@@ -19,7 +19,7 @@ const AdminDashboardPage = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-        const { data: usersData, error: usersError } = await supabase.from('profiles').select('*', { count: 'exact' });
+  const { data: usersData, error: usersError } = await supabase.from('users').select('*', { count: 'exact' });
         if (usersError) throw usersError;
 
         const { data: parcelsData, error: parcelsError } = await supabase.from('parcels').select('status', { count: 'exact' });

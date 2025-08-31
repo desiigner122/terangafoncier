@@ -161,7 +161,7 @@ const ParcelDetailPage = () => {
       : [...(profile.favorites || []), parcel.id];
 
     const { error: updateError } = await supabase
-      .from('profiles')
+  .from('users')
       .update({ favorites: newFavorites })
       .eq('id', profile.id);
 

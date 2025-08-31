@@ -41,7 +41,7 @@ import React, { useState, useContext, useEffect } from 'react';
       useEffect(() => {
         const checkSellerVerification = async () => {
           if (!parcel.seller_id) return;
-          const { data, error } = await supabase.from('profiles').select('verification_status').eq('id', parcel.seller_id).single();
+          const { data, error } = await supabase.from('users').select('verification_status').eq('id', parcel.seller_id).single();
           if (!error && data) {
             setIsVerifiedSeller(data.verification_status === 'verified' || parcel.owner_type === 'Mairie');
           }
@@ -70,7 +70,7 @@ import React, { useState, useContext, useEffect } from 'react';
           : [...(profile.favorites || []), parcel.id];
 
         const { error: updateError } = await supabase
-          .from('profiles')
+          .from('users')
           .update({ favorites: newFavorites })
           .eq('id', profile.id);
 

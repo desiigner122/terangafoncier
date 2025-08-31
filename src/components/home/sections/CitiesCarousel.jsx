@@ -15,7 +15,7 @@ const CitiesCarousel = () => {
     const fetchCities = async () => {
       setLoading(true);
       const { data, error } = await supabase
-        .from('profiles')
+  .from('users')
         .select('full_name, company_info')
         .eq('role', 'Mairie')
         .limit(10);

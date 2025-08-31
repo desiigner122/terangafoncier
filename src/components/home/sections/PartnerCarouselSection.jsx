@@ -7,11 +7,11 @@ import { Building2, Scale, Briefcase, ArrowRight, Landmark, Smartphone, Banknote
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
-const senegal2050LogoUrl = "https://storage.googleapis.com/hostinger-horizons-assets-prod/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6cbcb36b5ee5efb7f4a236679ac5ad51.png";
-const waveLogoUrl = "https://storage.googleapis.com/hostinger-horizons-assets-prod/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/a6815a54888f8206821508084773171d.png";
-const orangeMoneyLogoUrl = "https://storage.googleapis.com/hostinger-horizons-assets-prod/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/351505325811092910a2405c38f51b6c.png";
-const sgbsLogoUrl = "https://storage.googleapis.com/hostinger-horizons-assets-prod/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/9581b28a18055b0d581829114096524f.png";
-const bdsLogoUrl = "https://storage.googleapis.com/hostinger-horizons-assets-prod/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/9581b28a18055b0d581829114096524f.png";
+const senegal2050LogoUrl = undefined; // Remplacer par un chemin local si disponible
+const waveLogoUrl = undefined; // Remplacer par un chemin local si disponible
+const orangeMoneyLogoUrl = undefined; // Remplacer par un chemin local si disponible
+const sgbsLogoUrl = undefined; // Remplacer par un chemin local si disponible
+const bdsLogoUrl = undefined; // Remplacer par un chemin local si disponible
 
 
 const partners = [

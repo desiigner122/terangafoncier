@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -9,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import { ArrowLeft, Smartphone, Landmark, FileCheck2, CheckCircle, Loader2 } from 'lucide-react';
-import { paymentMethods, partnerBanks } from '@/data/paymentData';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const sampleTransactions = [
@@ -32,25 +32,52 @@ const PaymentPage = () => {
   const [paymentDetails, setPaymentDetails] = useState({});
   const [isProcessing, setIsProcessing] = useState(false);
   const [isPaid, setIsPaid] = useState(false);
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [partnerBanks, setPartnerBanks] = useState([]);
+  const [loadingData, setLoadingData] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
-    const foundTransaction = sampleTransactions.find(tx => tx.id === transactionId);
-    if (foundTransaction) {
-      setTransaction(foundTransaction);
-      if (foundTransaction.amount <= 100000) {
-        setSelectedMethod('mobile');
-      } else {
-        setSelectedMethod('transfer');
+    const fetchData = async () => {
+      setLoadingData(true);
+      setFetchError(null);
+      try {
+        // Récupérer les méthodes de paiement
+        const { data: methods, error: methodsError } = await supabase.from('payment_methods').select('*');
+        if (methodsError) throw methodsError;
+        setPaymentMethods(methods);
+        // Récupérer les banques partenaires
+        const { data: banks, error: banksError } = await supabase.from('partner_banks').select('*');
+        if (banksError) throw banksError;
+        setPartnerBanks(banks);
+      } catch (err) {
+        setFetchError(err.message);
+        setPaymentMethods([]);
+        setPartnerBanks([]);
+        console.error('Erreur lors du chargement des méthodes de paiement ou banques:', err);
+      } finally {
+        setLoadingData(false);
       }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    // Remplacer par un appel API réel pour récupérer la transaction si besoin
+    const foundTransaction = {
+      id: transactionId,
+      date: '2025-08-15',
+      description: 'Achat de la parcelle SLY-NGP-010 (2/4)',
+      amount: 10312500,
+      type: 'Achat de terrain',
+    };
+    setTransaction(foundTransaction);
+    if (foundTransaction.amount <= 100000) {
+      setSelectedMethod('mobile');
     } else {
-      toast({
-        title: "Erreur",
-        description: "Transaction non trouvée.",
-        variant: "destructive",
-      });
-      navigate('/transactions');
+      setSelectedMethod('transfer');
     }
-  }, [transactionId, navigate, toast]);
+  }, [transactionId]);
 
   const handlePaymentSubmit = (e) => {
     e.preventDefault();
@@ -69,13 +96,14 @@ const PaymentPage = () => {
 
   const renderPaymentDetails = () => {
     switch (selectedMethod) {
-      case 'mobile':
+      case 'mobile': {
+        const mobileMethod = paymentMethods.find(p => p.id === 'mobile');
         return (
           <div className="space-y-4">
             <Select onValueChange={(value) => setPaymentDetails({ provider: value })}>
               <SelectTrigger><SelectValue placeholder="Choisissez un opérateur" /></SelectTrigger>
               <SelectContent>
-                {paymentMethods.find(p => p.id === 'mobile').providers.map(provider => (
+                {mobileMethod && Array.isArray(mobileMethod.providers) && mobileMethod.providers.map(provider => (
                   <SelectItem key={provider} value={provider}>{provider}</SelectItem>
                 ))}
               </SelectContent>
@@ -83,6 +111,7 @@ const PaymentPage = () => {
             <Input type="tel" placeholder="Numéro de téléphone (ex: 771234567)" required />
           </div>
         );
+      }
       case 'transfer':
         return (
           <div className="space-y-4">
@@ -115,6 +144,12 @@ const PaymentPage = () => {
     }
   };
 
+  if (loadingData) {
+    return <div className="flex items-center justify-center h-full"><LoadingSpinner size="large" /></div>;
+  }
+  if (fetchError) {
+    return <div className="text-red-600 py-4">Erreur : {fetchError}</div>;
+  }
   if (!transaction) {
     return <div className="flex items-center justify-center h-full"><LoadingSpinner size="large" /></div>;
   }

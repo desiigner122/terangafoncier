@@ -9,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/components/ui/use-toast";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { sampleAdminDashboardData } from '@/data/index.js';
 
 const kpiData = [
   { title: "Projets en Cours", value: "5", icon: Building2, trend: "+1", trendColor: "text-green-500", unit: "projets" },

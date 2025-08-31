@@ -1,5 +1,6 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/SupabaseAuthContext';
@@ -7,7 +8,6 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FileText, UserCheck, Gavel, TrendingUp, CalendarDays, PlusCircle, Heart, UserPlus } from 'lucide-react';
 import { useToast } from "@/components/ui/use-toast";
-import { sampleUserListings, sampleRequests, sampleParcels } from '@/data/index.js';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import BecomeSellerButton from '@/components/auth/BecomeSellerButton';
@@ -61,7 +61,41 @@ const ParticulierDashboard = () => {
   if (!user) {
     return <div className="flex items-center justify-center h-full"><LoadingSpinner size="large" /></div>;
   }
-  const myActiveRequests = sampleRequests.filter(r => r.user_id === user.id && r.status !== 'Traitée' && r.status !== 'Annulée'); 
+  const [requests, setRequests] = useState([]);
+  const [parcels, setParcels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      setFetchError(null);
+      try {
+        const { data: reqs, error: reqsError } = await supabase.from('requests').select('*').eq('user_id', user.id);
+        if (reqsError) throw reqsError;
+        setRequests(reqs);
+        const parcelIds = reqs.map(r => r.parcel_id).filter(Boolean);
+        let parcelsMap = {};
+        if (parcelIds.length > 0) {
+          const { data: parcelsData, error: parcelsError } = await supabase.from('parcels').select('id, name').in('id', parcelIds);
+          if (!parcelsError && parcelsData) {
+            parcelsMap = Object.fromEntries(parcelsData.map(p => [p.id, p]));
+          }
+        }
+        setParcels(parcelsMap);
+      } catch (err) {
+        setFetchError(err.message);
+        setRequests([]);
+        setParcels({});
+        console.error('Erreur lors du chargement des demandes ou parcelles:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (user) fetchData();
+  }, [user]);
+
+  const myActiveRequests = requests.filter(r => r.status !== 'Traitée' && r.status !== 'Annulée');
 
   return (
     <motion.div
@@ -143,12 +177,16 @@ const ParticulierDashboard = () => {
               <CardDescription>Visualisez l'avancement de vos dossiers en cours.</CardDescription>
             </CardHeader>
             <CardContent>
-              {myActiveRequests.length > 0 ? (
+              {loading ? (
+                <div className="flex items-center justify-center py-8"><LoadingSpinner size="large" /></div>
+              ) : fetchError ? (
+                <div className="text-center py-8 text-red-600">Erreur : {fetchError}</div>
+              ) : myActiveRequests.length > 0 ? (
                 <div className="space-y-4">
                   {myActiveRequests.slice(0, 3).map(req => (
                     <div key={req.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                       <div>
-                         <p className="font-semibold">{sampleParcels.find(p=>p.id === req.parcel_id)?.name || `Demande à ${req.recipient}`}</p>
+                         <p className="font-semibold">{parcels[req.parcel_id]?.name || `Demande à ${req.recipient}`}</p>
                          <p className="text-sm text-muted-foreground">ID: {req.id} | Statut: <span className="font-medium text-primary">{req.status}</span></p>
                       </div>
                       <Button asChild size="sm">

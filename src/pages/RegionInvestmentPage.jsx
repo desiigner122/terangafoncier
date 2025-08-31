@@ -1,8 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
-import { sampleParcels } from '@/data';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { MapPin, Building, Leaf, Ship, Sun, ArrowRight, CheckCircle } from 'lucide-react';
@@ -49,18 +48,42 @@ const RegionInvestmentPage = () => {
   const { regionSlug } = useParams();
   const [region, setRegion] = useState(null);
   const [parcels, setParcels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
 
   useEffect(() => {
-    const regionInfo = regionDataSim[regionSlug];
-    if (regionInfo) {
-      setRegion(regionInfo);
-      const regionParcels = sampleParcels.filter(p => p.zone.toLowerCase().includes(regionInfo.name.toLowerCase()) || senegalRegionsAndDepartments.find(r => r.slug === regionSlug)?.departements.some(d => d.communes.includes(p.zone))).slice(0, 6);
-      setParcels(regionParcels);
-    }
+    const fetchRegionAndParcels = async () => {
+      setLoading(true);
+      setFetchError(null);
+      try {
+        // Récupérer la région depuis la table regions
+        const { data: regionData, error: regionError } = await supabase.from('regions').select('*').eq('slug', regionSlug).single();
+        if (regionError || !regionData) throw regionError || new Error('Région non trouvée');
+        setRegion(regionData);
+        // Récupérer les parcelles associées à la région
+        const { data: parcelsData, error: parcelsError } = await supabase.from('parcels').select('*').ilike('zone', `%${regionData.name}%`).limit(6);
+        if (parcelsError) throw parcelsError;
+        setParcels(parcelsData);
+      } catch (err) {
+        setFetchError(err.message);
+        setRegion(null);
+        setParcels([]);
+        console.error('Erreur lors du chargement de la région ou des parcelles:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRegionAndParcels();
   }, [regionSlug]);
 
-  if (!region) {
+  if (loading) {
     return <div className="container mx-auto py-10 text-center">Chargement de la région...</div>;
+  }
+  if (fetchError) {
+    return <div className="container mx-auto py-10 text-center text-red-600">Erreur : {fetchError}</div>;
+  }
+  if (!region) {
+    return <div className="container mx-auto py-10 text-center">Région non trouvée.</div>;
   }
 
   return (

@@ -10,7 +10,6 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
-import { sampleAdminDashboardData } from '@/data/index.js';
 
 const kpiData = [
   { title: "Parcelles en Exploitation", value: "3", icon: MapPin, trend: "+1", trendColor: "text-green-500", unit: "parcelles" },

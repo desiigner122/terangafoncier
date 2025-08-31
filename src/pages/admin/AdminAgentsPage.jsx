@@ -11,7 +11,6 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
 import { useToast } from "@/components/ui/use-toast";
-import { sampleAdminDashboardData } from '@/data/index.js';
 import LoadingSpinner from '@/components/ui/spinner';
 
 const initialSampleAgents = [

@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Download, BarChart2, Calendar, MapPin } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { useToast } from "@/components/ui/use-toast";
-import { sampleAdminDashboardData } from '@/data/index.js';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const AdminReportsPage = () => {

@@ -7,7 +7,6 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ExternalLink, Layers, Search, ZoomIn, ZoomOut, Home, DollarSign, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { sampleParcels } from '@/data/sampleData'; 
 import { Card, CardContent } from '@/components/ui/card'; // Import Card and CardContent
 
 delete L.Icon.Default.prototype._getIconUrl;
@@ -64,11 +63,34 @@ const MapLegend = () => (
   </Card>
 );
 
+import { supabase } from '@/lib/supabaseClient';
+
 const MapPage = () => {
-  const parcels = sampleParcels;
+  const [parcels, setParcels] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [fetchError, setFetchError] = useState(null);
   const defaultPosition = [14.7167, -17.4677]; // Dakar center
   const defaultZoom = 11;
   const mapRef = useRef();
+
+  useEffect(() => {
+    const fetchParcels = async () => {
+      setLoading(true);
+      setFetchError(null);
+      try {
+        const { data, error } = await supabase.from('parcels').select('*');
+        if (error) throw error;
+        setParcels(data);
+      } catch (err) {
+        setFetchError(err.message);
+        setParcels([]);
+        console.error('Erreur lors du chargement des parcelles:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchParcels();
+  }, []);
 
   const getIconForParcel = (status) => {
     switch (status) {
@@ -99,68 +121,71 @@ const MapPage = () => {
       transition={{ duration: 0.5 }}
       className="relative h-[calc(100vh-64px)] w-full"
     >
-       <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-full max-w-lg px-4">
-          <form onSubmit={handleSearch} className="relative">
-             <Input
-               type="search"
-               name="locationSearch"
-               placeholder="Rechercher une adresse, ville, ou référence de parcelle..."
-               className="w-full h-12 pl-12 pr-4 rounded-full bg-background/95 shadow-xl border-border focus:ring-2 focus:ring-primary text-sm"
-             />
-             <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
-          </form>
-       </div>
+      <div className="absolute top-4 left-1/2 transform -translate-x-1/2 z-[1000] w-full max-w-lg px-4">
+        <form onSubmit={handleSearch} className="relative">
+          <Input
+            type="search"
+            name="locationSearch"
+            placeholder="Rechercher une adresse, ville, ou référence de parcelle..."
+            className="w-full h-12 pl-12 pr-4 rounded-full bg-background/95 shadow-xl border-border focus:ring-2 focus:ring-primary text-sm"
+          />
+          <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+        </form>
+      </div>
 
-       <MapContainer
-         center={defaultPosition}
-         zoom={defaultZoom}
-         scrollWheelZoom={true}
-         style={{ height: '100%', width: '100%' }}
-         zoomControl={false}
-         ref={mapRef}
-       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & Teranga Foncier'
-          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
-        />
-        {parcels
-          .filter(parcel => parcel.coordinates)
-          .map((parcel) => (
-          <Marker key={parcel.id} position={[parcel.coordinates.lat, parcel.coordinates.lng]} icon={getIconForParcel(parcel.status)}>
-            <Popup minWidth={220}>
-              <div className="space-y-1.5">
-                  <h3 className="font-bold text-base mb-1 text-primary">{parcel.location_name}</h3>
-                  <p className="text-xs text-muted-foreground -mt-1">Réf: {parcel.reference}</p>
-                  
-                  <div className="flex items-center text-sm">
-                     <Home className="h-4 w-4 mr-1.5 text-muted-foreground"/>
-                     <span>{parcel.area_sqm ? `${parcel.area_sqm} m²` : 'Surface N/A'}</span>
+      {loading ? (
+        <div className="flex justify-center items-center h-full">Chargement des parcelles...</div>
+      ) : fetchError ? (
+        <div className="text-red-600 py-4">Erreur : {fetchError}</div>
+      ) : (
+        <MapContainer
+          center={defaultPosition}
+          zoom={defaultZoom}
+          scrollWheelZoom={true}
+          style={{ height: '100%', width: '100%' }}
+          zoomControl={false}
+          ref={mapRef}
+        >
+          <TileLayer
+            attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors & Teranga Foncier'
+            url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+          />
+          {parcels
+            .filter(parcel => parcel.coordinates)
+            .map((parcel) => (
+              <Marker key={parcel.id} position={[parcel.coordinates.lat, parcel.coordinates.lng]} icon={getIconForParcel(parcel.status)}>
+                <Popup minWidth={220}>
+                  <div className="space-y-1.5">
+                    <h3 className="font-bold text-base mb-1 text-primary">{parcel.location_name}</h3>
+                    <p className="text-xs text-muted-foreground -mt-1">Réf: {parcel.reference}</p>
+                    <div className="flex items-center text-sm">
+                      <Home className="h-4 w-4 mr-1.5 text-muted-foreground"/>
+                      <span>{parcel.area_sqm ? `${parcel.area_sqm} m²` : 'Surface N/A'}</span>
+                    </div>
+                    <div className="flex items-center text-sm">
+                      <DollarSign className="h-4 w-4 mr-1.5 text-muted-foreground"/>
+                      <span className="font-semibold">{formatPrice(parcel.price)}</span>
+                    </div>
+                    <p className={`text-xs font-medium capitalize ${
+                      parcel.status === 'Disponible' ? 'text-green-600' :
+                      parcel.status === 'Réservée' ? 'text-yellow-600' :
+                      parcel.status === 'Vendue' ? 'text-red-600' : 'text-gray-600'
+                    }`}>
+                      Statut : {parcel.status}
+                    </p>
+                    <Button asChild size="sm" className="w-full mt-2.5">
+                      <Link to={`/parcelles/${parcel.id}`}>
+                        Voir les détails <ExternalLink className="ml-2 h-3.5 w-3.5"/>
+                      </Link>
+                    </Button>
                   </div>
-                  <div className="flex items-center text-sm">
-                    <DollarSign className="h-4 w-4 mr-1.5 text-muted-foreground"/>
-                    <span className="font-semibold">{formatPrice(parcel.price)}</span>
-                  </div>
-                  <p className={`text-xs font-medium capitalize ${
-                     parcel.status === 'Disponible' ? 'text-green-600' :
-                     parcel.status === 'Réservée' ? 'text-yellow-600' :
-                     parcel.status === 'Vendue' ? 'text-red-600' : 'text-gray-600'
-                   }`}>
-                     Statut : {parcel.status}
-                  </p>
-                  <Button asChild size="sm" className="w-full mt-2.5">
-                    <Link to={`/parcelles/${parcel.id}`}>
-                       Voir les détails <ExternalLink className="ml-2 h-3.5 w-3.5"/>
-                    </Link>
-                  </Button>
-              </div>
-            </Popup>
-          </Marker>
-        ))}
-        <CustomZoomControl />
-        <MapLegend />
-        {/* TODO: Add Layer control for points of interest, zoning, etc. */}
-        {/* <Button className="absolute top-20 right-4 z-[1000]" variant="secondary" size="icon" title="Gérer les couches"><Layers className="h-5 w-5"/></Button> */}
-      </MapContainer>
+                </Popup>
+              </Marker>
+            ))}
+          <CustomZoomControl />
+          <MapLegend />
+        </MapContainer>
+      )}
     </motion.div>
   );
 };

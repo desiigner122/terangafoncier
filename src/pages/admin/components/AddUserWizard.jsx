@@ -1,8 +1,7 @@
 
 import React, { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
-import { supabase } from '@/lib/customSupabaseClient';
-import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -86,9 +85,65 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
         }
     };
     
-    const regionsOptions = Object.keys(senegalRegionsAndDepartments).map(r => ({ value: r, label: r }));
-    const departmentsOptions = currentUser.region ? Object.keys(senegalRegionsAndDepartments[currentUser.region]).map(d => ({ value: d, label: d })) : [];
-    const communesOptions = (currentUser.region && currentUser.departement) ? senegalRegionsAndDepartments[currentUser.region][currentUser.departement].map(c => ({ value: c, label: c })) : [];
+
+    const [regions, setRegions] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [communes, setCommunes] = useState([]);
+    const [loadingRegions, setLoadingRegions] = useState(true);
+    const [fetchError, setFetchError] = useState(null);
+
+    // Charger les régions au montage
+    React.useEffect(() => {
+        const fetchRegions = async () => {
+            setLoadingRegions(true);
+            setFetchError(null);
+            try {
+                const { data, error } = await supabase.from('regions').select('*');
+                if (error) throw error;
+                setRegions(data);
+            } catch (err) {
+                setFetchError(err.message);
+                setRegions([]);
+            } finally {
+                setLoadingRegions(false);
+            }
+        };
+        fetchRegions();
+    }, []);
+
+    // Charger les départements quand la région change
+    React.useEffect(() => {
+        const fetchDepartments = async () => {
+            if (!currentUser.region) { setDepartments([]); return; }
+            try {
+                const { data, error } = await supabase.from('departments').select('*').eq('region', currentUser.region);
+                if (error) throw error;
+                setDepartments(data);
+            } catch (err) {
+                setDepartments([]);
+            }
+        };
+        fetchDepartments();
+    }, [currentUser.region]);
+
+    // Charger les communes quand le département change
+    React.useEffect(() => {
+        const fetchCommunes = async () => {
+            if (!currentUser.departement) { setCommunes([]); return; }
+            try {
+                const { data, error } = await supabase.from('communes').select('*').eq('departement', currentUser.departement);
+                if (error) throw error;
+                setCommunes(data);
+            } catch (err) {
+                setCommunes([]);
+            }
+        };
+        fetchCommunes();
+    }, [currentUser.departement]);
+
+    const regionsOptions = regions.map(r => ({ value: r.name, label: r.name }));
+    const departmentsOptions = departments.map(d => ({ value: d.name, label: d.name }));
+    const communesOptions = communes.map(c => ({ value: c.name, label: c.name }));
 
 
     return (

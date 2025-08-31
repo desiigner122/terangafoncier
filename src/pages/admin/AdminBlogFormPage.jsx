@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from "@/components/ui/use-toast";
-import { sampleBlogPosts } from '@/data/blogData';
 import { Save, ArrowLeft, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -33,15 +33,19 @@ const AdminBlogFormPage = () => {
   const [imageFile, setImageFile] = useState(null);
 
   useEffect(() => {
-    if (isEditing) {
-      const existingPost = sampleBlogPosts.find(p => p.slug === slug);
-      if (existingPost) {
-        setPost({ ...existingPost, tags: existingPost.tags.join(', ') });
-      } else {
-        toast({ title: "Erreur", description: "Article non trouvé.", variant: "destructive" });
-        navigate('/admin/blog');
+    const fetchPost = async () => {
+      if (isEditing) {
+        const { data, error } = await supabase.from('blog').select('*').eq('slug', slug).single();
+        if (error || !data) {
+          toast({ title: "Erreur", description: "Article non trouvé.", variant: "destructive" });
+          navigate('/admin/blog');
+        } else {
+          setPost({ ...data, tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || '') });
+        }
       }
-    }
+    };
+    fetchPost();
+    // eslint-disable-next-line
   }, [slug, isEditing, navigate, toast]);
 
   const handleChange = (e) => {
@@ -63,13 +67,30 @@ const AdminBlogFormPage = () => {
       }
   }
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    toast({
-      title: `Article ${isEditing ? 'modifié' : 'créé'} avec succès !`,
-      description: "Les modifications ont été enregistrées (simulation).",
-    });
-    navigate('/admin/blog');
+    try {
+      const tagsArray = post.tags.split(',').map(t => t.trim()).filter(Boolean);
+      const payload = { ...post, tags: tagsArray };
+      let result;
+      if (isEditing) {
+        result = await supabase.from('blog').update(payload).eq('slug', slug);
+      } else {
+        result = await supabase.from('blog').insert([payload]);
+      }
+      if (result.error) throw result.error;
+      toast({
+        title: `Article ${isEditing ? 'modifié' : 'créé'} avec succès !`,
+        description: "Les modifications ont été enregistrées.",
+      });
+      navigate('/admin/blog');
+    } catch (err) {
+      toast({
+        title: "Erreur lors de l'enregistrement",
+        description: err.message,
+        variant: "destructive",
+      });
+    }
   };
 
   return (

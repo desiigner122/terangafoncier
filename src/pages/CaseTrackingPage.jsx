@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { sampleRequests } from '@/data/sampleData';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { CheckCircle, Clock, FileText, Home, User, AlertCircle, Banknote, ArrowRight } from 'lucide-react';
@@ -44,11 +44,19 @@ const CaseTrackingPage = () => {
 
   useEffect(() => {
     setLoading(true);
-    setTimeout(() => {
-      const foundRequest = sampleRequests.find(r => r.id === id);
-      setRequest(foundRequest);
-      setLoading(false);
-    }, 500);
+    const fetchRequest = async () => {
+      try {
+        const { data, error } = await supabase.from('requests').select('*').eq('id', id).single();
+        if (error) throw error;
+        setRequest(data);
+      } catch (err) {
+        setRequest(null);
+        console.error('Erreur lors du chargement de la demande:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRequest();
   }, [id]);
 
   if (loading) return (

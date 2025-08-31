@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { sampleConversations as initialSampleConversations, sampleMessages as initialSampleMessages, sampleUsers } from '@/data/userData';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -13,7 +12,7 @@ import { Send, MessageSquare, Users, ArrowLeft } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const getInitials = (name) => {
   if (!name) return '??';
@@ -55,25 +54,39 @@ const SecureMessagingPage = () => {
     setLoadingConversations(true);
     setError(null);
     if (!user) {
-       setError("Veuillez vous connecter pour accéder à la messagerie.");
-       setLoadingConversations(false);
-       return;
+      setError("Veuillez vous connecter pour accéder à la messagerie.");
+      setLoadingConversations(false);
+      return;
     }
-    
-    setTimeout(() => {
-      let userConvs = initialSampleConversations.filter(c => c.participants && c.participants.includes(user.id));
-      
-      let convsWithDetails = userConvs.map(c => {
-        const otherUserId = c.participants.find(pId => pId !== user.id);
-        const otherUser = sampleUsers.find(u => u.id === otherUserId);
-        return { ...c, otherUserName: otherUser?.name || 'Utilisateur Inconnu', otherUserAvatar: otherUser?.avatar };
-      });
-      
-      const { parcelId, parcelName, contactUser } = location.state || {};
-      if (parcelId && contactUser) {
-        let existingConv = convsWithDetails.find(c => c.parcel_id === parcelId && c.participants.includes(contactUser));
-        if (!existingConv) {
-            const otherUserDetails = sampleUsers.find(u => u.id === contactUser);
+    const fetchConversations = async () => {
+      try {
+        const { data: convs, error: convsError } = await supabase
+          .from('conversations')
+          .select('*')
+          .contains('participants', [user.id]);
+        if (convsError) throw convsError;
+        // Récupérer les infos des autres utilisateurs
+        const userIds = convs.flatMap(c => c.participants.filter(id => id !== user.id));
+        let usersMap = {};
+        if (userIds.length > 0) {
+          const { data: users, error: usersError } = await supabase
+            .from('users')
+            .select('id, name, avatar')
+            .in('id', userIds);
+          if (!usersError && users) {
+            usersMap = Object.fromEntries(users.map(u => [u.id, u]));
+          }
+        }
+        let convsWithDetails = convs.map(c => {
+          const otherUserId = c.participants.find(pId => pId !== user.id);
+          const otherUser = usersMap[otherUserId];
+          return { ...c, otherUserName: otherUser?.name || 'Utilisateur Inconnu', otherUserAvatar: otherUser?.avatar };
+        });
+        const { parcelId, parcelName, contactUser } = location.state || {};
+        if (parcelId && contactUser) {
+          let existingConv = convsWithDetails.find(c => c.parcel_id === parcelId && c.participants.includes(contactUser));
+          if (!existingConv) {
+            const { data: otherUserDetails } = await supabase.from('users').select('id, name, avatar').eq('id', contactUser).single();
             const newConv = {
               id: `conv_${parcelId}_${contactUser}`,
               participants: [user.id, contactUser],
@@ -86,27 +99,46 @@ const SecureMessagingPage = () => {
             };
             convsWithDetails = [newConv, ...convsWithDetails];
             setSelectedConversationId(newConv.id);
-        } else {
+          } else {
             setSelectedConversationId(existingConv.id);
+          }
         }
+        setConversations(convsWithDetails);
+      } catch (err) {
+        setError(err.message);
+        setConversations([]);
+        console.error('Erreur lors du chargement des conversations:', err);
+      } finally {
+        setLoadingConversations(false);
       }
-
-      setConversations(convsWithDetails);
-      setLoadingConversations(false);
-    }, 300);
+    };
+    fetchConversations();
   }, [user, location.state]);
 
   useEffect(() => {
     if (selectedConversationId) {
       setLoadingMessages(true);
       setMessages([]);
-      setTimeout(() => {
-        setMessages(initialSampleMessages[selectedConversationId] || []);
-        setLoadingMessages(false);
-        setConversations(prev => prev.map(c => c.id === selectedConversationId ? {...c, unread_count: 0} : c));
-      }, 200);
+      const fetchMessages = async () => {
+        try {
+          const { data: msgs, error: msgsError } = await supabase
+            .from('messages')
+            .select('*')
+            .eq('conversation_id', selectedConversationId)
+            .order('created_at', { ascending: true });
+          if (msgsError) throw msgsError;
+          setMessages(msgs);
+          setConversations(prev => prev.map(c => c.id === selectedConversationId ? {...c, unread_count: 0} : c));
+        } catch (err) {
+          setMessages([]);
+          console.error('Erreur lors du chargement des messages:', err);
+        } finally {
+          setLoadingMessages(false);
+        }
+      };
+      fetchMessages();
     } else {
-       setMessages([]);
+      setMessages([]);
     }
   }, [selectedConversationId]);
 

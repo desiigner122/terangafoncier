@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -8,7 +9,6 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from "@/components/ui/use-toast";
-import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
 import { Landmark, Send, Loader2, FileCheck, CheckCircle, ArrowRight, ArrowLeft, User, UploadCloud, ClipboardCheck } from 'lucide-react';
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Link } from 'react-router-dom';
@@ -44,8 +44,57 @@ const DashboardMunicipalRequestPageComponent = () => {
     const watchedRegion = watch('region');
     const watchedDepartment = watch('department');
 
-    const departments = senegalRegionsAndDepartments.find(r => r.region === watchedRegion)?.departements || [];
-    const communes = departments.find(d => d.nom === watchedDepartment)?.communes || [];
+    const [regions, setRegions] = useState([]);
+    const [departments, setDepartments] = useState([]);
+    const [communes, setCommunes] = useState([]);
+    const [loadingRegions, setLoadingRegions] = useState(true);
+    const [fetchError, setFetchError] = useState(null);
+
+    useEffect(() => {
+        const fetchRegions = async () => {
+            setLoadingRegions(true);
+            setFetchError(null);
+            try {
+                const { data, error } = await supabase.from('regions').select('*');
+                if (error) throw error;
+                setRegions(data);
+            } catch (err) {
+                setFetchError(err.message);
+                setRegions([]);
+            } finally {
+                setLoadingRegions(false);
+            }
+        };
+        fetchRegions();
+    }, []);
+
+    useEffect(() => {
+        const fetchDepartments = async () => {
+            if (!watchedRegion) { setDepartments([]); return; }
+            try {
+                const { data, error } = await supabase.from('departments').select('*').eq('region', watchedRegion);
+                if (error) throw error;
+                setDepartments(data);
+            } catch (err) {
+                setDepartments([]);
+            }
+        };
+        fetchDepartments();
+    }, [watchedRegion]);
+
+    useEffect(() => {
+        const fetchCommunes = async () => {
+            if (!watchedDepartment) { setCommunes([]); return; }
+            try {
+                const { data, error } = await supabase.from('communes').select('*').eq('departement', watchedDepartment);
+                if (error) throw error;
+                setCommunes(data);
+            } catch (err) {
+                setCommunes([]);
+            }
+        };
+        fetchCommunes();
+    }, [watchedDepartment]);
 
     const onSubmit = async (data) => {
         setIsSubmitting(true);

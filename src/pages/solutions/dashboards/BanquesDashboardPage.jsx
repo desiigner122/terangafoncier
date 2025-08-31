@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/components/ui/use-toast";
-import { sampleAdminDashboardData } from '@/data/index.js';
 
 const kpiData = [
   { title: "Garanties Évaluées (Mois)", value: "18", icon: FileText, trend: "+8%", trendColor: "text-green-500", unit: "dossiers" },

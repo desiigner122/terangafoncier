@@ -61,7 +61,7 @@ const AdminUserVerificationsPage = () => {
         const fetchUnverifiedUsers = async () => {
             setLoading(true);
             const { data: usersData, error: usersError } = await supabase
-                .from('profiles')
+                .from('users')
                 .select('*, user_auth:id(email)')
                 .in('verification_status', ['unverified', 'pending']);
 
@@ -100,7 +100,7 @@ const AdminUserVerificationsPage = () => {
     const handleVerificationAction = async (userId, newStatus) => {
         const user = users.find(u => u.id === userId);
         const { error } = await supabase
-            .from('profiles')
+            .from('users')
             .update({ verification_status: newStatus })
             .eq('id', userId);
 

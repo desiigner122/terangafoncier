@@ -65,7 +65,7 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
             if (signUpError) throw signUpError;
             
             const { data: profile, error: profileError } = await supabase
-                .from('profiles')
+                .from('users')
                 .select('*')
                 .eq('id', user.id)
                 .single();

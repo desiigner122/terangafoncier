@@ -26,7 +26,7 @@ const AdminUsersPage = () => {
 
     const fetchUsers = async () => {
         setLoading(true);
-        const { data, error } = await supabase.from('profiles').select('*');
+    const { data, error } = await supabase.from('users').select('*');
         if (error) {
             console.error("Error fetching users:", error);
             toast({ title: 'Erreur', description: 'Impossible de charger les utilisateurs.', variant: 'destructive' });
@@ -72,7 +72,7 @@ const AdminUsersPage = () => {
                 }
 
                 const { data: updatedUser, error } = await supabase
-                    .from('profiles')
+                    .from('users')
                     .update(updateData)
                     .eq('id', userId)
                     .select()
@@ -99,7 +99,7 @@ const AdminUsersPage = () => {
         }
         
         const { data: updatedUser, error } = await supabase
-            .from('profiles')
+            .from('users')
             .update({ full_name: updatedUserData.full_name, role: updatedUserData.role, user_type: updatedUserData.role })
             .eq('id', updatedUserData.id)
             .select()

@@ -16,7 +16,7 @@
         if (!userId) return null;
         try {
           const { data, error } = await supabase
-            .from('profiles')
+            .from('users')
             .select('*')
             .eq('id', userId)
             .single();

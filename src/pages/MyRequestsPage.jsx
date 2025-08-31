@@ -28,7 +28,7 @@ const MyRequestsPage = () => {
             // Requests sent by me
             const { data: sent, error: sentError } = await supabase
                 .from('requests')
-                .select('*, parcels(name, zone), profiles!requests_recipient_id_fkey(full_name)')
+                .select('*, parcels(name, zone), users!requests_recipient_id_fkey(full_name)')
                 .eq('user_id', user.id);
             if (sentError) console.error("Error fetching sent requests:", sentError);
             else setMySentRequests(sent);
@@ -36,7 +36,7 @@ const MyRequestsPage = () => {
             // Requests received by me (as a seller)
             const { data: received, error: receivedError } = await supabase
                 .from('requests')
-                .select('*, parcels(name), profiles!requests_user_id_fkey(full_name)')
+                .select('*, parcels(name), users!requests_user_id_fkey(full_name)')
                 .eq('recipient_id', user.id);
             if (receivedError) console.error("Error fetching received requests:", receivedError);
             else setMyReceivedRequests(received);
@@ -83,8 +83,8 @@ const MyRequestsPage = () => {
             {mySentRequests.length > 0 ? mySentRequests.map(req => (
                 <li key={req.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
-                        <p className="font-semibold">{req.parcels?.name || `Demande à ${req.profiles?.full_name}`}</p>
-                        <p className="text-sm text-muted-foreground">ID: {req.id} | Destinataire: {req.profiles?.full_name || 'Mairie'}</p>
+                        <p className="font-semibold">{req.parcels?.name || `Demande à ${req.users?.full_name}`}</p>
+                        <p className="text-sm text-muted-foreground">ID: {req.id} | Destinataire: {req.users?.full_name || 'Mairie'}</p>
                         <div className="mt-1">{getStatusBadge(req.status)}</div>
                     </div>
                     <Button asChild size="sm">
@@ -102,7 +102,7 @@ const MyRequestsPage = () => {
             {myReceivedRequests.length > 0 ? myReceivedRequests.map(req => (
                 <li key={req.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
-                        <p className="font-semibold">{req.profiles?.full_name} pour {req.parcels?.name}</p>
+                        <p className="font-semibold">{req.users?.full_name} pour {req.parcels?.name}</p>
                         <p className="text-sm text-muted-foreground">ID: {req.id}</p>
                         <div className="mt-1">{getStatusBadge(req.status)}</div>
                     </div>

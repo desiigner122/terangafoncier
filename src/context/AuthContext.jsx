@@ -14,7 +14,7 @@ export const AuthProvider = ({ children }) => {
       const { data: { session } } = await supabase.auth.getSession();
       if (session) {
         const { data: profile } = await supabase
-          .from('profiles')
+          .from('users')
           .select('*')
           .eq('id', session.user.id)
           .single();
@@ -29,7 +29,7 @@ export const AuthProvider = ({ children }) => {
       async (_event, session) => {
         if (session) {
             const { data: profile } = await supabase
-              .from('profiles')
+              .from('users')
               .select('*')
               .eq('id', session.user.id)
               .single();
@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     if (error) throw error;
     
     const { data: profile } = await supabase
-      .from('profiles')
+  .from('users')
       .select('*')
       .eq('id', data.user.id)
       .single();
@@ -77,7 +77,7 @@ export const AuthProvider = ({ children }) => {
     
     // The profile is created by a trigger `handle_new_user`
     const { data: profile } = await supabase
-      .from('profiles')
+  .from('users')
       .select('*')
       .eq('id', data.user.id)
       .single();
@@ -96,7 +96,7 @@ export const AuthProvider = ({ children }) => {
     if (!user) throw new Error("No user is logged in.");
     
     const { data, error } = await supabase
-      .from('profiles')
+  .from('users')
       .update(updates)
       .eq('id', user.id)
       .select()

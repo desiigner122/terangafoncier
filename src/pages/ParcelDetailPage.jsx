@@ -90,7 +90,7 @@ const ParcelDetailPage = () => {
 
         if (parcelData.seller_id) {
           const { data: sellerData, error: sellerError } = await supabase
-            .from('users')
+               .from('users')
             .select('*')
             .eq('id', parcelData.seller_id)
             .single();

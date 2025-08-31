@@ -86,8 +86,8 @@ const ProfilePage = () => {
         avatarUrl = publicUrl;
       }
 
-      const { error } = await supabase
-  .from('users')
+        const { error } = await supabase
+          .from('users')
         .update({ full_name: fullName, phone: phone, avatar_url: avatarUrl })
         .eq('id', user.id);
 

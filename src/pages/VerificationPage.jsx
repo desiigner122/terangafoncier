@@ -114,7 +114,7 @@ const VerificationPage = () => {
             }
         }
 
-  await supabase.from('users').update({ verification_status: 'pending' }).eq('id', user.id);
+    await supabase.from('users').update({ verification_status: 'pending' }).eq('id', user.id);
         
         await revalidate();
 

@@ -1,23 +1,30 @@
+import { config } from 'dotenv';
+config({ path: '.env.local' });
+config({ path: '.env' });
+
 import { supabase } from '../lib/supabaseClient.js';
-// Crée un utilisateur de test (si email inexistant)
-export async function createTestUser(email, password) {
+
+// Test de connexion simple
+async function testConnection() {
   try {
-    const { data, error } = await supabase.auth.signUp({ email, password });
-    if (error && error.status !== 400) { // 400 = déjà inscrit
-      console.error('Erreur création utilisateur:', error);
+    console.log('--- Test de connexion Supabase ---');
+    console.log('URL:', process.env.VITE_SUPABASE_URL);
+    console.log('Key présente:', !!process.env.VITE_SUPABASE_ANON_KEY);
+
+    const { data, error } = await supabase.from('users').select('count').limit(1);
+    if (error) {
+      console.log('Erreur de connexion:', error.message);
       return false;
     }
-    if (error && error.status === 400) {
-      console.log('Utilisateur déjà existant.');
-      return true;
-    }
-    console.log('Utilisateur créé, vérifiez l\'email pour confirmation.');
+    console.log('Connexion réussie!');
     return true;
   } catch (e) {
-    console.error('Exception création utilisateur:', e);
+    console.log('Exception:', e.message);
     return false;
   }
 }
+
+testConnection();
 
 // Crée une parcelle de test avec is_featured=true
 export async function createTestParcel() {

@@ -1,7 +1,8 @@
 
     import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
     import { supabase } from '@/lib/customSupabaseClient';
-    import { useToast } from '@/components/ui/use-toast';
+    // TEMPORARILY USING SIMPLE TOAST TO FIX TypeError: nT() is null
+    import { useToast } from '@/components/ui/use-toast-simple';
 
     const AuthContext = createContext(null);
 

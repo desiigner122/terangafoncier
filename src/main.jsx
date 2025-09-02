@@ -1,9 +1,9 @@
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import SimpleApp from '@/SimpleApp';
+import App from '@/App';
 import '@/index.css';
-import { SimpleSupabaseAuthProvider } from '@/context/SimpleSupabaseAuthContext';
+import { SupabaseAuthProvider } from '@/context/SupabaseAuthContext';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 // Vérification de sécurité pour l'élément root
@@ -14,12 +14,11 @@ if (!rootElement) {
 }
 
 ReactDOM.createRoot(rootElement).render(
-  // TEMPORARILY DISABLED: React.StrictMode might be causing TypeError: nT() is null
-  // <React.StrictMode>
+  <React.StrictMode>
     <Router>
-      <SimpleSupabaseAuthProvider>
-        <SimpleApp />
-      </SimpleSupabaseAuthProvider>
+      <SupabaseAuthProvider>
+        <App />
+      </SupabaseAuthProvider>
     </Router>
-  // </React.StrictMode>
+  </React.StrictMode>
 );

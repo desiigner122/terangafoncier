@@ -6,7 +6,8 @@ import { Users, MapPin, GitPullRequest, ShieldCheck as ComplianceIcon, Activity,
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { useToast } from "@/components/ui/use-toast";
+// TEMPORARILY USING SIMPLE TOAST TO FIX TypeError: nT() is null
+import { useToast } from "@/components/ui/use-toast-simple";
 import { supabase } from '@/lib/supabaseClient';
 
 const AdminDashboardPage = () => {

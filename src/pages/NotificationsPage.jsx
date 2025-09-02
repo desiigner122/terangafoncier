@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BellRing, BellOff, CheckCheck, Trash2, ArrowRight } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/customSupabaseClient';
 

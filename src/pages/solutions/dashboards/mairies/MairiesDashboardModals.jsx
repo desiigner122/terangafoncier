@@ -14,7 +14,7 @@
     import { fr } from 'date-fns/locale';
     import { sampleParcels } from '@/data';
     import { Card, CardContent } from '@/components/ui/card';
-    import { useToast } from "@/components/ui/use-toast";
+    import { useToast } from "@/components/ui/use-toast-simple";
 
     const checklistItems = [
         { id: 'check-dossier', label: 'Dossier complet vérifié' },

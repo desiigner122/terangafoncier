@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, ArrowRight, Bell, User, MessageSquare, Check, X, ShoppingCart } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 import { supabase } from '@/lib/customSupabaseClient';
 
 const MyRequestsPage = () => {

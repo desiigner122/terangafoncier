@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import { Archive as Vault, FileText, Download, ShieldCheck, PlusCircle } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { Helmet } from 'react-helmet-async';
 
 const documents = [

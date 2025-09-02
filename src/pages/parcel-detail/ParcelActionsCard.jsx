@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Share2, Flag, Banknote, FileSignature } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { useAuth } from '@/context/AuthContext';
 
 const ParcelActionsCard = ({ parcel, onInstallmentClick }) => {

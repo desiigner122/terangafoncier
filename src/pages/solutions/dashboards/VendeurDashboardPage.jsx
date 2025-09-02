@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { sampleRequests, sampleUsers, sampleParcels } from '@/data';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 import { Link } from 'react-router-dom';
 
 const VendeurDashboardPage = () => {

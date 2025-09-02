@@ -7,7 +7,7 @@ import { useAuth } from '@/context/SupabaseAuthContext';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, FileText, UserCheck, Gavel, TrendingUp, CalendarDays, PlusCircle, Heart, UserPlus } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import BecomeSellerButton from '@/components/auth/BecomeSellerButton';

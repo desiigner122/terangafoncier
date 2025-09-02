@@ -6,7 +6,7 @@ import { FileText, Download, Search, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { jsPDF } from "jspdf"; 
-import { useToast } from "@/components/ui/use-toast"; 
+import { useToast } from "@/components/ui/use-toast-simple"; 
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const initialSampleContracts = [

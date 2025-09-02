@@ -13,7 +13,7 @@ import ParcelFeeCalculator from '@/components/parcel-detail/ParcelFeeCalculator'
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Home, MapPin, School, ShoppingCart, Hotel as Hospital, HeartHandshake as Handshake, Shield, User, Award, FileText, Landmark, PercentSquare } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { useContext } from 'react';

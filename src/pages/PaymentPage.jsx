@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { ArrowLeft, Smartphone, Landmark, FileCheck2, CheckCircle, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 

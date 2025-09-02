@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { User, Database, TestTube2, AlertTriangle } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';

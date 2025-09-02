@@ -7,7 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { sampleParcels, sampleRequests, sampleUsers } from '@/data';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { InstructionModal, AttributionModal, GenericActionModal } from './mairies/MairiesDashboardModals';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';

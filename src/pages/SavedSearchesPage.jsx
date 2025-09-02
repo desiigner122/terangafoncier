@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bell, BellOff, SearchCheck, Trash2, Edit3, PlusCircle, ExternalLink, Filter, Info } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {

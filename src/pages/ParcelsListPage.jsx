@@ -8,7 +8,7 @@ import ParcelListSkeleton from '@/components/parcels/ParcelListSkeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, ListFilter, Map, Save, Landmark } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 import ParcelsHeroSearch from '@/components/parcels/ParcelsHeroSearch';
 import { Helmet } from 'react-helmet-async';
 import NoResultsFound from '@/components/parcels/NoResultsFound';

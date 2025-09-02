@@ -84,9 +84,9 @@ export const sampleRequests = [
 ];
 
 export const sampleNotifications = [
-  { id: 1, user_id: 'user-particulier', type: 'message', content: 'Nouveau message de Vendeur de Test concernant SLY-NGP-010', date: '2025-07-11T14:25:00Z', is_read: false, link: '/messaging' },
-  { id: 2, user_id: 'user-particulier', type: 'status_update', content: 'Le statut de votre demande REQ-2025-002 est passé à "En instruction"', date: '2025-07-08T09:00:00Z', is_read: false, link: '/case-tracking/REQ-2025-002' },
-  { id: 3, user_id: 'user-vendeur-particulier', type: 'new_request', content: 'Nouvelle demande d\'achat pour votre parcelle à Pikine', date: '2025-07-12T11:05:00Z', is_read: false, link: '/dashboard' },
+  { id: 1, user_id: 'user-particulier', type: 'message', content: 'Nouveau message de Vendeur de Test concernant SLY-NGP-010', date: '2025-07-11T14:25:00Z', read: false, link: '/messaging' },
+  { id: 2, user_id: 'user-particulier', type: 'status_update', content: 'Le statut de votre demande REQ-2025-002 est passé à "En instruction"', date: '2025-07-08T09:00:00Z', read: false, link: '/case-tracking/REQ-2025-002' },
+  { id: 3, user_id: 'user-vendeur-particulier', type: 'new_request', content: 'Nouvelle demande d\'achat pour votre parcelle à Pikine', date: '2025-07-12T11:05:00Z', read: false, link: '/dashboard' },
 ];
 
 export const sampleSavedSearches = [

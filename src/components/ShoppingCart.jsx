@@ -5,7 +5,7 @@ import { ShoppingCart as ShoppingCartIcon, X } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { initializeCheckout, formatCurrency } from '@/api/EcommerceApi';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 
 const ShoppingCart = ({ isCartOpen, setIsCartOpen }) => {
   const { toast } = useToast();

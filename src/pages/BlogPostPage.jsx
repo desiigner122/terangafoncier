@@ -6,7 +6,7 @@ import { Calendar, User, Tag, ArrowLeft, Share2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 
 const BlogPostPage = () => {
   const { slug } = useParams();

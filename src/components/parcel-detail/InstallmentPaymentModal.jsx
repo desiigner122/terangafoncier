@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Send, CheckCircle, Loader2, Landmark } from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';

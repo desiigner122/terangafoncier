@@ -2,7 +2,7 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { PlusCircle } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';

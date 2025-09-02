@@ -3,7 +3,7 @@ import React from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 
 const ProtectedRoute = ({ children }) => {
   const { user, loading } = useAuth();

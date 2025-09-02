@@ -2,7 +2,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { PlayCircle } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 
 const VideoPresentationSection = () => {
   const { toast } = useToast();

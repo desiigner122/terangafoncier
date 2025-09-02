@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Landmark, Layers, Download } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const UrbanPlanPage = () => {

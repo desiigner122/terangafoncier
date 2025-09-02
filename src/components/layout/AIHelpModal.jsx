@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Info, Search, Lightbulb, FileQuestion, Home, UserCircle, Banknote, Building2, Leaf, TrendingUp } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { useLocation } from 'react-router-dom';
 
 const AIHelpModal = ({ isOpen, onClose }) => {

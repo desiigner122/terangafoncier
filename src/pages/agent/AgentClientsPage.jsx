@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { PlusCircle, Search, MessageSquare, Phone, Edit } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { Badge } from '@/components/ui/badge';
 import { sampleAgentData } from '@/data';
 import { LoadingSpinner } from '@/components/ui/spinner';

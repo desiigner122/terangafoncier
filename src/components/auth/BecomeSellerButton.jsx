@@ -11,7 +11,7 @@ import React, { useState } from 'react';
     } from '@/components/ui/dialog';
     import { Input } from '@/components/ui/input';
     import { useAuth } from '@/context/AuthContext';
-    import { useToast } from '@/components/ui/use-toast';
+    import { useToast } from '@/components/ui/use-toast-simple';
     import { UploadCloud, Award, UserPlus } from 'lucide-react';
     import { sampleSystemRequests } from '@/data/systemRequestsData';
 

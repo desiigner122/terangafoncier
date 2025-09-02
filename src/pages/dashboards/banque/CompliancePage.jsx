@@ -4,7 +4,7 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FolderCheck, Download, Filter, Search } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/spinner';
 

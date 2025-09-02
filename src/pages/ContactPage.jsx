@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Phone, Mail, MapPin, Clock, Send, Building, HelpCircle, Loader2, Linkedin } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/lib/supabaseClient';
 

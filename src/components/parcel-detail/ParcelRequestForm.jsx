@@ -5,7 +5,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Send } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/use-toast-simple";
 
 const ParcelRequestForm = ({ parcelId, requestType, onSubmit, onCancel }) => {
   const { toast } = useToast();

@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { User, MapPin, FileCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/components/ui/use-toast-simple';
 
 const getActionBadge = (action) => {
   const lowerAction = action.toLowerCase();

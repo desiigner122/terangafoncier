@@ -83,7 +83,8 @@ const Sidebar = () => {
     useEffect(() => {
         const fetchNotificationsCount = async () => {
             if (user) {
-                const { count: generalCount } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('is_read', false);
+                // FIX: Utiliser 'read' au lieu de 'is_read' pour correspondre à la structure DB
+                const { count: generalCount } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false);
                 const { count: requestsCount } = await supabase.from('requests').select('*', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ['En cours', 'Nouvelle']);
                 setNotifications({
                     general: generalCount || 0,

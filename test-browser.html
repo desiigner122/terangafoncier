@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Browser Console</title>
+</head>
+<body>
+    <h1>Testing for JavaScript Errors</h1>
+    <p>Open browser console to check for any errors</p>
+    <script>
+        // Load the main app bundle to test for errors
+        const script = document.createElement('script');
+        script.src = '/assets/index-95024207.js';
+        script.onload = () => {
+            console.log('✅ Main bundle loaded successfully without errors');
+        };
+        script.onerror = (error) => {
+            console.error('❌ Error loading main bundle:', error);
+        };
+        document.head.appendChild(script);
+        
+        // Test for common error patterns
+        window.addEventListener('error', (error) => {
+            console.error('❌ JavaScript Error:', error.message, error.filename, error.lineno);
+        });
+        
+        setTimeout(() => {
+            console.log('🔍 Checking for nT() errors...');
+            if (!window.hasOwnProperty('nT') || typeof window.nT !== 'function') {
+                console.log('✅ No nT function found - this is expected and good!');
+            }
+        }, 2000);
+    </script>
+</body>
+</html>

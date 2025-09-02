@@ -1,4 +1,4 @@
-// Load dotenv for Node.js
+// Load dotenv for Node.js - Cache Bust v2.0
 if (typeof window === 'undefined' && typeof process !== 'undefined') {
 	try {
 		const dotenv = require('dotenv');

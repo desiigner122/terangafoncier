@@ -68,6 +68,19 @@ temp/
 *Installer*
 *Setup*
 
+# Supabase CLI binaries
+supabase.exe
+supabase.tar.gz
+supabase/
+
+# Vercel diagnostic files
+vercel-bundle-*.js
+vercel-page-*.html
+vercel-diagnostic*.js
+
+# Build tools binaries
+esbuild.exe
+
 # Database
 *.sqlite
 *.db

@@ -63,10 +63,10 @@ const SecureMessagingPage = () => {
         const { data: convs, error: convsError } = await supabase
           .from('conversations')
           .select('*')
-          .contains('participants', [user.id]);
+          .contains('participant_ids', [user.id]);
         if (convsError) throw convsError;
         // Récupérer les infos des autres utilisateurs
-        const userIds = convs.flatMap(c => c.participants.filter(id => id !== user.id));
+        const userIds = convs.flatMap(c => c.participant_ids.filter(id => id !== user.id));
         let usersMap = {};
         if (userIds.length > 0) {
           const { data: users, error: usersError } = await supabase
@@ -78,18 +78,18 @@ const SecureMessagingPage = () => {
           }
         }
         let convsWithDetails = convs.map(c => {
-          const otherUserId = c.participants.find(pId => pId !== user.id);
+          const otherUserId = c.participant_ids.find(pId => pId !== user.id);
           const otherUser = usersMap[otherUserId];
           return { ...c, otherUserName: otherUser?.name || 'Utilisateur Inconnu', otherUserAvatar: otherUser?.avatar };
         });
         const { parcelId, parcelName, contactUser } = location.state || {};
         if (parcelId && contactUser) {
-          let existingConv = convsWithDetails.find(c => c.parcel_id === parcelId && c.participants.includes(contactUser));
+          let existingConv = convsWithDetails.find(c => c.parcel_id === parcelId && c.participant_ids.includes(contactUser));
           if (!existingConv) {
             const { data: otherUserDetails } = await supabase.from('users').select('id, name, avatar').eq('id', contactUser).single();
             const newConv = {
               id: `conv_${parcelId}_${contactUser}`,
-              participants: [user.id, contactUser],
+              participant_ids: [user.id, contactUser],
               parcel_id: parcelId,
               last_message: `Nouvelle conversation pour ${parcelName}`,
               unread_count: 0,
@@ -162,7 +162,7 @@ const SecureMessagingPage = () => {
     setNewMessage('');
 
     const currentConv = conversations.find(c => c.id === selectedConversationId);
-    const otherUserId = currentConv.participants.find(pId => pId !== user.id);
+    const otherUserId = currentConv.participant_ids.find(pId => pId !== user.id);
 
     setTimeout(() => {
        const reply = {

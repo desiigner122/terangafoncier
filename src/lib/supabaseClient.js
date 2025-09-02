@@ -42,4 +42,7 @@ if (!supabaseUrl || !supabaseAnonKey) {
 	supabaseAnonKey = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kZW5xaWtjb2d6cmtyam5sdm5zIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTY2NjMzMDQsImV4cCI6MjA3MjIzOTMwNH0.4UOe3QXy8DywtlOkgtZn9A9xrVIW2tnYEowjJX3VbYM";
 }
 
+// Debug log to confirm which URL is being used
+console.log('🔧 Supabase URL being used:', supabaseUrl);
+
 export const supabase = createClient(supabaseUrl, supabaseAnonKey)

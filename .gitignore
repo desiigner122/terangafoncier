@@ -8,6 +8,11 @@ yarn-error.log*
 dist/
 build/
 
+# Vercel diagnostic files
+vercel-*.js
+vercel-*.html
+vercel-*.json
+
 # Environment variables
 .env
 .env.local

@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import SimpleApp from '@/SimpleApp';
 import '@/index.css';
-import { SimpleAuthProvider } from '@/context/SimpleAuthContext';
+import { SimpleSupabaseAuthProvider } from '@/context/SimpleSupabaseAuthContext';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 // Vérification de sécurité pour l'élément root
@@ -17,9 +17,9 @@ ReactDOM.createRoot(rootElement).render(
   // TEMPORARILY DISABLED: React.StrictMode might be causing TypeError: nT() is null
   // <React.StrictMode>
     <Router>
-      <SimpleAuthProvider>
+      <SimpleSupabaseAuthProvider>
         <SimpleApp />
-      </SimpleAuthProvider>
+      </SimpleSupabaseAuthProvider>
     </Router>
   // </React.StrictMode>
 );

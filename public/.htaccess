@@ -1,14 +1,27 @@
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteBase /
+  
+  # Redirection HTTPS en production
+  RewriteCond %{HTTP_HOST} !^localhost
+  RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+  
+  # Gestion des routes SPA - rediriger tout vers index.html sauf les fichiers existants
   RewriteCond %{REQUEST_FILENAME} !-f
   RewriteCond %{REQUEST_FILENAME} !-d
+  RewriteCond %{REQUEST_URI} !^/favicon\.ico$
+  RewriteCond %{REQUEST_URI} !^/robots\.txt$
   RewriteRule ^ index.html [L]
 </IfModule>
 
 <IfModule mod_headers.c>
-  # Header Hostinger supprimé
-
+  # Sécurité - Headers de protection
+  Header always set X-Content-Type-Options nosniff
+  Header always set X-Frame-Options DENY
+  Header always set X-XSS-Protection "1; mode=block"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  
   # Cache everything on CDN by default
   Header set Cache-Control "public, s-maxage=604800, max-age=0"
   
@@ -16,4 +29,12 @@
   <If "%{REQUEST_URI} =~ m#^/assets/.*$#">
     Header set Cache-Control "public, max-age=604800"
   </If>
+  
+  # Cache favicon
+  <If "%{REQUEST_URI} =~ m#^/favicon\.ico$#">
+    Header set Cache-Control "public, max-age=2592000"
+  </If>
 </IfModule>
+
+# Page d'erreur 404 personnalisée
+ErrorDocument 404 /index.html

@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { ExternalLink, Layers, Search, ZoomIn, ZoomOut, Home, DollarSign, MapPin } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card'; // Import Card and CardContent
+import { useSecureGeolocation, getBrowserCapabilities } from '@/hooks/useSecureGeolocation';
 
 delete L.Icon.Default.prototype._getIconUrl;
 L.Icon.Default.mergeOptions({
@@ -72,6 +73,8 @@ const MapPage = () => {
   const defaultPosition = [14.7167, -17.4677]; // Dakar center
   const defaultZoom = 11;
   const mapRef = useRef();
+  const { position: userPosition, error: geoError, loading: geoLoading, getCurrentPosition } = useSecureGeolocation();
+  const browserCapabilities = getBrowserCapabilities();
 
   useEffect(() => {
     const fetchParcels = async () => {
@@ -92,6 +95,21 @@ const MapPage = () => {
     fetchParcels();
   }, []);
 
+  // Fonction sécurisée pour obtenir la position utilisateur
+  const handleGetUserLocation = () => {
+    if (!browserCapabilities.geolocation) {
+      alert('Votre navigateur ne supporte pas la géolocalisation.');
+      return;
+    }
+    
+    if (!browserCapabilities.isSecureContext) {
+      alert('La géolocalisation nécessite une connexion sécurisée (HTTPS).');
+      return;
+    }
+    
+    getCurrentPosition();
+  };
+
   const getIconForParcel = (status) => {
     switch (status) {
       case 'Disponible': return greenIcon;
@@ -106,13 +124,23 @@ const MapPage = () => {
     return new Intl.NumberFormat('fr-SN', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(price);
   }
 
-  const handleSearch = (event) => {
-      event.preventDefault();
-      const query = event.target.elements.locationSearch.value;
-      if (!query) return;
-      console.log("Recherche pour :", query);
-      alert(`Recherche pour "${query}" - L'intégration de l'API de Géocodage est nécessaire pour cette fonctionnalité.`);
-  }
+      const handleSearch = (event) => {
+          event.preventDefault();
+          const query = event.target.elements.locationSearch.value;
+          if (!query) return;
+          console.log("Recherche pour :", query);
+          alert(`Recherche pour "${query}" - L'intégration de l'API de Géocodage est nécessaire pour cette fonctionnalité.`);
+      }
+
+      // Afficher les erreurs de géolocalisation de manière non-bloquante
+      useEffect(() => {
+        if (geoError) {
+          console.warn('Erreur de géolocalisation:', geoError);
+        }
+        if (userPosition) {
+          console.log('Position utilisateur obtenue:', userPosition);
+        }
+      }, [geoError, userPosition]);
 
   return (
     <motion.div

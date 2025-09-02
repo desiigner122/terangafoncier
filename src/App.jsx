@@ -37,6 +37,8 @@ import React from 'react';
     import ScrollToTop from '@/components/layout/ScrollToTop';
     import { motion } from 'framer-motion';
     import { ComparisonProvider } from '@/context/ComparisonContext';
+    import './lib/errorManager'; // Import du gestionnaire d'erreurs global
+    import './lib/securityConfig'; // Import de la configuration de sécurité
     import FloatingWhatsAppButton from '@/components/layout/FloatingWhatsAppButton';
     import DashboardMunicipalRequestPage from '@/pages/DashboardMunicipalRequestPage';
     import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';

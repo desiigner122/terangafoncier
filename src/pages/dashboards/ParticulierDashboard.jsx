@@ -52,9 +52,9 @@ const ParticulierDashboard = () => {
   // Système de notification sécurisé
 const safeToast = (message, type = 'default') => {
   try {
-    // Tentative d'utilisation du toast standard
-    if (typeof window !== 'undefined' && window.toast) {
-      window.window.safeGlobalToast({ description: message, variant: type });
+    // Utilisation du système global sécurisé
+    if (typeof window !== 'undefined' && window.safeGlobalToast) {
+      window.safeGlobalToast(message, type);
       return;
     }
     

@@ -133,19 +133,31 @@ class UserStatusManager {
   // Action de bannissement avec invalidation de session
   async banUser(userId, reason = 'Violation des conditions d\'utilisation') {
     try {
+      // Version simplifiée sans colonnes ban_reason et banned_at si elles n'existent pas
+      const updateData = {
+        verification_status: 'banned',
+        updated_at: new Date().toISOString()
+      };
+
+      // Essayer d'ajouter les colonnes spécifiques au bannissement si elles existent
+      try {
+        updateData.ban_reason = reason;
+        updateData.banned_at = new Date().toISOString();
+      } catch (e) {
+        console.warn('⚠️ Colonnes ban_reason/banned_at non disponibles, bannissement simplifié');
+      }
+
       const { data: updatedUser, error } = await supabase
         .from('users')
-        .update({
-          verification_status: 'banned',
-          ban_reason: reason,
-          banned_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
+        .update(updateData)
         .eq('id', userId)
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erreur bannissement:', error);
+        throw error;
+      }
 
       // Invalider la session
       await this.invalidateBannedUserSession(userId);

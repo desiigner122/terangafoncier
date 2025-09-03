@@ -2,7 +2,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/components/ui/use-toast-simple";
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { PlusCircle } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -12,25 +11,44 @@ import EditUserDialog from './components/EditUserDialog';
 import UserFilters from './components/UserFilters';
 import UserTable from './components/UserTable';
 
+// Fonction toast sécurisée
+const safeToast = (message, type = 'info') => {
+  try {
+    // Simple logging pour éviter les erreurs
+    console.log(`${type.toUpperCase()}: ${message}`);
+    
+    // Affichage visuel pour l'utilisateur
+    if (type === 'error') {
+      alert(`Erreur: ${message}`);
+    } else {
+      // Pour les messages de succès, juste le log console
+      console.log(`✅ ${message}`);
+    }
+  } catch (error) {
+    console.error('Erreur dans safeToast:', error);
+  }
+};
+
 const AdminUsersPage = () => {
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [searchTerm, setSearchTerm] = useState('');
-    const [roleFilter, setRoleFilter] = useState('all');
-    const [statusFilter, setStatusFilter] = useState('all');
-    const { toast } = useToast();
-    
-    const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-    
-    const [editingUser, setEditingUser] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [filters, setFilters] = useState({
+    status: 'all',
+    role: 'all',
+    banned: 'all',
+    search: ''
+  });
 
     const fetchUsers = async () => {
         setLoading(true);
     const { data, error } = await supabase.from('users').select('*');
         if (error) {
             console.error("Error fetching users:", error);
-            toast({ title: 'Erreur', description: 'Impossible de charger les utilisateurs.', variant: 'destructive' });
+            safeToast('Impossible de charger les utilisateurs.', 'error');
         } else {
             setUsers(data);
         }
@@ -99,19 +117,11 @@ const AdminUsersPage = () => {
                     return;
             }
 
-            toast({ 
-                title: 'Succès', 
-                description: message,
-                variant: 'default'
-            });
+            safeToast(message, 'success');
             
         } catch (error) {
             console.error('Error in handleAction:', error);
-            toast({ 
-                title: 'Erreur', 
-                description: `L'opération a échoué: ${error.message}`, 
-                variant: 'destructive' 
-            });
+            safeToast(`L'opération a échoué: ${error.message}`, 'error');
         }
     };
 
@@ -122,7 +132,7 @@ const AdminUsersPage = () => {
 
     const handleEditSubmit = async (updatedUserData) => {
         if (!updatedUserData.full_name) {
-            toast({ title: 'Erreur', description: 'Le nom est requis.', variant: 'destructive'});
+            safeToast('Le nom est requis.', 'error');
             return;
         }
 
@@ -153,19 +163,11 @@ const AdminUsersPage = () => {
             }
 
             setUsers(prev => prev.map(u => u.id === updatedUserData.id ? result.user : u));
-            toast({ 
-                title: 'Succès', 
-                description: `Utilisateur ${updatedUserData.full_name} mis à jour avec succès.`,
-                variant: 'default'
-            });
+            safeToast(`Utilisateur ${updatedUserData.full_name} mis à jour avec succès.`, 'success');
             
         } catch (error) {
             console.error('Error in handleEditSubmit:', error);
-            toast({ 
-                title: 'Erreur', 
-                description: `La mise à jour a échoué: ${error.message}`, 
-                variant: 'destructive' 
-            });
+            safeToast(`La mise à jour a échoué: ${error.message}`, 'error');
         }
         
         setIsEditModalOpen(false);

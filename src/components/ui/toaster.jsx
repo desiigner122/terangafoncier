@@ -6,28 +6,14 @@
 	ToastTitle,
 	ToastViewport,
 } from '@/components/ui/toast';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import React from 'react';
 
 export function Toaster() {
-	const { toasts } = usewindow.safeGlobalToast();
-
+	// 🛡️ Système de toast sécurisé - pas de toasts React pour éviter les erreurs
+	// Le système utilise window.safeGlobalToast pour les notifications
+	
 	return (
 		<ToastProvider>
-			{toasts.map(({ id, title, description, action, ...props }) => {
-				return (
-					<Toast key={id} {...props}>
-						<div className="grid gap-1">
-							{title && <ToastTitle>{title}</ToastTitle>}
-							{description && (
-								<ToastDescription>{description}</ToastDescription>
-							)}
-						</div>
-						{action}
-						<ToastClose />
-					</Toast>
-				);
-			})}
 			<ToastViewport />
 		</ToastProvider>
 	);

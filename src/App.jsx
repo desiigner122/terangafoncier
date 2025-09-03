@@ -2,6 +2,7 @@
 import React from 'react';
     import { Route, Routes, Outlet, Link } from 'react-router-dom';
     import { Toaster } from '@/components/ui/toaster';
+    import ErrorBoundary from '@/components/ErrorBoundary';
     import Header from '@/components/layout/Header';
     import Footer from '@/components/layout/Footer';
     import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -139,10 +140,11 @@ import React from 'react';
 
     function App() {
       return (
-        <HelmetProvider>
-            <ComparisonProvider>
-              <ScrollToTop />
-              <Routes>
+        <ErrorBoundary>
+          <HelmetProvider>
+              <ComparisonProvider>
+                <ScrollToTop />
+                <Routes>
                 <Route path="/" element={<PublicLayout />}>
                   <Route index element={<HomePage />} />
                   <Route path="login" element={<LoginPage />} />
@@ -289,6 +291,7 @@ import React from 'react';
               <FloatingWhatsAppButton />
             </ComparisonProvider>
         </HelmetProvider>
+        </ErrorBoundary>
       );
     }
 

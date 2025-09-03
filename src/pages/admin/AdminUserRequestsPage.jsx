@@ -28,11 +28,20 @@ const AdminUserRequestsPage = () => {
                 console.error("Error fetching requests:", error);
                 toast({ title: 'Erreur', description: 'Impossible de charger les requêtes.', variant: 'destructive' });
             } else {
-                setRequests(data.map(r => ({
-                    ...r,
-                    user: { name: r.user?.full_name || 'Utilisateur Inconnu', id: r.user_id, currentRole: r.user?.role },
-                    details: { requestedRole: JSON.parse(r.message)?.requestedRole || 'N/A' }
-                })));
+                setRequests(data.map(r => {
+                    let requestedRole = 'N/A';
+                    try {
+                        requestedRole = JSON.parse(r.message || '{}')?.requestedRole || 'N/A';
+                    } catch (error) {
+                        console.warn('Failed to parse request message:', error);
+                    }
+                    
+                    return {
+                        ...r,
+                        user: { name: r.user?.full_name || 'Utilisateur Inconnu', id: r.user_id, currentRole: r.user?.role },
+                        details: { requestedRole }
+                    };
+                }));
             }
             setLoading(false);
         };

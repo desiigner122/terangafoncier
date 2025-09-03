@@ -18,7 +18,11 @@ export const CartProvider = ({ children }) => {
   });
 
   useEffect(() => {
-    localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    try {
+      localStorage.setItem(CART_STORAGE_KEY, JSON.stringify(cartItems));
+    } catch (error) {
+      console.warn('Failed to save cart to localStorage:', error);
+    }
   }, [cartItems]);
 
   const addToCart = useCallback((product, variant, quantity, availableQuantity) => {

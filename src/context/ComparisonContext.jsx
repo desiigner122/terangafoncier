@@ -4,12 +4,21 @@ export const ComparisonContext = createContext();
 
 export const ComparisonProvider = ({ children }) => {
   const [comparisonList, setComparisonList] = useState(() => {
-    const localData = localStorage.getItem('comparisonList');
-    return localData ? JSON.parse(localData) : [];
+    try {
+      const localData = localStorage.getItem('comparisonList');
+      return localData ? JSON.parse(localData) : [];
+    } catch (error) {
+      console.warn('Failed to parse comparison list from localStorage:', error);
+      return [];
+    }
   });
 
   useEffect(() => {
-    localStorage.setItem('comparisonList', JSON.stringify(comparisonList));
+    try {
+      localStorage.setItem('comparisonList', JSON.stringify(comparisonList));
+    } catch (error) {
+      console.warn('Failed to save comparison list to localStorage:', error);
+    }
   }, [comparisonList]);
 
   const addToCompare = (parcelId) => {

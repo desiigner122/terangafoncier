@@ -55,7 +55,7 @@ const safeToast = (message, type = 'default') => {
   try {
     // Tentative d'utilisation du toast standard
     if (typeof window !== 'undefined' && window.toast) {
-      window.safeToast("message", "type ");
+      window.toast({ description: message, variant: type });
       return;
     }
     

@@ -76,7 +76,7 @@ const DigitalVaultPage = () => {
 
         // Requête pour récupérer les documents de l'utilisateur
         const { data: userDocuments, error: docError } = await supabase
-          .from('user_documents')
+          .from('documents')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });

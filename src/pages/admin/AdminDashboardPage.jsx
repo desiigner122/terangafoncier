@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/spinner';
 // TEMPORARILY USING SIMPLE TOAST TO FIX TypeError: nT() is null
 import { useToast } from "@/components/ui/use-toast-simple";
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const AdminDashboardPage = () => {
   const [loading, setLoading] = useState(true);
@@ -20,48 +20,87 @@ const AdminDashboardPage = () => {
     const fetchDashboardData = async () => {
       setLoading(true);
       try {
-  const { data: usersData, error: usersError } = await supabase.from('users').select('*', { count: 'exact' });
-        if (usersError) throw usersError;
+        // Avec gestion d'erreur pour chaque requête
+        let usersData = [];
+        let parcelsData = [];
+        let requestsData = [];
+        let auditLogs = [];
 
-        const { data: parcelsData, error: parcelsError } = await supabase.from('parcels').select('status', { count: 'exact' });
-        if (parcelsError) throw parcelsError;
+        // Requête users avec fallback
+        try {
+          const { data, error } = await supabase.from('users').select('*');
+          if (error) throw error;
+          usersData = data || [];
+        } catch (error) {
+          console.warn('Error fetching users:', error);
+          usersData = [];
+        }
 
-        const { data: requestsData, error: requestsError } = await supabase.from('requests').select('status, request_type', { count: 'exact' });
-        if (requestsError) throw requestsError;
-        
-        const { data: auditLogs, error: auditError } = await supabase.from('audit_logs').select('*, actor:actor_id(full_name)').order('created_at', { ascending: false }).limit(5);
-        if (auditError) throw auditError;
+        // Requête parcels avec fallback
+        try {
+          const { data, error } = await supabase.from('parcels').select('status');
+          if (error) throw error;
+          parcelsData = data || [];
+        } catch (error) {
+          console.warn('Error fetching parcels:', error);
+          parcelsData = [];
+        }
 
+        // Requête requests avec fallback
+        try {
+          const { data, error } = await supabase.from('requests').select('status, request_type');
+          if (error) throw error;
+          requestsData = data || [];
+        } catch (error) {
+          console.warn('Error fetching requests:', error);
+          requestsData = [];
+        }
+
+        // Requête audit_logs avec fallback
+        try {
+          const { data, error } = await supabase.from('audit_logs').select('*, actor:actor_id(full_name)').order('created_at', { ascending: false }).limit(5);
+          if (error) throw error;
+          auditLogs = data || [];
+        } catch (error) {
+          console.warn('Error fetching audit_logs:', error);
+          auditLogs = [];
+        }
+
+        // Calculs sécurisés avec fallbacks
         setStats({
           totalUsers: usersData.length,
-          unverifiedUsers: usersData.filter(u => u.verification_status === 'unverified').length,
-          availableParcels: parcelsData.filter(p => p.status === 'Disponible').length,
-          pendingRequests: requestsData.filter(r => r.status === 'pending' && r.request_type === 'parcel_listing').length,
-          pendingUserRequests: requestsData.filter(r => r.status === 'pending' && r.request_type === 'account_upgrade').length,
+          unverifiedUsers: usersData.filter(u => (u.verification_status || 'verified') === 'unverified').length,
+          availableParcels: parcelsData.filter(p => (p.status || '') === 'Disponible').length,
+          pendingRequests: requestsData.filter(r => (r.status || '') === 'pending' && (r.request_type || '') === 'parcel_listing').length,
+          pendingUserRequests: requestsData.filter(r => (r.status || '') === 'pending' && (r.request_type || '') === 'account_upgrade').length,
         });
         
+        // Mapping sécurisé des activités
         setRecentActivities(auditLogs.map(log => ({
-          id: log.id,
+          id: log.id || Math.random().toString(),
           user: log.actor?.full_name || 'Système',
-          action: log.details,
-          time: new Date(log.created_at).toLocaleString('fr-FR'),
-          type: log.action.toLowerCase()
+          action: log.details || 'Action inconnue',
+          time: log.created_at ? new Date(log.created_at).toLocaleString('fr-FR') : 'Date inconnue',
+          type: (log.action || 'unknown').toLowerCase()
         })));
 
       } catch (error) {
         console.error("Error fetching admin dashboard data:", error);
-        toast({
-          title: "Erreur de chargement",
-          description: "Impossible de récupérer les données du tableau de bord.",
-          variant: "destructive",
-        });
+        // Toast sécurisé
+        if (toast && typeof toast === 'function') {
+          toast({
+            title: "Erreur de chargement",
+            description: "Impossible de récupérer les données du tableau de bord.",
+            variant: "destructive",
+          });
+        }
       } finally {
         setLoading(false);
       }
     };
 
     fetchDashboardData();
-  }, [toast]);
+  }, []);
 
   const getIconForActivity = (type) => {
     if (type.includes('user')) return <Users className="h-4 w-4 mr-2 mt-0.5 text-purple-500 flex-shrink-0"/>;

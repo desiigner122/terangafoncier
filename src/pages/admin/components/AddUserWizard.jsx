@@ -49,39 +49,72 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
 
     const handleSubmit = async () => {
         try {
-            const { data: { user }, error: signUpError } = await supabase.auth.admin.createUser({
+            // Utiliser la méthode standard au lieu d'admin.createUser
+            const { data: { user }, error: signUpError } = await supabase.auth.signUp({
                 email: currentUser.email,
                 password: currentUser.password,
-                email_confirm: true,
-                user_metadata: {
-                    full_name: currentUser.full_name,
-                    user_type: currentUser.role,
-                    role: currentUser.role,
-                    verification_status: 'verified',
-                    company_info: currentUser.role === 'Mairie' ? { region: currentUser.region, departement: currentUser.departement, commune: currentUser.commune } : (roleSpecificFields[currentUser.role] ? { info: currentUser.specificInfo } : null)
+                options: {
+                    data: {
+                        full_name: currentUser.full_name,
+                        user_type: currentUser.role,
+                        role: currentUser.role,
+                        verification_status: 'verified',
+                        company_info: currentUser.role === 'Mairie' ? { 
+                            region: currentUser.region, 
+                            departement: currentUser.departement, 
+                            commune: currentUser.commune 
+                        } : (roleSpecificFields[currentUser.role] ? { 
+                            info: currentUser.specificInfo 
+                        } : null)
+                    }
                 }
             });
 
             if (signUpError) throw signUpError;
             
+            // Créer ou mettre à jour le profil dans la table users
             const { data: profile, error: profileError } = await supabase
                 .from('users')
-                .select('*')
-                .eq('id', user.id)
+                .upsert({
+                    id: user.id,
+                    email: user.email,
+                    full_name: currentUser.full_name,
+                    role: currentUser.role,
+                    user_type: currentUser.role,
+                    verification_status: 'verified',
+                    created_at: new Date().toISOString(),
+                    updated_at: new Date().toISOString()
+                })
+                .select()
                 .single();
 
             if (profileError) {
-                console.warn("Could not fetch profile for new user, but user was created.", profileError);
+                console.warn("Could not create/update profile for new user, but user was created.", profileError);
             }
 
-            onUserAdded(profile || { id: user.id, ...user.user_metadata });
-            toast({ title: 'Succès', description: `Utilisateur ${currentUser.full_name} créé.`});
+            onUserAdded(profile || { 
+                id: user.id, 
+                email: user.email,
+                full_name: currentUser.full_name,
+                role: currentUser.role,
+                verification_status: 'verified',
+                ...user.user_metadata 
+            });
+            
+            toast({ 
+                title: 'Succès', 
+                description: `Utilisateur ${currentUser.full_name} créé avec succès.`
+            });
             setIsOpen(false);
             setCurrentUser(initialFormState);
             setStep(1);
         } catch (error) {
             console.error("Error creating user:", error);
-            toast({ title: 'Erreur', description: error.message, variant: 'destructive'});
+            toast({ 
+                title: 'Erreur', 
+                description: `Impossible de créer l'utilisateur: ${error.message}`, 
+                variant: 'destructive'
+            });
         }
     };
     

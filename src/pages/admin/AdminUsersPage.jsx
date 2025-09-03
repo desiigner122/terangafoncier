@@ -49,22 +49,39 @@ const AdminUsersPage = () => {
 
         try {
             if (actionType === 'delete') {
-                const { error: deleteError } = await supabase.auth.admin.deleteUser(userId);
+                // Utiliser verification_status au lieu de 'active' qui n'existe pas
+                const { error: deleteError } = await supabase
+                    .from('users')
+                    .update({ 
+                        verification_status: 'deleted',
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', userId);
+                    
                 if (deleteError) throw deleteError;
-                message = `Utilisateur ${user.full_name} supprimé.`;
+                message = `Utilisateur ${user.full_name} désactivé.`;
                 setUsers(prev => prev.filter(u => u.id !== userId));
             } else {
                 switch(actionType) {
                     case 'ban':
-                        updateData = { verification_status: 'banned' };
+                        updateData = { 
+                            verification_status: 'banned',
+                            updated_at: new Date().toISOString()
+                        };
                         message = `Utilisateur ${user.full_name} banni.`;
                         break;
                     case 'unban':
-                        updateData = { verification_status: 'verified' };
+                        updateData = { 
+                            verification_status: 'verified',
+                            updated_at: new Date().toISOString()
+                        };
                         message = `Utilisateur ${user.full_name} débanni.`;
                         break;
                     case 'verify':
-                        updateData = { verification_status: 'verified' };
+                        updateData = { 
+                            verification_status: 'verified',
+                            updated_at: new Date().toISOString()
+                        };
                         message = `Utilisateur ${user.full_name} vérifié.`;
                         break;
                     default:
@@ -83,7 +100,12 @@ const AdminUsersPage = () => {
             }
             toast({ title: 'Succès', description: message });
         } catch (error) {
-            toast({ title: 'Erreur', description: `L'opération a échoué: ${error.message}`, variant: 'destructive' });
+            console.error('Error in handleAction:', error);
+            toast({ 
+                title: 'Erreur', 
+                description: `L'opération a échoué: ${error.message}`, 
+                variant: 'destructive' 
+            });
         }
     };
 

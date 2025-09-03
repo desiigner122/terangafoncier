@@ -38,11 +38,11 @@ const AdminBlogPage = () => {
     fetchPosts();
   }, []);
 
-  const handleDeletePost = async (slug) => {
+  const handleDeletePost = async (postId) => {
     try {
-      const { error } = await supabase.from('blog').delete().eq('slug', slug);
+      const { error } = await supabase.from('blog').delete().eq('id', postId);
       if (error) throw error;
-      setPosts(prev => prev.filter(p => p.slug !== slug));
+      setPosts(prev => prev.filter(p => p.id !== postId));
       toast({
         title: "Article Supprimé",
         description: "L'article de blog a été supprimé avec succès.",
@@ -116,7 +116,7 @@ const AdminBlogPage = () => {
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground"><Badge variant="secondary">{post.category}</Badge></td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{post.published_at ? new Date(post.published_at).toLocaleDateString('fr-FR') : ''}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">
-                        <Button variant="outline" size="sm" onClick={() => navigate(`/admin/blog/edit/${post.slug}`)}>
+                        <Button variant="outline" size="sm" onClick={() => navigate(`/admin/blog/edit/${post.id}`)}>
                           <Edit className="mr-1 h-3 w-3" /> Modifier
                         </Button>
                         <AlertDialog>
@@ -132,7 +132,7 @@ const AdminBlogPage = () => {
                             </AlertDialogHeader>
                             <AlertDialogFooter>
                               <AlertDialogCancel>Annuler</AlertDialogCancel>
-                              <AlertDialogAction onClick={() => handleDeletePost(post.slug)}>Supprimer</AlertDialogAction>
+                              <AlertDialogAction onClick={() => handleDeletePost(post.id)}>Supprimer</AlertDialogAction>
                             </AlertDialogFooter>
                           </AlertDialogContent>
                         </AlertDialog>

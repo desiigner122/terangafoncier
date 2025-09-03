@@ -14,10 +14,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 const blogCategories = ["Guide d'Achat", "Juridique", "Marché Immobilier", "Agriculture", "Urbanisme"];
 
 const AdminBlogFormPage = () => {
-  const { slug } = useParams();
+  const { id } = useParams(); // Changer slug en id
   const navigate = useNavigate();
   const { toast } = useToast();
-  const isEditing = Boolean(slug);
+  const isEditing = Boolean(id);
 
   const [post, setPost] = useState({
     title: '',
@@ -35,7 +35,7 @@ const AdminBlogFormPage = () => {
   useEffect(() => {
     const fetchPost = async () => {
       if (isEditing) {
-        const { data, error } = await supabase.from('blog').select('*').eq('slug', slug).single();
+        const { data, error } = await supabase.from('blog').select('*').eq('id', id).single();
         if (error || !data) {
           toast({ title: "Erreur", description: "Article non trouvé.", variant: "destructive" });
           navigate('/admin/blog');
@@ -46,7 +46,7 @@ const AdminBlogFormPage = () => {
     };
     fetchPost();
     // eslint-disable-next-line
-  }, [slug, isEditing, navigate, toast]);
+  }, [id, isEditing, navigate, toast]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -74,7 +74,7 @@ const AdminBlogFormPage = () => {
       const payload = { ...post, tags: tagsArray };
       let result;
       if (isEditing) {
-        result = await supabase.from('blog').update(payload).eq('slug', slug);
+        result = await supabase.from('blog').update(payload).eq('id', id);
       } else {
         result = await supabase.from('blog').insert([payload]);
       }

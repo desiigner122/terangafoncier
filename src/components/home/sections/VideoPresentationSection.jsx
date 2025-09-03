@@ -1,14 +1,14 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { PlayCircle } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const VideoPresentationSection = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   const handlePlayVideo = () => {
-    toast({
+    window.safeGlobalToast({
       title: "Vidéo de Présentation",
       description: "🚧 La lecture de la vidéo n'est pas encore implémentée. Bientôt disponible !",
       duration: 3000,

@@ -1,11 +1,11 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calculator, Send, CheckCircle, Loader2, Landmark } from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
@@ -19,7 +19,7 @@ const formatPrice = (price) => {
 
 const InstallmentPaymentModal = ({ isOpen, onClose, parcelPrice, parcelName }) => {
   const { user, profile } = useAuth();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [step, setStep] = useState(user ? 1 : 0);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -183,3 +183,4 @@ const InstallmentPaymentModal = ({ isOpen, onClose, parcelPrice, parcelName }) =
 };
 
 export default InstallmentPaymentModal;
+

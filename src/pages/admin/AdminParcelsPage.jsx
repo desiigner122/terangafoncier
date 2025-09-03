@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Search, CheckCircle, Clock, XCircle, FileText, Trash2, Eye } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from '@/components/ui/dialog';
@@ -73,7 +73,7 @@ const AdminParcelsPage = () => {
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   useEffect(() => {
     const fetchParcels = async () => {
@@ -84,7 +84,7 @@ const AdminParcelsPage = () => {
         
         if (error) {
             console.error("Error fetching parcels:", error);
-            toast({ title: 'Erreur', description: 'Impossible de charger les annonces.', variant: 'destructive' });
+            window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger les annonces.', variant: 'destructive' });
         } else {
             setParcels(data.map(p => ({...p, sellerName: p.seller?.full_name || 'Vendeur Inconnu'})));
         }
@@ -100,10 +100,10 @@ const AdminParcelsPage = () => {
         .eq('id', parcelId);
 
     if (error) {
-        toast({ title: 'Erreur', description: 'La mise à jour a échoué.', variant: 'destructive' });
+        window.safeGlobalToast({ title: 'Erreur', description: 'La mise à jour a échoué.', variant: 'destructive' });
     } else {
         setParcels(prev => prev.map(p => p.id === parcelId ? {...p, status: newStatus} : p));
-        toast({ title: 'Succès', description: `Le statut de l'annonce a été mis à jour.` });
+        window.safeGlobalToast({ title: 'Succès', description: `Le statut de l'annonce a été mis à jour.` });
     }
   };
   
@@ -114,10 +114,10 @@ const AdminParcelsPage = () => {
         .eq('id', parcelId);
 
     if (error) {
-        toast({ title: 'Erreur', description: 'La suppression a échoué.', variant: 'destructive' });
+        window.safeGlobalToast({ title: 'Erreur', description: 'La suppression a échoué.', variant: 'destructive' });
     } else {
         setParcels(prev => prev.filter(p => p.id !== parcelId));
-        toast({ title: 'Succès', description: `L'annonce a été supprimée.` });
+        window.safeGlobalToast({ title: 'Succès', description: `L'annonce a été supprimée.` });
     }
   };
   

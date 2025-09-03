@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useParams, useNavigate } from 'react-router-dom';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { ArrowLeft, Smartphone, Landmark, FileCheck2, CheckCircle, Loader2 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -25,7 +25,7 @@ const formatPrice = (price) => new Intl.NumberFormat('fr-SN', { style: 'currency
 const PaymentPage = () => {
   const { transactionId } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   const [transaction, setTransaction] = useState(null);
   const [selectedMethod, setSelectedMethod] = useState('');
@@ -85,7 +85,7 @@ const PaymentPage = () => {
     setTimeout(() => {
       setIsProcessing(false);
       setIsPaid(true);
-      toast({
+      window.safeGlobalToast({
         title: "Paiement Réussi !",
         description: `Le paiement de ${formatPrice(transaction.amount)} pour ${transaction.description} a été effectué avec succès.`,
         variant: "success",
@@ -250,3 +250,4 @@ const PaymentPage = () => {
 };
 
 export default PaymentPage;
+

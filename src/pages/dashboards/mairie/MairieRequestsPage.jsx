@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileSignature, Search, Filter, Eye } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -14,7 +14,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/context/SupabaseAuthContext';
 
 const MairieRequestsPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const { user } = useAuth();
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -44,7 +44,7 @@ const MairieRequestsPage = () => {
       
       if (requestsError) {
         console.error("Error fetching requests:", requestsError);
-        toast({ title: "Erreur", description: "Impossible de charger les demandes.", variant: "destructive" });
+        window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger les demandes.", variant: "destructive" });
       } else {
         setRequests(requestsData.map(r => ({...r, history: r.history || []})));
       }
@@ -84,11 +84,11 @@ const MairieRequestsPage = () => {
       .eq('id', request.id);
 
     if (error) {
-      toast({ title: "Erreur", description: "La mise à jour a échoué.", variant: "destructive" });
+      window.safeGlobalToast({ title: "Erreur", description: "La mise à jour a échoué.", variant: "destructive" });
     } else {
       setRequests(prev => prev.map(req => req.id === request.id ? {...req, status: decision} : req));
       closeModal();
-      toast({
+      window.safeGlobalToast({
           title: "Décision Enregistrée",
           description: `La décision '${decision}' a été enregistrée pour le dossier ${request.id}. L'acheteur a été notifié.`,
       });
@@ -97,7 +97,7 @@ const MairieRequestsPage = () => {
 
   const handleAttribution = async (request) => {
     if (!attributionParcel) {
-        toast({ title: "Erreur", description: "Veuillez sélectionner une parcelle à attribuer.", variant: "destructive" });
+        window.safeGlobalToast({ title: "Erreur", description: "Veuillez sélectionner une parcelle à attribuer.", variant: "destructive" });
         return;
     }
     await handleDecision(request, 'Approuvée', `La parcelle ${attributionParcel} a été attribuée au demandeur.`);
@@ -116,7 +116,7 @@ const MairieRequestsPage = () => {
                  content={data} 
                  onDecision={(decision, note) => handleDecision(request, decision, note)}
                  onContact={() => handleContactApplicant(request.user_id, request.id)}
-                 onAction={(title, desc) => toast({ title, description: desc, variant: 'destructive'})}
+                 onAction={(title, desc) => window.safeGlobalToast({ title, description: desc, variant: 'destructive'})}
                  onClose={closeModal} 
                />;
       case 'attribution':
@@ -161,7 +161,7 @@ const MairieRequestsPage = () => {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Rechercher par demandeur, parcelle..." className="pl-8" />
             </div>
-            <Button variant="outline" onClick={() => toast({title: "Filtres appliqués"})}><Filter className="mr-2 h-4 w-4" /> Filtrer</Button>
+            <Button variant="outline" onClick={() => window.safeGlobalToast({title: "Filtres appliqués"})}><Filter className="mr-2 h-4 w-4" /> Filtrer</Button>
           </div>
         </CardHeader>
         <CardContent>

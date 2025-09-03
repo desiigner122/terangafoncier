@@ -1,9 +1,9 @@
-
+﻿
 import React from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const ProtectedRoute = ({ children }) => {
   const { user, profile, loading } = useAuth();
@@ -89,7 +89,7 @@ export const AdminRoute = ({ children }) => {
 export const RoleProtectedRoute = ({ children, allowedRoles }) => {
   const { profile, loading } = useAuth();
   const location = useLocation();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   if (loading) {
     return (
@@ -100,7 +100,7 @@ export const RoleProtectedRoute = ({ children, allowedRoles }) => {
   }
   
   if (!profile || !allowedRoles.includes(profile.role)) {
-    toast({
+    window.safeGlobalToast({
         variant: 'destructive',
         title: 'Accès Interdit',
         description: 'Vous n\'avez pas les permissions requises pour accéder à cette page.',
@@ -113,3 +113,4 @@ export const RoleProtectedRoute = ({ children, allowedRoles }) => {
 
 
 export default ProtectedRoute;
+

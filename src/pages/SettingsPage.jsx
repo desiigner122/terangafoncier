@@ -1,10 +1,10 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
     import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
     import { Switch } from '@/components/ui/switch';
     import { motion } from 'framer-motion';
-    import { useToast } from "@/components/ui/use-toast-simple";
+    // useToast import supprimÃ© - utilisation window.safeGlobalToast
     import { Save, Bell, Shield, Palette, Trash2, Globe } from 'lucide-react';
     import { useAuth } from '@/context/SupabaseAuthContext';
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -149,7 +149,7 @@ import React, { useState, useEffect } from 'react';
     );
 
     const SettingsPage = () => {
-        const { toast } = useToast();
+        // toast remplacÃ© par window.safeGlobalToast
         const { user } = useAuth();
         
         const [settings, setSettings] = useState({
@@ -189,7 +189,7 @@ import React, { useState, useEffect } from 'react';
             }
             if (key === 'language') {
                 localStorage.setItem('appLang', value);
-                toast({ title: "Langue (Simulation)", description: `La langue est passée à : ${value.toUpperCase()}.` });
+                window.safeGlobalToast({ title: "Langue (Simulation)", description: `La langue est passée à : ${value.toUpperCase()}.` });
             }
         };
         
@@ -198,11 +198,11 @@ import React, { useState, useEffect } from 'react';
             setIsSaving(true);
             await new Promise(resolve => setTimeout(resolve, 1000));
             console.log("Paramètres sauvegardés:", settings);
-            toast({ title: "Paramètres Sauvegardés", description: "Vos préférences ont été mises à jour.", className: "bg-green-500 text-white" });
+            window.safeGlobalToast({ title: "Paramètres Sauvegardés", description: "Vos préférences ont été mises à jour.", className: "bg-green-500 text-white" });
             setIsSaving(false);
         };
         
-        const handleAccountDeletionRequest = () => toast({ title: "Demande de Suppression de Compte", description: "Contactez le support pour supprimer votre compte.", variant: "default" });
+        const handleAccountDeletionRequest = () => window.safeGlobalToast({ title: "Demande de Suppression de Compte", description: "Contactez le support pour supprimer votre compte.", variant: "default" });
 
         const renderNotificationSettings = () => {
             switch (user?.role) {
@@ -239,3 +239,4 @@ import React, { useState, useEffect } from 'react';
     };
 
     export default SettingsPage;
+

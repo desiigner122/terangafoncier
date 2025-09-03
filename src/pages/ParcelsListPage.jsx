@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect, useMemo } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,7 +8,7 @@ import ParcelListSkeleton from '@/components/parcels/ParcelListSkeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
 import { AlertTriangle, ListFilter, Map, Save, Landmark } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import ParcelsHeroSearch from '@/components/parcels/ParcelsHeroSearch';
 import { Helmet } from 'react-helmet-async';
 import NoResultsFound from '@/components/parcels/NoResultsFound';
@@ -17,7 +17,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 const ParcelsListPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   const [parcels, setParcels] = useState([]);
   const [filteredParcels, setFilteredParcels] = useState([]);
@@ -130,7 +130,7 @@ const ParcelsListPage = () => {
   };
 
   const handleSaveSearch = () => {
-    toast({
+    window.safeGlobalToast({
       title: "Sauvegarder la Recherche",
       description: "🚧 Cette fonctionnalité est en cours de développement. Bientôt, vous pourrez sauvegarder vos critères et recevoir des alertes !",
       duration: 5000,
@@ -225,3 +225,4 @@ const ParcelsListPage = () => {
 };
 
 export default ParcelsListPage;
+

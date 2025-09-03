@@ -1,4 +1,4 @@
-
+﻿
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -54,7 +54,7 @@ const safeToast = (message, type = 'default') => {
   try {
     // Tentative d'utilisation du toast standard
     if (typeof window !== 'undefined' && window.toast) {
-      window.toast({ description: message, variant: type });
+      window.window.safeGlobalToast({ description: message, variant: type });
       return;
     }
     
@@ -284,3 +284,4 @@ const safeToast = (message, type = 'default') => {
 };
 
 export default ParticulierDashboard;
+

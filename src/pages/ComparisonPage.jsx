@@ -1,4 +1,4 @@
-import React, { useContext, useState, useEffect } from 'react';
+﻿import React, { useContext, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ComparisonContext } from '@/context/ComparisonContext';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { ArrowRight, Maximize, MapPin, Trash2, CheckCircle, AlertCircle, FileText, Droplets, Zap } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/customSupabaseClient';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -28,7 +28,7 @@ const ComparisonPage = () => {
   const { comparisonList, removeFromCompare, clearCompare } = useContext(ComparisonContext);
   const [parcelsToCompare, setParcelsToCompare] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   useEffect(() => {
     const fetchParcels = async () => {
@@ -45,7 +45,7 @@ const ComparisonPage = () => {
       
       if (error) {
         console.error("Error fetching parcels for comparison:", error);
-        toast({ title: "Erreur", description: "Impossible de charger les parcelles à comparer.", variant: "destructive" });
+        window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger les parcelles à comparer.", variant: "destructive" });
       } else {
         setParcelsToCompare(data);
       }

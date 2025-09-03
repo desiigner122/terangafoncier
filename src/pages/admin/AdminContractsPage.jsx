@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { FileText, Download, Search, Filter } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { jsPDF } from "jspdf"; 
-import { useToast } from "@/components/ui/use-toast-simple"; 
+// useToast import supprimÃ© - utilisation window.safeGlobalToast 
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const initialSampleContracts = [
@@ -15,7 +15,7 @@ const initialSampleContracts = [
 ];
 
 const AdminContractsPage = () => {
-  const { toast } = useToast(); 
+  // toast remplacÃ© par window.safeGlobalToast 
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -41,14 +41,14 @@ const AdminContractsPage = () => {
      doc.text("Signatures (placeholder)...", 10, 100);
      doc.save(`contrat_${contract.id}.pdf`);
 
-     toast({
+     window.safeGlobalToast({
         title: "PDF Généré",
         description: `Le fichier contrat_${contract.id}.pdf a été téléchargé.`,
      });
   };
 
   const handleSimulatedAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   if (loading) {
@@ -122,3 +122,4 @@ const AdminContractsPage = () => {
 };
 
 export default AdminContractsPage;
+

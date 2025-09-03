@@ -1,8 +1,8 @@
-
+﻿
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/SupabaseAuthContext';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -38,7 +38,7 @@ const FileUploadField = ({ id, label, required, onFileChange, fileName, descript
 
 const VerificationPage = () => {
   const { user, revalidate } = useAuth();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
@@ -118,7 +118,7 @@ const VerificationPage = () => {
         
         await revalidate();
 
-        toast({
+        window.safeGlobalToast({
             title: "Documents Soumis",
             description: "Vos documents ont été envoyés pour vérification.",
         });
@@ -187,3 +187,4 @@ const VerificationPage = () => {
 };
 
 export default VerificationPage;
+

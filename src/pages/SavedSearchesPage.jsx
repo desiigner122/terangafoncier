@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Bell, BellOff, SearchCheck, Trash2, Edit3, PlusCircle, ExternalLink, Filter, Info } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import {
@@ -145,7 +145,7 @@ const SavedSearchesPage = () => {
   const [savedSearches, setSavedSearches] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   useEffect(() => {
     const fetchSearches = async () => {
@@ -182,10 +182,10 @@ const SavedSearchesPage = () => {
         .eq('id', searchId);
     
     if (error) {
-      toast({ title: "Erreur", description: "Impossible de modifier le statut des notifications.", variant: "destructive" });
+      window.safeGlobalToast({ title: "Erreur", description: "Impossible de modifier le statut des notifications.", variant: "destructive" });
     } else {
       setSavedSearches(prev => prev.map(s => s.id === searchId ? { ...s, notify: notify } : s));
-      toast({ title: `Alertes ${notify ? 'activées' : 'désactivées'}`, description: `Les notifications pour cette recherche ont été ${notify ? 'activées' : 'désactivées'}.` });
+      window.safeGlobalToast({ title: `Alertes ${notify ? 'activées' : 'désactivées'}`, description: `Les notifications pour cette recherche ont été ${notify ? 'activées' : 'désactivées'}.` });
     }
   };
 
@@ -196,19 +196,19 @@ const SavedSearchesPage = () => {
         .eq('id', searchId);
 
     if (error) {
-      toast({ title: "Erreur", description: "Impossible de supprimer la recherche.", variant: "destructive" });
+      window.safeGlobalToast({ title: "Erreur", description: "Impossible de supprimer la recherche.", variant: "destructive" });
     } else {
       setSavedSearches(prev => prev.filter(s => s.id !== searchId));
-      toast({ title: "Recherche Supprimée", description: "La recherche sauvegardée a été supprimée avec succès." });
+      window.safeGlobalToast({ title: "Recherche Supprimée", description: "La recherche sauvegardée a été supprimée avec succès." });
     }
   };
 
   const handleEditSearch = (search) => {
-     toast({ title: "Fonctionnalité à venir", description: "La modification des recherches sera bientôt disponible. Pour l'instant, supprimez et recréez votre recherche." });
+     window.safeGlobalToast({ title: "Fonctionnalité à venir", description: "La modification des recherches sera bientôt disponible. Pour l'instant, supprimez et recréez votre recherche." });
   };
 
    const handleAddNewSearch = () => {
-      toast({ 
+      window.safeGlobalToast({ 
         title: "Comment sauvegarder une recherche ?",
         description: (
           <div>
@@ -227,7 +227,7 @@ const SavedSearchesPage = () => {
   const handleViewResults = (params) => {
     const queryParams = new URLSearchParams(params).toString();
     navigate(`/parcelles?${queryParams}`);
-    toast({ title: "Redirection...", description: "Affichage des résultats correspondants."});
+    window.safeGlobalToast({ title: "Redirection...", description: "Affichage des résultats correspondants."});
   };
 
   return (
@@ -285,3 +285,4 @@ const SavedSearchesPage = () => {
 };
 
 export default SavedSearchesPage;
+

@@ -1,16 +1,16 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, Search, FileText } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const ComplianceCheckPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [parcelId, setParcelId] = useState('');
   const [checkResult, setCheckResult] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -24,7 +24,7 @@ const ComplianceCheckPage = () => {
 
   const handleCheck = () => {
     if (!parcelId.trim()) {
-      toast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez entrer une référence de parcelle.' });
+      window.safeGlobalToast({ variant: 'destructive', title: 'Erreur', description: 'Veuillez entrer une référence de parcelle.' });
       return;
     }
     // Simulation
@@ -35,7 +35,7 @@ const ComplianceCheckPage = () => {
       litiges: 'Aucun',
       overall: 'Conforme',
     });
-    toast({ title: 'Vérification terminée', description: `Résultats pour la parcelle ${parcelId} affichés.` });
+    window.safeGlobalToast({ title: 'Vérification terminée', description: `Résultats pour la parcelle ${parcelId} affichés.` });
   };
 
   if (loading) {
@@ -96,3 +96,4 @@ const ComplianceCheckPage = () => {
 };
 
 export default ComplianceCheckPage;
+

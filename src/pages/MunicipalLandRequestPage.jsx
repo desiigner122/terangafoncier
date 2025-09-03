@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Landmark, Send, UploadCloud, User, FileText, ClipboardCheck, ArrowLeft, ArrowRight } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -37,7 +37,7 @@ const StepIndicator = ({ currentStep, totalSteps }) => (
 );
 
 const MunicipalLandRequestPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   
@@ -57,7 +57,7 @@ const MunicipalLandRequestPage = () => {
 
   useEffect(() => {
     if (!isAuthenticated) {
-      toast({
+      window.safeGlobalToast({
         title: "Connexion requise",
         description: "Vous devez être connecté pour accéder à cette page.",
         variant: "destructive",
@@ -96,7 +96,7 @@ const MunicipalLandRequestPage = () => {
 
     console.log("Municipal Land Request Submitted:", { ...formData, files: files.map(f => f.name) });
 
-    toast({
+    window.safeGlobalToast({
       title: "Demande Envoyée (Simulation)",
       description: `Votre demande a bien été transmise à la Mairie de ${formData.mairie}. Vous pouvez suivre son statut dans 'Mes Demandes'.`,
       className: "bg-green-500 text-white",

@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, Search, Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link, useNavigate } from 'react-router-dom';
 
@@ -16,7 +16,7 @@ const AdminBlogPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
   const [fetchError, setFetchError] = useState(null);
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -43,12 +43,12 @@ const AdminBlogPage = () => {
       const { error } = await supabase.from('blog').delete().eq('id', postId);
       if (error) throw error;
       setPosts(prev => prev.filter(p => p.id !== postId));
-      toast({
+      window.safeGlobalToast({
         title: "Article Supprimé",
         description: "L'article de blog a été supprimé avec succès.",
       });
     } catch (err) {
-      toast({
+      window.safeGlobalToast({
         title: "Erreur lors de la suppression",
         description: err.message,
         variant: "destructive",

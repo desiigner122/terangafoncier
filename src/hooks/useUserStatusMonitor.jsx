@@ -1,13 +1,13 @@
-import { useEffect, useCallback } from 'react';
+﻿import { useEffect, useCallback } from 'react';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import userStatusManager from '@/lib/userStatusManager';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 export const useUserStatusMonitor = () => {
   const { user, revalidate, signOut } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   const handleUserStatusChange = useCallback(async (change) => {
     if (!user) return;
@@ -19,7 +19,7 @@ export const useUserStatusMonitor = () => {
       switch (change.type) {
         case 'USER_STATUS_CHANGED':
           if (change.user.verification_status === 'banned') {
-            toast({
+            window.safeGlobalToast({
               title: '🚫 Compte suspendu',
               description: 'Votre compte a été suspendu. Vous allez être déconnecté.',
               variant: 'destructive'
@@ -34,7 +34,7 @@ export const useUserStatusMonitor = () => {
           break;
 
         case 'USER_ROLE_CHANGED':
-          toast({
+          window.safeGlobalToast({
             title: '🔄 Rôle mis à jour',
             description: `Votre rôle a été changé vers: ${change.user.role}`,
             variant: 'default'
@@ -71,7 +71,7 @@ export const useUserStatusMonitor = () => {
       const currentUserData = await userStatusManager.checkUserSession(user.id);
       
       if (currentUserData?.verification_status === 'banned') {
-        toast({
+        window.safeGlobalToast({
           title: '🚫 Compte suspendu',
           description: 'Votre compte a été suspendu.',
           variant: 'destructive'
@@ -93,3 +93,4 @@ export const useUserStatusMonitor = () => {
 };
 
 export default useUserStatusMonitor;
+

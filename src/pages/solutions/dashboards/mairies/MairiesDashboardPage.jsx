@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Landmark, FileSignature, LandPlot, AlertTriangle, Map as MapIcon, Library, Construction, Users } from 'lucide-react';
@@ -7,7 +7,7 @@ import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { sampleParcels, sampleRequests, sampleUsers } from '@/data';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { InstructionModal, AttributionModal, GenericActionModal } from './mairies/MairiesDashboardModals';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
@@ -19,7 +19,7 @@ const MairiesDashboardPage = () => {
   const [municipalParcels, setMunicipalParcels] = useState([]);
   const [requestsForTable, setRequestsForTable] = useState([]);
   const [attributionParcel, setAttributionParcel] = useState('');
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const navigate = useNavigate();
 
   const openModal = (type, data) => {
@@ -80,7 +80,7 @@ const MairiesDashboardPage = () => {
     ));
 
     closeModal();
-    toast({
+    window.safeGlobalToast({
         title: "Décision Enregistrée",
         description: `La décision '${decision}' a été enregistrée pour le dossier ${request.id}. L'acheteur a été notifié.`,
     });
@@ -88,7 +88,7 @@ const MairiesDashboardPage = () => {
 
   const handleAttribution = (request) => {
     if (!attributionParcel) {
-        toast({ title: "Erreur", description: "Veuillez sélectionner une parcelle à attribuer.", variant: "destructive" });
+        window.safeGlobalToast({ title: "Erreur", description: "Veuillez sélectionner une parcelle à attribuer.", variant: "destructive" });
         return;
     }
     const decision = 'Approuvée';
@@ -101,7 +101,7 @@ const MairiesDashboardPage = () => {
     
     setRequestsForTable(prev => prev.map(req => req.id === request.id ? {...req, status: decision, history: [...(req.history || []), newHistoryEntry]} : req));
     closeModal();
-    toast({
+    window.safeGlobalToast({
         title: "Parcelle Attribuée",
         description: `La parcelle ${attributionParcel} a été attribuée au demandeur pour le dossier ${request.id}.`,
     });
@@ -128,7 +128,7 @@ const MairiesDashboardPage = () => {
                  content={data} 
                  onDecision={(decision, note) => handleDecision(request, decision, note)}
                  onContact={() => handleContactApplicant(request.user_id, request.id)}
-                 onAction={(title, desc) => toast({ title, description: desc, variant: 'destructive'})}
+                 onAction={(title, desc) => window.safeGlobalToast({ title, description: desc, variant: 'destructive'})}
                  onClose={closeModal} 
                />;
       case 'attribution':
@@ -278,3 +278,4 @@ const MairiesDashboardPage = () => {
 };
 
 export default MairiesDashboardPage;
+

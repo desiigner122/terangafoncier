@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useContext, useEffect } from 'react';
     import { motion } from 'framer-motion';
     import { Link, useNavigate } from 'react-router-dom';
@@ -6,7 +6,7 @@ import React, { useState, useContext, useEffect } from 'react';
     import { Button } from '@/components/ui/button';
     import { Badge } from '@/components/ui/badge';
     import { Heart, Maximize, MapPin, Layers, ShieldCheck, ShoppingCart, PercentSquare, Landmark, CheckCircle } from 'lucide-react';
-    import { useToast } from '@/components/ui/use-toast-simple';
+    // useToast import supprimÃ© - utilisation window.safeGlobalToast
     import { ComparisonContext } from '@/context/ComparisonContext';
     import InstallmentPaymentModal from '@/components/parcel-detail/InstallmentPaymentModal';
     import { useAuth } from '@/context/SupabaseAuthContext';
@@ -28,7 +28,7 @@ import React, { useState, useContext, useEffect } from 'react';
     };
 
     const ParcelCard = ({ parcel }) => {
-      const { toast } = useToast();
+      // toast remplacÃ© par window.safeGlobalToast
       const { profile } = useAuth();
       const [isFavorite, setIsFavorite] = useState(false);
       const [isModalOpen, setIsModalOpen] = useState(false);
@@ -60,7 +60,7 @@ import React, { useState, useContext, useEffect } from 'react';
         e.stopPropagation();
 
         if (!profile) {
-          toast({ title: 'Connectez-vous', description: 'Vous devez être connecté pour gérer vos favoris.', variant: 'destructive' });
+          window.safeGlobalToast({ title: 'Connectez-vous', description: 'Vous devez être connecté pour gérer vos favoris.', variant: 'destructive' });
           navigate('/login');
           return;
         }
@@ -75,10 +75,10 @@ import React, { useState, useContext, useEffect } from 'react';
           .eq('id', profile.id);
 
         if (updateError) {
-          toast({ title: "Erreur", description: "Impossible de mettre à jour les favoris.", variant: "destructive" });
+          window.safeGlobalToast({ title: "Erreur", description: "Impossible de mettre à jour les favoris.", variant: "destructive" });
         } else {
           setIsFavorite(!isFavorite);
-          toast({ title: isFavorite ? "Retiré des favoris" : "Ajouté aux favoris" });
+          window.safeGlobalToast({ title: isFavorite ? "Retiré des favoris" : "Ajouté aux favoris" });
         }
       };
 
@@ -88,10 +88,10 @@ import React, { useState, useContext, useEffect } from 'react';
         e.stopPropagation();
         if (isParcelInCompare) {
           removeFromCompare(parcel.id);
-          toast({ title: 'Retiré du comparateur', description: `"${parcel.name}" a été retiré.` });
+          window.safeGlobalToast({ title: 'Retiré du comparateur', description: `"${parcel.name}" a été retiré.` });
         } else {
           addToCompare(parcel.id);
-          toast({ title: 'Ajouté au comparateur', description: `"${parcel.name}" a été ajouté.` });
+          window.safeGlobalToast({ title: 'Ajouté au comparateur', description: `"${parcel.name}" a été ajouté.` });
         }
       };
       
@@ -190,3 +190,4 @@ import React, { useState, useContext, useEffect } from 'react';
     };
 
     export default ParcelCard;
+

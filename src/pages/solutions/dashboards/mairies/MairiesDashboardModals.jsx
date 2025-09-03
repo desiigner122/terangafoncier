@@ -1,4 +1,4 @@
-
+﻿
     import React, { useState } from 'react';
     import { Link } from 'react-router-dom';
     import { DialogHeader, DialogTitle, DialogDescription, DialogFooter, DialogClose } from "@/components/ui/dialog";
@@ -14,7 +14,7 @@
     import { fr } from 'date-fns/locale';
     import { sampleParcels } from '@/data';
     import { Card, CardContent } from '@/components/ui/card';
-    import { useToast } from "@/components/ui/use-toast-simple";
+    // useToast import supprimÃ© - utilisation window.safeGlobalToast
 
     const checklistItems = [
         { id: 'check-dossier', label: 'Dossier complet vérifié' },
@@ -180,7 +180,7 @@
     };
 
     export const AttributionModal = ({ content, municipalParcels, onAttribution, onDecision, onClose, onContact }) => {
-      const { toast } = useToast();
+      // toast remplacÃ© par window.safeGlobalToast
       const { request, user, title, description } = content;
       const [attributionMode, setAttributionMode] = useState('select'); // 'select' or 'suggest'
       const [selectedParcel, setSelectedParcel] = useState('');
@@ -193,15 +193,15 @@
           const randomParcel = availableParcels[Math.floor(Math.random() * availableParcels.length)];
           setSuggestedParcel(randomParcel);
           setSelectedParcel(randomParcel.id);
-          toast({ title: "Suggestion Générée", description: `La parcelle ${randomParcel.name} a été suggérée.` });
+          window.safeGlobalToast({ title: "Suggestion Générée", description: `La parcelle ${randomParcel.name} a été suggérée.` });
         } else {
-          toast({ title: "Aucune Suggestion", description: "Aucune parcelle disponible pour une suggestion.", variant: "destructive" });
+          window.safeGlobalToast({ title: "Aucune Suggestion", description: "Aucune parcelle disponible pour une suggestion.", variant: "destructive" });
         }
       };
       
       const handleAttributionClick = () => {
         if (!selectedParcel) {
-          toast({ title: "Erreur", description: "Veuillez sélectionner ou suggérer une parcelle.", variant: 'destructive' });
+          window.safeGlobalToast({ title: "Erreur", description: "Veuillez sélectionner ou suggérer une parcelle.", variant: 'destructive' });
           return;
         }
         onAttribution(selectedParcel);

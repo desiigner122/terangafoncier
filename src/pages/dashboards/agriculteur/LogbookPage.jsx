@@ -1,10 +1,10 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BookOpen, PlusCircle, Filter, Download } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
@@ -17,7 +17,7 @@ const initialLogbookData = [
 ];
 
 const LogbookPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newEntry, setNewEntry] = useState('');
@@ -31,7 +31,7 @@ const LogbookPage = () => {
   }, []);
 
   const handleAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   if (loading) {
@@ -116,3 +116,4 @@ const LogbookPage = () => {
 };
 
 export default LogbookPage;
+

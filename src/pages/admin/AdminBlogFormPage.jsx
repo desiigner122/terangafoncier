@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Save, ArrowLeft, Image as ImageIcon, UploadCloud } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
@@ -16,7 +16,7 @@ const blogCategories = ["Guide d'Achat", "Juridique", "Marché Immobilier", "Agr
 const AdminBlogFormPage = () => {
   const { id } = useParams(); // Changer slug en id
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const isEditing = Boolean(id);
 
   const [post, setPost] = useState({
@@ -37,7 +37,7 @@ const AdminBlogFormPage = () => {
       if (isEditing) {
         const { data, error } = await supabase.from('blog').select('*').eq('id', id).single();
         if (error || !data) {
-          toast({ title: "Erreur", description: "Article non trouvé.", variant: "destructive" });
+          window.safeGlobalToast({ title: "Erreur", description: "Article non trouvé.", variant: "destructive" });
           navigate('/admin/blog');
         } else {
           setPost({ ...data, tags: Array.isArray(data.tags) ? data.tags.join(', ') : (data.tags || '') });
@@ -79,13 +79,13 @@ const AdminBlogFormPage = () => {
         result = await supabase.from('blog').insert([payload]);
       }
       if (result.error) throw result.error;
-      toast({
+      window.safeGlobalToast({
         title: `Article ${isEditing ? 'modifié' : 'créé'} avec succès !`,
         description: "Les modifications ont été enregistrées.",
       });
       navigate('/admin/blog');
     } catch (err) {
-      toast({
+      window.safeGlobalToast({
         title: "Erreur lors de l'enregistrement",
         description: err.message,
         variant: "destructive",

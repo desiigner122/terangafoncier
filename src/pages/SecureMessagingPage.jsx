@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -9,7 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Send, MessageSquare, Users, ArrowLeft } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
 import { supabase } from '@/lib/supabaseClient';
@@ -31,7 +31,7 @@ const formatDate = (date) => {
 const SecureMessagingPage = () => {
   const { user } = useAuth();
   const location = useLocation();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   
   const [conversations, setConversations] = useState([]);
   const [selectedConversationId, setSelectedConversationId] = useState(null);
@@ -179,7 +179,7 @@ const SecureMessagingPage = () => {
        c.id === selectedConversationId ? {...c, last_message: newMessage, updated_at: new Date().toISOString()} : c
     ).sort((a, b) => new Date(b.updated_at) - new Date(a.updated_at)));
 
-    toast({ title: "Message envoyé (Simulation)" });
+    window.safeGlobalToast({ title: "Message envoyé (Simulation)" });
   };
 
   const selectedConversation = conversations.find(c => c.id === selectedConversationId);
@@ -317,3 +317,4 @@ const SecureMessagingPage = () => {
 };
 
 export default SecureMessagingPage;
+

@@ -1,14 +1,14 @@
-import React, { useCallback, useMemo } from 'react';
+﻿import React, { useCallback, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { ShoppingCart as ShoppingCartIcon, X } from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { initializeCheckout, formatCurrency } from '@/api/EcommerceApi';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const ShoppingCart = ({ isCartOpen, setIsCartOpen }) => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const location = useLocation();
   const { cartItems, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
 
@@ -16,7 +16,7 @@ const ShoppingCart = ({ isCartOpen, setIsCartOpen }) => {
 
   const handleCheckout = useCallback(async () => {
     if (cartItems.length === 0) {
-      toast({
+      window.safeGlobalToast({
         title: 'Your cart is empty',
         description: 'Add some products to your cart before checking out.',
         variant: 'destructive',
@@ -38,7 +38,7 @@ const ShoppingCart = ({ isCartOpen, setIsCartOpen }) => {
       clearCart();
       window.location.href = url;
     } catch (error) {
-      toast({
+      window.safeGlobalToast({
         title: 'Checkout Error',
         description: 'There was a problem initializing checkout. Please try again.',
         variant: 'destructive',

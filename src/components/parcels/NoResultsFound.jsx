@@ -1,15 +1,15 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Search, Landmark, Heart } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const NoResultsFound = ({ searchedZone, onResetFilters }) => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   const handleSaveSearch = () => {
-    toast({
+    window.safeGlobalToast({
       title: "Recherche Sauvegardée (Simulation)",
       description: `Nous vous alerterons dès qu'un terrain sera disponible à ${searchedZone}.`,
     });

@@ -1,10 +1,10 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { ShieldCheck, Search, Filter, Eye } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -17,7 +17,7 @@ const initialGuarantees = [
 ];
 
 const GuaranteesPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [guarantees, setGuarantees] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -30,7 +30,7 @@ const GuaranteesPage = () => {
   }, []);
 
   const handleAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   if (loading) {
@@ -95,3 +95,4 @@ const GuaranteesPage = () => {
 };
 
 export default GuaranteesPage;
+

@@ -6,6 +6,9 @@ import '@/index.css';
 import { SupabaseAuthProvider } from '@/context/SupabaseAuthContext';
 import { BrowserRouter as Router } from 'react-router-dom';
 
+// 🛡️ PATCH GLOBAL ANTI-CRASH TOAST - Import du système de protection
+import '@/lib/global-toast-patch';
+
 // Vérification de sécurité pour l'élément root
 const rootElement = document.getElementById('root');
 if (!rootElement) {

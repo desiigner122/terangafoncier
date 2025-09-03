@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState } from 'react';
     import { Button } from '@/components/ui/button';
     import {
@@ -11,7 +11,7 @@ import React, { useState } from 'react';
     } from '@/components/ui/dialog';
     import { Input } from '@/components/ui/input';
     import { useAuth } from '@/context/AuthContext';
-    import { useToast } from '@/components/ui/use-toast-simple';
+    // useToast import supprimÃ© - utilisation window.safeGlobalToast
     import { UploadCloud, Award, UserPlus } from 'lucide-react';
     import { sampleSystemRequests } from '@/data/systemRequestsData';
 
@@ -20,7 +20,7 @@ import React, { useState } from 'react';
       const [isSubmitting, setIsSubmitting] = useState(false);
       const [files, setFiles] = useState({ identity: null, residence: null });
       const { user } = useAuth();
-      const { toast } = useToast();
+      // toast remplacÃ© par window.safeGlobalToast
 
       const handleFileChange = (e) => {
         const { name, files: inputFiles } = e.target;
@@ -31,7 +31,7 @@ import React, { useState } from 'react';
 
       const handleSubmit = async () => {
         if (!files.identity || !files.residence) {
-          toast({
+          window.safeGlobalToast({
             title: 'Documents requis',
             description: 'Veuillez téléverser votre pièce d\'identité et un justificatif de domicile.',
             variant: 'destructive',
@@ -66,7 +66,7 @@ import React, { useState } from 'react';
           
           sampleSystemRequests.push(newRequest);
 
-          toast({
+          window.safeGlobalToast({
             title: 'Demande envoyée !',
             description: 'Votre demande pour devenir vendeur a été soumise pour vérification. Vous serez notifié de la décision.',
             className: 'bg-green-500 text-white',
@@ -74,7 +74,7 @@ import React, { useState } from 'react';
           setIsModalOpen(false);
 
         } catch (error) {
-          toast({
+          window.safeGlobalToast({
             title: 'Erreur',
             description: 'Une erreur est survenue lors de la soumission de votre demande.',
             variant: 'destructive',

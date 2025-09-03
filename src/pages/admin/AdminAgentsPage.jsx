@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +10,7 @@ import {
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Badge } from '@/components/ui/badge';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import LoadingSpinner from '@/components/ui/spinner';
 
 const initialSampleAgents = [
@@ -26,7 +26,7 @@ const AdminAgentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [zoneFilter, setZoneFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -45,7 +45,7 @@ const AdminAgentsPage = () => {
   });
 
   const handleSimulatedAction = (actionMessage, agentName = "") => {
-    toast({
+    window.safeGlobalToast({
       title: "Action (Simulation)",
       description: agentName ? `${actionMessage} pour l'agent ${agentName}.` : actionMessage,
     });

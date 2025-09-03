@@ -1,10 +1,10 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Scale, PlusCircle, Search, Filter, Download } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -15,7 +15,7 @@ const initialValuations = [
 ];
 
 const LandValuationPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [valuations, setValuations] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +28,7 @@ const LandValuationPage = () => {
   }, []);
 
   const handleAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   if (loading) {
@@ -98,3 +98,4 @@ const LandValuationPage = () => {
 };
 
 export default LandValuationPage;
+

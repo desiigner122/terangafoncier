@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Leaf, MapPin, Thermometer, Droplets, BarChart, CalendarDays, PlusCircle, AlertTriangle, CheckCircle, TrendingUp, Filter, Maximize, Sprout, Cloudy, BookOpen, Download, ArrowRightLeft } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -59,14 +59,14 @@ const SoilAnalysisSimulation = ({ parcelName }) => (
 
 
 const AgriculteursDashboardPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [activeTab, setActiveTab] = useState('overview');
   const [selectedParcel, setSelectedParcel] = useState(myParcels[0]);
   const [isJournalModalOpen, setIsJournalModalOpen] = useState(false);
   const [journalEntry, setJournalEntry] = useState("");
 
   const handleSimulatedAction = (message) => {
-    toast({
+    window.safeGlobalToast({
       title: "Action Simulée",
       description: message,
     });
@@ -79,7 +79,7 @@ const AgriculteursDashboardPage = () => {
 
   const handleAddJournalEntry = () => {
     if (!journalEntry.trim()) {
-      toast({ title: "Erreur", description: "L'entrée du journal ne peut pas être vide.", variant: "destructive"});
+      window.safeGlobalToast({ title: "Erreur", description: "L'entrée du journal ne peut pas être vide.", variant: "destructive"});
       return;
     }
     const updatedParcel = {
@@ -92,7 +92,7 @@ const AgriculteursDashboardPage = () => {
 
     setSelectedParcel(updatedParcel);
     setJournalEntry("");
-    toast({ title: "Entrée ajoutée", description: `Journal de bord pour ${selectedParcel.name} mis à jour.` });
+    window.safeGlobalToast({ title: "Entrée ajoutée", description: `Journal de bord pour ${selectedParcel.name} mis à jour.` });
     setIsJournalModalOpen(false); 
   };
 

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { useParams, useNavigate, Link } from 'react-router-dom';
@@ -7,13 +7,13 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Save, ArrowLeft } from 'lucide-react';
 
 const AdminBlogFormPageSimple = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const isEditing = Boolean(id);
 
   const [post, setPost] = useState({
@@ -36,7 +36,7 @@ const AdminBlogFormPageSimple = () => {
           
           if (error) {
             console.error('Erreur fetch:', error);
-            toast({ 
+            window.safeGlobalToast({ 
               title: "Erreur", 
               description: "Article non trouvé.", 
               variant: "destructive" 
@@ -47,7 +47,7 @@ const AdminBlogFormPageSimple = () => {
           }
         } catch (err) {
           console.error('Erreur:', err);
-          toast({ 
+          window.safeGlobalToast({ 
             title: "Erreur", 
             description: "Impossible de charger l'article.", 
             variant: "destructive" 
@@ -91,7 +91,7 @@ const AdminBlogFormPageSimple = () => {
         throw result.error;
       }
       
-      toast({
+      window.safeGlobalToast({
         title: `Article ${isEditing ? 'modifié' : 'créé'} avec succès !`,
         description: "Les modifications ont été enregistrées.",
       });
@@ -99,7 +99,7 @@ const AdminBlogFormPageSimple = () => {
       
     } catch (err) {
       console.error('Erreur sauvegarde:', err);
-      toast({
+      window.safeGlobalToast({
         title: "Erreur lors de l'enregistrement",
         description: err.message,
         variant: "destructive",
@@ -199,3 +199,4 @@ const AdminBlogFormPageSimple = () => {
 };
 
 export default AdminBlogFormPageSimple;
+

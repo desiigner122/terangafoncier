@@ -1,4 +1,4 @@
-import {
+﻿import {
 	Toast,
 	ToastClose,
 	ToastDescription,
@@ -6,11 +6,11 @@ import {
 	ToastTitle,
 	ToastViewport,
 } from '@/components/ui/toast';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import React from 'react';
 
 export function Toaster() {
-	const { toasts } = useToast();
+	const { toasts } = usewindow.safeGlobalToast();
 
 	return (
 		<ToastProvider>

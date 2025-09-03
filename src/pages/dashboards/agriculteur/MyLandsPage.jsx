@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LandPlot, PlusCircle, Map, BookOpen } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -11,7 +11,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/context/SupabaseAuthContext';
 
 const MyLandsPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const { user } = useAuth();
   const [lands, setLands] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ const MyLandsPage = () => {
       
       if (error) {
         console.error("Error fetching agricultural lands:", error);
-        toast({ title: "Erreur", description: "Impossible de charger vos parcelles agricoles.", variant: "destructive" });
+        window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger vos parcelles agricoles.", variant: "destructive" });
       } else {
         setLands(data);
       }
@@ -38,7 +38,7 @@ const MyLandsPage = () => {
   }, [user, toast]);
 
   const handleAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   if (loading) {

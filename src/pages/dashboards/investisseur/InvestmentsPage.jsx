@@ -1,10 +1,10 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Briefcase, TrendingUp, Download, Filter } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -15,7 +15,7 @@ const initialInvestments = [
 ];
 
 const InvestmentsPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [investments, setInvestments] = useState([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,7 +28,7 @@ const InvestmentsPage = () => {
   }, []);
 
   const handleAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   if (loading) {
@@ -92,3 +92,4 @@ const InvestmentsPage = () => {
 };
 
 export default InvestmentsPage;
+

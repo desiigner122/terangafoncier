@@ -1,11 +1,11 @@
-
+﻿
 import React, { useState, useEffect, useRef } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useAuth } from '@/context/SupabaseAuthContext';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, KeyRound, Save, LogOut, ShieldCheck, Trash2, Upload } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
@@ -26,7 +26,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 
 const ProfilePage = () => {
   const { user, profile, signOut, revalidate } = useAuth();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 
@@ -66,7 +66,7 @@ const ProfilePage = () => {
   const handleProfileUpdate = async (e) => {
     e.preventDefault();
     if (!fullName.trim()) {
-      toast({ variant: "destructive", title: "Erreur", description: "Le nom ne peut pas être vide." });
+      window.safeGlobalToast({ variant: "destructive", title: "Erreur", description: "Le nom ne peut pas être vide." });
       return;
     }
     setIsUpdatingProfile(true);
@@ -94,10 +94,10 @@ const ProfilePage = () => {
       if (error) throw error;
       
       await revalidate();
-      toast({ title: "Profil mis à jour", description: "Vos informations ont été sauvegardées." });
+      window.safeGlobalToast({ title: "Profil mis à jour", description: "Vos informations ont été sauvegardées." });
     } catch (error) {
       console.error("Error updating profile:", error);
-      toast({ variant: "destructive", title: "Erreur de mise à jour", description: error.message });
+      window.safeGlobalToast({ variant: "destructive", title: "Erreur de mise à jour", description: error.message });
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -106,23 +106,23 @@ const ProfilePage = () => {
   const handlePasswordUpdate = async (e) => {
     e.preventDefault();
     if (newPassword !== confirmNewPassword) {
-      toast({ variant: "destructive", title: "Erreur", description: "Les nouveaux mots de passe ne correspondent pas." });
+      window.safeGlobalToast({ variant: "destructive", title: "Erreur", description: "Les nouveaux mots de passe ne correspondent pas." });
       return;
     }
     if (!newPassword || newPassword.length < 6) {
-       toast({ variant: "destructive", title: "Erreur", description: "Le mot de passe doit contenir au moins 6 caractères." });
+       window.safeGlobalToast({ variant: "destructive", title: "Erreur", description: "Le mot de passe doit contenir au moins 6 caractères." });
        return;
     }
     setIsUpdatingPassword(true);
     try {
       const { error } = await supabase.auth.updateUser({ password: newPassword });
       if (error) throw error;
-      toast({ title: "Mot de passe mis à jour", description: "Votre mot de passe a été changé." });
+      window.safeGlobalToast({ title: "Mot de passe mis à jour", description: "Votre mot de passe a été changé." });
       setNewPassword('');
       setConfirmNewPassword('');
     } catch (error) {
       console.error("Error updating password:", error);
-      toast({ variant: "destructive", title: "Erreur de mise à jour", description: error.message });
+      window.safeGlobalToast({ variant: "destructive", title: "Erreur de mise à jour", description: error.message });
     } finally {
       setIsUpdatingPassword(false);
     }
@@ -130,12 +130,12 @@ const ProfilePage = () => {
   
   const handleLogout = async () => {
     await signOut();
-    toast({ title: "Déconnexion réussie" });
+    window.safeGlobalToast({ title: "Déconnexion réussie" });
     navigate('/');
   };
   
   const handleDeleteAccount = () => {
-     toast({
+     window.safeGlobalToast({
         title: "Suppression de Compte (Simulation)",
         description: "Cette action sera bientôt disponible.",
         variant: "default",

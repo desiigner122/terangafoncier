@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Building2, Search, FileCheck, TrendingUp, CalendarDays, DollarSign, Lightbulb, Users, Map, PlusCircle, Filter, Calculator, LandPlot, Coins as HandCoins } from 'lucide-react';
@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Label } from "@/components/ui/label";
 
@@ -66,7 +66,7 @@ const OpportunitiesMap = () => (
 );
 
 const PromoteursDashboardPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [activeTab, setActiveTab] = useState('overview');
   const [isCalculatorModalOpen, setIsCalculatorModalOpen] = useState(false);
   const [calculatorData, setCalculatorData] = useState({ terrainId: '', coutTerrain: '', coutConstruction: '', prixVenteEstime: ''});
@@ -74,7 +74,7 @@ const PromoteursDashboardPage = () => {
 
 
   const handleSimulatedAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   const openRentabilityCalculator = (terrain) => {
@@ -94,7 +94,7 @@ const PromoteursDashboardPage = () => {
       const profit = parseFloat(prixVenteEstime) - (parseFloat(coutTerrain) + parseFloat(coutConstruction));
       setCalculatedProfit(profit);
     } else {
-      toast({ title: "Erreur", description: "Veuillez remplir tous les champs pour calculer.", variant: "destructive" });
+      window.safeGlobalToast({ title: "Erreur", description: "Veuillez remplir tous les champs pour calculer.", variant: "destructive" });
     }
   };
 

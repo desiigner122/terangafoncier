@@ -1,9 +1,9 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Receipt, Download, Filter, Banknote } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
@@ -23,7 +23,7 @@ const getStatusBadge = (status) => {
 };
 
 const TransactionsPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ const TransactionsPage = () => {
         
         if (error) {
             console.error("Error fetching transactions:", error);
-            toast({ title: "Erreur", description: "Impossible de charger vos transactions.", variant: "destructive" });
+            window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger vos transactions.", variant: "destructive" });
         } else {
             setTransactions(data);
         }
@@ -55,7 +55,7 @@ const TransactionsPage = () => {
   };
 
   const handleDownloadInvoice = (transactionId) => {
-    toast({
+    window.safeGlobalToast({
       title: "Téléchargement de la facture...",
       description: `La facture pour la transaction ${transactionId} est en cours de génération.`,
     });
@@ -133,3 +133,4 @@ const TransactionsPage = () => {
 };
 
 export default TransactionsPage;
+

@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { User, MapPin, FileCheck } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const getActionBadge = (action) => {
   const lowerAction = action.toLowerCase();
@@ -43,7 +43,7 @@ const AdminAuditLogPage = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ searchTerm: '', user: '', action: '', entity: '' });
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   useEffect(() => {
     const fetchAuditLogs = async () => {
@@ -55,7 +55,7 @@ const AdminAuditLogPage = () => {
         
         if (error) {
             console.error("Error fetching audit logs:", error);
-            toast({ title: 'Erreur', description: 'Impossible de charger le journal d\'audit.', variant: 'destructive' });
+            window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger le journal d\'audit.', variant: 'destructive' });
         } else {
             setLogs(data.map(log => ({
                 ...log,

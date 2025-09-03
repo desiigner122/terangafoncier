@@ -1,6 +1,6 @@
-import React from 'react';
+﻿import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -30,14 +30,14 @@ export const withRoleProtection = (Component, allowedRoles) => {
     return (props) => {
         const { user, loading } = useAuth();
         const navigate = useNavigate();
-        const { toast } = useToast();
+        // toast remplacÃ© par window.safeGlobalToast
 
         if (loading) {
             return null; // Or a loading spinner
         }
 
         if (!user || !allowedRoles.includes(user.role)) {
-            toast({
+            window.safeGlobalToast({
                 variant: 'destructive',
                 title: 'Accès non autorisé',
                 description: 'Vous n\'avez pas les permissions nécessaires pour accéder à cette page.',

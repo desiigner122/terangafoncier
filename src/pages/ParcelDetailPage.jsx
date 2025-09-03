@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -13,7 +13,7 @@ import ParcelFeeCalculator from '@/components/parcel-detail/ParcelFeeCalculator'
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Home, MapPin, School, ShoppingCart, Hotel as Hospital, HeartHandshake as Handshake, Shield, User, Award, FileText, Landmark, PercentSquare } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { useContext } from 'react';
@@ -57,7 +57,7 @@ const ParcelDocumentsCard = ({ documents }) => {
 const ParcelDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const { user, profile } = useAuth();
   const { comparisonList, addToCompare, removeFromCompare } = useContext(ComparisonContext);
   
@@ -104,7 +104,7 @@ const ParcelDetailPage = () => {
         }
       } catch (err) {
         setError(err.message);
-        toast({
+        window.safeGlobalToast({
           title: "Erreur",
           description: err.message,
           variant: "destructive",
@@ -124,7 +124,7 @@ const ParcelDetailPage = () => {
   }, [profile, parcel]);
 
   const handleAction = (message, details) => {
-    toast({
+    window.safeGlobalToast({
       title: "Action Simulée",
       description: message,
     });
@@ -136,16 +136,16 @@ const ParcelDetailPage = () => {
   const handleCompareChange = (checked) => {
      if(checked) {
        addToCompare(id);
-        toast({ title: 'Ajouté au comparateur', description: `"${parcel.name}" a été ajouté.` });
+        window.safeGlobalToast({ title: 'Ajouté au comparateur', description: `"${parcel.name}" a été ajouté.` });
      } else {
        removeFromCompare(id);
-        toast({ title: 'Retiré du comparateur', description: `"${parcel.name}" a été retiré.` });
+        window.safeGlobalToast({ title: 'Retiré du comparateur', description: `"${parcel.name}" a été retiré.` });
      }
   };
   
   const handleShare = () => {
     navigator.clipboard.writeText(window.location.href);
-    toast({
+    window.safeGlobalToast({
       title: "Lien Copié!",
       description: "Le lien de la parcelle a été copié dans le presse-papiers.",
     });
@@ -153,7 +153,7 @@ const ParcelDetailPage = () => {
 
   const handleToggleFavorite = async () => {
     if (!profile) {
-      toast({ title: "Connectez-vous", description: "Vous devez être connecté pour gérer vos favoris.", variant: "destructive" });
+      window.safeGlobalToast({ title: "Connectez-vous", description: "Vous devez être connecté pour gérer vos favoris.", variant: "destructive" });
       return;
     }
     const newFavorites = isFavorite 
@@ -166,10 +166,10 @@ const ParcelDetailPage = () => {
       .eq('id', profile.id);
 
     if (updateError) {
-      toast({ title: "Erreur", description: "Impossible de mettre à jour les favoris.", variant: "destructive" });
+      window.safeGlobalToast({ title: "Erreur", description: "Impossible de mettre à jour les favoris.", variant: "destructive" });
     } else {
       setIsFavorite(!isFavorite);
-      toast({ title: isFavorite ? "Retiré des favoris" : "Ajouté aux favoris" });
+      window.safeGlobalToast({ title: isFavorite ? "Retiré des favoris" : "Ajouté aux favoris" });
     }
   };
 
@@ -352,3 +352,4 @@ const ParcelDetailPage = () => {
 };
 
 export default ParcelDetailPage;
+

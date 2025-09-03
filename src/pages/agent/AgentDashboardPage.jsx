@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
@@ -8,7 +8,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 
 const kpiData = [
@@ -22,7 +22,7 @@ const kpiData = [
 const AGENT_NAME = 'Bob Martin';
 
 const AgentDashboardPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [activeTab, setActiveTab] = useState('requests');
   const [agentParcels, setAgentParcels] = useState([]);
   const [agentRequests, setAgentRequests] = useState([]);
@@ -55,7 +55,7 @@ const AgentDashboardPage = () => {
   }, []);
 
   const handleSimulatedAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   const getStatusVariant = (status) => {
@@ -229,3 +229,4 @@ const AgentDashboardPage = () => {
 };
 
 export default AgentDashboardPage;
+

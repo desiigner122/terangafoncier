@@ -1,4 +1,4 @@
-
+﻿
     import React, { useState, useEffect } from 'react';
     import { Link, useNavigate, useLocation } from 'react-router-dom';
     import { motion } from 'framer-motion';
@@ -6,7 +6,7 @@
     import { Input } from '@/components/ui/input';
     import { Label } from '@/components/ui/label';
     import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-    import { useToast } from '@/components/ui/use-toast-simple';
+    // useToast import supprimÃ© - utilisation window.safeGlobalToast
     import { LogIn, AlertCircle } from 'lucide-react';
     import { useAuth } from '@/context/SupabaseAuthContext';
 
@@ -18,7 +18,7 @@
       const { signIn, session } = useAuth();
       const navigate = useNavigate();
       const location = useLocation();
-      const { toast } = useToast();
+      // toast remplacÃ© par window.safeGlobalToast
 
       const handleLogin = async (e) => {
         e.preventDefault();
@@ -29,7 +29,7 @@
           const { error: signInError } = await signIn(email, password);
           if (signInError) throw signInError;
           
-          toast({
+          window.safeGlobalToast({
               title: `Bienvenue !`,
               description: "Connexion réussie. Redirection en cours...",
               className: "bg-green-500 text-white",
@@ -40,7 +40,7 @@
             ? "Email ou mot de passe incorrect."
             : "Une erreur est survenue lors de la connexion.";
           setError(errorMessage);
-          toast({
+          window.safeGlobalToast({
             title: "Échec de la Connexion",
             description: errorMessage,
             variant: "destructive",
@@ -87,7 +87,7 @@
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
                      <Label htmlFor="password">Mot de passe</Label>
-                     <Link to="#" className="text-sm text-primary hover:underline" onClick={(e) => {e.preventDefault(); toast({title:"Fonctionnalité à venir", description: "La récupération de mot de passe n'est pas encore implémentée."})}}>Mot de passe oublié ?</Link>
+                     <Link to="#" className="text-sm text-primary hover:underline" onClick={(e) => {e.preventDefault(); window.safeGlobalToast({title:"Fonctionnalité à venir", description: "La récupération de mot de passe n'est pas encore implémentée."})}}>Mot de passe oublié ?</Link>
                   </div>
                   <Input
                     id="password"

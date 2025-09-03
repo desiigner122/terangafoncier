@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { TrendingUp, ShieldCheck, Briefcase, DollarSign, MapPin, BarChartHorizontalBig, Filter, Eye, Search, AlertCircle, ExternalLink, FileSearch, Users, Download, PlusCircle } from 'lucide-react';
@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const kpiData = [
   { title: "Investissements Actifs", value: "8", icon: Briefcase, trend: "+2", trendColor: "text-green-500", unit: "biens" },
@@ -66,11 +66,11 @@ const DiversificationPieChart = () => (
 );
 
 const InvestisseursDashboardPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [activeTab, setActiveTab] = useState('overview');
 
   const handleSimulatedAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   const renderTabContent = () => {

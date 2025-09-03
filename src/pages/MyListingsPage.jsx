@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -18,7 +18,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 
@@ -45,7 +45,7 @@ const MyListingsPage = () => {
    const { user } = useAuth();
    const [isLoading, setIsLoading] = useState(true);
    const [listings, setListings] = useState([]);
-   const { toast } = useToast();
+   // toast remplacÃ© par window.safeGlobalToast
 
    useEffect(() => {
     const fetchListings = async () => {
@@ -59,7 +59,7 @@ const MyListingsPage = () => {
         
         if (error) {
             console.error("Error fetching listings:", error);
-            toast({ title: "Erreur", description: "Impossible de charger vos annonces.", variant: "destructive" });
+            window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger vos annonces.", variant: "destructive" });
         } else {
             setListings(data);
         }
@@ -71,15 +71,15 @@ const MyListingsPage = () => {
    const handleDelete = async (listingId) => {
        const { error } = await supabase.from('parcels').delete().eq('id', listingId);
        if (error) {
-           toast({ title: 'Erreur', description: 'Impossible de supprimer le bien.', variant: 'destructive' });
+           window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de supprimer le bien.', variant: 'destructive' });
        } else {
            setListings(prev => prev.filter(l => l.id !== listingId));
-           toast({ title: 'Bien supprimé', description: `Votre bien a été retiré.` });
+           window.safeGlobalToast({ title: 'Bien supprimé', description: `Votre bien a été retiré.` });
        }
    };
    
    const handleEdit = (listing) => {
-      toast({title: "Fonctionnalité à venir", description: "La modification des annonces sera bientôt disponible."})
+      window.safeGlobalToast({title: "Fonctionnalité à venir", description: "La modification des annonces sera bientôt disponible."})
    }
 
    const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
@@ -180,3 +180,4 @@ const MyListingsPage = () => {
 };
 
 export default MyListingsPage;
+

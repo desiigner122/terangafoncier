@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -8,12 +8,12 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { FileText, ArrowRight, Bell, User, MessageSquare, Check, X, ShoppingCart } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/customSupabaseClient';
 
 const MyRequestsPage = () => {
     const { user } = useAuth();
-    const { toast } = useToast();
+    // toast remplacÃ© par window.safeGlobalToast
     const [loading, setLoading] = useState(true);
     const [mySentRequests, setMySentRequests] = useState([]);
     const [myReceivedRequests, setMyReceivedRequests] = useState([]);
@@ -53,7 +53,7 @@ const MyRequestsPage = () => {
             .eq('id', requestId);
 
         if (error) {
-            toast({ title: "Erreur", description: "Impossible de mettre à jour la demande.", variant: "destructive" });
+            window.safeGlobalToast({ title: "Erreur", description: "Impossible de mettre à jour la demande.", variant: "destructive" });
         } else {
             const actionText = newStatus === 'approved' ? 'approuvée' : 'rejetée';
             setMyReceivedRequests(prevRequests =>
@@ -61,7 +61,7 @@ const MyRequestsPage = () => {
                     req.id === requestId ? { ...req, status: newStatus } : req
                 )
             );
-            toast({
+            window.safeGlobalToast({
                 title: `Demande ${actionText}`,
                 description: `La demande ${requestId} a été ${actionText}. L'acheteur a été notifié.`,
             });
@@ -184,3 +184,4 @@ const MyRequestsPage = () => {
 };
 
 export default MyRequestsPage;
+

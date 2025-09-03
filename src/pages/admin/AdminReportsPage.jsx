@@ -1,15 +1,15 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Download, BarChart2, Calendar, MapPin, Users, FileText, TrendingUp } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { supabase } from '@/lib/supabaseClient';
 
 const AdminReportsPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -71,7 +71,7 @@ const AdminReportsPage = () => {
 
     } catch (error) {
       console.error('Erreur lors du chargement des données:', error);
-      toast({
+      window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible de charger les statistiques réelles.",
         variant: "destructive"
@@ -83,20 +83,20 @@ const AdminReportsPage = () => {
 
   const handleGenerateReport = async (reportType) => {
     try {
-      toast({
+      window.safeGlobalToast({
         title: "Génération en cours...",
         description: `Préparation du rapport ${reportType}`,
       });
 
       // Simuler la génération de rapport
       setTimeout(() => {
-        toast({
+        window.safeGlobalToast({
           title: "Rapport généré !",
           description: `Le rapport ${reportType} a été téléchargé avec succès.`,
         });
       }, 2000);
     } catch (error) {
-      toast({
+      window.safeGlobalToast({
         title: "Erreur",
         description: "Impossible de générer le rapport.",
         variant: "destructive"
@@ -241,3 +241,4 @@ const AdminReportsPage = () => {
 };
 
 export default AdminReportsPage;
+

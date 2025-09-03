@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { BellRing, BellOff, CheckCheck, Trash2, ArrowRight } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/customSupabaseClient';
 
@@ -89,7 +89,7 @@ const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   const fetchNotifications = async () => {
     if (!user) {
@@ -120,7 +120,7 @@ const NotificationsPage = () => {
   const handleMarkRead = async (notificationId) => {
     const { error } = await supabase.from('notifications').update({ read: true }).eq('id', notificationId);
     if(error) {
-      toast({ title: "Erreur", description: "Impossible de marquer la notification comme lue.", variant: "destructive" });
+      window.safeGlobalToast({ title: "Erreur", description: "Impossible de marquer la notification comme lue.", variant: "destructive" });
     } else {
       fetchNotifications();
     }
@@ -130,9 +130,9 @@ const NotificationsPage = () => {
       if (!user) return;
       const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
       if(error) {
-         toast({ title: "Erreur", description: "Impossible de marquer toutes les notifications comme lues.", variant: "destructive" });
+         window.safeGlobalToast({ title: "Erreur", description: "Impossible de marquer toutes les notifications comme lues.", variant: "destructive" });
       } else {
-         toast({ title: "Notifications marquées comme lues." });
+         window.safeGlobalToast({ title: "Notifications marquées comme lues." });
          fetchNotifications();
       }
    };
@@ -140,9 +140,9 @@ const NotificationsPage = () => {
   const handleDelete = async (notificationId) => {
     const { error } = await supabase.from('notifications').delete().eq('id', notificationId);
     if(error) {
-      toast({ title: "Erreur", description: "Impossible de supprimer la notification.", variant: "destructive" });
+      window.safeGlobalToast({ title: "Erreur", description: "Impossible de supprimer la notification.", variant: "destructive" });
     } else {
-      toast({ title: "Notification supprimée." });
+      window.safeGlobalToast({ title: "Notification supprimée." });
       fetchNotifications();
     }
   };
@@ -151,9 +151,9 @@ const NotificationsPage = () => {
       if (!user) return;
       const { error } = await supabase.from('notifications').delete().eq('user_id', user.id);
        if(error) {
-         toast({ title: "Erreur", description: "Impossible de supprimer toutes les notifications.", variant: "destructive" });
+         window.safeGlobalToast({ title: "Erreur", description: "Impossible de supprimer toutes les notifications.", variant: "destructive" });
       } else {
-         toast({ title: "Toutes les notifications ont été supprimées." });
+         window.safeGlobalToast({ title: "Toutes les notifications ont été supprimées." });
          fetchNotifications();
       }
    };
@@ -219,3 +219,4 @@ const NotificationsPage = () => {
 };
 
 export default NotificationsPage;
+

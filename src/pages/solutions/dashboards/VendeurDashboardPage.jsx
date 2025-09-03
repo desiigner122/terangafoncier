@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Home, MessageSquare, BarChart2, Bell, User, PlusCircle, Eye, Edit, Trash2 } from 'lucide-react';
@@ -8,12 +8,12 @@ import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { sampleRequests, sampleUsers, sampleParcels } from '@/data';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Link } from 'react-router-dom';
 
 const VendeurDashboardPage = () => {
     const { user } = useAuth();
-    const { toast } = useToast();
+    // toast remplacÃ© par window.safeGlobalToast
     const [loading, setLoading] = useState(true);
     const [requests, setRequests] = useState([]);
     const [listings, setListings] = useState([]);
@@ -40,14 +40,14 @@ const VendeurDashboardPage = () => {
             )
         );
 
-        toast({
+        window.safeGlobalToast({
             title: `Demande ${actionText}`,
             description: `La demande ${requestId} a été ${actionText}. L'acheteur a été notifié.`,
         });
     };
     
     const handleListingAction = (listingId, action) => {
-        toast({
+        window.safeGlobalToast({
             title: `Action sur l'annonce ${listingId}`,
             description: `L'action "${action}" a été simulée.`,
         });
@@ -169,3 +169,4 @@ const VendeurDashboardPage = () => {
 };
 
 export default VendeurDashboardPage;
+

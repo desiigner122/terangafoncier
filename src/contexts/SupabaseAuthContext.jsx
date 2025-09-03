@@ -1,12 +1,12 @@
-import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
+﻿import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 
 import { supabase } from '@/lib/customSupabaseClient';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);
@@ -43,7 +43,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     if (error) {
-      toast({
+      window.safeGlobalToast({
         variant: "destructive",
         title: "Sign up Failed",
         description: error.message || "Something went wrong",
@@ -60,7 +60,7 @@ export const AuthProvider = ({ children }) => {
     });
 
     if (error) {
-      toast({
+      window.safeGlobalToast({
         variant: "destructive",
         title: "Sign in Failed",
         description: error.message || "Something went wrong",
@@ -74,7 +74,7 @@ export const AuthProvider = ({ children }) => {
     const { error } = await supabase.auth.signOut();
 
     if (error) {
-      toast({
+      window.safeGlobalToast({
         variant: "destructive",
         title: "Sign out Failed",
         description: error.message || "Something went wrong",
@@ -103,3 +103,4 @@ export const useAuth = () => {
   }
   return context;
 };
+

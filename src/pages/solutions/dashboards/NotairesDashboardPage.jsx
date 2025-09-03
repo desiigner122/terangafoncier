@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FileClock, Search, PlusCircle, Users, Gavel, Scale, Download, History, Eye, CheckCircle, XCircle } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
@@ -11,13 +11,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 
 const NotairesDashboardPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [activeTab, setActiveTab] = useState('dossiers');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDossier, setCurrentDossier] = useState(null);
 
   const handleAction = (action, dossierId = '') => {
-    toast({
+    window.safeGlobalToast({
       title: "Action Simulée",
       description: `${action} ${dossierId ? `pour le dossier ${dossierId}` : ''}`,
     });
@@ -35,7 +35,7 @@ const NotairesDashboardPage = () => {
 
   const handleDecision = (decision) => {
     if (!currentDossier) return;
-    toast({
+    window.safeGlobalToast({
         title: "Décision Enregistrée",
         description: `La décision '${decision}' a été enregistrée pour le dossier ${currentDossier.id}.`,
     });

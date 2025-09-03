@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { motion } from 'framer-motion';
 import { UserPlus } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
@@ -16,7 +16,7 @@ const allowedRoles = ['Particulier', 'Vendeur Particulier', 'Vendeur Pro', 'Inve
 
 const RegisterPage = () => {
     const navigate = useNavigate();
-    const { toast } = useToast();
+    // toast remplacÃ© par window.safeGlobalToast
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
     const [fullName, setFullName] = useState('');
@@ -48,7 +48,7 @@ const RegisterPage = () => {
 
             if (signUpError) throw signUpError;
 
-            toast({
+            window.safeGlobalToast({
                 title: "Inscription presque terminée!",
                 description: "Veuillez consulter vos emails pour confirmer votre compte.",
                 className: "bg-green-500 text-white",
@@ -60,7 +60,7 @@ const RegisterPage = () => {
                 errorMessage = "Un utilisateur avec cet email existe déjà.";
             }
             setError(errorMessage);
-            toast({
+            window.safeGlobalToast({
                 title: "Erreur d'inscription",
                 description: errorMessage,
                 variant: "destructive",

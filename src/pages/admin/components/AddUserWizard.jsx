@@ -1,6 +1,6 @@
-
+﻿
 import React, { useState } from 'react';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,7 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
     const [step, setStep] = useState(1);
     const initialFormState = { full_name: '', email: '', password: 'password123', role: 'Particulier', region: '', departement: '', commune: '', specificInfo: '' };
     const [currentUser, setCurrentUser] = useState(initialFormState);
-    const { toast } = useToast();
+    // toast remplacÃ© par window.safeGlobalToast
 
     const handleSelectChange = (name, value) => {
         const updates = {[name]: value};
@@ -40,7 +40,7 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
 
     const nextStep = () => {
         if(step === 1 && (!currentUser.full_name || !currentUser.email || !currentUser.password)) {
-            toast({ title: 'Erreur', description: 'Nom, email et mot de passe sont requis.', variant: 'destructive'});
+            window.safeGlobalToast({ title: 'Erreur', description: 'Nom, email et mot de passe sont requis.', variant: 'destructive'});
             return;
         }
         setStep(s => s + 1);
@@ -101,7 +101,7 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
                 ...user.user_metadata 
             });
             
-            toast({ 
+            window.safeGlobalToast({ 
                 title: 'Succès', 
                 description: `Utilisateur ${currentUser.full_name} créé avec succès.`
             });
@@ -110,7 +110,7 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
             setStep(1);
         } catch (error) {
             console.error("Error creating user:", error);
-            toast({ 
+            window.safeGlobalToast({ 
                 title: 'Erreur', 
                 description: `Impossible de créer l'utilisateur: ${error.message}`, 
                 variant: 'destructive'

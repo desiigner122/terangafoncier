@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -8,7 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
 import { MapPin, Maximize, HeartOff, Trash2 } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,7 +121,7 @@ const MyFavoritesPage = () => {
   const [favoriteParcels, setFavoriteParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   const fetchFavorites = async () => {
     if (!user) {
@@ -167,9 +167,9 @@ const MyFavoritesPage = () => {
   const { error } = await supabase.from('users').update({ favorites: currentFavs }).eq('id', user.id);
      
      if (error) {
-        toast({ title: "Erreur", description: "Impossible de retirer la parcelle des favoris.", variant: "destructive" });
+        window.safeGlobalToast({ title: "Erreur", description: "Impossible de retirer la parcelle des favoris.", variant: "destructive" });
      } else {
-        toast({ title: "Retiré des favoris", description: "La parcelle a été retirée de vos favoris." });
+        window.safeGlobalToast({ title: "Retiré des favoris", description: "La parcelle a été retirée de vos favoris." });
         setFavoriteParcels(prev => prev.filter(p => p.id !== parcelIdToRemove));
      }
   };
@@ -214,3 +214,4 @@ const MyFavoritesPage = () => {
 };
 
 export default MyFavoritesPage;
+

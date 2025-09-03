@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
@@ -7,14 +7,14 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { LoadingSpinner } from '@/components/ui/spinner';
 // TEMPORARILY USING SIMPLE TOAST TO FIX TypeError: nT() is null
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/customSupabaseClient';
 
 const AdminDashboardPage = () => {
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({});
   const [recentActivities, setRecentActivities] = useState([]);
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -88,7 +88,7 @@ const AdminDashboardPage = () => {
         console.error("Error fetching admin dashboard data:", error);
         // Toast sécurisé
         if (toast && typeof toast === 'function') {
-          toast({
+          window.safeGlobalToast({
             title: "Erreur de chargement",
             description: "Impossible de récupérer les données du tableau de bord.",
             variant: "destructive",

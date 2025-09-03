@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -6,12 +6,12 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Phone, Mail, MapPin, Clock, Send, Building, HelpCircle, Loader2, Linkedin } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/lib/supabaseClient';
 
 const ContactPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [loading, setLoading] = useState(false);
   const [formData, setFormData] = useState({ name: '', email: '', subject: '', message: '' });
 
@@ -40,7 +40,7 @@ const ContactPage = () => {
         throw error;
       }
 
-      toast({
+      window.safeGlobalToast({
         title: "Message Envoyé !",
         description: "Merci de nous avoir contactés. Votre message a été enregistré et nous reviendrons vers vous bientôt.",
         className: "bg-green-500 text-white",
@@ -50,7 +50,7 @@ const ContactPage = () => {
 
     } catch (error) {
       console.error('Error sending contact form:', error);
-      toast({
+      window.safeGlobalToast({
         title: "Erreur d'envoi",
         description: "Une erreur est survenue. Veuillez réessayer plus tard.",
         variant: "destructive",

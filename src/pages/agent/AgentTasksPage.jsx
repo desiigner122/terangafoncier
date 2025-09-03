@@ -1,11 +1,11 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { PlusCircle, Search, CheckCircle } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sampleAgentData } from '@/data';
@@ -13,7 +13,7 @@ import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const AgentTasksPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newTaskTitle, setNewTaskTitle] = useState('');
@@ -27,7 +27,7 @@ const AgentTasksPage = () => {
   }, []);
 
   const handleAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
 
   const handleToggleTask = (taskId) => {
@@ -38,7 +38,7 @@ const AgentTasksPage = () => {
 
   const handleAddTask = () => {
     if (!newTaskTitle.trim()) {
-      toast({ variant: 'destructive', title: 'Erreur', description: 'Le titre de la tâche ne peut pas être vide.' });
+      window.safeGlobalToast({ variant: 'destructive', title: 'Erreur', description: 'Le titre de la tâche ne peut pas être vide.' });
       return;
     }
     const newTask = {
@@ -147,3 +147,4 @@ const AgentTasksPage = () => {
 };
 
 export default AgentTasksPage;
+

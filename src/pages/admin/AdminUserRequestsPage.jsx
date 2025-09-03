@@ -1,10 +1,10 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
@@ -14,7 +14,7 @@ import { Check, X, UserPlus, Eye } from 'lucide-react';
 const AdminUserRequestsPage = () => {
     const [requests, setRequests] = useState([]);
     const [loading, setLoading] = useState(true);
-    const { toast } = useToast();
+    // toast remplacÃ© par window.safeGlobalToast
 
     useEffect(() => {
         const fetchRequests = async () => {
@@ -26,7 +26,7 @@ const AdminUserRequestsPage = () => {
             
             if (error) {
                 console.error("Error fetching requests:", error);
-                toast({ title: 'Erreur', description: 'Impossible de charger les requêtes.', variant: 'destructive' });
+                window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger les requêtes.', variant: 'destructive' });
             } else {
                 setRequests(data.map(r => {
                     let requestedRole = 'N/A';
@@ -58,7 +58,7 @@ const AdminUserRequestsPage = () => {
             .eq('id', requestId);
 
         if (requestError) {
-            toast({ title: 'Erreur', description: 'La mise à jour de la requête a échoué.', variant: 'destructive' });
+            window.safeGlobalToast({ title: 'Erreur', description: 'La mise à jour de la requête a échoué.', variant: 'destructive' });
             return;
         }
 
@@ -69,13 +69,13 @@ const AdminUserRequestsPage = () => {
                 .eq('id', request.user.id);
 
             if (profileError) {
-                toast({ title: 'Erreur', description: 'La mise à jour du profil a échoué.', variant: 'destructive' });
+                window.safeGlobalToast({ title: 'Erreur', description: 'La mise à jour du profil a échoué.', variant: 'destructive' });
                 return;
             }
         }
         
         setRequests(prev => prev.map(req => req.id === requestId ? { ...req, status: newStatus } : req));
-        toast({
+        window.safeGlobalToast({
             title: 'Action effectuée',
             description: `La demande de ${request.user.name} a été ${newStatus === 'approved' ? 'approuvée' : 'rejetée'}.`,
         });

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { LandPlot, PlusCircle, Search, Filter, Eye } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
@@ -12,7 +12,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { useAuth } from '@/context/SupabaseAuthContext';
 
 const LandManagementPage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const { user } = useAuth();
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ const LandManagementPage = () => {
       
       if (error) {
         console.error("Error fetching municipal parcels:", error);
-        toast({ title: "Erreur", description: "Impossible de charger le patrimoine foncier.", variant: "destructive" });
+        window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger le patrimoine foncier.", variant: "destructive" });
       } else {
         setParcels(data);
       }
@@ -38,7 +38,7 @@ const LandManagementPage = () => {
   }, [user, toast]);
 
   const handleAddParcel = () => {
-    toast({ title: "Action non implémentée", description: "Utilisez la page 'Ajouter une parcelle' pour créer de nouvelles annonces." });
+    window.safeGlobalToast({ title: "Action non implémentée", description: "Utilisez la page 'Ajouter une parcelle' pour créer de nouvelles annonces." });
   };
 
   if (loading) {
@@ -73,7 +73,7 @@ const LandManagementPage = () => {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input placeholder="Rechercher une parcelle..." className="pl-8" />
             </div>
-            <Button variant="outline" onClick={() => toast({title: "Filtres appliqués"})}><Filter className="mr-2 h-4 w-4" /> Filtrer</Button>
+            <Button variant="outline" onClick={() => window.safeGlobalToast({title: "Filtres appliqués"})}><Filter className="mr-2 h-4 w-4" /> Filtrer</Button>
           </div>
         </CardHeader>
         <CardContent>

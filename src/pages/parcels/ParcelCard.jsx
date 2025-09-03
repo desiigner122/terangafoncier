@@ -1,11 +1,11 @@
-import React, { useState, useContext } from 'react';
+﻿import React, { useState, useContext } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Heart, Maximize, MapPin, Layers, ShieldCheck, ShoppingCart, PercentSquare, Landmark } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { ComparisonContext } from '@/context/ComparisonContext';
 import InstallmentPaymentModal from '@/components/parcel-detail/InstallmentPaymentModal';
 
@@ -25,7 +25,7 @@ const getStatusVariant = (status) => {
 };
 
 const ParcelCard = ({ parcel }) => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [isFavorite, setIsFavorite] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { comparisonList, addToCompare, removeFromCompare } = useContext(ComparisonContext);
@@ -35,7 +35,7 @@ const ParcelCard = ({ parcel }) => {
     e.preventDefault();
     e.stopPropagation();
     setIsFavorite(!isFavorite);
-    toast({
+    window.safeGlobalToast({
       title: isFavorite ? "Retiré des favoris" : "Ajouté aux favoris",
       description: `"${parcel.name}" a été ${isFavorite ? 'retiré de' : 'ajouté à'} vos favoris.`,
     });
@@ -46,10 +46,10 @@ const ParcelCard = ({ parcel }) => {
     e.stopPropagation();
     if (isParcelInCompare) {
       removeFromCompare(parcel.id);
-      toast({ title: 'Retiré du comparateur', description: `"${parcel.name}" a été retiré.` });
+      window.safeGlobalToast({ title: 'Retiré du comparateur', description: `"${parcel.name}" a été retiré.` });
     } else {
       addToCompare(parcel.id);
-      toast({ title: 'Ajouté au comparateur', description: `"${parcel.name}" a été ajouté.` });
+      window.safeGlobalToast({ title: 'Ajouté au comparateur', description: `"${parcel.name}" a été ajouté.` });
     }
   };
   

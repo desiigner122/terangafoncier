@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';
@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { ArrowRight, ArrowLeft, Check, Loader2, FileUp, MapPin, Info, DollarSign, FileText, Image as ImageIcon } from 'lucide-react';
 import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
 import { Link, useNavigate } from 'react-router-dom';
@@ -17,7 +17,7 @@ import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 
 const AddParcelPageComponent = () => {
     const { user } = useAuth();
-    const { toast } = useToast();
+    // toast remplacÃ© par window.safeGlobalToast
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -93,7 +93,7 @@ const AddParcelPageComponent = () => {
         // sampleParcels.unshift(newParcel); // This would be a DB call
 
         setIsSubmitting(false);
-        toast({
+        window.safeGlobalToast({
             title: "Parcelle Soumise !",
             description: "Votre parcelle a été soumise. Elle sera visible après approbation.",
         });

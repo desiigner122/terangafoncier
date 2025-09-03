@@ -1,4 +1,4 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -55,7 +55,7 @@ const safeToast = (message, type = 'default') => {
   try {
     // Tentative d'utilisation du toast standard
     if (typeof window !== 'undefined' && window.toast) {
-      window.toast({ description: message, variant: type });
+      window.window.safeGlobalToast({ description: message, variant: type });
       return;
     }
     
@@ -323,3 +323,4 @@ const safeToast = (message, type = 'default') => {
 };
 
 export default ParticulierDashboard;
+

@@ -1,21 +1,21 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Send } from 'lucide-react';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const ParcelRequestForm = ({ parcelId, requestType, onSubmit, onCancel }) => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState([]);
 
   const handleFileChange = (event) => {
      const files = Array.from(event.target.files);
      if (files.length > 3) {
-         toast({ title: "Attention", description: "Vous ne pouvez joindre que 3 fichiers maximum.", variant: "destructive" });
+         window.safeGlobalToast({ title: "Attention", description: "Vous ne pouvez joindre que 3 fichiers maximum.", variant: "destructive" });
          setAttachments([]);
          event.target.value = null; // Reset file input
      } else {

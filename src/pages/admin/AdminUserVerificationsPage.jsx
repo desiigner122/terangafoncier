@@ -1,9 +1,9 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Check, X, ShieldOff, Eye } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
@@ -55,7 +55,7 @@ const AdminUserVerificationsPage = () => {
     const [users, setUsers] = useState([]);
     const [documents, setDocuments] = useState({});
     const [loading, setLoading] = useState(true);
-    const { toast } = useToast();
+    // toast remplacÃ© par window.safeGlobalToast
 
     useEffect(() => {
         const fetchUnverifiedUsers = async () => {
@@ -67,7 +67,7 @@ const AdminUserVerificationsPage = () => {
 
             if (usersError) {
                 console.error("Error fetching users:", usersError);
-                toast({ title: 'Erreur', description: 'Impossible de charger les utilisateurs.', variant: 'destructive' });
+                window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger les utilisateurs.', variant: 'destructive' });
                 setLoading(false);
                 return;
             }
@@ -105,10 +105,10 @@ const AdminUserVerificationsPage = () => {
             .eq('id', userId);
 
         if (error) {
-            toast({ title: 'Erreur', description: 'La mise à jour a échoué.', variant: 'destructive' });
+            window.safeGlobalToast({ title: 'Erreur', description: 'La mise à jour a échoué.', variant: 'destructive' });
         } else {
             setUsers(prevUsers => prevUsers.filter(u => u.id !== userId));
-            toast({
+            window.safeGlobalToast({
                 title: 'Action effectuée',
                 description: `Le compte de ${user?.full_name} a été ${newStatus === 'verified' ? 'approuvé' : 'rejeté'}.`,
             });
@@ -186,3 +186,4 @@ const AdminUserVerificationsPage = () => {
 };
 
 export default AdminUserVerificationsPage;
+

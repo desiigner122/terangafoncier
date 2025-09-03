@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Map, Search, Layers, Download } from 'lucide-react';
 import { Input } from '@/components/ui/input';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { MapContainer, TileLayer, Marker, Popup, GeoJSON } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
@@ -30,7 +30,7 @@ const zoningData = {
 };
 
 const CadastrePage = () => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [loading, setLoading] = useState(true);
   const [parcels, setParcels] = useState([]);
   const [mapCenter, setMapCenter] = useState([14.7167, -17.4677]); // Dakar
@@ -46,7 +46,7 @@ const CadastrePage = () => {
       
       if (error) {
         console.error("Error fetching parcels:", error);
-        toast({ title: "Erreur", description: "Impossible de charger les parcelles.", variant: "destructive" });
+        window.safeGlobalToast({ title: "Erreur", description: "Impossible de charger les parcelles.", variant: "destructive" });
       } else {
         setParcels(data);
         if (data.length > 0 && data[0].coordinates) {
@@ -59,7 +59,7 @@ const CadastrePage = () => {
   }, [toast]);
 
   const handleAction = (message) => {
-    toast({ title: "Action Simulée", description: message });
+    window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
   
   const getZoneStyle = (feature) => {

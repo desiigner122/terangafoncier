@@ -1,16 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Share2, Flag, Banknote, FileSignature } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { useAuth } from '@/context/AuthContext';
 
 const ParcelActionsCard = ({ parcel, onInstallmentClick }) => {
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const { user } = useAuth();
 
   const handleAction = (message) => {
-    toast({
+    window.safeGlobalToast({
       title: "Action Simulée",
       description: message,
     });

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
@@ -42,7 +42,7 @@ const safeToast = (message, type = 'default') => {
   try {
     // Tentative d'utilisation du toast standard
     if (typeof window !== 'undefined' && window.toast) {
-      window.toast({ description: message, variant: type });
+      window.window.safeGlobalToast({ description: message, variant: type });
       return;
     }
     
@@ -153,7 +153,7 @@ const safeToast = (message, type = 'default') => {
         await new Promise(resolve => setTimeout(resolve, 1500));
         setIsSubmitting(false);
         setStep(4); // Go to success step
-        toast({
+        window.safeGlobalToast({
             title: "Demande Envoyée !",
             description: `Votre demande d'attribution pour la commune de ${data.commune} a bien été enregistrée.`,
         });

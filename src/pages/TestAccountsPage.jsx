@@ -1,11 +1,11 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuth } from '@/context/SupabaseAuthContext'; 
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
-import { useToast } from '@/components/ui/use-toast-simple';
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { User, Database, TestTube2, AlertTriangle } from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
@@ -13,7 +13,7 @@ import { Spinner } from '@/components/ui/spinner';
 const TestAccountsPage = () => {
   const { register: supabaseRegister, setSimulatedUser, loading: authLoading } = useAuth();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const [loadingAccountId, setLoadingAccountId] = useState(null);
   const [users, setUsers] = useState([]);
   const [loadingUsers, setLoadingUsers] = useState(true);
@@ -45,13 +45,13 @@ const TestAccountsPage = () => {
     setLoadingAccountId(user.id);
     try {
       setSimulatedUser(user);
-      toast({
+      window.safeGlobalToast({
         title: "Connexion Réussie (Simulation)",
         description: `Connecté en tant que ${user.name}.`,
       });
       navigate('/dashboard');
     } catch (error) {
-      toast({
+      window.safeGlobalToast({
         title: "Échec de la connexion",
         description: error.message,
         variant: "destructive",
@@ -71,12 +71,12 @@ const TestAccountsPage = () => {
             fullName: user.full_name,
             userType: user.role
         });
-        toast({
+        window.safeGlobalToast({
             title: "Compte Réel Créé!",
             description: `Compte pour ${newUser.email} créé avec succès sur Supabase.`,
         });
     } catch (error) {
-        toast({
+        window.safeGlobalToast({
             title: "Erreur de Création",
             description: error.message.includes('User already registered') ? `L'utilisateur ${user.email.replace('@teranga.sn', '@real.teranga.sn')} existe déjà.` : error.message,
             variant: "destructive",

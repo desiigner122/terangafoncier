@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { sampleBlogPosts } from '@/data';
@@ -6,12 +6,12 @@ import { Calendar, User, Tag, ArrowLeft, Share2, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const BlogPostPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
+  // toast remplacÃ© par window.safeGlobalToast
   const post = sampleBlogPosts.find(p => p.slug === slug);
 
   if (!post) {
@@ -37,11 +37,11 @@ const BlogPostPage = () => {
         text: post.excerpt,
         url: window.location.href,
       })
-      .then(() => toast({ title: "Article partagé !", description: "L'article a été partagé avec succès."}))
-      .catch((error) => toast({ title: "Erreur de partage", description: `Impossible de partager : ${error}`, variant: "destructive" }));
+      .then(() => window.safeGlobalToast({ title: "Article partagé !", description: "L'article a été partagé avec succès."}))
+      .catch((error) => window.safeGlobalToast({ title: "Erreur de partage", description: `Impossible de partager : ${error}`, variant: "destructive" }));
     } else {
       navigator.clipboard.writeText(window.location.href);
-      toast({ title: "Lien copié !", description: "Le lien de l'article a été copié dans le presse-papiers."});
+      window.safeGlobalToast({ title: "Lien copié !", description: "Le lien de l'article a été copié dans le presse-papiers."});
     }
   };
   

@@ -8,10 +8,11 @@ import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useToast } from "@/components/ui/use-toast-simple";
+// useToast remplacé par safeToast
 import { Landmark, Send, Loader2, FileCheck, CheckCircle, ArrowRight, ArrowLeft, User, UploadCloud, ClipboardCheck } from 'lucide-react';
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Link } from 'react-router-dom';
+import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
 
 const StepIndicator = ({ currentStep, totalSteps }) => (
   <div className="flex justify-center items-center space-x-2 mb-8">
@@ -36,7 +37,57 @@ const StepIndicator = ({ currentStep, totalSteps }) => (
 );
 
 const DashboardMunicipalRequestPageComponent = () => {
-    const { toast } = useToast();
+  // Système de notification sécurisé
+const safeToast = (message, type = 'default') => {
+  try {
+    // Tentative d'utilisation du toast standard
+    if (typeof window !== 'undefined' && window.toast) {
+      window.safeToast("message", "type ");
+      return;
+    }
+    
+    // Fallback 1: Console pour développement
+    console.log(`📢 TOAST [${type.toUpperCase()}]: ${message}`);
+    
+    // Fallback 2: Alert pour utilisateur en cas d'erreur critique
+    if (type === 'destructive' || type === 'error') {
+      alert(`❌ Erreur: ${message}`);
+    } else if (type === 'success') {
+      // Notification discrète pour succès
+      if (typeof document !== 'undefined') {
+        const notification = document.createElement('div');
+        notification.style.cssText = `
+          position: fixed;
+          top: 20px;
+          right: 20px;
+          background: #10b981;
+          color: white;
+          padding: 12px 20px;
+          border-radius: 8px;
+          box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+          z-index: 9999;
+          font-family: system-ui, -apple-system, sans-serif;
+          font-size: 14px;
+          transition: all 0.3s ease;
+        `;
+        notification.textContent = `✅ ${message}`;
+        document.body.appendChild(notification);
+        
+        setTimeout(() => {
+          if (notification.parentNode) {
+            notification.style.opacity = '0';
+            setTimeout(() => notification.remove(), 300);
+          }
+        }, 3000);
+      }
+    }
+  } catch (error) {
+    console.error('Erreur dans safeToast:', error);
+    console.log(`📢 MESSAGE: ${message}`);
+  }
+};
+
+    // toast remplacé par safeToast
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);

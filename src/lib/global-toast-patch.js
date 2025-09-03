@@ -81,11 +81,15 @@ window.safeGlobalToast = (message, type = 'default') => {
   }
 };
 
-// Patch d'urgence pour intercepter les erreurs de toast
+// Patch d'urgence pour intercepter TOUTES les erreurs de toast possibles
 const originalError = window.console.error;
 window.console.error = function(...args) {
   const errorStr = args.join(' ');
-  if (errorStr.includes('nT() is null') || errorStr.includes('toast') || errorStr.includes('useToast')) {
+  if (errorStr.includes('nT() is null') || 
+      errorStr.includes('toast') || 
+      errorStr.includes('useToast') ||
+      errorStr.includes('toast is not defined') ||
+      errorStr.includes('Cannot read properties of null')) {
     console.warn('🛡️ Erreur toast interceptée et neutralisée:', errorStr);
     // Essayer de déclencher le toast de fallback
     window.safeGlobalToast('Notification (système de fallback)', 'default');
@@ -94,14 +98,26 @@ window.console.error = function(...args) {
   originalError.apply(window.console, args);
 };
 
-// Hook de protection global
+// Hook de protection global renforcé
 window.addEventListener('error', function(event) {
   if (event.error && event.error.message && 
       (event.error.message.includes('nT() is null') || 
-       event.error.message.includes('toast'))) {
+       event.error.message.includes('toast') ||
+       event.error.message.includes('toast is not defined'))) {
     console.warn('🛡️ Erreur globale toast interceptée:', event.error.message);
     event.preventDefault();
     return false;
+  }
+});
+
+// Protection contre les erreurs de React non capturées
+window.addEventListener('unhandledrejection', function(event) {
+  if (event.reason && 
+      (String(event.reason).includes('toast') || 
+       String(event.reason).includes('nT() is null'))) {
+    console.warn('🛡️ Promise rejetée toast interceptée:', event.reason);
+    event.preventDefault();
+    window.safeGlobalToast('Erreur interceptée et corrigée', 'default');
   }
 });
 

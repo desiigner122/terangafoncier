@@ -5,7 +5,7 @@ import userStatusManager from '@/lib/userStatusManager';
 import { useToast } from '@/components/ui/use-toast-simple';
 
 export const useUserStatusMonitor = () => {
-  const { user, refreshUser, signOut } = useAuth();
+  const { user, revalidate, signOut } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -41,7 +41,7 @@ export const useUserStatusMonitor = () => {
           });
           
           // Rafraîchir les données utilisateur
-          await refreshUser();
+          await revalidate();
           break;
 
         case 'USER_SESSION_INVALIDATED':
@@ -52,7 +52,7 @@ export const useUserStatusMonitor = () => {
           break;
       }
     }
-  }, [user, toast, signOut, navigate, refreshUser]);
+  }, [user, toast, signOut, navigate, revalidate]);
 
   useEffect(() => {
     if (!user) return;

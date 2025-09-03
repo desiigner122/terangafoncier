@@ -1,4 +1,5 @@
 import React from 'react';
+import { Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import useUserStatusMonitor from '@/hooks/useUserStatusMonitor';
 
@@ -21,7 +22,8 @@ const UserStatusWrapper = ({ children }) => {
     );
   }
 
-  return <>{children}</>;
+  // Si utilisé comme Route element, utiliser Outlet, sinon children
+  return children ? <>{children}</> : <Outlet />;
 };
 
 export default UserStatusWrapper;

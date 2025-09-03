@@ -1,13 +1,38 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tag, Calendar, ArrowRight, BookOpen } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { sampleBlogPosts } from '@/data'; 
+import { supabase } from '@/lib/supabaseClient';
 import { Helmet } from 'react-helmet-async';
 
 const BlogPage = () => {
+  const [blogPosts, setBlogPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchBlogPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('blog')
+          .select('*')
+          .eq('status', 'published')
+          .order('published_at', { ascending: false });
+
+        if (error) throw error;
+        setBlogPosts(data || []);
+      } catch (error) {
+        console.error('Error fetching blog posts:', error);
+        setBlogPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBlogPosts();
+  }, []);
+
   const cardVariants = {
     initial: { opacity: 0, y: 30 },
     animate: (index) => ({
@@ -47,7 +72,16 @@ const BlogPage = () => {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-          {sampleBlogPosts.map((post, index) => (
+          {loading ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-lg text-muted-foreground">Chargement des articles...</p>
+            </div>
+          ) : blogPosts.length === 0 ? (
+            <div className="col-span-full text-center py-12">
+              <p className="text-lg text-muted-foreground">Aucun article disponible pour le moment.</p>
+            </div>
+          ) : (
+            blogPosts.map((post, index) => (
             <motion.custom
               key={post.id}
               variants={cardVariants}
@@ -93,7 +127,8 @@ const BlogPage = () => {
                 </CardFooter>
               </Card>
             </motion.custom>
-          ))}
+            ))
+          )}
         </div>
         
          <div className="text-center mt-12">

@@ -98,6 +98,8 @@ import React from 'react';
     import PricingPage from '@/pages/PricingPage';
     import GlossaryPage from '@/pages/GlossaryPage';
     import TaxGuidePage from '@/pages/TaxGuidePage';
+    import BannedPage from '@/pages/BannedPage';
+    import UserStatusWrapper from '@/components/layout/UserStatusWrapper';
     import CaseTrackingPage from '@/pages/CaseTrackingPage';
     import DigitalVaultPage from '@/pages/DigitalVaultPage';
     import TransactionsPage from '@/pages/TransactionsPage';
@@ -149,6 +151,7 @@ import React from 'react';
                   <Route index element={<HomePage />} />
                   <Route path="login" element={<LoginPage />} />
                   <Route path="register" element={<RegisterPage />} />
+                  <Route path="banned" element={<BannedPage />} />
                   <Route path="parcelles" element={<ParcelsListPage />} />
                   <Route path="parcelles/:id" element={<ParcelDetailPage />} />
                   <Route path="contact" element={<ContactPage />} />
@@ -186,10 +189,11 @@ import React from 'react';
                 </Route>
 
                 <Route element={<ProtectedRoute />}>
-                    <Route path="verify" element={<VerificationPage />} />
-                    <Route path="pending-verification" element={<PendingVerificationPage />} />
-                    
-                    <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
+                    <Route element={<UserStatusWrapper />}>
+                        <Route path="verify" element={<VerificationPage />} />
+                        <Route path="pending-verification" element={<PendingVerificationPage />} />
+                        
+                        <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
                         <Route path="dashboard" element={<DashboardPage />} />
                         <Route path="profile" element={<ProfilePage />} />
                         <Route path="my-requests" element={<MyRequestsPage />} />
@@ -274,6 +278,7 @@ import React from 'react';
                      <Route path="audit-log" element={<AdminAuditLogPage />} />
                      <Route path="settings" element={<AdminSettingsPage />} />
                      <Route path="*" element={<NotFoundPage />} />
+                </Route>
                 </Route>
 
                 <Route path="/agent" element={<RoleProtectedRoute allowedRoles={['Agent Foncier']}><DashboardLayout /></RoleProtectedRoute>}>

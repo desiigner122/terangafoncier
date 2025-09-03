@@ -6,6 +6,7 @@ import { useToast } from "@/components/ui/use-toast-simple";
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { PlusCircle } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
+import userStatusManager from '@/lib/userStatusManager';
 import AddUserWizard from './components/AddUserWizard';
 import EditUserDialog from './components/EditUserDialog';
 import UserFilters from './components/UserFilters';
@@ -44,61 +45,66 @@ const AdminUsersPage = () => {
         let user = users.find(u => u.id === userId);
         if (!user) return;
 
-        let updateData = {};
-        let message = "";
-
         try {
-            if (actionType === 'delete') {
-                // Utiliser verification_status au lieu de 'active' qui n'existe pas
-                const { error: deleteError } = await supabase
-                    .from('users')
-                    .update({ 
-                        verification_status: 'deleted',
-                        updated_at: new Date().toISOString()
-                    })
-                    .eq('id', userId);
-                    
-                if (deleteError) throw deleteError;
-                message = `Utilisateur ${user.full_name} désactivé.`;
-                setUsers(prev => prev.filter(u => u.id !== userId));
-            } else {
-                switch(actionType) {
-                    case 'ban':
-                        updateData = { 
-                            verification_status: 'banned',
-                            updated_at: new Date().toISOString()
-                        };
-                        message = `Utilisateur ${user.full_name} banni.`;
-                        break;
-                    case 'unban':
-                        updateData = { 
-                            verification_status: 'verified',
-                            updated_at: new Date().toISOString()
-                        };
-                        message = `Utilisateur ${user.full_name} débanni.`;
-                        break;
-                    case 'verify':
-                        updateData = { 
-                            verification_status: 'verified',
-                            updated_at: new Date().toISOString()
-                        };
-                        message = `Utilisateur ${user.full_name} vérifié.`;
-                        break;
-                    default:
-                        return;
-                }
+            let result;
+            let message = "";
 
-                const { data: updatedUser, error } = await supabase
-                    .from('users')
-                    .update(updateData)
-                    .eq('id', userId)
-                    .select()
-                    .single();
-                
-                if (error) throw error;
-                setUsers(prev => prev.map(u => u.id === userId ? updatedUser : u));
+            switch(actionType) {
+                case 'delete':
+                    // Soft delete
+                    const { error: deleteError } = await supabase
+                        .from('users')
+                        .update({ 
+                            verification_status: 'deleted',
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', userId);
+                        
+                    if (deleteError) throw deleteError;
+                    message = `Utilisateur ${user.full_name} désactivé.`;
+                    setUsers(prev => prev.filter(u => u.id !== userId));
+                    break;
+
+                case 'ban':
+                    result = await userStatusManager.banUser(userId, 'Banni par un administrateur');
+                    if (!result.success) throw new Error(result.error);
+                    message = `Utilisateur ${user.full_name} banni avec succès.`;
+                    setUsers(prev => prev.map(u => u.id === userId ? result.user : u));
+                    break;
+
+                case 'unban':
+                    result = await userStatusManager.unbanUser(userId);
+                    if (!result.success) throw new Error(result.error);
+                    message = `Utilisateur ${user.full_name} dé-banni avec succès.`;
+                    setUsers(prev => prev.map(u => u.id === userId ? result.user : u));
+                    break;
+
+                case 'verify':
+                    const { data: verifiedUser, error: verifyError } = await supabase
+                        .from('users')
+                        .update({ 
+                            verification_status: 'verified',
+                            updated_at: new Date().toISOString()
+                        })
+                        .eq('id', userId)
+                        .select()
+                        .single();
+                    
+                    if (verifyError) throw verifyError;
+                    message = `Utilisateur ${user.full_name} vérifié.`;
+                    setUsers(prev => prev.map(u => u.id === userId ? verifiedUser : u));
+                    break;
+
+                default:
+                    return;
             }
-            toast({ title: 'Succès', description: message });
+
+            toast({ 
+                title: 'Succès', 
+                description: message,
+                variant: 'default'
+            });
+            
         } catch (error) {
             console.error('Error in handleAction:', error);
             toast({ 
@@ -119,20 +125,49 @@ const AdminUsersPage = () => {
             toast({ title: 'Erreur', description: 'Le nom est requis.', variant: 'destructive'});
             return;
         }
-        
-        const { data: updatedUser, error } = await supabase
-            .from('users')
-            .update({ full_name: updatedUserData.full_name, role: updatedUserData.role, user_type: updatedUserData.role })
-            .eq('id', updatedUserData.id)
-            .select()
-            .single();
 
-        if (error) {
-            toast({ title: 'Erreur', description: 'La mise à jour a échoué.', variant: 'destructive' });
-        } else {
-            setUsers(prev => prev.map(u => u.id === updatedUserData.id ? updatedUser : u));
-            toast({ title: 'Succès', description: `Utilisateur ${updatedUserData.full_name} mis à jour.` });
+        try {
+            // Vérifier si le rôle a changé
+            const currentUser = users.find(u => u.id === updatedUserData.id);
+            const roleChanged = currentUser && currentUser.role !== updatedUserData.role;
+
+            let result;
+            if (roleChanged) {
+                // Utiliser le gestionnaire de statut pour les changements de rôle
+                result = await userStatusManager.updateUserRole(updatedUserData.id, updatedUserData.role);
+                if (!result.success) throw new Error(result.error);
+            } else {
+                // Mise à jour simple du nom
+                const { data: updatedUser, error } = await supabase
+                    .from('users')
+                    .update({ 
+                        full_name: updatedUserData.full_name,
+                        updated_at: new Date().toISOString()
+                    })
+                    .eq('id', updatedUserData.id)
+                    .select()
+                    .single();
+
+                if (error) throw error;
+                result = { success: true, user: updatedUser };
+            }
+
+            setUsers(prev => prev.map(u => u.id === updatedUserData.id ? result.user : u));
+            toast({ 
+                title: 'Succès', 
+                description: `Utilisateur ${updatedUserData.full_name} mis à jour avec succès.`,
+                variant: 'default'
+            });
+            
+        } catch (error) {
+            console.error('Error in handleEditSubmit:', error);
+            toast({ 
+                title: 'Erreur', 
+                description: `La mise à jour a échoué: ${error.message}`, 
+                variant: 'destructive' 
+            });
         }
+        
         setIsEditModalOpen(false);
     };
 

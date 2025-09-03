@@ -6,7 +6,7 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 import { useToast } from '@/components/ui/use-toast-simple';
 
 const ProtectedRoute = ({ children }) => {
-  const { user, loading } = useAuth();
+  const { user, profile, loading } = useAuth();
   const location = useLocation();
 
   if (loading) {
@@ -19,6 +19,11 @@ const ProtectedRoute = ({ children }) => {
 
   if (!user) {
     return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  // VÉRIFICATION CRITIQUE: Bloquer les utilisateurs bannis
+  if (profile && profile.verification_status === 'banned') {
+    return <Navigate to="/banned" state={{ from: location }} replace />;
   }
 
   return children ? children : <Outlet />;
@@ -38,6 +43,11 @@ export const VerifiedRoute = ({ children }) => {
 
     if (!profile) {
       return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+    
+    // VÉRIFICATION CRITIQUE: Bloquer les utilisateurs bannis
+    if (profile.verification_status === 'banned') {
+        return <Navigate to="/banned" state={{ from: location }} replace />;
     }
     
     const requiresVerification = ['Particulier', 'Vendeur Particulier', 'Vendeur Pro', 'Investisseur', 'Promoteur', 'Agriculteur'].includes(profile.user_type);

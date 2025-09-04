@@ -23,12 +23,18 @@ const CitiesCarousel = () => {
       if (error) {
         console.error("Error fetching cities:", error);
       } else {
-        const formattedCities = data.map(mairie => ({
-          name: mairie.company_info?.commune || mairie.full_name.replace('Mairie de ', ''),
-          slug: (mairie.company_info?.commune || mairie.full_name.replace('Mairie de ', '')).toLowerCase().replace(/ /g, '-'),
-          description: `Découvrez les opportunités à ${mairie.company_info?.commune || mairie.full_name.replace('Mairie de ', '')}`,
-          image: `https://source.unsplash.com/random/400x500/?${(mairie.company_info?.commune || 'senegal').toLowerCase()}`,
-        }));
+        const formattedCities = data
+          .filter(mairie => mairie.full_name || mairie.company_info?.commune) // Filtrer les entrées avec des noms valides
+          .map(mairie => {
+            const communeName = mairie.company_info?.commune || 
+                              (mairie.full_name ? mairie.full_name.replace('Mairie de ', '') : 'Ville inconnue');
+            return {
+              name: communeName,
+              slug: communeName.toLowerCase().replace(/ /g, '-'),
+              description: `Découvrez les opportunités à ${communeName}`,
+              image: `https://source.unsplash.com/random/400x500/?${communeName.toLowerCase()}`,
+            };
+          });
         setCities(formattedCities);
       }
       setLoading(false);

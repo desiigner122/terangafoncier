@@ -1,287 +1,682 @@
-﻿import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Banknote, ShieldCheck, FileText, BarChart3, Users, MapPin, DollarSign, TrendingUp, AlertTriangle, Download, Filter, Search, PlusCircle, FileWarning, Layers, Maximize } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
-
-const kpiData = [
-  { title: "Garanties Évaluées (Mois)", value: "18", icon: FileText, trend: "+8%", trendColor: "text-green-500", unit: "dossiers" },
-  { title: "Valeur Totale des Garanties", value: "1.5", icon: DollarSign, trend: "+3.2%", trendColor: "text-green-500", unit: "Mds XOF" },
-  { title: "Risque Portefeuille Moyen", value: "Faible (2.1)", icon: ShieldCheck, trendColor: "text-green-500", trend: "Amélioration", unit: "score" },
-  { title: "Dossiers Complexes", value: "2", icon: FileWarning, trendColor: "text-yellow-500", trend: "Nécessite Expertise", unit: "dossiers" },
-];
-
-const recentEvaluations = [
-  { id: 'DK-ALM-002', type: 'Résidentiel', zone: 'Dakar', valeurEstimee: "150M XOF", risqueScore: 1.8, risqueLevel: 'Faible', date: '2025-06-10', rapportLien: '#' },
-  { id: 'SLY-NGP-010', type: 'Résidentiel', zone: 'Saly', valeurEstimee: "32M XOF", risqueScore: 2.5, risqueLevel: 'Moyen', date: '2025-06-08', rapportLien: '#' },
-  { id: 'DMN-CIT-005', type: 'Commercial', zone: 'Diamniadio', valeurEstimee: "25M XOF", risqueScore: 1.5, risqueLevel: 'Très Faible', date: '2025-06-05', rapportLien: '#' },
-  { id: 'THS-EXT-021', type: 'Mixte', zone: 'Thiès', valeurEstimee: "18M XOF", risqueScore: 2.0, risqueLevel: 'Faible', date: '2025-06-02', rapportLien: '#' },
-  {id: 'DK-YOF-007', type: 'Industriel', zone: 'Dakar', valeurEstimee: "350M XOF", risqueScore: 3.1, risqueLevel: 'Élevé', date: '2025-06-01', rapportLien: '#' , isComplex: true},
-];
-
-const PortfolioDistributionChart = () => (
-  <div className="h-full bg-gradient-to-br from-sky-50 to-blue-100 dark:from-sky-900/30 dark:to-blue-800/30 rounded-lg p-4 flex flex-col items-center justify-center shadow-inner">
-    <Layers className="h-12 w-12 text-blue-600 dark:text-blue-400 mb-3" />
-    <p className="text-sm font-semibold text-blue-800 dark:text-blue-200 mb-2">Distribution du Portefeuille (Type)</p>
-    <div className="w-full mt-2 space-y-1.5">
-      <div className="flex items-center text-xs">
-        <div className="w-1/3 text-blue-700 dark:text-blue-300">Résidentiel</div>
-        <div className="w-2/3 bg-blue-200 dark:bg-blue-700 rounded-full h-2.5"><div className="bg-blue-500 dark:bg-blue-400 h-2.5 rounded-full" style={{width: "60%"}}></div></div>
-        <div className="w-1/6 text-right text-blue-700 dark:text-blue-300">60%</div>
-      </div>
-      <div className="flex items-center text-xs">
-        <div className="w-1/3 text-blue-700 dark:text-blue-300">Commercial</div>
-        <div className="w-2/3 bg-green-200 dark:bg-green-700 rounded-full h-2.5"><div className="bg-green-500 dark:bg-green-400 h-2.5 rounded-full" style={{width: "25%"}}></div></div>
-        <div className="w-1/6 text-right text-blue-700 dark:text-blue-300">25%</div>
-      </div>
-      <div className="flex items-center text-xs">
-        <div className="w-1/3 text-blue-700 dark:text-blue-300">Industriel</div>
-        <div className="w-2/3 bg-orange-200 dark:bg-orange-700 rounded-full h-2.5"><div className="bg-orange-500 dark:bg-orange-400 h-2.5 rounded-full" style={{width: "10%"}}></div></div>
-        <div className="w-1/6 text-right text-blue-700 dark:text-blue-300">10%</div>
-      </div>
-      <div className="flex items-center text-xs">
-        <div className="w-1/3 text-blue-700 dark:text-blue-300">Autre (Mixte)</div>
-        <div className="w-2/3 bg-yellow-200 dark:bg-yellow-700 rounded-full h-2.5"><div className="bg-yellow-500 dark:bg-yellow-400 h-2.5 rounded-full" style={{width: "5%"}}></div></div>
-        <div className="w-1/6 text-right text-blue-700 dark:text-blue-300">5%</div>
-      </div>
-    </div>
-     <Button variant="link" size="sm" className="mt-3 text-xs p-0 h-auto text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300">Rapport Détaillé de Portefeuille</Button>
-  </div>
-);
-
-const RiskMapSimulation = () => (
-  <div className="h-full bg-gradient-to-br from-red-50 to-pink-100 dark:from-red-900/30 dark:to-pink-800/30 rounded-lg p-4 flex flex-col items-center justify-center shadow-inner">
-    <MapPin className="h-12 w-12 text-red-600 dark:text-red-400 mb-3" />
-    <p className="text-sm font-semibold text-red-800 dark:text-red-200">Carte des Risques Fonciers</p>
-    <p className="text-xs text-center mt-1 text-red-700 dark:text-red-300">Visualisation des niveaux de risque par zone (données fictives).</p>
-    <img  className="w-full h-auto mt-2 rounded" alt="Simulation de carte des risques fonciers avec zones colorées et icônes de danger" src="https://images.unsplash.com/photo-1542617752-e09fd73c3513" />
-    <Button variant="link" size="sm" className="mt-2 text-xs p-0 h-auto text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300">Explorer la Carte Interactive</Button>
-  </div>
-);
-
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Separator } from '@/components/ui/separator';
+import { 
+  AreaChart, 
+  Area, 
+  BarChart, 
+  Bar, 
+  PieChart, 
+  Pie, 
+  Cell, 
+  LineChart, 
+  Line, 
+  XAxis, 
+  YAxis, 
+  CartesianGrid, 
+  Tooltip, 
+  Legend, 
+  ResponsiveContainer 
+} from 'recharts';
+import { 
+  CreditCard, 
+  TrendingUp, 
+  DollarSign, 
+  Users, 
+  FileText, 
+  Shield, 
+  AlertTriangle, 
+  CheckCircle, 
+  Clock, 
+  Target, 
+  Activity,
+  Banknote,
+  Calculator,
+  PieChart as PieChartIcon,
+  BarChart3,
+  Wallet,
+  Building2,
+  Coins,
+  Receipt,
+  Download,
+  Search,
+  PlusCircle
+} from 'lucide-react';
 
 const BanquesDashboardPage = () => {
-  // toast remplacÃ© par window.safeGlobalToast
+  const [banqueMetrics, setBanqueMetrics] = useState({
+    creditsImmobiliers: 1847,
+    montantTotal: 98500000000,
+    tauxApprobation: 78.5,
+    delaiTraitement: 15,
+    clientsActifs: 12450,
+    portefeuilleRisque: 2.3,
+    revenus: 4750000000,
+    croissance: 12.8
+  });
+
+  const [chartData, setChartData] = useState({
+    evolutionCredits: [
+      { mois: 'Jan', credits: 145, montant: 7800000000, approuves: 114, refuses: 31 },
+      { mois: 'Fév', credits: 162, montant: 8900000000, approuves: 128, refuses: 34 },
+      { mois: 'Mar', credits: 178, montant: 9200000000, approuves: 142, refuses: 36 },
+      { mois: 'Avr', credits: 195, montant: 10100000000, approuves: 156, refuses: 39 },
+      { mois: 'Mai', credits: 188, montant: 9800000000, approuves: 149, refuses: 39 },
+      { mois: 'Jun', credits: 203, montant: 11200000000, approuves: 164, refuses: 39 }
+    ],
+    typesCredits: [
+      { type: 'Acquisition', nombre: 486, pourcentage: 45.2, montant: 28500000000, couleur: '#10B981' },
+      { type: 'Construction', nombre: 312, pourcentage: 29.0, montant: 22100000000, couleur: '#3B82F6' },
+      { type: 'Rénovation', nombre: 187, pourcentage: 17.4, montant: 9800000000, couleur: '#F59E0B' },
+      { type: 'Refinancement', nombre: 92, pourcentage: 8.4, montant: 4200000000, couleur: '#EF4444' }
+    ],
+    risquePortefeuille: [
+      { trimestre: 'Q1', taux: 2.1, provisions: 890000000, recouvrements: 450000000 },
+      { trimestre: 'Q2', taux: 2.3, provisions: 920000000, recouvrements: 480000000 },
+      { trimestre: 'Q3', taux: 2.0, provisions: 850000000, recouvrements: 520000000 },
+      { trimestre: 'Q4', taux: 2.2, provisions: 900000000, recouvrements: 495000000 }
+    ],
+    performanceAgences: [
+      { agence: 'Dakar Plateau', credits: 425, montant: 18500000000, taux: 85.2 },
+      { agence: 'Almadies', credits: 387, montant: 21200000000, taux: 82.1 },
+      { agence: 'Parcelles', credits: 356, montant: 16800000000, taux: 79.8 },
+      { agence: 'Guédiawaye', credits: 298, montant: 14200000000, taux: 75.4 },
+      { agence: 'Thiès', credits: 245, montant: 12100000000, taux: 73.2 },
+      { agence: 'Saint-Louis', credits: 136, montant: 8900000000, taux: 71.8 }
+    ]
+  });
+
+  const [demandesCredits, setDemandesCredits] = useState([
+    {
+      id: 1,
+      client: 'Mme Fatou DIOP',
+      type: 'Acquisition',
+      montant: 45000000,
+      statut: 'En analyse',
+      agence: 'Dakar Plateau',
+      delai: 8,
+      score: 785,
+      garantie: 'Hypothèque',
+      progression: 65
+    },
+    {
+      id: 2,
+      client: 'M. Abdou NDIAYE',
+      type: 'Construction',
+      montant: 72000000,
+      statut: 'Approuvé',
+      agence: 'Almadies',
+      delai: 12,
+      score: 820,
+      garantie: 'Hypothèque + Caution',
+      progression: 95
+    },
+    {
+      id: 3,
+      client: 'SCI Les Palmiers',
+      type: 'Promotion',
+      montant: 185000000,
+      statut: 'En attente docs',
+      agence: 'Parcelles',
+      delai: 3,
+      score: 742,
+      garantie: 'Nantissement',
+      progression: 25
+    },
+    {
+      id: 4,
+      client: 'Mme Aïssa FALL',
+      type: 'Rénovation',
+      montant: 28000000,
+      statut: 'En analyse',
+      agence: 'Guédiawaye',
+      delai: 6,
+      score: 698,
+      garantie: 'Hypothèque',
+      progression: 45
+    }
+  ]);
+
   const [activeTab, setActiveTab] = useState('overview');
+
+  useEffect(() => {
+    // Simulation de données temps réel
+    const interval = setInterval(() => {
+      setBanqueMetrics(prev => ({
+        ...prev,
+        creditsImmobiliers: prev.creditsImmobiliers + Math.floor(Math.random() * 5) - 2,
+        tauxApprobation: 75 + Math.random() * 8,
+        portefeuilleRisque: 2.0 + Math.random() * 0.6
+      }));
+    }, 6000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   const handleSimulatedAction = (message) => {
     window.safeGlobalToast({ title: "Action Simulée", description: message });
   };
-  
-  const getRiskColor = (level) => {
-    if (level === 'Très Faible' || level === 'Faible') return 'text-green-600';
-    if (level === 'Moyen') return 'text-yellow-600';
-    if (level === 'Élevé') return 'text-red-600';
-    return 'text-muted-foreground';
+
+  const getStatutColor = (statut) => {
+    switch (statut) {
+      case 'Approuvé': return 'bg-green-100 text-green-800';
+      case 'En analyse': return 'bg-blue-100 text-blue-800';
+      case 'En attente docs': return 'bg-yellow-100 text-yellow-800';
+      case 'Refusé': return 'bg-red-100 text-red-800';
+      case 'Suspendu': return 'bg-orange-100 text-orange-800';
+      default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const getScoreColor = (score) => {
+    if (score >= 800) return 'text-green-600 font-bold';
+    if (score >= 700) return 'text-blue-600 font-bold';
+    if (score >= 600) return 'text-orange-600 font-bold';
+    return 'text-red-600 font-bold';
+  };
+
+  const formatMontant = (montant) => {
+    if (montant >= 1000000000) {
+      return (montant / 1000000000).toFixed(1) + 'Md';
+    } else if (montant >= 1000000) {
+      return (montant / 1000000).toFixed(0) + 'M';
+    }
+    return montant.toLocaleString();
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case 'overview':
         return (
-          <>
-            <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4">
-              {kpiData.map((kpi, index) => (
-                <Card key={index} className="hover:shadow-lg transition-shadow border-l-4 border-blue-500">
-                  <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">{kpi.title}</CardTitle>
-                    <kpi.icon className="h-5 w-5 text-blue-600" />
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold">{kpi.value} <span className="text-sm text-muted-foreground">{kpi.unit}</span></div>
-                    {kpi.trend && <p className={`text-xs ${kpi.trendColor}`}>{kpi.trend}</p>}
-                  </CardContent>
-                </Card>
-              ))}
+          <div className="space-y-8">
+            {/* KPIs Principaux */}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <Card className="bg-gradient-to-br from-emerald-500 to-teal-600 text-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-emerald-100 text-sm font-medium">Crédits Immobiliers</p>
+                      <p className="text-3xl font-bold">{banqueMetrics.creditsImmobiliers.toLocaleString()}</p>
+                      <p className="text-emerald-100 text-xs mt-1">Dossiers actifs</p>
+                    </div>
+                    <div className="bg-white/20 p-3 rounded-lg">
+                      <Building2 className="h-8 w-8" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-blue-500 to-indigo-600 text-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-blue-100 text-sm font-medium">Montant Total</p>
+                      <p className="text-3xl font-bold">{formatMontant(banqueMetrics.montantTotal)}</p>
+                      <p className="text-blue-100 text-xs mt-1">FCFA engagés</p>
+                    </div>
+                    <div className="bg-white/20 p-3 rounded-lg">
+                      <Banknote className="h-8 w-8" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-violet-500 to-purple-600 text-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-violet-100 text-sm font-medium">Taux d'Approbation</p>
+                      <p className="text-3xl font-bold">{banqueMetrics.tauxApprobation.toFixed(1)}%</p>
+                      <p className="text-violet-100 text-xs mt-1">Performance commerciale</p>
+                    </div>
+                    <div className="bg-white/20 p-3 rounded-lg">
+                      <CheckCircle className="h-8 w-8" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="bg-gradient-to-br from-orange-500 to-red-500 text-white border-0 shadow-lg">
+                <CardContent className="p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-orange-100 text-sm font-medium">Risque Portefeuille</p>
+                      <p className="text-3xl font-bold">{banqueMetrics.portefeuilleRisque.toFixed(1)}%</p>
+                      <p className="text-orange-100 text-xs mt-1">Taux de défaut</p>
+                    </div>
+                    <div className="bg-white/20 p-3 rounded-lg">
+                      <Shield className="h-8 w-8" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="grid gap-6 lg:grid-cols-3 mt-6">
-                <div className="lg:col-span-1 space-y-6">
-                  <Card className="h-full">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-blue-700 dark:text-blue-300"><Layers className="mr-2 h-5 w-5"/>Distribution du Portefeuille</CardTitle>
-                    </CardHeader>
-                    <CardContent className="h-full flex flex-col">
-                      <PortfolioDistributionChart />
-                    </CardContent>
-                  </Card>
-                </div>
-                 <Card className="lg:col-span-2">
-                    <CardHeader>
-                      <CardTitle className="flex items-center text-red-700 dark:text-red-300"><MapPin className="mr-2 h-5 w-5"/>Carte des Risques Fonciers</CardTitle>
-                      <CardDescription>Visualisation des niveaux de risque par zone (simulation).</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                        <RiskMapSimulation />
-                    </CardContent>
-                  </Card>
+
+            {/* Graphiques Analytics */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+              {/* Évolution Crédits */}
+              <Card className="shadow-lg border-0">
+                <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center gap-2">
+                    <BarChart3 className="h-5 w-5" />
+                    Évolution des Crédits Immobiliers
+                  </CardTitle>
+                  <CardDescription className="text-emerald-100">
+                    Montants et nombre de dossiers par mois
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <AreaChart data={chartData.evolutionCredits}>
+                      <defs>
+                        <linearGradient id="colorMontant" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#10B981" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#10B981" stopOpacity={0.1}/>
+                        </linearGradient>
+                        <linearGradient id="colorCredits" x1="0" y1="0" x2="0" y2="1">
+                          <stop offset="5%" stopColor="#3B82F6" stopOpacity={0.8}/>
+                          <stop offset="95%" stopColor="#3B82F6" stopOpacity={0.1}/>
+                        </linearGradient>
+                      </defs>
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="mois" />
+                      <YAxis yAxisId="left" />
+                      <YAxis yAxisId="right" orientation="right" />
+                      <Tooltip 
+                        formatter={(value, name) => [
+                          name === 'montant' ? formatMontant(value) + ' FCFA' : value,
+                          name === 'montant' ? 'Montant' : 'Nombre'
+                        ]}
+                      />
+                      <Legend />
+                      <Area 
+                        yAxisId="right"
+                        type="monotone" 
+                        dataKey="montant" 
+                        stroke="#10B981" 
+                        fillOpacity={1} 
+                        fill="url(#colorMontant)" 
+                        name="Montant (Md FCFA)"
+                      />
+                      <Area 
+                        yAxisId="left"
+                        type="monotone" 
+                        dataKey="credits" 
+                        stroke="#3B82F6" 
+                        fillOpacity={1} 
+                        fill="url(#colorCredits)" 
+                        name="Nombre de crédits"
+                      />
+                    </AreaChart>
+                  </ResponsiveContainer>
+                </CardContent>
+              </Card>
+
+              {/* Types de Crédits */}
+              <Card className="shadow-lg border-0">
+                <CardHeader className="bg-gradient-to-r from-blue-500 to-violet-500 text-white rounded-t-lg">
+                  <CardTitle className="flex items-center gap-2">
+                    <PieChartIcon className="h-5 w-5" />
+                    Répartition Types de Crédits
+                  </CardTitle>
+                  <CardDescription className="text-blue-100">
+                    Distribution par finalité de financement
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ResponsiveContainer width="100%" height={300}>
+                    <PieChart>
+                      <Pie
+                        data={chartData.typesCredits}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        label={({ type, pourcentage }) => `${type} (${pourcentage}%)`}
+                        outerRadius={80}
+                        fill="#8884d8"
+                        dataKey="nombre"
+                      >
+                        {chartData.typesCredits.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.couleur} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value, name) => [
+                          value + ' crédits',
+                          'Nombre'
+                        ]}
+                      />
+                    </PieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 space-y-2">
+                    {chartData.typesCredits.map((type, index) => (
+                      <div key={index} className="flex items-center justify-between text-sm">
+                        <div className="flex items-center gap-2">
+                          <div 
+                            className="w-3 h-3 rounded-full" 
+                            style={{ backgroundColor: type.couleur }}
+                          ></div>
+                          <span>{type.type}</span>
+                        </div>
+                        <div className="text-right">
+                          <div className="font-medium">{type.nombre} crédits</div>
+                          <div className="text-xs text-gray-500">{formatMontant(type.montant)} FCFA</div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-          </>
+          </div>
         );
       case 'evaluations':
         return (
-           <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center"><FileText className="mr-2 h-5 w-5"/>Évaluations de Garanties</CardTitle>
-              <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 mt-2">
-                <div className="relative w-full sm:w-auto sm:flex-grow">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input type="search" placeholder="Rechercher par réf, zone..." className="pl-8 w-full sm:w-[300px]" onChange={(e) => handleSimulatedAction(`Recherche: ${e.target.value}`)} />
+          <div className="space-y-8">
+            {/* Demandes de Crédits */}
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-violet-500 to-purple-500 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="h-5 w-5" />
+                  Demandes de Crédits en Traitement
+                </CardTitle>
+                <CardDescription className="text-violet-100">
+                  Pipeline des dossiers en cours d'instruction
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  {demandesCredits.map((demande) => (
+                    <motion.div
+                      key={demande.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.3 }}
+                      className="bg-gradient-to-r from-gray-50 to-violet-50 rounded-lg p-4 border border-gray-200 hover:shadow-md transition-shadow"
+                    >
+                      <div className="flex justify-between items-start mb-3">
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900 flex items-center gap-2">
+                            <CreditCard className="h-4 w-4 text-violet-500" />
+                            {demande.client}
+                          </h4>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {demande.type} • {formatMontant(demande.montant)} FCFA • {demande.agence}
+                          </p>
+                        </div>
+                        <div className="flex gap-2">
+                          <Badge className={getStatutColor(demande.statut)}>
+                            {demande.statut}
+                          </Badge>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center gap-4 text-sm text-gray-600 mb-3">
+                        <span className="flex items-center gap-1">
+                          <Calculator className="h-3 w-3" />
+                          Score: <span className={getScoreColor(demande.score)}>{demande.score}</span>
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Shield className="h-3 w-3" />
+                          {demande.garantie}
+                        </span>
+                        <span className="flex items-center gap-1">
+                          <Clock className="h-3 w-3" />
+                          {demande.delai} jours
+                        </span>
+                      </div>
+
+                      <div className="w-full bg-gray-200 rounded-full h-2">
+                        <div
+                          className="bg-gradient-to-r from-violet-500 to-purple-500 h-2 rounded-full transition-all duration-300"
+                          style={{ width: `${demande.progression}%` }}
+                        ></div>
+                      </div>
+                      <p className="text-xs text-gray-500 mt-1">
+                        Avancement: {demande.progression}%
+                      </p>
+                    </motion.div>
+                  ))}
                 </div>
-                <Select onValueChange={(value) => handleSimulatedAction(`Filtrage par type de bien: ${value}`)}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filtrer par type" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous types</SelectItem>
-                    <SelectItem value="residentiel">Résidentiel</SelectItem>
-                    <SelectItem value="commercial">Commercial</SelectItem>
-                    <SelectItem value="industriel">Industriel</SelectItem>
-                    <SelectItem value="mixte">Mixte</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Select onValueChange={(value) => handleSimulatedAction(`Filtrage par risque: ${value}`)}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filtrer par risque" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les risques</SelectItem>
-                    <SelectItem value="faible">Faible</SelectItem>
-                    <SelectItem value="moyen">Moyen</SelectItem>
-                    <SelectItem value="eleve">Élevé</SelectItem>
-                  </SelectContent>
-                </Select>
-                <Input type="date" className="w-full sm:w-[180px]" onChange={(e) => handleSimulatedAction(`Filtrage par date: ${e.target.value}`)} />
-                <Button variant="outline" onClick={() => handleSimulatedAction("Nouvelle évaluation.")}><PlusCircle className="mr-2 h-4 w-4"/>Nouvelle Évaluation</Button>
-              </div>
+              </CardContent>
+            </Card>
+            
+            {/* Performance des Agences */}
+            <Card className="shadow-lg border-0">
+              <CardHeader className="bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-t-lg">
+                <CardTitle className="flex items-center gap-2">
+                  <Target className="h-5 w-5" />
+                  Performance par Agence Bancaire
+                </CardTitle>
+                <CardDescription className="text-cyan-100">
+                  Analyse comparative des agences pour les crédits immobiliers
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="p-6">
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={chartData.performanceAgences} margin={{ top: 20, right: 30, left: 20, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis 
+                      dataKey="agence" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={80}
+                    />
+                    <YAxis yAxisId="left" />
+                    <YAxis yAxisId="right" orientation="right" />
+                    <Tooltip 
+                      formatter={(value, name) => [
+                        name === 'montant' ? formatMontant(value) + ' FCFA' : 
+                        name === 'taux' ? value + '%' : value,
+                        name === 'montant' ? 'Montant' : 
+                        name === 'taux' ? 'Taux approbation' : 'Nombre'
+                      ]}
+                    />
+                    <Legend />
+                    <Bar 
+                      yAxisId="left"
+                      dataKey="credits" 
+                      fill="#06B6D4" 
+                      name="Nombre crédits"
+                      radius={[4, 4, 0, 0]}
+                    />
+                    <Bar 
+                      yAxisId="right"
+                      dataKey="taux" 
+                      fill="#10B981" 
+                      name="Taux approbation (%)"
+                      radius={[4, 4, 0, 0]}
+                    />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+        );
+      case 'reports':
+        return (
+          <Card>
+            <CardHeader>
+              <CardTitle>Rapports et Analyses Avancées</CardTitle>
+              <CardDescription>Générez des rapports personnalisés et accédez à des analyses approfondies.</CardDescription>
             </CardHeader>
-            <CardContent>
-              <div className="overflow-x-auto">
-                <table className="w-full text-sm">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left p-2 font-semibold">Référence</th>
-                      <th className="text-left p-2 font-semibold">Zone</th>
-                      <th className="text-left p-2 font-semibold">Type</th>
-                      <th className="text-left p-2 font-semibold">Valeur Estimée</th>
-                      <th className="text-left p-2 font-semibold">Risque</th>
-                      <th className="text-left p-2 font-semibold">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {recentEvaluations.map((evalItem) => (
-                      <tr key={evalItem.id} className={`border-b hover:bg-muted/30 ${evalItem.isComplex ? 'bg-yellow-50 dark:bg-yellow-900/20' : ''}`}>
-                        <td className="p-2 text-primary hover:underline">
-                          <Link to={`/parcelles/${evalItem.id}`}>{evalItem.id}{evalItem.isComplex && <FileWarning className="inline ml-1 h-3 w-3 text-yellow-600"/>}</Link>
-                        </td>
-                        <td className="p-2">{evalItem.zone}</td>
-                        <td className="p-2">{evalItem.type}</td>
-                        <td className="p-2">{evalItem.valeurEstimee}</td>
-                        <td className={`p-2 font-medium ${getRiskColor(evalItem.risqueLevel)}`}>{evalItem.risqueLevel} ({evalItem.risqueScore})</td>
-                        <td className="p-2 space-x-1">
-                           <Button variant="outline" size="xs" onClick={() => handleSimulatedAction(`Lancement analyse de risque détaillée pour ${evalItem.id}`)}>Analyser</Button>
-                          <Button variant="ghost" size="xs" onClick={() => handleSimulatedAction(`Téléchargement du rapport pour ${evalItem.id}`)} title="Télécharger le rapport">
-                            <Download className="h-3.5 w-3.5"/>
-                          </Button>
-                          <Button variant="ghost" size="xs" onClick={() => handleSimulatedAction(`Affichage des détails cartographiques pour ${evalItem.id}`)} title="Voir sur carte">
-                            <Maximize className="h-3.5 w-3.5"/>
-                          </Button>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
+            <CardContent className="space-y-6">
+              <div className="p-4 border rounded-md">
+                <h3 className="font-semibold text-sm mb-2">Rapport de Portefeuille Mensuel</h3>
+                <p className="text-xs text-muted-foreground mb-2">Synthèse de la performance, évaluation des risques et évolution de la valeur de votre portefeuille.</p>
+                <Button onClick={() => handleSimulatedAction("Génération du rapport de portefeuille (Septembre 2025).")}>
+                  <Download className="mr-2 h-4 w-4"/>Générer Rapport (Sept 2025)
+                </Button>
               </div>
-              <Button variant="link" className="mt-4 p-0" onClick={() => handleSimulatedAction("Affichage de toutes les évaluations.")}>Voir toutes les évaluations</Button>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-semibold text-sm mb-2">Analyse de Risque par Zone</h3>
+                <p className="text-xs text-muted-foreground mb-2">Comparez les niveaux de risque, les types de litiges fréquents et les tendances d'évolution par zone géographique.</p>
+                <Select onValueChange={(value) => handleSimulatedAction(`Génération rapport risque pour ${value}.`)}>
+                  <SelectTrigger className="w-full sm:w-[220px]">
+                    <SelectValue placeholder="Sélectionner une zone" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="dakar_plateau">Dakar Plateau</SelectItem>
+                    <SelectItem value="almadies">Almadies</SelectItem>
+                    <SelectItem value="diamniadio_pole">Diamniadio Pôle Urbain</SelectItem>
+                    <SelectItem value="saly_portudal">Saly Portudal</SelectItem>
+                    <SelectItem value="thies_ville">Thiès Ville</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="p-4 border rounded-md">
+                <h3 className="font-semibold text-sm mb-2">Simulation de Scénarios de Portefeuille</h3>
+                <p className="text-xs text-muted-foreground mb-2">Testez l'impact de l'ajout ou de la cession d'actifs sur la performance globale de votre portefeuille.</p>
+                <Button variant="outline" onClick={() => handleSimulatedAction("Ouverture du module de simulation de scénarios.")}>
+                  Lancer une Simulation
+                </Button>
+              </div>
             </CardContent>
           </Card>
         );
-      case 'reports':
-         return (
-            <Card>
-                <CardHeader>
-                    <CardTitle>Rapports et Analyses Avancées</CardTitle>
-                    <CardDescription>Générez des rapports personnalisés et accédez à des analyses approfondies.</CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-6">
-                    <div className="p-4 border rounded-md">
-                        <h3 className="font-semibold text-sm mb-2">Rapport de Portefeuille Mensuel</h3>
-                        <p className="text-xs text-muted-foreground mb-2">Synthèse de la performance, évaluation des risques et évolution de la valeur de votre portefeuille.</p>
-                        <Button onClick={() => handleSimulatedAction("Génération du rapport de portefeuille (Juin 2025).")}><Download className="mr-2 h-4 w-4"/>Générer Rapport (Juin 2025)</Button>
-                    </div>
-                    <div className="p-4 border rounded-md">
-                        <h3 className="font-semibold text-sm mb-2">Analyse de Risque par Zone</h3>
-                        <p className="text-xs text-muted-foreground mb-2">Comparez les niveaux de risque, les types de litiges fréquents et les tendances d'évolution par zone géographique.</p>
-                         <Select onValueChange={(value) => handleSimulatedAction(`Génération rapport risque pour ${value}.`)}>
-                            <SelectTrigger className="w-full sm:w-[220px]">
-                                <SelectValue placeholder="Sélectionner une zone" />
-                            </SelectTrigger>
-                            <SelectContent>
-                                <SelectItem value="dakar_plateau">Dakar Plateau</SelectItem>
-                                <SelectItem value="almadies">Almadies</SelectItem>
-                                <SelectItem value="diamniadio_pole">Diamniadio Pôle Urbain</SelectItem>
-                                <SelectItem value="saly_portudal">Saly Portudal</SelectItem>
-                                <SelectItem value="thies_ville">Thiès Ville</SelectItem>
-                            </SelectContent>
-                        </Select>
-                    </div>
-                     <div className="p-4 border rounded-md">
-                        <h3 className="font-semibold text-sm mb-2">Simulation de Scénarios de Portefeuille</h3>
-                        <p className="text-xs text-muted-foreground mb-2">Testez l'impact de l'ajout ou de la cession d'actifs sur la performance globale de votre portefeuille.</p>
-                        <Button variant="outline" onClick={() => handleSimulatedAction("Ouverture du module de simulation de scénarios.")}>Lancer une Simulation</Button>
-                    </div>
-                </CardContent>
-            </Card>
-         );
-      default: return null;
+      default: 
+        return null;
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="space-y-6 p-4 md:p-6 lg:p-8"
-    >
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-primary flex items-center">
-            <Banknote className="h-8 w-8 mr-3 text-blue-600"/>
-            Tableau de Bord Banques & Institutions Financières
-          </h1>
-          <p className="text-muted-foreground">Outils et analyses pour la gestion des actifs fonciers et l'évaluation des risques.</p>
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50 to-blue-50 p-6">
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.6 }}
+        className="max-w-7xl mx-auto space-y-8"
+      >
+        {/* En-tête Dashboard */}
+        <div className="text-center mb-8">
+          <motion.h1
+            initial={{ opacity: 0, y: -20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5 }}
+            className="text-4xl font-bold text-gray-900 mb-4"
+          >
+            Dashboard Bancaire Immobilier
+          </motion.h1>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+            className="text-lg text-gray-600 max-w-3xl mx-auto"
+          >
+            Plateforme de gestion des crédits immobiliers, analyse des risques et 
+            monitoring de la performance du portefeuille bancaire
+          </motion.p>
         </div>
-        <Button onClick={() => handleSimulatedAction("Nouvelle évaluation de garantie.")}>
-            <PlusCircle className="mr-2 h-4 w-4"/> Nouvelle Évaluation
-        </Button>
-      </div>
 
-      <div className="border-b border-gray-200 dark:border-gray-700">
-        <nav className="-mb-px flex space-x-8" aria-label="Tabs">
-          {['overview', 'evaluations', 'reports'].map((tab) => (
-            <button
-              key={tab}
-              onClick={() => setActiveTab(tab)}
-              className={`${
-                activeTab === tab
-                  ? 'border-blue-500 text-blue-600'
-                  : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
-              } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
-            >
-              {tab === 'overview' ? 'Vue d\'ensemble' : tab === 'evaluations' ? 'Évaluations Détaillées' : 'Rapports & Analyses'}
-            </button>
-          ))}
-        </nav>
-      </div>
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-primary flex items-center">
+              <Banknote className="h-6 w-6 mr-3 text-emerald-600"/>
+              Institutions Financières
+            </h2>
+            <p className="text-muted-foreground">Outils et analyses pour la gestion des actifs fonciers et l'évaluation des risques.</p>
+          </div>
+          <Button onClick={() => handleSimulatedAction("Nouvelle évaluation de crédit immobilier.")}>
+            <PlusCircle className="mr-2 h-4 w-4"/> Nouveau Crédit
+          </Button>
+        </div>
 
-      <div className="mt-6">
-        {renderTabContent()}
-      </div>
-    </motion.div>
+        <div className="border-b border-gray-200 dark:border-gray-700">
+          <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+            {['overview', 'evaluations', 'reports'].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`${
+                  activeTab === tab
+                    ? 'border-emerald-500 text-emerald-600'
+                    : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-200 dark:hover:border-gray-600'
+                } whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm capitalize`}
+              >
+                {tab === 'overview' ? 'Vue d\'ensemble' : tab === 'evaluations' ? 'Crédits Détaillés' : 'Rapports & Analyses'}
+              </button>
+            ))}
+          </nav>
+        </div>
+
+        <div className="mt-6">
+          {renderTabContent()}
+        </div>
+
+        {/* Métriques Complémentaires */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6, delay: 0.6 }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          <Card className="bg-gradient-to-br from-teal-500 to-cyan-500 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-teal-100 text-sm font-medium">Clients Actifs</p>
+                  <p className="text-3xl font-bold">{banqueMetrics.clientsActifs.toLocaleString()}</p>
+                  <p className="text-teal-100 text-xs mt-1">Base clientèle</p>
+                </div>
+                <div className="bg-white/20 p-3 rounded-lg">
+                  <Users className="h-8 w-8" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-indigo-500 to-purple-500 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-indigo-100 text-sm font-medium">Délai Traitement</p>
+                  <p className="text-3xl font-bold">{banqueMetrics.delaiTraitement}</p>
+                  <p className="text-indigo-100 text-xs mt-1">jours moyens</p>
+                </div>
+                <div className="bg-white/20 p-3 rounded-lg">
+                  <Clock className="h-8 w-8" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-green-500 to-emerald-500 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">Revenus Crédits</p>
+                  <p className="text-3xl font-bold">{formatMontant(banqueMetrics.revenus)}</p>
+                  <p className="text-green-100 text-xs mt-1">FCFA semestriel</p>
+                </div>
+                <div className="bg-white/20 p-3 rounded-lg">
+                  <DollarSign className="h-8 w-8" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-br from-pink-500 to-rose-500 text-white border-0 shadow-lg">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-pink-100 text-sm font-medium">Croissance</p>
+                  <p className="text-3xl font-bold">{banqueMetrics.croissance.toFixed(1)}%</p>
+                  <p className="text-pink-100 text-xs mt-1">Évolution annuelle</p>
+                </div>
+                <div className="bg-white/20 p-3 rounded-lg">
+                  <TrendingUp className="h-8 w-8" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </motion.div>
+    </div>
   );
 };
 

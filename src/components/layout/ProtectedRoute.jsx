@@ -1,9 +1,10 @@
 ﻿
 import React from 'react';
-import { Navigate, useLocation, Outlet } from 'react-router-dom';
+import { Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+import { hasPermission, getAccessDeniedMessage, getDefaultDashboard } from '@/lib/rbacConfig';
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 const ProtectedRoute = ({ children }) => {
   const { user, profile, loading } = useAuth();
@@ -86,26 +87,39 @@ export const AdminRoute = ({ children }) => {
   return children ? children : <Outlet />;
 };
 
-export const RoleProtectedRoute = ({ children, allowedRoles }) => {
-  const { profile, loading } = useAuth();
-  const location = useLocation();
-  // toast remplacÃ© par window.safeGlobalToast
+export const RoleProtectedRoute = ({ children, allowedRoles = [], permission = null }) => {
+  const { user, profile, loading } = useAuth();
+  const navigate = useNavigate();
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <LoadingSpinner size="large" />
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
       </div>
     );
   }
-  
-  if (!profile || !allowedRoles.includes(profile.role)) {
-    window.safeGlobalToast({
-        variant: 'destructive',
-        title: 'Accès Interdit',
-        description: 'Vous n\'avez pas les permissions requises pour accéder à cette page.',
-    });
-    return <Navigate to="/dashboard" state={{ from: location }} replace />;
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (!profile) {
+    return <Navigate to="/profile" replace />;
+  }
+
+  // Vérifier si l'utilisateur est banni
+  if (profile.banned) {
+    return <Navigate to="/banned" replace />;
+  }
+
+  // Si une permission spécifique est requise, la vérifier
+  if (permission && !hasPermission(profile.role, permission)) {
+    return <Navigate to={`/access-denied?permission=${permission}&role=${profile.role}`} replace />;
+  }
+
+  // Vérifier le rôle si pas de permission spécifique
+  if (!permission && !allowedRoles.includes(profile.role)) {
+    return <Navigate to={`/access-denied?role=${profile.role}&required=${allowedRoles.join(',')}`} replace />;
   }
 
   return children;

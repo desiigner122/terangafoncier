@@ -11,6 +11,7 @@ import { InstructionModal, AttributionModal, GenericActionModal } from './mairie
 import { useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
+import TerrainAlertSystem from '@/components/mairie/TerrainAlertSystem';
 
 const MairiesDashboardPage = () => {
   const [loading, setLoading] = useState(true);
@@ -192,12 +193,12 @@ const MairiesDashboardPage = () => {
             </Card>
              <Card>
                 <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                    <CardTitle className="text-sm font-medium">Litiges en Cours</CardTitle>
-                    <AlertTriangle className="h-4 w-4 text-muted-foreground" />
+                    <CardTitle className="text-sm font-medium">Terrains Surveillés</CardTitle>
+                    <AlertTriangle className="h-4 w-4 text-orange-500" />
                 </CardHeader>
                 <CardContent>
-                    <div className="text-2xl font-bold">1</div>
-                    <p className="text-xs text-muted-foreground">nécessitant une médiation</p>
+                    <div className="text-2xl font-bold">12</div>
+                    <p className="text-xs text-muted-foreground">en vente dans la commune</p>
                 </CardContent>
             </Card>
              <Card>
@@ -246,11 +247,36 @@ const MairiesDashboardPage = () => {
             <div className="space-y-6">
                 <Card>
                     <CardHeader>
-                        <CardTitle className="text-base">Outils d'Urbanisme</CardTitle>
+                        <CardTitle className="text-base">Surveillance Territoriale</CardTitle>
                     </CardHeader>
                     <CardContent className="flex flex-col gap-2">
-                        <Button asChild variant="secondary" className="justify-start"><Link to="/dashboard/cadastre"><MapIcon className="mr-2 h-4 w-4"/> Consulter le Cadastre</Link></Button>
-                        <Button asChild variant="secondary" className="justify-start"><Link to="/dashboard/urban-plan"><Library className="mr-2 h-4 w-4"/> Voir Plan d'Urbanisme</Link></Button>
+                        <Button asChild variant="secondary" className="justify-start">
+                            <Link to="/dashboard/terrain-oversight">
+                                <AlertTriangle className="mr-2 h-4 w-4 text-orange-500"/> 
+                                Terrains en Vente
+                            </Link>
+                        </Button>
+                        <Button asChild variant="secondary" className="justify-start">
+                            <Link to="/dashboard/terrain-analytics">
+                                <MapIcon className="mr-2 h-4 w-4 text-blue-500"/> 
+                                Analytics Marché
+                            </Link>
+                        </Button>
+                        <Button asChild variant="secondary" className="justify-start">
+                            <Link to="/dashboard/cadastre">
+                                <MapIcon className="mr-2 h-4 w-4"/> 
+                                Consulter le Cadastre
+                            </Link>
+                        </Button>
+                        <Button asChild variant="secondary" className="justify-start">
+                            <Link to="/dashboard/urban-plan">
+                                <Library className="mr-2 h-4 w-4"/> 
+                                Voir Plan d'Urbanisme
+                            </Link>
+                        </Button>
+                        <div className="pt-2 text-xs text-orange-600 bg-orange-50 p-2 rounded border-l-4 border-orange-400">
+                            <strong>2 nouveaux terrains</strong> mis en vente cette semaine
+                        </div>
                     </CardContent>
                 </Card>
                 <Card>
@@ -264,6 +290,11 @@ const MairiesDashboardPage = () => {
                     </CardContent>
                 </Card>
             </div>
+        </div>
+
+        {/* Système d'alertes terrain temps réel */}
+        <div className="mt-6">
+          <TerrainAlertSystem municipalityName="Saly" />
         </div>
         
       </motion.div>

@@ -60,42 +60,63 @@ const AdminUserVerificationsPage = () => {
     useEffect(() => {
         const fetchUnverifiedUsers = async () => {
             setLoading(true);
-            const { data: usersData, error: usersError } = await supabase
-                .from('users')
-                .select('*, user_auth:id(email)')
-                .in('verification_status', ['unverified', 'pending']);
-
-            if (usersError) {
-                console.error("Error fetching users:", usersError);
-                window.safeGlobalToast({ title: 'Erreur', description: 'Impossible de charger les utilisateurs.', variant: 'destructive' });
-                setLoading(false);
-                return;
-            }
-            const formattedUsers = usersData.map(u => ({ ...u, email: u.user_auth?.email || 'Email non trouvé' }));
-            setUsers(formattedUsers);
-
-            const userIds = formattedUsers.map(u => u.id);
-            if (userIds.length > 0) {
-                const { data: docsData, error: docsError } = await supabase
-                    .from('documents')
+            try {
+                // Récupérer les utilisateurs non vérifiés
+                const { data: usersData, error: usersError } = await supabase
+                    .from('users')
                     .select('*')
-                    .in('user_id', userIds);
-                
-                if (docsError) {
-                    console.error("Error fetching documents:", docsError);
-                } else {
-                    const docsByUserId = docsData.reduce((acc, doc) => {
-                        if (!acc[doc.user_id]) acc[doc.user_id] = [];
-                        acc[doc.user_id].push(doc);
-                        return acc;
-                    }, {});
-                    setDocuments(docsByUserId);
+                    .in('verification_status', ['unverified', 'pending']);
+
+                if (usersError) {
+                    console.error("Error fetching users:", usersError);
+                    window.safeGlobalToast({ 
+                        title: 'Erreur', 
+                        description: 'Impossible de charger les utilisateurs.', 
+                        variant: 'destructive' 
+                    });
+                    setLoading(false);
+                    return;
                 }
+
+                // Pour l'instant, utiliser un email par défaut ou récupérer via une vue/fonction
+                const usersWithEmails = usersData.map((user) => ({
+                    ...user,
+                    email: user.email || 'Email non disponible'  // Utiliser le champ email de la table users si disponible
+                }));
+
+                setUsers(usersWithEmails);
+
+                const userIds = usersWithEmails.map(u => u.id);
+                if (userIds.length > 0) {
+                    const { data: docsData, error: docsError } = await supabase
+                        .from('documents')
+                        .select('*')
+                        .in('user_id', userIds);
+                    
+                    if (docsError) {
+                        console.error("Error fetching documents:", docsError);
+                    } else {
+                        const docsByUserId = docsData.reduce((acc, doc) => {
+                            if (!acc[doc.user_id]) acc[doc.user_id] = [];
+                            acc[doc.user_id].push(doc);
+                            return acc;
+                        }, {});
+                        setDocuments(docsByUserId);
+                    }
+                }
+            } catch (error) {
+                console.error("Error in fetchUnverifiedUsers:", error);
+                window.safeGlobalToast({ 
+                    title: 'Erreur', 
+                    description: 'Une erreur est survenue lors du chargement.', 
+                    variant: 'destructive' 
+                });
+            } finally {
+                setLoading(false);
             }
-            setLoading(false);
         };
         fetchUnverifiedUsers();
-    }, [toast]);
+    }, []); // Supprimer la dépendance toast
     
     const handleVerificationAction = async (userId, newStatus) => {
         const user = users.find(u => u.id === userId);

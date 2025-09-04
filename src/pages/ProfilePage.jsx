@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useAuth } from '@/context/SupabaseAuthContext';
+import { safeStorageUpload } from '@/lib/supabaseStorageInit';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { motion } from 'framer-motion';
 import { User, Mail, Phone, KeyRound, Save, LogOut, ShieldCheck, Trash2, Upload } from 'lucide-react';
@@ -77,13 +78,23 @@ const ProfilePage = () => {
         const fileName = `${user.id}-${Math.random()}.${fileExt}`;
         const filePath = `avatars/${fileName}`;
         
-        const { error: uploadError } = await supabase.storage.from('avatars').upload(filePath, avatarFile, {
-            upsert: true,
+        // Utiliser l'upload sécurisé
+        const uploadResult = await safeStorageUpload(supabase, 'avatars', filePath, avatarFile, {
+          upsert: true,
         });
-        if (uploadError) throw uploadError;
-
-        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(filePath);
-        avatarUrl = publicUrl;
+        
+        if (uploadResult.success) {
+          avatarUrl = uploadResult.publicUrl;
+        } else {
+          console.warn('Erreur upload avatar:', uploadResult.error);
+          window.safeGlobalToast({ 
+            variant: "destructive", 
+            title: "Attention", 
+            description: "L'avatar n'a pas pu être téléchargé, mais le profil sera mis à jour." 
+          });
+          // Garder l'ancien avatar
+          avatarUrl = profile.avatar_url;
+        }
       }
 
         const { error } = await supabase

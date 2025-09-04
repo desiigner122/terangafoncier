@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Check Browser Errors - Teranga Foncier</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .error-log {
+            background: #fff;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .error {
+            color: #d32f2f;
+            background: #ffebee;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #d32f2f;
+        }
+        .warning {
+            color: #f57c00;
+            background: #fff8e1;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #f57c00;
+        }
+        .info {
+            color: #1976d2;
+            background: #e3f2fd;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #1976d2;
+        }
+        .success {
+            color: #388e3c;
+            background: #e8f5e8;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 4px;
+            border-left: 4px solid #388e3c;
+        }
+        .test-button {
+            background: #1976d2;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin: 10px 5px;
+            font-size: 14px;
+        }
+        .test-button:hover {
+            background: #1565c0;
+        }
+        iframe {
+            width: 100%;
+            height: 600px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🔍 Check Browser Errors - Teranga Foncier</h1>
+    
+    <div class="error-log">
+        <h2>📋 Journal des Erreurs</h2>
+        <div id="errorLog">
+            <div class="info">Initialisation du monitoring des erreurs...</div>
+        </div>
+    </div>
+
+    <div class="error-log">
+        <h2>🚀 Tests Automatiques</h2>
+        <button class="test-button" onclick="testMainSite()">Tester Site Principal</button>
+        <button class="test-button" onclick="testDashboardAccess()">Tester Dashboard Particulier</button>
+        <button class="test-button" onclick="testToastSystem()">Tester Système Toast</button>
+        <button class="test-button" onclick="clearLog()">Effacer Log</button>
+    </div>
+
+    <div class="error-log">
+        <h2>🌐 Site Teranga Foncier</h2>
+        <iframe id="siteFrame" src="https://terangafoncier.vercel.app"></iframe>
+    </div>
+
+    <script>
+        const errorLog = document.getElementById('errorLog');
+        let errorCount = 0;
+
+        function logMessage(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const div = document.createElement('div');
+            div.className = type;
+            div.innerHTML = `<strong>[${timestamp}]</strong> ${message}`;
+            errorLog.appendChild(div);
+            errorLog.scrollTop = errorLog.scrollHeight;
+        }
+
+        function clearLog() {
+            errorLog.innerHTML = '<div class="info">Log effacé...</div>';
+            errorCount = 0;
+        }
+
+        // Intercepter les erreurs JavaScript
+        window.addEventListener('error', (event) => {
+            errorCount++;
+            logMessage(`🚨 ERREUR JS #${errorCount}: ${event.message} (${event.filename}:${event.lineno})`, 'error');
+        });
+
+        // Intercepter les erreurs de promesses non gérées
+        window.addEventListener('unhandledrejection', (event) => {
+            errorCount++;
+            logMessage(`🚨 PROMESSE REJETÉE #${errorCount}: ${event.reason}`, 'error');
+        });
+
+        // Intercepter les erreurs dans l'iframe
+        window.addEventListener('message', (event) => {
+            if (event.data && event.data.type === 'error') {
+                errorCount++;
+                logMessage(`🚨 ERREUR IFRAME #${errorCount}: ${event.data.message}`, 'error');
+            }
+        });
+
+        function testMainSite() {
+            logMessage('🔍 Test du site principal...', 'info');
+            const frame = document.getElementById('siteFrame');
+            frame.src = 'https://terangafoncier.vercel.app';
+            
+            setTimeout(() => {
+                try {
+                    logMessage('✅ Site principal chargé avec succès', 'success');
+                } catch (error) {
+                    logMessage(`❌ Erreur lors du chargement: ${error.message}`, 'error');
+                }
+            }, 3000);
+        }
+
+        function testDashboardAccess() {
+            logMessage('🔍 Test d\'accès au dashboard particulier...', 'info');
+            const frame = document.getElementById('siteFrame');
+            frame.src = 'https://terangafoncier.vercel.app/dashboard-particulier';
+            
+            setTimeout(() => {
+                logMessage('⚠️ Vérifiez manuellement l\'accès au dashboard', 'warning');
+            }, 3000);
+        }
+
+        function testToastSystem() {
+            logMessage('🔍 Test du système toast...', 'info');
+            
+            // Test de window.safeGlobalToast
+            if (typeof window.safeGlobalToast === 'function') {
+                logMessage('✅ window.safeGlobalToast est disponible', 'success');
+                try {
+                    window.safeGlobalToast('Test toast réussi!', 'success');
+                    logMessage('✅ Test toast exécuté avec succès', 'success');
+                } catch (error) {
+                    logMessage(`❌ Erreur test toast: ${error.message}`, 'error');
+                }
+            } else {
+                logMessage('❌ window.safeGlobalToast n\'est pas disponible', 'error');
+            }
+
+            // Test de window.toast
+            if (typeof window.toast === 'function') {
+                logMessage('✅ window.toast est disponible', 'success');
+            } else {
+                logMessage('⚠️ window.toast n\'est pas disponible', 'warning');
+            }
+        }
+
+        // Initialisation
+        logMessage('🚀 Monitoring des erreurs initialisé', 'success');
+        logMessage('📡 Écoute des erreurs JavaScript...', 'info');
+        logMessage('🎯 Prêt pour les tests automatiques', 'info');
+
+        // Test automatique initial
+        setTimeout(() => {
+            testToastSystem();
+        }, 1000);
+    </script>
+</body>
+</html>

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '@/components/layout/Sidebar';
 import Header from '@/components/layout/Header';
+import AIChatbot from '@/components/AIChatbot';
 
 const DashboardLayout = ({ children }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
@@ -29,6 +30,9 @@ const DashboardLayout = ({ children }) => {
           </div>
         </main>
       </div>
+      
+      {/* Chatbot IA */}
+      <AIChatbot />
     </div>
   );
 };

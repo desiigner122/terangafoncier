@@ -33,6 +33,7 @@ import React from 'react';
     import SavedSearchesPage from '@/pages/SavedSearchesPage';
     import ComparisonPage from '@/pages/ComparisonPage';
     import SecureMessagingPage from '@/pages/SecureMessagingPage';
+    import SimpleDashboard from '@/pages/SimpleDashboard';
     import { Button } from '@/components/ui/button';
     import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
     import ScrollToTop from '@/components/layout/ScrollToTop';
@@ -43,6 +44,7 @@ import React from 'react';
     import FloatingWhatsAppButton from '@/components/layout/FloatingWhatsAppButton';
     import DashboardMunicipalRequestPage from '@/pages/DashboardMunicipalRequestPage';
     import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
+    import GlobalAdminDashboard from '@/pages/admin/GlobalAdminDashboard';
     import AdminUsersPage from '@/pages/admin/AdminUsersPage';
     import AdminParcelsPage from '@/pages/admin/AdminParcelsPage';
     import AdminSystemRequestsPage from '@/pages/admin/AdminSystemRequestsPage';
@@ -53,6 +55,7 @@ import React from 'react';
     import AdminAuditLogPage from '@/pages/admin/AdminAuditLogPage';
     import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
     import AdminUserRequestsPage from '@/pages/admin/AdminUserRequestsPage';
+    import AdminUserVerificationsPage from '@/pages/admin/AdminUserVerificationsPage';
     import AgentDashboardPage from '@/pages/agent/AgentDashboardPage';
     import AgentClientsPage from '@/pages/agent/AgentClientsPage';
     import AgentParcelsPage from '@/pages/agent/AgentParcelsPage';
@@ -84,6 +87,8 @@ import React from 'react';
     import DisputesPage from '@/pages/dashboards/mairie/DisputesPage';
     import UrbanPlanPage from '@/pages/dashboards/mairie/UrbanPlanPage';
     import MairieReportsPage from '@/pages/dashboards/mairie/MairieReportsPage';
+    import TerrainOversightPage from '@/pages/solutions/dashboards/mairies/TerrainOversightPage';
+    import TerrainAnalyticsPage from '@/pages/solutions/dashboards/mairies/TerrainAnalyticsPage';
     import CasesPage from '@/pages/dashboards/notaire/CasesPage';
     import AuthenticationPage from '@/pages/dashboards/notaire/AuthenticationPage';
     import ArchivesPage from '@/pages/dashboards/notaire/ArchivesPage';
@@ -94,7 +99,11 @@ import React from 'react';
     import InvestisseursDashboardPage from '@/pages/solutions/dashboards/InvestisseursDashboardPage';
     import PromoteursDashboardPage from '@/pages/solutions/dashboards/PromoteursDashboardPage';
     import MairiesDashboardPage from '@/pages/solutions/dashboards/MairiesDashboardPage';
+    import AccountCreationTestPage from '@/pages/AccountCreationTestPage';
     import NotairesDashboardPage from '@/pages/solutions/dashboards/NotairesDashboardPage';
+    import AccessDeniedPage from '@/components/AccessDeniedPage';
+    import SecurityDiagnosticTool from '@/components/SecurityDiagnosticTool';
+    import NotFoundPage from '@/pages/NotFoundPage';
     import PricingPage from '@/pages/PricingPage';
     import GlossaryPage from '@/pages/GlossaryPage';
     import TaxGuidePage from '@/pages/TaxGuidePage';
@@ -108,12 +117,12 @@ import React from 'react';
     import VerificationPage from '@/pages/VerificationPage';
     import PendingVerificationPage from '@/pages/PendingVerificationPage';
     import MunicipalLandInfoPage from '@/pages/MunicipalLandInfoPage';
-    import AdminUserVerificationsPage from '@/pages/admin/AdminUserVerificationsPage';
     import AddParcelPage from '@/pages/AddParcelPage';
     import AnalyticsPage from '@/pages/AnalyticsPage';
     import MairiePage from '@/pages/MairiePage';
     import RegionInvestmentPage from '@/pages/RegionInvestmentPage';
     import SolutionsAgriculteursPage from '@/pages/solutions/SolutionsAgriculteursPage';
+    import BecomeSellerPage from '@/pages/BecomeSellerPage';
 
 
     const PublicLayout = () => (
@@ -124,19 +133,6 @@ import React from 'react';
         </main>
         <Footer />
       </div>
-    );
-
-    const NotFoundPage = () => (
-       <div className="container mx-auto text-center py-20 flex flex-col items-center justify-center min-h-[calc(100vh-200px)]">
-          <motion.div initial={{ scale: 0.5, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} transition={{ type: 'spring', stiffness: 100 }}>
-              <h1 className="text-6xl font-bold text-primary">404</h1>
-              <h2 className="text-2xl font-semibold mb-4">Page Non Trouvée</h2>
-              <p className="text-muted-foreground mb-8 max-w-md">Désolé, la page que vous recherchez semble s'être égarée dans le cadastre numérique.</p>
-              <Button asChild size="lg" className="bg-gradient-to-r from-green-500 to-primary hover:opacity-90 text-white">
-                 <Link to="/">Retourner à l'Accueil</Link>
-              </Button>
-          </motion.div>
-       </div>
     );
 
 
@@ -151,6 +147,7 @@ import React from 'react';
                   <Route index element={<HomePage />} />
                   <Route path="login" element={<LoginPage />} />
                   <Route path="register" element={<RegisterPage />} />
+                  <Route path="test-account-creation" element={<AccountCreationTestPage />} />
                   <Route path="banned" element={<BannedPage />} />
                   <Route path="parcelles" element={<ParcelsListPage />} />
                   <Route path="parcelles/:id" element={<ParcelDetailPage />} />
@@ -192,37 +189,39 @@ import React from 'react';
                     <Route element={<UserStatusWrapper />}>
                         <Route path="verify" element={<VerificationPage />} />
                         <Route path="pending-verification" element={<PendingVerificationPage />} />
+                        <Route path="become-seller" element={<BecomeSellerPage />} />
+                        <Route path="dashboard-simple" element={<ProtectedRoute><SimpleDashboard /></ProtectedRoute>} />
                         
                         <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
                         <Route path="dashboard" element={<DashboardPage />} />
                         <Route path="profile" element={<ProfilePage />} />
-                        <Route path="my-requests" element={<MyRequestsPage />} />
+                        <Route path="my-requests" element={<RoleProtectedRoute permission="MY_REQUESTS"><MyRequestsPage /></RoleProtectedRoute>} />
                         <Route path="settings" element={<SettingsPage />} />
                         <Route path="transactions" element={<TransactionsPage />} />
                         <Route path="payment/:transactionId" element={<PaymentPage />} />
-                        <Route path="favorites" element={<MyFavoritesPage />} />
+                        <Route path="favorites" element={<RoleProtectedRoute permission="FAVORITES"><MyFavoritesPage /></RoleProtectedRoute>} />
                         <Route path="notifications" element={<NotificationsPage />} />
                         <Route path="messaging" element={<SecureMessagingPage />} />
                         <Route path="case-tracking/:id" element={<CaseTrackingPage />} />
                         <Route path="analytics" element={<AnalyticsPage />} />
-                        <Route path="digital-vault" element={<RoleProtectedRoute allowedRoles={['Particulier']}><DigitalVaultPage /></RoleProtectedRoute>} />
+                        <Route path="digital-vault" element={<RoleProtectedRoute permission="DIGITAL_VAULT"><DigitalVaultPage /></RoleProtectedRoute>} />
 
                         {/* Particulier */}
-                        <Route path="request-municipal-land" element={<DashboardMunicipalRequestPage />} />
+                        <Route path="request-municipal-land" element={<RoleProtectedRoute permission="REQUEST_MUNICIPAL_LAND"><DashboardMunicipalRequestPage /></RoleProtectedRoute>} />
                         
                         {/* Vendeurs */}
-                        <Route path="sell-property" element={<RoleProtectedRoute allowedRoles={['Vendeur Particulier', 'Vendeur Pro', 'Mairie']}><SellPropertyPage /></RoleProtectedRoute>} />
-                        <Route path="add-parcel" element={<AddParcelPage />} />
-                        <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
-                        <Route path="solutions/vendeur/dashboard" element={<RoleProtectedRoute allowedRoles={['Vendeur Particulier', 'Vendeur Pro']}><VendeurDashboardPage /></RoleProtectedRoute>} />
+                        <Route path="sell-property" element={<RoleProtectedRoute permission="SELL_PROPERTY"><SellPropertyPage /></RoleProtectedRoute>} />
+                        <Route path="add-parcel" element={<RoleProtectedRoute permission="ADD_PARCEL"><AddParcelPage /></RoleProtectedRoute>} />
+                        <Route path="my-listings" element={<RoleProtectedRoute permission="MY_LISTINGS"><MyListingsPage /></RoleProtectedRoute>} />
+                        <Route path="solutions/vendeur/dashboard" element={<RoleProtectedRoute permission="VENDEUR_DASHBOARD"><VendeurDashboardPage /></RoleProtectedRoute>} />
 
                         {/* Investisseur */}
-                        <Route path="dashboard/investments" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><InvestmentsPage /></RoleProtectedRoute>} />
-                        <Route path="dashboard/market-analysis" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><MarketAnalysisPage /></RoleProtectedRoute>} />
-                        <Route path="dashboard/opportunities" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><OpportunitiesPage /></RoleProtectedRoute>} />
-                        <Route path="dashboard/roi-calculator" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><RoiCalculatorPage /></RoleProtectedRoute>} />
-                        <Route path="dashboard/due-diligence" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><DueDiligencePage /></RoleProtectedRoute>} />
-                        <Route path="solutions/investisseurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><InvestisseursDashboardPage /></RoleProtectedRoute>} />
+                        <Route path="dashboard/investments" element={<RoleProtectedRoute permission="INVESTMENTS"><InvestmentsPage /></RoleProtectedRoute>} />
+                        <Route path="dashboard/market-analysis" element={<RoleProtectedRoute permission="MARKET_ANALYSIS"><MarketAnalysisPage /></RoleProtectedRoute>} />
+                        <Route path="dashboard/opportunities" element={<RoleProtectedRoute permission="OPPORTUNITIES"><OpportunitiesPage /></RoleProtectedRoute>} />
+                        <Route path="dashboard/roi-calculator" element={<RoleProtectedRoute permission="ROI_CALCULATOR"><RoiCalculatorPage /></RoleProtectedRoute>} />
+                        <Route path="dashboard/due-diligence" element={<RoleProtectedRoute permission="DUE_DILIGENCE"><DueDiligencePage /></RoleProtectedRoute>} />
+                        <Route path="solutions/investisseurs/dashboard" element={<RoleProtectedRoute permission="INVESTISSEURS_DASHBOARD"><InvestisseursDashboardPage /></RoleProtectedRoute>} />
                         
                         {/* Promoteur */}
                         <Route path="dashboard/projects" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ProjectsPage /></RoleProtectedRoute>} />
@@ -252,6 +251,8 @@ import React from 'react';
                         <Route path="dashboard/disputes" element={<RoleProtectedRoute allowedRoles={['Mairie']}><DisputesPage /></RoleProtectedRoute>} />
                         <Route path="dashboard/urban-plan" element={<RoleProtectedRoute allowedRoles={['Mairie']}><UrbanPlanPage /></RoleProtectedRoute>} />
                         <Route path="dashboard/mairie-reports" element={<RoleProtectedRoute allowedRoles={['Mairie']}><MairieReportsPage /></RoleProtectedRoute>} />
+                        <Route path="dashboard/terrain-oversight" element={<RoleProtectedRoute allowedRoles={['Mairie']}><TerrainOversightPage /></RoleProtectedRoute>} />
+                        <Route path="dashboard/terrain-analytics" element={<RoleProtectedRoute allowedRoles={['Mairie']}><TerrainAnalyticsPage /></RoleProtectedRoute>} />
                         <Route path="solutions/mairies/dashboard" element={<RoleProtectedRoute allowedRoles={['Mairie']}><MairiesDashboardPage /></RoleProtectedRoute>} />
 
                         {/* Notaire */}
@@ -265,6 +266,7 @@ import React from 'react';
 
                 <Route path="/admin" element={<AdminRoute><DashboardLayout /></AdminRoute>}>
                      <Route index element={<AdminDashboardPage />} />
+                     <Route path="global" element={<GlobalAdminDashboard />} />
                      <Route path="users" element={<AdminUsersPage />} />
                      <Route path="user-requests" element={<AdminUserRequestsPage />} />
                      <Route path="user-verifications" element={<AdminUserVerificationsPage />} />
@@ -277,6 +279,7 @@ import React from 'react';
                      <Route path="blog/edit/:slug" element={<AdminBlogFormPage />} />
                      <Route path="audit-log" element={<AdminAuditLogPage />} />
                      <Route path="settings" element={<AdminSettingsPage />} />
+                     <Route path="security-diagnostic" element={<SecurityDiagnosticTool />} />
                      <Route path="*" element={<NotFoundPage />} />
                 </Route>
                 </Route>
@@ -288,6 +291,9 @@ import React from 'react';
                      <Route path="tasks" element={<AgentTasksPage />} />
                      <Route path="*" element={<NotFoundPage />} />
                 </Route>
+
+                 {/* Page d'accès refusé */}
+                 <Route path="/access-denied" element={<AccessDeniedPage />} />
 
                  <Route path="*" element={<NotFoundPage />} />
 

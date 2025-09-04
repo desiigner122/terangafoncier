@@ -9,6 +9,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/component
 import { getSidebarConfig } from './sidebarConfig';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/customSupabaseClient';
+import BecomeSellerButton from '@/components/auth/BecomeSellerButton';
 
 const logoUrl = "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6e6f6bf058d3590fd198aa8fadf9d2dd.png";
 
@@ -135,7 +136,14 @@ const Sidebar = () => {
       </nav>
 
        {user && (
-         <div className="p-3 mt-auto border-t border-sidebar-hover-bg shrink-0">
+         <div className="p-3 mt-auto border-t border-sidebar-hover-bg shrink-0 space-y-2">
+              {/* Bouton Devenir Vendeur pour les particuliers */}
+              <BecomeSellerButton 
+                variant="outline" 
+                size="sm" 
+                className="w-full justify-start border-orange-500 text-orange-500 hover:bg-orange-500 hover:text-white"
+              />
+              
               <Button variant="ghost" className="w-full justify-start text-red-400 hover:bg-red-500/20 hover:text-red-300" onClick={signOut}>
                   <LogOut className="mr-3 h-5 w-5" />
                   Déconnexion

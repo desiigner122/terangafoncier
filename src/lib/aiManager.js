@@ -7,10 +7,17 @@ import { supabase } from './customSupabaseClient';
 
 class AIManager {
   constructor() {
-    this.apiKey = process.env.VITE_OPENAI_API_KEY;
+    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY;
     this.baseURL = 'https://api.openai.com/v1';
-    this.model = 'gpt-4';
+    this.model = 'gpt-4o-mini'; // Modèle plus économique et rapide
     this.isEnabled = Boolean(this.apiKey);
+    
+    // Log du statut d'activation
+    if (this.isEnabled) {
+      console.log('🤖 IA Teranga Foncier activée avec OpenAI GPT-4o-mini');
+    } else {
+      console.log('⚠️ IA en mode simulation - Clé OpenAI manquante');
+    }
   }
 
   /**
@@ -175,6 +182,83 @@ class AIManager {
       console.error('Erreur analyse sentiment:', error);
       return this.getMockSentimentAnalysis();
     }
+  }
+
+  /**
+   * Génération de réponse contextuelle pour l'assistant IA
+   */
+  async generateContextualResponse(userQuery, pageContext) {
+    if (!this.isEnabled) {
+      return this.getMockContextualResponse(userQuery, pageContext);
+    }
+
+    try {
+      const prompt = `
+        Utilisateur sur Teranga Foncier demande: "${userQuery}"
+        
+        Contexte de la page: ${pageContext.pathname}
+        Questions suggérées: ${JSON.stringify(pageContext.contextualQuestions)}
+        
+        En tant qu'assistant IA spécialisé dans l'immobilier sénégalais:
+        - Fournis une réponse claire et actionnable
+        - Utilise des émojis pour rendre la réponse engageante
+        - Mentionne des fonctionnalités spécifiques de Teranga Foncier si pertinent
+        - Reste concis (max 2-3 phrases)
+        
+        Réponds directement sans formatage JSON.
+      `;
+
+      const response = await fetch(`${this.baseURL}/chat/completions`, {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${this.apiKey}`,
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({
+          model: this.model,
+          messages: [
+            { 
+              role: 'system', 
+              content: 'Tu es l\'assistant IA de Teranga Foncier, plateforme immobilière sénégalaise. Sois helpful, concis et professionnel.' 
+            },
+            { role: 'user', content: prompt }
+          ],
+          temperature: 0.7,
+          max_tokens: 150
+        })
+      });
+
+      const data = await response.json();
+      
+      if (data.error) {
+        console.error('Erreur OpenAI:', data.error);
+        return this.getMockContextualResponse(userQuery, pageContext);
+      }
+
+      const aiResponse = data.choices[0].message.content.trim();
+      
+      // Log de l'interaction pour audit
+      this.logAIInteraction('contextual_help', { userQuery, pageContext }, aiResponse);
+      
+      return aiResponse;
+    } catch (error) {
+      console.error('Erreur IA contextuelle:', error);
+      return this.getMockContextualResponse(userQuery, pageContext);
+    }
+  }
+
+  /**
+   * Réponse contextuelle simulée
+   */
+  getMockContextualResponse(userQuery, pageContext) {
+    const responses = {
+      '/parcelles': '🏠 Utilisez les filtres avancés pour trouver la parcelle idéale selon vos critères de localisation, prix et surface.',
+      '/dashboard': '📊 Votre tableau de bord centralise toutes vos activités : demandes en cours, favoris et notifications importantes.',
+      '/messaging': '💬 La messagerie sécurisée vous permet de négocier directement avec les vendeurs pour vos projets immobiliers.',
+      'default': '🤖 Je suis là pour vous guider dans votre parcours immobilier sur Teranga Foncier. Que puis-je vous expliquer ?'
+    };
+
+    return responses[pageContext.pathname] || responses.default;
   }
 
   /**

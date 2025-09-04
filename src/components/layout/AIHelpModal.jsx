@@ -3,14 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Send, Info, Search, Lightbulb, FileQuestion, Home, UserCircle, Banknote, Building2, Leaf, TrendingUp } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { useLocation } from 'react-router-dom';
+import aiManager from '@/lib/aiManager';
 
 const AIHelpModal = ({ isOpen, onClose }) => {
   const [inputValue, setInputValue] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [contextualQuestions, setContextualQuestions] = useState([]);
-  // toast remplacÃ© par window.safeGlobalToast
   const location = useLocation();
 
   const baseQuestions = [
@@ -86,28 +85,54 @@ const AIHelpModal = ({ isOpen, onClose }) => {
     if (!currentQuery.trim()) return;
 
     setIsLoading(true);
-    await new Promise(resolve => setTimeout(resolve, 1000)); 
-
-    let simulatedResponse = "🚧 Cette fonctionnalité d'IA est en cours de développement. Votre question : '" + currentQuery + "' serait traitée par notre IA pour vous fournir une réponse pertinente. Pour l'instant, vous pouvez consulter notre FAQ ou contacter notre support. 🚀";
     
-    if (currentQuery.toLowerCase().includes("document")) {
-        simulatedResponse = "Les documents listés sur la page de la parcelle (Titre Foncier, Bail, etc.) sont vérifiés par nos équipes. Vous pouvez demander plus de détails à un agent. (Réponse IA simulée)";
-    } else if (currentQuery.toLowerCase().includes("visite")) {
-        simulatedResponse = "Pour planifier une visite, utilisez le calendrier sur votre tableau de bord ou le bouton 'Demander une visite' sur la page de la parcelle. (Réponse IA simulée)";
-    } else if (currentQuery.toLowerCase().includes("filtres")) {
-        simulatedResponse = "Utilisez les filtres en haut de la liste des parcelles pour affiner votre recherche par zone, prix, surface, etc. (Réponse IA simulée)";
-    } else if (currentQuery.toLowerCase().includes("banques")) {
-        simulatedResponse = "Nous aidons les banques avec l'évaluation de garanties, le suivi de portefeuille et la diligence raisonnée. (Réponse IA simulée)";
-    } else if (currentQuery.toLowerCase().includes("promoteurs")) {
-        simulatedResponse = "Pour les promoteurs, nous facilitons l'identification de terrains stratégiques et fournissons des analyses de potentiel. (Réponse IA simulée)";
+    try {
+      // Contexte de la page actuelle pour l'IA
+      const pageContext = {
+        pathname: location.pathname,
+        contextualQuestions: contextualQuestions,
+        userQuery: currentQuery
+      };
+
+      // Appel à l'IA réelle si disponible
+      if (aiManager.isEnabled) {
+        const aiResponse = await aiManager.generateContextualResponse(currentQuery, pageContext);
+        
+        window.safeGlobalToast({
+          title: "🤖 Assistance IA Teranga Foncier",
+          description: aiResponse.response || aiResponse,
+          duration: 10000,
+        });
+      } else {
+        // Fallback sur les réponses simulées
+        let simulatedResponse = "🚧 IA en mode simulation. Votre question : '" + currentQuery + "' serait traitée par notre IA OpenAI pour vous fournir une réponse personnalisée. 🚀";
+        
+        if (currentQuery.toLowerCase().includes("document")) {
+          simulatedResponse = "📄 Les documents listés sur la page de la parcelle (Titre Foncier, Bail, etc.) sont vérifiés par nos équipes. Vous pouvez demander plus de détails à un agent.";
+        } else if (currentQuery.toLowerCase().includes("visite")) {
+          simulatedResponse = "📅 Pour planifier une visite, utilisez le calendrier sur votre tableau de bord ou le bouton 'Demander une visite' sur la page de la parcelle.";
+        } else if (currentQuery.toLowerCase().includes("filtres")) {
+          simulatedResponse = "🔍 Utilisez les filtres en haut de la liste des parcelles pour affiner votre recherche par zone, prix, surface, etc.";
+        } else if (currentQuery.toLowerCase().includes("banques")) {
+          simulatedResponse = "🏦 Nous aidons les banques avec l'évaluation de garanties, le suivi de portefeuille et la diligence raisonnée.";
+        } else if (currentQuery.toLowerCase().includes("promoteurs")) {
+          simulatedResponse = "🏗️ Pour les promoteurs, nous facilitons l'identification de terrains stratégiques et fournissons des analyses de potentiel.";
+        }
+
+        window.safeGlobalToast({
+          title: "Assistance IA (Mode Simulation)",
+          description: simulatedResponse,
+          duration: 8000,
+        });
+      }
+    } catch (error) {
+      console.error('Erreur IA:', error);
+      window.safeGlobalToast({
+        title: "Erreur IA",
+        description: "Une erreur s'est produite. Essayez une question plus simple ou contactez le support.",
+        duration: 5000,
+      });
     }
-
-
-    window.safeGlobalToast({
-      title: "Assistance IA (Simulation)",
-      description: simulatedResponse,
-      duration: 8000,
-    });
 
     setInputValue('');
     setIsLoading(false);
@@ -135,7 +160,7 @@ const AIHelpModal = ({ isOpen, onClose }) => {
             Assistant IA Teranga Foncier
           </DialogTitle>
           <DialogDescription className="text-muted-foreground">
-            Posez votre question ou choisissez une suggestion. Notre IA (simulée) est là pour vous aider !
+            Posez votre question ou choisissez une suggestion. Notre IA OpenAI vous assiste 24h/24 !
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
@@ -180,7 +205,7 @@ const AIHelpModal = ({ isOpen, onClose }) => {
         <DialogFooter className="sm:justify-between flex-col sm:flex-row gap-2">
            <div className="flex items-center text-xs text-muted-foreground">
              <Info className="h-4 w-4 mr-1 flex-shrink-0" />
-             <span>L'assistance IA est actuellement en mode simulation.</span>
+             <span>Assistant IA alimenté par OpenAI GPT-4o-mini.</span>
            </div>
           <Button type="button" variant="outline" onClick={onClose} disabled={isLoading}>
             Fermer

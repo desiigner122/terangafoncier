@@ -19,6 +19,7 @@ import {
   Clock,
   CheckCircle2
 } from 'lucide-react';
+import aiManager from '@/lib/aiManager';
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -104,12 +105,29 @@ const AIChatbot = () => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    const currentMessage = newMessage;
     setNewMessage('');
     setIsTyping(true);
 
-    // Simulation d'un délai de réponse de l'IA
-    setTimeout(() => {
-      const aiResponse = getAIResponse(newMessage);
+    try {
+      let aiResponse;
+      
+      if (aiManager.isEnabled) {
+        // Utiliser l'IA réelle OpenAI
+        const response = await aiManager.generateContextualResponse(currentMessage, {
+          pathname: '/chatbot',
+          contextualQuestions: ['Comment acheter un terrain ?', 'Procédures administratives', 'Contact avec un notaire']
+        });
+        
+        aiResponse = {
+          content: response,
+          suggestions: ['Plus d\'infos', 'Parler à un agent', 'Voir les parcelles', 'Calculer les frais']
+        };
+      } else {
+        // Fallback sur réponses prédéfinies
+        aiResponse = getAIResponse(currentMessage);
+      }
+
       const botMessage = {
         id: Date.now() + 1,
         type: 'bot',
@@ -119,8 +137,22 @@ const AIChatbot = () => {
       };
       
       setMessages(prev => [...prev, botMessage]);
-      setIsTyping(false);
-    }, 1500);
+    } catch (error) {
+      console.error('Erreur chatbot IA:', error);
+      
+      // Message d'erreur convivial
+      const errorMessage = {
+        id: Date.now() + 1,
+        type: 'bot',
+        content: '🤖 Désolé, je rencontre un petit problème technique. Pourriez-vous reformuler votre question ?',
+        timestamp: new Date(),
+        suggestions: ['Recommencer', 'Contacter le support']
+      };
+      
+      setMessages(prev => [...prev, errorMessage]);
+    }
+    
+    setIsTyping(false);
   };
 
   const handleSuggestionClick = (suggestion) => {

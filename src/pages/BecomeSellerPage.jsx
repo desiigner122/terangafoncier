@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
@@ -7,7 +7,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-import { UploadCloud, File, UserPlus, Building, AlertCircle, CheckCircle } from 'lucide-react';
+import { 
+  UploadCloud, 
+  File, 
+  UserPlus, 
+  Building, 
+  AlertCircle, 
+  CheckCircle
+} from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 
 const FileUploadField = ({ id, label, required, onFileChange, fileName, description }) => (
@@ -73,13 +80,13 @@ const BecomeSellerPage = () => {
 
   const uploadFile = async (file, fileName) => {
     const { data, error } = await supabase.storage
-      .from('documents')
+      .from('FileTexts')
       .upload(fileName, file);
     
     if (error) throw error;
     
     const { data: { publicUrl } } = supabase.storage
-      .from('documents')
+      .from('FileTexts')
       .getPublicUrl(fileName);
     
     return publicUrl;
@@ -99,7 +106,7 @@ const BecomeSellerPage = () => {
     }
 
     if (sellerType === 'professionnel' && !files.businessDocs) {
-      setError('Les documents d\'entreprise sont obligatoires pour un vendeur professionnel');
+      setError('Les FileTexts d\'entreprise sont obligatoires pour un vendeur professionnel');
       return;
     }
 
@@ -113,37 +120,37 @@ const BecomeSellerPage = () => {
 
     try {
       // Upload des fichiers
-      const documentUploadPromises = [];
+      const FileTextUploadPromises = [];
       const timestamp = Date.now();
       const userId = user.id;
 
       if (files.idCardFront) {
-        documentUploadPromises.push(
+        FileTextUploadPromises.push(
           uploadFile(files.idCardFront, `seller-applications/${userId}/id_card_front_${timestamp}.${files.idCardFront.name.split('.').pop()}`)
         );
       }
       if (files.idCardBack) {
-        documentUploadPromises.push(
+        FileTextUploadPromises.push(
           uploadFile(files.idCardBack, `seller-applications/${userId}/id_card_back_${timestamp}.${files.idCardBack.name.split('.').pop()}`)
         );
       }
       if (files.residenceCert) {
-        documentUploadPromises.push(
+        FileTextUploadPromises.push(
           uploadFile(files.residenceCert, `seller-applications/${userId}/residence_cert_${timestamp}.${files.residenceCert.name.split('.').pop()}`)
         );
       }
       if (files.businessDocs) {
-        documentUploadPromises.push(
+        FileTextUploadPromises.push(
           uploadFile(files.businessDocs, `seller-applications/${userId}/business_docs_${timestamp}.${files.businessDocs.name.split('.').pop()}`)
         );
       }
       if (files.propertyDocs) {
-        documentUploadPromises.push(
+        FileTextUploadPromises.push(
           uploadFile(files.propertyDocs, `seller-applications/${userId}/property_docs_${timestamp}.${files.propertyDocs.name.split('.').pop()}`)
         );
       }
 
-      const uploadedUrls = await Promise.all(documentUploadPromises);
+      const uploadedUrls = await Promise.all(FileTextUploadPromises);
 
       // Créer la demande de vendeur
       const requestData = {
@@ -158,7 +165,7 @@ const BecomeSellerPage = () => {
           experience: formData.experience,
           businessName: sellerType === 'professionnel' ? formData.businessName : null,
           businessDescription: sellerType === 'professionnel' ? formData.businessDescription : null,
-          documents: {
+          FileTexts: {
             idCardFront: uploadedUrls[0] || null,
             idCardBack: uploadedUrls[1] || null,
             residenceCert: uploadedUrls[2] || null,
@@ -329,9 +336,9 @@ const BecomeSellerPage = () => {
                 </div>
               )}
 
-              {/* Documents requis */}
+              {/* FileTexts requis */}
               <div className="space-y-4">
-                <Label className="text-lg font-semibold">Documents Requis</Label>
+                <Label className="text-lg font-semibold">FileTexts Requis</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <FileUploadField
                     id="idCardFront"
@@ -354,16 +361,16 @@ const BecomeSellerPage = () => {
                     label="Certificat de résidence"
                     onFileChange={handleFileChange}
                     fileName={files.residenceCert?.name}
-                    description="Document prouvant votre adresse"
+                    description="FileText prouvant votre adresse"
                   />
                   {sellerType === 'professionnel' && (
                     <FileUploadField
                       id="businessDocs"
-                      label="Documents d'entreprise *"
+                      label="FileTexts d'entreprise *"
                       required
                       onFileChange={handleFileChange}
                       fileName={files.businessDocs?.name}
-                      description="NINEA, RCCM, ou autre document officiel"
+                      description="NINEA, RCCM, ou autre FileText officiel"
                     />
                   )}
                   <FileUploadField
@@ -371,7 +378,7 @@ const BecomeSellerPage = () => {
                     label="Titres de propriété"
                     onFileChange={handleFileChange}
                     fileName={files.propertyDocs?.name}
-                    description="Documents de vos biens à vendre (optionnel)"
+                    description="FileTexts de vos biens à vendre (optionnel)"
                   />
                 </div>
               </div>

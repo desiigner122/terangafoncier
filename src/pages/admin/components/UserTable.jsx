@@ -1,8 +1,14 @@
-
+﻿
 import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { CheckCircle, Clock, AlertTriangle, ShieldOff, Ban } from 'lucide-react';
+import { 
+  CheckCircle, 
+  Clock, 
+  AlertTriangle, 
+  ShieldOff, 
+  Ban
+} from 'lucide-react';
 import UserActions from './UserActions';
 
 const getStatusBadge = (status) => {

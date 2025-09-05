@@ -3,7 +3,13 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { ShieldCheck, Search, PlusCircle, Download, FileText } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  Search, 
+  PlusCircle, 
+  Download, 
+  FileText
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -12,7 +18,7 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 const initialDueDiligenceReports = [
   { id: 'DD001', parcelId: 'DK-ALM-002', status: 'Complété', date: '2022-12-15', riskLevel: 'Faible', summary: 'Titre foncier clair, pas de litiges.' },
   { id: 'DD002', parcelId: 'DMN-CIT-005', status: 'En cours', date: '2024-07-01', riskLevel: 'N/A', summary: 'Vérification du plan de zonage.' },
-  { id: 'DD003', parcelId: 'OPP002', status: 'Demandé', date: '2025-07-16', riskLevel: 'N/A', summary: 'En attente des documents du vendeur.' },
+  { id: 'DD003', parcelId: 'OPP002', status: 'Demandé', date: '2025-07-16', riskLevel: 'N/A', summary: 'En attente des FileTexts du vendeur.' },
 ];
 
 const DueDiligencePage = () => {

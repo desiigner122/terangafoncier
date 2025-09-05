@@ -4,11 +4,21 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { useAuth } from '@/context/SupabaseAuthContext';
-import { safeStorageUpload } from '@/lib/supabaseStorageInit';
+import { useAuth } from '@/context/AuthContext';
+import { avatarManager } from '@/lib/avatarManager';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { motion } from 'framer-motion';
-import { User, Mail, Phone, KeyRound, Save, LogOut, ShieldCheck, Trash2, Upload } from 'lucide-react';
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  KeyRound, 
+  Save, 
+  LogOut, 
+  ShieldCheck, 
+  Trash2, 
+  Upload
+} from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertDialog,
@@ -23,10 +33,10 @@ import {
 } from "@/components/ui/alert-dialog";
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const ProfilePage = () => {
-  const { user, profile, signOut, revalidate } = useAuth();
+  const { user, updateUserProfile, logout } = useAuth();
   // toast remplacÃ© par window.safeGlobalToast
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -50,6 +60,15 @@ const ProfilePage = () => {
     if (user) {
       setEmail(user.email || '');
     }
+    
+    // Tester la connectivité du bucket avatars
+    testAvatarsBucket().then(isReady => {
+      if (isReady) {
+        console.log('✅ Bucket avatars prêt pour upload');
+      } else {
+        console.warn('⚠️ Bucket avatars pas disponible');
+      }
+    });
   }, [user, profile]);
 
   const handleProfileImageChange = (e) => {
@@ -74,23 +93,29 @@ const ProfilePage = () => {
     try {
       let avatarUrl = profile.avatar_url;
       if (avatarFile) {
-        const fileExt = avatarFile.name.split('.').pop();
-        const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-        const filePath = `avatars/${fileName}`;
+        console.log('🔄 Upload avatar en cours...');
         
-        // Utiliser l'upload sécurisé
-        const uploadResult = await safeStorageUpload(supabase, 'avatars', filePath, avatarFile, {
-          upsert: true,
-        });
+        // Supprimer l'ancien avatar si il existe
+        if (profile.avatar_url) {
+          await deleteOldAvatar(profile.avatar_url);
+        }
+        
+        // Upload le nouvel avatar avec système robuste
+        const uploadResult = await uploadAvatarRobust(avatarFile, user.id);
         
         if (uploadResult.success) {
           avatarUrl = uploadResult.publicUrl;
+          console.log('✅ Avatar uploadé avec succès:', avatarUrl);
+          window.safeGlobalToast({ 
+            title: "Avatar mis à jour", 
+            description: "Votre photo de profil a été changée avec succès." 
+          });
         } else {
-          console.warn('Erreur upload avatar:', uploadResult.error);
+          console.error('❌ Erreur upload avatar:', uploadResult.error);
           window.safeGlobalToast({ 
             variant: "destructive", 
-            title: "Attention", 
-            description: "L'avatar n'a pas pu être téléchargé, mais le profil sera mis à jour." 
+            title: "Erreur upload avatar", 
+            description: uploadResult.error || "Impossible d'uploader l'avatar." 
           });
           // Garder l'ancien avatar
           avatarUrl = profile.avatar_url;

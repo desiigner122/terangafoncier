@@ -1,6 +1,14 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
-import { Leaf, MapPin, Tractor, Sun, Droplets, BarChart3, ShieldCheck } from 'lucide-react';
+import { 
+  Leaf, 
+  MapPin, 
+  Tractor, 
+  Sun, 
+  Droplets, 
+  BarChart3, 
+  ShieldCheck
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';

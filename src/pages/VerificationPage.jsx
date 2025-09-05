@@ -8,7 +8,13 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { UploadCloud, File, ShieldCheck, Building, AlertCircle } from 'lucide-react';
+import { 
+  UploadCloud, 
+  File, 
+  ShieldCheck, 
+  Building, 
+  AlertCircle
+} from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 
 const FileUploadField = ({ id, label, required, onFileChange, fileName, description }) => (
@@ -59,14 +65,14 @@ const VerificationPage = () => {
 
   const uploadFile = async (file, bucketPath) => {
     const { data, error } = await supabase.storage
-      .from('verification-documents')
+      .from('verification-FileTexts')
       .upload(bucketPath, file, {
         cacheControl: '3600',
         upsert: true,
       });
     if (error) throw error;
     
-    const { data: { publicUrl } } = supabase.storage.from('verification-documents').getPublicUrl(data.path);
+    const { data: { publicUrl } } = supabase.storage.from('verification-FileTexts').getPublicUrl(data.path);
     return publicUrl;
   };
 
@@ -89,26 +95,26 @@ const VerificationPage = () => {
     try {
         const userId = user.id;
         
-        const documentUploadPromises = [];
-        if (files.idCardFront) documentUploadPromises.push(uploadFile(files.idCardFront, `${userId}/id_card_front.${files.idCardFront.name.split('.').pop()}`));
-        if (files.idCardBack) documentUploadPromises.push(uploadFile(files.idCardBack, `${userId}/id_card_back.${files.idCardBack.name.split('.').pop()}`));
-        if (files.residenceCert) documentUploadPromises.push(uploadFile(files.residenceCert, `${userId}/residence_cert.${files.residenceCert.name.split('.').pop()}`));
-        if (isCompany && files.companyDocs) documentUploadPromises.push(uploadFile(files.companyDocs, `${userId}/company_docs.${files.companyDocs.name.split('.').pop()}`));
+        const FileTextUploadPromises = [];
+        if (files.idCardFront) FileTextUploadPromises.push(uploadFile(files.idCardFront, `${userId}/id_card_front.${files.idCardFront.name.split('.').pop()}`));
+        if (files.idCardBack) FileTextUploadPromises.push(uploadFile(files.idCardBack, `${userId}/id_card_back.${files.idCardBack.name.split('.').pop()}`));
+        if (files.residenceCert) FileTextUploadPromises.push(uploadFile(files.residenceCert, `${userId}/residence_cert.${files.residenceCert.name.split('.').pop()}`));
+        if (isCompany && files.companyDocs) FileTextUploadPromises.push(uploadFile(files.companyDocs, `${userId}/company_docs.${files.companyDocs.name.split('.').pop()}`));
 
-        const uploadedUrls = await Promise.all(documentUploadPromises);
+        const uploadedUrls = await Promise.all(FileTextUploadPromises);
 
-        const documentPayload = {
+        const FileTextPayload = {
             id_card_front: uploadedUrls[0],
             id_card_back: uploadedUrls[1],
             residence_cert: uploadedUrls[2] || null,
             company_docs: (isCompany && uploadedUrls[3]) ? uploadedUrls[3] : null,
         };
 
-        for (const [type, url] of Object.entries(documentPayload)) {
+        for (const [type, url] of Object.entries(FileTextPayload)) {
             if (url) {
-                await supabase.from('documents').insert({
+                await supabase.from('FileTexts').insert({
                     user_id: userId,
-                    document_type: type,
+                    FileText_type: type,
                     file_url: url,
                 });
             }
@@ -119,14 +125,14 @@ const VerificationPage = () => {
         await revalidate();
 
         window.safeGlobalToast({
-            title: "Documents Soumis",
-            description: "Vos documents ont été envoyés pour vérification.",
+            title: "FileTexts Soumis",
+            description: "Vos FileTexts ont été envoyés pour vérification.",
         });
         navigate('/pending-verification');
 
     } catch (err) {
         console.error("Verification submission error:", err);
-        setError("Une erreur est survenue lors de l'envoi de vos documents. Veuillez réessayer.");
+        setError("Une erreur est survenue lors de l'envoi de vos FileTexts. Veuillez réessayer.");
     } finally {
         setIsLoading(false);
     }
@@ -145,7 +151,7 @@ const VerificationPage = () => {
           <CardHeader className="text-center">
             <ShieldCheck className="w-12 h-12 mx-auto text-primary" />
             <CardTitle className="text-2xl font-bold mt-2">Vérification de votre Identité</CardTitle>
-            <CardDescription>Pour la sécurité de tous, veuillez nous fournir les documents suivants.</CardDescription>
+            <CardDescription>Pour la sécurité de tous, veuillez nous fournir les FileTexts suivants.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
@@ -155,7 +161,7 @@ const VerificationPage = () => {
               </div>
               {userType === 'Vendeur' && (
                 <>
-                  <FileUploadField id="residenceCert" label="Certificat de Résidence" required onFileChange={handleFileChange} fileName={files.residenceCert?.name} description="Document légalisé." />
+                  <FileUploadField id="residenceCert" label="Certificat de Résidence" required onFileChange={handleFileChange} fileName={files.residenceCert?.name} description="FileText légalisé." />
                   <div className="flex items-center space-x-2 rounded-md border p-3 bg-muted/30">
                     <input type="checkbox" id="isCompany" checked={isCompany} onChange={(e) => setIsCompany(e.target.checked)} className="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"/>
                     <Label htmlFor="isCompany" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
@@ -164,7 +170,7 @@ const VerificationPage = () => {
                   </div>
                   {isCompany && (
                     <motion.div initial={{opacity:0, height: 0}} animate={{opacity:1, height: 'auto'}} transition={{duration: 0.3}}>
-                        <FileUploadField id="companyDocs" label="Documents de la Société" onFileChange={handleFileChange} fileName={files.companyDocs?.name} description="NINEA, RCCM, etc." />
+                        <FileUploadField id="companyDocs" label="FileTexts de la Société" onFileChange={handleFileChange} fileName={files.companyDocs?.name} description="NINEA, RCCM, etc." />
                     </motion.div>
                   )}
                 </>

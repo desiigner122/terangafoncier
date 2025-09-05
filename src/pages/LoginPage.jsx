@@ -7,7 +7,10 @@
     import { Label } from '@/components/ui/label';
     import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
     // useToast import supprimÃ© - utilisation window.safeGlobalToast
-    import { LogIn, AlertCircle } from 'lucide-react';
+    import { 
+  LogIn, 
+  AlertCircle
+} from 'lucide-react';
     import { useAuth } from '@/context/SupabaseAuthContext';
 
     const LoginPage = () => {

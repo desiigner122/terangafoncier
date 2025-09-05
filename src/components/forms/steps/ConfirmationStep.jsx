@@ -1,9 +1,19 @@
-/**
+﻿/**
  * Étape finale: Confirmation et création du compte
  */
 
 import React, { useState } from 'react';
-import { CheckCircle, User, Mail, Phone, MapPin, Building, Calendar, Shield, AlertCircle } from 'lucide-react';
+import { 
+  CheckCircle, 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Building, 
+  Calendar, 
+  Shield, 
+  AlertCircle
+} from 'lucide-react';
 
 const ConfirmationStep = ({ data, errors, onFinalize, isLoading, role }) => {
   const [isCreating, setIsCreating] = useState(false);

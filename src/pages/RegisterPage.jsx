@@ -8,7 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { motion } from 'framer-motion';
-import { UserPlus } from 'lucide-react';
+import { 
+  UserPlus
+} from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/lib/customSupabaseClient';
 

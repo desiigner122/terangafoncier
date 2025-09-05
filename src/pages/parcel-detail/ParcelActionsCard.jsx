@@ -1,7 +1,13 @@
 ﻿import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Heart, Share2, Flag, Banknote, FileSignature } from 'lucide-react';
+import { 
+  Heart, 
+  Share2, 
+  Flag, 
+  Banknote, 
+  FileSignature
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { useAuth } from '@/context/AuthContext';
 

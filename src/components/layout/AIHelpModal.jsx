@@ -2,7 +2,19 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Send, Info, Search, Lightbulb, FileQuestion, Home, UserCircle, Banknote, Building2, Leaf, TrendingUp } from 'lucide-react';
+import { 
+  Send, 
+  Info, 
+  Search, 
+  Lightbulb, 
+  FileQuestion, 
+  Home, 
+  UserCircle, 
+  Banknote, 
+  Building2, 
+  Leaf, 
+  TrendingUp
+} from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import aiManager from '@/lib/aiManager';
 
@@ -25,7 +37,7 @@ const AIHelpModal = ({ isOpen, onClose }) => {
 
     if (pathname.startsWith('/parcelles/')) {
       specificQuestions = [
-        "Expliquez-moi les documents de cette parcelle.",
+        "Expliquez-moi les FileTexts de cette parcelle.",
         "Quels sont les points d'intérêt proches ?",
         "Comment initier une offre pour ce terrain ?",
       ];
@@ -38,7 +50,7 @@ const AIHelpModal = ({ isOpen, onClose }) => {
     } else if (pathname === '/dashboard') {
       specificQuestions = [
         "Comment voir mes demandes en cours ?",
-        "Où trouver mes documents sauvegardés ?",
+        "Où trouver mes FileTexts sauvegardés ?",
         "Comment planifier une visite ?",
       ];
     } else if (pathname === '/profile' || pathname === '/settings') {
@@ -107,8 +119,8 @@ const AIHelpModal = ({ isOpen, onClose }) => {
         // Fallback sur les réponses simulées
         let simulatedResponse = "🚧 IA en mode simulation. Votre question : '" + currentQuery + "' serait traitée par notre IA OpenAI pour vous fournir une réponse personnalisée. 🚀";
         
-        if (currentQuery.toLowerCase().includes("document")) {
-          simulatedResponse = "📄 Les documents listés sur la page de la parcelle (Titre Foncier, Bail, etc.) sont vérifiés par nos équipes. Vous pouvez demander plus de détails à un agent.";
+        if (currentQuery.toLowerCase().includes("FileText")) {
+          simulatedResponse = "📄 Les FileTexts listés sur la page de la parcelle (Titre Foncier, Bail, etc.) sont vérifiés par nos équipes. Vous pouvez demander plus de détails à un agent.";
         } else if (currentQuery.toLowerCase().includes("visite")) {
           simulatedResponse = "📅 Pour planifier une visite, utilisez le calendrier sur votre tableau de bord ou le bouton 'Demander une visite' sur la page de la parcelle.";
         } else if (currentQuery.toLowerCase().includes("filtres")) {

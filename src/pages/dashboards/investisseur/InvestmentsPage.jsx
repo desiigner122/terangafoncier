@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Briefcase, TrendingUp, Download, Filter } from 'lucide-react';
+import { 
+  Briefcase, 
+  TrendingUp, 
+  Download, 
+  Filter
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';

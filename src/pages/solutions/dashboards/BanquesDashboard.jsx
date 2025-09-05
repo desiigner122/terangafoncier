@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Badge, 
@@ -36,14 +36,14 @@ import {
   CheckCircle, 
   Clock, 
   Target, 
-  Activity,
-  Banknote,
-  Calculator,
-  PieChart as PieChartIcon,
-  BarChart3,
-  Wallet,
-  Building2,
-  HandCoins,
+  Activity, 
+  Banknote, 
+  Calculator, 
+  PieChart as PieChartIcon, 
+  BarChart3, 
+  Wallet, 
+  Building2, 
+  HandCoins, 
   Receipt
 } from 'lucide-react';
 

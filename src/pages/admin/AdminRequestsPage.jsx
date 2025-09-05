@@ -1,8 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { FileSignature, GitPullRequest } from 'lucide-react';
+import { 
+  FileSignature, 
+  GitPullRequest
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminRequestsPage = () => {

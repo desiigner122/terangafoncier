@@ -1,14 +1,19 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Building2, Scale, Briefcase, ArrowRight } from 'lucide-react';
+import { 
+  Building2, 
+  Scale, 
+  Briefcase, 
+  ArrowRight
+} from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
 const partners = [
   { icon: Building2, title: "Mairies & Collectivités", description: "Accédez à une vue d'ensemble du foncier sur votre territoire, suivez les transactions et facilitez la gestion administrative.", color: "text-blue-600" },
-  { icon: Scale, title: "Notaires", description: "Collaborez sur une plateforme sécurisée pour la vérification des documents et la finalisation des actes de vente.", color: "text-purple-600" },
+  { icon: Scale, title: "Notaires", description: "Collaborez sur une plateforme sécurisée pour la vérification des FileTexts et la finalisation des actes de vente.", color: "text-purple-600" },
   { icon: Briefcase, title: "Agents de l'État (Cadastre, Domaines)", description: "Utilisez nos outils pour une meilleure coordination et un accès simplifié aux informations foncières à jour.", color: "text-green-600" },
   { icon: Building2, title: "Promoteurs Immobiliers", description: "Trouvez des terrains vérifiés et adaptés à vos projets de construction résidentielle ou commerciale.", color: "text-orange-600" }, // Added another partner
 ];

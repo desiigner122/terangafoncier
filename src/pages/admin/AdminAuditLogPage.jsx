@@ -4,12 +4,12 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Search } from 'lucide-react';
+import { Search, User, MapPin, FileCheck } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
-import { User, MapPin, FileCheck } from 'lucide-react';
+// ...existing code...
 import { supabase } from '@/lib/supabaseClient';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 

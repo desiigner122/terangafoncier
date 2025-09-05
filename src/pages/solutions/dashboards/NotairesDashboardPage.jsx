@@ -1,12 +1,39 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import { 
-  FileClock, Search, PlusCircle, Users, Gavel, Scale, Download, History, Eye, 
-  CheckCircle, XCircle, AlertTriangle, Clock, FileText, Stamp, Shield, 
-  TrendingUp, BarChart3, Activity, Calendar, Archive, BookOpen, Award, 
-  Target, Zap, Monitor, FileCheck, Timer, AlertCircle
+  FileClock, 
+  Search, 
+  PlusCircle, 
+  Users, 
+  Gavel, 
+  Scale, 
+  Download, 
+  History, 
+  Eye, 
+  CheckCircle, 
+  XCircle, 
+  AlertTriangle, 
+  Clock, 
+  FileText, 
+  Stamp, 
+  Shield, 
+  TrendingUp, 
+  BarChart3, 
+  Activity, 
+  Calendar, 
+  Archive, 
+  BookOpen, 
+  Award, 
+  Target, 
+  Zap, 
+  Monitor, 
+  FileCheck, 
+  Timer, 
+  AlertCircle
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
@@ -20,96 +47,225 @@ import {
 } from 'recharts';
 
 const NotairesDashboardPage = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dossiers');
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [currentDossier, setCurrentDossier] = useState(null);
 
   // Analytics juridiques avancées
   const [legalAnalytics, setLegalAnalytics] = useState({
-    totalActes: 347,
-    monthlyActes: 45,
+    totalActes: 0,
+    monthlyActes: 0,
     averageProcessingTime: 7.5,
     complianceRate: 96.8,
-    pendingDossiers: 12,
-    authenticatedThisWeek: 8,
-    revenueThisMonth: 2100000,
+    pendingDossiers: 0,
+    authenticatedThisWeek: 0,
+    revenueThisMonth: 0,
     clientSatisfaction: 94,
     performanceScore: 92,
-    urgentCases: 3,
-    complexCases: 5,
-    standardCases: 28
+    urgentCases: 0,
+    complexCases: 0,
+    standardCases: 0
   });
 
   // Données graphiques pour analytics juridiques
   const [chartData, setChartData] = useState({
-    weeklyActivity: [
-      { day: 'Lun', actes: 12, verifications: 8, consultations: 15 },
-      { day: 'Mar', actes: 15, verifications: 10, consultations: 12 },
-      { day: 'Mer', actes: 8, verifications: 6, consultations: 18 },
-      { day: 'Jeu', actes: 18, verifications: 12, consultations: 10 },
-      { day: 'Ven', actes: 22, verifications: 15, consultations: 8 },
-      { day: 'Sam', actes: 5, verifications: 3, consultations: 20 }
-    ],
-    dossierDistribution: [
-      { type: 'Vente immobilière', count: 156, percentage: 45, color: '#8884d8' },
-      { type: 'Succession', count: 89, percentage: 26, color: '#82ca9d' },
-      { type: 'Donation', count: 52, percentage: 15, color: '#ffc658' },
-      { type: 'Hypothèque', count: 35, percentage: 10, color: '#ff7300' },
-      { type: 'Autres', count: 15, percentage: 4, color: '#00ff88' }
-    ],
-    processingTimes: [
-      { month: 'Jan', temps: 8.2, dossiers: 38 },
-      { month: 'Fév', temps: 7.8, dossiers: 42 },
-      { month: 'Mar', temps: 7.5, dossiers: 45 },
-      { month: 'Avr', temps: 7.2, dossiers: 48 },
-      { month: 'Mai', temps: 7.0, dossiers: 52 },
-      { month: 'Juin', temps: 7.5, dossiers: 45 }
-    ]
+    weeklyActivity: [],
+    dossierDistribution: [],
+    processingTimes: []
   });
 
   // Timeline workflow juridique
-  const [workflowActivities, setWorkflowActivities] = useState([
-    {
-      id: 1,
-      type: 'authentication',
-      title: 'Acte authentifié',
-      description: 'Vente Villa Almadies - 180M FCFA',
-      time: 'Il y a 30 minutes',
-      status: 'completed',
-      priority: 'normal',
-      clientName: 'M. Diallo'
-    },
-    {
-      id: 2,
-      type: 'verification',
-      title: 'Vérification en cours',
-      description: 'Succession - Terrain Yoff',
-      time: 'Il y a 1 heure',
-      status: 'in_progress',
-      priority: 'high',
-      clientName: 'Mme. Fall'
-    },
-    {
-      id: 3,
-      type: 'consultation',
-      title: 'Consultation programmée',
-      description: 'Donation entre vifs - Bureau Plateau',
-      time: 'Demain 10h',
-      status: 'scheduled',
-      priority: 'medium',
-      clientName: 'SCI Teranga'
-    },
-    {
-      id: 4,
-      type: 'compliance',
-      title: 'Contrôle conformité',
-      description: 'Hypothèque conventionnelle - Appartement',
-      time: 'Il y a 2 heures',
-      status: 'review',
-      priority: 'high',
-      clientName: 'M. Niang'
+  const [workflowActivities, setWorkflowActivities] = useState([]);
+
+  // Charger les données depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadNotaryData();
     }
-  ]);
+  }, [user]);
+
+  const loadNotaryData = async () => {
+    try {
+      // Récupérer les transactions pour simuler les actes notariés
+      const { data: transactions, error: transactionsError } = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          parcels(
+            id,
+            title,
+            price,
+            location,
+            region,
+            departement,
+            commune
+          )
+        `)
+        .order('created_at', { ascending: false });
+
+      if (transactionsError) {
+        console.error('Erreur lors du chargement des transactions:', transactionsError);
+        return;
+      }
+
+      // Récupérer les demandes pour simuler les dossiers en cours
+      const { data: requests, error: requestsError } = await supabase
+        .from('requests')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (requestsError) {
+        console.error('Erreur lors du chargement des demandes:', requestsError);
+        return;
+      }
+
+      // Calculer les métriques
+      const totalActes = transactions?.length || 0;
+      const thisMonth = new Date();
+      thisMonth.setMonth(thisMonth.getMonth());
+      const thisWeek = new Date();
+      thisWeek.setDate(thisWeek.getDate() - 7);
+
+      const monthlyActes = transactions?.filter(t => {
+        const created = new Date(t.created_at);
+        return created.getMonth() === thisMonth.getMonth() && 
+               created.getFullYear() === thisMonth.getFullYear();
+      })?.length || 0;
+
+      const authenticatedThisWeek = transactions?.filter(t => {
+        const created = new Date(t.created_at);
+        return created >= thisWeek;
+      })?.length || 0;
+
+      const pendingDossiers = requests?.filter(r => r.status === 'pending')?.length || 0;
+      const revenueThisMonth = transactions?.filter(t => {
+        const created = new Date(t.created_at);
+        return created.getMonth() === thisMonth.getMonth() && 
+               created.getFullYear() === thisMonth.getFullYear();
+      }).reduce((sum, t) => sum + (t.amount * 0.02 || 0), 0) || 0; // 2% commission notariale
+
+      setLegalAnalytics({
+        totalActes,
+        monthlyActes,
+        averageProcessingTime: 7.5,
+        complianceRate: 96.8,
+        pendingDossiers,
+        authenticatedThisWeek,
+        revenueThisMonth,
+        clientSatisfaction: 94,
+        performanceScore: 92,
+        urgentCases: Math.floor(pendingDossiers * 0.25),
+        complexCases: Math.floor(pendingDossiers * 0.4),
+        standardCases: Math.ceil(pendingDossiers * 0.35)
+      });
+
+      // Générer les données de graphiques
+      generateChartData(transactions, requests);
+      generateWorkflowActivities(transactions, requests);
+
+    } catch (error) {
+      console.error('Erreur lors du chargement des données notariales:', error);
+    }
+  };
+
+  const generateChartData = (transactions, requests) => {
+    // Activité hebdomadaire
+    const weeklyActivity = [
+      { day: 'Lun', actes: 0, verifications: 0, consultations: 0 },
+      { day: 'Mar', actes: 0, verifications: 0, consultations: 0 },
+      { day: 'Mer', actes: 0, verifications: 0, consultations: 0 },
+      { day: 'Jeu', actes: 0, verifications: 0, consultations: 0 },
+      { day: 'Ven', actes: 0, verifications: 0, consultations: 0 },
+      { day: 'Sam', actes: 0, verifications: 0, consultations: 0 }
+    ];
+
+    // Remplir avec des données basées sur les transactions
+    transactions?.forEach(t => {
+      const day = new Date(t.created_at).getDay();
+      if (day >= 1 && day <= 6) {
+        const dayIndex = day - 1;
+        weeklyActivity[dayIndex].actes += 1;
+        if (t.status === 'pending') weeklyActivity[dayIndex].verifications += 1;
+        else weeklyActivity[dayIndex].consultations += 1;
+      }
+    });
+
+    // Distribution des dossiers par région
+    const regions = [...new Set(transactions?.map(t => t.parcels?.region).filter(Boolean))];
+    const dossierDistribution = regions.slice(0, 5).map((region, index) => {
+      const count = transactions?.filter(t => t.parcels?.region === region)?.length || 0;
+      const percentage = transactions?.length ? (count / transactions.length) * 100 : 0;
+      const colors = ['#8884d8', '#82ca9d', '#ffc658', '#ff7300', '#00ff88'];
+      
+      return {
+        type: `Dossiers ${region}`,
+        count,
+        percentage: Math.round(percentage),
+        color: colors[index % colors.length]
+      };
+    });
+
+    // Temps de traitement par mois (simulé)
+    const processingTimes = [
+      { month: 'Jan', temps: 8.2, dossiers: Math.floor(Math.random() * 20) + 30 },
+      { month: 'Fév', temps: 7.8, dossiers: Math.floor(Math.random() * 20) + 35 },
+      { month: 'Mar', temps: 7.5, dossiers: Math.floor(Math.random() * 20) + 40 },
+      { month: 'Avr', temps: 7.2, dossiers: Math.floor(Math.random() * 20) + 45 },
+      { month: 'Mai', temps: 7.0, dossiers: Math.floor(Math.random() * 20) + 50 },
+      { month: 'Juin', temps: 7.5, dossiers: transactions?.length || 45 }
+    ];
+
+    setChartData({
+      weeklyActivity,
+      dossierDistribution,
+      processingTimes
+    });
+  };
+
+  const generateWorkflowActivities = (transactions, requests) => {
+    const activities = [];
+    
+    // Ajouter quelques transactions récentes comme activités
+    transactions?.slice(0, 3).forEach((transaction, index) => {
+      activities.push({
+        id: activities.length + 1,
+        type: transaction.status === 'completed' ? 'authentication' : 'verification',
+        title: transaction.status === 'completed' ? 'Acte authentifié' : 'Vérification en cours',
+        description: `${transaction.parcels?.title || 'Transaction'} - ${transaction.amount ? (transaction.amount / 1000000).toFixed(1) + 'M FCFA' : 'Montant non spécifié'}`,
+        time: getTimeAgo(transaction.created_at),
+        status: transaction.status === 'completed' ? 'completed' : 'in_progress',
+        priority: index === 0 ? 'high' : index === 1 ? 'medium' : 'normal',
+        clientName: `Client ${transaction.id.slice(0, 8)}`
+      });
+    });
+
+    // Ajouter quelques demandes comme consultations
+    requests?.slice(0, 2).forEach((request, index) => {
+      activities.push({
+        id: activities.length + 1,
+        type: 'consultation',
+        title: 'Consultation programmée',
+        description: `${request.request_type} - ${request.message?.substring(0, 50) || 'Demande en attente'}`,
+        time: 'Demain 10h',
+        status: 'scheduled',
+        priority: 'medium',
+        clientName: `Demandeur ${request.id.slice(0, 8)}`
+      });
+    });
+
+    setWorkflowActivities(activities);
+  };
+
+  const getTimeAgo = (dateString) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diffInMinutes = Math.floor((now - date) / (1000 * 60));
+    
+    if (diffInMinutes < 60) return `Il y a ${diffInMinutes} minutes`;
+    if (diffInMinutes < 1440) return `Il y a ${Math.floor(diffInMinutes / 60)} heures`;
+    return `Il y a ${Math.floor(diffInMinutes / 1440)} jours`;
+  };
 
   const getWorkflowIcon = (type) => {
     switch (type) {
@@ -635,14 +791,14 @@ const NotairesDashboardPage = () => {
         <DialogHeader>
           <DialogTitle>Instruction du Dossier: {currentDossier?.id}</DialogTitle>
           <DialogDescription>
-            Examinez les documents et statuez sur le dossier.
+            Examinez les FileTexts et statuez sur le dossier.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4 py-4 text-sm">
           <p><span className="font-semibold">Parcelle:</span> <Link to={`/parcelles/${currentDossier?.parcelRef}`} className="text-primary underline">{currentDossier?.parcelRef}</Link></p>
           <p><span className="font-semibold">Type de procédure:</span> {currentDossier?.type}</p>
           <div className="space-y-2 pt-2">
-            <h4 className="font-semibold">Documents à vérifier (Simulation)</h4>
+            <h4 className="font-semibold">FileTexts à vérifier (Simulation)</h4>
             <ul className="list-disc list-inside text-muted-foreground">
               <li>Acte de vente préliminaire <Button variant="link" size="sm" className="p-0 h-auto ml-2" onClick={() => handleAction("Visualisation de l'acte de vente.")}>Voir</Button></li>
               <li>Certificat de propriété <Button variant="link" size="sm" className="p-0 h-auto ml-2" onClick={() => handleAction("Visualisation du certificat.")}>Voir</Button></li>

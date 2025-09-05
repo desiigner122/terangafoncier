@@ -9,7 +9,12 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
-import { Check, X, FilePlus, Eye } from 'lucide-react';
+import { 
+  Check, 
+  X, 
+  FilePlus, 
+  Eye
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const AdminSystemRequestsPage = () => {
@@ -84,12 +89,12 @@ const AdminSystemRequestsPage = () => {
             <DialogContent className="sm:max-w-lg">
                 <DialogHeader>
                     <DialogTitle>Détails de la Soumission: {request.details.parcelName}</DialogTitle>
-                    <DialogDescription>Vérifiez les informations et les documents avant de prendre une décision.</DialogDescription>
+                    <DialogDescription>Vérifiez les informations et les FileTexts avant de prendre une décision.</DialogDescription>
                 </DialogHeader>
                 <div className="py-4 space-y-4 text-sm max-h-96 overflow-y-auto">
                     <p><strong>Utilisateur:</strong> {request.user.name}</p>
                     <p><strong>ID de la parcelle:</strong> {request.details.parcelId}</p>
-                    <p className="text-muted-foreground">La gestion des documents se fait sur la page de gestion des annonces.</p>
+                    <p className="text-muted-foreground">La gestion des FileTexts se fait sur la page de gestion des annonces.</p>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" asChild><Link to={`/admin/parcels`} target="_blank">Gérer les annonces</Link></Button>

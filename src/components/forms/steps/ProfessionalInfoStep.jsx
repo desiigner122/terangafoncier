@@ -1,9 +1,14 @@
-/**
+﻿/**
  * Étape: Informations professionnelles génériques
  */
 
 import React, { useState } from 'react';
-import { Briefcase, Building, Award, ChevronRight } from 'lucide-react';
+import { 
+  Briefcase, 
+  Building, 
+  Award, 
+  ChevronRight
+} from 'lucide-react';
 
 const ProfessionalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
   const [formData, setFormData] = useState({

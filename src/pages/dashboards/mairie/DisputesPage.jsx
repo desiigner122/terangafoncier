@@ -1,9 +1,12 @@
-
+﻿
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { AlertTriangle, Construction } from 'lucide-react';
+import { 
+  AlertTriangle, 
+  Construction
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const DisputesPage = () => {

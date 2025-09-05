@@ -1,8 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { HeartHandshake as Handshake, Building, Landmark, Users, ExternalLink, Phone, Briefcase, CheckCircle } from 'lucide-react';
+import { 
+  Users, 
+  Building, 
+  Landmark, 
+  ExternalLink, 
+  Phone, 
+  Briefcase, 
+  CheckCircle
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const partnersData = [
@@ -80,7 +88,7 @@ const PartnerCard = ({ partner, index }) => {
     if (category.includes("Développement") || category.includes("Aménageur")) return <Landmark className="h-6 w-6 text-primary" />;
     if (category.includes("Juridique") || category.includes("Notaires")) return <Briefcase className="h-6 w-6 text-primary" />;
     if (category.includes("Technique") || category.includes("Géomètres")) return <Users className="h-6 w-6 text-primary" />;
-    return <Handshake className="h-6 w-6 text-primary" />;
+    return <Users className="h-6 w-6 text-primary" />;
   };
 
   return (
@@ -140,7 +148,7 @@ const PartnersPage = () => {
             transition={{ duration: 0.7, delay: 0.1 }} 
             className="text-center mb-12 md:mb-16"
         >
-          <Handshake className="h-16 w-16 md:h-20 md:w-20 text-primary mx-auto mb-6" />
+          <Users className="h-16 w-16 md:h-20 md:w-20 text-primary mx-auto mb-6" />
           <h1 className="text-4xl md:text-5xl font-extrabold tracking-tight text-primary mb-4">
             Nos Partenaires Stratégiques
           </h1>

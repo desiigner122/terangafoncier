@@ -1,6 +1,13 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Users, Scale, Globe, CalendarCheck, Plane } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  Users, 
+  Scale, 
+  Globe, 
+  CalendarCheck, 
+  Plane
+} from 'lucide-react';
 
 const objectives = [
    { icon: ShieldCheck, title: "Contre la Fraude", description: "Vérification systématique des titres fonciers, identités des vendeurs et mandats pour prévenir les doubles ventes et litiges.", color: "text-red-600" },
@@ -39,7 +46,7 @@ const PlatformObjectives = () => {
           <motion.div variants={itemVariants}>
               <h2 className="text-3xl md:text-4xl font-bold mb-5 text-primary">Investir au Sénégal, en Toute Sécurité</h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify"> {/* Added text-justify */}
-                 Notre mission est de rendre l'achat de terrain au Sénégal fiable, transparent et accessible à tous. Nous combattons activement la fraude (doubles ventes, faux documents) et simplifions les démarches complexes, en particulier pour la diaspora sénégalaise.
+                 Notre mission est de rendre l'achat de terrain au Sénégal fiable, transparent et accessible à tous. Nous combattons activement la fraude (doubles ventes, faux FileTexts) et simplifions les démarches complexes, en particulier pour la diaspora sénégalaise.
               </p>
               <div className="space-y-4">
                   {objectives.map((obj, index) => (

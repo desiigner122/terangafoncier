@@ -1,12 +1,42 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { motion } from 'framer-motion';
 import { 
-  Users, MapPin, GitPullRequest, Activity, BarChart, Globe, Brain, Zap,
-  TrendingUp, Clock, DollarSign, Monitor, BarChart3, Building2, Landmark, 
-  Home, Store, Scale, UserCog, PieChart as PieChartIcon, Target, 
-  Lightbulb, Database, Shield, AlertTriangle, CheckCircle, XCircle,
-  Calendar, Eye, MessageSquare, Heart, Search, Filter, ArrowUp, ArrowDown
+  Users, 
+  MapPin, 
+  GitPullRequest, 
+  Activity, 
+  BarChart, 
+  Globe, 
+  Brain, 
+  Zap, 
+  TrendingUp, 
+  Clock, 
+  DollarSign, 
+  Monitor, 
+  BarChart3, 
+  Building2, 
+  Landmark, 
+  Home, 
+  Store, 
+  Scale, 
+  UserCog, 
+  PieChart as PieChartIcon, 
+  Target, 
+  Lightbulb, 
+  Database, 
+  Shield, 
+  AlertTriangle, 
+  CheckCircle, 
+  XCircle, 
+  Calendar, 
+  Eye, 
+  MessageSquare, 
+  Heart, 
+  Search, 
+  Filter, 
+  ArrowUp, 
+  ArrowDown
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';

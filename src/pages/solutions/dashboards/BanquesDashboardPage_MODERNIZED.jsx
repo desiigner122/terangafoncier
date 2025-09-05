@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Badge, 
@@ -36,17 +36,17 @@ import {
   CheckCircle, 
   Clock, 
   Target, 
-  Activity,
-  Banknote,
-  Calculator,
-  PieChart as PieChartIcon,
-  BarChart3,
-  Wallet,
-  Building2,
-  HandCoins,
-  Receipt,
-  Download,
-  Search,
+  Activity, 
+  Banknote, 
+  Calculator, 
+  PieChart as PieChartIcon, 
+  BarChart3, 
+  Wallet, 
+  Building2, 
+  HandCoins, 
+  Receipt, 
+  Download, 
+  Search, 
   PlusCircle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

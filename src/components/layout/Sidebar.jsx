@@ -1,7 +1,33 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
-import { LayoutDashboard, User, FileText, MapPin, Settings, LogOut, Users, UserCheck, BarChart, FileSignature, FileCheck as FileCheckIcon, LifeBuoy, UploadCloud, Building, LandPlot, Heart, Bell, Banknote, TrendingUp, Leaf, Briefcase, ChevronDown, ChevronRight, MessageSquare, Home } from 'lucide-react';
+import { 
+  LayoutDashboard, 
+  User, 
+  FileText, 
+  MapPin, 
+  Settings, 
+  LogOut, 
+  Users, 
+  UserCheck, 
+  BarChart, 
+  FileSignature, 
+  FileCheck as FileCheckIcon, 
+  LifeBuoy, 
+  UploadCloud, 
+  Building, 
+  LandPlot, 
+  Heart, 
+  Bell, 
+  Banknote, 
+  TrendingUp, 
+  Leaf, 
+  Briefcase, 
+  ChevronDown, 
+  ChevronRight, 
+  MessageSquare, 
+  Home
+} from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Button } from '@/components/ui/button';

@@ -7,7 +7,12 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/componen
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { MapPin, Maximize, HeartOff, Trash2 } from 'lucide-react';
+import { 
+  MapPin, 
+  Maximize, 
+  HeartOff, 
+  Trash2
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import {
   AlertDialog,

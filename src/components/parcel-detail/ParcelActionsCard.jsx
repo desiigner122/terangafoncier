@@ -1,8 +1,16 @@
-
+﻿
 import React, { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Info, ShoppingCart, CalendarPlus, PercentSquare, Landmark, FileSignature, Ban } from 'lucide-react';
+import { 
+  Info, 
+  ShoppingCart, 
+  CalendarPlus, 
+  PercentSquare, 
+  Landmark, 
+  FileSignature, 
+  Ban
+} from 'lucide-react';
 import InstallmentPaymentModal from '@/components/parcel-detail/InstallmentPaymentModal';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/SupabaseAuthContext';

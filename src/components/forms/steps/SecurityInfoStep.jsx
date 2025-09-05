@@ -1,9 +1,16 @@
-/**
+﻿/**
  * Étape de sécurité: Mot de passe et conditions
  */
 
 import React, { useState } from 'react';
-import { Shield, Eye, EyeOff, CheckCircle, XCircle, ChevronRight } from 'lucide-react';
+import { 
+  Shield, 
+  Eye, 
+  EyeOff, 
+  CheckCircle, 
+  XCircle, 
+  ChevronRight
+} from 'lucide-react';
 import { accountCreationService } from '../../../lib/accountCreationService';
 
 const SecurityInfoStep = ({ data, errors, onNext, isLoading, role }) => {

@@ -1,8 +1,19 @@
-import React from 'react';
+﻿import React from 'react';
     import { motion } from 'framer-motion';
     import { Button } from '@/components/ui/button';
     import { Link, useNavigate } from 'react-router-dom';
-    import { Building2, Search, FileCheck, TrendingUp, Users, ArrowRight, LayoutDashboard, BarChart2, UserCog, HeartHandshake as Handshake, Check } from 'lucide-react';
+    import { 
+  Building2, 
+  Search, 
+  FileCheck, 
+  TrendingUp, 
+  ArrowRight, 
+  LayoutDashboard, 
+  BarChart2, 
+  UserCog, 
+  Users, 
+  Check
+} from 'lucide-react';
     import { Card, CardContent } from '@/components/ui/card';
     import { useAuth } from '@/context/SupabaseAuthContext';
     import { Helmet } from 'react-helmet-async';

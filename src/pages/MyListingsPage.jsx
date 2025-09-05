@@ -4,7 +4,19 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Building, LandPlot, Clock, CheckCircle, AlertTriangle, ArrowRight, Edit, Trash2, UploadCloud, Banknote, XCircle } from 'lucide-react';
+import { 
+  Building, 
+  LandPlot, 
+  Clock, 
+  CheckCircle, 
+  AlertTriangle, 
+  ArrowRight, 
+  Edit, 
+  Trash2, 
+  UploadCloud, 
+  Banknote, 
+  XCircle
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import {
@@ -120,7 +132,7 @@ const MyListingsPage = () => {
                       </CardHeader>
                       {listing.status === 'rejected' && (
                         <CardContent>
-                          <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">Votre annonce a été rejetée. Raison simulée : Document manquant. Veuillez vérifier vos documents ou contacter le support.</p>
+                          <p className="text-sm text-destructive bg-destructive/10 p-3 rounded-md">Votre annonce a été rejetée. Raison simulée : FileText manquant. Veuillez vérifier vos FileTexts ou contacter le support.</p>
                         </CardContent>
                       )}
                       <CardFooter className="pt-4 flex flex-wrap gap-2 justify-end">

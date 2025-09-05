@@ -7,7 +7,13 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { BellRing, BellOff, CheckCheck, Trash2, ArrowRight } from 'lucide-react';
+import { 
+  BellRing, 
+  BellOff, 
+  CheckCheck, 
+  Trash2, 
+  ArrowRight
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/customSupabaseClient';

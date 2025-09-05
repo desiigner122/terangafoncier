@@ -1,7 +1,9 @@
-// Composants simplifiés pour compléter le système
+﻿// Composants simplifiés pour compléter le système
 
 import React, { useState } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { 
+  ChevronRight
+} from 'lucide-react';
 
 export const SurveyorOfficeStep = ({ data, errors, onNext, isLoading }) => {
   const [formData, setFormData] = useState({

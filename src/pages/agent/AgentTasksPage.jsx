@@ -4,7 +4,11 @@ import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Search, CheckCircle } from 'lucide-react';
+import { 
+  PlusCircle, 
+  Search, 
+  CheckCircle
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';

@@ -1,11 +1,20 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, useMap, ZoomControl } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ExternalLink, Layers, Search, ZoomIn, ZoomOut, Home, DollarSign, MapPin } from 'lucide-react';
+import { 
+  ExternalLink, 
+  Layers, 
+  Search, 
+  ZoomIn, 
+  ZoomOut, 
+  Home, 
+  DollarSign, 
+  MapPin
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card'; // Import Card and CardContent
 import { useSecureGeolocation, getBrowserCapabilities } from '@/hooks/useSecureGeolocation';

@@ -5,7 +5,17 @@ import React, { useState, useContext, useEffect } from 'react';
     import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
     import { Badge } from '@/components/ui/badge';
-    import { Heart, Maximize, MapPin, Layers, ShieldCheck, ShoppingCart, PercentSquare, Landmark, CheckCircle } from 'lucide-react';
+    import { 
+  Heart, 
+  Maximize, 
+  MapPin, 
+  Layers, 
+  ShieldCheck, 
+  ShoppingCart, 
+  PercentSquare, 
+  Landmark, 
+  CheckCircle
+} from 'lucide-react';
     // useToast import supprimÃ© - utilisation window.safeGlobalToast
     import { ComparisonContext } from '@/context/ComparisonContext';
     import InstallmentPaymentModal from '@/components/parcel-detail/InstallmentPaymentModal';

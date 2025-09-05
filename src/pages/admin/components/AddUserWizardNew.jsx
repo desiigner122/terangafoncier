@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,12 +13,12 @@ import {
   Building, 
   CheckCircle, 
   ChevronRight, 
-  ChevronLeft,
-  Mail,
-  Phone,
-  Calendar,
-  Shield,
-  FileText,
+  ChevronLeft, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  Shield, 
+  FileText, 
   Upload
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -78,7 +78,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
     professional_id: '',
     specializations: [],
     
-    // Étape 4: Validation et documents
+    // Étape 4: Validation et FileTexts
     password: '',
     confirm_password: '',
     terms_accepted: false,

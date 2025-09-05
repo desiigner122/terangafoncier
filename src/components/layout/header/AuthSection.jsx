@@ -1,9 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { LayoutGrid, User, LogOut, Settings, Bell, MessageSquare } from 'lucide-react';
+import { 
+  LayoutGrid, 
+  User, 
+  LogOut, 
+  Settings, 
+  Bell, 
+  MessageSquare
+} from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -19,7 +26,7 @@ const getInitials = (nameOrEmail) => {
 };
 
 const AuthSection = ({ isScrolled }) => {
-  const { user, profile, signOut, loading } = useAuth();
+  const { user, profile, loading, signOut } = useAuth();
   const { pathname } = window.location;
   const isHomePage = pathname === '/';
   
@@ -32,9 +39,14 @@ const AuthSection = ({ isScrolled }) => {
   const unreadNotifications = 0; 
   const unreadMessages = 0;
 
+  // Obtenir le nom d'affichage - utiliser profile et user
+  const displayName = profile?.full_name || profile?.first_name || (user?.email ? user.email.split('@')[0] : 'Utilisateur');
+  const avatarUrl = profile?.avatar_url || (user?.email ? `https://avatar.vercel.sh/${user.email}.png` : '');
+  const userRole = profile?.role || profile?.user_type || 'Utilisateur';
+
   return (
     <div className="flex items-center gap-2 md:gap-3">
-      {user && profile ? (
+      {user ? (
         <>
           <Button variant="ghost" size="icon" className="relative h-10 w-10" asChild>
             <Link to="/messaging">
@@ -64,15 +76,15 @@ const AuthSection = ({ isScrolled }) => {
             <DropdownMenuTrigger asChild>
               <Button variant="ghost" className="relative h-10 w-10 rounded-full">
                 <Avatar className="h-10 w-10 border-2 border-transparent hover:border-primary transition-colors">
-                  <AvatarImage src={profile.avatar_url || `https://avatar.vercel.sh/${user.email}.png`} alt={profile.full_name || user.email} />
-                  <AvatarFallback>{getInitials(profile.full_name || user.email)}</AvatarFallback>
+                  <AvatarImage src={avatarUrl} alt={displayName} />
+                  <AvatarFallback>{getInitials(displayName)}</AvatarFallback>
                 </Avatar>
               </Button>
             </DropdownMenuTrigger>
             <DropdownMenuContent align="end" className="w-56">
               <DropdownMenuLabel>
-                <p className="font-semibold truncate">{profile.full_name || user.email}</p>
-                <p className="text-xs text-muted-foreground font-normal capitalize">{profile.user_type || profile.role}</p>
+                <p className="font-semibold truncate">{displayName}</p>
+                <p className="text-xs text-muted-foreground font-normal capitalize">{userRole}</p>
               </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem asChild>

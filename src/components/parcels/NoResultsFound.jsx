@@ -2,7 +2,11 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Search, Landmark, Heart } from 'lucide-react';
+import { 
+  Search, 
+  Landmark, 
+  Heart
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const NoResultsFound = ({ searchedZone, onResetFilters }) => {

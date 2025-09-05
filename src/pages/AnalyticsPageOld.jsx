@@ -1,8 +1,18 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { BarChart, Users, Eye, MousePointerClick, Globe, TrendingUp, TrendingDown, FileCheck, DollarSign } from 'lucide-react';
+import { 
+  BarChart, 
+  Users, 
+  Eye, 
+  MousePointerClick, 
+  Globe, 
+  TrendingUp, 
+  TrendingDown, 
+  FileCheck, 
+  DollarSign
+} from 'lucide-react';
 import { ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, Legend } from 'recharts';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';

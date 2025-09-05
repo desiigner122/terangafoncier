@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabaseClient';
 import { Badge } from '@/components/ui/badge';
@@ -33,15 +33,15 @@ import {
   Heart, 
   CalendarDays, 
   Target, 
-  Activity,
-  ShoppingCart,
-  MapPin,
-  Star,
-  Clock,
-  PlusCircle,
-  UserPlus,
-  Building,
-  Wallet,
+  Activity, 
+  ShoppingCart, 
+  MapPin, 
+  Star, 
+  Clock, 
+  PlusCircle, 
+  UserPlus, 
+  Building, 
+  Wallet, 
   BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
@@ -68,8 +68,8 @@ const ParticulierDashboard = () => {
         alert(`❌ Erreur: ${message}`);
       } else if (type === 'success') {
         // Notification discrète pour succès
-        if (typeof document !== 'undefined') {
-          const notification = document.createElement('div');
+        if (typeof FileText !== 'undefined') {
+          const notification = FileText.createElement('div');
           notification.style.cssText = `
             position: fixed;
             top: 20px;
@@ -85,7 +85,7 @@ const ParticulierDashboard = () => {
             transition: all 0.3s ease;
           `;
           notification.textContent = `✅ ${message}`;
-          document.body.appendChild(notification);
+          FileText.body.appendChild(notification);
           
           setTimeout(() => {
             if (notification.parentNode) {
@@ -789,7 +789,7 @@ const ParticulierDashboard = () => {
                 <CardContent>
                   <div className="flex items-center gap-3">
                     <Avatar>
-                      <AvatarImage src={`https://ui-avatars.com/api/?name=${encodeURIComponent(assignedAgent.name)}&background=random`} />
+                      <AvatarImage src={assignedAgent.avatar_url || `/api/placeholder/40/40?text=${encodeURIComponent(assignedAgent.name.charAt(0))}`} />
                       <AvatarFallback>{assignedAgent.avatarDesc?.charAt(0)}</AvatarFallback>
                     </Avatar>
                     <div>

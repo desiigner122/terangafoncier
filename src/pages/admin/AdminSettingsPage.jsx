@@ -6,7 +6,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Bell, Palette, Shield, Bot, Mail, Percent, Save } from 'lucide-react';
+import { 
+  Bell, 
+  Palette, 
+  Shield, 
+  Bot, 
+  Mail, 
+  Percent, 
+  Save
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const AdminSettingsPage = () => {
@@ -73,13 +81,13 @@ const AdminSettingsPage = () => {
                 <Card>
                     <CardHeader>
                         <CardTitle className="flex items-center"><Bot className="mr-2" /> Intelligence Artificielle</CardTitle>
-                        <CardDescription>Paramètres pour l'assistant IA et la vérification de documents.</CardDescription>
+                        <CardDescription>Paramètres pour l'assistant IA et la vérification de FileTexts.</CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
                          <div className="flex items-center justify-between">
                             <Label htmlFor="ai-review" className="flex flex-col space-y-1">
-                                <span>Vérification IA des documents</span>
-                                <span className="font-normal leading-snug text-muted-foreground">Activer l'analyse automatique des documents soumis pour détection de fraude.</span>
+                                <span>Vérification IA des FileTexts</span>
+                                <span className="font-normal leading-snug text-muted-foreground">Activer l'analyse automatique des FileTexts soumis pour détection de fraude.</span>
                             </Label>
                             <Switch id="ai-review" defaultChecked />
                         </div>

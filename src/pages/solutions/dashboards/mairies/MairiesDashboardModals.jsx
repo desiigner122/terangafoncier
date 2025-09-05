@@ -8,7 +8,18 @@
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
     import { Badge } from '@/components/ui/badge';
     import { Checkbox } from '@/components/ui/checkbox';
-    import { AlertCircle, CheckCircle, Clock, MessageSquare, Eye, User, FileText, Search, MapPin, Maximize } from 'lucide-react';
+    import { 
+  AlertCircle, 
+  CheckCircle, 
+  Clock, 
+  MessageSquare, 
+  Eye, 
+  User, 
+  FileText, 
+  Search, 
+  MapPin, 
+  Maximize
+} from 'lucide-react';
     import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
     import { format } from 'date-fns';
     import { fr } from 'date-fns/locale';
@@ -39,12 +50,12 @@
         </div>
     );
 
-    const RequestDocuments = ({ documents }) => (
+    const RequestFileTexts = ({ FileTexts }) => (
         <div>
-            <h4 className="font-semibold mb-2 text-base">Documents Justificatifs</h4>
-            {documents && Object.keys(documents).length > 0 ? (
+            <h4 className="font-semibold mb-2 text-base">FileTexts Justificatifs</h4>
+            {FileTexts && Object.keys(FileTexts).length > 0 ? (
                 <ul className="space-y-2">
-                    {Object.entries(documents).map(([key, value]) => (
+                    {Object.entries(FileTexts).map(([key, value]) => (
                         <li key={key} className="flex items-center justify-between p-2 border rounded-md bg-background">
                             <span className="text-sm font-medium capitalize flex items-center gap-2">
                                 <FileText className="h-4 w-4 text-primary" />
@@ -59,7 +70,7 @@
                     ))}
                 </ul>
             ) : (
-                <p className="text-center text-sm text-muted-foreground p-4 border rounded-md">Aucun document n'a été fourni pour cette demande.</p>
+                <p className="text-center text-sm text-muted-foreground p-4 border rounded-md">Aucun FileText n'a été fourni pour cette demande.</p>
             )}
         </div>
     );
@@ -116,7 +127,7 @@
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 max-h-[70vh]">
             <div className="md:col-span-1 space-y-4 overflow-y-auto pr-2">
                 <ApplicantInfo user={user} />
-                <RequestDocuments documents={user.documents || {}} />
+                <RequestFileTexts FileTexts={user.FileTexts || {}} />
             </div>
             <div className="md:col-span-2 space-y-4 overflow-y-auto pr-2">
                 {request.parcel_id && <p><span className="font-semibold">Parcelle:</span> <Link to={`/parcelles/${request.parcel_id}`} className="text-primary underline">{request.parcel_id}</Link></p>}
@@ -216,7 +227,7 @@
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 py-4 max-h-[70vh]">
             <div className="md:col-span-1 space-y-4 overflow-y-auto pr-2">
                 <ApplicantInfo user={user} />
-                <RequestDocuments documents={user.documents || {}} />
+                <RequestFileTexts FileTexts={user.FileTexts || {}} />
             </div>
             <div className="md:col-span-2 space-y-4 overflow-y-auto pr-2">
                 <p><span className="font-semibold">Motivation:</span> {request.message}</p>

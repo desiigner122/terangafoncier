@@ -1,8 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { HeartHandshake as Handshake, Zap, Target, BarChart2, Users, ShieldCheck, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { 
+  Users, 
+  Zap, 
+  Target, 
+  BarChart2, 
+  ShieldCheck, 
+  ArrowRight, 
+  LayoutDashboard
+} from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent } from '@/components/ui/card';
@@ -82,7 +90,7 @@ const SolutionsVendeursPage = () => {
             transition={{ duration: 0.6 }}
             className="container mx-auto px-4 relative z-10"
           >
-            <Handshake className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-6 text-green-600" />
+            <Users className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-6 text-green-600" />
             <h1 className="text-4xl md:text-5xl font-extrabold text-green-700 mb-4">
               Vendez Votre Terrain. Simplement. Rapidement.
             </h1>

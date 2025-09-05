@@ -6,7 +6,16 @@ import { useAuth } from '@/context/SupabaseAuthContext';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { FileText, ArrowRight, Bell, User, MessageSquare, Check, X, ShoppingCart } from 'lucide-react';
+import { 
+  FileText, 
+  ArrowRight, 
+  Bell, 
+  User, 
+  MessageSquare, 
+  Check, 
+  X, 
+  ShoppingCart
+} from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/customSupabaseClient';

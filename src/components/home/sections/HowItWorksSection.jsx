@@ -1,10 +1,19 @@
-import React from 'react';
+﻿import React from 'react';
     import { motion } from 'framer-motion';
-    import { Map, FileSearch, CheckCircle, Smile, Landmark, FileSignature, Users, ShieldCheck } from 'lucide-react';
+    import { 
+  Map, 
+  FileSearch, 
+  CheckCircle, 
+  Smile, 
+  Landmark, 
+  FileSignature, 
+  Users, 
+  ShieldCheck
+} from 'lucide-react';
 
     const steps = [
         { icon: Map, title: "1. Explorez les Offres", description: "Trouvez le terrain idéal parmi des parcelles vérifiées par nos vendeurs certifiés, ou soumettez une demande à une mairie.", color: "text-brand-blue" },
-        { icon: ShieldCheck, title: "2. Vérification Renforcée", description: "Chaque parcelle listée par un vendeur subit un contrôle documentaire rigoureux par nos équipes pour garantir sa validité.", color: "text-brand-red" },
+        { icon: ShieldCheck, title: "2. Vérification Renforcée", description: "Chaque parcelle listée par un vendeur subit un contrôle FileTextaire rigoureux par nos équipes pour garantir sa validité.", color: "text-brand-red" },
         { icon: FileSearch, title: "3. Suivez Votre Dossier", description: "Suivez l'avancement de votre acquisition ou de votre demande communale en toute transparence depuis votre tableau de bord.", color: "text-brand-orange" },
         { icon: Smile, title: "4. Finalisez en Toute Sérénité", description: "Devenez propriétaire en toute sécurité, accompagné par nos experts et nos partenaires notaires.", color: "text-green-600" },
     ];

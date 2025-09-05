@@ -4,10 +4,38 @@ import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { 
-  UserCheck, MapPin, FileText, BarChart2, CalendarDays, MessageSquare, Search, Filter, 
-  Check, X, TrendingUp, TrendingDown, DollarSign, Users, Eye, Phone, Mail, 
-  Clock, Building, Map, Star, Award, Target, Zap, Activity, Timer, 
-  AlertCircle, CheckCircle, Calendar, Home, Briefcase, PieChart as PieChartIcon
+  UserCheck, 
+  MapPin, 
+  FileText, 
+  BarChart2, 
+  CalendarDays, 
+  MessageSquare, 
+  Search, 
+  Filter, 
+  Check, 
+  X, 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Users, 
+  Eye, 
+  Phone, 
+  Mail, 
+  Clock, 
+  Building, 
+  Map, 
+  Star, 
+  Award, 
+  Target, 
+  Zap, 
+  Activity, 
+  Timer, 
+  AlertCircle, 
+  CheckCircle, 
+  Calendar, 
+  Home, 
+  Briefcase, 
+  PieChart as PieChartIcon
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -6,6 +6,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Separator } from '@/components/ui/separator';
+import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import { 
   AreaChart, 
   Area, 
@@ -34,113 +36,234 @@ import {
   CheckCircle, 
   Clock, 
   Target, 
-  Activity,
-  Banknote,
-  Calculator,
-  PieChart as PieChartIcon,
-  BarChart3,
-  Wallet,
-  Building2,
-  Coins,
-  Receipt,
-  Download,
-  Search,
+  Activity, 
+  Banknote, 
+  Calculator, 
+  PieChart as PieChartIcon, 
+  BarChart3, 
+  Wallet, 
+  Building2, 
+  Coins, 
+  Receipt, 
+  Download, 
+  Search, 
   PlusCircle
 } from 'lucide-react';
 
 const BanquesDashboardPage = () => {
+  const { user } = useAuth();
   const [banqueMetrics, setBanqueMetrics] = useState({
-    creditsImmobiliers: 1847,
-    montantTotal: 98500000000,
-    tauxApprobation: 78.5,
+    creditsImmobiliers: 0,
+    montantTotal: 0,
+    tauxApprobation: 0,
     delaiTraitement: 15,
-    clientsActifs: 12450,
+    clientsActifs: 0,
     portefeuilleRisque: 2.3,
-    revenus: 4750000000,
-    croissance: 12.8
+    revenus: 0,
+    croissance: 0
   });
 
   const [chartData, setChartData] = useState({
-    evolutionCredits: [
-      { mois: 'Jan', credits: 145, montant: 7800000000, approuves: 114, refuses: 31 },
-      { mois: 'Fév', credits: 162, montant: 8900000000, approuves: 128, refuses: 34 },
-      { mois: 'Mar', credits: 178, montant: 9200000000, approuves: 142, refuses: 36 },
-      { mois: 'Avr', credits: 195, montant: 10100000000, approuves: 156, refuses: 39 },
-      { mois: 'Mai', credits: 188, montant: 9800000000, approuves: 149, refuses: 39 },
-      { mois: 'Jun', credits: 203, montant: 11200000000, approuves: 164, refuses: 39 }
-    ],
-    typesCredits: [
-      { type: 'Acquisition', nombre: 486, pourcentage: 45.2, montant: 28500000000, couleur: '#10B981' },
-      { type: 'Construction', nombre: 312, pourcentage: 29.0, montant: 22100000000, couleur: '#3B82F6' },
-      { type: 'Rénovation', nombre: 187, pourcentage: 17.4, montant: 9800000000, couleur: '#F59E0B' },
-      { type: 'Refinancement', nombre: 92, pourcentage: 8.4, montant: 4200000000, couleur: '#EF4444' }
-    ],
-    risquePortefeuille: [
+    evolutionCredits: [],
+    typesCredits: [],
+    risquePortefeuille: [],
+    performanceAgences: []
+  });
+
+  const [demandesCredits, setDemandesCredits] = useState([]);
+
+  // Charger les données depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadBankingData();
+    }
+  }, [user]);
+
+  const loadBankingData = async () => {
+    try {
+      // Récupérer toutes les transactions pour simuler les crédits immobiliers
+      const { data: transactions, error: transactionsError } = await supabase
+        .from('transactions')
+        .select(`
+          *,
+          parcels(
+            id,
+            title,
+            price,
+            location,
+            region,
+            departement,
+            commune
+          )
+        `)
+        .eq('transaction_type', 'purchase')
+        .order('created_at', { ascending: false });
+
+      if (transactionsError) {
+        console.error('Erreur lors du chargement des transactions:', transactionsError);
+        return;
+      }
+
+      // Récupérer les utilisateurs clients pour les métriques
+      const { data: users, error: usersError } = await supabase
+        .from('users')
+        .select('id, full_name, role, region, departement, commune, created_at')
+        .in('role', ['Particulier', 'Vendeur Particulier', 'Vendeur Professionnel']);
+
+      if (usersError) {
+        console.error('Erreur lors du chargement des utilisateurs:', usersError);
+        return;
+      }
+
+      // Calculer les métriques bancaires
+      const totalCredits = transactions?.length || 0;
+      const montantTotal = transactions?.reduce((sum, t) => sum + (t.amount || 0), 0) || 0;
+      const clientsActifs = users?.length || 0;
+      
+      // Calculer le taux d'approbation basé sur le statut des transactions
+      const transactionsCompleted = transactions?.filter(t => t.status === 'completed')?.length || 0;
+      const tauxApprobation = totalCredits > 0 ? (transactionsCompleted / totalCredits) * 100 : 0;
+
+      // Croissance basée sur les créations d'utilisateurs récentes
+      const usersLastMonth = users?.filter(u => {
+        const created = new Date(u.created_at);
+        const lastMonth = new Date();
+        lastMonth.setMonth(lastMonth.getMonth() - 1);
+        return created >= lastMonth;
+      })?.length || 0;
+      
+      const croissance = clientsActifs > 0 ? (usersLastMonth / clientsActifs) * 100 : 0;
+
+      setBanqueMetrics({
+        creditsImmobiliers: totalCredits,
+        montantTotal: montantTotal,
+        tauxApprobation: Math.round(tauxApprobation * 10) / 10,
+        delaiTraitement: 15, // Fixe pour le moment
+        clientsActifs: clientsActifs,
+        portefeuilleRisque: 2.3, // Fixe pour le moment
+        revenus: Math.round(montantTotal * 0.03), // 3% de commission approximative
+        croissance: Math.round(croissance * 10) / 10
+      });
+
+      // Générer les données de graphiques basées sur les données réelles
+      generateChartData(transactions, users);
+      generateDemandesCredits(transactions);
+
+    } catch (error) {
+      console.error('Erreur lors du chargement des données bancaires:', error);
+    }
+  };
+
+  const generateChartData = (transactions, users) => {
+    // Évolution mensuelle des crédits (basée sur les transactions)
+    const evolutionCredits = [];
+    const mois = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun'];
+    
+    mois.forEach((nom, index) => {
+      const startDate = new Date(2025, index, 1);
+      const endDate = new Date(2025, index + 1, 0);
+      
+      const transactionsDuMois = transactions?.filter(t => {
+        const date = new Date(t.created_at);
+        return date >= startDate && date <= endDate;
+      }) || [];
+      
+      const credits = transactionsDuMois.length;
+      const montant = transactionsDuMois.reduce((sum, t) => sum + (t.amount || 0), 0);
+      const approuves = transactionsDuMois.filter(t => t.status === 'completed').length;
+      const refuses = credits - approuves;
+      
+      evolutionCredits.push({
+        mois: nom,
+        credits: credits,
+        montant: montant,
+        approuves: approuves,
+        refuses: refuses
+      });
+    });
+
+    // Types de crédits (basés sur les régions pour simuler)
+    const typesCredits = [
+      { 
+        type: 'Acquisition', 
+        nombre: transactions?.filter(t => t.parcels?.region === 'Dakar').length || 0,
+        pourcentage: 45.2, 
+        montant: transactions?.filter(t => t.parcels?.region === 'Dakar').reduce((sum, t) => sum + (t.amount || 0), 0) || 0,
+        couleur: '#10B981' 
+      },
+      { 
+        type: 'Construction', 
+        nombre: transactions?.filter(t => t.parcels?.region === 'Thiès').length || 0,
+        pourcentage: 29.0, 
+        montant: transactions?.filter(t => t.parcels?.region === 'Thiès').reduce((sum, t) => sum + (t.amount || 0), 0) || 0,
+        couleur: '#3B82F6' 
+      },
+      { 
+        type: 'Rénovation', 
+        nombre: transactions?.filter(t => t.parcels?.region === 'Saint-Louis').length || 0,
+        pourcentage: 17.4, 
+        montant: transactions?.filter(t => t.parcels?.region === 'Saint-Louis').reduce((sum, t) => sum + (t.amount || 0), 0) || 0,
+        couleur: '#F59E0B' 
+      },
+      { 
+        type: 'Refinancement', 
+        nombre: transactions?.filter(t => !['Dakar', 'Thiès', 'Saint-Louis'].includes(t.parcels?.region)).length || 0,
+        pourcentage: 8.4, 
+        montant: transactions?.filter(t => !['Dakar', 'Thiès', 'Saint-Louis'].includes(t.parcels?.region)).reduce((sum, t) => sum + (t.amount || 0), 0) || 0,
+        couleur: '#EF4444' 
+      }
+    ];
+
+    // Performance par agences (basée sur les départements)
+    const departements = [...new Set(users?.map(u => u.departement).filter(Boolean))];
+    const performanceAgences = departements.slice(0, 6).map(dept => {
+      const clientsDept = users?.filter(u => u.departement === dept) || [];
+      const transactionsDept = transactions?.filter(t => t.parcels?.departement === dept) || [];
+      
+      return {
+        agence: dept,
+        credits: transactionsDept.length,
+        montant: transactionsDept.reduce((sum, t) => sum + (t.amount || 0), 0),
+        taux: transactionsDept.length > 0 ? 
+          (transactionsDept.filter(t => t.status === 'completed').length / transactionsDept.length) * 100 : 
+          0
+      };
+    });
+
+    // Données de risque (simulées mais réalistes)
+    const risquePortefeuille = [
       { trimestre: 'Q1', taux: 2.1, provisions: 890000000, recouvrements: 450000000 },
       { trimestre: 'Q2', taux: 2.3, provisions: 920000000, recouvrements: 480000000 },
       { trimestre: 'Q3', taux: 2.0, provisions: 850000000, recouvrements: 520000000 },
       { trimestre: 'Q4', taux: 2.2, provisions: 900000000, recouvrements: 495000000 }
-    ],
-    performanceAgences: [
-      { agence: 'Dakar Plateau', credits: 425, montant: 18500000000, taux: 85.2 },
-      { agence: 'Almadies', credits: 387, montant: 21200000000, taux: 82.1 },
-      { agence: 'Parcelles', credits: 356, montant: 16800000000, taux: 79.8 },
-      { agence: 'Guédiawaye', credits: 298, montant: 14200000000, taux: 75.4 },
-      { agence: 'Thiès', credits: 245, montant: 12100000000, taux: 73.2 },
-      { agence: 'Saint-Louis', credits: 136, montant: 8900000000, taux: 71.8 }
-    ]
-  });
+    ];
 
-  const [demandesCredits, setDemandesCredits] = useState([
-    {
-      id: 1,
-      client: 'Mme Fatou DIOP',
-      type: 'Acquisition',
-      montant: 45000000,
-      statut: 'En analyse',
-      agence: 'Dakar Plateau',
-      delai: 8,
-      score: 785,
-      garantie: 'Hypothèque',
-      progression: 65
-    },
-    {
-      id: 2,
-      client: 'M. Abdou NDIAYE',
-      type: 'Construction',
-      montant: 72000000,
-      statut: 'Approuvé',
-      agence: 'Almadies',
-      delai: 12,
-      score: 820,
-      garantie: 'Hypothèque + Caution',
-      progression: 95
-    },
-    {
-      id: 3,
-      client: 'SCI Les Palmiers',
-      type: 'Promotion',
-      montant: 185000000,
-      statut: 'En attente docs',
-      agence: 'Parcelles',
-      delai: 3,
-      score: 742,
-      garantie: 'Nantissement',
-      progression: 25
-    },
-    {
-      id: 4,
-      client: 'Mme Aïssa FALL',
-      type: 'Rénovation',
-      montant: 28000000,
-      statut: 'En analyse',
-      agence: 'Guédiawaye',
-      delai: 6,
-      score: 698,
-      garantie: 'Hypothèque',
-      progression: 45
-    }
-  ]);
+    setChartData({
+      evolutionCredits,
+      typesCredits,
+      risquePortefeuille,
+      performanceAgences
+    });
+  };
+
+  const generateDemandesCredits = (transactions) => {
+    // Transformer quelques transactions en demandes de crédit
+    const demandes = transactions?.slice(0, 8).map((transaction, index) => ({
+      id: index + 1,
+      client: `Client ${transaction.id.slice(0, 8)}`,
+      type: ['Acquisition', 'Construction', 'Rénovation', 'Promotion'][index % 4],
+      montant: transaction.amount || 0,
+      statut: transaction.status === 'completed' ? 'Approuvé' : 
+              transaction.status === 'pending' ? 'En analyse' : 'En attente docs',
+      agence: transaction.parcels?.departement || 'Non spécifié',
+      delai: Math.floor(Math.random() * 20) + 5,
+      score: Math.floor(Math.random() * 200) + 600,
+      garantie: ['Hypothèque', 'Caution', 'Nantissement'][index % 3],
+      progression: transaction.status === 'completed' ? 100 : Math.floor(Math.random() * 80) + 20
+    })) || [];
+
+    setDemandesCredits(demandes);
+  };
 
   const [activeTab, setActiveTab] = useState('overview');
 

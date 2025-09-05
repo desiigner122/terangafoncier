@@ -1,8 +1,12 @@
-import React from 'react';
+﻿import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowRight, UserPlus, UploadCloud } from 'lucide-react';
+import { 
+  ArrowRight, 
+  UserPlus, 
+  UploadCloud
+} from 'lucide-react';
 
 const CallToActionSection = () => {
   return (

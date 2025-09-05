@@ -1,10 +1,16 @@
-
+﻿
 import React from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { CheckCircle, FilePlus, Landmark, UserCheck, Ban } from 'lucide-react';
+import { 
+  CheckCircle, 
+  FilePlus, 
+  Landmark, 
+  UserCheck, 
+  Ban
+} from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Can } from '@/components/auth/RoleBasedGuard';
 
@@ -13,13 +19,13 @@ const SellPropertyPage = () => {
     
     const sellerSteps = [
         { icon: UserCheck, title: "Vérification du Vendeur", description: "Assurez-vous que votre profil est complet et vérifié par nos équipes pour gagner la confiance des acheteurs." },
-        { icon: FilePlus, title: "Préparation des Documents", description: "Rassemblez tous les documents nécessaires : titre foncier, bail, plan cadastral, etc." },
+        { icon: FilePlus, title: "Préparation des FileTexts", description: "Rassemblez tous les FileTexts nécessaires : titre foncier, bail, plan cadastral, etc." },
         { icon: CheckCircle, title: "Soumission de la Parcelle", description: "Utilisez notre formulaire guidé pour ajouter votre terrain. Il sera publié après une vérification rapide." },
     ];
 
     const mairieSteps = [
         { icon: Landmark, title: "Identifier les Terrains", description: "Identifiez les parcelles du patrimoine communal disponibles pour l'attribution." },
-        { icon: FilePlus, title: "Définir les Conditions", description: "Précisez les critères d'éligibilité et les documents requis pour les demandeurs." },
+        { icon: FilePlus, title: "Définir les Conditions", description: "Précisez les critères d'éligibilité et les FileTexts requis pour les demandeurs." },
         { icon: CheckCircle, title: "Publier l'Offre", description: "Ajoutez le terrain sur la plateforme pour le rendre visible aux citoyens et recevoir les demandes." },
     ];
 

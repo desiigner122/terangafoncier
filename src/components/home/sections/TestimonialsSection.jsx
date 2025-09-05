@@ -1,8 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card, CardContent } from "@/components/ui/card";
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from "@/components/ui/carousel";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
-import { Star, Quote } from 'lucide-react';
+import { 
+  Star, 
+  Quote
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 
 const testimonials = [
@@ -17,7 +20,7 @@ const testimonials = [
   {
     name: "Moussa D.",
     location: "Dakar",
-    quote: "J'étais sceptique au début, mais leur équipe a été très professionnelle. Ils ont vérifié tous les documents et m'ont accompagné chez le notaire. Je recommande vivement.",
+    quote: "J'étais sceptique au début, mais leur équipe a été très professionnelle. Ils ont vérifié tous les FileTexts et m'ont accompagné chez le notaire. Je recommande vivement.",
     rating: 5,
     avatarDesc: "Avatar Moussa D.",
     avatarTextDesc: "Portrait d'un homme sénégalais souriant"

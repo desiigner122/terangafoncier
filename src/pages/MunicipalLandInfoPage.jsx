@@ -1,10 +1,20 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Landmark, FileSignature, ArrowRight, CheckCircle, Map, FileSearch, Users, ShieldCheck, MailQuestion } from 'lucide-react';
+import { 
+  Landmark, 
+  FileSignature, 
+  ArrowRight, 
+  CheckCircle, 
+  Map, 
+  FileSearch, 
+  Users, 
+  ShieldCheck, 
+  MailQuestion
+} from 'lucide-react';
 
 const benefits = [
     {
@@ -25,14 +35,14 @@ const benefits = [
     {
         icon: ShieldCheck,
         title: "Processus Sécurisé",
-        description: "Nous assurons la transmission sécurisée de vos documents et informations aux administrations compétentes."
+        description: "Nous assurons la transmission sécurisée de vos FileTexts et informations aux administrations compétentes."
     },
 ];
 
 const steps = [
     { title: "1. Créez votre compte", description: "Inscrivez-vous sur Teranga Foncier pour accéder à votre espace personnel." },
     { title: "2. Remplissez le formulaire", description: "Accédez au formulaire de demande, remplissez vos informations et précisez votre projet." },
-    { title: "3. Joignez vos documents", description: "Téléchargez les pièces justificatives requises (pièce d'identité, justificatif de projet, etc.)." },
+    { title: "3. Joignez vos FileTexts", description: "Téléchargez les pièces justificatives requises (pièce d'identité, justificatif de projet, etc.)." },
     { title: "4. Soumettez et suivez", description: "Envoyez votre dossier en un clic et suivez son traitement par la mairie concernée." },
 ];
 

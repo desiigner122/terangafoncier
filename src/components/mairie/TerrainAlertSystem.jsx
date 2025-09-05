@@ -1,8 +1,16 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, AlertTriangle, MapPin, Calendar, Eye, Flag, X } from 'lucide-react';
+import { 
+  Bell, 
+  AlertTriangle, 
+  MapPin, 
+  Calendar, 
+  Eye, 
+  Flag, 
+  X
+} from 'lucide-react';
 import { sampleParcels, sampleUsers } from '@/data';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -23,7 +31,7 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
             'price_change', 
             'status_change',
             'suspicious_activity',
-            'document_missing'
+            'FileText_missing'
           ];
           
           return {
@@ -70,7 +78,7 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
       case 'price_change': return <AlertTriangle className="h-4 w-4 text-orange-500" />;
       case 'status_change': return <Bell className="h-4 w-4 text-green-500" />;
       case 'suspicious_activity': return <Flag className="h-4 w-4 text-red-500" />;
-      case 'document_missing': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
+      case 'FileText_missing': return <AlertTriangle className="h-4 w-4 text-yellow-500" />;
       default: return <Bell className="h-4 w-4" />;
     }
   };
@@ -86,8 +94,8 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
         return `Statut changé pour ${terrain?.title || 'terrain'}`;
       case 'suspicious_activity':
         return `Activité suspecte détectée sur ${terrain?.title || 'terrain'}`;
-      case 'document_missing':
-        return `Documents manquants signalés pour ${terrain?.title || 'terrain'}`;
+      case 'FileText_missing':
+        return `FileTexts manquants signalés pour ${terrain?.title || 'terrain'}`;
       default:
         return 'Nouvelle activité détectée';
     }
@@ -102,7 +110,7 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
       case 'price_change': return 'border-orange-200 bg-orange-50';
       case 'status_change': return 'border-green-200 bg-green-50';
       case 'suspicious_activity': return 'border-red-200 bg-red-50';
-      case 'document_missing': return 'border-yellow-200 bg-yellow-50';
+      case 'FileText_missing': return 'border-yellow-200 bg-yellow-50';
       default: return 'border-gray-200 bg-gray-50';
     }
   };

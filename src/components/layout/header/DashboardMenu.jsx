@@ -1,6 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
     import { NavLink } from 'react-router-dom';
-    import { LayoutDashboard, Users, MapPin, Settings } from 'lucide-react';
+    import { 
+  LayoutDashboard, 
+  Users, 
+  MapPin, 
+  Settings
+} from 'lucide-react';
     import { cn } from '@/lib/utils';
     import { useAuth } from '@/context/SupabaseAuthContext';
 

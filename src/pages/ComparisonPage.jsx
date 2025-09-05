@@ -4,7 +4,17 @@ import { ComparisonContext } from '@/context/ComparisonContext';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, Maximize, MapPin, Trash2, CheckCircle, AlertCircle, FileText, Droplets, Zap } from 'lucide-react';
+import { 
+  ArrowRight, 
+  Maximize, 
+  MapPin, 
+  Trash2, 
+  CheckCircle, 
+  AlertCircle, 
+  FileText, 
+  Droplets, 
+  Zap
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/customSupabaseClient';

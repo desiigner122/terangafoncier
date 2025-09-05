@@ -1,9 +1,13 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ArrowRight, CalendarDays, TrendingUp } from 'lucide-react';
+import { 
+  ArrowRight, 
+  CalendarDays, 
+  TrendingUp
+} from 'lucide-react';
 import { sampleBlogPosts } from '@/data'; 
 
 const MarketNewsSection = () => {

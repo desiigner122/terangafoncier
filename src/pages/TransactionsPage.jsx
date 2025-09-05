@@ -4,7 +4,12 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
-import { Receipt, Download, Filter, Banknote } from 'lucide-react';
+import { 
+  Receipt, 
+  Download, 
+  Filter, 
+  Banknote
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/SupabaseAuthContext';

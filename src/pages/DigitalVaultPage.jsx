@@ -1,6 +1,13 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Archive as Vault, FileText, Download, ShieldCheck, PlusCircle, AlertCircle } from 'lucide-react';
+import { 
+  Archive as Vault, 
+  FileText, 
+  Download, 
+  ShieldCheck, 
+  PlusCircle, 
+  AlertCircle
+} from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -8,7 +15,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { Helmet } from 'react-helmet-async';
 
 const DigitalVaultPage = () => {
-  const [documents, setDocuments] = useState([]);
+  const [FileTexts, setFileTexts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -29,8 +36,8 @@ const DigitalVaultPage = () => {
         alert(`❌ Erreur: ${message}`);
       } else if (type === 'success') {
         // Notification discrète pour succès
-        if (typeof document !== 'undefined') {
-          const notification = document.createElement('div');
+        if (typeof FileText !== 'undefined') {
+          const notification = FileText.createElement('div');
           notification.style.cssText = `
             position: fixed;
             top: 20px;
@@ -46,7 +53,7 @@ const DigitalVaultPage = () => {
             transition: all 0.3s ease;
           `;
           notification.textContent = `✅ ${message}`;
-          document.body.appendChild(notification);
+          FileText.body.appendChild(notification);
           
           setTimeout(() => {
             if (notification.parentNode) {
@@ -62,9 +69,9 @@ const DigitalVaultPage = () => {
     }
   };
 
-  // Charger les documents depuis Supabase
+  // Charger les FileTexts depuis Supabase
   useEffect(() => {
-    const fetchDocuments = async () => {
+    const fetchFileTexts = async () => {
       try {
         const { data: { user } } = await supabase.auth.getUser();
         
@@ -74,21 +81,21 @@ const DigitalVaultPage = () => {
           return;
         }
 
-        // Requête pour récupérer les documents de l'utilisateur
-        const { data: userDocuments, error: docError } = await supabase
-          .from('documents')
+        // Requête pour récupérer les FileTexts de l'utilisateur
+        const { data: userFileTexts, error: docError } = await supabase
+          .from('FileTexts')
           .select('*')
           .eq('user_id', user.id)
           .order('created_at', { ascending: false });
 
         if (docError) {
-          console.error('Erreur récupération documents:', docError);
+          console.error('Erreur récupération FileTexts:', docError);
           // Fallback vers données d'exemple si la table n'existe pas encore
-          setDocuments([
+          setFileTexts([
             {
               id: "demo1",
-              name: "Exemple - Document foncier.pdf",
-              category: "Documents de démonstration",
+              name: "Exemple - FileText foncier.pdf",
+              category: "FileTexts de démonstration",
               date: new Date().toISOString().split('T')[0],
               size: "Exemple",
               verified: false,
@@ -96,43 +103,43 @@ const DigitalVaultPage = () => {
             }
           ]);
         } else {
-          setDocuments(userDocuments || []);
+          setFileTexts(userFileTexts || []);
         }
       } catch (err) {
-        console.error('Erreur lors du chargement des documents:', err);
-        setError('Impossible de charger vos documents');
+        console.error('Erreur lors du chargement des FileTexts:', err);
+        setError('Impossible de charger vos FileTexts');
       } finally {
         setLoading(false);
       }
     };
 
-    fetchDocuments();
+    fetchFileTexts();
   }, []);
 
   const handleDownload = async (docId, docName) => {
     try {
-      // Pour les documents de démo
-      if (documents.find(d => d.id === docId)?.is_demo) {
+      // Pour les FileTexts de démo
+      if (FileTexts.find(d => d.id === docId)?.is_demo) {
         safeToast("Fonctionnalité de téléchargement en cours de développement", "default");
         return;
       }
 
-      // Pour les vrais documents
+      // Pour les vrais FileTexts
       const { data, error } = await supabase.storage
-        .from('user-documents')
+        .from('user-FileTexts')
         .download(`${docId}/${docName}`);
       
       if (error) throw error;
       
       // Créer un lien de téléchargement
       const url = window.URL.createObjectURL(data);
-      const a = document.createElement('a');
+      const a = FileText.createElement('a');
       a.href = url;
       a.download = docName;
-      document.body.appendChild(a);
+      FileText.body.appendChild(a);
       a.click();
       window.URL.revokeObjectURL(url);
-      document.body.removeChild(a);
+      FileText.body.removeChild(a);
       
       safeToast(`Téléchargement de "${docName}" réussi`, "success");
     } catch (err) {
@@ -159,7 +166,7 @@ const DigitalVaultPage = () => {
   if (loading) {
     return (
       <div className="container mx-auto py-12 px-4 text-center">
-        <p>Chargement de vos documents...</p>
+        <p>Chargement de vos FileTexts...</p>
       </div>
     );
   }
@@ -168,7 +175,7 @@ const DigitalVaultPage = () => {
     <>
       <Helmet>
         <title>Coffre-fort Numérique - Teranga Foncier</title>
-        <meta name="description" content="Accédez à tous vos documents fonciers importants (actes de vente, titres de propriété, plans) dans un espace sécurisé et confidentiel." />
+        <meta name="description" content="Accédez à tous vos FileTexts fonciers importants (actes de vente, titres de propriété, plans) dans un espace sécurisé et confidentiel." />
       </Helmet>
       <motion.div
         variants={pageVariants}
@@ -182,11 +189,11 @@ const DigitalVaultPage = () => {
               <Vault className="h-10 w-10 mr-3" /> Coffre-fort Numérique
             </h1>
             <p className="text-lg text-muted-foreground">
-              Vos documents fonciers, sécurisés et accessibles à tout moment.
+              Vos FileTexts fonciers, sécurisés et accessibles à tout moment.
             </p>
           </div>
           <Button size="lg" onClick={handleUpload}>
-            <PlusCircle className="mr-2 h-5 w-5" /> Téléverser un Document
+            <PlusCircle className="mr-2 h-5 w-5" /> Téléverser un FileText
           </Button>
         </motion.div>
 
@@ -202,32 +209,32 @@ const DigitalVaultPage = () => {
         <motion.div variants={itemVariants}>
           <Card className="shadow-lg">
             <CardHeader>
-              <CardTitle>Mes Documents</CardTitle>
+              <CardTitle>Mes FileTexts</CardTitle>
               <CardDescription>
-                {documents.length === 0 
-                  ? "Aucun document trouvé. Téléversez vos premiers documents fonciers." 
-                  : "Retrouvez ici tous les documents liés à vos transactions."}
+                {FileTexts.length === 0 
+                  ? "Aucun FileText trouvé. Téléversez vos premiers FileTexts fonciers." 
+                  : "Retrouvez ici tous les FileTexts liés à vos transactions."}
               </CardDescription>
             </CardHeader>
             <CardContent>
-              {documents.length === 0 ? (
+              {FileTexts.length === 0 ? (
                 <div className="text-center py-8">
                   <FileText className="h-16 w-16 mx-auto text-muted-foreground mb-4" />
-                  <p className="text-muted-foreground">Aucun document dans votre coffre-fort</p>
+                  <p className="text-muted-foreground">Aucun FileText dans votre coffre-fort</p>
                 </div>
               ) : (
                 <div className="overflow-x-auto">
                   <table className="w-full text-sm">
                     <thead>
                       <tr className="border-b">
-                        <th className="text-left p-3 font-semibold">Nom du Document</th>
+                        <th className="text-left p-3 font-semibold">Nom du FileText</th>
                         <th className="text-left p-3 font-semibold hidden md:table-cell">Catégorie</th>
                         <th className="text-left p-3 font-semibold hidden sm:table-cell">Date</th>
                         <th className="text-left p-3 font-semibold">Actions</th>
                       </tr>
                     </thead>
                     <tbody>
-                      {documents.map((doc) => (
+                      {FileTexts.map((doc) => (
                         <tr key={doc.id} className="border-b hover:bg-muted/50">
                           <td className="p-3">
                             <div className="flex items-center">
@@ -253,7 +260,7 @@ const DigitalVaultPage = () => {
                                 <Download className="h-4 w-4 mr-1" /> Télécharger
                               </Button>
                               {doc.verified && (
-                                <ShieldCheck className="h-5 w-5 text-green-500" title="Document vérifié par Teranga Foncier" />
+                                <ShieldCheck className="h-5 w-5 text-green-500" title="FileText vérifié par Teranga Foncier" />
                               )}
                             </div>
                           </td>

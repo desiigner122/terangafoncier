@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Plus, 
@@ -8,9 +8,9 @@ import {
   TrendingUp, 
   CheckCircle2, 
   Clock, 
-  XCircle,
-  BarChart3,
-  UserCheck,
+  XCircle, 
+  BarChart3, 
+  UserCheck, 
   AlertTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

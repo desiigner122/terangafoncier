@@ -1,10 +1,13 @@
-
+﻿
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/context/SupabaseAuthContext';
-import { Clock, Mail } from 'lucide-react';
+import { 
+  Clock, 
+  Mail
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const PendingVerificationPage = () => {
@@ -27,7 +30,7 @@ const PendingVerificationPage = () => {
           </CardHeader>
           <CardContent className="space-y-4">
             <p>
-              Nos équipes examinent actuellement les documents que vous avez soumis. Ce processus prend généralement 24 à 48 heures.
+              Nos équipes examinent actuellement les FileTexts que vous avez soumis. Ce processus prend généralement 24 à 48 heures.
             </p>
             <p className="font-semibold">
               Vous recevrez un e-mail à l'adresse <span className="text-primary">{user?.email}</span> dès que votre compte sera activé.

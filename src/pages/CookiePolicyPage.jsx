@@ -1,7 +1,14 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Cookie, Settings, ShieldCheck, Info, CheckCircle, XCircle } from 'lucide-react';
+import { 
+  Cookie, 
+  Settings, 
+  ShieldCheck, 
+  Info, 
+  CheckCircle, 
+  XCircle
+} from 'lucide-react';
 
 const CookiePolicyPage = () => {
   const sectionVariants = {

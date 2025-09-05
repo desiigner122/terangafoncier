@@ -1,8 +1,25 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Building, Landmark, Leaf, Banknote, TrendingUp, ChevronDown, ChevronRight, Scale, Users, HeartHandshake as Handshake, FileSignature, AlertTriangle, Sprout, Home } from 'lucide-react';
+import { 
+  Building, 
+  Landmark, 
+  Leaf, 
+  Banknote, 
+  TrendingUp, 
+  ChevronDown, 
+  ChevronRight, 
+  Scale, 
+  Users, 
+  FileSignature, 
+  AlertTriangle, 
+  Sprout, 
+  Home, 
+  Globe, 
+  Plane
+} from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/context/SupabaseAuthContext';
 
@@ -29,6 +46,12 @@ const solutions = [
   { title: 'Agriculteurs', href: '/solutions/agriculteurs', description: 'Gérez vos parcelles, suivez la météo et analysez vos sols.', icon: Leaf },
 ];
 
+const diasporaSolutions = [
+  { title: 'Construction à Distance', href: '/solutions/construction-distance', description: 'Pilotez votre projet depuis l\'étranger.', icon: Home, isNew: true },
+  { title: 'Investissement Diaspora', href: '/solutions/diaspora-investment', description: 'Investissez dans l\'immobilier sénégalais.', icon: Globe, isNew: true },
+  { title: 'Suivi Projet Live', href: '/solutions/project-monitoring', description: 'Surveillez vos travaux en temps réel.', icon: Plane, isNew: true },
+];
+
 const CollapsibleMobileMenu = ({ title, items, onClose }) => {
   const [isSubMenuOpen, setIsSubMenuOpen] = useState(false);
   const mobileNavLinkClass = (isActive) =>
@@ -47,8 +70,11 @@ const CollapsibleMobileMenu = ({ title, items, onClose }) => {
            <NavLink key={item.href} to={item.href} className={({isActive}) => mobileNavLinkClass(isActive)} onClick={onClose}>
              <div className="flex items-center gap-3">
               <item.icon className="h-5 w-5 text-primary"/>
-              <div>
-                <p className="font-semibold">{item.title}</p>
+              <div className="flex-1">
+                <div className="flex items-center gap-2">
+                  <p className="font-semibold">{item.title}</p>
+                  {item.isNew && <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>}
+                </div>
                 <p className="text-xs text-muted-foreground">{item.description}</p>
               </div>
              </div>
@@ -78,6 +104,17 @@ const MobileMenu = ({ isOpen, onClose, isDashboard }) => {
         ))}
         
         <CollapsibleMobileMenu title="Solutions" items={solutions} onClose={onClose} />
+        
+        <CollapsibleMobileMenu 
+          title={
+            <div className="flex items-center gap-2">
+              Solutions Diaspora 
+              <Badge variant="secondary" className="text-xs bg-primary/10 text-primary border-primary/20">Nouveau</Badge>
+            </div>
+          } 
+          items={diasporaSolutions} 
+          onClose={onClose} 
+        />
 
         <div className="border-t pt-4 mt-4 space-y-3">
           {!user ? (

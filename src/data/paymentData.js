@@ -1,4 +1,8 @@
-import { Smartphone, Landmark, FileCheck2 } from 'lucide-react';
+﻿import { 
+  Smartphone, 
+  Landmark, 
+  FileCheck2
+} from 'lucide-react';
 
 export const paymentMethods = [
   { id: 'mobile', name: 'Mobile Money', icon: Smartphone, providers: ['Wave', 'Orange Money'] },

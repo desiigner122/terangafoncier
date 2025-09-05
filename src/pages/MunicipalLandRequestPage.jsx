@@ -7,7 +7,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
-import { Landmark, Send, UploadCloud, User, FileText, ClipboardCheck, ArrowLeft, ArrowRight } from 'lucide-react';
+import { 
+  Landmark, 
+  Send, 
+  UploadCloud, 
+  User, 
+  FileText, 
+  ClipboardCheck, 
+  ArrowLeft, 
+  ArrowRight
+} from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 
@@ -136,7 +145,7 @@ const MunicipalLandRequestPage = () => {
             <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/> Motivation et Pièces Jointes</CardTitle></CardHeader>
             <CardContent className="space-y-4">
               <div><Label htmlFor="message">Message de Motivation</Label><Textarea id="message" name="message" placeholder="Expliquez votre projet..." value={formData.message} onChange={handleInputChange} rows={5} required /></div>
-              <div><Label htmlFor="documents">Pièces Jointes</Label><div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors border-border"><div className="space-y-1 text-center"><UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" /><div className="flex text-sm text-muted-foreground"><label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80"><span>Téléchargez vos fichiers</span><input id="file-upload" name="file-upload" type="file" className="sr-only" multiple onChange={handleFileChange} /></label><p className="pl-1">ou glissez-déposez</p></div><p className="text-xs text-muted-foreground">PDF, JPG, PNG (Max. 5MB)</p>{files.length > 0 && (<ul className="mt-2 text-xs text-foreground list-disc list-inside">{files.map(file => <li key={file.name}>{file.name}</li>)}</ul>)}</div></div></div>
+              <div><Label htmlFor="FileTexts">Pièces Jointes</Label><div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors border-border"><div className="space-y-1 text-center"><UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" /><div className="flex text-sm text-muted-foreground"><label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80"><span>Téléchargez vos fichiers</span><input id="file-upload" name="file-upload" type="file" className="sr-only" multiple onChange={handleFileChange} /></label><p className="pl-1">ou glissez-déposez</p></div><p className="text-xs text-muted-foreground">PDF, JPG, PNG (Max. 5MB)</p>{files.length > 0 && (<ul className="mt-2 text-xs text-foreground list-disc list-inside">{files.map(file => <li key={file.name}>{file.name}</li>)}</ul>)}</div></div></div>
             </CardContent>
           </motion.div>
         );

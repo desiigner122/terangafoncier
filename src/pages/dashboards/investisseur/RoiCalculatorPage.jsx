@@ -1,9 +1,13 @@
-
+﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Calculator, DollarSign, TrendingUp } from 'lucide-react';
+import { 
+  Calculator, 
+  DollarSign, 
+  TrendingUp
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { LoadingSpinner } from '@/components/ui/spinner';

@@ -1,10 +1,13 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { sampleParcels } from '@/data/sampleData'; 
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, Maximize } from 'lucide-react';
+import { 
+  MapPin, 
+  Maximize
+} from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
 
 const formatPrice = (price) => {

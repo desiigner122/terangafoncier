@@ -1,9 +1,14 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldAlert, FileCheck, UserCheck, Lock } from 'lucide-react';
+import { 
+  ShieldAlert, 
+  FileCheck, 
+  UserCheck, 
+  Lock
+} from 'lucide-react';
 
 const preventionPoints = [
-  { icon: FileCheck, title: "Vérification Documentaire Approfondie", description: "Nous analysons minutieusement les titres de propriété, plans cadastraux et certificats d'urbanisme pour détecter toute anomalie ou falsification." },
+  { icon: FileCheck, title: "Vérification FileTextaire Approfondie", description: "Nous analysons minutieusement les titres de propriété, plans cadastraux et certificats d'urbanisme pour détecter toute anomalie ou falsification." },
   { icon: UserCheck, title: "Contrôle d'Identité Rigoureux", description: "L'identité des vendeurs et la validité de leurs mandats sont systématiquement vérifiées pour éviter les usurpations et les ventes illégitimes." },
   { icon: ShieldAlert, title: "Prévention de la Double Vente", description: "Nos processus croisent les informations pour identifier et bloquer les tentatives de vente multiple d'un même bien." },
   { icon: Lock, title: "Transactions Sécurisées", description: "Nous recommandons des procédures de paiement sécurisées et travaillons avec des notaires partenaires pour garantir la légalité de l'acte final." },
@@ -58,7 +63,7 @@ const FraudPreventionSection = () => {
              <div className="absolute inset-0 bg-black/30 z-10"></div>
              <img 
                 className="w-full h-full object-cover relative z-0"
-                alt="Loupe examinant un document officiel sénégalais avec sceau"
+                alt="Loupe examinant un FileText officiel sénégalais avec sceau"
                 src="https://images.unsplash.com/photo-1589330694653-ded6df03f754" />
           </motion.div>
         </motion.div>

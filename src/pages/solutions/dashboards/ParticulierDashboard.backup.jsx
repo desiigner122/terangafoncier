@@ -36,15 +36,15 @@ import {
   Heart, 
   CalendarDays, 
   Target, 
-  Activity,
-  ShoppingCart,
-  MapPin,
-  Star,
-  Clock,
-  PlusCircle,
-  UserPlus,
-  Building,
-  Wallet,
+  Activity, 
+  ShoppingCart, 
+  MapPin, 
+  Star, 
+  Clock, 
+  PlusCircle, 
+  UserPlus, 
+  Building, 
+  Wallet, 
   BarChart3
 } from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
@@ -73,8 +73,8 @@ const safeToast = (message, type = 'default') => {
       alert(`❌ Erreur: ${message}`);
     } else if (type === 'success') {
       // Notification discrète pour succès
-      if (typeof document !== 'undefined') {
-        const notification = document.createElement('div');
+      if (typeof FileText !== 'undefined') {
+        const notification = FileText.createElement('div');
         notification.style.cssText = `
           position: fixed;
           top: 20px;
@@ -90,7 +90,7 @@ const safeToast = (message, type = 'default') => {
           transition: all 0.3s ease;
         `;
         notification.textContent = `✅ ${message}`;
-        document.body.appendChild(notification);
+        FileText.body.appendChild(notification);
         
         setTimeout(() => {
           if (notification.parentNode) {
@@ -535,7 +535,7 @@ const safeToast = (message, type = 'default') => {
                   <Avatar className="h-8 w-8">
                     {assignedAgent ? (
                       <>
-                        <AvatarImage src={`https://avatar.vercel.sh/${assignedAgent.name}.png`} alt={assignedAgent.avatarDesc} />
+                        <AvatarImage src={assignedAgent.avatar_url || `/api/placeholder/40/40?text=${encodeURIComponent(assignedAgent.name.charAt(0))}`} alt={assignedAgent.avatarDesc} />
                         <AvatarFallback>{assignedAgent.name.substring(0,1)}</AvatarFallback>
                       </>
                     ) : (

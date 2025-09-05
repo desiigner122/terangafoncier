@@ -1,15 +1,27 @@
-import React from 'react';
+﻿import React from 'react';
     import { motion } from 'framer-motion';
     import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
     import { Link } from 'react-router-dom';
-    import { Search, UserCheck, HeartHandshake as Handshake, Smile, ArrowRight, Settings2, Check, ListChecks, Landmark, FileSignature, ShieldCheck as Shield } from 'lucide-react';
+    import { 
+  Search, 
+  UserCheck, 
+  Users, 
+  Smile, 
+  ArrowRight, 
+  Settings2, 
+  Check, 
+  ListChecks, 
+  Landmark, 
+  FileSignature, 
+  ShieldCheck as Shield
+} from 'lucide-react';
 
     const buyerSteps = [
-      { icon: Search, title: "1. Explorez les Terrains Vérifiés", description: "Parcourez notre catalogue de parcelles dont les documents ont été pré-vérifiés par nos experts et nos partenaires (notaires, mairies)." },
+      { icon: Search, title: "1. Explorez les Terrains Vérifiés", description: "Parcourez notre catalogue de parcelles dont les FileTexts ont été pré-vérifiés par nos experts et nos partenaires (notaires, mairies)." },
       { icon: Landmark, title: "2. Ou Demandez un Terrain Communal", description: "Si vous ne trouvez pas votre bonheur, soumettez une demande directement à une mairie partenaire via notre formulaire guidé." },
       { icon: UserCheck, title: "3. Suivi & Accompagnement", description: "Que ce soit pour une acquisition directe ou une demande communale, suivez l'avancement de votre dossier et soyez accompagné par un agent dédié." },
-      { icon: Handshake, title: "4. Finalisation Sécurisée", description: "Nous coordonnons toutes les démarches avec les notaires et l'administration pour une signature et une transaction en toute sérénité." },
+      { icon: Users, title: "4. Finalisation Sécurisée", description: "Nous coordonnons toutes les démarches avec les notaires et l'administration pour une signature et une transaction en toute sérénité." },
     ];
 
     const verificationSteps = [

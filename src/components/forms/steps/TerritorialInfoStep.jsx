@@ -1,190 +1,197 @@
-/**
- * Étape 1: Informations personnelles
+﻿/**
+ * Étape 2: Informations territoriales
  */
 
-import React, { useState } from 'react';
-import { User, Mail, Phone, MapPin, Calendar, ChevronRight } from 'lucide-react';
+import React from 'react';
+import { 
+  Map, 
+  Building
+} from 'lucide-react';
+import TerritorialSelector from '../TerritorialSelector';
 
-const PersonalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
-  const [formData, setFormData] = useState({
-    full_name: data.full_name || '',
-    email: data.email || '',
-    phone: data.phone || '',
-    date_of_birth: data.date_of_birth || '',
-    address: data.address || '',
-    ...data
-  });
-
+const TerritorialInfoStep = ({ 
+  formData, 
+  updateFormData, 
+  errors, 
+  onNext, 
+  onPrevious, 
+  isValid 
+}) => {
   const handleInputChange = (field, value) => {
-    setFormData(prev => ({
-      ...prev,
-      [field]: value
-    }));
+    updateFormData({ [field]: value });
   };
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    onNext(formData);
+  const handleTerritorialChange = (territorialData) => {
+    updateFormData(territorialData);
   };
-
-  const personalErrors = errors.personal || {};
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="text-center mb-6">
-        <User className="w-12 h-12 text-blue-600 mx-auto mb-3" />
-        <h2 className="text-xl font-semibold text-gray-800">
-          Informations personnelles
+    <div className="space-y-6">
+      <div className="text-center">
+        <div className="mx-auto flex items-center justify-center w-12 h-12 rounded-full bg-blue-100 mb-4">
+          <Map className="w-6 h-6 text-blue-600" />
+        </div>
+        <h2 className="text-2xl font-bold text-gray-900 mb-2">
+          Informations Territoriales
         </h2>
-        <p className="text-gray-600 mt-2">
-          Renseignez vos informations personnelles pour créer votre compte {role}
+        <p className="text-gray-600">
+          Renseignez votre zone de compétence territoriale
         </p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Nom complet */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <User className="w-4 h-4 inline mr-2" />
-            Nom complet *
-          </label>
-          <input
-            type="text"
-            value={formData.full_name}
-            onChange={(e) => handleInputChange('full_name', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              personalErrors.full_name ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Votre nom complet"
-            required
-          />
-          {personalErrors.full_name && (
-            <p className="text-red-500 text-sm mt-1">{personalErrors.full_name}</p>
-          )}
-        </div>
+      {/* Sélecteur territorial */}
+      <TerritorialSelector
+        formData={formData}
+        updateFormData={handleTerritorialChange}
+        errors={errors}
+        label="Zone de compétence territoriale"
+      />
 
-        {/* Email */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Mail className="w-4 h-4 inline mr-2" />
-            Adresse email *
-          </label>
-          <input
-            type="email"
-            value={formData.email}
-            onChange={(e) => handleInputChange('email', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              personalErrors.email ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="votre.email@exemple.com"
-            required
-          />
-          {personalErrors.email && (
-            <p className="text-red-500 text-sm mt-1">{personalErrors.email}</p>
-          )}
-        </div>
+      {/* Informations spécifiques selon le rôle */}
+      {formData.role === 'Mairie' && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nom de la mairie
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.municipality_name || ''}
+              onChange={(e) => handleInputChange('municipality_name', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ex: Mairie de Passy"
+            />
+            {errors.municipality_name && (
+              <p className="text-sm text-red-600 mt-1">{errors.municipality_name}</p>
+            )}
+          </div>
 
-        {/* Téléphone */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Phone className="w-4 h-4 inline mr-2" />
-            Numéro de téléphone *
-          </label>
-          <input
-            type="tel"
-            value={formData.phone}
-            onChange={(e) => handleInputChange('phone', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              personalErrors.phone ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="+221 XX XXX XX XX"
-            required
-          />
-          {personalErrors.phone && (
-            <p className="text-red-500 text-sm mt-1">{personalErrors.phone}</p>
-          )}
-          <p className="text-gray-500 text-xs mt-1">
-            Format: +221 suivi de 9 chiffres
-          </p>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nom du maire
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <input
+              type="text"
+              value={formData.mayor_name || ''}
+              onChange={(e) => handleInputChange('mayor_name', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ex: M. Amadou Diallo"
+            />
+            {errors.mayor_name && (
+              <p className="text-sm text-red-600 mt-1">{errors.mayor_name}</p>
+            )}
+          </div>
 
-        {/* Date de naissance */}
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <Calendar className="w-4 h-4 inline mr-2" />
-            Date de naissance *
-          </label>
-          <input
-            type="date"
-            value={formData.date_of_birth}
-            onChange={(e) => handleInputChange('date_of_birth', e.target.value)}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              personalErrors.date_of_birth ? 'border-red-500' : 'border-gray-300'
-            }`}
-            required
-          />
-          {personalErrors.date_of_birth && (
-            <p className="text-red-500 text-sm mt-1">{personalErrors.date_of_birth}</p>
-          )}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Population approximative
+            </label>
+            <input
+              type="number"
+              value={formData.population || ''}
+              onChange={(e) => handleInputChange('population', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ex: 15000"
+              min="0"
+            />
+          </div>
         </div>
+      )}
 
-        {/* Adresse */}
-        <div className="md:col-span-2">
-          <label className="block text-sm font-medium text-gray-700 mb-2">
-            <MapPin className="w-4 h-4 inline mr-2" />
-            Adresse complète *
-          </label>
-          <textarea
-            value={formData.address}
-            onChange={(e) => handleInputChange('address', e.target.value)}
-            rows={3}
-            className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
-              personalErrors.address ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Votre adresse complète (rue, quartier, ville)"
-            required
-          />
-          {personalErrors.address && (
-            <p className="text-red-500 text-sm mt-1">{personalErrors.address}</p>
-          )}
+      {formData.role === 'Banque' && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Zones de couverture bancaire
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <textarea
+              value={formData.coverage_areas || ''}
+              onChange={(e) => handleInputChange('coverage_areas', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Décrivez les zones géographiques couvertes par votre banque..."
+            />
+            {errors.coverage_areas && (
+              <p className="text-sm text-red-600 mt-1">{errors.coverage_areas}</p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Nombre d'agences dans la région
+            </label>
+            <input
+              type="number"
+              value={formData.agency_count || ''}
+              onChange={(e) => handleInputChange('agency_count', e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Ex: 5"
+              min="0"
+            />
+          </div>
+        </div>
+      )}
+
+      {(formData.role === 'Notaire' || formData.role === 'Geometre') && (
+        <div className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Zone d'intervention professionnelle
+              <span className="text-red-500 ml-1">*</span>
+            </label>
+            <textarea
+              value={formData.service_area || ''}
+              onChange={(e) => handleInputChange('service_area', e.target.value)}
+              rows={3}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
+              placeholder="Décrivez votre zone d'intervention professionnelle..."
+            />
+            {errors.service_area && (
+              <p className="text-sm text-red-600 mt-1">{errors.service_area}</p>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Informations complémentaires */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start">
+          <Building className="w-5 h-5 text-blue-600 mt-0.5 mr-3" />
+          <div>
+            <h3 className="text-sm font-medium text-blue-800">
+              Importance de la localisation
+            </h3>
+            <p className="text-sm text-blue-700 mt-1">
+              Cette information détermine votre zone de compétence sur la plateforme et permet 
+              aux utilisateurs de vous identifier facilement selon leur localisation.
+            </p>
+          </div>
         </div>
       </div>
 
-      {/* Bouton suivant */}
-      <div className="flex justify-end pt-6">
+      <div className="flex justify-between pt-6">
         <button
-          type="submit"
-          disabled={isLoading}
-          className="flex items-center px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+          type="button"
+          onClick={onPrevious}
+          className="px-4 py-2 text-sm font-medium text-gray-700 bg-white border border-gray-300 rounded-md hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
         >
-          {isLoading ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-              Validation...
-            </>
-          ) : (
-            <>
-              Suivant
-              <ChevronRight className="w-4 h-4 ml-2" />
-            </>
-          )}
+          Précédent
+        </button>
+        
+        <button
+          type="button"
+          onClick={onNext}
+          disabled={!isValid}
+          className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed"
+        >
+          Suivant
         </button>
       </div>
-
-      {/* Informations supplémentaires */}
-      <div className="mt-6 p-4 bg-blue-50 rounded-lg">
-        <h3 className="font-medium text-blue-800 mb-2">
-          Informations importantes
-        </h3>
-        <ul className="text-sm text-blue-700 space-y-1">
-          <li>• Toutes les informations marquées d'un * sont obligatoires</li>
-          <li>• Votre email servira d'identifiant de connexion</li>
-          <li>• Vous devez être majeur pour créer un compte</li>
-          <li>• Les informations seront vérifiées par nos équipes</li>
-        </ul>
-      </div>
-    </form>
+    </div>
   );
 };
 
-export default PersonalInfoStep;
+export default TerritorialInfoStep;

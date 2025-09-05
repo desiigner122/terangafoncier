@@ -7,7 +7,13 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calculator, Send, CheckCircle, Loader2, Landmark } from 'lucide-react';
+import { 
+  Calculator, 
+  Send, 
+  CheckCircle, 
+  Loader2, 
+  Landmark
+} from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Link } from 'react-router-dom';
 import { partnerBanks } from '@/data/paymentData';

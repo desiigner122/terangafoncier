@@ -7,7 +7,17 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Bell, BellOff, SearchCheck, Trash2, Edit3, PlusCircle, ExternalLink, Filter, Info } from 'lucide-react';
+import { 
+  Bell, 
+  BellOff, 
+  SearchCheck, 
+  Trash2, 
+  Edit3, 
+  PlusCircle, 
+  ExternalLink, 
+  Filter, 
+  Info
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';

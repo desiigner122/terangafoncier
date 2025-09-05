@@ -4,7 +4,9 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
-import { Send } from 'lucide-react';
+import { 
+  Send
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const ParcelRequestForm = ({ parcelId, requestType, onSubmit, onCancel }) => {
@@ -56,7 +58,7 @@ const ParcelRequestForm = ({ parcelId, requestType, onSubmit, onCancel }) => {
           </div>
           {requestType === 'buy' && (
             <div>
-              <Label htmlFor="attachments">Joindre des documents (Ex: CNI, Plan de financement - Max 3 fichiers)</Label>
+              <Label htmlFor="attachments">Joindre des FileTexts (Ex: CNI, Plan de financement - Max 3 fichiers)</Label>
               <Input
                 id="attachments"
                 type="file"

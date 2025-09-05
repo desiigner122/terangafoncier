@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,22 +21,22 @@ import {
   AreaChart,
   Area
 } from 'recharts';
-import {
-  Users,
-  Globe,
-  Activity,
-  TrendingUp,
-  Eye,
-  MousePointer,
-  Clock,
-  MapPin,
-  Building,
-  DollarSign,
-  UserCheck,
-  AlertCircle,
-  Calendar,
-  Download,
-  Filter,
+import { 
+  Users, 
+  Globe, 
+  Activity, 
+  TrendingUp, 
+  Eye, 
+  MousePointer, 
+  Clock, 
+  MapPin, 
+  Building, 
+  DollarSign, 
+  UserCheck, 
+  AlertCircle, 
+  Calendar, 
+  Download, 
+  Filter, 
   RefreshCw
 } from 'lucide-react';
 

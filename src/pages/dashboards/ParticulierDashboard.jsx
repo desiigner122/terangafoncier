@@ -5,7 +5,17 @@ import { motion } from 'framer-motion';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, FileText, UserCheck, Gavel, TrendingUp, CalendarDays, PlusCircle, Heart, UserPlus } from 'lucide-react';
+import { 
+  ArrowRight, 
+  FileText, 
+  UserCheck, 
+  Gavel, 
+  TrendingUp, 
+  CalendarDays, 
+  PlusCircle, 
+  Heart, 
+  UserPlus
+} from 'lucide-react';
 // useToast remplacé par safeToast
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -66,8 +76,8 @@ const safeToast = (message, type = 'default') => {
       alert(`❌ Erreur: ${message}`);
     } else if (type === 'success') {
       // Notification discrète pour succès
-      if (typeof document !== 'undefined') {
-        const notification = document.createElement('div');
+      if (typeof FileText !== 'undefined') {
+        const notification = FileText.createElement('div');
         notification.style.cssText = `
           position: fixed;
           top: 20px;
@@ -83,7 +93,7 @@ const safeToast = (message, type = 'default') => {
           transition: all 0.3s ease;
         `;
         notification.textContent = `✅ ${message}`;
-        document.body.appendChild(notification);
+        FileText.body.appendChild(notification);
         
         setTimeout(() => {
           if (notification.parentNode) {

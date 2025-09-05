@@ -7,7 +7,12 @@ import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { User, Database, TestTube2, AlertTriangle } from 'lucide-react';
+import { 
+  User, 
+  Database, 
+  TestTube2, 
+  AlertTriangle
+} from 'lucide-react';
 import { Spinner } from '@/components/ui/spinner';
 
 const TestAccountsPage = () => {

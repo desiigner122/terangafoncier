@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Badge, 
@@ -33,20 +33,20 @@ import {
   Map as MapIcon, 
   Library, 
   Construction, 
-  Users,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  Clock,
-  CheckCircle,
-  XCircle,
-  UserCheck,
-  Building,
-  BarChart3,
-  PieChart as PieChartIcon,
-  Calendar,
-  Target,
-  Globe,
+  Users, 
+  TrendingUp, 
+  TrendingDown, 
+  Activity, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  UserCheck, 
+  Building, 
+  BarChart3, 
+  PieChart as PieChartIcon, 
+  Calendar, 
+  Target, 
+  Globe, 
   Shield
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';

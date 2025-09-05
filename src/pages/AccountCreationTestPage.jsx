@@ -1,10 +1,15 @@
-/**
+﻿/**
  * Page de test pour le système de création de comptes multi-étapes
  */
 
 import React, { useState } from 'react';
 import MultiStepAccountCreation from '../components/forms/MultiStepAccountCreation';
-import { User, ArrowLeft, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  User, 
+  ArrowLeft, 
+  CheckCircle, 
+  AlertCircle
+} from 'lucide-react';
 
 const AccountCreationTestPage = () => {
   const [showCreationForm, setShowCreationForm] = useState(false);
@@ -198,7 +203,7 @@ const AccountCreationTestPage = () => {
               <ul className="text-sm text-gray-600 space-y-1">
                 <li>• Email de confirmation</li>
                 <li>• Vérification administrateur</li>
-                <li>• Contrôle des documents</li>
+                <li>• Contrôle des FileTexts</li>
                 <li>• Validation des licences</li>
               </ul>
             </div>

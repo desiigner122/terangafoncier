@@ -1,7 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { BookOpen } from 'lucide-react';
+import { 
+  BookOpen
+} from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
 
 const glossaryTerms = [
@@ -27,7 +29,7 @@ const glossaryTerms = [
   },
   {
     term: "Cadastre",
-    definition: "Ensemble de documents (plans, registres) qui recensent et décrivent toutes les propriétés foncières d'une commune ou d'une région. Il a une fonction principalement fiscale (calcul des impôts fonciers) et technique (identification des parcelles)."
+    definition: "Ensemble de FileTexts (plans, registres) qui recensent et décrivent toutes les propriétés foncières d'une commune ou d'une région. Il a une fonction principalement fiscale (calcul des impôts fonciers) et technique (identification des parcelles)."
   },
   {
     term: "Conservation Foncière",

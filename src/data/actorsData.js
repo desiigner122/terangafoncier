@@ -1,4 +1,14 @@
-import { Landmark, Building, Briefcase, School as University, ShoppingCart, Hotel as Hospital, Bus, Ship, Plane } from 'lucide-react';
+﻿import { 
+  Landmark, 
+  Building, 
+  Briefcase, 
+  School as University, 
+  ShoppingCart, 
+  Hotel as Hospital, 
+  Bus, 
+  Ship, 
+  Plane
+} from 'lucide-react';
 
 export const sampleMairies = [
   { id: 'mairie_dakar_plateau', name: 'Mairie de Dakar-Plateau', zone: 'Dakar', coordinates: { lat: 14.6739, lng: -17.4358 }, icon: Landmark },

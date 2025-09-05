@@ -9,7 +9,18 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
-import { ArrowRight, ArrowLeft, Check, Loader2, FileUp, MapPin, Info, DollarSign, FileText, Image as ImageIcon } from 'lucide-react';
+import { 
+  ArrowRight, 
+  ArrowLeft, 
+  Check, 
+  Loader2, 
+  FileUp, 
+  MapPin, 
+  Info, 
+  DollarSign, 
+  FileText, 
+  Image as ImageIcon
+} from 'lucide-react';
 import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
 import { Link, useNavigate } from 'react-router-dom';
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
@@ -35,7 +46,7 @@ const AddParcelPageComponent = () => {
         isEligibleForInstallments: false,
         attributionConditions: '',
         images: [],
-        documents: [],
+        FileTexts: [],
     });
 
     const isMairie = user?.role === 'Mairie';
@@ -75,7 +86,7 @@ const AddParcelPageComponent = () => {
             price: isMairie ? null : parseFloat(formData.price),
             area_sqm: parseFloat(formData.area),
             status: isMairie ? 'Attribution sur demande' : 'Disponible',
-            documents: {}, 
+            FileTexts: {}, 
             images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"],
             coordinates: { lat: 14.7167, lng: -17.4677 }, // Default to Dakar, should be dynamic
             zone: formData.commune,
@@ -173,12 +184,12 @@ const AddParcelPageComponent = () => {
                 return (
                     <motion.div key="step4" initial={{ opacity: 0, x: 50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -50 }} className="space-y-4">
                         <CardHeader>
-                            <CardTitle className="flex items-center"><ImageIcon className="mr-2"/>Étape 4: Photos & Documents</CardTitle>
-                            <CardDescription>Ajoutez des visuels et les documents justificatifs.</CardDescription>
+                            <CardTitle className="flex items-center"><ImageIcon className="mr-2"/>Étape 4: Photos & FileTexts</CardTitle>
+                            <CardDescription>Ajoutez des visuels et les FileTexts justificatifs.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div><Label htmlFor="images">Photos du terrain (5 max)</Label><Input id="images" name="images" type="file" multiple accept="image/*" /></div>
-                            <div><Label htmlFor="documents">Documents (Titre Foncier, Bail, etc.)</Label><Input id="documents" name="documents" type="file" multiple accept=".pdf,.doc,.docx" /></div>
+                            <div><Label htmlFor="FileTexts">FileTexts (Titre Foncier, Bail, etc.)</Label><Input id="FileTexts" name="FileTexts" type="file" multiple accept=".pdf,.doc,.docx" /></div>
                         </CardContent>
                     </motion.div>
                 );

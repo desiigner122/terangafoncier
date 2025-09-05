@@ -1,9 +1,18 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
-import { MapPin, Maximize, CheckCircle, AlertCircle, Clock, Share2, Heart, MessageSquare } from 'lucide-react';
+import { 
+  MapPin, 
+  Maximize, 
+  CheckCircle, 
+  AlertCircle, 
+  Clock, 
+  Share2, 
+  Heart, 
+  MessageSquare
+} from 'lucide-react';
 
 const formatPrice = (price) => {
    if (typeof price !== 'number' || isNaN(price)) {
@@ -21,7 +30,7 @@ const getStatusVariant = (status) => {
     }
 };
 
-const getDocumentStatusVariant = (status) => {
+const getFileTextStatusVariant = (status) => {
      switch (status) {
       case 'Vérifié': return 'success';
       case 'Partiellement Vérifié': return 'warning';
@@ -31,7 +40,7 @@ const getDocumentStatusVariant = (status) => {
      }
 };
 
-const getDocumentStatusIcon = (status) => {
+const getFileTextStatusIcon = (status) => {
      switch (status) {
       case 'Vérifié': return <CheckCircle className="h-4 w-4 mr-1.5" />;
       case 'Partiellement Vérifié': return <AlertCircle className="h-4 w-4 mr-1.5" />;
@@ -60,8 +69,8 @@ const ParcelHeaderSection = ({
             <span className="flex items-center"><MapPin className="h-4 w-4 mr-1.5" /> {parcel.zone}</span>
             <span className="flex items-center"><Maximize className="h-4 w-4 mr-1.5" /> {parcel.area} m²</span>
             <Badge variant={getStatusVariant(parcel.status)}>{parcel.status}</Badge>
-            <Badge variant={getDocumentStatusVariant(parcel.documentStatus)} className="items-center">
-              {getDocumentStatusIcon(parcel.documentStatus)} Statut Docs: {parcel.documentStatus}
+            <Badge variant={getFileTextStatusVariant(parcel.FileTextStatus)} className="items-center">
+              {getFileTextStatusIcon(parcel.FileTextStatus)} Statut Docs: {parcel.FileTextStatus}
             </Badge>
           </div>
           <p className="text-3xl font-bold text-primary">{formatPrice(parcel.price)}</p>

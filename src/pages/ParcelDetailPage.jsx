@@ -12,7 +12,20 @@ import ParcelDetailSkeleton from '@/components/parcel-detail/ParcelDetailSkeleto
 import ParcelFeeCalculator from '@/components/parcel-detail/ParcelFeeCalculator';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Home, MapPin, School, ShoppingCart, Hotel as Hospital, HeartHandshake as Handshake, Shield, User, Award, FileText, Landmark, PercentSquare } from 'lucide-react';
+import { 
+  Home, 
+  MapPin, 
+  School, 
+  ShoppingCart, 
+  Hotel as Hospital, 
+  Users, 
+  Shield, 
+  User, 
+  Award, 
+  FileText, 
+  Landmark, 
+  PercentSquare
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/context/SupabaseAuthContext';
@@ -22,22 +35,22 @@ import { Helmet } from 'react-helmet-async';
 import InstallmentPaymentModal from '@/components/parcel-detail/InstallmentPaymentModal';
 import { supabase } from '@/lib/customSupabaseClient';
 
-const ParcelDocumentsCard = ({ documents }) => {
-  if (!documents || typeof documents !== 'object' || Object.keys(documents).length === 0) {
+const ParcelFileTextsCard = ({ FileTexts }) => {
+  if (!FileTexts || typeof FileTexts !== 'object' || Object.keys(FileTexts).length === 0) {
     return (
       <Card>
-        <CardHeader><CardTitle>Documents</CardTitle></CardHeader>
-        <CardContent><p className="text-sm text-muted-foreground">Aucun document disponible.</p></CardContent>
+        <CardHeader><CardTitle>FileTexts</CardTitle></CardHeader>
+        <CardContent><p className="text-sm text-muted-foreground">Aucun FileText disponible.</p></CardContent>
       </Card>
     );
   }
 
   return (
     <Card>
-      <CardHeader><CardTitle>Documents Disponibles</CardTitle></CardHeader>
+      <CardHeader><CardTitle>FileTexts Disponibles</CardTitle></CardHeader>
       <CardContent>
         <ul className="space-y-3">
-          {Object.entries(documents).map(([key, url]) => (
+          {Object.entries(FileTexts).map(([key, url]) => (
             <li key={key} className="flex items-center justify-between text-sm">
               <span className="flex items-center font-medium capitalize">
                 <FileText className="h-4 w-4 mr-2" />
@@ -181,7 +194,7 @@ const ParcelDetailPage = () => {
   ];
 
   const servicePacks = [
-      { icon: Handshake, title: "Pack Diaspora", description: "Mandataire de confiance pour visites, démarches et signatures.", link: "/contact?subject=Pack+Diaspora" },
+      { icon: Users, title: "Pack Diaspora", description: "Mandataire de confiance pour visites, démarches et signatures.", link: "/contact?subject=Pack+Diaspora" },
       { icon: Shield, title: "Pack Sécurité Juridique", description: "Accompagnement complet par un notaire partenaire, de A à Z.", link: "/contact?subject=Pack+Securite" },
   ];
 
@@ -273,7 +286,7 @@ const ParcelDetailPage = () => {
                 </Card>
             )}
 
-            {!isMunicipal && <ParcelDocumentsCard documents={parcel.documents} />}
+            {!isMunicipal && <ParcelFileTextsCard FileTexts={parcel.FileTexts} />}
             
             <motion.div
               initial={{ opacity: 0, y: 20 }}

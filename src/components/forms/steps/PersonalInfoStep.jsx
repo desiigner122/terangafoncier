@@ -1,9 +1,16 @@
-/**
+﻿/**
  * Étape 1: Informations personnelles
  */
 
 import React, { useState } from 'react';
-import { User, Mail, Phone, MapPin, Calendar, ChevronRight } from 'lucide-react';
+import { 
+  User, 
+  Mail, 
+  Phone, 
+  MapPin, 
+  Calendar, 
+  ChevronRight
+} from 'lucide-react';
 
 const PersonalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
   const [formData, setFormData] = useState({

@@ -9,7 +9,18 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 // useToast remplacé par safeToast
-import { Landmark, Send, Loader2, FileCheck, CheckCircle, ArrowRight, ArrowLeft, User, UploadCloud, ClipboardCheck } from 'lucide-react';
+import { 
+  Landmark, 
+  Send, 
+  Loader2, 
+  FileCheck, 
+  CheckCircle, 
+  ArrowRight, 
+  ArrowLeft, 
+  User, 
+  UploadCloud, 
+  ClipboardCheck
+} from 'lucide-react';
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Link } from 'react-router-dom';
 import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
@@ -54,8 +65,8 @@ const safeToast = (message, type = 'default') => {
       alert(`❌ Erreur: ${message}`);
     } else if (type === 'success') {
       // Notification discrète pour succès
-      if (typeof document !== 'undefined') {
-        const notification = document.createElement('div');
+      if (typeof FileText !== 'undefined') {
+        const notification = FileText.createElement('div');
         notification.style.cssText = `
           position: fixed;
           top: 20px;
@@ -71,7 +82,7 @@ const safeToast = (message, type = 'default') => {
           transition: all 0.3s ease;
         `;
         notification.textContent = `✅ ${message}`;
-        document.body.appendChild(notification);
+        FileText.body.appendChild(notification);
         
         setTimeout(() => {
           if (notification.parentNode) {
@@ -188,13 +199,13 @@ const safeToast = (message, type = 'default') => {
                 return (
                     <motion.div key="step2" variants={stepVariants} initial="hidden" animate="visible" exit="exit">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-2xl"><FileCheck/>Étape 2: Motivation & Documents</CardTitle>
+                            <CardTitle className="flex items-center gap-2 text-2xl"><FileCheck/>Étape 2: Motivation & FileTexts</CardTitle>
                             <CardDescription>Expliquez votre projet et joignez les pièces requises.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div><Label htmlFor="project_type">Type de projet</Label><Select onValueChange={(v) => setValue('project_type', v)}><SelectTrigger><SelectValue placeholder="Sélectionnez le type de projet..." /></SelectTrigger><SelectContent>{['Habitation', 'Commercial', 'Agricole', 'Industriel'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
                             <div><Label htmlFor="motivation">Motivation de votre demande</Label><Textarea id="motivation" placeholder="Décrivez votre projet, son impact, et pourquoi vous sollicitez un terrain dans cette commune..." {...register('motivation', { required: true })} /></div>
-                            <div><Label htmlFor="documents">Documents Justificatifs</Label><Input id="documents" type="file" multiple {...register('documents')} /><p className="text-xs text-muted-foreground mt-1">Joindre CNI, plan de financement, etc.</p></div>
+                            <div><Label htmlFor="FileTexts">FileTexts Justificatifs</Label><Input id="FileTexts" type="file" multiple {...register('FileTexts')} /><p className="text-xs text-muted-foreground mt-1">Joindre CNI, plan de financement, etc.</p></div>
                         </CardContent>
                     </motion.div>
                 );

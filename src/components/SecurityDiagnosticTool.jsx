@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,9 +13,9 @@ import {
   Lock, 
   CheckCircle, 
   XCircle, 
-  AlertTriangle,
-  Search,
-  Settings,
+  AlertTriangle, 
+  Search, 
+  Settings, 
   Eye
 } from 'lucide-react';
 import { 

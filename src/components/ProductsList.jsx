@@ -2,7 +2,10 @@
 import { motion } from 'framer-motion';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, Loader2 } from 'lucide-react';
+import { 
+  ShoppingCart, 
+  Loader2
+} from 'lucide-react';
 import { useCart } from '@/hooks/useCart';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { getProducts, getProductQuantities } from '@/api/EcommerceApi';

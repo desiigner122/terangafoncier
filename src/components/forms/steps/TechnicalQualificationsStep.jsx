@@ -1,5 +1,10 @@
-import React from 'react';
-import { Award, BookOpen, Users, CheckCircle } from 'lucide-react';
+﻿import React from 'react';
+import { 
+  Award, 
+  BookOpen, 
+  Users, 
+  CheckCircle
+} from 'lucide-react';
 
 const TechnicalQualificationsStep = ({ 
   formData, 

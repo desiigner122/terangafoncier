@@ -4,7 +4,15 @@ import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Search, CheckCircle, Clock, XCircle, FileText, Trash2, Eye } from 'lucide-react';
+import { 
+  Search, 
+  CheckCircle, 
+  Clock, 
+  XCircle, 
+  FileText, 
+  Trash2, 
+  Eye
+} from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -14,40 +22,40 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { supabase } from '@/lib/supabaseClient';
 import { Link } from 'react-router-dom';
 
-const ParcelDocumentsDialog = ({ parcel }) => {
-    const [documents, setDocuments] = useState([]);
+const ParcelFileTextsDialog = ({ parcel }) => {
+    const [FileTexts, setFileTexts] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const fetchDocuments = async () => {
+        const fetchFileTexts = async () => {
             setLoading(true);
             const { data, error } = await supabase
-                .from('documents')
+                .from('FileTexts')
                 .select('*')
                 .eq('parcel_id', parcel.id);
             
             if (error) {
-                console.error("Error fetching documents:", error);
+                console.error("Error fetching FileTexts:", error);
             } else {
-                setDocuments(data);
+                setFileTexts(data);
             }
             setLoading(false);
         };
-        fetchDocuments();
+        fetchFileTexts();
     }, [parcel.id]);
 
     return (
         <DialogContent className="sm:max-w-lg">
             <DialogHeader>
-                <DialogTitle>Documents pour {parcel.reference}</DialogTitle>
-                <DialogDescription>Consultez les documents justificatifs pour cette annonce.</DialogDescription>
+                <DialogTitle>FileTexts pour {parcel.reference}</DialogTitle>
+                <DialogDescription>Consultez les FileTexts justificatifs pour cette annonce.</DialogDescription>
             </DialogHeader>
             <div className="py-4 max-h-96 overflow-y-auto">
-                {loading ? <LoadingSpinner /> : documents.length > 0 ? (
+                {loading ? <LoadingSpinner /> : FileTexts.length > 0 ? (
                     <ul className="space-y-2">
-                        {documents.map((doc) => (
+                        {FileTexts.map((doc) => (
                            <li key={doc.id} className="flex items-center justify-between p-2 border rounded-md">
-                               <span className="text-sm font-medium capitalize">{doc.document_type.replace(/_/g, ' ')}</span>
+                               <span className="text-sm font-medium capitalize">{doc.FileText_type.replace(/_/g, ' ')}</span>
                                <Button asChild variant="outline" size="sm">
                                    <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
                                        <Eye className="mr-2 h-4 w-4" /> Voir
@@ -57,7 +65,7 @@ const ParcelDocumentsDialog = ({ parcel }) => {
                         ))}
                     </ul>
                 ) : (
-                    <p className="text-center text-muted-foreground">Aucun document n'a été fourni pour cette parcelle.</p>
+                    <p className="text-center text-muted-foreground">Aucun FileText n'a été fourni pour cette parcelle.</p>
                 )}
             </div>
             <DialogFooter>
@@ -161,7 +169,7 @@ const AdminParcelsPage = () => {
                    <DialogTrigger asChild>
                      <Button size="xs" variant="outline"><FileText className="mr-1 h-3 w-3" /> Docs</Button>
                    </DialogTrigger>
-                   <ParcelDocumentsDialog parcel={parcel} />
+                   <ParcelFileTextsDialog parcel={parcel} />
                  </Dialog>
                  <AlertDialog>
                    <AlertDialogTrigger asChild>

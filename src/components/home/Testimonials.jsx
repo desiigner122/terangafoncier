@@ -1,7 +1,9 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { Star } from 'lucide-react';
+import { 
+  Star
+} from 'lucide-react';
 
 const testimonials = [
   { name: "Moussa Diop", location: "Dakar", quote: "Processus clair, rapide et sécurisé. J'ai enfin acheté mon terrain à Diamniadio sans tracas grâce à l'équipe Teranga Foncier.", imgDesc: "Portrait homme sénégalais souriant chemise traditionnelle", rating: 5 },

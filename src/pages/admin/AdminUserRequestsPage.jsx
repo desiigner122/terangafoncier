@@ -9,7 +9,12 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
-import { Check, X, UserPlus, Eye } from 'lucide-react';
+import { 
+  Check, 
+  X, 
+  UserPlus, 
+  Eye
+} from 'lucide-react';
 
 const AdminUserRequestsPage = () => {
     const [requests, setRequests] = useState([]);
@@ -101,7 +106,7 @@ const AdminUserRequestsPage = () => {
                     <p><strong>Utilisateur:</strong> {request.user.name} ({request.user.id})</p>
                     <p><strong>Rôle Actuel:</strong> {request.user.currentRole}</p>
                     <p><strong>Rôle Demandé:</strong> {request.details.requestedRole}</p>
-                    <p className="text-muted-foreground">La gestion des documents se fait sur la page de vérification des utilisateurs.</p>
+                    <p className="text-muted-foreground">La gestion des FileTexts se fait sur la page de vérification des utilisateurs.</p>
                 </div>
                 <DialogFooter>
                     <DialogClose asChild><Button variant="secondary">Fermer</Button></DialogClose>

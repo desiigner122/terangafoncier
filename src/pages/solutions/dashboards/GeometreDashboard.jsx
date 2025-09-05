@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Badge, 
@@ -38,11 +38,11 @@ import {
   CheckCircle, 
   Users, 
   Target, 
-  Activity,
-  Compass,
-  Map,
-  Layers,
-  Scan,
+  Activity, 
+  Compass, 
+  Map, 
+  Layers, 
+  Scan, 
   Settings
 } from 'lucide-react';
 

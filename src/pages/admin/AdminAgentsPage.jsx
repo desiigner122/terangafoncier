@@ -3,7 +3,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter }
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, UserCheck, Search, Filter, Edit3, Trash2, Briefcase, BarChart2 } from 'lucide-react';
+import { 
+  PlusCircle, 
+  UserCheck, 
+  Search, 
+  Filter, 
+  Edit3, 
+  Trash2, 
+  Briefcase, 
+  BarChart2
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,

@@ -1,9 +1,15 @@
-
+﻿
 import React from 'react';
     import { motion } from 'framer-motion';
     import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
     import { Button } from '@/components/ui/button';
-    import { BarChart, PieChart, Download, FileText, Calendar } from 'lucide-react';
+    import { 
+  BarChart, 
+  PieChart, 
+  Download, 
+  FileText, 
+  Calendar
+} from 'lucide-react';
     import { ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, Legend, Pie, Cell, ComposedChart, Line } from 'recharts';
     import {
       Select,
@@ -116,7 +122,7 @@ import React from 'react';
           <Card>
             <CardHeader>
                 <CardTitle>Génération de Rapports Personnalisés</CardTitle>
-                <CardDescription>Créez des documents PDF ou CSV pour vos archives ou réunions.</CardDescription>
+                <CardDescription>Créez des FileTexts PDF ou CSV pour vos archives ou réunions.</CardDescription>
             </CardHeader>
             <CardContent className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                 <Button variant="secondary" size="lg" className="h-auto py-4" onClick={() => handleExport('Rapport d\'occupation des sols')}>

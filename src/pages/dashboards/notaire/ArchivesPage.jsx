@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Archive, Search, Filter, Download } from 'lucide-react';
+import { 
+  Archive, 
+  Search, 
+  Filter, 
+  Download
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Input } from '@/components/ui/input';
 import { LoadingSpinner } from '@/components/ui/spinner';

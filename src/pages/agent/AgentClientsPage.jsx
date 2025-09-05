@@ -5,7 +5,13 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { PlusCircle, Search, MessageSquare, Phone, Edit } from 'lucide-react';
+import { 
+  PlusCircle, 
+  Search, 
+  MessageSquare, 
+  Phone, 
+  Edit
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { sampleAgentData } from '@/data';

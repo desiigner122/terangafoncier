@@ -1,6 +1,10 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Percent, AlertTriangle } from 'lucide-react';
+import { 
+  FileText, 
+  Percent, 
+  AlertTriangle
+} from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card';
 import { Helmet } from 'react-helmet-async';
 

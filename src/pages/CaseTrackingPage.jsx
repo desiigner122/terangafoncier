@@ -1,10 +1,19 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
-import { CheckCircle, Clock, FileText, Home, User, AlertCircle, Banknote, ArrowRight } from 'lucide-react';
+import { 
+  CheckCircle, 
+  Clock, 
+  FileText, 
+  Home, 
+  User, 
+  AlertCircle, 
+  Banknote, 
+  ArrowRight
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 
@@ -93,7 +102,7 @@ const CaseTrackingPage = () => {
             </CardHeader>
             <CardContent>
               <ol className="relative border-l border-gray-200 dark:border-gray-700">
-                {request.history.sort((a,b) => new Date(b.date) - new Date(a.date)).map((item, index) => {
+                {(request.history || []).sort((a,b) => new Date(b.date) - new Date(a.date)).map((item, index) => {
                   const statusInfo = getStatusInfo(item.status);
                   return (
                     <motion.li

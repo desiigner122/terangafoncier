@@ -1,5 +1,8 @@
-import React, { useState, useEffect } from 'react';
-import { MapPin, ChevronDown } from 'lucide-react';
+﻿import React, { useState, useEffect } from 'react';
+import { 
+  MapPin, 
+  ChevronDown
+} from 'lucide-react';
 import { localTerritorialManager } from '@/lib/localTerritorialManager';
 
 const TerritorialSelector = ({ 

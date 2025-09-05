@@ -1,8 +1,16 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { Banknote, ShieldCheck, BarChart3, FileSearch, Users, ArrowRight, LayoutDashboard, HeartHandshake as Handshake } from 'lucide-react';
+import { 
+  Banknote, 
+  ShieldCheck, 
+  BarChart3, 
+  FileSearch, 
+  ArrowRight, 
+  LayoutDashboard, 
+  Users
+} from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Helmet } from 'react-helmet-async';
@@ -39,7 +47,7 @@ const SolutionsBanquesPage = () => {
       description: "Accédez à des données vérifiées et à des analyses de marché pour évaluer avec précision la valeur des terrains proposés en garantie. Réduisez vos risques et optimisez vos décisions de crédit.",
     },
     {
-      icon: Handshake,
+      icon: Users,
       title: "Faciliter l'Accès au Financement",
       description: "Proposez à vos clients des parcours de financement simplifiés pour l'acquisition de biens vérifiés sur notre plateforme. Un gage de sécurité qui accélère les décisions.",
     },

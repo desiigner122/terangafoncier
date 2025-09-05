@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -13,17 +13,17 @@ import {
   Building, 
   CheckCircle, 
   ChevronRight, 
-  ChevronLeft,
-  Mail,
-  Phone,
-  Calendar,
-  Shield,
-  FileText,
+  ChevronLeft, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  Shield, 
+  FileText, 
   Upload
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
 
-// Données territoriales du Sénégal
+// Données territoriales complètes du Sénégal
 const SENEGAL_REGIONS = {
   'Dakar': {
     'Dakar': ['Dakar Plateau', 'Médina', 'Grand Dakar', 'Fann-Point E-Amitié', 'Gorée'],
@@ -40,6 +40,63 @@ const SENEGAL_REGIONS = {
     'Saint-Louis': ['Saint-Louis', 'Mpal', 'Gandon'],
     'Dagana': ['Dagana', 'Richard-Toll', 'Ross Béthio'],
     'Podor': ['Podor', 'Ndioum', 'Golléré']
+  },
+  'Diourbel': {
+    'Diourbel': ['Diourbel', 'Ndoulo', 'Ngoye'],
+    'Bambey': ['Bambey', 'Baba Garage', 'Gawane'],
+    'Mbacké': ['Mbacké', 'Touba', 'Darou Salam']
+  },
+  'Fatick': {
+    'Fatick': ['Fatick', 'Diakhao', 'Tattaguine'],
+    'Foundiougne': ['Foundiougne', 'Djilasse', 'Sokone'],
+    'Gossas': ['Gossas', 'Ouadiour', 'Colobane']
+  },
+  'Kaolack': {
+    'Kaolack': ['Kaolack', 'Ndoffane', 'Ndiedieng'],
+    'Guinguinéo': ['Guinguinéo', 'Ngayokheme', 'Fimela'],
+    'Nioro du Rip': ['Nioro du Rip', 'Médina Sabakh', 'Wack Ngouna']
+  },
+  'Kolda': {
+    'Kolda': ['Kolda', 'Salikégné', 'Médina Yoro Foulah'],
+    'Vélingara': ['Vélingara', 'Pakour', 'Kounkané'],
+    'Médina Yoro Foulah': ['Médina Yoro Foulah', 'Badion', 'Mampatim']
+  },
+  'Louga': {
+    'Louga': ['Louga', 'Sakal', 'Kébémer'],
+    'Linguère': ['Linguère', 'Barkédji', 'Yang Yang'],
+    'Kébémer': ['Kébémer', 'Sagatta Djoloff', 'Loro']
+  },
+  'Matam': {
+    'Matam': ['Matam', 'Ogo', 'Thilogne'],
+    'Kanel': ['Kanel', 'Sémémé', 'Wouro Sidy'],
+    'Ranérou Ferlo': ['Ranérou', 'Lougré Thioly', 'Oudalaye']
+  },
+  'Sédhiou': {
+    'Sédhiou': ['Sédhiou', 'Marsassoum', 'Diannah Malary'],
+    'Bounkiling': ['Bounkiling', 'Diaroumé', 'Tankon'],
+    'Goudomp': ['Goudomp', 'Samine', 'Karantaba']
+  },
+  'Tambacounda': {
+    'Tambacounda': ['Tambacounda', 'Dialafara', 'Missirah'],
+    'Bakel': ['Bakel', 'Goudiry', 'Kidira'],
+    'Goudiry': ['Goudiry', 'Bala', 'Kothiary'],
+    'Koumpentoum': ['Koumpentoum', 'Payar', 'Bamba Thialène']
+  },
+  'Kaffrine': {
+    'Kaffrine': ['Kaffrine', 'Katakel', 'Nganda'],
+    'Birkelane': ['Birkelane', 'Mabo', 'Touba Toul'],
+    'Koungheul': ['Koungheul', 'Lour Escale', 'Ida Mouride'],
+    'Malem Hodar': ['Malem Hodar', 'Ndrame Escale', 'Kahi']
+  },
+  'Kédougou': {
+    'Kédougou': ['Kédougou', 'Bandafassi', 'Fongolimbi'],
+    'Saraya': ['Saraya', 'Khossanto', 'Sabodala'],
+    'Salémata': ['Salémata', 'Ethiolo', 'Dakately']
+  },
+  'Ziguinchor': {
+    'Ziguinchor': ['Ziguinchor', 'Boutoupa Casamance', 'Nyassia'],
+    'Bignona': ['Bignona', 'Diouloulou', 'Tendouck'],
+    'Oussouye': ['Oussouye', 'Diembéring', 'Santhiaba Manjaque']
   }
 };
 
@@ -78,7 +135,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
     professional_id: '',
     specializations: [],
     
-    // Étape 4: Validation et documents
+    // Étape 4: Validation et FileTexts
     password: '',
     confirm_password: '',
     terms_accepted: false,

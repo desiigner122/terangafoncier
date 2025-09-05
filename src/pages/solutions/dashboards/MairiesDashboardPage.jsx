@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -31,20 +31,20 @@ import {
   Map as MapIcon, 
   Library, 
   Construction, 
-  Users,
-  TrendingUp,
-  TrendingDown,
-  Activity,
-  Clock,
-  CheckCircle,
-  XCircle,
-  UserCheck,
-  Building,
-  BarChart3,
-  PieChart as PieChartIcon,
-  Calendar,
-  Target,
-  Globe,
+  Users, 
+  TrendingUp, 
+  TrendingDown, 
+  Activity, 
+  Clock, 
+  CheckCircle, 
+  XCircle, 
+  UserCheck, 
+  Building, 
+  BarChart3, 
+  PieChart as PieChartIcon, 
+  Calendar, 
+  Target, 
+  Globe, 
   Shield
 } from 'lucide-react';
 import { Dialog, DialogContent } from "@/components/ui/dialog";

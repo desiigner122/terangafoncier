@@ -1,13 +1,22 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
-import { ShieldCheck, Users, Scale, Globe, CreditCard, Plane, AlertOctagon, TrendingUp } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  Users, 
+  Scale, 
+  Globe, 
+  CreditCard, 
+  Plane, 
+  AlertOctagon, 
+  TrendingUp
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import CountUp from 'react-countup';
 
 const objectives = [
-   { icon: ShieldCheck, title: "Lutte Acharnée Contre la Fraude", description: "Vérification systématique et multi-niveaux des titres fonciers, baux, délibérations, identités des vendeurs et mandats pour prévenir les doubles ventes, les faux documents et les litiges.", color: "text-red-600" },
-   { icon: Scale, title: "Processus Transparent et Traçable", description: "Suivez chaque étape de votre acquisition en ligne, de la réservation à la signature, en toute clarté, avec des mises à jour régulières et un accès aux documents vérifiés.", color: "text-blue-600" },
+   { icon: ShieldCheck, title: "Lutte Acharnée Contre la Fraude", description: "Vérification systématique et multi-niveaux des titres fonciers, baux, délibérations, identités des vendeurs et mandats pour prévenir les doubles ventes, les faux FileTexts et les litiges.", color: "text-red-600" },
+   { icon: Scale, title: "Processus Transparent et Traçable", description: "Suivez chaque étape de votre acquisition en ligne, de la réservation à la signature, en toute clarté, avec des mises à jour régulières et un accès aux FileTexts vérifiés.", color: "text-blue-600" },
    { icon: CreditCard, title: "Paiements Flexibles et Sécurisés", description: "Payez vos échéances, frais de notaire ou timbres en toute sécurité via Mobile Money (Wave, Orange Money), virement bancaire ou chèque, avec un suivi en temps réel.", color: "text-green-600" },
    { icon: Plane, title: "Accessibilité Optimisée pour la Diaspora", description: "Procédures entièrement dématérialisées, assistance dédiée et accompagnement personnalisé à distance pour les Sénégalais résidant à l'étranger, facilitant l'investissement sécurisé depuis n'importe où.", color: "text-purple-600" },
 ];
@@ -57,7 +66,7 @@ const PlatformObjectivesSection = () => {
           <motion.div variants={itemVariants}>
               <h2 className="text-3xl md:text-4xl font-bold mb-5 text-primary">Investir au Sénégal, en Toute Sécurité : Notre Mission Fondamentale</h2>
               <p className="text-lg text-muted-foreground mb-6 leading-relaxed text-justify">
-                 Notre mission est de rendre l'achat de terrain au Sénégal fiable, transparent et accessible à tous, en particulier pour la diaspora. Nous combattons activement la fraude foncière sous toutes ses formes (doubles ventes, faux documents, usurpations d'identité, litiges cachés) et simplifions les démarches administratives et juridiques complexes.
+                 Notre mission est de rendre l'achat de terrain au Sénégal fiable, transparent et accessible à tous, en particulier pour la diaspora. Nous combattons activement la fraude foncière sous toutes ses formes (doubles ventes, faux FileTexts, usurpations d'identité, litiges cachés) et simplifions les démarches administratives et juridiques complexes.
               </p>
               <div className="space-y-4 mb-8">
                   {objectives.map((obj, index) => (

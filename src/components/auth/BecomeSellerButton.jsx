@@ -1,7 +1,9 @@
 ﻿
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { UserPlus } from 'lucide-react';
+import { 
+  UserPlus
+} from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 

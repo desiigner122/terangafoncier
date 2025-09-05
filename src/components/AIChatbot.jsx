@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,13 +10,13 @@ import {
   X, 
   Send, 
   Bot, 
-  User,
-  Minimize2,
-  Maximize2,
-  HelpCircle,
-  Sparkles,
-  Coffee,
-  Clock,
+  User, 
+  Minimize2, 
+  Maximize2, 
+  HelpCircle, 
+  Sparkles, 
+  Coffee, 
+  Clock, 
   CheckCircle2
 } from 'lucide-react';
 import aiManager from '@/lib/aiManager';

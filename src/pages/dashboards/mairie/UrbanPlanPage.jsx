@@ -3,7 +3,11 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Landmark, Layers, Download } from 'lucide-react';
+import { 
+  Landmark, 
+  Layers, 
+  Download
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
 

@@ -1,7 +1,14 @@
-
+﻿
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Users, Target, Eye, ShieldCheck, Linkedin, ArrowRight } from 'lucide-react';
+import { 
+  Users, 
+  Target, 
+  Eye, 
+  ShieldCheck, 
+  Linkedin, 
+  ArrowRight
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';

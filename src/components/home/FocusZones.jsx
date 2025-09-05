@@ -1,8 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { MapPin, ArrowRight } from 'lucide-react';
+import { 
+  MapPin, 
+  ArrowRight
+} from 'lucide-react';
 
 const zones = [
   { name: "Dakar", description: "Capitale dynamique, centre économique et administratif.", imageDesc: "Skyline de Dakar Sénégal buildings modernes", link: "/parcelles?zone=Dakar" },

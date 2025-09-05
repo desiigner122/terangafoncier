@@ -1,8 +1,13 @@
-
+﻿
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { ShieldCheck, FileCheck2, UserCheck2, Gavel } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  FileCheck2, 
+  UserCheck2, 
+  Gavel
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
@@ -14,8 +19,8 @@ const preventionItems = [
   },
   {
     icon: FileCheck2,
-    title: "Documents Contrôlés",
-    description: "Nous encourageons et facilitons la vérification des documents juridiques (titre foncier, bail, etc.) pour certifier l'authenticité des parcelles."
+    title: "FileTexts Contrôlés",
+    description: "Nous encourageons et facilitons la vérification des FileTexts juridiques (titre foncier, bail, etc.) pour certifier l'authenticité des parcelles."
   },
   {
     icon: ShieldCheck,

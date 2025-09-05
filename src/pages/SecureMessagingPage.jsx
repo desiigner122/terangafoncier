@@ -8,7 +8,12 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Skeleton } from '@/components/ui/skeleton';
-import { Send, MessageSquare, Users, ArrowLeft } from 'lucide-react';
+import { 
+  Send, 
+  MessageSquare, 
+  Users, 
+  ArrowLeft
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';

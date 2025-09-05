@@ -1,8 +1,13 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Tag, Calendar, ArrowRight, BookOpen } from 'lucide-react';
+import { 
+  Tag, 
+  Calendar, 
+  ArrowRight, 
+  BookOpen
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { Helmet } from 'react-helmet-async';

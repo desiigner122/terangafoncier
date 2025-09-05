@@ -2,7 +2,14 @@
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { sampleBlogPosts } from '@/data';
-import { Calendar, User, Tag, ArrowLeft, Share2, Printer } from 'lucide-react';
+import { 
+  Calendar, 
+  User, 
+  Tag, 
+  ArrowLeft, 
+  Share2, 
+  Printer
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';

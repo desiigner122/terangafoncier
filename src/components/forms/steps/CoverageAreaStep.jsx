@@ -1,9 +1,14 @@
-/**
+﻿/**
  * Étape: Zone de couverture (Banque)
  */
 
 import React, { useState, useEffect } from 'react';
-import { Map, Plus, X, ChevronRight } from 'lucide-react';
+import { 
+  Map, 
+  Plus, 
+  X, 
+  ChevronRight
+} from 'lucide-react';
 import { territorialManager } from '../../../lib/territorialManager';
 
 const CoverageAreaStep = ({ data, errors, onNext, isLoading, role }) => {

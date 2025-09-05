@@ -1,9 +1,12 @@
-
+﻿
 import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, ArrowRight } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  ArrowRight
+} from 'lucide-react';
 import { sampleParcels } from '@/data/sampleData';
 import ParcelCard from '@/components/parcels/ParcelCard';
 
@@ -29,7 +32,7 @@ const VerifiedParcelsSection = () => {
                         <ShieldCheck className="h-8 w-8 text-green-500 mr-3" /> Terrains Vérifiés
                     </h2>
                     <p className="text-muted-foreground mt-2 max-w-2xl">
-                        Investissez en toute confiance. Ces parcelles ont fait l'objet d'une vérification documentaire par nos équipes pour garantir leur statut juridique.
+                        Investissez en toute confiance. Ces parcelles ont fait l'objet d'une vérification FileTextaire par nos équipes pour garantir leur statut juridique.
                     </p>
                 </div>
                 <Button asChild variant="ghost" className="mt-4 sm:mt-0 text-primary hover:text-primary/80">

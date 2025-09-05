@@ -1,7 +1,15 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { FileText, Landmark, Server, Copyright, AlertTriangle, Database, ShieldAlert } from 'lucide-react';
+import { 
+  FileText, 
+  Landmark, 
+  Server, 
+  Copyright, 
+  AlertTriangle, 
+  Database, 
+  ShieldAlert
+} from 'lucide-react';
 
 const LegalPage = () => {
   const sectionVariants = {
@@ -81,7 +89,7 @@ const LegalPage = () => {
                 En conséquence, Teranga Foncier décline toute responsabilité pour toute interruption de la Plateforme, survenance de bogues, pour toute inexactitude ou omission portant sur des informations disponibles sur la Plateforme, ou pour tous dommages résultant d'une intrusion frauduleuse d'un tiers.
               </p>
               <p>
-                Les informations fournies concernant les parcelles (statut juridique, documents, etc.) sont basées sur les vérifications effectuées par Teranga Foncier au moment de leur publication. <strong className="text-foreground">Il incombe impérativement à l'acheteur de procéder à ses propres vérifications complémentaires</strong>, notamment auprès des autorités compétentes (Cadastre, Domaines, Mairies) et d'un notaire, avant toute transaction. Teranga Foncier agit en tant qu'intermédiaire facilitant la mise en relation et la vérification initiale, mais ne se substitue pas aux diligences légales et notariales finales qui sont de la responsabilité de l'acheteur.
+                Les informations fournies concernant les parcelles (statut juridique, FileTexts, etc.) sont basées sur les vérifications effectuées par Teranga Foncier au moment de leur publication. <strong className="text-foreground">Il incombe impérativement à l'acheteur de procéder à ses propres vérifications complémentaires</strong>, notamment auprès des autorités compétentes (Cadastre, Domaines, Mairies) et d'un notaire, avant toute transaction. Teranga Foncier agit en tant qu'intermédiaire facilitant la mise en relation et la vérification initiale, mais ne se substitue pas aux diligences légales et notariales finales qui sont de la responsabilité de l'acheteur.
               </p>
             </div>
           </motion.section>

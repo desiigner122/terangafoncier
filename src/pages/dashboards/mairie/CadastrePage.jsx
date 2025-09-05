@@ -2,7 +2,12 @@
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Map, Search, Layers, Download } from 'lucide-react';
+import { 
+  Map, 
+  Search, 
+  Layers, 
+  Download
+} from 'lucide-react';
 import { Input } from '@/components/ui/input';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';

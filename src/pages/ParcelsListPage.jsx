@@ -7,7 +7,13 @@ import ParcelFilters from '@/components/parcels/ParcelFilters';
 import ParcelListSkeleton from '@/components/parcels/ParcelListSkeleton';
 import { Button } from '@/components/ui/button';
 import { Card, CardDescription, CardTitle } from '@/components/ui/card';
-import { AlertTriangle, ListFilter, Map, Save, Landmark } from 'lucide-react';
+import { 
+  AlertTriangle, 
+  ListFilter, 
+  Map, 
+  Save, 
+  Landmark
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import ParcelsHeroSearch from '@/components/parcels/ParcelsHeroSearch';
 import { Helmet } from 'react-helmet-async';
@@ -174,6 +180,27 @@ const ParcelsListPage = () => {
           </div>
 
           <div className="w-full md:w-2/3 lg:w-3/4">
+            {/* Bannière pour la nouvelle page intelligente */}
+            <div className="mb-6 bg-gradient-to-r from-primary/10 via-blue-50/50 to-emerald-50/30 dark:from-primary/20 dark:via-blue-950/30 dark:to-emerald-950/20 rounded-xl p-6 border border-primary/20">
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4">
+                <div className="flex-1">
+                  <div className="flex items-center gap-2 mb-2">
+                    <span className="text-lg font-bold text-primary">🎯 Nouveau : Système de Paiement Intelligent</span>
+                    <span className="text-xs bg-primary/20 text-primary px-2 py-1 rounded-full animate-pulse">BETA</span>
+                  </div>
+                  <p className="text-sm text-muted-foreground">
+                    Découvrez notre nouvelle expérience d'achat avec options de paiement flexibles : 
+                    achat direct, paiement échelonné ou financement bancaire.
+                  </p>
+                </div>
+                <Button asChild className="bg-primary hover:bg-primary/90">
+                  <Link to="/terrain-intelligent/TF-2024-001">
+                    Découvrir →
+                  </Link>
+                </Button>
+              </div>
+            </div>
+
             <div className="flex flex-col sm:flex-row justify-between items-center mb-6 gap-4">
               <p className="text-sm text-muted-foreground">
                 {loading ? 'Chargement...' : `${filteredParcels.length} parcelle(s) trouvée(s).`}

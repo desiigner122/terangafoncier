@@ -1,9 +1,15 @@
-/**
+﻿/**
  * Étape: Informations bancaires (Banque)
  */
 
 import React, { useState } from 'react';
-import { Building2, CreditCard, MapPin, FileText, ChevronRight } from 'lucide-react';
+import { 
+  Building2, 
+  CreditCard, 
+  MapPin, 
+  FileText, 
+  ChevronRight
+} from 'lucide-react';
 
 const BankInfoStep = ({ data, errors, onNext, isLoading, role }) => {
   const [formData, setFormData] = useState({

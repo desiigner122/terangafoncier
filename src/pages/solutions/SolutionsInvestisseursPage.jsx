@@ -1,8 +1,15 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
-import { TrendingUp, ShieldCheck, Briefcase, BarChartHorizontalBig, ArrowRight, LayoutDashboard } from 'lucide-react';
+import { 
+  TrendingUp, 
+  ShieldCheck, 
+  Briefcase, 
+  BarChartHorizontalBig, 
+  ArrowRight, 
+  LayoutDashboard
+} from 'lucide-react';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Helmet } from 'react-helmet-async';
 

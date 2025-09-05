@@ -1,7 +1,16 @@
 ﻿
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Landmark, FileSignature, LandPlot, AlertTriangle, Map as MapIcon, Library, Construction, Users } from 'lucide-react';
+import { 
+  Landmark, 
+  FileSignature, 
+  LandPlot, 
+  AlertTriangle, 
+  Map as MapIcon, 
+  Library, 
+  Construction, 
+  Users
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { sampleParcels, sampleRequests, sampleUsers } from '@/data';

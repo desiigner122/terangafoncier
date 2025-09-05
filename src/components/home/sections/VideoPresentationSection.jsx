@@ -1,7 +1,9 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
-import { PlayCircle } from 'lucide-react';
+import { 
+  PlayCircle
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 const VideoPresentationSection = () => {

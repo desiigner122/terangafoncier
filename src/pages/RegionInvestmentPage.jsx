@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { MapPin, Building, Leaf, Ship, Sun, ArrowRight, CheckCircle } from 'lucide-react';
+import { 
+  MapPin, 
+  Building, 
+  Leaf, 
+  Ship, 
+  Sun, 
+  ArrowRight, 
+  CheckCircle
+} from 'lucide-react';
 import ParcelCard from '@/components/parcels/ParcelCard';
 import { Helmet } from 'react-helmet-async';
 

@@ -5,14 +5,19 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { Check, X, ShieldOff, Eye } from 'lucide-react';
+import { 
+  Check, 
+  X, 
+  ShieldOff, 
+  Eye
+} from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter, DialogTrigger, DialogClose } from '@/components/ui/dialog';
 
-const UserVerificationDetailsDialog = ({ user, documents }) => (
+const UserVerificationDetailsDialog = ({ user, FileTexts }) => (
     <DialogContent>
         <DialogHeader>
             <DialogTitle>Détails pour {user.full_name}</DialogTitle>
@@ -23,13 +28,13 @@ const UserVerificationDetailsDialog = ({ user, documents }) => (
             <p><strong>Email:</strong> {user.email}</p>
             <p><strong>Rôle demandé:</strong> {user.role}</p>
             <p><strong>Date d'inscription:</strong> {format(new Date(user.created_at), 'd MMMM yyyy, HH:mm', { locale: fr })}</p>
-            {documents.length > 0 ? (
+            {FileTexts.length > 0 ? (
                 <div>
-                    <strong className="block mt-4 mb-2">Documents soumis:</strong>
+                    <strong className="block mt-4 mb-2">FileTexts soumis:</strong>
                     <ul className="space-y-2">
-                       {documents.map((doc) => (
+                       {FileTexts.map((doc) => (
                          <li key={doc.id} className="flex items-center justify-between p-2 border rounded-md">
-                           <span className="font-medium capitalize">{doc.document_type.replace(/_/g, ' ')}</span>
+                           <span className="font-medium capitalize">{doc.FileText_type.replace(/_/g, ' ')}</span>
                            <Button asChild variant="outline" size="sm">
                                <a href={doc.file_url} target="_blank" rel="noopener noreferrer">
                                    <Eye className="mr-2 h-4 w-4" /> Voir
@@ -40,7 +45,7 @@ const UserVerificationDetailsDialog = ({ user, documents }) => (
                     </ul>
                 </div>
             ) : (
-                <p className="text-muted-foreground mt-4">Aucun document n'a été soumis par cet utilisateur.</p>
+                <p className="text-muted-foreground mt-4">Aucun FileText n'a été soumis par cet utilisateur.</p>
             )}
         </div>
         <DialogFooter>
@@ -53,7 +58,7 @@ const UserVerificationDetailsDialog = ({ user, documents }) => (
 
 const AdminUserVerificationsPage = () => {
     const [users, setUsers] = useState([]);
-    const [documents, setDocuments] = useState({});
+    const [FileTexts, setFileTexts] = useState({});
     const [loading, setLoading] = useState(true);
     // toast remplacÃ© par window.safeGlobalToast
 
@@ -89,19 +94,19 @@ const AdminUserVerificationsPage = () => {
                 const userIds = usersWithEmails.map(u => u.id);
                 if (userIds.length > 0) {
                     const { data: docsData, error: docsError } = await supabase
-                        .from('documents')
+                        .from('FileTexts')
                         .select('*')
                         .in('user_id', userIds);
                     
                     if (docsError) {
-                        console.error("Error fetching documents:", docsError);
+                        console.error("Error fetching FileTexts:", docsError);
                     } else {
                         const docsByUserId = docsData.reduce((acc, doc) => {
                             if (!acc[doc.user_id]) acc[doc.user_id] = [];
                             acc[doc.user_id].push(doc);
                             return acc;
                         }, {});
-                        setDocuments(docsByUserId);
+                        setFileTexts(docsByUserId);
                     }
                 }
             } catch (error) {
@@ -179,7 +184,7 @@ const AdminUserVerificationsPage = () => {
                                             <DialogTrigger asChild>
                                                 <Button size="sm" variant="outline"><Eye className="h-4 w-4 mr-1"/>Détails & Docs</Button>
                                             </DialogTrigger>
-                                            <UserVerificationDetailsDialog user={user} documents={documents[user.id] || []} />
+                                            <UserVerificationDetailsDialog user={user} FileTexts={FileTexts[user.id] || []} />
                                         </Dialog>
                                         <Button size="sm" variant="success" onClick={() => handleVerificationAction(user.id, 'verified')}>
                                             <Check className="h-4 w-4 mr-1"/> Approuver

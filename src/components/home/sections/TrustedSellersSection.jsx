@@ -1,8 +1,14 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { ShieldCheck, ArrowRight, Landmark, Building2, UserCheck as UserCheckIcon } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  ArrowRight, 
+  Landmark, 
+  Building2, 
+  UserCheck as UserCheckIcon
+} from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 
@@ -38,7 +44,7 @@ const TrustedSellersSection = () => {
         <ShieldCheck className="h-12 w-12 mx-auto mb-4 text-primary" />
         <h2 className="text-3xl md:text-4xl font-bold text-primary mb-3">Nos Vendeurs de Confiance</h2>
         <p className="text-lg text-muted-foreground max-w-3xl mx-auto">
-          Nous vérifions l'identité et les documents de chaque vendeur pour vous garantir des transactions sécurisées. Achetez en toute sérénité auprès de nos partenaires institutionnels, promoteurs certifiés et particuliers vérifiés.
+          Nous vérifions l'identité et les FileTexts de chaque vendeur pour vous garantir des transactions sécurisées. Achetez en toute sérénité auprès de nos partenaires institutionnels, promoteurs certifiés et particuliers vérifiés.
         </p>
       </motion.div>
 

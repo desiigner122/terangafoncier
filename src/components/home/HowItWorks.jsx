@@ -1,6 +1,11 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
-import { Map, FileSearch, CheckCircle, Smile } from 'lucide-react';
+import { 
+  Map, 
+  FileSearch, 
+  CheckCircle, 
+  Smile
+} from 'lucide-react';
 
 const steps = [
     { icon: Map, title: "Explorez", description: "Trouvez le terrain idéal parmi des offres vérifiées à travers le Sénégal.", color: "text-green-600" },

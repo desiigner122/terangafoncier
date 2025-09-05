@@ -1,4 +1,4 @@
-
+﻿
 import React from 'react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
 import { ResponsiveContainer, BarChart, XAxis, YAxis, Tooltip, Legend, Bar } from 'recharts';
-import { Map, Users, Download, Search, Eye } from 'lucide-react';
+import { 
+  Map, 
+  Users, 
+  Download, 
+  Search, 
+  Eye
+} from 'lucide-react';
 
 const CadastreMapSimulation = ({ onAction }) => (
   <div className="h-full bg-gradient-to-br from-blue-50 to-sky-100 dark:from-blue-900/30 dark:to-sky-800/30 rounded-lg p-4 flex flex-col items-center justify-center shadow-inner">

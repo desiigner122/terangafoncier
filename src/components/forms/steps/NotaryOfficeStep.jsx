@@ -1,9 +1,14 @@
-/**
+﻿/**
  * Étape: Cabinet notarial (Notaire)
  */
 
 import React, { useState } from 'react';
-import { Scale, Building, FileText, ChevronRight } from 'lucide-react';
+import { 
+  Scale, 
+  Building, 
+  FileText, 
+  ChevronRight
+} from 'lucide-react';
 
 const NotaryOfficeStep = ({ data, errors, onNext, isLoading, role }) => {
   const [formData, setFormData] = useState({

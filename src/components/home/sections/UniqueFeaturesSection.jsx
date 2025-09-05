@@ -1,7 +1,14 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { ShieldCheck, MapPinned, BellRing, FileLock2, Users2, CheckSquare } from 'lucide-react';
+import { 
+  ShieldCheck, 
+  MapPinned, 
+  BellRing, 
+  FileLock2, 
+  Users2, 
+  CheckSquare
+} from 'lucide-react';
 
 const features = [
   {
@@ -27,8 +34,8 @@ const features = [
   },
   {
     icon: FileLock2,
-    title: "Espace Documentaire Sécurisé",
-    description: "Accédez à tous les documents vérifiés relatifs à votre transaction (titres, plans, rapports de vérification) dans un espace personnel en ligne, crypté et confidentiel.",
+    title: "Espace FileTextaire Sécurisé",
+    description: "Accédez à tous les FileTexts vérifiés relatifs à votre transaction (titres, plans, rapports de vérification) dans un espace personnel en ligne, crypté et confidentiel.",
     color: "text-purple-600",
     bgColor: "bg-purple-100/50",
   },

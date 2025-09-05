@@ -1,8 +1,12 @@
-import React from 'react';
+﻿import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Search, Landmark, ShieldCheck } from 'lucide-react';
+import { 
+  Search, 
+  Landmark, 
+  ShieldCheck
+} from 'lucide-react';
 const HeroSection = () => {
   return <div className="relative min-h-[70vh] md:min-h-[80vh] flex items-center justify-center text-center px-4 overflow-hidden">
       <div className="absolute inset-0 z-0">

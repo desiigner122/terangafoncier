@@ -1,14 +1,18 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
-import { HelpCircle, MessageSquare, Phone } from 'lucide-react';
+import { 
+  HelpCircle, 
+  MessageSquare, 
+  Phone
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 
 const faqData = [
   {
     question: "Comment Teranga Foncier vérifie-t-il l'authenticité des parcelles ?",
-    answer: "Notre processus est rigoureux. Chaque parcelle subit une vérification documentaire approfondie auprès des services compétents (cadastre, domaines, mairies). Nous analysons les titres de propriété (titre foncier, bail, délibération), les plans cadastraux, et nous nous assurons de l'absence de litiges connus. Des visites sur site peuvent compléter ces vérifications pour confirmer les limites et l'état du terrain. Notre but est de vous offrir une tranquillité d'esprit maximale."
+    answer: "Notre processus est rigoureux. Chaque parcelle subit une vérification FileTextaire approfondie auprès des services compétents (cadastre, domaines, mairies). Nous analysons les titres de propriété (titre foncier, bail, délibération), les plans cadastraux, et nous nous assurons de l'absence de litiges connus. Des visites sur site peuvent compléter ces vérifications pour confirmer les limites et l'état du terrain. Notre but est de vous offrir une tranquillité d'esprit maximale."
   },
   {
     question: "Quels sont les frais de service de Teranga Foncier et que couvrent-ils ?",
@@ -19,16 +23,16 @@ const faqData = [
     answer: "Absolument ! Teranga Foncier est spécifiquement conçu pour faciliter l'acquisition foncière pour la diaspora sénégalaise. Nous vous guidons à travers les démarches à distance, y compris la mise en place de procurations sécurisées si nécessaire, les transferts de fonds, et la représentation par nos agents sur place. Notre objectif est de rendre l'investissement aussi simple et sûr que si vous étiez au Sénégal."
   },
   {
-    question: "Quels documents sont nécessaires pour l'achat d'un terrain ?",
-    answer: "Les documents varient, mais typiquement : une pièce d'identité en cours de validité (carte d'identité nationale ou passeport), un justificatif de domicile récent. Pour les sociétés, des documents supplémentaires (registre de commerce, statuts) sont requis. Nos agents vous fourniront une liste précise et vous aideront à rassembler tous les éléments nécessaires pour le notaire."
+    question: "Quels FileTexts sont nécessaires pour l'achat d'un terrain ?",
+    answer: "Les FileTexts varient, mais typiquement : une pièce d'identité en cours de validité (carte d'identité nationale ou passeport), un justificatif de domicile récent. Pour les sociétés, des FileTexts supplémentaires (registre de commerce, statuts) sont requis. Nos agents vous fourniront une liste précise et vous aideront à rassembler tous les éléments nécessaires pour le notaire."
   },
   {
     question: "Comment puis-je proposer mon terrain à la vente sur votre plateforme ?",
-    answer: "C'est simple ! Créez un compte vendeur, puis utilisez la section 'Vendre un Bien' de votre tableau de bord. Vous devrez fournir des informations détaillées sur votre terrain (localisation, superficie, type de titre) et télécharger les documents de propriété (titre foncier, bail, plan, etc.). Notre équipe vérifiera les informations avant de publier votre annonce et vous contactera pour les prochaines étapes."
+    answer: "C'est simple ! Créez un compte vendeur, puis utilisez la section 'Vendre un Bien' de votre tableau de bord. Vous devrez fournir des informations détaillées sur votre terrain (localisation, superficie, type de titre) et télécharger les FileTexts de propriété (titre foncier, bail, plan, etc.). Notre équipe vérifiera les informations avant de publier votre annonce et vous contactera pour les prochaines étapes."
   },
    {
     question: "Quel est le rôle exact du notaire dans une transaction immobilière au Sénégal ?",
-    answer: "Le notaire est un officier public indispensable qui sécurise et authentifie la transaction. Il rédige l'acte de vente final après avoir vérifié la conformité légale de tous les documents, s'assure du paiement des taxes et droits d'enregistrement (droits de mutation), et inscrit la transaction au conservatoire foncier. Il protège les intérêts de l'acheteur et du vendeur. Nous travaillons en étroite collaboration avec un réseau de notaires partenaires de confiance."
+    answer: "Le notaire est un officier public indispensable qui sécurise et authentifie la transaction. Il rédige l'acte de vente final après avoir vérifié la conformité légale de tous les FileTexts, s'assure du paiement des taxes et droits d'enregistrement (droits de mutation), et inscrit la transaction au conservatoire foncier. Il protège les intérêts de l'acheteur et du vendeur. Nous travaillons en étroite collaboration avec un réseau de notaires partenaires de confiance."
   },
   {
     question: "Quelles garanties Teranga Foncier offre-t-elle contre les litiges ?",

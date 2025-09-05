@@ -1,9 +1,15 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Plane, ShieldCheck, MessageSquare, MapPin, ArrowRight } from 'lucide-react';
+import { 
+  Plane, 
+  ShieldCheck, 
+  MessageSquare, 
+  MapPin, 
+  ArrowRight
+} from 'lucide-react';
 
 const guidePoints = [
   {
@@ -21,7 +27,7 @@ const guidePoints = [
   {
     icon: MessageSquare,
     title: "Pièges à Éviter & Nos Solutions",
-    description: "Méfiez-vous des intermédiaires non vérifiés et des 'bonnes affaires' trop belles. Nous vous protégeons contre les faux documents, les litiges et les arnaques courantes.",
+    description: "Méfiez-vous des intermédiaires non vérifiés et des 'bonnes affaires' trop belles. Nous vous protégeons contre les faux FileTexts, les litiges et les arnaques courantes.",
     color: "text-red-600",
   },
 ];

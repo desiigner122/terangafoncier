@@ -2,7 +2,13 @@
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { LandPlot, PlusCircle, Search, Filter, Eye } from 'lucide-react';
+import { 
+  LandPlot, 
+  PlusCircle, 
+  Search, 
+  Filter, 
+  Eye
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';

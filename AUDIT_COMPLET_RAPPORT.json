@@ -1,0 +1,286 @@
+{
+  "dashboards": {
+    "DashboardLayout.jsx": "components\\layout\\DashboardLayout.jsx",
+    "DashboardMenu.jsx": "components\\layout\\header\\DashboardMenu.jsx",
+    "AdminDashboardPage.jsx": "pages\\admin\\AdminDashboardPage.jsx",
+    "GlobalAdminDashboard.jsx": "pages\\admin\\GlobalAdminDashboard.jsx",
+    "GlobalAnalyticsDashboard.jsx": "pages\\admin\\GlobalAnalyticsDashboard.jsx",
+    "AgentDashboardPage.jsx": "pages\\agent\\AgentDashboardPage.jsx",
+    "DashboardMunicipalRequestPage.jsx": "pages\\DashboardMunicipalRequestPage.jsx",
+    "DashboardPage.jsx": "pages\\DashboardPage.jsx",
+    "EquipmentPage.jsx": "pages\\dashboards\\agriculteur\\EquipmentPage.jsx",
+    "LogbookPage.jsx": "pages\\dashboards\\agriculteur\\LogbookPage.jsx",
+    "MyLandsPage.jsx": "pages\\dashboards\\agriculteur\\MyLandsPage.jsx",
+    "SoilAnalysisPage.jsx": "pages\\dashboards\\agriculteur\\SoilAnalysisPage.jsx",
+    "WeatherPage.jsx": "pages\\dashboards\\agriculteur\\WeatherPage.jsx",
+    "CompliancePage.jsx": "pages\\dashboards\\banque\\CompliancePage.jsx",
+    "FundingRequestsPage.jsx": "pages\\dashboards\\banque\\FundingRequestsPage.jsx",
+    "GuaranteesPage.jsx": "pages\\dashboards\\banque\\GuaranteesPage.jsx",
+    "LandValuationPage.jsx": "pages\\dashboards\\banque\\LandValuationPage.jsx",
+    "DueDiligencePage.jsx": "pages\\dashboards\\investisseur\\DueDiligencePage.jsx",
+    "InvestmentsPage.jsx": "pages\\dashboards\\investisseur\\InvestmentsPage.jsx",
+    "MarketAnalysisPage.jsx": "pages\\dashboards\\investisseur\\MarketAnalysisPage.jsx",
+    "OpportunitiesPage.jsx": "pages\\dashboards\\investisseur\\OpportunitiesPage.jsx",
+    "RoiCalculatorPage.jsx": "pages\\dashboards\\investisseur\\RoiCalculatorPage.jsx",
+    "CadastrePage.jsx": "pages\\dashboards\\mairie\\CadastrePage.jsx",
+    "DisputesPage.jsx": "pages\\dashboards\\mairie\\DisputesPage.jsx",
+    "LandManagementPage.jsx": "pages\\dashboards\\mairie\\LandManagementPage.jsx",
+    "MairieReportsPage.jsx": "pages\\dashboards\\mairie\\MairieReportsPage.jsx",
+    "MairieRequestsPage.jsx": "pages\\dashboards\\mairie\\MairieRequestsPage.jsx",
+    "UrbanPlanPage.jsx": "pages\\dashboards\\mairie\\UrbanPlanPage.jsx",
+    "ArchivesPage.jsx": "pages\\dashboards\\notaire\\ArchivesPage.jsx",
+    "AuthenticationPage.jsx": "pages\\dashboards\\notaire\\AuthenticationPage.jsx",
+    "CasesPage.jsx": "pages\\dashboards\\notaire\\CasesPage.jsx",
+    "ComplianceCheckPage.jsx": "pages\\dashboards\\notaire\\ComplianceCheckPage.jsx",
+    "ParticulierDashboard.jsx": "pages\\solutions\\dashboards\\ParticulierDashboard.jsx",
+    "ConstructionTrackingPage.jsx": "pages\\dashboards\\promoteur\\ConstructionTrackingPage.jsx",
+    "ProjectsPage.jsx": "pages\\dashboards\\promoteur\\ProjectsPage.jsx",
+    "SalesPage.jsx": "pages\\dashboards\\promoteur\\SalesPage.jsx",
+    "SimpleDashboard.jsx": "pages\\SimpleDashboard.jsx",
+    "AgriculteursDashboardPage.jsx": "pages\\solutions\\dashboards\\AgriculteursDashboardPage.jsx",
+    "BanquesDashboard.jsx": "pages\\solutions\\dashboards\\BanquesDashboard.jsx",
+    "BanquesDashboardPage.jsx": "pages\\solutions\\dashboards\\BanquesDashboardPage.jsx",
+    "BanquesDashboardPage_MODERNIZED.jsx": "pages\\solutions\\dashboards\\BanquesDashboardPage_MODERNIZED.jsx",
+    "GeometreDashboard.jsx": "pages\\solutions\\dashboards\\GeometreDashboard.jsx",
+    "InvestisseursDashboardPage.jsx": "pages\\solutions\\dashboards\\InvestisseursDashboardPage.jsx",
+    "MairiesDashboardModals.jsx": "pages\\solutions\\dashboards\\mairies\\MairiesDashboardModals.jsx",
+    "MairiesDashboardPage.jsx": "pages\\solutions\\dashboards\\MairiesDashboardPage.jsx",
+    "MairiesDashboardTabs.jsx": "pages\\solutions\\dashboards\\mairies\\MairiesDashboardTabs.jsx",
+    "TerrainAnalyticsPage.jsx": "pages\\solutions\\dashboards\\mairies\\TerrainAnalyticsPage.jsx",
+    "TerrainOversightPage.jsx": "pages\\solutions\\dashboards\\mairies\\TerrainOversightPage.jsx",
+    "MairiesDashboardModernized.jsx": "pages\\solutions\\dashboards\\MairiesDashboardModernized.jsx",
+    "MairiesDashboardPage.backup.jsx": "pages\\solutions\\dashboards\\MairiesDashboardPage.backup.jsx",
+    "NotairesDashboardPage.jsx": "pages\\solutions\\dashboards\\NotairesDashboardPage.jsx",
+    "ParticulierDashboard.backup.jsx": "pages\\solutions\\dashboards\\ParticulierDashboard.backup.jsx",
+    "ParticulierDashboardModernized.jsx": "pages\\solutions\\dashboards\\ParticulierDashboardModernized.jsx",
+    "PromoteursDashboardPage.jsx": "pages\\solutions\\dashboards\\PromoteursDashboardPage.jsx",
+    "VendeurDashboardPage.jsx": "pages\\solutions\\dashboards\\VendeurDashboardPage.jsx"
+  },
+  "components": {},
+  "pages": {},
+  "missing": [
+    {
+      "type": "dashboard",
+      "role": "agent_foncier",
+      "file": "agent_foncierDashboard.jsx",
+      "description": "Agent foncier certifié"
+    },
+    {
+      "type": "feature",
+      "role": "admin",
+      "feature": "roles",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "admin",
+      "feature": "logs",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "admin",
+      "feature": "system_config",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "admin",
+      "feature": "ai_management",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "agent_foncier",
+      "feature": "parcelles",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "agent_foncier",
+      "feature": "signatures",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "agent_foncier",
+      "feature": "calendar",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "agent_foncier",
+      "feature": "ai_assistance",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "banque",
+      "feature": "credits",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "banque",
+      "feature": "evaluations",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "banque",
+      "feature": "portfolio",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "banque",
+      "feature": "risk_analysis",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "particulier",
+      "feature": "parcelles",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "particulier",
+      "feature": "messages",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "particulier",
+      "feature": "marketplace",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "vendeur",
+      "feature": "parcelles",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "vendeur",
+      "feature": "messages",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "vendeur",
+      "feature": "ai_valuation",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "vendeur",
+      "feature": "marketing",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "investisseur",
+      "feature": "portfolio",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "investisseur",
+      "feature": "market_data",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "investisseur",
+      "feature": "parcelles",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "investisseur",
+      "feature": "roi_calculator",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "investisseur",
+      "feature": "ai_insights",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "notaire",
+      "feature": "signatures",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "notaire",
+      "feature": "legal_docs",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "notaire",
+      "feature": "calendar",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "notaire",
+      "feature": "templates",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "notaire",
+      "feature": "validations",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "geometre",
+      "feature": "measurements",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "geometre",
+      "feature": "maps",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "geometre",
+      "feature": "technical_docs",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "geometre",
+      "feature": "validations",
+      "files": []
+    },
+    {
+      "type": "feature",
+      "role": "geometre",
+      "feature": "certifications",
+      "files": []
+    }
+  ],
+  "issues": [],
+  "recommendations": [
+    "1. Créer les dashboards manquants pour chaque rôle",
+    "2. Implémenter le système de rôles dynamique",
+    "3. Créer les composants de gestion des utilisateurs",
+    "4. Implémenter la synchronisation temps réel Supabase",
+    "5. Créer le système de notifications",
+    "6. Implémenter les signatures électroniques",
+    "7. Créer le système de messagerie",
+    "8. Implémenter la gestion des parcelles",
+    "9. Créer les systèmes d'analytics par rôle",
+    "10. Implémenter l'IA pour chaque métier"
+  ]
+}

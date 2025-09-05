@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { AlertTriangle, MapPin, Eye, Flag, Calendar, DollarSign, FileText, Search, Filter } from 'lucide-react';
+import { 
+  AlertTriangle, 
+  MapPin, 
+  Eye, 
+  Flag, 
+  Calendar, 
+  DollarSign, 
+  FileText, 
+  Search, 
+  Filter
+} from 'lucide-react';
 import { sampleParcels, sampleUsers } from '@/data';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
@@ -43,7 +53,7 @@ const TerrainOversightPage = () => {
           seller_name: seller?.name || 'Vendeur inconnu',
           seller_type: seller?.user_type || 'Non spécifié',
           days_on_market: Math.floor(Math.random() * 90) + 1,
-          flags: Math.random() > 0.8 ? ['Prix suspect', 'Documents manquants'] : [],
+          flags: Math.random() > 0.8 ? ['Prix suspect', 'FileTexts manquants'] : [],
           last_activity: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString()
         };
       });
@@ -415,7 +425,7 @@ const TerrainOversightPage = () => {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="Prix suspect">Prix suspect</SelectItem>
-                  <SelectItem value="Documents manquants">Documents manquants</SelectItem>
+                  <SelectItem value="FileTexts manquants">FileTexts manquants</SelectItem>
                   <SelectItem value="Informations incorrectes">Informations incorrectes</SelectItem>
                   <SelectItem value="Vendeur non autorisé">Vendeur non autorisé</SelectItem>
                   <SelectItem value="Terrain inexistant">Terrain inexistant</SelectItem>

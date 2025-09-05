@@ -1,10 +1,18 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, LineChart, Line } from 'recharts';
-import { TrendingUp, MapPin, Calendar, FileText, Download, Users, DollarSign } from 'lucide-react';
+import { 
+  TrendingUp, 
+  MapPin, 
+  Calendar, 
+  FileText, 
+  Download, 
+  Users, 
+  DollarSign
+} from 'lucide-react';
 import { sampleParcels, sampleUsers } from '@/data';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -67,7 +75,7 @@ const TerrainAnalyticsPage = () => {
         signalements: 2,
         terrainsVerifies: 18,
         vendeursSuspects: 1,
-        documentsManquants: 1
+        FileTextsManquants: 1
       };
 
       setAnalyticsData({
@@ -207,7 +215,7 @@ const TerrainAnalyticsPage = () => {
             <FileText className="h-4 w-4 text-yellow-500" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{surveillanceStats.documentsManquants}</div>
+            <div className="text-2xl font-bold">{surveillanceStats.FileTextsManquants}</div>
             <p className="text-xs text-muted-foreground">terrain(s)</p>
           </CardContent>
         </Card>
@@ -359,7 +367,7 @@ const TerrainAnalyticsPage = () => {
               {[
                 { type: 'Prix suspect', details: 'Terrain 30% sous marché', priority: 'high' },
                 { type: 'Nouveau vendeur', details: 'Première vente dans la commune', priority: 'medium' },
-                { type: 'Document manquant', details: 'Titre foncier non fourni', priority: 'high' },
+                { type: 'FileText manquant', details: 'Titre foncier non fourni', priority: 'high' },
                 { type: 'Activité rapide', details: '3 ventes en 1 semaine', priority: 'low' }
               ].map((alert, index) => (
                 <div key={index} className="flex items-start gap-3 p-2 rounded border">

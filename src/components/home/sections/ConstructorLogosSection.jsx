@@ -1,8 +1,12 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Building, ArrowRight, CheckCircle } from 'lucide-react';
+import { 
+  Building, 
+  ArrowRight, 
+  CheckCircle
+} from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
 

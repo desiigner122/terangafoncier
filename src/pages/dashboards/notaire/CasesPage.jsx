@@ -3,7 +3,12 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Briefcase, Search, Filter, Eye } from 'lucide-react';
+import { 
+  Briefcase, 
+  Search, 
+  Filter, 
+  Eye
+} from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
@@ -13,7 +18,7 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 const initialCases = [
   { id: 'DOS001', parcelId: 'dk-alm-002', type: 'Vente', status: 'Signature Contrat', client: 'Moussa Diop' },
   { id: 'DOS002', parcelId: 'sly-ngp-010', type: 'Vente', status: 'Vérification Fiscale', client: 'Aïssatou Gueye' },
-  { id: 'DOS003', parcelId: 'ths-ext-021', type: 'Succession', status: 'En attente documents', client: 'Famille Sarr' },
+  { id: 'DOS003', parcelId: 'ths-ext-021', type: 'Succession', status: 'En attente FileTexts', client: 'Famille Sarr' },
 ];
 
 const CasesPage = () => {

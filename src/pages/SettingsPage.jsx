@@ -5,7 +5,14 @@ import React, { useState, useEffect } from 'react';
     import { Switch } from '@/components/ui/switch';
     import { motion } from 'framer-motion';
     // useToast import supprimÃ© - utilisation window.safeGlobalToast
-    import { Save, Bell, Shield, Palette, Trash2, Globe } from 'lucide-react';
+    import { 
+  Save, 
+  Bell, 
+  Shield, 
+  Palette, 
+  Trash2, 
+  Globe
+} from 'lucide-react';
     import { useAuth } from '@/context/SupabaseAuthContext';
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
@@ -183,9 +190,9 @@ import React, { useState, useEffect } from 'react';
 
             if (key === 'theme') {
                 localStorage.setItem('appTheme', value);
-                document.documentElement.classList.remove('light', 'dark');
-                if (value === 'light') document.documentElement.classList.add('light');
-                else if (value === 'dark') document.documentElement.classList.add('dark');
+                FileText.FileTextElement.classList.remove('light', 'dark');
+                if (value === 'light') FileText.FileTextElement.classList.add('light');
+                else if (value === 'dark') FileText.FileTextElement.classList.add('dark');
             }
             if (key === 'language') {
                 localStorage.setItem('appLang', value);

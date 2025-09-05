@@ -1,5 +1,19 @@
-
-import { Smartphone, Mail, Settings, HelpCircle, Heart, Search, FileText, Bell, MessageSquare, LogOut, Lock, User, UserPlus } from 'lucide-react';
+﻿
+import { 
+  Smartphone, 
+  Mail, 
+  Settings, 
+  HelpCircle, 
+  Heart, 
+  Search, 
+  FileText, 
+  Bell, 
+  MessageSquare, 
+  LogOut, 
+  Lock, 
+  User, 
+  UserPlus
+} from 'lucide-react';
 
 export const sampleUsers = [
     { id: 'user-particulier', full_name: 'Alioune Diop', name: 'Alioune Diop', email: 'particulier@teranga.sn', role: 'Particulier', user_type: 'Particulier', verification_status: 'verified', avatar: 'https://avatar.vercel.sh/alioune.png', created_at: '2025-01-15T10:00:00Z' },
@@ -25,9 +39,9 @@ export const sampleUsers = [
         verification_status: 'unverified', 
         avatar: 'https://avatar.vercel.sh/new.png', 
         created_at: new Date().toISOString(),
-        documents: {
-            "piece_identite": "/documents/sample-cni.pdf",
-            "justificatif_domicile": "/documents/sample-facture.pdf"
+        FileTexts: {
+            "piece_identite": "/FileTexts/sample-cni.pdf",
+            "justificatif_domicile": "/FileTexts/sample-facture.pdf"
         }
     },
 ];
@@ -100,7 +114,7 @@ export const sampleUserListings = [
 ];
 
 export const sampleConversations = [
-  { id: 'conv1', participants: ['user-particulier', 'user-vendeur-pro-certifie'], parcel_id: 'Mbo-Rési-059', last_message: 'Ok, je prépare les documents.', unread_count: 1, updated_at: '2025-07-11T14:25:00Z' },
+  { id: 'conv1', participants: ['user-particulier', 'user-vendeur-pro-certifie'], parcel_id: 'Mbo-Rési-059', last_message: 'Ok, je prépare les FileTexts.', unread_count: 1, updated_at: '2025-07-11T14:25:00Z' },
   { id: 'conv2', participants: ['user-particulier', 'user-vendeur-particulier-certifie'], parcel_id: 'Pik-Comm-063', last_message: 'Bonjour, est-il possible de visiter ?', unread_count: 0, updated_at: '2025-07-12T11:10:00Z' },
 ];
 

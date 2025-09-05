@@ -2,7 +2,15 @@
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Download, BarChart2, Calendar, MapPin, Users, FileText, TrendingUp } from 'lucide-react';
+import { 
+  Download, 
+  BarChart2, 
+  Calendar, 
+  MapPin, 
+  Users, 
+  FileText, 
+  TrendingUp
+} from 'lucide-react';
 import { motion } from 'framer-motion';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';

@@ -1,7 +1,18 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Shield, UserCircle, Database, FileLock, Server, Users, Edit3, Cookie, RotateCcw, MailWarning } from 'lucide-react';
+import { 
+  Shield, 
+  UserCircle, 
+  Database, 
+  FileLock, 
+  Server, 
+  Users, 
+  Edit3, 
+  Cookie, 
+  RotateCcw, 
+  MailWarning
+} from 'lucide-react';
 
 const PrivacyPage = () => {
   const sectionVariants = {
@@ -57,10 +68,10 @@ const PrivacyPage = () => {
                 <strong>Informations de compte :</strong> Nom d'utilisateur, mot de passe (fortement crypté).
               </li>
               <li>
-                <strong>Données de transaction :</strong> Détails des parcelles consultées/demandées, échanges de messages, documents que vous soumettez (pour achat ou vente), historique.
+                <strong>Données de transaction :</strong> Détails des parcelles consultées/demandées, échanges de messages, FileTexts que vous soumettez (pour achat ou vente), historique.
               </li>
               <li>
-                <strong>Informations sur les biens :</strong> Détails de la propriété, documents soumis pour vérification par nos équipes.
+                <strong>Informations sur les biens :</strong> Détails de la propriété, FileTexts soumis pour vérification par nos équipes.
               </li>
               <li>
                 <strong>Données techniques de navigation :</strong> Adresse IP, type de navigateur, OS, pages visitées, dates/heures d'accès (via cookies et technologies similaires, voir section Cookies).
@@ -74,7 +85,7 @@ const PrivacyPage = () => {
               <li>Fournir, opérer, maintenir et améliorer notre Plateforme.</li>
               <li>Créer, gérer et sécuriser votre compte utilisateur.</li>
               <li>Traiter efficacement vos demandes d'information, d'achat ou de vente.</li>
-              <li>Effectuer les vérifications nécessaires des biens et des documents.</li>
+              <li>Effectuer les vérifications nécessaires des biens et des FileTexts.</li>
               <li>Faciliter la mise en relation avec nos agents ou d'autres utilisateurs (acheteurs/vendeurs) dans le cadre d'une transaction.</li>
               <li>Communiquer avec vous concernant votre compte, vos transactions et les mises à jour importantes.</li>
               <li>Personnaliser votre expérience et vous proposer du contenu pertinent.</li>

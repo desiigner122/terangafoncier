@@ -8,7 +8,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
-import { Save, ArrowLeft } from 'lucide-react';
+import { 
+  Save, 
+  ArrowLeft
+} from 'lucide-react';
 
 const AdminBlogFormPageSimple = () => {
   const { id } = useParams();

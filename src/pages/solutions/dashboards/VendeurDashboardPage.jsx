@@ -2,9 +2,27 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  Home, MessageSquare, BarChart2, Bell, User, PlusCircle, Eye, Edit, Trash2,
-  TrendingUp, TrendingDown, DollarSign, Calendar, Users, MapPin, 
-  Clock, CheckCircle, AlertCircle, Activity, Target, Zap
+  Home, 
+  MessageSquare, 
+  BarChart2, 
+  Bell, 
+  User, 
+  PlusCircle, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  TrendingUp, 
+  TrendingDown, 
+  DollarSign, 
+  Calendar, 
+  Users, 
+  MapPin, 
+  Clock, 
+  CheckCircle, 
+  AlertCircle, 
+  Activity, 
+  Target, 
+  Zap
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

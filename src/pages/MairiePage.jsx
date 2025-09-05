@@ -1,10 +1,24 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { sampleParcels } from '@/data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { MapPin, Building, Leaf, Ship, Sun, ArrowRight, Landmark, Users, HeartHandshake as Handshake, Info, Briefcase, TrendingUp, FileSignature, Lightbulb } from 'lucide-react';
+import { 
+  MapPin, 
+  Building, 
+  Leaf, 
+  Ship, 
+  Sun, 
+  ArrowRight, 
+  Landmark, 
+  Users, 
+  Info, 
+  Briefcase, 
+  TrendingUp, 
+  FileSignature, 
+  Lightbulb
+} from 'lucide-react';
 import ParcelCard from '@/components/parcels/ParcelCard';
 import { Helmet } from 'react-helmet-async';
 import { LoadingSpinner } from '@/components/ui/spinner';
@@ -43,7 +57,7 @@ const mairieDataSim = {
     maire: { name: "Alioune Ndoye", avatar: `https://avatar.vercel.sh/alioune-ndoye.png`, mot: "Le Plateau est le moteur de l'économie sénégalaise. Nous facilitons les investissements immobiliers qui contribuent à moderniser notre capitale." },
     atouts: [
       { icon: Building, text: "Quartier des affaires et ministères." },
-      { icon: Handshake, text: "Forte demande en bureaux et résidences." },
+      { icon: Users, text: "Forte demande en bureaux et résidences." },
       { icon: Sun, text: "Corniche Ouest et sites prisés." },
       { icon: Info, text: "Projets de rénovation urbaine." },
     ],
@@ -165,7 +179,7 @@ const MairiePage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                 {mairie.projects.map(proj => (
                     <motion.div key={proj.name} initial={{ opacity: 0, y: 30 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true, amount: 0.3 }}>
-                        <Card className="overflow-hidden group"><div className="relative aspect-video"><img  src={proj.image} alt={proj.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" src="https://images.unsplash.com/photo-1572177812156-58036aae439c" /><div className="absolute inset-0 bg-black/40"></div><h3 className="absolute bottom-4 left-4 text-white text-xl font-bold z-10">{proj.name}</h3></div></Card>
+                        <Card className="overflow-hidden group"><div className="relative aspect-video"><img  src={proj.image} alt={proj.name} className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105" /><div className="absolute inset-0 bg-black/40"></div><h3 className="absolute bottom-4 left-4 text-white text-xl font-bold z-10">{proj.name}</h3></div></Card>
                     </motion.div>
                 ))}
             </div>

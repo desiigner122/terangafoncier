@@ -1,11 +1,19 @@
-/**
+﻿/**
  * Wizard de création de compte multi-étapes
  */
 
 import React, { useState, useEffect } from 'react';
 import { accountCreationService } from '../../lib/accountCreationService';
 import { ROLES } from '../../lib/rbacConfig';
-import { ChevronLeft, ChevronRight, User, Building, Shield, CheckCircle, AlertCircle } from 'lucide-react';
+import { 
+  ChevronLeft, 
+  ChevronRight, 
+  User, 
+  Building, 
+  Shield, 
+  CheckCircle, 
+  AlertCircle
+} from 'lucide-react';
 
 // Composants d'étapes
 import PersonalInfoStep from './steps/PersonalInfoStep';

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
@@ -14,19 +14,19 @@ import {
   Building, 
   CheckCircle, 
   ChevronRight, 
-  ChevronLeft,
-  Mail,
-  Phone,
-  Calendar,
-  Shield,
-  FileText,
-  Upload,
-  UserCog,
-  Building2,
-  Landmark,
-  Scale,
-  UserCheck,
-  Store,
+  ChevronLeft, 
+  Mail, 
+  Phone, 
+  Calendar, 
+  Shield, 
+  FileText, 
+  Upload, 
+  UserCog, 
+  Building2, 
+  Landmark, 
+  Scale, 
+  UserCheck, 
+  Store, 
   Home
 } from 'lucide-react';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -39,7 +39,7 @@ const ROLE_TYPES = {
     description: 'Personne physique recherchant un bien immobilier',
     fields: ['email', 'phone', 'full_name', 'address', 'location'],
     permissions: ['search_properties', 'contact_sellers', 'save_favorites'],
-    documents: []
+    FileTexts: []
   },
   'Vendeur Particulier': {
     icon: Home,
@@ -47,7 +47,7 @@ const ROLE_TYPES = {
     description: 'Propriétaire vendant son bien immobilier',
     fields: ['email', 'phone', 'full_name', 'address', 'location', 'properties_owned'],
     permissions: ['list_properties', 'manage_listings', 'contact_buyers'],
-    documents: ['proof_of_ownership', 'identity_card']
+    FileTexts: ['proof_of_ownership', 'identity_card']
   },
   'Vendeur Professionnel': {
     icon: Store,
@@ -55,7 +55,7 @@ const ROLE_TYPES = {
     description: 'Professionnel de l\'immobilier (agence, promoteur)',
     fields: ['email', 'phone', 'full_name', 'company_name', 'business_license', 'address', 'location'],
     permissions: ['bulk_listings', 'professional_tools', 'analytics', 'client_management'],
-    documents: ['business_license', 'tax_certificate', 'professional_insurance']
+    FileTexts: ['business_license', 'tax_certificate', 'professional_insurance']
   },
   'Géomètre': {
     icon: Building,
@@ -63,7 +63,7 @@ const ROLE_TYPES = {
     description: 'Expert géomètre pour relevés et certifications',
     fields: ['email', 'phone', 'full_name', 'license_number', 'specializations', 'address', 'location'],
     permissions: ['certify_properties', 'create_surveys', 'technical_reports'],
-    documents: ['professional_license', 'insurance_certificate', 'qualifications']
+    FileTexts: ['professional_license', 'insurance_certificate', 'qualifications']
   },
   'Notaire': {
     icon: Scale,
@@ -71,7 +71,7 @@ const ROLE_TYPES = {
     description: 'Notaire pour transactions et actes authentiques',
     fields: ['email', 'phone', 'full_name', 'office_name', 'bar_number', 'address', 'location'],
     permissions: ['create_authentic_acts', 'validate_transactions', 'legal_advice'],
-    documents: ['notary_license', 'bar_registration', 'office_insurance']
+    FileTexts: ['notary_license', 'bar_registration', 'office_insurance']
   },
   'Mairie': {
     icon: Landmark,
@@ -79,7 +79,7 @@ const ROLE_TYPES = {
     description: 'Représentant municipal pour autorisations',
     fields: ['email', 'phone', 'full_name', 'municipality', 'department', 'position', 'location'],
     permissions: ['issue_permits', 'urban_planning', 'municipal_approvals'],
-    documents: ['municipal_authorization', 'official_mandate']
+    FileTexts: ['municipal_authorization', 'official_mandate']
   },
   'Banque': {
     icon: Building2,
@@ -87,7 +87,7 @@ const ROLE_TYPES = {
     description: 'Institution financière pour crédits immobiliers',
     fields: ['email', 'phone', 'full_name', 'bank_name', 'branch', 'license', 'address', 'location'],
     permissions: ['approve_loans', 'financial_products', 'credit_analysis'],
-    documents: ['banking_license', 'financial_statements', 'regulatory_approvals']
+    FileTexts: ['banking_license', 'financial_statements', 'regulatory_approvals']
   },
   'Agent Foncier': {
     icon: UserCog,
@@ -95,7 +95,7 @@ const ROLE_TYPES = {
     description: 'Agent spécialisé en droit foncier et régularisation',
     fields: ['email', 'phone', 'full_name', 'agency', 'specializations', 'address', 'location'],
     permissions: ['land_regularization', 'title_verification', 'legal_consulting'],
-    documents: ['professional_certificate', 'legal_authorization', 'insurance']
+    FileTexts: ['professional_certificate', 'legal_authorization', 'insurance']
   },
   'Investisseur': {
     icon: Shield,
@@ -103,7 +103,7 @@ const ROLE_TYPES = {
     description: 'Investisseur recherchant des opportunités immobilières',
     fields: ['email', 'phone', 'full_name', 'investment_type', 'budget_range', 'preferred_locations', 'address', 'location'],
     permissions: ['access_investments', 'portfolio_management', 'market_analysis', 'exclusive_deals'],
-    documents: ['financial_statements', 'investment_profile', 'bank_references']
+    FileTexts: ['financial_statements', 'investment_profile', 'bank_references']
   },
   'Promoteur': {
     icon: Building2,
@@ -111,7 +111,7 @@ const ROLE_TYPES = {
     description: 'Promoteur immobilier développant des projets',
     fields: ['email', 'phone', 'full_name', 'company_name', 'project_types', 'portfolio', 'address', 'location'],
     permissions: ['create_projects', 'project_management', 'marketing_tools', 'investor_relations'],
-    documents: ['developer_license', 'company_registration', 'project_portfolio', 'financial_guarantees']
+    FileTexts: ['developer_license', 'company_registration', 'project_portfolio', 'financial_guarantees']
   }
 };
 
@@ -323,7 +323,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                     {roleConfig.permissions.length} permissions
                   </Badge>
                   <Badge variant="outline" className="text-xs">
-                    {roleConfig.documents.length} documents
+                    {roleConfig.FileTexts.length} FileTexts
                   </Badge>
                 </div>
               </CardContent>
@@ -593,12 +593,12 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
           </div>
         </div>
 
-        {/* Documents requis */}
-        {roleConfig.documents.length > 0 && (
+        {/* FileTexts requis */}
+        {roleConfig.FileTexts.length > 0 && (
           <div className="bg-blue-50 p-4 rounded-lg">
-            <h4 className="font-medium text-blue-900 mb-2">Documents requis :</h4>
+            <h4 className="font-medium text-blue-900 mb-2">FileTexts requis :</h4>
             <ul className="text-sm text-blue-800 space-y-1">
-              {roleConfig.documents.map((doc, index) => (
+              {roleConfig.FileTexts.map((doc, index) => (
                 <li key={index}>• {doc}</li>
               ))}
             </ul>

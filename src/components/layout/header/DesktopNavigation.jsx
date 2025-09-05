@@ -107,106 +107,201 @@ const DesktopNavigation = ({ isScrolled }) => {
         </button>
 
         {activeDropdown === 'solutions' && (
-          <div className="absolute top-full left-0 mt-2 w-screen max-w-4xl bg-white shadow-2xl rounded-xl border border-gray-100 z-50 -translate-x-1/4">
-            <div className="p-6">
-              <div className="grid grid-cols-3 gap-6">
-                {/* Pour Particuliers */}
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+          <div className="absolute top-full left-0 mt-2 w-screen max-w-5xl bg-white shadow-2xl rounded-xl border border-gray-100 z-50 -translate-x-1/3">
+            <div className="p-8">
+              <div className="grid grid-cols-4 gap-8">
+                {/* Colonne 1 - Pour Particuliers */}
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
                     <Users className="h-4 w-4 text-primary" />
                     Pour Particuliers
                   </h3>
-                  <div className="space-y-2">
-                    {solutions.slice(0, 3).map((item) => (
-                      <Link 
-                        key={item.title}
-                        to={item.href}
-                        className="flex items-start gap-2 p-2 rounded-lg hover:bg-gray-50 transition-colors group"
-                      >
-                        <item.icon className="h-4 w-4 text-primary mt-0.5 flex-shrink-0" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 group-hover:text-primary">
-                            {item.title}
-                          </div>
-                          <div className="text-xs text-gray-600 mt-1 line-clamp-2">
-                            {item.description}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
+                  <div className="space-y-1">
+                    <Link 
+                      to="/solutions/particuliers"
+                      className="block px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-primary">
+                        Achat de Terrain
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Trouvez votre terrain idéal
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/villes"
+                      className="block px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-primary">
+                        Demandes Communales
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Terrains via mairies
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/parcels"
+                      className="block px-3 py-2 rounded-lg hover:bg-gray-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-primary">
+                        Catalogue Vérifié
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Parcelles certifiées
+                      </div>
+                    </Link>
                   </div>
                 </div>
 
-                {/* Pour Diaspora */}
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                {/* Colonne 2 - Diaspora */}
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
                     <Globe className="h-4 w-4 text-emerald-600" />
                     Diaspora
                     <Badge className="bg-emerald-100 text-emerald-700 text-xs">Nouveau</Badge>
                   </h3>
-                  <div className="space-y-2">
-                    {diasporaSolutions.map((item) => (
-                      <Link 
-                        key={item.title}
-                        to={item.href}
-                        className="flex items-start gap-2 p-2 rounded-lg hover:bg-emerald-50 transition-colors group"
-                      >
-                        <item.icon className="h-4 w-4 text-emerald-600 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 group-hover:text-emerald-600 flex items-center gap-1">
-                            {item.title}
-                            {item.isNew && <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full"></div>}
-                          </div>
-                          <div className="text-xs text-gray-600 mt-1 line-clamp-2">
-                            {item.description}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
+                  <div className="space-y-1">
+                    <Link 
+                      to="/diaspora"
+                      className="block px-3 py-2 rounded-lg hover:bg-emerald-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-emerald-600">
+                        Investissement à Distance
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Achetez depuis l'étranger
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/solutions/construction-distance"
+                      className="block px-3 py-2 rounded-lg hover:bg-emerald-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-emerald-600">
+                        Construction Temps Réel
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Suivez vos travaux
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/diaspora/guide"
+                      className="block px-3 py-2 rounded-lg hover:bg-emerald-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-emerald-600">
+                        Guide Diaspora
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Conseils et démarches
+                      </div>
+                    </Link>
                   </div>
                 </div>
 
-                {/* Pour Professionnels */}
-                <div>
-                  <h3 className="text-sm font-bold text-gray-900 mb-3 flex items-center gap-2">
+                {/* Colonne 3 - Professionnels */}
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
                     <Building className="h-4 w-4 text-blue-600" />
                     Professionnels
                   </h3>
-                  <div className="space-y-2">
-                    {solutions.slice(3).map((item) => (
-                      <Link 
-                        key={item.title}
-                        to={item.href}
-                        className="flex items-start gap-2 p-2 rounded-lg hover:bg-blue-50 transition-colors group"
-                      >
-                        <item.icon className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
-                        <div>
-                          <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
-                            {item.title}
-                          </div>
-                          <div className="text-xs text-gray-600 mt-1 line-clamp-2">
-                            {item.description}
-                          </div>
-                        </div>
-                      </Link>
-                    ))}
+                  <div className="space-y-1">
+                    <Link 
+                      to="/promoteurs"
+                      className="block px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+                        Promoteurs
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Gestion de projets
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/banques"
+                      className="block px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+                        Banques
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Financement foncier
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/notaires"
+                      className="block px-3 py-2 rounded-lg hover:bg-blue-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-blue-600">
+                        Notaires
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Authentification
+                      </div>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Colonne 4 - Services */}
+                <div className="space-y-1">
+                  <h3 className="text-sm font-bold text-gray-900 mb-4 flex items-center gap-2 pb-2 border-b border-gray-100">
+                    <Shield className="h-4 w-4 text-purple-600" />
+                    Services
+                  </h3>
+                  <div className="space-y-1">
+                    <Link 
+                      to="/geometres"
+                      className="block px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-purple-600">
+                        Géomètres
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Bornage et mesures
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/agents-fonciers"
+                      className="block px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-purple-600">
+                        Agents Fonciers
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Accompagnement
+                      </div>
+                    </Link>
+                    <Link 
+                      to="/carte-interactive"
+                      className="block px-3 py-2 rounded-lg hover:bg-purple-50 transition-colors group"
+                    >
+                      <div className="text-sm font-medium text-gray-900 group-hover:text-purple-600">
+                        Carte Interactive
+                      </div>
+                      <div className="text-xs text-gray-600 mt-1">
+                        Explorez les zones
+                      </div>
+                    </Link>
                   </div>
                 </div>
               </div>
 
               {/* Call to Action */}
-              <div className="mt-4 pt-4 border-t border-gray-100">
+              <div className="mt-6 pt-6 border-t border-gray-100">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="text-sm font-semibold text-gray-900">Prêt à commencer ?</h4>
-                    <p className="text-xs text-gray-600">Découvrez la solution qui vous convient</p>
+                  <div className="flex items-center gap-4">
+                    <div className="text-sm text-gray-600">
+                      Découvrez comment Teranga Foncier révolutionne l'immobilier au Sénégal
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm" asChild className="text-xs">
-                      <Link to="/contact">Parler à un expert</Link>
+                  <div className="flex items-center gap-3">
+                    <Button variant="outline" size="sm" asChild>
+                      <Link to="/how-it-works">
+                        Comment ça marche
+                      </Link>
                     </Button>
-                    <Button size="sm" asChild className="text-xs">
-                      <Link to="/register">Commencer</Link>
+                    <Button size="sm" asChild>
+                      <Link to="/register">
+                        Commencer maintenant
+                      </Link>
                     </Button>
                   </div>
                 </div>

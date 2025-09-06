@@ -137,6 +137,7 @@ import VendeursPage from '@/pages/VendeursPage';
 import PromoteursPage from '@/pages/PromoteursPage';
 import RejoignezNousPage from '@/pages/RejoignezNousPage';
 import SolutionsPage from '@/pages/SolutionsPage';
+import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
 import TerrangaFoncierChatbot from '@/components/ai/TerrangaFoncierChatbot';
 
 const PublicLayout = () => (
@@ -190,6 +191,7 @@ function App() {
               <Route path="saved-searches" element={<SavedSearchesPage />} />
               <Route path="compare" element={<ComparisonPage />} />
               <Route path="solutions" element={<SolutionsPage />} />
+              <Route path="solutions/particuliers" element={<SolutionsParticuliersPage />} />
               <Route path="solutions/banques" element={<SolutionsBanquesPage />} />
               <Route path="solutions/promoteurs" element={<SolutionsPromoteursPage />} />
               <Route path="solutions/investisseurs" element={<SolutionsInvestisseursPage />} />

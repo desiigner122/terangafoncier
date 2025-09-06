@@ -10,6 +10,7 @@ import LoginPage from '@/pages/LoginPage';
 import ModernLoginPage from '@/pages/ModernLoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import ModernRegisterPage from '@/pages/ModernRegisterPage';
+import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import DashboardPage from '@/pages/DashboardPage';
 import ParcelsListPage from '@/pages/ParcelsListPage';
 import ParcelDetailPage from '@/pages/ParcelDetailPage';
@@ -41,6 +42,9 @@ import SavedSearchesPage from '@/pages/SavedSearchesPage';
 import ComparisonPage from '@/pages/ComparisonPage';
 import SecureMessagingPage from '@/pages/SecureMessagingPage';
 import SimpleDashboard from '@/pages/SimpleDashboard';
+import DashboardRedirect from '@/components/DashboardRedirect';
+import PurchaseProcessPage from '@/pages/PurchaseProcessPage';
+import PurchaseSuccessPage from '@/pages/PurchaseSuccessPage';
 import CityDetailPage from '@/pages/CityDetailPage';
 import { Button } from '@/components/ui/button';
 import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
@@ -51,6 +55,7 @@ import './lib/errorManager';
 import './lib/securityConfig';
 import DashboardMunicipalRequestPage from '@/pages/DashboardMunicipalRequestPage';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
+import ModernAdminDashboard from '@/pages/admin/ModernAdminDashboard';
 import AdminProjectsPage from '@/pages/admin/AdminProjectsPage';
 import AdminPricingPage from '@/pages/admin/AdminPricingPage';
 import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage';
@@ -162,6 +167,7 @@ function App() {
               <Route index element={<HomePage />} />
               <Route path="login" element={<ModernLoginPage />} />
               <Route path="register" element={<ModernRegisterPage />} />
+              <Route path="reset-password" element={<ResetPasswordPage />} />
               <Route path="test-account-creation" element={<AccountCreationTestPage />} />
               <Route path="banned" element={<BannedPage />} />
               <Route path="parcelles" element={<ParcelsListPage />} />
@@ -170,6 +176,8 @@ function App() {
               <Route path="villes/:cityId" element={<CityDetailPage />} />
               <Route path="contact" element={<ContactPage />} />
               <Route path="about" element={<ModernAboutPage />} />
+              <Route path="purchase/:propertyId" element={<PurchaseProcessPage />} />
+              <Route path="purchase-success/:propertyId" element={<PurchaseSuccessPage />} />
               <Route path="diaspora" element={<DiasporaPage />} />
               <Route path="banques" element={<BanquesPage />} />
               <Route path="notaires" element={<NotairesPage />} />
@@ -223,7 +231,7 @@ function App() {
                 <Route path="dashboard-simple" element={<ProtectedRoute><SimpleDashboard /></ProtectedRoute>} />
                 
                 <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
-                  <Route path="dashboard" element={<DashboardPage />} />
+                  <Route path="dashboard" element={<DashboardRedirect />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="my-requests" element={<RoleProtectedRoute permission="MY_REQUESTS"><MyRequestsPage /></RoleProtectedRoute>} />
                   <Route path="settings" element={<SettingsPage />} />
@@ -245,7 +253,7 @@ function App() {
             </Route>
 
             <Route path="/admin" element={<AdminRoute><DashboardLayout /></AdminRoute>}>
-              <Route index element={<AdminDashboardPage />} />
+              <Route index element={<ModernAdminDashboard />} />
               <Route path="projects" element={<AdminProjectsPage />} />
               <Route path="pricing" element={<AdminPricingPage />} />
               <Route path="analytics" element={<AdminAnalyticsPage />} />

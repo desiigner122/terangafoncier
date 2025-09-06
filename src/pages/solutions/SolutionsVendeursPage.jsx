@@ -11,23 +11,20 @@ import {
   ArrowRight, 
   LayoutDashboard
 } from 'lucide-react';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useUser } from '@/hooks/useUser';
 import { Helmet } from 'react-helmet-async';
+import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
 import { Card, CardContent } from '@/components/ui/card';
 
 const SolutionsVendeursPage = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
 
   const handleDashboardAccess = () => {
     if (user) {
-      if (user.profile?.role.includes('Vendeur')) {
-        navigate('/solutions/vendeur/dashboard');
-      } else {
-        navigate('/dashboard'); 
-      }
+      navigate('/dashboard');
     } else {
-      navigate('/login', { state: { from: { pathname: '/solutions/vendeur/dashboard' } } });
+      navigate('/login', { state: { from: { pathname: '/dashboard' } } });
     }
   };
 
@@ -126,6 +123,143 @@ const SolutionsVendeursPage = () => {
                   <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
                 </motion.custom>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Section Tarification */}
+        <section className="py-16 md:py-20 bg-gradient-to-br from-green-50 to-blue-50">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-green-700">
+                Tarification Vendeurs
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Choisissez le plan qui correspond à votre profil de vendeur
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Plan Vendeur Particulier */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card className="relative p-8 h-full border-2 border-green-200 hover:border-green-300 transition-all">
+                  <CardContent className="p-0">
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-green-700 mb-2">Vendeur Particulier</h3>
+                      <div className="text-4xl font-bold text-green-600 mb-2">
+                        {ROLES_CONFIG.VENDEUR_PARTICULIER.subscription.price.toLocaleString()} XOF
+                      </div>
+                      <p className="text-muted-foreground">par mois</p>
+                    </div>
+                    <ul className="space-y-3 mb-8">
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        Jusqu'à 5 annonces actives
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        Outils de gestion basiques
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        Support client standard
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        Statistiques de base
+                      </li>
+                    </ul>
+                    <Button 
+                      onClick={handleDashboardAccess}
+                      className="w-full bg-green-600 hover:bg-green-700 text-white"
+                    >
+                      Commencer
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Plan Vendeur Professionnel */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                <Card className="relative p-8 h-full border-2 border-blue-200 hover:border-blue-300 transition-all">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-medium">
+                      POPULAIRE
+                    </span>
+                  </div>
+                  <CardContent className="p-0">
+                    <div className="text-center mb-6">
+                      <h3 className="text-2xl font-bold text-blue-700 mb-2">Vendeur Professionnel</h3>
+                      <div className="text-4xl font-bold text-blue-600 mb-2">
+                        {ROLES_CONFIG.VENDEUR_PROFESSIONNEL.subscription.price.toLocaleString()} XOF
+                      </div>
+                      <p className="text-muted-foreground">par mois</p>
+                    </div>
+                    <ul className="space-y-3 mb-8">
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        Annonces illimitées
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        Outils avancés de gestion
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        Support prioritaire 24/7
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        Analytics avancées
+                      </li>
+                      <li className="flex items-center text-sm">
+                        <div className="w-5 h-5 rounded-full bg-blue-100 flex items-center justify-center mr-3">
+                          ✓
+                        </div>
+                        API intégration
+                      </li>
+                    </ul>
+                    <Button 
+                      onClick={handleDashboardAccess}
+                      className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+                    >
+                      Commencer
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </div>
           </div>
         </section>

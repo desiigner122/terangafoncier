@@ -168,7 +168,15 @@ import React, { useState, useContext, useEffect } from 'react';
             </CardContent>
             <CardFooter className="p-3 bg-muted/30 border-t flex flex-col gap-2">
               <div className="flex w-full gap-2">
-                <Button asChild className="w-full">
+                {!isMunicipal && parcel.status === 'Disponible' && (
+                  <Button asChild className="w-full bg-green-600 hover:bg-green-700">
+                    <Link to={`/purchase/${parcel.id}`}>
+                      <ShoppingCart className="mr-2 h-4 w-4" />
+                      Acheter
+                    </Link>
+                  </Button>
+                )}
+                <Button asChild variant={!isMunicipal && parcel.status === 'Disponible' ? "outline" : "default"} className="w-full">
                   <Link to={`/parcelles/${parcel.id}`}>
                     {isMunicipal ? <Landmark className="mr-2 h-4 w-4" /> : <ShoppingCart className="mr-2 h-4 w-4" />}
                     {isMunicipal ? 'Détails & Demande' : 'Voir Détails'}

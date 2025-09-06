@@ -296,12 +296,19 @@ const FeaturedParcels = () => {
 
                     {/* Actions */}
                     <div className="space-y-2">
-                      <Button asChild size="sm" className="w-full">
-                        <Link to={parcel.type === 'intelligent' ? `/terrain-intelligent/${parcel.id}` : `/parcelles/${parcel.id}`}>
-                          Voir les Détails
-                          <ArrowRight className="h-4 w-4 ml-2" />
-                        </Link>
-                      </Button>
+                      <div className="flex gap-2">
+                        <Button asChild size="sm" className="flex-1 bg-green-600 hover:bg-green-700">
+                          <Link to={`/purchase/${parcel.id}`}>
+                            Acheter
+                          </Link>
+                        </Button>
+                        <Button asChild size="sm" variant="outline" className="flex-1">
+                          <Link to={parcel.type === 'intelligent' ? `/terrain-intelligent/${parcel.id}` : `/parcelles/${parcel.id}`}>
+                            Détails
+                            <ArrowRight className="h-4 w-4 ml-2" />
+                          </Link>
+                        </Button>
+                      </div>
                       
                       <div className="text-xs text-gray-500 text-center">
                         Vendu par {parcel.seller}

@@ -10,18 +10,20 @@ import {
   ArrowRight, 
   LayoutDashboard
 } from 'lucide-react';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useUser } from '@/hooks/useUser';
 import { Helmet } from 'react-helmet-async';
+import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
+import { Card, CardContent } from '@/components/ui/card';
 
 const SolutionsInvestisseursPage = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
 
   const handleDashboardAccess = () => {
     if (user) {
-      navigate('/solutions/investisseurs/dashboard');
+      navigate('/dashboard');
     } else {
-      navigate('/login', { state: { from: { pathname: '/solutions/investisseurs/dashboard' } } });
+      navigate('/login', { state: { from: { pathname: '/dashboard' } } });
     }
   };
 
@@ -115,6 +117,145 @@ const SolutionsInvestisseursPage = () => {
                   <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
                 </motion.custom>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Section Tarification */}
+        <section className="py-16 md:py-20 bg-gradient-to-br from-red-50 to-pink-50">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 50 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.7 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl md:text-4xl font-bold mb-4 text-red-700">
+                Tarification Investisseurs
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Des plans adaptés à votre stratégie d'investissement
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Plan Investisseur Immobilier */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.1 }}
+                viewport={{ once: true }}
+              >
+                <div className="relative p-8 h-full border-2 border-red-200 hover:border-red-300 transition-all bg-white rounded-xl shadow-lg">
+                  <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-red-600 text-white px-6 py-2 rounded-full text-sm font-medium">
+                      POPULAIRE
+                    </span>
+                  </div>
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold text-red-700 mb-2">Investisseur Immobilier</h3>
+                    <div className="text-4xl font-bold text-red-600 mb-2">
+                      {ROLES_CONFIG.INVESTISSEUR_IMMOBILIER.subscription.price.toLocaleString()} XOF
+                    </div>
+                    <p className="text-muted-foreground">par mois</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Analyse de rentabilité immobilière
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Alertes opportunités exclusives
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Portfolio tracking avancé
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Rapports de performance
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-red-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Support expert dédié
+                    </li>
+                  </ul>
+                  <Button 
+                    onClick={handleDashboardAccess}
+                    className="w-full bg-red-600 hover:bg-red-700 text-white"
+                  >
+                    Commencer
+                  </Button>
+                </div>
+              </motion.div>
+
+              {/* Plan Investisseur Agricole */}
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.5, delay: 0.2 }}
+                viewport={{ once: true }}
+              >
+                <div className="relative p-8 h-full border-2 border-green-200 hover:border-green-300 transition-all bg-white rounded-xl shadow-lg">
+                  <div className="text-center mb-6">
+                    <h3 className="text-2xl font-bold text-green-700 mb-2">Investisseur Agricole</h3>
+                    <div className="text-4xl font-bold text-green-600 mb-2">
+                      {ROLES_CONFIG.INVESTISSEUR_AGRICOLE.subscription.price.toLocaleString()} XOF
+                    </div>
+                    <p className="text-muted-foreground">par mois</p>
+                  </div>
+                  <ul className="space-y-3 mb-8">
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Analyse sols et rendements
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Terrains agricoles certifiés
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Suivi météo et climatique
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Connexion avec agriculteurs
+                    </li>
+                    <li className="flex items-center text-sm">
+                      <div className="w-5 h-5 rounded-full bg-green-100 flex items-center justify-center mr-3">
+                        ✓
+                      </div>
+                      Outils de gestion agricole
+                    </li>
+                  </ul>
+                  <Button 
+                    onClick={handleDashboardAccess}
+                    className="w-full bg-green-600 hover:bg-green-700 text-white"
+                  >
+                    Commencer
+                  </Button>
+                </div>
+              </motion.div>
             </div>
           </div>
         </section>

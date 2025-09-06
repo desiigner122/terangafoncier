@@ -1,40 +1,40 @@
 ﻿import React from 'react';
-    import { motion } from 'framer-motion';
-    import { Button } from '@/components/ui/button';
-    import { Link, useNavigate } from 'react-router-dom';
-    import { 
+import { motion } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Link, useNavigate } from 'react-router-dom';
+import { 
   Building2, 
-  Search, 
-  FileCheck, 
-  TrendingUp, 
+  ShieldCheck, 
+  BarChart3, 
+  FileSearch, 
   ArrowRight, 
   LayoutDashboard, 
-  BarChart2, 
-  UserCog, 
-  Users, 
-  Check
+  Users,
+  CheckCircle,
+  Hammer,
+  Camera,
+  Calculator,
+  TrendingUp
 } from 'lucide-react';
-    import { Card, CardContent } from '@/components/ui/card';
-    import { useAuth } from '@/context/SupabaseAuthContext';
-    import { Helmet } from 'react-helmet-async';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { useUser } from '@/hooks/useUser';
+import { Helmet } from 'react-helmet-async';
+import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
 
-    const SolutionsPromoteursPage = () => {
-      const { user } = useAuth();
-      const navigate = useNavigate();
+const SolutionsPromoteursPage = () => {
+  const { user } = useUser();
+  const navigate = useNavigate();
 
-      const handleDashboardAccess = () => {
-        if (user) {
-          if (user.profile?.role === 'Promoteur') {
-            navigate('/solutions/promoteurs/dashboard');
-          } else {
-            navigate('/dashboard'); 
-          }
-        } else {
-          navigate('/login', { state: { from: { pathname: '/solutions/promoteurs/dashboard' } } });
-        }
-      };
+  const handleDashboardAccess = () => {
+    if (user) {
+      navigate('/dashboard'); // Notre nouveau système de redirection intelligente
+    } else {
+      navigate('/login', { state: { from: { pathname: '/dashboard' } } });
+    }
+  };
 
-      const featureVariants = {
+  const featureVariants = {
         hidden: { opacity: 0, y: 20 },
         visible: (i) => ({
           opacity: 1,
@@ -146,6 +146,141 @@
                           </Card>
                       </motion.div>
                   </div>
+              </div>
+            </section>
+
+            {/* Section Tarification */}
+            <section className="py-16 md:py-20 bg-gradient-to-br from-purple-50 to-indigo-50">
+              <div className="container mx-auto px-4">
+                <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-purple-700">Plans Professionnels</h2>
+                <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+                  Solutions complètes pour les professionnels de la construction
+                </p>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
+                  {/* Plan Promoteur */}
+                  <Card className="border-2 border-purple-200 shadow-xl">
+                    <CardHeader className="text-center bg-gradient-to-r from-purple-600 to-indigo-600 text-white rounded-t-lg">
+                      <CardTitle className="text-xl flex items-center justify-center gap-2">
+                        <Building2 className="w-5 h-5" />
+                        Promoteur
+                      </CardTitle>
+                      <div className="text-2xl font-bold mt-2">
+                        {ROLES_CONFIG.PROMOTEUR?.subscription?.price?.toLocaleString()} XOF
+                        <span className="text-sm font-normal opacity-90">/mois</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-3 mb-6 text-sm">
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-purple-600" />
+                          <span>Gestion projets complets</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-purple-600" />
+                          <span>Matching acheteurs-projets</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-purple-600" />
+                          <span>Timeline avec photos</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-purple-600" />
+                          <span>Gestion devis</span>
+                        </li>
+                      </ul>
+                      <Button 
+                        onClick={handleDashboardAccess} 
+                        className="w-full bg-purple-600 hover:bg-purple-700"
+                        size="sm"
+                      >
+                        Choisir ce plan
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Plan Architecte */}
+                  <Card className="border-2 border-blue-200 shadow-xl">
+                    <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-sky-600 text-white rounded-t-lg">
+                      <CardTitle className="text-xl flex items-center justify-center gap-2">
+                        <Calculator className="w-5 h-5" />
+                        Architecte
+                      </CardTitle>
+                      <div className="text-2xl font-bold mt-2">
+                        {ROLES_CONFIG.ARCHITECTE?.subscription?.price?.toLocaleString()} XOF
+                        <span className="text-sm font-normal opacity-90">/mois</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-3 mb-6 text-sm">
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-blue-600" />
+                          <span>Portfolio projets</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-blue-600" />
+                          <span>Outils conception</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-blue-600" />
+                          <span>Collaboration équipes</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-blue-600" />
+                          <span>Validation plans</span>
+                        </li>
+                      </ul>
+                      <Button 
+                        onClick={handleDashboardAccess} 
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                        size="sm"
+                      >
+                        Choisir ce plan
+                      </Button>
+                    </CardContent>
+                  </Card>
+
+                  {/* Plan Constructeur */}
+                  <Card className="border-2 border-orange-200 shadow-xl">
+                    <CardHeader className="text-center bg-gradient-to-r from-orange-600 to-red-600 text-white rounded-t-lg">
+                      <CardTitle className="text-xl flex items-center justify-center gap-2">
+                        <Hammer className="w-5 h-5" />
+                        Constructeur
+                      </CardTitle>
+                      <div className="text-2xl font-bold mt-2">
+                        {ROLES_CONFIG.CONSTRUCTEUR?.subscription?.price?.toLocaleString()} XOF
+                        <span className="text-sm font-normal opacity-90">/mois</span>
+                      </div>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ul className="space-y-3 mb-6 text-sm">
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-orange-600" />
+                          <span>Suivi chantiers</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-orange-600" />
+                          <span>Photos progression</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-orange-600" />
+                          <span>Gestion équipes</span>
+                        </li>
+                        <li className="flex items-center gap-3">
+                          <CheckCircle className="w-4 h-4 text-orange-600" />
+                          <span>Reporting client</span>
+                        </li>
+                      </ul>
+                      <Button 
+                        onClick={handleDashboardAccess} 
+                        className="w-full bg-orange-600 hover:bg-orange-700"
+                        size="sm"
+                      >
+                        Choisir ce plan
+                      </Button>
+                    </CardContent>
+                  </Card>
+                </div>
               </div>
             </section>
 

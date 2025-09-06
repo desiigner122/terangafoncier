@@ -43,7 +43,7 @@ import {
   BarChart3, 
   Wallet, 
   Building2, 
-  HandCoins, 
+  Coins, 
   Receipt
 } from 'lucide-react';
 

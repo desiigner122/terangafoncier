@@ -341,6 +341,54 @@ const ParcelDetailPage = () => {
           </div>
         </div>
 
+        {/* Action Buttons Section */}
+        <div className="mt-12 bg-gradient-to-r from-blue-50 to-green-50 rounded-2xl p-8">
+          <div className="text-center mb-6">
+            <h3 className="text-2xl font-bold text-gray-900 mb-2">Intéressé par ce terrain ?</h3>
+            <p className="text-gray-600">Démarrez votre processus d'achat dès maintenant</p>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+            <Button 
+              asChild 
+              size="lg" 
+              className="bg-green-600 hover:bg-green-700 text-white px-8 py-3 rounded-lg shadow-lg hover:shadow-xl transition-all"
+            >
+              <Link to={`/purchase/${parcel.id}`}>
+                <ShoppingCart className="mr-2 h-5 w-5" />
+                Acheter maintenant
+              </Link>
+            </Button>
+            
+            <Button 
+              asChild 
+              variant="outline" 
+              size="lg"
+              className="border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg"
+            >
+              <Link to={`/contact?property=${parcel.id}`}>
+                Demander plus d'infos
+              </Link>
+            </Button>
+            
+            {parcel.is_eligible_for_installments && (
+              <Button 
+                variant="outline" 
+                size="lg"
+                onClick={() => setIsInstallmentModalOpen(true)}
+                className="border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-3 rounded-lg"
+              >
+                <PercentSquare className="mr-2 h-5 w-5" />
+                Financement
+              </Button>
+            )}
+          </div>
+          
+          <div className="mt-6 text-center text-sm text-gray-500">
+            <p>💡 Processus 100% sécurisé • Paiement protégé • Support 24/7</p>
+          </div>
+        </div>
+
         <div className="mt-12">
           <SimilarParcels currentParcelId={parcel.id} currentParcelZone={parcel.zone} />
         </div>

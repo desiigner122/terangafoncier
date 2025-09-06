@@ -16,22 +16,27 @@ import {
   Clock,
   CreditCard,
   Globe,
-  UserCheck
+  UserCheck,
+  Building2,
+  DollarSign,
+  Camera,
+  Phone
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useUser } from '@/hooks/useUser';
 import { Helmet } from 'react-helmet-async';
+import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
 
 const SolutionsParticuliersPage = () => {
-  const { user } = useAuth();
+  const { user } = useUser();
   const navigate = useNavigate();
 
   const handleDashboardAccess = () => {
     if (user) {
-      navigate('/dashboard');
+      navigate('/dashboard'); // Notre nouveau système de redirection intelligente
     } else {
-      navigate('/register', { state: { from: { pathname: '/dashboard' } } });
+      navigate('/login', { state: { from: { pathname: '/dashboard' } } });
     }
   };
 
@@ -428,6 +433,105 @@ const SolutionsParticuliersPage = () => {
                   </Card>
                 </motion.div>
               ))}
+            </div>
+          </div>
+        </section>
+
+        {/* Section Tarification */}
+        <section className="py-16 md:py-20 bg-gradient-to-br from-green-50 to-emerald-50">
+          <div className="container mx-auto px-4">
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-green-700">Plans Particuliers</h2>
+            <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
+              Choisissez le plan qui correspond à vos besoins d'investissement
+            </p>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
+              {/* Plan Sénégal */}
+              <Card className="border-2 border-green-200 shadow-xl">
+                <CardHeader className="text-center bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-t-lg">
+                  <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                    <Home className="w-6 h-6" />
+                    Particulier Sénégal
+                  </CardTitle>
+                  <div className="text-3xl font-bold mt-2">
+                    {ROLES_CONFIG.PARTICULIER_SENEGAL?.subscription?.price?.toLocaleString()} XOF
+                    <span className="text-sm font-normal opacity-90">/mois</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span>Recherche terrains avancée</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span>Favoris et comparaisons</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span>Contact direct vendeurs</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-green-600" />
+                      <span>Historique des prix</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    onClick={handleDashboardAccess} 
+                    className="w-full bg-green-600 hover:bg-green-700"
+                  >
+                    Commencer
+                  </Button>
+                </CardContent>
+              </Card>
+
+              {/* Plan Diaspora */}
+              <Card className="border-2 border-blue-200 shadow-xl relative">
+                <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                  <Badge className="bg-blue-600 text-white px-4 py-1">POPULAIRE</Badge>
+                </div>
+                <CardHeader className="text-center bg-gradient-to-r from-blue-600 to-sky-600 text-white rounded-t-lg">
+                  <CardTitle className="text-2xl flex items-center justify-center gap-2">
+                    <Globe className="w-6 h-6" />
+                    Particulier Diaspora
+                  </CardTitle>
+                  <div className="text-3xl font-bold mt-2">
+                    {ROLES_CONFIG.PARTICULIER_DIASPORA?.subscription?.price?.toLocaleString()} XOF
+                    <span className="text-sm font-normal opacity-90">/mois</span>
+                  </div>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-blue-600" />
+                      <span>Tout du plan Sénégal</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-blue-600" />
+                      <span>Suivi construction à distance</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-blue-600" />
+                      <span>Photos progression temps réel</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-blue-600" />
+                      <span>Communication promoteurs</span>
+                    </li>
+                    <li className="flex items-center gap-3">
+                      <CheckCircle className="w-5 h-5 text-blue-600" />
+                      <span>Support prioritaire</span>
+                    </li>
+                  </ul>
+                  <Button 
+                    onClick={handleDashboardAccess} 
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    Commencer
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </section>

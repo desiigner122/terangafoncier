@@ -43,9 +43,14 @@ const SimilarParcelCard = ({ parcel }) => (
     </CardContent>
     <CardFooter className="p-3 border-t flex justify-between items-center">
       <p className="text-sm font-bold text-accent_brand">{formatPrice(parcel.price)}</p>
-      <Button size="xs" variant="outline" asChild>
-        <Link to={`/parcelles/${parcel.id}`}>Voir</Link>
-      </Button>
+      <div className="flex gap-1">
+        <Button size="xs" className="bg-green-600 hover:bg-green-700" asChild>
+          <Link to={`/purchase/${parcel.id}`}>Acheter</Link>
+        </Button>
+        <Button size="xs" variant="outline" asChild>
+          <Link to={`/parcelles/${parcel.id}`}>Voir</Link>
+        </Button>
+      </div>
     </CardFooter>
   </Card>
 );

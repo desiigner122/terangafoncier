@@ -1,0 +1,293 @@
+/* ========================================
+   NOUVEAU SYSTÈME MEGA MENU - VERSION COMPLÈTE
+   ======================================== */
+
+/* === STYLES DESKTOP === */
+.desktop-mega-menu-overlay {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  z-index: 999999 !important;
+  pointer-events: auto;
+}
+
+.desktop-mega-menu-container {
+  width: 100%;
+  max-width: none;
+  padding: 0 2rem;
+}
+
+.desktop-mega-menu-panel {
+  width: 100%;
+  max-width: 1400px;
+  min-width: 1200px;
+  margin: 0 auto;
+  background: #ffffff;
+  border-radius: 16px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+  border: 1px solid #e5e7eb;
+  overflow: hidden;
+  animation: megaMenuFadeIn 0.2s ease-out;
+}
+
+@keyframes megaMenuFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.desktop-mega-menu-header {
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 2rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.desktop-mega-menu-content {
+  padding: 2rem;
+}
+
+.desktop-mega-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 3rem;
+  width: 100%;
+  min-height: 350px;
+}
+
+.desktop-mega-menu-column {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.desktop-mega-menu-item {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 12px;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+  text-decoration: none;
+}
+
+.desktop-mega-menu-item:hover {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.desktop-mega-menu-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 2rem;
+  padding-top: 2rem;
+  border-top: 1px solid #e5e7eb;
+}
+
+/* === STYLES MOBILE === */
+.mobile-mega-menu-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  bottom: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important;
+  pointer-events: auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: mobileOverlayIn 0.3s ease-out;
+}
+
+@keyframes mobileOverlayIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.mobile-mega-menu-backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.8);
+  backdrop-filter: blur(4px);
+}
+
+.mobile-mega-menu-container {
+  position: relative;
+  width: 90%;
+  max-width: 400px;
+  max-height: 85vh;
+  background: linear-gradient(135deg, #1e293b 0%, #334155 100%);
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  animation: mobileContainerIn 0.3s ease-out;
+}
+
+@keyframes mobileContainerIn {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+.mobile-mega-menu-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+}
+
+.mobile-mega-menu-content {
+  padding: 1.5rem;
+  max-height: calc(85vh - 120px);
+  overflow-y: auto;
+}
+
+.mobile-menu-section {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  overflow: hidden;
+}
+
+.mobile-menu-summary {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.05);
+  color: white;
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  transition: all 0.2s ease;
+}
+
+.mobile-menu-summary:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-summary::-webkit-details-marker {
+  display: none;
+}
+
+.mobile-menu-items {
+  padding: 0.5rem;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.mobile-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  margin-bottom: 0.5rem;
+}
+
+.mobile-menu-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.mobile-menu-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.mobile-contact-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-radius: 12px;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.mobile-contact-button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(59, 130, 246, 0.4);
+}
+
+/* === RESPONSIVE ADJUSTMENTS === */
+@media (max-width: 1400px) {
+  .desktop-mega-menu-panel {
+    min-width: 1000px;
+  }
+  
+  .desktop-mega-menu-grid {
+    gap: 2rem;
+  }
+}
+
+@media (max-width: 1200px) {
+  .desktop-mega-menu-panel {
+    min-width: 900px;
+  }
+  
+  .desktop-mega-menu-grid {
+    gap: 1.5rem;
+  }
+  
+  .desktop-mega-menu-content {
+    padding: 1.5rem;
+  }
+}
+
+@media (max-width: 1024px) {
+  /* Force mobile styles on tablets and below */
+  .desktop-mega-menu-overlay {
+    display: none !important;
+  }
+}
+
+/* === SCROLLBAR STYLES FOR MOBILE === */
+.mobile-mega-menu-content::-webkit-scrollbar {
+  width: 4px;
+}
+
+.mobile-mega-menu-content::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.mobile-mega-menu-content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+}
+
+.mobile-mega-menu-content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.5);
+}

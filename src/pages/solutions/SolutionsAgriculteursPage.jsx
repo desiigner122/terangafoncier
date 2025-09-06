@@ -7,13 +7,18 @@ import {
   Sun, 
   Droplets, 
   BarChart3, 
-  ShieldCheck
+  ShieldCheck,
+  CheckCircle,
+  DollarSign
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
-import { Link } from 'react-router-dom';
+import { Badge } from '@/components/ui/badge';
+import { Link, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import CallToActionSection from '@/components/home/sections/CallToActionSection';
+import { useUser } from '@/hooks/useUser';
+import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
 
 const featureList = [
     { icon: MapPin, title: "Gestion de Parcelles", description: "Visualisez et gérez toutes vos terres agricoles sur une carte interactive. Suivez les cultures, les rendements et l'historique de chaque parcelle." },
@@ -25,6 +30,17 @@ const featureList = [
 ];
 
 const SolutionsAgriculteursPage = () => {
+    const { user } = useUser();
+    const navigate = useNavigate();
+
+    const handleDashboardAccess = () => {
+        if (user) {
+            navigate('/dashboard');
+        } else {
+            navigate('/login', { state: { from: { pathname: '/dashboard' } } });
+        }
+    };
+
     return (
         <>
             <Helmet>
@@ -80,6 +96,91 @@ const SolutionsAgriculteursPage = () => {
                                     </Card>
                                 </motion.div>
                             ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Section Tarification */}
+                <section className="py-16 md:py-20 bg-gradient-to-br from-green-50 to-yellow-50">
+                    <div className="container mx-auto px-4">
+                        <motion.div
+                            initial={{ opacity: 0, y: 50 }}
+                            whileInView={{ opacity: 1, y: 0 }}
+                            transition={{ duration: 0.7 }}
+                            viewport={{ once: true }}
+                            className="text-center mb-12"
+                        >
+                            <h2 className="text-3xl md:text-4xl font-bold mb-4 text-green-700">
+                                Tarification Agriculteurs
+                            </h2>
+                            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                                Un plan spécialement conçu pour optimiser votre exploitation agricole
+                            </p>
+                        </motion.div>
+
+                        <div className="max-w-md mx-auto">
+                            <motion.div
+                                initial={{ opacity: 0, y: 30 }}
+                                whileInView={{ opacity: 1, y: 0 }}
+                                transition={{ duration: 0.5 }}
+                                viewport={{ once: true }}
+                            >
+                                <Card className="relative p-8 border-2 border-green-200 hover:border-green-300 transition-all bg-white shadow-lg">
+                                    <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                                        <span className="bg-green-600 text-white px-6 py-2 rounded-full text-sm font-medium">
+                                            RECOMMANDÉ
+                                        </span>
+                                    </div>
+                                    <CardContent className="p-0">
+                                        <div className="text-center mb-6">
+                                            <div className="p-4 bg-green-100 rounded-full inline-block mb-4">
+                                                <Leaf className="h-8 w-8 text-green-600" />
+                                            </div>
+                                            <h3 className="text-2xl font-bold text-green-700 mb-2">Plan Agriculteur</h3>
+                                            <div className="text-4xl font-bold text-green-600 mb-2">
+                                                45,000 XOF
+                                            </div>
+                                            <p className="text-muted-foreground">par mois</p>
+                                        </div>
+                                        <ul className="space-y-3 mb-8">
+                                            <li className="flex items-center text-sm">
+                                                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                                                Gestion illimitée de parcelles
+                                            </li>
+                                            <li className="flex items-center text-sm">
+                                                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                                                Météo agricole en temps réel
+                                            </li>
+                                            <li className="flex items-center text-sm">
+                                                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                                                Analyses de sols détaillées
+                                            </li>
+                                            <li className="flex items-center text-sm">
+                                                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                                                Carnet de bord numérique
+                                            </li>
+                                            <li className="flex items-center text-sm">
+                                                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                                                Prix du marché en temps réel
+                                            </li>
+                                            <li className="flex items-center text-sm">
+                                                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                                                Sécurisation foncière
+                                            </li>
+                                            <li className="flex items-center text-sm">
+                                                <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                                                Support technique spécialisé
+                                            </li>
+                                        </ul>
+                                        <Button 
+                                            onClick={handleDashboardAccess}
+                                            className="w-full bg-green-600 hover:bg-green-700 text-white"
+                                        >
+                                            Commencer mon exploitation numérique
+                                        </Button>
+                                    </CardContent>
+                                </Card>
+                            </motion.div>
                         </div>
                     </div>
                 </section>

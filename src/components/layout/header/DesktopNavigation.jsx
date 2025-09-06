@@ -95,13 +95,21 @@ const DesktopNavigation = ({ isScrolled }) => {
         Terrains
       </NavLink>
 
+      <NavLink to="/solutions" className={navLinkClass}>
+        Solutions
+      </NavLink>
+
       {/* Solutions Dropdown */}
       <div 
         className="relative"
         onMouseEnter={() => handleMouseEnter('solutions')}
         onMouseLeave={handleMouseLeave}
       >
-        <button className="px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1 text-gray-900 hover:text-primary hover:bg-white/10">
+        <button className={cn(
+          "px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+          useDarkText ? 'text-gray-700 hover:text-primary hover:bg-gray-50' : 'text-gray-900 hover:text-primary hover:bg-white/10',
+          activeDropdown === 'solutions' && 'text-primary bg-primary/10'
+        )}>
           Solutions
           <ChevronDown className="h-4 w-4" />
         </button>
@@ -317,7 +325,11 @@ const DesktopNavigation = ({ isScrolled }) => {
         onMouseEnter={() => handleMouseEnter('ecosystem')}
         onMouseLeave={handleMouseLeave}
       >
-        <button className="px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1 text-gray-900 hover:text-primary hover:bg-white/10">
+        <button className={cn(
+          "px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+          useDarkText ? 'text-gray-700 hover:text-primary hover:bg-gray-50' : 'text-gray-900 hover:text-primary hover:bg-white/10',
+          activeDropdown === 'ecosystem' && 'text-primary bg-primary/10'
+        )}>
           Écosystème
           <ChevronDown className="h-4 w-4" />
         </button>
@@ -360,7 +372,11 @@ const DesktopNavigation = ({ isScrolled }) => {
         onMouseEnter={() => handleMouseEnter('resources')}
         onMouseLeave={handleMouseLeave}
       >
-        <button className="px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1 text-gray-900 hover:text-primary hover:bg-white/10">
+        <button className={cn(
+          "px-4 py-2 text-sm font-medium rounded-md transition-colors flex items-center gap-1",
+          useDarkText ? 'text-gray-700 hover:text-primary hover:bg-gray-50' : 'text-gray-900 hover:text-primary hover:bg-white/10',
+          activeDropdown === 'resources' && 'text-primary bg-primary/10'
+        )}>
           Ressources
           <ChevronDown className="h-4 w-4" />
         </button>
@@ -411,8 +427,11 @@ const DesktopNavigation = ({ isScrolled }) => {
 
       {/* Boutons d'authentification */}
       <div className="flex items-center gap-2 ml-4 pl-4 border-l border-gray-200">
-        <Button variant="ghost" size="sm" asChild className="text-gray-900 hover:text-primary hover:bg-primary/5 px-3 py-2 text-sm">
-          <Link to="/login">Connexion</Link>
+        <Button variant="ghost" size="sm" asChild className={cn(
+          "px-3 py-2 text-sm",
+          useDarkText ? 'text-gray-700 hover:text-primary hover:bg-gray-50' : 'text-gray-900 hover:text-primary hover:bg-primary/5'
+        )}>
+          <Link to="/login">Mon Compte</Link>
         </Button>
         <Button size="sm" asChild className="bg-gradient-to-r from-primary to-blue-600 hover:from-primary/90 hover:to-blue-600/90 text-white px-4 py-2 text-sm">
           <Link to="/register">S'inscrire</Link>

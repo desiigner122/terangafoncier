@@ -16,7 +16,7 @@ import { Dialog, DialogContent } from '@/components/ui/dialog';
 import { InstructionModal, AttributionModal } from '@/pages/solutions/dashboards/mairies/MairiesDashboardModals';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 
 const MairieRequestsPage = () => {
   // toast remplacÃ© par window.safeGlobalToast

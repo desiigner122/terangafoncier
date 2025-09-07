@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -29,7 +29,7 @@ const getStatusBadge = (status) => {
 
 const TransactionsPage = () => {
   // toast remplacÃ© par window.safeGlobalToast
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [transactions, setTransactions] = useState([]);
@@ -138,5 +138,7 @@ const TransactionsPage = () => {
 };
 
 export default TransactionsPage;
+
+
 
 

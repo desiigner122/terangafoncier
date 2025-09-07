@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/contexts/SupabaseAuthContextFixed';
+﻿import React, { useState } from 'react';
+import { useAuth } from '@/contexts/AuthProvider';
 
 const AuthDebugPage = () => {
   const { user, profile, loading, signIn, signOut, revalidate } = useAuth();
@@ -113,3 +113,5 @@ const AuthDebugPage = () => {
 };
 
 export default AuthDebugPage;
+
+

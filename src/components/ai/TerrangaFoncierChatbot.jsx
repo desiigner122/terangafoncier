@@ -12,7 +12,7 @@ import {
   User, 
   Sparkles
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 
 const TerrangaFoncierChatbot = ({ className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -20,7 +20,7 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
   const [inputMessage, setInputMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -348,3 +348,5 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
 };
 
 export default TerrangaFoncierChatbot;
+
+

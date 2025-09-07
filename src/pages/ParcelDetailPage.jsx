@@ -17,18 +17,18 @@ import {
   MapPin, 
   School, 
   ShoppingCart, 
-  Hotel as Hospital, 
+  Building2 as Hospital, 
   Users, 
   Shield, 
   User, 
   Award, 
   FileText, 
   Landmark, 
-  PercentSquare
+  Percent
 } from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { useContext } from 'react';
 import { ComparisonContext } from '@/context/ComparisonContext';
 import { Helmet } from 'react-helmet-async';
@@ -71,7 +71,7 @@ const ParcelDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   // toast remplacÃ© par window.safeGlobalToast
-  const { user, profile } = useSupabaseAuth();
+  const { user, profile } = useAuth();
   const { comparisonList, addToCompare, removeFromCompare } = useContext(ComparisonContext);
   
   const [parcel, setParcel] = useState(null);
@@ -277,7 +277,7 @@ const ParcelDetailPage = () => {
             {parcel.is_eligible_for_installments && !isMunicipal && (
                 <Card className="bg-blue-50 border-blue-200 dark:bg-blue-900/20 dark:border-blue-800">
                     <CardHeader>
-                        <CardTitle className="flex items-center text-blue-800 dark:text-blue-300"><PercentSquare className="mr-2"/>Financement Disponible</CardTitle>
+                        <CardTitle className="flex items-center text-blue-800 dark:text-blue-300"><Percent className="mr-2"/>Financement Disponible</CardTitle>
                     </CardHeader>
                     <CardContent>
                         <p className="text-blue-700 dark:text-blue-400 mb-4">Ce terrain est éligible au paiement échelonné via nos banques partenaires. Simulez votre crédit et faites une demande en quelques clics.</p>
@@ -378,7 +378,7 @@ const ParcelDetailPage = () => {
                 onClick={() => setIsInstallmentModalOpen(true)}
                 className="border-purple-600 text-purple-600 hover:bg-purple-50 px-8 py-3 rounded-lg"
               >
-                <PercentSquare className="mr-2 h-5 w-5" />
+                <Percent className="mr-2 h-5 w-5" />
                 Financement
               </Button>
             )}
@@ -413,5 +413,7 @@ const ParcelDetailPage = () => {
 };
 
 export default ParcelDetailPage;
+
+
 
 

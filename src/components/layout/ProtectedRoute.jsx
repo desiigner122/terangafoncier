@@ -1,7 +1,7 @@
 ﻿
 import React from 'react';
 import { Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { hasPermission, getAccessDeniedMessage, getDefaultDashboard } from '@/lib/rbacConfig';
 // useToast import supprimé - utilisation window.safeGlobalToast
@@ -159,4 +159,5 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [], permission = n
 
 
 export default ProtectedRoute;
+
 

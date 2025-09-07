@@ -256,7 +256,7 @@ const AdminUsersPage = () => {
                 <SelectValue placeholder="Filtrer par rôle" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les rôles</SelectItem>
+                <SelectItem value="all">Tous les rôles</SelectItem>
                 {ROLES.map(role => (
                   <SelectItem key={role} value={role}>{role}</SelectItem>
                 ))}
@@ -268,7 +268,7 @@ const AdminUsersPage = () => {
                 <SelectValue placeholder="Filtrer par statut" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Tous les statuts</SelectItem>
+                <SelectItem value="all_status">Tous les statuts</SelectItem>
                 <SelectItem value="active">Actif</SelectItem>
                 <SelectItem value="banned">Banni</SelectItem>
                 <SelectItem value="suspended">Suspendu</SelectItem>
@@ -280,7 +280,7 @@ const AdminUsersPage = () => {
                 <SelectValue placeholder="Filtrer par vérification" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="">Toutes les vérifications</SelectItem>
+                <SelectItem value="all_verifications">Toutes les vérifications</SelectItem>
                 <SelectItem value="pending">En attente</SelectItem>
                 <SelectItem value="verified">Vérifié</SelectItem>
                 <SelectItem value="rejected">Rejeté</SelectItem>

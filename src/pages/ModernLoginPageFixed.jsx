@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ import {
   Globe,
   Zap
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 
 const logoUrl = "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6e6f6bf058d3590fd198aa8fadf9d2dd.png";
 
@@ -31,7 +31,7 @@ const ModernLoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { signIn, session } = useSupabaseAuth();
+  const { signIn, session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,7 +46,7 @@ const ModernLoginPage = () => {
       
       window.safeGlobalToast({
           title: `Bienvenue !`,
-          description: "Connexion réussie. Redirection en cours...",
+          description: "Connexion rÃ©ussie. Redirection en cours...",
           className: "bg-green-500 text-white",
       });
     } catch (err) {
@@ -56,7 +56,7 @@ const ModernLoginPage = () => {
         : "Une erreur est survenue lors de la connexion.";
       setError(errorMessage);
       window.safeGlobalToast({
-        title: "Échec de la Connexion",
+        title: "Ã‰chec de la Connexion",
         description: errorMessage,
         className: "bg-red-500 text-white",
       });
@@ -104,19 +104,19 @@ const ModernLoginPage = () => {
 
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold text-gray-800">
-                Simplifiez vos transactions foncières
+                Simplifiez vos transactions fonciÃ¨res
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Une plateforme moderne et sécurisée pour tous vos besoins en matière foncière au Sénégal.
+                Une plateforme moderne et sÃ©curisÃ©e pour tous vos besoins en matiÃ¨re fonciÃ¨re au SÃ©nÃ©gal.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
               {[
-                { icon: Shield, title: "Sécurisé", desc: "Transactions 100% sécurisées" },
-                { icon: Users, title: "Multi-rôles", desc: "Plateforme pour tous les acteurs" },
-                { icon: Zap, title: "Rapide", desc: "Traitement accéléré des dossiers" },
-                { icon: Globe, title: "National", desc: "Couverture du territoire sénégalais" }
+                { icon: Shield, title: "SÃ©curisÃ©", desc: "Transactions 100% sÃ©curisÃ©es" },
+                { icon: Users, title: "Multi-rÃ´les", desc: "Plateforme pour tous les acteurs" },
+                { icon: Zap, title: "Rapide", desc: "Traitement accÃ©lÃ©rÃ© des dossiers" },
+                { icon: Globe, title: "National", desc: "Couverture du territoire sÃ©nÃ©galais" }
               ].map((feature, index) => (
                 <motion.div
                   key={index}
@@ -155,7 +155,7 @@ const ModernLoginPage = () => {
                   Connexion
                 </CardTitle>
                 <CardDescription className="text-gray-600">
-                  Accédez à votre espace personnel
+                  AccÃ©dez Ã  votre espace personnel
                 </CardDescription>
               </div>
             </CardHeader>
@@ -199,7 +199,7 @@ const ModernLoginPage = () => {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="••••••••"
+                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                       className="h-11 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       required
                       disabled={loading}
@@ -224,7 +224,7 @@ const ModernLoginPage = () => {
                     to="/forgot-password" 
                     className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                   >
-                    Mot de passe oublié ?
+                    Mot de passe oubliÃ© ?
                   </Link>
                 </div>
 
@@ -284,7 +284,7 @@ const ModernLoginPage = () => {
               <p className="text-center text-sm text-gray-600 w-full">
                 Pas encore de compte ?{' '}
                 <Link to="/register" className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
-                  Créer un compte
+                  CrÃ©er un compte
                 </Link>
               </p>
             </CardFooter>
@@ -296,3 +296,5 @@ const ModernLoginPage = () => {
 };
 
 export default ModernLoginPage;
+
+

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -21,7 +21,7 @@ import { LoadingSpinner } from '@/components/ui/spinner';
 import { supabase } from '@/lib/customSupabaseClient';
 
 const MyRequestsPage = () => {
-    const { user } = useSupabaseAuth();
+    const { user } = useAuth();
     // toast remplacÃ© par window.safeGlobalToast
     const [loading, setLoading] = useState(true);
     const [mySentRequests, setMySentRequests] = useState([]);
@@ -193,5 +193,7 @@ const MyRequestsPage = () => {
 };
 
 export default MyRequestsPage;
+
+
 
 

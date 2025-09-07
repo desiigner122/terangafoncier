@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/index.css';
-import { SupabaseAuthProvider } from '@/contexts/SupabaseAuthContextFixed';
+import { AuthProvider } from '@/contexts/AuthProvider';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 // 🛡️ PATCH GLOBAL ANTI-CRASH TOAST - Import du système de protection
@@ -21,9 +21,9 @@ if (!rootElement) {
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <Router>
-      <SupabaseAuthProvider>
+      <AuthProvider>
         <App />
-      </SupabaseAuthProvider>
+      </AuthProvider>
     </Router>
   </React.StrictMode>
 );

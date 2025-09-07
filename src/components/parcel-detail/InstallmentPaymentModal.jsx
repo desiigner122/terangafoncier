@@ -14,7 +14,7 @@ import {
   Loader2, 
   Landmark
 } from 'lucide-react';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Link } from 'react-router-dom';
 import { partnerBanks } from '@/data/paymentData';
 

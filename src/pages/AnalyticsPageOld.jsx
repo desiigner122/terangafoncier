@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { 
   BarChart, 

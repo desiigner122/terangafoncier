@@ -17,7 +17,20 @@ import {
   Globe,
   Users,
   TrendingUp,
-  ArrowRight
+  ArrowRight,
+  Blocks,
+  Database,
+  Cpu,
+  Lock,
+  Coins,
+  Fingerprint,
+  Smartphone,
+  CreditCard,
+  FileCheck,
+  Rocket,
+  Brain,
+  Eye,
+  Sparkles
 } from 'lucide-react';
 
 const logoUrl = "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6e6f6bf058d3590fd198aa8fadf9d2dd.png";
@@ -27,52 +40,64 @@ const Footer = () => {
 
   const quickLinks = [
     {
-      title: "Solutions Populaires",
+      title: "🔗 Blockchain Immobilier",
       links: [
-        { label: "Acheter un Terrain", path: "/parcelles", icon: MapPin },
-        { label: "Terrain Intelligent", path: "/terrain-intelligent/TF-2024-001", icon: Zap, badge: "Nouveau" },
+        { label: "Terrains Blockchain", path: "/terrains", icon: Blocks, badge: "Vérifié" },
+        { label: "NFT Propriétés", path: "/nft-properties", icon: Sparkles, badge: "Innovation" },
+        { label: "Smart Contracts", path: "/smart-contracts", icon: Cpu, badge: "Auto" },
+        { label: "Vérification Crypto", path: "/tools/property-verification", icon: Shield },
+        { label: "Market Analysis IA", path: "/tools/market-analysis", icon: Brain, badge: "IA" },
+      ]
+    },
+    {
+      title: "💎 Solutions Premium",
+      links: [
         { label: "Construction Distance", path: "/solutions/construction-distance", icon: Globe, badge: "Diaspora" },
-        { label: "Investissement Sécurisé", path: "/solutions/investisseurs", icon: TrendingUp },
-        { label: "Vendre Rapidement", path: "/solutions/vendeurs", icon: Users },
+        { label: "Surveillance IA", path: "/solutions/project-monitoring", icon: Eye, badge: "24/7" },
+        { label: "Financement Crypto", path: "/solutions/blockchain", icon: Coins, badge: "DeFi" },
+        { label: "Escrow Sécurisé", path: "/escrow", icon: Lock },
+        { label: "Paiement Mobile", path: "/solutions/diaspora-investment", icon: Smartphone },
       ]
     },
     {
-      title: "Professionnels",
+      title: "🏛️ Professionnels",
       links: [
-        { label: "Banques & Financement", path: "/banques", icon: Award },
-        { label: "Promoteurs Immobiliers", path: "/promoteurs", icon: Users },
-        { label: "Agents Fonciers", path: "/agents-fonciers", icon: Users },
-        { label: "Notaires", path: "/notaires", icon: Shield },
-        { label: "Rejoignez-Nous", path: "/rejoignez-nous", icon: ArrowRight, badge: "Recrutement" },
+        { label: "Banques Digitales", path: "/banques", icon: CreditCard },
+        { label: "Agents Certifiés", path: "/agents-fonciers", icon: Fingerprint, badge: "Vérifié" },
+        { label: "Notaires Blockchain", path: "/notaires", icon: FileCheck },
+        { label: "Promoteurs Innovants", path: "/promoteurs", icon: Rocket },
+        { label: "Rejoindre l'Écosystème", path: "/rejoignez-nous", icon: ArrowRight, badge: "Recrutement" },
       ]
     },
     {
-      title: "Ressources",
+      title: "🚀 Innovation Tech",
       links: [
-        { label: "Comment ça Marche", path: "/how-it-works", icon: null },
-        { label: "Guide Diaspora", path: "/guide-diaspora", icon: null },
-        { label: "Carte Interactive", path: "/map", icon: null },
-        { label: "Blog & Actualités", path: "/blog", icon: null },
-        { label: "Support Client", path: "/contact", icon: null },
+        { label: "Guide Blockchain", path: "/how-it-works", icon: Database },
+        { label: "API Développeurs", path: "/blog", icon: Cpu, badge: "API" },
+        { label: "Carte IA Interactive", path: "/map", icon: Brain },
+        { label: "Support Technique", path: "/contact", icon: Shield },
+        { label: "Centre d'Aide IA", path: "/faq", icon: Sparkles },
       ]
     },
     {
-      title: "Légal & Sécurité",
+      title: "🔒 Sécurité & Légal",
       links: [
-        { label: "À Propos", path: "/about", icon: null },
-        { label: "Conditions d'Utilisation", path: "/legal", icon: null },
-        { label: "Politique de Confidentialité", path: "/privacy", icon: null },
-        { label: "Protection Anti-Fraude", path: "/#anti-fraude", icon: Shield },
-        { label: "FAQ", path: "/faq", icon: null },
+        { label: "À Propos Blockchain", path: "/about", icon: Blocks },
+        { label: "Conditions Smart", path: "/legal", icon: FileCheck },
+        { label: "Confidentialité Crypto", path: "/privacy", icon: Lock },
+        { label: "Anti-Fraude IA", path: "/#anti-fraude", icon: Eye },
+        { label: "Certification Blockchain", path: "/faq", icon: Award, badge: "Certifié" },
       ]
     }
   ];
 
-  const stats = [
-    { label: "Terrains Vérifiés", value: "2,500+", icon: Shield },
-    { label: "Clients Satisfaits", value: "1,200+", icon: Users },
-    { label: "Transactions Sécurisées", value: "800+", icon: Award },
-    { label: "Professionnels Partenaires", value: "150+", icon: TrendingUp }
+  const blockchainStats = [
+    { label: "Transactions Blockchain", value: "5,847+", icon: Blocks, trend: "+23%" },
+    { label: "Terrains Vérifiés", value: "2,500+", icon: Shield, trend: "+12%" },
+    { label: "Smart Contracts", value: "1,250+", icon: Cpu, trend: "+45%" },
+    { label: "Utilisateurs Crypto", value: "892+", icon: Coins, trend: "+67%" },
+    { label: "Partenaires Certifiés", value: "150+", icon: Fingerprint, trend: "+8%" },
+    { label: "NFT Propriétés", value: "734+", icon: Sparkles, trend: "+89%" }
   ];
 
   const socialLinks = [
@@ -84,18 +109,37 @@ const Footer = () => {
   ];
 
   return (
-    <footer className="bg-gray-900 text-white">
-      {/* Section des statistiques */}
-      <div className="border-b border-gray-800">
-        <div className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-            {stats.map((stat, index) => (
-              <div key={index} className="text-center">
-                <div className="flex justify-center mb-2">
-                  <stat.icon className="h-8 w-8 text-primary" />
+    <footer className="bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white relative overflow-hidden">
+      {/* Particules de fond blockchain */}
+      <div className="absolute inset-0 opacity-10">
+        <div className="absolute top-10 left-10 w-32 h-32 border border-blue-500 rounded-full animate-pulse"></div>
+        <div className="absolute top-32 right-20 w-24 h-24 border border-purple-500 rounded-full animate-pulse delay-1000"></div>
+        <div className="absolute bottom-20 left-32 w-16 h-16 border border-teal-500 rounded-full animate-pulse delay-2000"></div>
+        <div className="absolute bottom-40 right-16 w-20 h-20 border border-blue-500 rounded-full animate-pulse delay-500"></div>
+      </div>
+
+      {/* Section des statistiques blockchain */}
+      <div className="border-b border-white/10 relative z-10">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-teal-400 bg-clip-text text-transparent mb-2">
+              🚀 Écosystème Blockchain en Temps Réel
+            </h3>
+            <p className="text-gray-300">Données vérifiées et transparentes</p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {blockchainStats.map((stat, index) => (
+              <div key={index} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:border-purple-400/30 transition-all duration-300 group">
+                <div className="flex items-center justify-center mb-3">
+                  <div className="p-2 bg-gradient-to-r from-blue-500 to-purple-500 rounded-lg group-hover:scale-110 transition-transform">
+                    <stat.icon className="h-5 w-5 text-white" />
+                  </div>
                 </div>
-                <div className="text-2xl font-bold text-white">{stat.value}</div>
-                <div className="text-sm text-gray-400">{stat.label}</div>
+                <div className="text-center">
+                  <div className="text-xl font-bold text-white mb-1">{stat.value}</div>
+                  <div className="text-xs text-gray-400 mb-2">{stat.label}</div>
+                  <div className="text-xs text-green-400 font-semibold">{stat.trend}</div>
+                </div>
               </div>
             ))}
           </div>
@@ -103,53 +147,91 @@ const Footer = () => {
       </div>
 
       {/* Section principale */}
-      <div className="container mx-auto px-4 py-12">
+      <div className="container mx-auto px-4 py-12 relative z-10">
         <div className="grid grid-cols-1 lg:grid-cols-6 gap-8">
-          {/* Logo et description */}
+          {/* Logo et description blockchain */}
           <div className="lg:col-span-2">
-            <Link to="/" className="flex items-center gap-3 mb-6">
-              <img 
-                src={logoUrl} 
-                alt="Teranga Foncier" 
-                className="w-10 h-10"
-              />
+            <Link to="/" className="flex items-center gap-3 mb-6 group">
+              <div className="relative">
+                <img 
+                  src={logoUrl} 
+                  alt="Teranga Foncier" 
+                  className="w-12 h-12 rounded-lg"
+                />
+                <div className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full border-2 border-white animate-pulse"></div>
+              </div>
               <div>
-                <span className="text-xl font-bold text-white">Teranga Foncier</span>
-                <div className="text-xs text-primary">La référence du foncier au Sénégal</div>
+                <span className="text-xl font-bold text-white group-hover:text-blue-400 transition-colors">
+                  Teranga Foncier
+                </span>
+                <div className="text-xs bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent font-semibold">
+                  🔗 Blockchain Immobilier Sénégal
+                </div>
               </div>
             </Link>
             
             <p className="text-gray-300 mb-6 leading-relaxed">
-              La première plateforme digitale sécurisée pour l'achat, la vente et la gestion de terrains au Sénégal. 
-              Nous connectons particuliers, professionnels et institutions pour des transactions foncières transparentes.
+              🚀 La première plateforme blockchain immobilière du Sénégal. Transactions sécurisées, 
+              vérification automatisée et smart contracts pour un immobilier transparent et fiable.
             </p>
 
-            {/* Contact CEO */}
-            <div className="bg-gray-800 rounded-lg p-4 mb-6">
-              <h4 className="font-semibold text-white mb-3">Contact Direct CEO</h4>
-              <div className="space-y-2 text-sm">
-                <div className="flex items-center gap-2">
-                  <Users className="h-4 w-4 text-primary" />
-                  <span className="text-gray-300">Abdoulaye Diémé, CEO</span>
+            {/* Badges de certification */}
+            <div className="flex flex-wrap gap-2 mb-6">
+              <Badge className="bg-blue-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30">
+                <Blocks className="w-3 h-3 mr-1" />
+                Blockchain Verified
+              </Badge>
+              <Badge className="bg-purple-500/20 text-purple-300 border-purple-500/30 hover:bg-purple-500/30">
+                <Cpu className="w-3 h-3 mr-1" />
+                IA Powered
+              </Badge>
+              <Badge className="bg-teal-500/20 text-teal-300 border-teal-500/30 hover:bg-teal-500/30">
+                <Shield className="w-3 h-3 mr-1" />
+                Crypto Secure
+              </Badge>
+            </div>
+
+            {/* Contact CEO avec thème blockchain */}
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-purple-400/30 transition-all duration-300">
+              <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+                <Rocket className="w-4 h-4 text-purple-400" />
+                Contact CEO Blockchain
+              </h4>
+              <div className="space-y-3 text-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
+                    <Users className="h-4 w-4 text-white" />
+                  </div>
+                  <div>
+                    <div className="text-white font-medium">Abdoulaye Diémé</div>
+                    <div className="text-purple-300 text-xs">CEO & Blockchain Architect</div>
+                  </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Phone className="h-4 w-4 text-primary" />
-                  <a href="tel:+221775934241" className="text-gray-300 hover:text-primary transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-blue-500 rounded-full flex items-center justify-center">
+                    <Phone className="h-4 w-4 text-white" />
+                  </div>
+                  <a href="tel:+221775934241" className="text-gray-300 hover:text-blue-400 transition-colors">
                     +221 77 593 42 41
                   </a>
                 </div>
-                <div className="flex items-center gap-2">
-                  <Mail className="h-4 w-4 text-primary" />
-                  <a href="mailto:contact@terangafoncier.com" className="text-gray-300 hover:text-primary transition-colors">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-teal-500 rounded-full flex items-center justify-center">
+                    <Mail className="h-4 w-4 text-white" />
+                  </div>
+                  <a href="mailto:contact@terangafoncier.com" className="text-gray-300 hover:text-purple-400 transition-colors">
                     contact@terangafoncier.com
                   </a>
                 </div>
               </div>
             </div>
 
-            {/* Réseaux sociaux */}
+            {/* Réseaux sociaux blockchain */}
             <div>
-              <h4 className="font-semibold text-white mb-3">Suivez-nous</h4>
+              <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
+                <Globe className="w-4 h-4 text-teal-400" />
+                Communauté Blockchain
+              </h4>
               <div className="flex gap-3">
                 {socialLinks.map((social, index) => (
                   <a
@@ -157,30 +239,34 @@ const Footer = () => {
                     href={social.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-10 h-10 bg-gray-800 hover:bg-primary rounded-lg flex items-center justify-center transition-colors"
+                    className="w-12 h-12 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/10 hover:border-purple-400/50 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 group"
                   >
-                    <social.icon className="h-5 w-5" />
+                    <social.icon className="h-5 w-5 text-gray-300 group-hover:text-purple-400 transition-colors" />
                   </a>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Liens rapides */}
+          {/* Liens rapides blockchain */}
           {quickLinks.map((section, index) => (
             <div key={index} className="lg:col-span-1">
-              <h3 className="font-semibold text-white mb-4">{section.title}</h3>
+              <h3 className="font-semibold text-white mb-4 text-sm">{section.title}</h3>
               <ul className="space-y-3">
                 {section.links.map((link, linkIndex) => (
                   <li key={linkIndex}>
                     <Link 
                       to={link.path} 
-                      className="group flex items-center gap-2 text-gray-300 hover:text-primary transition-colors"
+                      className="group flex items-center gap-2 text-gray-300 hover:text-blue-400 transition-all duration-300 text-sm"
                     >
-                      {link.icon && <link.icon className="h-4 w-4" />}
-                      <span className="text-sm">{link.label}</span>
+                      {link.icon && (
+                        <div className="w-4 h-4 flex items-center justify-center">
+                          <link.icon className="h-3 w-3 group-hover:scale-110 transition-transform" />
+                        </div>
+                      )}
+                      <span className="group-hover:translate-x-1 transition-transform">{link.label}</span>
                       {link.badge && (
-                        <Badge variant="secondary" className="text-xs bg-primary/20 text-primary border-primary/30">
+                        <Badge className="text-xs bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 border-blue-500/30 hover:bg-blue-500/30">
                           {link.badge}
                         </Badge>
                       )}
@@ -193,57 +279,85 @@ const Footer = () => {
         </div>
       </div>
 
-      {/* Newsletter */}
-      <div className="border-t border-gray-800">
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
-            <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Restez Informé</h3>
-              <p className="text-gray-300 text-sm">Recevez nos dernières offres de terrains et actualités du foncier</p>
-            </div>
-            
-            <div className="flex gap-3 w-full md:w-auto">
-              <input
-                type="email"
-                placeholder="Votre email"
-                className="flex-1 md:w-64 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
-              />
-              <Button className="px-6 bg-primary hover:bg-primary/90">
-                S'abonner
+      {/* Newsletter Blockchain */}
+      <div className="border-t border-white/10 bg-gradient-to-r from-blue-900/20 to-purple-900/20 backdrop-blur-sm relative z-10">
+        <div className="container mx-auto px-4 py-12">
+          <div className="text-center mb-8">
+            <h3 className="text-2xl font-bold text-white mb-2 flex items-center justify-center gap-2">
+              <Brain className="w-6 h-6 text-purple-400" />
+              Newsletter Blockchain IA
+            </h3>
+            <p className="text-gray-300 text-sm">
+              🚀 Recevez les dernières innovations blockchain, analyses IA du marché et opportunités exclusives
+            </p>
+          </div>
+          
+          <div className="max-w-md mx-auto">
+            <div className="flex gap-3">
+              <div className="flex-1 relative">
+                <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <input
+                  type="email"
+                  placeholder="votre.email@blockchain.com"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                />
+              </div>
+              <Button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105 flex items-center gap-2">
+                <Rocket className="w-4 h-4" />
+                Rejoindre
               </Button>
             </div>
+            <p className="text-xs text-gray-400 mt-3 text-center">
+              🔒 Vos données sont protégées par blockchain • Désabonnement en un clic
+            </p>
           </div>
         </div>
       </div>
 
-      {/* Copyright et mentions légales */}
-      <div className="border-t border-gray-800">
+      {/* Copyright blockchain */}
+      <div className="border-t border-white/10 bg-black/20">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
-            <div className="text-gray-400 text-sm">
-              © {currentYear} Teranga Foncier. Tous droits réservés. 
+            <div className="text-gray-400 text-sm flex items-center gap-2">
+              <Blocks className="w-4 h-4 text-blue-400" />
+              © {currentYear} Teranga Foncier Blockchain. Tous droits réservés. 
               <span className="mx-2">•</span>
-              Fait avec ❤️ au Sénégal
+              <span className="flex items-center gap-1">
+                Fait avec 💜 au Sénégal 
+                <Database className="w-3 h-3 text-purple-400 ml-1" />
+              </span>
             </div>
             
             <div className="flex items-center gap-6 text-sm">
-              <Link to="/legal" className="text-gray-400 hover:text-primary transition-colors">
-                Mentions Légales
+              <Link to="/legal" className="text-gray-400 hover:text-blue-400 transition-colors flex items-center gap-1">
+                <FileCheck className="w-3 h-3" />
+                Smart Contracts
               </Link>
-              <Link to="/privacy" className="text-gray-400 hover:text-primary transition-colors">
-                Confidentialité
+              <Link to="/privacy" className="text-gray-400 hover:text-purple-400 transition-colors flex items-center gap-1">
+                <Lock className="w-3 h-3" />
+                Crypto Privacy
               </Link>
-              <Link to="/cookie-policy" className="text-gray-400 hover:text-primary transition-colors">
-                Cookies
+              <Link to="/cookie-policy" className="text-gray-400 hover:text-teal-400 transition-colors flex items-center gap-1">
+                <Cpu className="w-3 h-3" />
+                IA Cookies
               </Link>
-              <div className="flex items-center gap-1 text-gray-400">
-                <Shield className="h-4 w-4" />
-                <span>Site Sécurisé SSL</span>
+              <div className="flex items-center gap-2 text-gray-400">
+                <div className="flex items-center gap-1">
+                  <Shield className="h-3 w-3 text-green-400" />
+                  <span className="text-xs">SSL Blockchain</span>
+                </div>
+                <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
+                <span className="text-xs">Site Ultra-Sécurisé</span>
               </div>
             </div>
           </div>
         </div>
       </div>
+    </footer>
+  );
+};
+
+export default Footer;
     </footer>
   );
 };

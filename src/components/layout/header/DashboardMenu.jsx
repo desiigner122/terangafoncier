@@ -7,7 +7,7 @@
   Settings
 } from 'lucide-react';
     import { cn } from '@/lib/utils';
-    import { useAuth } from '@/context/SupabaseAuthContext';
+    import { useAuth } from '@/contexts/AuthProvider';
 
     const DashboardMenu = () => {
         const { profile } = useAuth();

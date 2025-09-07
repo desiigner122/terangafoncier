@@ -29,7 +29,7 @@ import {
   Home
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getSidebarConfig } from './sidebarConfig';

@@ -31,7 +31,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { supabase } from '@/lib/customSupabaseClient';
 
 const getStatusInfo = (status) => {
@@ -54,7 +54,7 @@ const formatPrice = (price) => {
 }
 
 const MyListingsPage = () => {
-   const { user } = useSupabaseAuth();
+   const { user } = useAuth();
    const [isLoading, setIsLoading] = useState(true);
    const [listings, setListings] = useState([]);
    // toast remplacÃ© par window.safeGlobalToast
@@ -192,5 +192,7 @@ const MyListingsPage = () => {
 };
 
 export default MyListingsPage;
+
+
 
 

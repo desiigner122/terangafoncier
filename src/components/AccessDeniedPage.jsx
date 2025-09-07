@@ -1,5 +1,5 @@
 ﻿import React from 'react';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

@@ -3,24 +3,33 @@ import { Route, Routes, Outlet, Link } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import ModernHeader from '@/components/layout/ModernHeader';
-import Footer from '@/components/layout/Footer';
+import BlockchainFooter from '@/components/layout/BlockchainFooter';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import HomePage from '@/pages/HomePage';
+import ModernHomePage from '@/pages/ModernHomePage';
 import LoginPage from '@/pages/LoginPage';
 import ModernLoginPage from '@/pages/ModernLoginPage';
+import BlockchainLoginPage from '@/pages/BlockchainLoginPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import RegisterPage from '@/pages/RegisterPage';
 import ModernRegisterPage from '@/pages/ModernRegisterPage';
+import BlockchainRegisterPage from '@/pages/BlockchainRegisterPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
-import DashboardPage from '@/pages/DashboardPage';
 import DebugDashboard from '@/pages/DebugDashboard';
 import ParcelsListPage from '@/pages/ParcelsListPage';
 import ParcelDetailPage from '@/pages/ParcelDetailPage';
 import IntelligentParcelPage from '@/pages/IntelligentParcelPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ContactPage from '@/pages/ContactPage';
+import BlockchainContactPage from '@/pages/BlockchainContactPage';
 import AboutPage from '@/pages/AboutPage';
 import ModernAboutPage from '@/pages/ModernAboutPage';
+import BlockchainAboutPage from '@/pages/BlockchainAboutPage';
+import FoncierBlockchainPage from '@/pages/FoncierBlockchainPage';
+import FoncierSenegalPage from '@/pages/FoncierSenegalPage';
+import ModernTerrainsPage from '@/pages/ModernTerrainsPage';
+import ModernTerrainsBlockchainPage from '@/pages/ModernTerrainsBlockchainPage';
+import TestAccountsPage from '@/pages/TestAccountsPage';
 import MapPage from '@/pages/MapPage';
 import MyRequestsPage from '@/pages/MyRequestsPage';
 import SettingsPage from '@/pages/SettingsPage';
@@ -38,6 +47,17 @@ import ConstructionDistancePage from '@/pages/solutions/ConstructionDistancePage
 import DiasporaInvestmentPage from '@/pages/solutions/DiasporaInvestmentPage';
 import ProjectMonitoringPage from '@/pages/solutions/ProjectMonitoringPage';
 import BlockchainSolutionsPage from '@/pages/BlockchainSolutionsPage';
+import NFTPropertiesPage from '@/pages/NFTPropertiesPage';
+import SmartContractsPage from '@/pages/SmartContractsPage';
+import EscrowPage from '@/pages/EscrowPage';
+import AgentsFonciersPage from '@/pages/solutions/AgentsFonciersPage';
+import GeometresPage from '@/pages/solutions/GeometresPage';
+import PriceCalculatorPage from '@/pages/tools/PriceCalculatorPage';
+import InteractiveMapPage from '@/pages/tools/InteractiveMapPage';
+import ToolsMarketAnalysisPage from '@/pages/tools/MarketAnalysisPage';
+import PropertyVerificationPage from '@/pages/tools/PropertyVerificationPage';
+import TerrainsPage from '@/pages/TerrainsPage';
+import CartePage from '@/pages/CartePage';
 import MyListingsPage from '@/pages/MyListingsPage';
 import MyFavoritesPage from '@/pages/MyFavoritesPage';
 import NotificationsPage from '@/pages/NotificationsPage';
@@ -48,7 +68,7 @@ import PromoterNewBuyersPage from '@/pages/promoteur/PromoterNewBuyersPage';
 import PromoterNewQuotePage from '@/pages/promoteur/PromoterNewQuotePage';
 import SecureMessagingPage from '@/pages/SecureMessagingPage';
 import SimpleDashboard from '@/pages/SimpleDashboard';
-import DashboardRedirect from '@/components/DashboardRedirectFixed';
+import DashboardRedirect from '@/components/DashboardRedirect';
 import PurchaseProcessPage from '@/pages/PurchaseProcessPage';
 import TestAuthPage from '@/pages/TestAuthPage';
 
@@ -87,6 +107,7 @@ import AdminSystemRequestsPage from '@/pages/admin/AdminSystemRequestsPage';
 import AdminContractsPage from '@/pages/admin/AdminContractsPage';
 import AuthDebugPage from '@/pages/AuthDebugPage';
 import AdminReportsPage from '@/pages/admin/AdminReportsPage';
+import AdminLoginPage from '@/pages/AdminLoginPage';
 import AdminBlogPage from '@/pages/admin/AdminBlogPage';
 import AdminBlogFormPage from '@/pages/admin/AdminBlogFormPage';
 import AdminAuditLogPage from '@/pages/admin/AdminAuditLogPage';
@@ -103,7 +124,7 @@ import SolutionsPromoteursPage from '@/pages/solutions/SolutionsPromoteursPage';
 import SolutionsInvestisseursPage from '@/pages/solutions/SolutionsInvestisseursPage';
 import SolutionsVendeursPage from '@/pages/solutions/SolutionsVendeursPage';
 import InvestmentsPage from '@/pages/dashboards/investisseur/InvestmentsPage';
-import MarketAnalysisPage from '@/pages/dashboards/investisseur/MarketAnalysisPage';
+import DashboardMarketAnalysisPage from '@/pages/dashboards/investisseur/MarketAnalysisPage';
 import OpportunitiesPage from '@/pages/dashboards/investisseur/OpportunitiesPage';
 import RoiCalculatorPage from '@/pages/dashboards/investisseur/RoiCalculatorPage';
 import DueDiligencePage from '@/pages/dashboards/investisseur/DueDiligencePage';
@@ -166,8 +187,6 @@ import BecomeSellerPage from '@/pages/BecomeSellerPage';
 import DiasporaPage from '@/pages/DiasporaPage';
 import BanquesPage from '@/pages/BanquesPage';
 import NotairesPage from '@/pages/NotairesPage';
-import GeometresPage from '@/pages/GeometresPage';
-import AgentsFonciersPage from '@/pages/AgentsFonciersPage';
 import VendeursPage from '@/pages/VendeursPage';
 import PromoteursPage from '@/pages/PromoteursPage';
 import RejoignezNousPage from '@/pages/RejoignezNousPage';
@@ -175,6 +194,7 @@ import SolutionsPage from '@/pages/SolutionsPage';
 import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
 import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
 import TerrangaFoncierChatbot from '@/components/ai/TerrangaFoncierChatbot';
+import BlockchainAIChatbot from '@/components/chat/BlockchainAIChatbot';
 import ModernGeometreDashboard from '@/pages/dashboards/ModernGeometreDashboard';
 import ModernAgentFoncierDashboard from '@/pages/dashboards/ModernAgentFoncierDashboard';
 
@@ -184,8 +204,8 @@ const PublicLayout = () => (
     <main className="flex-1 pt-20">
       <Outlet />
     </main>
-    <Footer />
-    <TerrangaFoncierChatbot />
+    <BlockchainFooter />
+    <BlockchainAIChatbot />
   </div>
 );
 
@@ -197,11 +217,11 @@ function App() {
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<PublicLayout />}>
-              <Route index element={<HomePage />} />
-              <Route path="login" element={<ModernLoginPage />} />
+              <Route index element={<ModernHomePage />} />
+              <Route path="login" element={<BlockchainLoginPage />} />
               <Route path="test-auth" element={<TestAuthPage />} />
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="register" element={<ModernRegisterPage />} />
+              <Route path="register" element={<BlockchainRegisterPage />} />
               <Route path="reset-password" element={<ResetPasswordPage />} />
               <Route path="test-account-creation" element={<AccountCreationTestPage />} />
               <Route path="debug-dashboard" element={<DebugDashboard />} />
@@ -211,7 +231,8 @@ function App() {
               <Route path="parcelles/:id" element={<ParcelDetailPage />} />
               <Route path="terrain-intelligent/:id" element={<IntelligentParcelPage />} />
               <Route path="villes/:cityId" element={<CityDetailPage />} />
-              <Route path="contact" element={<ContactPage />} />
+              <Route path="contact" element={<BlockchainContactPage />} />
+              <Route path="about" element={<BlockchainAboutPage />} />
               <Route path="about" element={<ModernAboutPage />} />
               <Route path="purchase/:propertyId" element={<PurchaseProcessPage />} />
               <Route path="purchase-success/:propertyId" element={<PurchaseSuccessPage />} />
@@ -248,6 +269,28 @@ function App() {
               <Route path="solutions/diaspora-investment" element={<DiasporaInvestmentPage />} />
               <Route path="solutions/project-monitoring" element={<ProjectMonitoringPage />} />
               <Route path="solutions/blockchain" element={<BlockchainSolutionsPage />} />
+              <Route path="nft-properties" element={<NFTPropertiesPage />} />
+              <Route path="smart-contracts" element={<SmartContractsPage />} />
+              <Route path="escrow" element={<EscrowPage />} />
+              <Route path="solutions/agents" element={<AgentsFonciersPage />} />
+              <Route path="solutions/geometres" element={<GeometresPage />} />
+              
+              {/* Pages principales */}
+              <Route path="terrains" element={<ModernTerrainsBlockchainPage />} />
+              <Route path="foncier-blockchain" element={<FoncierBlockchainPage />} />
+              <Route path="foncier-senegal" element={<FoncierSenegalPage />} />
+              <Route path="test-accounts" element={<TestAccountsPage />} />
+              <Route path="carte" element={<CartePage />} />
+              
+              {/* Admin Login - Accessible sans authentification */}
+              <Route path="admin/login" element={<AdminLoginPage />} />
+              
+              {/* Tools Routes */}
+              <Route path="tools/price-calculator" element={<PriceCalculatorPage />} />
+              <Route path="tools/map" element={<InteractiveMapPage />} />
+              <Route path="tools/market-analysis" element={<ToolsMarketAnalysisPage />} />
+              <Route path="tools/property-verification" element={<PropertyVerificationPage />} />
+              
               <Route path="fonctionnalites-avancees" element={<FonctionnalitesAvanceesPage />} />
               <Route path="blockchain" element={<BlockchainSolutionsPage />} />
               <Route path="solutions/mairies/apercu" element={<MairiesDashboardPage />} />

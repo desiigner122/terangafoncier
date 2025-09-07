@@ -28,7 +28,12 @@ import {
   Camera, 
   Video, 
   Headphones, 
-  AlertTriangle
+  AlertTriangle,
+  Database,
+  Blocks,
+  Link as LinkIcon,
+  Lock,
+  Coins
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -41,11 +46,11 @@ const AgentsFonciersPage = () => {
 
   const businessMetrics = [
     {
-      title: "Commissions Moyennes",
-      value: "+278%",
-      description: "Augmentation des commissions grâce au volume de transactions",
-      icon: DollarSign,
-      color: "from-blue-500 to-cyan-500"
+      title: "Commissions NFT",
+      value: "+385%",
+      description: "Augmentation grâce aux transactions blockchain sécurisées",
+      icon: Database,
+      color: "from-yellow-500 to-orange-500"
     },
     {
       title: "Ventes Mensuelles",

@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { 
   UserPlus
 } from 'lucide-react';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 
 const BecomeSellerButton = ({ variant = "default", size = "default", className = "" }) => {

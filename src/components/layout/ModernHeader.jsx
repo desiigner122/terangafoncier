@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { 
   User, 
   LogOut, 
@@ -24,14 +24,21 @@ import {
   Scale,
   Hammer,
   Banknote,
-  Zap
+  Zap,
+  Blocks,
+  Database,
+  Cpu,
+  Brain,
+  Sparkles,
+  Rocket,
+  Eye
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 
 const ModernHeader = () => {
-  const { user, signOut, profile } = useSupabaseAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -56,35 +63,29 @@ const ModernHeader = () => {
 
   const menuItems = [
     {
+      label: 'Terrains',
+      href: '/terrains',
+      key: 'terrains'
+    },
+    {
+      label: 'Carte',
+      href: '/carte',
+      key: 'carte'
+    },
+    {
       label: 'Solutions',
       key: 'solutions',
       hasDropdown: true,
       sections: [
         {
-          title: 'Particuliers',
+          title: 'Particuliers & Professionnels',
           items: [
-            { label: 'Acheteurs', href: '/solutions/particuliers', icon: Home, description: 'Trouvez votre terrain idéal' },
-            { label: 'Vendeurs', href: '/solutions/vendeurs', icon: TrendingUp, description: 'Vendez rapidement et au meilleur prix' },
-            { label: 'Diaspora', href: '/solutions/diaspora-investment', icon: Users, description: 'Investissez depuis l\'étranger' },
-            { label: 'Construction à distance', href: '/solutions/construction-distance', icon: Building2, description: 'Suivez vos travaux en temps réel' }
-          ]
-        },
-        {
-          title: 'Professionnels',
-          items: [
-            { label: 'Promoteurs', href: '/solutions/promoteurs', icon: Hammer, description: 'Développez vos projets immobiliers' },
-            { label: 'Agents Fonciers', href: '/solutions/agents', icon: Briefcase, description: 'Gérez votre portefeuille clients' },
-            { label: 'Notaires', href: '/solutions/notaires', icon: Scale, description: 'Services notariaux blockchain', isNew: true },
-            { label: 'Géomètres', href: '/solutions/geometres', icon: MapPin, description: 'Outils de cartographie avancés' }
-          ]
-        },
-        {
-          title: 'Institutions',
-          items: [
-            { label: 'Banques', href: '/solutions/banques', icon: Banknote, description: 'Financement et garanties sécurisées' },
-            { label: 'Investisseurs', href: '/solutions/investisseurs', icon: TrendingUp, description: 'Opportunités d\'investissement' },
-            { label: 'Communes', href: '/solutions/mairies', icon: Building2, description: 'Gestion administrative moderne' },
-            { label: 'Agriculteurs', href: '/solutions/agriculteurs', icon: Zap, description: 'Terres agricoles certifiées' }
+            { label: 'Particuliers', href: '/solutions/particuliers', icon: Home, description: 'Acheteurs & Vendeurs' },
+            { label: 'Promoteurs', href: '/solutions/promoteurs', icon: Hammer, description: 'Projets immobiliers' },
+            { label: 'Agents Fonciers', href: '/solutions/agents', icon: Briefcase, description: 'Outils de vente avancÃ©s' },
+            { label: 'GÃ©omÃ¨tres', href: '/solutions/geometres', icon: MapPin, description: 'Cartographie intelligente' },
+            { label: 'Notaires', href: '/solutions/notaires', icon: Scale, description: 'Services blockchain', isNew: true },
+            { label: 'Banques', href: '/solutions/banques', icon: Banknote, description: 'Financement sÃ©curisÃ©' }
           ]
         }
       ]
@@ -97,11 +98,11 @@ const ModernHeader = () => {
         {
           title: 'Innovations',
           items: [
-            { label: 'Fonctionnalités Avancées', href: '/fonctionnalites-avancees', icon: Zap, description: 'IA, Blockchain & Analytics', isNew: true },
-            { label: 'Solutions Blockchain', href: '/solutions/blockchain', icon: Shield, description: 'Technologie révolutionnaire', isNew: true },
-            { label: 'NFT Propriétés', href: '/nft-properties', icon: Coins, description: 'Tokenisation des biens immobiliers' },
-            { label: 'Smart Contracts', href: '/smart-contracts', icon: FileText, description: 'Contrats intelligents automatisés' },
-            { label: 'Escrow Décentralisé', href: '/escrow', icon: Shield, description: 'Séquestre sécurisé blockchain' }
+            { label: 'FonctionnalitÃ©s AvancÃ©es', href: '/fonctionnalites-avancees', icon: Zap, description: 'IA, Blockchain & Analytics', isNew: true },
+            { label: 'Solutions Blockchain', href: '/solutions/blockchain', icon: Shield, description: 'Technologie rÃ©volutionnaire', isNew: true },
+            { label: 'NFT PropriÃ©tÃ©s', href: '/nft-properties', icon: Coins, description: 'Tokenisation des biens immobiliers' },
+            { label: 'Smart Contracts', href: '/smart-contracts', icon: FileText, description: 'Contrats intelligents automatisÃ©s' },
+            { label: 'Escrow DÃ©centralisÃ©', href: '/escrow', icon: Shield, description: 'SÃ©questre sÃ©curisÃ© blockchain' }
           ]
         }
       ]
@@ -112,11 +113,12 @@ const ModernHeader = () => {
       hasDropdown: true,
       sections: [
         {
-          title: 'Calculateurs',
+          title: 'Calculateurs & Outils',
           items: [
-            { label: 'Estimation de prix', href: '/tools/price-calculator', icon: Calculator, description: 'IA de prédiction des prix' },
+            { label: 'Estimation de prix', href: '/tools/price-calculator', icon: Calculator, description: 'IA de prÃ©diction des prix' },
             { label: 'Carte interactive', href: '/tools/map', icon: MapPin, description: 'Explorez les terrains disponibles' },
-            { label: 'Analyses de marché', href: '/tools/market-analysis', icon: TrendingUp, description: 'Tendances et insights' }
+            { label: 'Analyses de marchÃ©', href: '/tools/market-analysis', icon: TrendingUp, description: 'Tendances et insights' },
+            { label: 'VÃ©rificateur de propriÃ©tÃ©', href: '/tools/property-verification', icon: Shield, description: 'VÃ©rifiez l\'authenticitÃ© des titres fonciers' }
           ]
         }
       ]
@@ -312,14 +314,14 @@ const ModernHeader = () => {
                             onClick={() => setActiveDropdown(null)}
                           >
                             <Settings className="w-4 h-4" />
-                            <span>Paramètres</span>
+                            <span>ParamÃ¨tres</span>
                           </Link>
                           <button
                             onClick={handleLogout}
                             className="flex items-center space-x-3 w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           >
                             <LogOut className="w-4 h-4" />
-                            <span>Déconnexion</span>
+                            <span>DÃ©connexion</span>
                           </button>
                         </div>
                       </motion.div>
@@ -422,3 +424,4 @@ const ModernHeader = () => {
 };
 
 export default ModernHeader;
+

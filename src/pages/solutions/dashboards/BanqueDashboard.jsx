@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { supabase } from '@/lib/customSupabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 
 const BanqueDashboard = () => {
-  const { profile } = useSupabaseAuth();
+  const { profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalFundingRequests: 0,
@@ -351,3 +351,5 @@ const BanqueDashboard = () => {
 };
 
 export default BanqueDashboard;
+
+

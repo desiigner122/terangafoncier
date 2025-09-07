@@ -11,7 +11,7 @@ import {
   Layers, 
   ShieldCheck, 
   ShoppingCart, 
-  PercentSquare, 
+  Percent, 
   Landmark
 } from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
@@ -126,7 +126,7 @@ const ParcelCard = ({ parcel }) => {
             </Button>
             {!isMunicipal && parcel.isEligibleForInstallments && (
               <Button variant="secondary" className="w-full" onClick={handleInstallmentClick}>
-                <PercentSquare className="mr-2 h-4 w-4" /> Financer
+                <Percent className="mr-2 h-4 w-4" /> Financer
               </Button>
             )}
           </div>

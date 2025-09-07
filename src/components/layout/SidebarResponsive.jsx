@@ -31,7 +31,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getSidebarConfig } from './sidebarConfig';
@@ -143,15 +143,12 @@ const SidebarContent = ({ onNavigate }) => {
       if (!user) return;
       
       try {
-        const { count: requestsCount } = await supabase
-          .from('requests')
-          .select('id', { count: 'exact' })
-          .eq('user_id', user.id)
-          .eq('status', 'pending');
-
+        // Mock notifications - Supabase désactivé
+        console.log('SidebarResponsive: Mock loading notifications for user:', user.id);
+        
         setNotifications({
           general: 0,
-          requests: requestsCount || 0
+          requests: 0
         });
       } catch (error) {
         console.error('Error loading notifications:', error);

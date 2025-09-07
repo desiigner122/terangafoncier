@@ -4,7 +4,7 @@
   Briefcase, 
   School as University, 
   ShoppingCart, 
-  Hotel as Hospital, 
+  Building2 as Hospital, 
   Bus, 
   Ship, 
   Plane

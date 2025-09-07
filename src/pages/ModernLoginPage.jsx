@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
@@ -21,7 +21,7 @@ import {
   Globe,
   Zap
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 
 const logoUrl = "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6e6f6bf058d3590fd198aa8fadf9d2dd.png";
 
@@ -31,7 +31,7 @@ const ModernLoginPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-  const { signIn, session } = useSupabaseAuth();
+  const { signIn, session } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -46,7 +46,7 @@ const ModernLoginPage = () => {
       
       window.safeGlobalToast({
           title: `Bienvenue !`,
-          description: "Connexion réussie. Redirection en cours...",
+          description: "Connexion rÃ©ussie. Redirection en cours...",
           className: "bg-green-500 text-white",
       });
     } catch (err) {
@@ -56,7 +56,7 @@ const ModernLoginPage = () => {
         : "Une erreur est survenue lors de la connexion.";
       setError(errorMessage);
       window.safeGlobalToast({
-        title: "Échec de la Connexion",
+        title: "Ã‰chec de la Connexion",
         description: errorMessage,
         variant: "destructive",
       });
@@ -74,13 +74,13 @@ const ModernLoginPage = () => {
 
   const quickLoginOptions = [
     { role: "Particulier", description: "Achetez votre terrain", icon: Users, href: "/register", color: "from-emerald-500 to-teal-500" },
-    { role: "Professionnel", description: "Rejoignez notre réseau", icon: Building, href: "/rejoignez-nous", color: "from-blue-500 to-cyan-500" },
+    { role: "Professionnel", description: "Rejoignez notre rÃ©seau", icon: Building, href: "/rejoignez-nous", color: "from-blue-500 to-cyan-500" },
     { role: "Mairie", description: "Partenariat institutionnel", icon: Landmark, href: "/contact", color: "from-purple-500 to-indigo-500" }
   ];
 
   const benefits = [
-    "Accès à 2,500+ terrains vérifiés",
-    "Paiements sécurisés et flexibles", 
+    "AccÃ¨s Ã  2,500+ terrains vÃ©rifiÃ©s",
+    "Paiements sÃ©curisÃ©s et flexibles", 
     "Support client 24/7",
     "Technologie blockchain",
     "Accompagnement juridique inclus"
@@ -96,7 +96,7 @@ const ModernLoginPage = () => {
             <img src={logoUrl} alt="Teranga Foncier" className="w-12 h-12" />
             <div>
               <span className="text-2xl font-bold text-white">Teranga Foncier</span>
-              <div className="text-emerald-200 text-sm">La référence du foncier au Sénégal</div>
+              <div className="text-emerald-200 text-sm">La rÃ©fÃ©rence du foncier au SÃ©nÃ©gal</div>
             </div>
           </Link>
 
@@ -112,8 +112,8 @@ const ModernLoginPage = () => {
             </h1>
             
             <p className="text-xl text-emerald-100 leading-relaxed">
-              Connectez-vous pour accéder à la première plateforme foncière digitale du Sénégal. 
-              Achetez, vendez et investissez en toute sécurité.
+              Connectez-vous pour accÃ©der Ã  la premiÃ¨re plateforme fonciÃ¨re digitale du SÃ©nÃ©gal. 
+              Achetez, vendez et investissez en toute sÃ©curitÃ©.
             </p>
 
             <div className="space-y-3">
@@ -181,7 +181,7 @@ const ModernLoginPage = () => {
             <CardHeader className="text-center space-y-2">
               <CardTitle className="text-2xl font-bold text-gray-900">Connexion</CardTitle>
               <CardDescription className="text-gray-600">
-                Accédez à votre espace personnel Teranga Foncier
+                AccÃ©dez Ã  votre espace personnel Teranga Foncier
               </CardDescription>
             </CardHeader>
 
@@ -210,12 +210,12 @@ const ModernLoginPage = () => {
                       onClick={(e) => {
                         e.preventDefault(); 
                         window.safeGlobalToast({
-                          title:"Fonctionnalité à venir", 
-                          description: "La récupération de mot de passe sera bientôt disponible."
+                          title:"FonctionnalitÃ© Ã  venir", 
+                          description: "La rÃ©cupÃ©ration de mot de passe sera bientÃ´t disponible."
                         })
                       }}
                     >
-                      Mot de passe oublié ?
+                      Mot de passe oubliÃ© ?
                     </Link>
                   </div>
                   <div className="relative">
@@ -306,7 +306,7 @@ const ModernLoginPage = () => {
                 En vous connectant, vous acceptez nos{' '}
                 <Link to="/legal" className="text-emerald-600 hover:underline">conditions d'utilisation</Link>{' '}
                 et notre{' '}
-                <Link to="/privacy" className="text-emerald-600 hover:underline">politique de confidentialité</Link>.
+                <Link to="/privacy" className="text-emerald-600 hover:underline">politique de confidentialitÃ©</Link>.
               </p>
             </CardFooter>
           </Card>
@@ -316,7 +316,7 @@ const ModernLoginPage = () => {
               to="/" 
               className="text-sm text-gray-500 hover:text-emerald-600 transition-colors"
             >
-              ← Retour à l'accueil
+              â† Retour Ã  l'accueil
             </Link>
           </div>
         </motion.div>
@@ -326,3 +326,5 @@ const ModernLoginPage = () => {
 };
 
 export default ModernLoginPage;
+
+

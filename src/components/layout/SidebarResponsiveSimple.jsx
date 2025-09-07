@@ -11,7 +11,7 @@ import {
   Home
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MobileDrawer from '@/components/ui/mobile-drawer';

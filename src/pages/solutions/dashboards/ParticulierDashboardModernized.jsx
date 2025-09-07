@@ -46,7 +46,7 @@ import {
   Wallet, 
   BarChart3
 } from 'lucide-react';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -104,7 +104,7 @@ const ParticulierDashboard = () => {
     }
   };
 
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
   
   // États pour les métriques de base
   const [requests, setRequests] = useState([]);
@@ -864,3 +864,5 @@ const ParticulierDashboard = () => {
 };
 
 export default ParticulierDashboard;
+
+

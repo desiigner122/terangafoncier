@@ -15,7 +15,7 @@ import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { supabase } from '@/lib/customSupabaseClient';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 
 const LandManagementPage = () => {
   // toast remplacÃ© par window.safeGlobalToast

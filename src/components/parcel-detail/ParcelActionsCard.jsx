@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import InstallmentPaymentModal from '@/components/parcel-detail/InstallmentPaymentModal';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Forbid, Can } from '@/components/auth/RoleBasedGuard';
 
 const ParcelActionsCard = ({ parcel, onRequestInfo, onInitiateBuy, onRequestVisit }) => {

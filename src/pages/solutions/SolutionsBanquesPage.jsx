@@ -14,11 +14,11 @@ import {
   Coins
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { Helmet } from 'react-helmet-async';
 
 const SolutionsBanquesPage = () => {
-  const { user } = useSupabaseAuth();
+  const { user } = useAuth();
   const navigate = useNavigate();
 
   const handleDashboardAccess = () => {
@@ -168,3 +168,5 @@ const SolutionsBanquesPage = () => {
 };
 
 export default SolutionsBanquesPage;
+
+

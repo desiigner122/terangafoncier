@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useUser } from '@/hooks/useUser';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 
 const DebugDashboard = () => {
   const { user, profile, loading: userLoading } = useUser();
-  const { user: authUser, loading: authLoading } = useSupabaseAuth();
+  const { user: authUser, loading: authLoading } = useAuth();
   const [debugInfo, setDebugInfo] = useState({});
 
   useEffect(() => {
@@ -50,11 +50,11 @@ const DebugDashboard = () => {
   return (
     <div className="min-h-screen bg-gray-50 p-8">
       <div className="max-w-4xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-8">🔍 Dashboard Debug</h1>
+        <h1 className="text-3xl font-bold text-gray-900 mb-8">ðŸ” Dashboard Debug</h1>
         
         <div className="grid gap-6">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">État des Hooks</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Ã‰tat des Hooks</h2>
             <div className="space-y-2">
               <p><strong>User Loading:</strong> {userLoading.toString()}</p>
               <p><strong>Auth Loading:</strong> {authLoading.toString()}</p>
@@ -83,12 +83,12 @@ const DebugDashboard = () => {
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Rôle Déterminé</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">RÃ´le DÃ©terminÃ©</h2>
             <div className="space-y-2">
               <p><strong>Profile Role:</strong> {profile?.role || 'Aucun'}</p>
               <p><strong>User Metadata Role:</strong> {user?.user_metadata?.role || 'Aucun'}</p>
               <p><strong>User Role:</strong> {user?.role || 'Aucun'}</p>
-              <p><strong>Dashboard Recommandé:</strong> 
+              <p><strong>Dashboard RecommandÃ©:</strong> 
                 {!user ? 'Login requis' : 
                  profile?.role === 'ADMIN' ? 'Admin Dashboard' :
                  profile?.role === 'PARTICULIER_DIASPORA' ? 'Acheteur Dashboard (Diaspora)' :
@@ -121,3 +121,5 @@ const DebugDashboard = () => {
 };
 
 export default DebugDashboard;
+
+

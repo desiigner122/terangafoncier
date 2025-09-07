@@ -31,23 +31,36 @@ import {
   TrendingUp,
   Globe,
   Phone,
-  Mail
+  Mail,
+  Database,
+  Blocks,
+  Link as LinkIcon,
+  Lock,
+  Eye,
+  Camera,
+  Video
 } from 'lucide-react';
 
-// Données simulées pour la démonstration
+// Données simulées pour la démonstration - Version NFT Blockchain
 const mockParcel = {
-  id: 'TF-2024-001',
-  title: 'Terrain Résidentiel Premium - Almadies',
+  id: 'TF-NFT-2024-001',
+  nft_id: 'NFT_TERRAIN_001',
+  title: 'Terrain NFT Premium - Almadies Blockchain',
   location: 'Almadies, Dakar',
   size: '500 m²',
-  price: 45000000, // En FCFA
-  pricePerSquareMeter: 90000,
-  status: 'Vérifié',
+  price: 125000000, // En FCFA
+  pricePerSquareMeter: 250000,
+  status: 'NFT Vérifié',
+  blockchain_status: 'Tokenisé',
+  smart_contract_address: '0x742d35cc6634c0532925a3b8d',
   coordinates: { lat: 14.7379, lng: -17.5007 },
-  description: 'Magnifique terrain résidentiel dans le quartier prestigieux des Almadies. Idéal pour construction de villa avec vue sur mer.',
+  description: 'Terrain premium tokenisé en NFT sur blockchain avec smart contract automatique. Financement bancaire intégré et suivi construction temps réel.',
+  seller_type: 'Vendeur Pro',
+  seller_name: 'Teranga Développement SARL',
   features: [
-    'Titre foncier sécurisé',
-    'Viabilisation complète (eau, électricité)',
+    'NFT Blockchain sécurisé',
+    'Smart Contract automatique',
+    'Financement bancaire intégré',
     'Accès route bitumée',
     'Vue sur océan',
     'Environnement calme et sécurisé'

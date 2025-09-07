@@ -1,11 +1,11 @@
 ﻿import { useEffect, useCallback } from 'react';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import userStatusManager from '@/lib/userStatusManager';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 
 export const useUserStatusMonitor = () => {
-  const { user, revalidate, signOut } = useAuth();
+  const { user, signOut } = useAuth();
   const navigate = useNavigate();
   // toast remplacÃ© par window.safeGlobalToast
 
@@ -40,8 +40,7 @@ export const useUserStatusMonitor = () => {
             variant: 'default'
           });
           
-          // Rafraîchir les données utilisateur
-          await revalidate();
+          // Note: revalidation non disponible dans SupabaseAuthContextFixed
           break;
 
         case 'USER_SESSION_INVALIDATED':
@@ -52,7 +51,7 @@ export const useUserStatusMonitor = () => {
           break;
       }
     }
-  }, [user, toast, signOut, navigate, revalidate]);
+  }, [user, signOut, navigate]);
 
   useEffect(() => {
     if (!user) return;
@@ -93,4 +92,6 @@ export const useUserStatusMonitor = () => {
 };
 
 export default useUserStatusMonitor;
+
+
 

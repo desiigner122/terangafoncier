@@ -23,7 +23,13 @@ import {
   Phone, 
   Mail, 
   Calculator, 
-  Briefcase
+  Briefcase,
+  Database,
+  Blocks,
+  Link as LinkIcon,
+  Lock,
+  Coins,
+  TrendingDown
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -36,41 +42,41 @@ const BanquesPage = () => {
 
   const businessMetrics = [
     {
-      title: "ROI Crédit Immobilier",
-      value: "+34%",
-      description: "Augmentation moyenne des revenus de crédit immobilier",
-      icon: TrendingUp,
-      color: "from-green-500 to-emerald-500"
+      title: "ROI Blockchain Immobilier",
+      value: "+45%",
+      description: "Augmentation des revenus grâce aux prêts sécurisés par NFT",
+      icon: Database,
+      color: "from-yellow-500 to-orange-500"
     },
     {
-      title: "Nouveaux Clients",
-      value: "2.5K+",
-      description: "Nouveaux comptes ouverts via notre plateforme mensuellem.",
+      title: "Nouveaux Clients Diaspora",
+      value: "3.8K+",
+      description: "Financement blockchain pour la diaspora sénégalaise",
       icon: Users,
       color: "from-blue-500 to-cyan-500"
     },
     {
-      title: "Volume Transactions",
-      value: "25M€",
-      description: "Volume mensuel de transactions immobilières facilitées",
-      icon: DollarSign,
+      title: "Smart Contracts NFT",
+      value: "89%", 
+      description: "Réduction du temps de traitement grâce aux contrats intelligents",
+      icon: Blocks,
       color: "from-purple-500 to-indigo-500"
     },
     {
-      title: "Taux Défaut",
-      value: "-67%",
-      description: "Réduction du taux de défaut grâce à notre scoring IA",
+      title: "Sécurité Blockchain",
+      value: "99.9%",
+      description: "Garantie anti-fraude avec tokenisation NFT des propriétés",
       icon: Shield,
-      color: "from-orange-500 to-red-500"
+      color: "from-green-500 to-emerald-500"
     }
   ];
 
   const advantages = [
     {
-      icon: Target,
-      title: "Clientèle qualifiée",
-      description: "Accès direct à +15,000 investisseurs pré-qualifiés avec projets immobiliers concrets",
-      color: "from-blue-500 to-cyan-500"
+      icon: Database,
+      title: "Garanties NFT Blockchain",
+      description: "Propriétés tokenisées en NFT offrant sécurité maximale et traçabilité complète des transactions",
+      color: "from-yellow-500 to-orange-500"
     },
     {
       icon: BarChart3,

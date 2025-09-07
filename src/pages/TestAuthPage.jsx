@@ -1,14 +1,14 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
-import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { LogIn, LogOut, User, Mail, Phone, MapPin } from 'lucide-react';
 
 const TestAuthPage = () => {
-  const { user, profile, loading, signIn, signOut } = useSupabaseAuth();
+  const { user, profile, loading, signIn, signOut } = useAuth();
   const [email, setEmail] = useState('admin@terangafoncier.sn');
   const [password, setPassword] = useState('TerrangaAdmin2024!');
   const [isSigningIn, setIsSigningIn] = useState(false);
@@ -17,11 +17,11 @@ const TestAuthPage = () => {
     { email: 'admin@terangafoncier.sn', password: 'TerrangaAdmin2024!', role: 'admin', name: 'Super Admin' },
     { email: 'agent@terangafoncier.sn', password: 'TerrangaAgent2024!', role: 'agent_foncier', name: 'Moussa Diallo' },
     { email: 'banque@terangafoncier.sn', password: 'TerrangaBank2024!', role: 'banque', name: 'Banque Atlantique' },
-    { email: 'notaire@terangafoncier.sn', password: 'TerrangaNotaire2024!', role: 'notaire', name: 'Maître Ousmane Ndiaye' },
+    { email: 'notaire@terangafoncier.sn', password: 'TerrangaNotaire2024!', role: 'notaire', name: 'MaÃ®tre Ousmane Ndiaye' },
     { email: 'geometre@terangafoncier.sn', password: 'TerrangaGeo2024!', role: 'geometre', name: 'Ibrahima Fall' },
     { email: 'client@terangafoncier.sn', password: 'TerrangaClient2024!', role: 'particulier', name: 'Fatou Sow' },
     { email: 'vendeur.particulier@terangafoncier.sn', password: 'TerrangaVendeur2024!', role: 'vendeur_particulier', name: 'Abdou Camara' },
-    { email: 'vendeur.pro@terangafoncier.sn', password: 'TerrangaVendeurPro2024!', role: 'vendeur_pro', name: 'Société ImmoSénégal' },
+    { email: 'vendeur.pro@terangafoncier.sn', password: 'TerrangaVendeurPro2024!', role: 'vendeur_pro', name: 'SociÃ©tÃ© ImmoSÃ©nÃ©gal' },
     { email: 'investisseur@terangafoncier.sn', password: 'TerrangaInvestisseur2024!', role: 'investisseur', name: 'Amadou Ba' },
     { email: 'promoteur@terangafoncier.sn', password: 'TerrangaPromoteur2024!', role: 'promoteur', name: 'Groupe SenConstruction' },
     { email: 'mairie@terangafoncier.sn', password: 'TerrangaMairie2024!', role: 'mairie', name: 'Mairie de Dakar' },
@@ -42,7 +42,7 @@ const TestAuthPage = () => {
         });
       } else {
         window.safeGlobalToast({
-          title: 'Connexion réussie !',
+          title: 'Connexion rÃ©ussie !',
           description: `Bienvenue ${profile?.full_name || email}`,
           className: 'bg-green-500 text-white'
         });
@@ -62,14 +62,14 @@ const TestAuthPage = () => {
     try {
       await signOut();
       window.safeGlobalToast({
-        title: 'Déconnexion',
-        description: 'Vous avez été déconnecté avec succès',
+        title: 'DÃ©connexion',
+        description: 'Vous avez Ã©tÃ© dÃ©connectÃ© avec succÃ¨s',
         className: 'bg-blue-500 text-white'
       });
     } catch (error) {
       window.safeGlobalToast({
         title: 'Erreur',
-        description: 'Erreur lors de la déconnexion',
+        description: 'Erreur lors de la dÃ©connexion',
         variant: 'destructive'
       });
     }
@@ -85,7 +85,7 @@ const TestAuthPage = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-gray-600">Vérification de l'authentification...</p>
+          <p className="text-gray-600">VÃ©rification de l'authentification...</p>
         </div>
       </div>
     );
@@ -96,10 +96,10 @@ const TestAuthPage = () => {
       <div className="max-w-4xl mx-auto">
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            🏢 Teranga Foncier - Test d'Authentification
+            ðŸ¢ Teranga Foncier - Test d'Authentification
           </h1>
           <p className="text-gray-600">
-            Page de test pour vérifier l'authentification avec comptes mock
+            Page de test pour vÃ©rifier l'authentification avec comptes mock
           </p>
         </div>
 
@@ -179,13 +179,13 @@ const TestAuthPage = () => {
             </Card>
           )}
 
-          {/* Section utilisateur connecté */}
+          {/* Section utilisateur connectÃ© */}
           {user && (
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <User className="w-5 h-5" />
-                  Utilisateur Connecté
+                  Utilisateur ConnectÃ©
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
@@ -200,7 +200,7 @@ const TestAuthPage = () => {
                       {profile?.full_name || 'Utilisateur'}
                     </h3>
                     <Badge variant="outline">
-                      {profile?.role || 'Non défini'}
+                      {profile?.role || 'Non dÃ©fini'}
                     </Badge>
                   </div>
                 </div>
@@ -230,29 +230,29 @@ const TestAuthPage = () => {
                   className="w-full"
                 >
                   <LogOut className="w-4 h-4 mr-2" />
-                  Se déconnecter
+                  Se dÃ©connecter
                 </Button>
               </CardContent>
             </Card>
           )}
 
-          {/* Informations système */}
+          {/* Informations systÃ¨me */}
           <Card>
             <CardHeader>
-              <CardTitle>État du Système</CardTitle>
+              <CardTitle>Ã‰tat du SystÃ¨me</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
                   <span className="font-medium">Authentification :</span>
                   <Badge variant={user ? "success" : "secondary"} className="ml-2">
-                    {user ? "Connecté" : "Déconnecté"}
+                    {user ? "ConnectÃ©" : "DÃ©connectÃ©"}
                   </Badge>
                 </div>
                 <div>
                   <span className="font-medium">Profil :</span>
                   <Badge variant={profile ? "success" : "secondary"} className="ml-2">
-                    {profile ? "Chargé" : "Non chargé"}
+                    {profile ? "ChargÃ©" : "Non chargÃ©"}
                   </Badge>
                 </div>
                 <div>
@@ -271,7 +271,7 @@ const TestAuthPage = () => {
 
               {user && (
                 <div className="border-t pt-3 mt-3">
-                  <h4 className="font-medium mb-2">Données utilisateur :</h4>
+                  <h4 className="font-medium mb-2">DonnÃ©es utilisateur :</h4>
                   <pre className="bg-gray-100 p-3 rounded text-xs overflow-auto max-h-40">
                     {JSON.stringify({ user: user, profile: profile }, null, 2)}
                   </pre>
@@ -286,3 +286,5 @@ const TestAuthPage = () => {
 };
 
 export default TestAuthPage;
+
+

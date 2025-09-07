@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   TrendingUp, Zap, Shield, Brain, Coins, AlertTriangle,
@@ -11,7 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/SupabaseAuthContextFixed';
+import { useAuth } from '@/contexts/AuthProvider';
 import { useAI } from '@/lib/ai/intelligenceArtificielle';
 import { useBlockchain } from '@/lib/blockchain/smartContracts';
 import { useExternalAPIs } from '@/lib/api/externalIntegrations';
@@ -46,7 +46,7 @@ const EnhancedParticulierDashboard = () => {
   const initializeEnhancedDashboard = async () => {
     setLoading(true);
     try {
-      // Parallélisation des appels pour performance optimale
+      // ParallÃ©lisation des appels pour performance optimale
       const [aiData, blockchainData, bankingData] = await Promise.all([
         loadAIRecommendations(),
         loadBlockchainAssets(),
@@ -67,7 +67,7 @@ const EnhancedParticulierDashboard = () => {
       });
 
     } catch (error) {
-      console.error('❌ Erreur initialisation dashboard:', error);
+      console.error('âŒ Erreur initialisation dashboard:', error);
     } finally {
       setLoading(false);
     }
@@ -84,7 +84,7 @@ const EnhancedParticulierDashboard = () => {
       const recommendations = await getRecommendations(user.id, profile, preferences);
       return recommendations;
     } catch (error) {
-      console.error('❌ Erreur recommandations IA:', error);
+      console.error('âŒ Erreur recommandations IA:', error);
       return [];
     }
   };
@@ -115,7 +115,7 @@ const EnhancedParticulierDashboard = () => {
         }
       ];
     } catch (error) {
-      console.error('❌ Erreur assets blockchain:', error);
+      console.error('âŒ Erreur assets blockchain:', error);
       return [];
     }
   };
@@ -133,7 +133,7 @@ const EnhancedParticulierDashboard = () => {
       return [
         {
           bank: 'CBAO',
-          product: 'Crédit Habitat Diaspora',
+          product: 'CrÃ©dit Habitat Diaspora',
           rate: 7.5,
           maxAmount: 35000000,
           term: 20,
@@ -151,7 +151,7 @@ const EnhancedParticulierDashboard = () => {
         }
       ];
     } catch (error) {
-      console.error('❌ Erreur offres bancaires:', error);
+      console.error('âŒ Erreur offres bancaires:', error);
       return [];
     }
   };
@@ -169,7 +169,7 @@ const EnhancedParticulierDashboard = () => {
         amenities: property.amenities || []
       });
 
-      // Mise à jour de la propriété avec prédiction
+      // Mise Ã  jour de la propriÃ©tÃ© avec prÃ©diction
       setDashboardData(prev => ({
         ...prev,
         portfolio: {
@@ -183,7 +183,7 @@ const EnhancedParticulierDashboard = () => {
       }));
 
     } catch (error) {
-      console.error('❌ Erreur prédiction prix:', error);
+      console.error('âŒ Erreur prÃ©diction prix:', error);
     }
   };
 
@@ -209,10 +209,10 @@ const EnhancedParticulierDashboard = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold">
-              Bonjour {profile?.full_name || user?.email?.split('@')[0]} 👋
+              Bonjour {profile?.full_name || user?.email?.split('@')[0]} ðŸ‘‹
             </h1>
             <p className="text-emerald-100 mt-2">
-              🤖 Votre assistant IA a analysé 24 nouvelles opportunités pour vous
+              ðŸ¤– Votre assistant IA a analysÃ© 24 nouvelles opportunitÃ©s pour vous
             </p>
           </div>
           <div className="flex items-center space-x-2">
@@ -228,7 +228,7 @@ const EnhancedParticulierDashboard = () => {
         </div>
       </motion.div>
 
-      {/* KPIs Avancés */}
+      {/* KPIs AvancÃ©s */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -257,11 +257,11 @@ const EnhancedParticulierDashboard = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">NFT Propriétés</p>
+                <p className="text-sm text-muted-foreground">NFT PropriÃ©tÃ©s</p>
                 <p className="text-2xl font-bold">2</p>
                 <p className="text-xs text-blue-600 flex items-center">
                   <Shield className="w-3 h-3 mr-1" />
-                  100% Vérifiées
+                  100% VÃ©rifiÃ©es
                 </p>
               </div>
               <div className="bg-blue-100 p-2 rounded-lg">
@@ -293,7 +293,7 @@ const EnhancedParticulierDashboard = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-muted-foreground">Crédit Pré-approuvé</p>
+                <p className="text-sm text-muted-foreground">CrÃ©dit PrÃ©-approuvÃ©</p>
                 <p className="text-2xl font-bold">35M XOF</p>
                 <p className="text-xs text-orange-600 flex items-center">
                   <CreditCard className="w-3 h-3 mr-1" />
@@ -326,7 +326,7 @@ const EnhancedParticulierDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <PieChart className="w-5 h-5 mr-2" />
-                  Répartition Portfolio
+                  RÃ©partition Portfolio
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -338,7 +338,7 @@ const EnhancedParticulierDashboard = () => {
                   <Progress value={65} className="h-2" />
                   
                   <div className="flex justify-between items-center">
-                    <span className="text-sm">Résidentiel (25%)</span>
+                    <span className="text-sm">RÃ©sidentiel (25%)</span>
                     <span className="font-medium">19M XOF</span>
                   </div>
                   <Progress value={25} className="h-2" />
@@ -357,7 +357,7 @@ const EnhancedParticulierDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Brain className="w-5 h-5 mr-2" />
-                  Prédictions IA
+                  PrÃ©dictions IA
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -365,13 +365,13 @@ const EnhancedParticulierDashboard = () => {
                   <div className="bg-gradient-to-r from-emerald-50 to-blue-50 p-4 rounded-lg">
                     <h4 className="font-medium text-emerald-700">Valorisation 5 ans</h4>
                     <p className="text-2xl font-bold text-emerald-600">+42%</p>
-                    <p className="text-xs text-muted-foreground">Basé sur 10,000+ transactions</p>
+                    <p className="text-xs text-muted-foreground">BasÃ© sur 10,000+ transactions</p>
                   </div>
                   
                   <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
                     <h4 className="font-medium text-blue-700">Meilleur moment vente</h4>
                     <p className="text-lg font-bold text-blue-600">Mars 2026</p>
-                    <p className="text-xs text-muted-foreground">Pic de marché prévu</p>
+                    <p className="text-xs text-muted-foreground">Pic de marchÃ© prÃ©vu</p>
                   </div>
                 </div>
               </CardContent>
@@ -383,7 +383,7 @@ const EnhancedParticulierDashboard = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Activity className="w-5 h-5 mr-2" />
-                Activité Récente
+                ActivitÃ© RÃ©cente
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -391,7 +391,7 @@ const EnhancedParticulierDashboard = () => {
                 {[
                   {
                     type: 'blockchain',
-                    title: 'NFT Terrain Almadies créé',
+                    title: 'NFT Terrain Almadies crÃ©Ã©',
                     time: 'Il y a 2h',
                     icon: Shield,
                     color: 'text-blue-600'
@@ -405,7 +405,7 @@ const EnhancedParticulierDashboard = () => {
                   },
                   {
                     type: 'banking',
-                    title: 'Pré-approbation crédit CBAO confirmée',
+                    title: 'PrÃ©-approbation crÃ©dit CBAO confirmÃ©e',
                     time: 'Hier',
                     icon: CreditCard,
                     color: 'text-emerald-600'
@@ -434,21 +434,21 @@ const EnhancedParticulierDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Target className="w-5 h-5 mr-2" />
-                  Opportunités Personnalisées
+                  OpportunitÃ©s PersonnalisÃ©es
                 </CardTitle>
                 <CardDescription>
-                  Basées sur votre profil et historique
+                  BasÃ©es sur votre profil et historique
                 </CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   {[
                     {
-                      title: 'Terrain Yoff - Opportunité Rare',
+                      title: 'Terrain Yoff - OpportunitÃ© Rare',
                       price: '28M XOF',
                       prediction: '+35% en 3 ans',
                       confidence: 92,
-                      reason: 'Développement infrastructure prévu'
+                      reason: 'DÃ©veloppement infrastructure prÃ©vu'
                     },
                     {
                       title: 'Villa Almadies - Investissement Premium',
@@ -469,7 +469,7 @@ const EnhancedParticulierDashboard = () => {
                       <p className="text-sm text-purple-600 font-medium">{opportunity.prediction}</p>
                       <p className="text-xs text-muted-foreground mt-2">{opportunity.reason}</p>
                       <Button size="sm" className="w-full mt-3">
-                        Voir les détails
+                        Voir les dÃ©tails
                       </Button>
                     </div>
                   ))}
@@ -481,7 +481,7 @@ const EnhancedParticulierDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Zap className="w-5 h-5 mr-2" />
-                  Actions Recommandées
+                  Actions RecommandÃ©es
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -489,16 +489,16 @@ const EnhancedParticulierDashboard = () => {
                   {[
                     {
                       action: 'Diversifier vers commercial',
-                      impact: 'Réduction risque 15%',
+                      impact: 'RÃ©duction risque 15%',
                       priority: 'Haute'
                     },
                     {
-                      action: 'Renégocier crédit actuel',
-                      impact: 'Économie 180K XOF/mois',
+                      action: 'RenÃ©gocier crÃ©dit actuel',
+                      impact: 'Ã‰conomie 180K XOF/mois',
                       priority: 'Moyenne'
                     },
                     {
-                      action: 'Vendre Terrain Thiès',
+                      action: 'Vendre Terrain ThiÃ¨s',
                       impact: 'Optimisation fiscale',
                       priority: 'Basse'
                     }
@@ -528,10 +528,10 @@ const EnhancedParticulierDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Coins className="w-5 h-5 mr-2" />
-                  Mes NFT Propriétés
+                  Mes NFT PropriÃ©tÃ©s
                 </CardTitle>
                 <CardDescription>
-                  Certificats de propriété blockchain
+                  Certificats de propriÃ©tÃ© blockchain
                 </CardDescription>
               </CardHeader>
               <CardContent>
@@ -552,7 +552,7 @@ const EnhancedParticulierDashboard = () => {
                         <div className="text-right">
                           <Badge variant="outline" className="text-xs">
                             <Shield className="w-3 h-3 mr-1" />
-                            Vérifié
+                            VÃ©rifiÃ©
                           </Badge>
                         </div>
                       </div>
@@ -573,7 +573,7 @@ const EnhancedParticulierDashboard = () => {
                 <div className="space-y-3">
                   {[
                     {
-                      type: 'Séquestre',
+                      type: 'SÃ©questre',
                       property: 'Terrain Saly',
                       status: 'En cours',
                       amount: '32M XOF'
@@ -611,7 +611,7 @@ const EnhancedParticulierDashboard = () => {
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <CreditCard className="w-5 h-5 mr-2" />
-                  Offres Crédit Personnalisées
+                  Offres CrÃ©dit PersonnalisÃ©es
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -625,7 +625,7 @@ const EnhancedParticulierDashboard = () => {
                         </div>
                         {offer.preApproved && (
                           <Badge className="bg-emerald-100 text-emerald-700">
-                            Pré-approuvé
+                            PrÃ©-approuvÃ©
                           </Badge>
                         )}
                       </div>
@@ -639,16 +639,16 @@ const EnhancedParticulierDashboard = () => {
                           <p className="font-medium">{(offer.maxAmount / 1000000).toFixed(0)}M XOF</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Durée</p>
+                          <p className="text-muted-foreground">DurÃ©e</p>
                           <p className="font-medium">{offer.term} ans</p>
                         </div>
                         <div>
-                          <p className="text-muted-foreground">Mensualité</p>
+                          <p className="text-muted-foreground">MensualitÃ©</p>
                           <p className="font-medium">{(offer.monthlyPayment / 1000).toFixed(0)}K XOF</p>
                         </div>
                       </div>
                       <Button size="sm" className="w-full mt-3">
-                        Simuler ce crédit
+                        Simuler ce crÃ©dit
                       </Button>
                     </div>
                   ))}
@@ -666,9 +666,9 @@ const EnhancedParticulierDashboard = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-blue-700">Transfert Euro → XOF</h4>
+                    <h4 className="font-medium text-blue-700">Transfert Euro â†’ XOF</h4>
                     <p className="text-2xl font-bold text-blue-600">1 EUR = 656 XOF</p>
-                    <p className="text-xs text-muted-foreground">Taux préférentiel -2%</p>
+                    <p className="text-xs text-muted-foreground">Taux prÃ©fÃ©rentiel -2%</p>
                   </div>
                   
                   <div className="space-y-2">
@@ -712,7 +712,7 @@ const EnhancedParticulierDashboard = () => {
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-blue-600">92%</p>
-                    <p className="text-xs text-muted-foreground">Précision IA</p>
+                    <p className="text-xs text-muted-foreground">PrÃ©cision IA</p>
                   </div>
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">7.2</p>
@@ -734,20 +734,20 @@ const EnhancedParticulierDashboard = () => {
                   {[
                     {
                       title: 'Premier NFT',
-                      description: 'Première propriété tokenisée',
-                      icon: '🏆',
+                      description: 'PremiÃ¨re propriÃ©tÃ© tokenisÃ©e',
+                      icon: 'ðŸ†',
                       completed: true
                     },
                     {
                       title: 'Investisseur IA',
                       description: '10 recommandations suivies',
-                      icon: '🤖',
+                      icon: 'ðŸ¤–',
                       completed: true
                     },
                     {
-                      title: 'Portfolio Diversifié',
-                      description: '3 types de propriétés',
-                      icon: '📊',
+                      title: 'Portfolio DiversifiÃ©',
+                      description: '3 types de propriÃ©tÃ©s',
+                      icon: 'ðŸ“Š',
                       completed: false
                     }
                   ].map((achievement, index) => (
@@ -781,22 +781,22 @@ const EnhancedParticulierDashboard = () => {
             {[
               {
                 type: 'opportunity',
-                title: 'Nouvelle opportunité détectée par IA',
-                message: 'Terrain Yoff correspond à vos critères avec ROI prévu +35%',
+                title: 'Nouvelle opportunitÃ© dÃ©tectÃ©e par IA',
+                message: 'Terrain Yoff correspond Ã  vos critÃ¨res avec ROI prÃ©vu +35%',
                 time: 'Il y a 1h',
                 urgent: true
               },
               {
                 type: 'market',
-                title: 'Alerte marché',
+                title: 'Alerte marchÃ©',
                 message: 'Prix zone Almadies en hausse +5% ce mois',
                 time: 'Il y a 3h',
                 urgent: false
               },
               {
                 type: 'blockchain',
-                title: 'Transaction blockchain confirmée',
-                message: 'Votre NFT Terrain Saly a été mis à jour',
+                title: 'Transaction blockchain confirmÃ©e',
+                message: 'Votre NFT Terrain Saly a Ã©tÃ© mis Ã  jour',
                 time: 'Il y a 5h',
                 urgent: false
               }
@@ -823,3 +823,5 @@ const EnhancedParticulierDashboard = () => {
 };
 
 export default EnhancedParticulierDashboard;
+
+

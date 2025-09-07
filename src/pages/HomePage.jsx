@@ -24,19 +24,22 @@ import {
   Lock,
   Coins,
   FileText,
-  Database
+  Database,
+  Blocks
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Helmet } from 'react-helmet-async';
-import ModernHeroSlider from '@/components/home/ModernHeroSlider';
+import ModernHeroSliderFixed from '@/components/home/ModernHeroSliderFixed';
+import MarketTickerBar from '@/components/home/MarketTickerBar';
 import PopularCities from '@/components/home/PopularCities';
 import FeaturedParcels from '@/components/home/FeaturedParcels';
 import ProblemSolutionSection from '@/components/home/sections/ProblemSolutionSection';
 import DiasporaConstructionSection from '@/components/home/sections/DiasporaConstructionSection';
 import CommunalLandSection from '@/components/home/sections/CommunalLandSection';
+import MarketBlockchainSection from '@/components/home/sections/MarketBlockchainSection';
 
 const HomePage = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -46,21 +49,28 @@ const HomePage = () => {
     {
       name: "Aminata Diallo",
       role: "Diaspora - France", 
-      content: "J'ai acheté mon terrain depuis Paris et suivi ma construction en temps réel. Incroyable !",
+      content: "Financement bancaire approuvé en 48h et suivi construction en temps réel depuis Paris. Révolutionnaire !",
       rating: 5,
       avatar: "/api/placeholder/60/60"
     },
     {
       name: "Moussa Seck",
       role: "Investisseur - Dakar",
-      content: "La plateforme m'a permis de diversifier mon portefeuille immobilier facilement.",
+      content: "Partenariat bancaire UBA facilite tout. NFT blockchain sécurise mes investissements terrains.",
       rating: 5,
       avatar: "/api/placeholder/60/60"
     },
     {
       name: "Fatou Ba",
       role: "Diaspora - USA",
-      content: "Paiements échelonnés parfaits, suivi photo quotidien. Je recommande !",
+      content: "Crédit Agricole approuve directement sur plateforme. Photos quotidiennes de ma construction !",
+      rating: 5,
+      avatar: "/api/placeholder/60/60"
+    },
+    {
+      name: "Ibrahim Touré",
+      role: "Mairie - Thiès",
+      content: "Demandes de terrains communaux simplifiées. Blockchain transparent pour tous citoyens.",
       rating: 5,
       avatar: "/api/placeholder/60/60"
     }
@@ -69,8 +79,9 @@ const HomePage = () => {
   const stats = [
     { number: "15K+", label: "Terrains disponibles", icon: MapPin, color: "text-blue-600" },
     { number: "8.2K", label: "Sénégalais connectés", icon: Users, color: "text-emerald-600" },
-    { number: "95%", label: "Satisfaction client", icon: Star, color: "text-yellow-600" },
-    { number: "24/7", label: "Support disponible", icon: Shield, color: "text-purple-600" }
+    { number: "12", label: "Banques partenaires", icon: CreditCard, color: "text-indigo-600" },
+    { number: "95%", label: "Projets financés", icon: TrendingUp, color: "text-green-600" },
+    { number: "24/7", label: "Suivi construction", icon: Shield, color: "text-purple-600" }
   ];
 
   const mainFeatures = [
@@ -80,6 +91,14 @@ const HomePage = () => {
       description: "Vos propriétés sont tokenisées en NFT sur blockchain pour une sécurité maximale et une traçabilité totale",
       color: "from-yellow-500 to-orange-500",
       bgColor: "from-yellow-50 to-orange-50",
+      isNew: true
+    },
+    {
+      icon: CreditCard,
+      title: "Financement Bancaire",
+      description: "Obtenez un crédit immobilier directement via notre plateforme avec nos banques partenaires",
+      color: "from-green-500 to-emerald-500",
+      bgColor: "from-green-50 to-emerald-50",
       isNew: true
     },
     {
@@ -97,12 +116,34 @@ const HomePage = () => {
       bgColor: "from-emerald-50 to-teal-50"
     },
     {
+      icon: Landmark,
+      title: "Terrains Communaux",
+      description: "Accédez aux terrains communaux jusqu'à 70% moins chers avec processus transparent",
+      color: "from-indigo-500 to-purple-500",
+      bgColor: "from-indigo-50 to-purple-50",
+      isNew: true
+    },
+    {
       icon: Lock,
       title: "Escrow Intelligent",
       description: "Transactions sécurisées par smart contracts avec libération automatique des fonds",
-      color: "from-purple-500 to-indigo-500", 
-      bgColor: "from-purple-50 to-indigo-50",
+      color: "from-purple-500 to-pink-500", 
+      bgColor: "from-purple-50 to-pink-50",
       isNew: true
+    },
+    {
+      icon: Phone,
+      title: "Support Diaspora",
+      description: "Service dédié à la diaspora avec conseils personnalisés et accompagnement complet",
+      color: "from-rose-500 to-red-500",
+      bgColor: "from-rose-50 to-red-50"
+    },
+    {
+      icon: Coins,
+      title: "Paiement Échelonné",
+      description: "Payez votre terrain en plusieurs fois avec des plans de financement flexibles",
+      color: "from-amber-500 to-yellow-500",
+      bgColor: "from-amber-50 to-yellow-50"
     }
   ];
 
@@ -146,61 +187,39 @@ const HomePage = () => {
   return (
     <>
       <Helmet>
-        <title>Teranga Foncier - Votre terrain au Sénégal depuis le monde entier</title>
-        <meta name="description" content="Achetez, construisez et suivez votre projet immobilier au Sénégal en toute sécurité, où que vous soyez dans le monde. Paiements échelonnés et suivi temps réel." />
-        <meta property="og:title" content="Teranga Foncier - Votre terrain au Sénégal depuis le monde entier" />
-        <meta property="og:description" content="La plateforme #1 pour investir dans l'immobilier sénégalais depuis l'étranger avec sécurité totale." />
+        <title>Teranga Foncier | Plateforme Blockchain Immobilière Sénégal</title>
+        <meta name="description" content="La première plateforme blockchain du Sénégal pour l'immobilier sécurisé. Terrains vérifiés, transactions transparentes, construction intelligente." />
+        <meta name="keywords" content="blockchain, immobilier, Sénégal, terrains, propriétés, crypto, sécurité" />
+        <meta property="og:title" content="Teranga Foncier | Blockchain Immobilier Sénégal" />
+        <meta property="og:description" content="Plateforme blockchain révolutionnaire pour l'immobilier sécurisé au Sénégal." />
         <meta property="og:type" content="website" />
         <link rel="canonical" href="https://www.terangafoncier.com" />
       </Helmet>
 
       <div className="min-h-screen bg-white">
-        {/* Bandeau Nouveautés */}
-        <motion.div
-          initial={{ opacity: 0, y: -50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          className="bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 text-white py-3 text-center relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative z-10 flex items-center justify-center gap-3 px-4">
-            <Zap className="h-5 w-5 animate-pulse" />
-            <span className="font-semibold">
-              🎉 NOUVEAUTÉ : Fonctionnalités Avancées disponibles !
-            </span>
-            <Link 
-              to="/fonctionnalites-avancees" 
-              className="bg-white/20 hover:bg-white/30 px-4 py-1 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-2"
-            >
-              Découvrir <ArrowRight className="h-4 w-4" />
-            </Link>
-          </div>
-        </motion.div>
+        {/* Modern Hero Slider avec Blockchain */}
+        <ModernHeroSliderFixed />
 
-        {/* Modern Hero Slider */}
-        <ModernHeroSlider />
+        {/* Market Ticker Bar */}
+        <MarketTickerBar />
 
-        {/* Stats rapides */}
-        <section className="py-12 bg-gray-50 border-b">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="grid grid-cols-2 md:grid-cols-4 gap-6"
-            >
-              {stats.map((stat, index) => (
-                <div key={index} className="text-center">
-                  <div className="flex justify-center mb-2">
-                    <stat.icon className={`h-8 w-8 ${stat.color}`} />
-                  </div>
-                  <div className="text-2xl lg:text-3xl font-bold text-gray-900">{stat.number}</div>
-                  <div className="text-sm text-gray-600">{stat.label}</div>
-                </div>
-              ))}
-            </motion.div>
-          </div>
-        </section>
+        {/* Market Blockchain Section */}
+        <MarketBlockchainSection />
+
+        {/* Problem & Solution Section */}
+        <ProblemSolutionSection />
+
+        {/* Diaspora Construction Section */}
+        <DiasporaConstructionSection />
+
+        {/* Communal Land Section */}
+        <CommunalLandSection />
+
+        {/* Popular Cities Section */}
+        <PopularCities />
+
+        {/* Featured Parcels Section */}
+        <FeaturedParcels />
 
         {/* Fonctionnalités Principales avec Blockchain */}
         <section className="py-20 bg-white">

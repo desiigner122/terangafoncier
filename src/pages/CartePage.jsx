@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
 import { 
@@ -26,7 +27,8 @@ import {
   Calendar,
   Users,
   Award,
-  Globe
+  Globe,
+  TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -35,12 +37,69 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const CartePage = () => {
+  const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [selectedCommune, setSelectedCommune] = useState(null);
   const [mapView, setMapView] = useState('satellite');
   const [activeTab, setActiveTab] = useState('private');
+  
+  // Nouveaux états pour fonctionnalités avancées
+  const [showPredictiveAnalysis, setShowPredictiveAnalysis] = useState(false);
+  const [showInfrastructureLayer, setShowInfrastructureLayer] = useState(false);
+  const [showTransportLayer, setShowTransportLayer] = useState(false);
+  const [showEducationLayer, setShowEducationLayer] = useState(false);
+  const [showROIHeatmap, setShowROIHeatmap] = useState(false);
+  const [showARMode, setShowARMode] = useState(false);
+  const [measurementMode, setMeasurementMode] = useState(false);
+  const [droneViewMode, setDroneViewMode] = useState(false);
+
+  // Données d'analyse prédictive IA
+  const predictiveData = {
+    growth_prediction: "+15.2%",
+    investment_score: 8.7,
+    infrastructure_development: "85%",
+    market_trend: "Croissance forte",
+    best_roi_zones: ["Almadies", "Mermoz", "Point E"],
+    risk_level: "Faible"
+  };
+
+  // Calques intelligents
+  const smartLayers = [
+    {
+      id: 'infrastructure',
+      name: 'Infrastructure',
+      icon: Building2,
+      active: showInfrastructureLayer,
+      toggle: () => setShowInfrastructureLayer(!showInfrastructureLayer),
+      color: 'blue'
+    },
+    {
+      id: 'transport',
+      name: 'Transport',
+      icon: Navigation,
+      active: showTransportLayer,
+      toggle: () => setShowTransportLayer(!showTransportLayer),
+      color: 'green'
+    },
+    {
+      id: 'education',
+      name: 'Écoles',
+      icon: Users,
+      active: showEducationLayer,
+      toggle: () => setShowEducationLayer(!showEducationLayer),
+      color: 'purple'
+    },
+    {
+      id: 'roi',
+      name: 'ROI Heatmap',
+      icon: TrendingUp,
+      active: showROIHeatmap,
+      toggle: () => setShowROIHeatmap(!showROIHeatmap),
+      color: 'orange'
+    }
+  ];
 
   // Propriétés NFT avec données blockchain
   const properties = [
@@ -397,7 +456,14 @@ const CartePage = () => {
                         )}
 
                         <div className="flex gap-2 mt-3">
-                          <Button size="sm" className="flex-1 text-xs">
+                          <Button 
+                            size="sm" 
+                            className="flex-1 text-xs"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate(`/parcel-blockchain/${property.id}`);
+                            }}
+                          >
                             Voir détails
                           </Button>
                           {property.is_municipal && (

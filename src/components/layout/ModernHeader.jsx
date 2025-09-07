@@ -31,7 +31,8 @@ import {
   Brain,
   Sparkles,
   Rocket,
-  Eye
+  Eye,
+  BookOpen
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -73,6 +74,22 @@ const ModernHeader = () => {
       key: 'carte'
     },
     {
+      label: 'Projets & Demandes',
+      key: 'projects',
+      hasDropdown: true,
+      sections: [
+        {
+          title: 'Construction Blockchain',
+          items: [
+            { label: 'Projets Promoteurs', href: '/promoters-projects', icon: Building2, description: 'Nouveaux projets immobiliers avec blockchain', isNew: true },
+            { label: 'Demandes Construction', href: '/promoter-requests', icon: Hammer, description: 'Demandes de particuliers pour construire', isNew: true },
+            { label: 'Guide Projets', href: '/guide-projets', icon: BookOpen, description: 'Comment ça marche avec la blockchain' },
+            { label: 'Guide Demandes', href: '/guide-demandes', icon: FileText, description: 'Processus de demande expliqué' }
+          ]
+        }
+      ]
+    },
+    {
       label: 'Solutions',
       key: 'solutions',
       hasDropdown: true,
@@ -81,11 +98,10 @@ const ModernHeader = () => {
           title: 'Particuliers & Professionnels',
           items: [
             { label: 'Particuliers', href: '/solutions/particuliers', icon: Home, description: 'Acheteurs & Vendeurs' },
-            { label: 'Promoteurs', href: '/solutions/promoteurs', icon: Hammer, description: 'Projets immobiliers' },
-            { label: 'Agents Fonciers', href: '/solutions/agents', icon: Briefcase, description: 'Outils de vente avancÃ©s' },
-            { label: 'GÃ©omÃ¨tres', href: '/solutions/geometres', icon: MapPin, description: 'Cartographie intelligente' },
+            { label: 'Agents Fonciers', href: '/solutions/agents', icon: Briefcase, description: 'Outils de vente avancés' },
+            { label: 'Géomètres', href: '/solutions/geometres', icon: MapPin, description: 'Cartographie intelligente' },
             { label: 'Notaires', href: '/solutions/notaires', icon: Scale, description: 'Services blockchain', isNew: true },
-            { label: 'Banques', href: '/solutions/banques', icon: Banknote, description: 'Financement sÃ©curisÃ©' }
+            { label: 'Banques', href: '/solutions/banques', icon: Banknote, description: 'Financement sécurisé' }
           ]
         }
       ]
@@ -179,7 +195,7 @@ const ModernHeader = () => {
                       animate={{ opacity: 1, y: 0, scale: 1 }}
                       exit={{ opacity: 0, y: 10, scale: 0.95 }}
                       transition={{ duration: 0.2 }}
-                      className="absolute top-full left-0 mt-2 w-[600px] bg-white rounded-xl shadow-xl border border-gray-200/50 overflow-hidden"
+                      className="absolute top-full left-1/2 transform -translate-x-1/2 mt-2 w-[600px] bg-white rounded-xl shadow-2xl border border-gray-200/50 overflow-hidden z-50"
                       onMouseLeave={() => setActiveDropdown(null)}
                     >
                       <div className="p-6">

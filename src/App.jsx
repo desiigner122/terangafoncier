@@ -18,6 +18,10 @@ import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import DebugDashboard from '@/pages/DebugDashboard';
 import ParcelsListPage from '@/pages/ParcelsListPage';
 import ParcelDetailPage from '@/pages/ParcelDetailPage';
+import BlockchainParcelDetailPage from '@/pages/BlockchainParcelDetailPage';
+import PromoterProjectsPage from '@/pages/PromoterProjectsPage';
+import ProjectDetailPage from '@/pages/ProjectDetailPage';
+import PromoterConstructionRequestsPage from '@/pages/PromoterConstructionRequestsPage';
 import IntelligentParcelPage from '@/pages/IntelligentParcelPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ContactPage from '@/pages/ContactPage';
@@ -43,6 +47,8 @@ import FaqPage from '@/pages/FaqPage';
 import PartnersPage from '@/pages/PartnersPage';
 import SellPropertyPage from '@/pages/SellPropertyPage';
 import DiasporaGuidePage from '@/pages/DiasporaGuidePage';
+import ProjectsGuidePage from '@/pages/ProjectsGuidePage';
+import RequestsGuidePage from '@/pages/RequestsGuidePage';
 import ConstructionDistancePage from '@/pages/solutions/ConstructionDistancePage';
 import DiasporaInvestmentPage from '@/pages/solutions/DiasporaInvestmentPage';
 import ProjectMonitoringPage from '@/pages/solutions/ProjectMonitoringPage';
@@ -229,6 +235,11 @@ function App() {
               <Route path="banned" element={<BannedPage />} />
               <Route path="parcelles" element={<ParcelsListPage />} />
               <Route path="parcelles/:id" element={<ParcelDetailPage />} />
+              <Route path="parcel-blockchain/:id" element={<BlockchainParcelDetailPage />} />
+              <Route path="promoters-projects" element={<PromoterProjectsPage />} />
+              <Route path="promoter-requests" element={<PromoterConstructionRequestsPage />} />
+              <Route path="project/:id" element={<ProjectDetailPage />} />
+              <Route path="promoter-requests" element={<PromoterConstructionRequestsPage />} />
               <Route path="terrain-intelligent/:id" element={<IntelligentParcelPage />} />
               <Route path="villes/:cityId" element={<CityDetailPage />} />
               <Route path="contact" element={<BlockchainContactPage />} />
@@ -248,6 +259,8 @@ function App() {
               <Route path="faq" element={<FaqPage />} />
               <Route path="partners" element={<PartnersPage />} />
               <Route path="guide-diaspora" element={<DiasporaGuidePage />} />
+              <Route path="guide-projets" element={<ProjectsGuidePage />} />
+              <Route path="guide-demandes" element={<RequestsGuidePage />} />
               <Route path="map" element={<MapPage />} />
               <Route path="blog" element={<BlogPage />} />
               <Route path="blog/:slug" element={<BlogPostPage />} />

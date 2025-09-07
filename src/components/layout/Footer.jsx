@@ -358,8 +358,3 @@ const Footer = () => {
 };
 
 export default Footer;
-    </footer>
-  );
-};
-
-export default Footer;

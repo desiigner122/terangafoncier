@@ -81,7 +81,7 @@ const ModernHeader = () => {
         {
           title: 'Construction Blockchain',
           items: [
-            { label: 'Projets Promoteurs', href: '/promoters-projects', icon: Building2, description: 'Nouveaux projets immobiliers avec blockchain', isNew: true },
+            { label: 'Projets Promoteurs', href: '/promoteurs', icon: Building2, description: 'Nouveaux projets immobiliers avec blockchain', isNew: true },
             { label: 'Demandes Construction', href: '/promoter-requests', icon: Hammer, description: 'Demandes de particuliers pour construire', isNew: true },
             { label: 'Guide Projets', href: '/guide-projets', icon: BookOpen, description: 'Comment ça marche avec la blockchain' },
             { label: 'Guide Demandes', href: '/guide-demandes', icon: FileText, description: 'Processus de demande expliqué' }

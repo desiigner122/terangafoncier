@@ -40,43 +40,45 @@ const BlockchainFooter = () => {
 
   const quickLinks = [
     {
-      title: "🔗 Blockchain Immobilier",
+      title: "Solutions",
       links: [
-        { label: "Terrains Blockchain", path: "/terrains", icon: Blocks, badge: "Vérifié" },
-        { label: "NFT Propriétés", path: "/nft-properties", icon: Sparkles, badge: "Innovation" },
-        { label: "Smart Contracts", path: "/smart-contracts", icon: Cpu, badge: "Auto" },
-        { label: "Vérification Crypto", path: "/tools/property-verification", icon: Shield },
-        { label: "Market Analysis IA", path: "/tools/market-analysis", icon: Brain, badge: "IA" },
+        { label: "Particuliers", path: "/solutions/particuliers", icon: Users },
+        { label: "Construction à Distance", path: "/solutions/construction-distance", icon: Globe },
+        { label: "Surveillance de Projets", path: "/solutions/project-monitoring", icon: Eye },
+        { label: "Investissement Diaspora", path: "/solutions/diaspora-investment", icon: Smartphone },
+        { label: "Comment ça marche", path: "/how-it-works", icon: ArrowRight },
       ]
     },
     {
-      title: "💎 Solutions Premium",
+      title: "Professionnels",
       links: [
-        { label: "Construction Distance", path: "/solutions/construction-distance", icon: Globe, badge: "Diaspora" },
-        { label: "Surveillance IA", path: "/solutions/project-monitoring", icon: Eye, badge: "24/7" },
-        { label: "Financement Crypto", path: "/solutions/blockchain", icon: Coins, badge: "DeFi" },
-        { label: "Escrow Sécurisé", path: "/escrow", icon: Lock },
-        { label: "Paiement Mobile", path: "/solutions/diaspora-investment", icon: Smartphone },
+        { label: "Banques", path: "/banques", icon: CreditCard },
+        { label: "Agents Fonciers", path: "/agents-fonciers", icon: Shield },
+        { label: "Notaires", path: "/notaires", icon: FileCheck },
+        { label: "Géomètres", path: "/geometres", icon: MapPin },
+        { label: "Promoteurs", path: "/promoteurs", icon: Rocket },
+        { label: "Rejoignez-nous", path: "/rejoignez-nous", icon: ArrowRight },
       ]
     },
     {
-      title: "🏛️ Professionnels",
+      title: "Informations",
       links: [
-        { label: "Banques Digitales", path: "/banques", icon: CreditCard },
-        { label: "Agents Certifiés", path: "/agents-fonciers", icon: Fingerprint, badge: "Vérifié" },
-        { label: "Notaires Blockchain", path: "/notaires", icon: FileCheck },
-        { label: "Promoteurs Innovants", path: "/promoteurs", icon: Rocket },
-        { label: "Rejoindre l'Écosystème", path: "/rejoignez-nous", icon: ArrowRight, badge: "Recrutement" },
+        { label: "À propos", path: "/about", icon: Users },
+        { label: "Contact", path: "/contact", icon: Mail },
+        { label: "Blog", path: "/blog", icon: Globe },
+        { label: "FAQ", path: "/faq", icon: ArrowRight },
+        { label: "Partenaires", path: "/partners", icon: Users },
+        { label: "Histoires de Succès", path: "/success-stories", icon: Award },
       ]
     },
     {
-      title: "🚀 Innovation Tech",
+      title: "Légal",
       links: [
-        { label: "Guide Blockchain", path: "/how-it-works", icon: Database },
-        { label: "API Développeurs", path: "/blog", icon: Cpu, badge: "API" },
-        { label: "Carte IA Interactive", path: "/map", icon: Brain },
-        { label: "Support Technique", path: "/contact", icon: Shield },
-        { label: "Centre d'Aide IA", path: "/faq", icon: Sparkles },
+        { label: "Mentions Légales", path: "/legal", icon: FileCheck },
+        { label: "Politique de Confidentialité", path: "/privacy", icon: Shield },
+        { label: "Politique des Cookies", path: "/cookie-policy", icon: Lock },
+        { label: "Conditions d'Utilisation", path: "/terms", icon: FileCheck },
+        { label: "Protection des Données", path: "/data-protection", icon: Shield },
       ]
     }
   ];

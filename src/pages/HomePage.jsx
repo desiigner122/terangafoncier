@@ -32,14 +32,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Helmet } from 'react-helmet-async';
-import ModernHeroSliderFixed from '@/components/home/ModernHeroSliderFixed';
 import MarketTickerBar from '@/components/home/MarketTickerBar';
-import PopularCities from '@/components/home/PopularCities';
-import FeaturedParcels from '@/components/home/FeaturedParcels';
+import LiveMetricsBar from '@/components/home/LiveMetricsBar';
 import ProblemSolutionSection from '@/components/home/sections/ProblemSolutionSection';
-import DiasporaConstructionSection from '@/components/home/sections/DiasporaConstructionSection';
-import CommunalLandSection from '@/components/home/sections/CommunalLandSection';
 import MarketBlockchainSection from '@/components/home/sections/MarketBlockchainSection';
+import CommunalLandsPreview from '@/components/home/CommunalLandsPreview';
+import SellersPreview from '@/components/home/SellersPreview';
+import DiasporaPreview from '@/components/home/DiasporaPreview';
+import CitiesPreview from '@/components/home/CitiesPreview';
+import DashboardProcessInfo from '@/components/home/DashboardProcessInfo';
 
 const HomePage = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
@@ -196,12 +197,63 @@ const HomePage = () => {
         <link rel="canonical" href="https://www.terangafoncier.com" />
       </Helmet>
 
-      <div className="min-h-screen bg-white">
-        {/* Modern Hero Slider avec Blockchain */}
-        <ModernHeroSliderFixed />
-
-        {/* Market Ticker Bar */}
+      <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
+        {/* Market Ticker Bar - Marché foncier entre menu et hero */}
         <MarketTickerBar />
+
+        {/* Hero Section Simple */}
+        <section className="relative py-24 overflow-hidden">
+          <div className="container mx-auto px-4 relative z-10">
+            <motion.div 
+              initial={{ opacity: 0, y: 30 }} 
+              animate={{ opacity: 1, y: 0 }} 
+              transition={{ duration: 0.8 }} 
+              className="text-center max-w-4xl mx-auto"
+            >
+              {/* Teranga Foncier Brand */}
+              <motion.div
+                initial={{ opacity: 0, y: -20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="mb-6"
+              >
+                <div className="flex items-center justify-center gap-3 mb-4">
+                  <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 via-green-500 to-red-500 rounded-xl flex items-center justify-center shadow-xl">
+                    <Building className="w-8 h-8 text-white" />
+                  </div>
+                  <h2 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 via-green-400 to-red-400 bg-clip-text text-transparent">
+                    Teranga Foncier
+                  </h2>
+                </div>
+              </motion.div>
+
+              <Badge className="mb-6 bg-gradient-to-r from-yellow-500 to-red-500 text-white border-0 px-6 py-2 text-lg shadow-lg">
+                🇸🇳 Powered by Blockchain
+              </Badge>
+              
+              <h1 className="text-5xl lg:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-yellow-200 to-green-200 bg-clip-text text-transparent leading-tight">
+                L'Immobilier Sénégalais
+                <span className="block text-4xl lg:text-6xl">Réinventé</span>
+              </h1>
+              
+              <p className="text-xl lg:text-2xl text-slate-300 mb-12 leading-relaxed max-w-3xl mx-auto">
+                Investissez dans des terrains au Sénégal avec la sécurité de la blockchain, la transparence des smart contracts et l'innovation de l'IA.
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
+                <Button asChild size="lg" className="bg-gradient-to-r from-yellow-500 to-red-500 hover:from-yellow-600 hover:to-red-600 text-white font-bold px-10 py-6 text-lg transform hover:scale-105 transition-all duration-300 shadow-2xl border-0">
+                  <Link to="/terrains">Explorer les Terrains<Building className="ml-2 h-5 w-5" /></Link>
+                </Button>
+                <Button asChild variant="outline" size="lg" className="border-slate-400 text-slate-200 hover:bg-slate-800 hover:text-white backdrop-blur-sm px-8 py-6 text-lg font-semibold">
+                  <Link to="/blockchain"><Play className="mr-2 h-5 w-5" />Voir la Blockchain</Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
+        {/* Live Metrics Bar - Métriques en temps réel juste sous le hero */}
+        <LiveMetricsBar />
 
         {/* Market Blockchain Section */}
         <MarketBlockchainSection />
@@ -209,31 +261,46 @@ const HomePage = () => {
         {/* Problem & Solution Section */}
         <ProblemSolutionSection />
 
-        {/* Diaspora Construction Section */}
-        <DiasporaConstructionSection />
+        {/* Aperçus Simplifiés */}
+        
+        {/* Construction Diaspora - Aperçu */}
+        <DiasporaPreview />
 
-        {/* Communal Land Section */}
-        <CommunalLandSection />
+        {/* Terrains Communaux - Aperçu */}
+        <CommunalLandsPreview />
 
-        {/* Popular Cities Section */}
-        <PopularCities />
+        {/* Vendeurs - Aperçu */}
+        <SellersPreview />
 
-        {/* Featured Parcels Section */}
-        <FeaturedParcels />
+        {/* Villes Populaires - Aperçu */}
+        <CitiesPreview />
 
-        {/* Fonctionnalités Principales avec Blockchain */}
-        <section className="py-20 bg-white">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        {/* Information Processus Dashboard */}
+        <DashboardProcessInfo />
+
+        {/* Testimonials Dynamiques */}
+        <section className="py-20 bg-gray-50">
+          {/* Background Pattern */}
+          <div className="absolute inset-0 opacity-5">
+            <div className="absolute inset-0" style={{
+              backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23000000' fill-opacity='0.1'%3E%3Ccircle cx='10' cy='10' r='2'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`,
+            }}></div>
+          </div>
+
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.8 }}
               className="text-center mb-16"
             >
-              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+              <Badge className="mb-4 bg-gradient-to-r from-blue-600 to-purple-600 text-white border-0 px-6 py-2">
+                🚀 Innovation Blockchain
+              </Badge>
+              <h2 className="text-4xl lg:text-5xl font-bold mb-6 bg-gradient-to-r from-gray-900 via-blue-800 to-gray-900 bg-clip-text text-transparent">
                 Fonctionnalités Révolutionnaires
               </h2>
-              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+              <p className="text-xl text-gray-700 max-w-3xl mx-auto leading-relaxed">
                 Découvrez comment nous révolutionnons l'immobilier sénégalais avec la blockchain et l'IA
               </p>
             </motion.div>
@@ -247,24 +314,25 @@ const HomePage = () => {
                   transition={{ duration: 0.8, delay: index * 0.1 }}
                   className="relative group"
                 >
-                  <Card className="h-full p-6 hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-gray-50 to-white">
+                  <Card className="h-full p-6 hover:shadow-2xl hover:scale-105 transition-all duration-300 border-0 bg-white/80 backdrop-blur-sm shadow-lg">
                     {feature.isNew && (
-                      <div className="absolute -top-2 -right-2">
-                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 animate-pulse">
+                      <div className="absolute -top-2 -right-2 z-10">
+                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 animate-pulse shadow-lg">
                           🆕 Nouveau
                         </Badge>
                       </div>
                     )}
                     <CardContent className="p-0">
-                      <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${feature.color} p-4 mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                      <div className={`w-16 h-16 rounded-xl bg-gradient-to-r ${feature.color} p-4 mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg`}>
                         <feature.icon className="w-8 h-8 text-white" />
                       </div>
                       <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
                         {feature.title}
                       </h3>
-                      <p className="text-gray-600 leading-relaxed">
+                      <p className="text-gray-700 leading-relaxed">
                         {feature.description}
                       </p>
+                      <div className="mt-4 w-12 h-1 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full group-hover:w-full transition-all duration-300"></div>
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -272,15 +340,6 @@ const HomePage = () => {
             </div>
           </div>
         </section>
-
-        {/* Section Problèmes/Solutions */}
-        <ProblemSolutionSection />
-
-        {/* Villes Populaires */}
-        <PopularCities />
-
-        {/* Section Demandes Communales */}
-        <CommunalLandSection />
 
         {/* Section Blockchain Innovation */}
         <section className="py-20 bg-gradient-to-r from-blue-900 via-purple-900 to-indigo-900 text-white relative overflow-hidden">
@@ -405,12 +464,6 @@ const HomePage = () => {
             </motion.div>
           </div>
         </section>
-
-        {/* Section Diaspora Construction */}
-        <DiasporaConstructionSection />
-
-        {/* Terrains en Vedette */}
-        <FeaturedParcels />
 
         {/* Testimonials Dynamiques */}
         <section className="py-20 bg-gray-50">

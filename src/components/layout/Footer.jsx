@@ -40,53 +40,44 @@ const Footer = () => {
 
   const quickLinks = [
     {
-      title: "🔗 Blockchain Immobilier",
+      title: "🏠 Solutions",
       links: [
-        { label: "Terrains Blockchain", path: "/terrains", icon: Blocks, badge: "Vérifié" },
-        { label: "NFT Propriétés", path: "/nft-properties", icon: Sparkles, badge: "Innovation" },
-        { label: "Smart Contracts", path: "/smart-contracts", icon: Cpu, badge: "Auto" },
-        { label: "Vérification Crypto", path: "/tools/property-verification", icon: Shield },
-        { label: "Market Analysis IA", path: "/tools/market-analysis", icon: Brain, badge: "IA" },
-      ]
-    },
-    {
-      title: "💎 Solutions Premium",
-      links: [
-        { label: "Construction Distance", path: "/solutions/construction-distance", icon: Globe, badge: "Diaspora" },
-        { label: "Surveillance IA", path: "/solutions/project-monitoring", icon: Eye, badge: "24/7" },
-        { label: "Financement Crypto", path: "/solutions/blockchain", icon: Coins, badge: "DeFi" },
-        { label: "Escrow Sécurisé", path: "/escrow", icon: Lock },
-        { label: "Paiement Mobile", path: "/solutions/diaspora-investment", icon: Smartphone },
+        { label: "Terrains Communaux", path: "/terrains-communaux", icon: Building2 },
+        { label: "Vendeurs Particuliers", path: "/vendeurs-particuliers", icon: Users },
+        { label: "Vendeurs Professionnels", path: "/vendeurs-professionnels", icon: Rocket },
+        { label: "Promoteurs", path: "/promoteurs", icon: Building2, badge: "Nouveau" },
+        { label: "Construction Diaspora", path: "/construction-diaspora", icon: Globe },
+        { label: "Carte Interactive", path: "/map", icon: MapPin },
       ]
     },
     {
       title: "🏛️ Professionnels",
       links: [
-        { label: "Banques Digitales", path: "/banques", icon: CreditCard },
-        { label: "Agents Certifiés", path: "/agents-fonciers", icon: Fingerprint, badge: "Vérifié" },
-        { label: "Notaires Blockchain", path: "/notaires", icon: FileCheck },
-        { label: "Promoteurs Innovants", path: "/promoteurs", icon: Rocket },
-        { label: "Rejoindre l'Écosystème", path: "/rejoignez-nous", icon: ArrowRight, badge: "Recrutement" },
+        { label: "Banques", path: "/banques", icon: CreditCard },
+        { label: "Agents Fonciers", path: "/agents-fonciers", icon: Shield },
+        { label: "Notaires", path: "/notaires", icon: FileCheck },
+        { label: "Rejoindre l'Équipe", path: "/careers", icon: Users },
+        { label: "Partenaires", path: "/partners", icon: TrendingUp },
       ]
     },
     {
-      title: "🚀 Innovation Tech",
+      title: "� Informations",
       links: [
-        { label: "Guide Blockchain", path: "/how-it-works", icon: Database },
-        { label: "API Développeurs", path: "/blog", icon: Cpu, badge: "API" },
-        { label: "Carte IA Interactive", path: "/map", icon: Brain },
-        { label: "Support Technique", path: "/contact", icon: Shield },
-        { label: "Centre d'Aide IA", path: "/faq", icon: Sparkles },
+        { label: "À Propos", path: "/about", icon: Eye },
+        { label: "Contact", path: "/contact", icon: Mail },
+        { label: "Blog", path: "/blog", icon: FileCheck },
+        { label: "Centre d'Aide", path: "/help", icon: Shield },
+        { label: "FAQ", path: "/faq", icon: Sparkles },
       ]
     },
     {
-      title: "🔒 Sécurité & Légal",
+      title: "🔒 Légal",
       links: [
-        { label: "À Propos Blockchain", path: "/about", icon: Blocks },
-        { label: "Conditions Smart", path: "/legal", icon: FileCheck },
-        { label: "Confidentialité Crypto", path: "/privacy", icon: Lock },
-        { label: "Anti-Fraude IA", path: "/#anti-fraude", icon: Eye },
-        { label: "Certification Blockchain", path: "/faq", icon: Award, badge: "Certifié" },
+        { label: "Mentions Légales", path: "/legal", icon: FileCheck },
+        { label: "Politique de Confidentialité", path: "/privacy", icon: Lock },
+        { label: "Conditions d'Utilisation", path: "/terms", icon: Shield },
+        { label: "Politique de Cookies", path: "/cookies", icon: Cpu },
+        { label: "RGPD", path: "/rgpd", icon: Eye },
       ]
     }
   ];

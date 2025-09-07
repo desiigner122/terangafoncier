@@ -46,7 +46,9 @@ const Header = ({ isSidebarOpen, setIsSidebarOpen }) => {
   return (
     <header className={cn(
         "fixed top-0 left-0 right-0 z-50 transition-all duration-300 h-16 md:h-20",
-        hasBackground ? 'bg-background/95 border-b backdrop-blur-sm shadow-sm' : 'bg-transparent border-b border-transparent',
+        hasBackground 
+          ? 'bg-gradient-to-r from-slate-900/95 via-blue-900/95 to-slate-900/95 border-b border-slate-700/50 backdrop-blur-lg shadow-xl' 
+          : 'bg-transparent border-b border-transparent',
     )}>
       <nav className="container mx-auto px-4 h-full flex items-center justify-between">
         <div className="flex items-center space-x-2">

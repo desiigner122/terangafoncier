@@ -1,172 +1,451 @@
-﻿
 import React from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Target, 
-  Eye, 
-  ShieldCheck, 
-  Linkedin, 
-  ArrowRight
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Link } from 'react-router-dom';
+import { 
+  User,
+  Code,
+  Briefcase,
+  Shield,
+  Target,
+  Users,
+  Award,
+  Mail,
+  Phone,
+  MapPin,
+  Calendar,
+  Heart,
+  CheckCircle2,
+  ArrowRight,
+  Linkedin,
+  Github,
+  Globe
+} from 'lucide-react';
 
 const AboutPage = () => {
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.1,
-      },
+  const achievements = [
+    {
+      icon: Code,
+      title: "Développeur Full-Stack",
+      description: "Expert en technologies modernes : React, Node.js, Python, PostgreSQL"
     },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    visible: {
-      opacity: 1,
-      y: 0,
-      transition: {
-        duration: 0.6,
-        ease: "easeOut",
-      },
+    {
+      icon: Briefcase,
+      title: "Chef de Projet Digital",
+      description: "Gestion de projets complexes avec méthodologies agiles"
     },
-  };
+    {
+      icon: Shield,
+      title: "Lutte contre la fraude",
+      description: "Spécialiste en sécurisation des transactions foncières"
+    },
+    {
+      icon: Target,
+      title: "Vision claire",
+      description: "Démocratiser l'accès au foncier pour tous les Sénégalais"
+    }
+  ];
 
-  const teamMember = {
-    name: "Abdoulaye Diémé",
-    role: "Fondateur & CEO",
-    imgUrl: "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/b56900731c6de95f42d124444209a813.jpg",
-    imgAlt: "Portrait d'Abdoulaye Diémé, fondateur de Teranga Foncier",
-    linkedin: "https://www.linkedin.com/in/abdoulaye-di%C3%A9m%C3%A9-58136a1b1/",
-  };
+  const missions = [
+    {
+      icon: Shield,
+      title: "Sécuriser les transactions",
+      description: "Vérifications approfondies de tous les titres fonciers et documents légaux"
+    },
+    {
+      icon: Users,
+      title: "Accompagner la diaspora",
+      description: "Faciliter l'investissement foncier pour les Sénégalais de l'étranger"
+    },
+    {
+      icon: CheckCircle2,
+      title: "Garantir la transparence",
+      description: "Processus transparent avec suivi en temps réel de chaque transaction"
+    },
+    {
+      icon: Globe,
+      title: "Moderniser le secteur",
+      description: "Digitalisation complète du marché foncier sénégalais"
+    }
+  ];
 
-  const values = [
-    { icon: ShieldCheck, title: "Intégrité", description: "Nous agissons avec honnêteté et transparence à chaque étape." },
-    { icon: Users, title: "Orientation Client", description: "Votre sécurité et votre satisfaction sont notre priorité absolue." },
-    { icon: Eye, title: "Rigueur", description: "Chaque dossier est traité avec la plus grande attention aux détails." },
+  const timeline = [
+    {
+      date: "Septembre 2024",
+      title: "Fondation de Teranga Foncier",
+      description: "Lancement de la plateforme avec la vision de révolutionner le marché foncier sénégalais"
+    },
+    {
+      date: "Octobre 2024",
+      title: "Premiers partenariats",
+      description: "Collaboration avec notaires, géomètres et agents fonciers certifiés"
+    },
+    {
+      date: "Novembre 2024",
+      title: "Expansion régionale",
+      description: "Extension des services à toutes les régions du Sénégal"
+    },
+    {
+      date: "Décembre 2024",
+      title: "Innovation technologique",
+      description: "Intégration IA et blockchain pour plus de sécurité"
+    }
+  ];
+
+  const stats = [
+    { number: "2024", label: "Année de fondation" },
+    { number: "1000+", label: "Utilisateurs actifs" },
+    { number: "500+", label: "Terrains vérifiés" },
+    { number: "98%", label: "Taux de satisfaction" }
   ];
 
   return (
     <>
       <Helmet>
-        <title>À Propos - Contribution à la Transformation Digitale du Sénégal</title>
-        <meta name="description" content="Découvrez comment Teranga Foncier participe à la transformation numérique du Sénégal, en phase avec les ambitions du gouvernement sénégalais et de l'agenda C50 pour le secteur foncier." />
-        <meta name="keywords" content="mission Teranga Foncier, transformation numérique Sénégal, agenda C50, Abdoulaye Diémé, gouvernement Sénégalais, modernisation foncier" />
-        <link rel="canonical" href="https://www.terangafoncier.com/about" />
+        <title>À propos - Abdoulaye Dièmé, Fondateur | Teranga Foncier</title>
+        <meta name="description" content="Découvrez l'histoire d'Abdoulaye Dièmé, développeur Full-Stack et fondateur de Teranga Foncier. Notre mission : lutter contre la fraude foncière au Sénégal." />
       </Helmet>
-      <motion.div
-        variants={containerVariants}
-        initial="hidden"
-        animate="visible"
-        className="bg-background"
-      >
-        {/* Header Section */}
-        <motion.section
-          variants={itemVariants}
-          className="relative pt-32 pb-20 md:pt-40 md:pb-24 text-center bg-muted/50 overflow-hidden"
-        >
-           <div className="absolute inset-0 z-0">
-             <img  className="w-full h-full object-cover opacity-10" alt="Fond abstrait architectural sénégalais" src="https://images.unsplash.com/photo-1676810343332-da05a7033931" />
-            <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/50"></div>
+
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pt-20">
+        
+        {/* Hero Section */}
+        <section className="py-16 bg-gradient-to-r from-blue-600 to-green-600 text-white">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              className="max-w-4xl mx-auto text-center"
+            >
+              <h1 className="text-4xl md:text-5xl font-bold mb-6">
+                À propos de Teranga Foncier
+              </h1>
+              <p className="text-xl md:text-2xl mb-8 opacity-90">
+                Une vision, une mission : révolutionner le marché foncier sénégalais
+              </p>
+              
+              {/* Stats */}
+              <div className="grid md:grid-cols-4 gap-6 mb-8">
+                {stats.map((stat, index) => (
+                  <motion.div
+                    key={index}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.6, delay: index * 0.1 }}
+                    className="bg-white/10 backdrop-blur-sm rounded-lg p-4"
+                  >
+                    <div className="text-2xl font-bold">{stat.number}</div>
+                    <div className="text-sm opacity-80">{stat.label}</div>
+                  </motion.div>
+                ))}
+              </div>
+            </motion.div>
           </div>
-          <div className="container mx-auto px-4 relative z-10">
-            <h1 className="text-4xl md:text-6xl font-extrabold text-brand-blue mb-4">Notre mission</h1>
-            <p className="max-w-3xl mx-auto text-lg md:text-xl text-muted-foreground">
-              Accélérer la transformation digitale du secteur foncier au Sénégal, en rendant l'investissement accessible, transparent et sécurisé pour tous.
-            </p>
-          </div>
-        </motion.section>
+        </section>
 
         {/* Founder Section */}
-        <motion.section
-          variants={itemVariants}
-          className="py-16 md:py-24"
-        >
+        <section className="py-16">
           <div className="container mx-auto px-4">
-            <Card className="overflow-hidden shadow-lg border-none">
-              <div className="grid lg:grid-cols-2 items-center">
-                <div className="relative h-96 lg:h-[500px] order-first">
+            <div className="grid lg:grid-cols-2 gap-12 items-center max-w-6xl mx-auto">
+              
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+                className="relative"
+              >
+                <div className="relative">
                   <img 
-                    alt={teamMember.imgAlt}
-                    className="w-full h-full object-cover"
-                   src={teamMember.imgUrl} />
-                </div>
-                <div className="p-8 md:p-12 text-left">
-                  <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">Le mot du fondateur</h2>
-                  <p className="text-lg text-muted-foreground mb-6 leading-relaxed">
-                    "J'ai fondé Teranga Foncier pour relever un défi majeur : la **lutte contre l'insécurité foncière** qui freine le développement du Sénégal et brise les rêves de notre diaspora. Face aux arnaques et à la complexité administrative, j'ai choisi de mener ce combat en utilisant la technologie comme une arme de confiance. Notre plateforme n'est pas qu'un outil, c'est un engagement. Un engagement à protéger chaque investissement, à garantir la transparence de chaque transaction et à bâtir un avenir où la propriété foncière est un droit sécurisé, pas un risque."
-                  </p>
-                  <div>
-                    <p className="font-semibold text-lg text-foreground">{teamMember.name}</p>
-                    <p className="text-brand-orange">{teamMember.role}</p>
-                    <div className="flex gap-4 mt-4">
-                      <a href={teamMember.linkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn de Abdoulaye Diémé">
-                        <Linkedin className="h-6 w-6 text-muted-foreground hover:text-primary transition-colors" />
-                      </a>
+                    src="https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=600&fit=crop&crop=face"
+                    alt="Abdoulaye Dièmé, Fondateur de Teranga Foncier"
+                    className="rounded-2xl shadow-xl w-full max-w-md mx-auto"
+                  />
+                  <div className="absolute -bottom-6 -right-6 bg-white rounded-xl p-4 shadow-lg">
+                    <div className="flex items-center gap-3">
+                      <Award className="h-8 w-8 text-blue-600" />
+                      <div>
+                        <div className="font-semibold text-gray-900">Fondateur</div>
+                        <div className="text-sm text-gray-600">Septembre 2024</div>
+                      </div>
                     </div>
                   </div>
                 </div>
-              </div>
-            </Card>
-          </div>
-        </motion.section>
+              </motion.div>
 
-        {/* Values Section */}
-        <motion.section
-          variants={itemVariants}
-          className="py-16 md:py-24 bg-muted/50"
-        >
-          <div className="container mx-auto px-4">
-            <div className="text-center mb-12">
-              <h2 className="text-3xl md:text-4xl font-bold text-foreground">Nos valeurs fondamentales</h2>
-              <p className="max-w-2xl mx-auto text-lg text-muted-foreground mt-4">
-                Trois piliers qui guident notre contribution à la transformation digitale.
-              </p>
+              <motion.div
+                initial={{ opacity: 0, x: 20 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.6 }}
+                viewport={{ once: true }}
+              >
+                <Badge className="bg-blue-100 text-blue-800 mb-4">Fondateur & CEO</Badge>
+                <h2 className="text-3xl font-bold text-gray-900 mb-6">
+                  Abdoulaye Dièmé
+                </h2>
+                <p className="text-lg text-gray-600 mb-6 leading-relaxed">
+                  Développeur Full-Stack passionné et Chef de Projet Digital expérimenté, 
+                  j'ai fondé Teranga Foncier en septembre 2024 avec une mission claire : 
+                  <strong className="text-gray-900"> lutter contre la fraude foncière au Sénégal</strong> 
+                  en démocratisant l'accès à un marché immobilier transparent et sécurisé.
+                </p>
+                
+                <p className="text-gray-600 mb-8 leading-relaxed">
+                  Fort de mon expertise en technologies modernes et de ma compréhension 
+                  profonde des défis du marché foncier sénégalais, j'ai créé une plateforme 
+                  qui combine innovation technologique et excellence du service pour offrir 
+                  à chaque Sénégalais, qu'il soit au pays ou dans la diaspora, 
+                  la possibilité d'investir en toute confiance.
+                </p>
+
+                {/* Achievements */}
+                <div className="grid md:grid-cols-2 gap-4 mb-8">
+                  {achievements.map((achievement, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="flex items-start gap-3 p-3 rounded-lg bg-white shadow-sm"
+                    >
+                      <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                        <achievement.icon className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <div className="font-semibold text-gray-900 text-sm">{achievement.title}</div>
+                        <div className="text-xs text-gray-600">{achievement.description}</div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+
+                {/* Contact Info */}
+                <div className="flex flex-col sm:flex-row gap-4">
+                  <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
+                    <a href="mailto:contact@terangafoncier.com">
+                      <Mail className="h-4 w-4 mr-2" />
+                      Me contacter
+                    </a>
+                  </Button>
+                  <Button variant="outline" asChild>
+                    <a href="tel:+221775934241">
+                      <Phone className="h-4 w-4 mr-2" />
+                      +221 77 593 42 41
+                    </a>
+                  </Button>
+                </div>
+              </motion.div>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              {values.map((value, index) => (
-                <Card key={index} className="text-center p-6 shadow-md hover:shadow-lg transition-shadow">
-                  <CardHeader className="items-center p-0 mb-4">
-                    <div className="flex items-center justify-center h-16 w-16 rounded-full bg-primary/10 text-primary mx-auto">
-                      <value.icon className="h-8 w-8" />
-                    </div>
-                  </CardHeader>
-                  <CardContent className="p-0">
-                    <h3 className="text-xl font-semibold text-foreground mb-2">{value.title}</h3>
-                    <p className="text-muted-foreground">{value.description}</p>
-                  </CardContent>
-                </Card>
+          </div>
+        </section>
+
+        {/* Mission Section */}
+        <section className="py-16 bg-white">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Notre Mission
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Révolutionner le marché foncier sénégalais par la technologie et la transparence
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
+              {missions.map((mission, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="h-full hover:shadow-lg transition-all duration-300 group border-t-4 border-t-blue-500">
+                    <CardHeader className="text-center">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4 group-hover:bg-blue-200 transition-colors">
+                        <mission.icon className="h-8 w-8 text-blue-600" />
+                      </div>
+                      <CardTitle className="text-lg text-gray-900">{mission.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="pt-0 text-center">
+                      <p className="text-gray-600">{mission.description}</p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
               ))}
             </div>
           </div>
-        </motion.section>
+        </section>
 
-        {/* CTA Section */}
-        <motion.section
-          variants={itemVariants}
-          className="py-20 md:py-28"
-        >
-          <div className="container mx-auto px-4 text-center">
-            <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-6">Participez à la modernisation du Sénégal</h2>
-            <p className="max-w-xl mx-auto text-lg text-muted-foreground mb-8">
-              Ensemble, construisons un marché foncier transparent, un pilier de la transformation numérique nationale.
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button asChild size="lg" className="bg-brand-orange text-white hover:bg-brand-orange/90 shadow-lg">
-                <Link to="/parcelles">Explorer les terrains <ArrowRight className="ml-2 h-5 w-5" /></Link>
-              </Button>
-              <Button asChild size="lg" variant="outline" className="bg-background hover:bg-accent">
-                <Link to="/contact">Devenir partenaire</Link>
-              </Button>
+        {/* Timeline Section */}
+        <section className="py-16 bg-gray-50">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Notre Parcours
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Les étapes clés de notre développement
+              </p>
+            </motion.div>
+
+            <div className="max-w-4xl mx-auto">
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-8 top-0 bottom-0 w-0.5 bg-blue-200"></div>
+                
+                <div className="space-y-8">
+                  {timeline.map((item, index) => (
+                    <motion.div
+                      key={index}
+                      initial={{ opacity: 0, x: -20 }}
+                      whileInView={{ opacity: 1, x: 0 }}
+                      transition={{ duration: 0.6, delay: index * 0.1 }}
+                      viewport={{ once: true }}
+                      className="relative flex items-start gap-6"
+                    >
+                      <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 relative z-10">
+                        {index + 1}
+                      </div>
+                      <div className="bg-white rounded-lg p-6 shadow-md flex-1">
+                        <div className="flex items-center gap-2 mb-2">
+                          <Calendar className="h-4 w-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-600">{item.date}</span>
+                        </div>
+                        <h3 className="font-semibold text-gray-900 mb-2">{item.title}</h3>
+                        <p className="text-gray-600">{item.description}</p>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+              </div>
             </div>
           </div>
-        </motion.section>
-      </motion.div>
+        </section>
+
+        {/* Values Section */}
+        <section className="py-16">
+          <div className="container mx-auto px-4">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-3xl font-bold text-gray-900 mb-4">
+                Nos Valeurs
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Les principes qui guident chacune de nos actions
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.1 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
+                <div className="w-20 h-20 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Shield className="h-10 w-10 text-blue-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Intégrité</h3>
+                <p className="text-gray-600">
+                  Transparence totale dans nos processus et nos tarifs. 
+                  Nous nous engageons à fournir des informations exactes et vérifiées.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.2 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
+                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Heart className="h-10 w-10 text-green-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Engagement</h3>
+                <p className="text-gray-600">
+                  Dédié au service de la communauté sénégalaise, nous mettons 
+                  notre expertise au service de votre réussite.
+                </p>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: 0.3 }}
+                viewport={{ once: true }}
+                className="text-center"
+              >
+                <div className="w-20 h-20 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-6">
+                  <Target className="h-10 w-10 text-orange-600" />
+                </div>
+                <h3 className="text-xl font-bold text-gray-900 mb-4">Excellence</h3>
+                <p className="text-gray-600">
+                  Recherche constante de l'amélioration de nos services pour 
+                  offrir la meilleure expérience utilisateur.
+                </p>
+              </motion.div>
+            </div>
+          </div>
+        </section>
+
+        {/* CTA Section */}
+        <section className="py-16 bg-gradient-to-r from-blue-600 to-green-600 text-white">
+          <div className="container mx-auto px-4 text-center">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+            >
+              <h2 className="text-3xl font-bold mb-4">
+                Rejoignez notre communauté
+              </h2>
+              <p className="text-xl mb-8 opacity-90">
+                Faites partie de la révolution du marché foncier sénégalais
+              </p>
+              
+              <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 font-semibold" asChild>
+                  <Link to="/register">
+                    <Users className="h-5 w-5 mr-2" />
+                    Créer un compte
+                  </Link>
+                </Button>
+                <Button size="lg" variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 font-semibold" asChild>
+                  <Link to="/contact">
+                    <Mail className="h-5 w-5 mr-2" />
+                    Nous contacter
+                  </Link>
+                </Button>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+      </div>
     </>
   );
 };

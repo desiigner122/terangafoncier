@@ -45,6 +45,7 @@ import CookiePolicyPage from '@/pages/CookiePolicyPage';
 import HowItWorksPage from '@/pages/HowItWorksPage';
 import FaqPage from '@/pages/FaqPage';
 import PartnersPage from '@/pages/PartnersPage';
+import SuccessPage from '@/pages/SuccessPage';
 import SellPropertyPage from '@/pages/SellPropertyPage';
 import DiasporaGuidePage from '@/pages/DiasporaGuidePage';
 import ProjectsGuidePage from '@/pages/ProjectsGuidePage';
@@ -93,6 +94,9 @@ import ExportPage from '@/pages/ExportPage';
 import UploadsPage from '@/pages/UploadsPage';
 import UserProfileTestPage from '@/pages/UserProfileTestPage';
 import CityDetailPage from '@/pages/CityDetailPage';
+import CommunalLandsPage from '@/pages/CommunalLandsPage';
+import TermsPage from '@/pages/TermsPage';
+import DataProtectionPage from '@/pages/DataProtectionPage';
 import { Button } from '@/components/ui/button';
 import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import ScrollToTop from '@/components/layout/ScrollToTop';
@@ -211,6 +215,7 @@ const PublicLayout = () => (
       <Outlet />
     </main>
     <BlockchainFooter />
+    <TerrangaFoncierChatbot />
     <BlockchainAIChatbot />
   </div>
 );
@@ -223,7 +228,7 @@ function App() {
           <ScrollToTop />
           <Routes>
             <Route path="/" element={<PublicLayout />}>
-              <Route index element={<ModernHomePage />} />
+              <Route index element={<HomePage />} />
               <Route path="login" element={<BlockchainLoginPage />} />
               <Route path="test-auth" element={<TestAuthPage />} />
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
@@ -235,6 +240,7 @@ function App() {
               <Route path="banned" element={<BannedPage />} />
               <Route path="parcelles" element={<ParcelsListPage />} />
               <Route path="parcelles/:id" element={<ParcelDetailPage />} />
+              <Route path="terrains-communaux" element={<CommunalLandsPage />} />
               <Route path="parcel-blockchain/:id" element={<BlockchainParcelDetailPage />} />
               <Route path="promoters-projects" element={<PromoterProjectsPage />} />
               <Route path="promoter-requests" element={<PromoterConstructionRequestsPage />} />
@@ -258,6 +264,7 @@ function App() {
               <Route path="how-it-works" element={<HowItWorksPage />} />
               <Route path="faq" element={<FaqPage />} />
               <Route path="partners" element={<PartnersPage />} />
+              <Route path="success" element={<SuccessPage />} />
               <Route path="guide-diaspora" element={<DiasporaGuidePage />} />
               <Route path="guide-projets" element={<ProjectsGuidePage />} />
               <Route path="guide-demandes" element={<RequestsGuidePage />} />
@@ -267,6 +274,8 @@ function App() {
               <Route path="legal" element={<LegalPage />} />
               <Route path="privacy" element={<PrivacyPage />} />
               <Route path="cookie-policy" element={<CookiePolicyPage />} />
+              <Route path="terms" element={<TermsPage />} />
+              <Route path="data-protection" element={<DataProtectionPage />} />
               <Route path="saved-searches" element={<SavedSearchesPage />} />
               <Route path="compare" element={<ComparisonPage />} />
               <Route path="success-stories" element={<SuccessStoriesPage />} />

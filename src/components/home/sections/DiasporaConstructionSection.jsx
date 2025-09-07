@@ -2,37 +2,39 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   Globe, 
-  Eye, 
+  BarChart3, 
   Clock, 
   Shield, 
   Users, 
-  Camera,
+  Upload,
   FileCheck,
   MessageSquare,
   MapPin,
   Building,
   ArrowRight,
   CheckCircle,
-  Star,
+  Image,
   Play
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import ConstructionProgressBar from '@/components/home/ConstructionProgressBar';
+import SimpleProgressTracker from '@/components/home/SimpleProgressTracker';
 
 const DiasporaConstructionSection = () => {
   const diasporaFeatures = [
     {
-      icon: Eye,
-      title: "Surveillance 24/7",
-      description: "Caméras haute définition installées sur votre chantier",
-      details: ["Stream en direct", "Enregistrements quotidiens", "Alertes automatiques"]
+      icon: BarChart3,
+      title: "Barre de Progression",
+      description: "Suivez chaque étape avec des barres de progression mises à jour par le promoteur",
+      details: ["Progression en temps réel", "Phases détaillées", "Validation des étapes"]
     },
     {
-      icon: FileCheck,
-      title: "Rapports Détaillés",
-      description: "Rapports d'avancement quotidiens avec photos et métriques",
-      details: ["Photos avant/après", "Métriques de progression", "Validation des étapes"]
+      icon: Upload,
+      title: "Preuves Visuelles",
+      description: "Images et vidéos quotidiennes uploadées directement par le promoteur",
+      details: ["Photos avant/après", "Vidéos d'avancement", "Rapports illustrés"]
     },
     {
       icon: MessageSquare,
@@ -61,9 +63,9 @@ const DiasporaConstructionSection = () => {
     },
     {
       step: "03",
-      title: "Surveillance Active",
-      description: "Suivez la construction en temps réel avec nos outils",
-      icon: Camera,
+      title: "Suivi par Progression",
+      description: "Suivez la construction avec des barres de progression et preuves visuelles",
+      icon: BarChart3,
       color: "text-purple-600",
       bgColor: "bg-purple-50"
     },
@@ -74,25 +76,6 @@ const DiasporaConstructionSection = () => {
       icon: Building,
       color: "text-orange-600",
       bgColor: "bg-orange-50"
-    }
-  ];
-
-  const testimonials = [
-    {
-      name: "Aminata Diallo",
-      location: "Paris, France",
-      project: "Villa à Dakar",
-      quote: "J'ai pu suivre chaque étape de ma construction depuis Paris. Incroyable sensation de contrôle !",
-      rating: 5,
-      image: "/api/placeholder/60/60"
-    },
-    {
-      name: "Moussa Touré",
-      location: "New York, USA", 
-      project: "Immeuble à Thiès",
-      quote: "Le système de surveillance m'a permis de détecter un problème rapidement. Économies: 2M FCFA !",
-      rating: 5,
-      image: "/api/placeholder/60/60"
     }
   ];
 
@@ -134,7 +117,7 @@ const DiasporaConstructionSection = () => {
             { value: "40%", label: "De la diaspora renonce", desc: "À cause des risques" },
             { value: "6M", label: "Sénégalais à l'étranger", desc: "Marché potentiel énorme" },
             { value: "100%", label: "Transparence garantie", desc: "Sur notre plateforme" },
-            { value: "24/7", label: "Surveillance continue", desc: "Cameras HD en direct" }
+            { value: "24/7", label: "Mises à jour", desc: "Par les promoteurs" }
           ].map((stat, index) => (
             <Card key={index} className="text-center p-6 hover:shadow-lg transition-shadow">
               <div className="text-3xl font-bold text-primary mb-2">{stat.value}</div>
@@ -228,47 +211,27 @@ const DiasporaConstructionSection = () => {
           </div>
         </div>
 
-        {/* Témoignages Diaspora */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6 }}
-          viewport={{ once: true }}
-          className="bg-white rounded-2xl p-8 shadow-lg mb-16"
-        >
-          <h3 className="text-2xl font-bold text-gray-900 mb-8 text-center">
-            💬 Témoignages de la Diaspora
-          </h3>
+        {/* Exemple de Suivi Simplifié */}
+        <div className="mb-16">
+          <motion.h3 
+            className="text-3xl font-bold text-gray-900 mb-8 text-center"
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            viewport={{ once: true }}
+          >
+            📊 Suivi Simplifié de Construction
+          </motion.h3>
           
-          <div className="grid md:grid-cols-2 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <Card key={index} className="border-l-4 border-l-emerald-500">
-                <CardContent className="p-6">
-                  <div className="flex items-start gap-4 mb-4">
-                    <img 
-                      src={testimonial.image} 
-                      alt={testimonial.name}
-                      className="w-12 h-12 rounded-full object-cover"
-                    />
-                    <div className="flex-1">
-                      <h5 className="font-bold text-gray-900">{testimonial.name}</h5>
-                      <p className="text-sm text-gray-600">{testimonial.location}</p>
-                      <Badge variant="outline" className="text-xs mt-1">
-                        {testimonial.project}
-                      </Badge>
-                    </div>
-                    <div className="flex gap-1">
-                      {[...Array(testimonial.rating)].map((_, i) => (
-                        <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-gray-700 italic">"{testimonial.quote}"</p>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </motion.div>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="max-w-md mx-auto"
+          >
+            <SimpleProgressTracker />
+          </motion.div>
+        </div>
 
         {/* Video Demo */}
         <motion.div

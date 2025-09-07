@@ -7,14 +7,23 @@
 /* Import driver.js CSS */
 @import 'driver.js/dist/driver.css';
 
-/* Animation pour la barre de métriques défilante */
+/* Animation pour les barres de métriques défilantes */
 @keyframes scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+@keyframes scroll-slow {
   0% { transform: translateX(0); }
   100% { transform: translateX(-50%); }
 }
 
 .animate-scroll {
   animation: scroll 30s linear infinite;
+}
+
+.animate-scroll-slow {
+  animation: scroll-slow 45s linear infinite;
 }
 
 @layer base {

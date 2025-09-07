@@ -191,6 +191,23 @@ const ModernHeroSlider = () => {
                   transition={{ duration: 0.8, delay: 0.2 }}
                   className="text-white"
                 >
+                  {/* Teranga Foncier Brand */}
+                  <motion.div
+                    initial={{ opacity: 0, y: -20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.8, delay: 0.1 }}
+                    className="mb-4"
+                  >
+                    <div className="flex items-center gap-3 mb-2">
+                      <div className="w-12 h-12 bg-gradient-to-r from-yellow-500 via-green-500 to-red-500 rounded-full flex items-center justify-center">
+                        <Building className="w-6 h-6 text-white" />
+                      </div>
+                      <h2 className="text-3xl font-bold bg-gradient-to-r from-yellow-400 via-green-400 to-red-400 bg-clip-text text-transparent">
+                        Teranga Foncier
+                      </h2>
+                    </div>
+                  </motion.div>
+
                   <Badge className="mb-6 bg-white/10 text-white border-white/20 backdrop-blur-sm">
                     {currentSlideData.subtitle}
                   </Badge>

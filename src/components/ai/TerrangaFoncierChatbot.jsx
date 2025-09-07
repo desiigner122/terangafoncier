@@ -137,8 +137,9 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
     // Réponses contextuelles selon le rôle
     const userRole = user?.role || 'Particulier';
     
-    if (lowerMessage.includes('bonjour') || lowerMessage.includes('salut')) {
-      return `Bonjour ! 😊 Je suis ravi de vous aider. En tant que ${userRole}, quelles sont vos questions sur Teranga Foncier ?`;
+    if (lowerMessage.includes('bonjour') || lowerMessage.includes('salut') || lowerMessage.includes('bonsoir') || lowerMessage.includes('bonne soirée')) {
+      const greeting = lowerMessage.includes('bonsoir') || lowerMessage.includes('bonne soirée') ? 'Bonsoir' : 'Bonjour';
+      return `${greeting} ! 😊 Je suis ravi de vous aider. En tant que ${userRole}, quelles sont vos questions sur Teranga Foncier ?`;
     }
 
     if (lowerMessage.includes('merci')) {
@@ -205,7 +206,7 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
             className="mb-4"
           >
-            <Card className="w-96 h-[500px] shadow-2xl border-2 border-primary/20">
+            <Card className="w-80 h-[450px] shadow-2xl border-2 border-primary/20">
               <CardHeader className="bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-t-lg">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
@@ -228,7 +229,7 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
               
               <CardContent className="p-0 flex flex-col h-full">
                 {/* Zone des messages */}
-                <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-80">
+                <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-72">
                   {messages.map((message) => (
                     <motion.div
                       key={message.id}

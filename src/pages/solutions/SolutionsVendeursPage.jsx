@@ -9,7 +9,8 @@ import {
   BarChart2, 
   ShieldCheck, 
   ArrowRight, 
-  LayoutDashboard
+  LayoutDashboard,
+  Coins
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
 import { Helmet } from 'react-helmet-async';
@@ -61,6 +62,18 @@ const SolutionsVendeursPage = () => {
       icon: BarChart2,
       title: "Outils de Suivi Performants",
       description: "Depuis votre tableau de bord, suivez les statistiques de vues de votre annonce, gérez les demandes et communiquez facilement avec les prospects.",
+    },
+    {
+      icon: Link,
+      title: "🆕 Vente via Smart Contracts",
+      description: "Sécurisez vos ventes avec la blockchain : contrats automatisés, paiements escrow décentralisés, transfert de propriété instantané et zéro risque de fraude.",
+      isNew: true
+    },
+    {
+      icon: Coins,
+      title: "🆕 Tokenisation de Propriétés",
+      description: "Vendez votre terrain par fractions tokenisées. Augmentez votre pool d'acheteurs potentiels et permettez l'investissement fractionné pour une vente plus rapide.",
+      isNew: true
     }
   ];
 
@@ -107,21 +120,34 @@ const SolutionsVendeursPage = () => {
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-green-700">Pourquoi Vendre sur Teranga Foncier ?</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
               {features.map((feature, index) => (
-                <motion.custom
+                <motion.div
                   key={index}
                   variants={featureVariants}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.2 }}
                   custom={index}
-                  className="bg-card p-6 rounded-xl shadow-lg border border-green-200 hover:shadow-green-100 transition-shadow flex flex-col items-center text-center"
+                  className={`bg-card p-6 rounded-xl shadow-lg border transition-shadow flex flex-col items-center text-center ${
+                    feature.isNew ? 'border-purple-200 hover:shadow-purple-100 bg-gradient-to-br from-purple-50 to-blue-50' : 'border-green-200 hover:shadow-green-100'
+                  }`}
                 >
-                  <div className="p-4 bg-green-500/10 rounded-full mb-4">
-                      <feature.icon className="h-8 w-8 text-green-600" />
+                  <div className={`p-4 rounded-full mb-4 ${
+                    feature.isNew ? 'bg-purple-500/10' : 'bg-green-500/10'
+                  }`}>
+                      <feature.icon className={`h-8 w-8 ${
+                        feature.isNew ? 'text-purple-600' : 'text-green-600'
+                      }`} />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-                </motion.custom>
+                  {feature.isNew && (
+                    <div className="mt-3">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        Blockchain
+                      </span>
+                    </div>
+                  )}
+                </motion.div>
               ))}
             </div>
           </div>
@@ -158,7 +184,7 @@ const SolutionsVendeursPage = () => {
                     <div className="text-center mb-6">
                       <h3 className="text-2xl font-bold text-green-700 mb-2">Vendeur Particulier</h3>
                       <div className="text-4xl font-bold text-green-600 mb-2">
-                        {ROLES_CONFIG.VENDEUR_PARTICULIER.subscription.price.toLocaleString()} XOF
+                        {ROLES_CONFIG.VENDEUR_PARTICULIER?.subscription?.seller?.price?.toLocaleString() || '20,000'} XOF
                       </div>
                       <p className="text-muted-foreground">par mois</p>
                     </div>
@@ -215,7 +241,7 @@ const SolutionsVendeursPage = () => {
                     <div className="text-center mb-6">
                       <h3 className="text-2xl font-bold text-blue-700 mb-2">Vendeur Professionnel</h3>
                       <div className="text-4xl font-bold text-blue-600 mb-2">
-                        {ROLES_CONFIG.VENDEUR_PROFESSIONNEL.subscription.price.toLocaleString()} XOF
+                        {ROLES_CONFIG.VENDEUR_PROFESSIONNEL?.subscription?.pro?.price?.toLocaleString() || '45,000'} XOF
                       </div>
                       <p className="text-muted-foreground">par mois</p>
                     </div>

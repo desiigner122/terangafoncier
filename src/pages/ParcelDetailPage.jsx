@@ -28,7 +28,7 @@ import {
 } from 'lucide-react';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { useContext } from 'react';
 import { ComparisonContext } from '@/context/ComparisonContext';
 import { Helmet } from 'react-helmet-async';
@@ -71,7 +71,7 @@ const ParcelDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   // toast remplacÃ© par window.safeGlobalToast
-  const { user, profile } = useAuth();
+  const { user, profile } = useSupabaseAuth();
   const { comparisonList, addToCompare, removeFromCompare } = useContext(ComparisonContext);
   
   const [parcel, setParcel] = useState(null);
@@ -413,4 +413,5 @@ const ParcelDetailPage = () => {
 };
 
 export default ParcelDetailPage;
+
 

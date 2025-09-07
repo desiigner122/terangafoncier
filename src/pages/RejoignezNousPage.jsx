@@ -114,9 +114,9 @@ const RejoignezNousPage = () => {
     {
       icon: Phone,
       title: "Appelez-nous",
-      content: "+221 77 654 32 10",
+      content: "+221 77 593 42 41",
       description: "Lun-Ven 8h-18h, Sam 9h-13h",
-      action: "tel:+221776543210"
+      action: "tel:+221775934241"
     },
     {
       icon: Mail,
@@ -868,7 +868,7 @@ const RejoignezNousPage = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="w-5 h-5" />
-                  <span>+221 77 654 32 10</span>
+                  <span>+221 77 593 42 41</span>
                 </div>
               </div>
               

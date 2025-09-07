@@ -6,47 +6,66 @@ const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZS
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 async function checkDatabaseTables() {
-    try {
-        console.log('🔍 VÉRIFICATION DES TABLES DATABASE');
-        console.log('===================================');
-        
-        const tables = ['users', 'parcels', 'requests', 'audit_logs'];
-        
-        for (const table of tables) {
-            console.log(`\n📋 Vérification table: ${table}`);
-            try {
-                const { data, error } = await supabase
-                    .from(table)
-                    .select('*')
-                    .limit(1);
-                    
-                if (error) {
-                    console.log(`❌ Table ${table}: ${error.message}`);
-                    if (error.code === 'PGRST106') {
-                        console.log(`   🏗️ Table ${table} n'existe pas ou n'est pas accessible`);
-                    }
-                } else {
-                    console.log(`✅ Table ${table}: OK (${data.length} échantillon récupéré)`);
-                    if (data.length > 0) {
-                        console.log('   📄 Colonnes disponibles:');
-                        Object.keys(data[0]).forEach(col => {
-                            console.log(`      - ${col}`);
-                        });
-                    }
-                }
-            } catch (err) {
-                console.log(`💥 Erreur ${table}:`, err.message);
-            }
+  console.log('�️ AUDIT COMPLET BASE DE DONNÉES');
+  console.log('================================');
+
+  try {
+    // Tenter de lister les tables via une requête d'information
+    console.log('📋 Tentative de découverte des tables...\n');
+
+    const tablesToCheck = [
+      'users',
+      'user_profiles', 
+      'profiles',
+      'parcels',
+      'requests',
+      'audit_logs',
+      'properties',
+      'transactions'
+    ];
+
+    for (const tableName of tablesToCheck) {
+      console.log(`� Vérification: ${tableName}`);
+      
+      try {
+        const { data, error } = await supabase
+          .from(tableName)
+          .select('*')
+          .limit(1);
+
+        if (error) {
+          console.log(`   ❌ ${error.message}`);
+          if (error.code === 'PGRST106') {
+            console.log(`   🏗️ Table ${tableName} n'existe pas`);
+          }
+        } else {
+          console.log(`   ✅ Table trouvée! Colonnes:`, data.length > 0 ? Object.keys(data[0]) : 'Table vide');
+          if (data.length > 0) {
+            console.log(`   📄 Exemple de données:`, data[0]);
+          }
         }
-        
-        console.log('\n🔧 SOLUTIONS RECOMMANDÉES:');
-        console.log('1. Pour les tables manquantes, créez-les dans Supabase');
-        console.log('2. Ou modifiez AdminDashboardPage pour ne pas les utiliser');
-        console.log('3. Ou ajoutez des fallbacks dans le code');
-        
-    } catch (error) {
-        console.error('💥 ERREUR GÉNÉRALE:', error);
+      } catch (e) {
+        console.log(`   💥 Exception: ${e.message}`);
+      }
     }
+
+    // Vérifier les utilisateurs authentifiés
+    console.log('\n� UTILISATEURS AUTHENTIFIÉS');
+    console.log('============================');
+    
+    const { data: { user }, error: userError } = await supabase.auth.getUser();
+    
+    if (userError) {
+      console.log('❌ Erreur auth:', userError.message);
+    } else if (user) {
+      console.log('✅ Utilisateur connecté:', user.email, user.id);
+    } else {
+      console.log('⚠️ Aucun utilisateur connecté');
+    }
+
+  } catch (error) {
+    console.error('💥 Erreur générale:', error.message);
+  }
 }
 
 checkDatabaseTables();

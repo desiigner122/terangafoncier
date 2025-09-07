@@ -2,16 +2,18 @@ import React from 'react';
 import { Route, Routes, Outlet, Link } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import ErrorBoundary from '@/components/ErrorBoundary';
-import Header from '@/components/layout/Header';
+import ModernHeader from '@/components/layout/ModernHeader';
 import Footer from '@/components/layout/Footer';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import HomePage from '@/pages/HomePage';
 import LoginPage from '@/pages/LoginPage';
 import ModernLoginPage from '@/pages/ModernLoginPage';
+import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import RegisterPage from '@/pages/RegisterPage';
 import ModernRegisterPage from '@/pages/ModernRegisterPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import DashboardPage from '@/pages/DashboardPage';
+import DebugDashboard from '@/pages/DebugDashboard';
 import ParcelsListPage from '@/pages/ParcelsListPage';
 import ParcelDetailPage from '@/pages/ParcelDetailPage';
 import IntelligentParcelPage from '@/pages/IntelligentParcelPage';
@@ -35,16 +37,35 @@ import DiasporaGuidePage from '@/pages/DiasporaGuidePage';
 import ConstructionDistancePage from '@/pages/solutions/ConstructionDistancePage';
 import DiasporaInvestmentPage from '@/pages/solutions/DiasporaInvestmentPage';
 import ProjectMonitoringPage from '@/pages/solutions/ProjectMonitoringPage';
+import BlockchainSolutionsPage from '@/pages/BlockchainSolutionsPage';
 import MyListingsPage from '@/pages/MyListingsPage';
 import MyFavoritesPage from '@/pages/MyFavoritesPage';
 import NotificationsPage from '@/pages/NotificationsPage';
 import SavedSearchesPage from '@/pages/SavedSearchesPage';
 import ComparisonPage from '@/pages/ComparisonPage';
+import SuccessStoriesPage from '@/pages/SuccessStoriesPage';
+import PromoterNewBuyersPage from '@/pages/promoteur/PromoterNewBuyersPage';
+import PromoterNewQuotePage from '@/pages/promoteur/PromoterNewQuotePage';
 import SecureMessagingPage from '@/pages/SecureMessagingPage';
 import SimpleDashboard from '@/pages/SimpleDashboard';
-import DashboardRedirect from '@/components/DashboardRedirect';
+import DashboardRedirect from '@/components/DashboardRedirectFixed';
 import PurchaseProcessPage from '@/pages/PurchaseProcessPage';
+import TestAuthPage from '@/pages/TestAuthPage';
+
+// Pages communes nouvelles
+import MessagesPageNew from '@/pages/common/MessagesPage';
+import DocumentsPageNew from '@/pages/common/DocumentsPage';
+import NotificationsPageNew from '@/pages/common/NotificationsPage';
+import CalendarPageNew from '@/pages/common/CalendarPage';
+import SettingsPageNew from '@/pages/common/SettingsPageNew';
+import MesTerrainsPageNew from '@/pages/common/MesTerrainsPage';
 import PurchaseSuccessPage from '@/pages/PurchaseSuccessPage';
+import MessagesPage from '@/pages/MessagesPage';
+import DocumentsPage from '@/pages/DocumentsPage';
+import CRMPage from '@/pages/CRMPage';
+import ExportPage from '@/pages/ExportPage';
+import UploadsPage from '@/pages/UploadsPage';
+import UserProfileTestPage from '@/pages/UserProfileTestPage';
 import CityDetailPage from '@/pages/CityDetailPage';
 import { Button } from '@/components/ui/button';
 import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
@@ -64,6 +85,7 @@ import AdminUsersPage from '@/pages/admin/AdminUsersPage';
 import AdminParcelsPage from '@/pages/admin/AdminParcelsPage';
 import AdminSystemRequestsPage from '@/pages/admin/AdminSystemRequestsPage';
 import AdminContractsPage from '@/pages/admin/AdminContractsPage';
+import AuthDebugPage from '@/pages/AuthDebugPage';
 import AdminReportsPage from '@/pages/admin/AdminReportsPage';
 import AdminBlogPage from '@/pages/admin/AdminBlogPage';
 import AdminBlogFormPage from '@/pages/admin/AdminBlogFormPage';
@@ -76,6 +98,7 @@ import AgentClientsPage from '@/pages/agent/AgentClientsPage';
 import AgentParcelsPage from '@/pages/agent/AgentParcelsPage';
 import AgentTasksPage from '@/pages/agent/AgentTasksPage';
 import SolutionsBanquesPage from '@/pages/solutions/SolutionsBanquesPage';
+import SolutionsNotairesPage from '@/pages/solutions/SolutionsNotairesPage';
 import SolutionsPromoteursPage from '@/pages/solutions/SolutionsPromoteursPage';
 import SolutionsInvestisseursPage from '@/pages/solutions/SolutionsInvestisseursPage';
 import SolutionsVendeursPage from '@/pages/solutions/SolutionsVendeursPage';
@@ -104,6 +127,13 @@ import CasesPage from '@/pages/dashboards/notaire/CasesPage';
 import AuthenticationPage from '@/pages/dashboards/notaire/AuthenticationPage';
 import ArchivesPage from '@/pages/dashboards/notaire/ArchivesPage';
 import ComplianceCheckPage from '@/pages/dashboards/notaire/ComplianceCheckPage';
+import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
+import ModernNotaireDashboard from '@/pages/dashboards/ModernNotaireDashboard';
+import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
+import ModernMairieDashboard from '@/pages/dashboards/ModernMairieDashboard';
+import ModernAcheteurDashboard from '@/pages/dashboards/ModernAcheteurDashboard';
+import ModernVendeurDashboard from '@/pages/dashboards/ModernVendeurDashboard';
+import ModernInvestisseurDashboard from '@/pages/dashboards/ModernInvestisseurDashboard';
 import { HelmetProvider } from 'react-helmet-async';
 import BanquesDashboardPage from '@/pages/solutions/dashboards/BanquesDashboardPage';
 import InvestisseursDashboardPage from '@/pages/solutions/dashboards/InvestisseursDashboardPage';
@@ -143,11 +173,14 @@ import PromoteursPage from '@/pages/PromoteursPage';
 import RejoignezNousPage from '@/pages/RejoignezNousPage';
 import SolutionsPage from '@/pages/SolutionsPage';
 import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
+import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
 import TerrangaFoncierChatbot from '@/components/ai/TerrangaFoncierChatbot';
+import ModernGeometreDashboard from '@/pages/dashboards/ModernGeometreDashboard';
+import ModernAgentFoncierDashboard from '@/pages/dashboards/ModernAgentFoncierDashboard';
 
 const PublicLayout = () => (
   <div className="flex flex-col min-h-screen">
-    <Header />
+    <ModernHeader />
     <main className="flex-1 pt-20">
       <Outlet />
     </main>
@@ -166,9 +199,13 @@ function App() {
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />
               <Route path="login" element={<ModernLoginPage />} />
+              <Route path="test-auth" element={<TestAuthPage />} />
+              <Route path="forgot-password" element={<ForgotPasswordPage />} />
               <Route path="register" element={<ModernRegisterPage />} />
               <Route path="reset-password" element={<ResetPasswordPage />} />
               <Route path="test-account-creation" element={<AccountCreationTestPage />} />
+              <Route path="debug-dashboard" element={<DebugDashboard />} />
+              <Route path="auth-debug" element={<AuthDebugPage />} />
               <Route path="banned" element={<BannedPage />} />
               <Route path="parcelles" element={<ParcelsListPage />} />
               <Route path="parcelles/:id" element={<ParcelDetailPage />} />
@@ -198,9 +235,11 @@ function App() {
               <Route path="cookie-policy" element={<CookiePolicyPage />} />
               <Route path="saved-searches" element={<SavedSearchesPage />} />
               <Route path="compare" element={<ComparisonPage />} />
+              <Route path="success-stories" element={<SuccessStoriesPage />} />
               <Route path="solutions" element={<SolutionsPage />} />
               <Route path="solutions/particuliers" element={<SolutionsParticuliersPage />} />
               <Route path="solutions/banques" element={<SolutionsBanquesPage />} />
+              <Route path="solutions/notaires" element={<SolutionsNotairesPage />} />
               <Route path="solutions/promoteurs" element={<SolutionsPromoteursPage />} />
               <Route path="solutions/investisseurs" element={<SolutionsInvestisseursPage />} />
               <Route path="solutions/vendeurs" element={<SolutionsVendeursPage />} />
@@ -208,6 +247,9 @@ function App() {
               <Route path="solutions/construction-distance" element={<ConstructionDistancePage />} />
               <Route path="solutions/diaspora-investment" element={<DiasporaInvestmentPage />} />
               <Route path="solutions/project-monitoring" element={<ProjectMonitoringPage />} />
+              <Route path="solutions/blockchain" element={<BlockchainSolutionsPage />} />
+              <Route path="fonctionnalites-avancees" element={<FonctionnalitesAvanceesPage />} />
+              <Route path="blockchain" element={<BlockchainSolutionsPage />} />
               <Route path="solutions/mairies/apercu" element={<MairiesDashboardPage />} />
               <Route path="solutions/vendeurs/apercu" element={<VendeurDashboardPage />} />
               <Route path="solutions/banques/apercu" element={<BanquesDashboardPage />} />
@@ -234,11 +276,21 @@ function App() {
                   <Route path="dashboard" element={<DashboardRedirect />} />
                   <Route path="profile" element={<ProfilePage />} />
                   <Route path="my-requests" element={<RoleProtectedRoute permission="MY_REQUESTS"><MyRequestsPage /></RoleProtectedRoute>} />
-                  <Route path="settings" element={<SettingsPage />} />
                   <Route path="transactions" element={<TransactionsPage />} />
                   <Route path="payment/:transactionId" element={<PaymentPage />} />
                   <Route path="favorites" element={<RoleProtectedRoute permission="FAVORITES"><MyFavoritesPage /></RoleProtectedRoute>} />
-                  <Route path="notifications" element={<NotificationsPage />} />
+                  <Route path="notifications" element={<NotificationsPageNew />} />
+                  <Route path="messages" element={<MessagesPageNew />} />
+                  <Route path="documents" element={<DocumentsPageNew />} />
+                  <Route path="rendez-vous" element={<CalendarPageNew />} />
+                  <Route path="calendar" element={<CalendarPageNew />} />
+                  <Route path="settings" element={<SettingsPageNew />} />
+                  <Route path="mes-terrains" element={<MesTerrainsPageNew />} />
+                  <Route path="my-properties" element={<MesTerrainsPageNew />} />
+                  <Route path="crm" element={<CRMPage />} />
+                  <Route path="export" element={<ExportPage />} />
+                  <Route path="uploads" element={<UploadsPage />} />
+                  <Route path="user-test" element={<UserProfileTestPage />} />
                   <Route path="messaging" element={<SecureMessagingPage />} />
                   <Route path="case-tracking/:id" element={<CaseTrackingPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
@@ -248,6 +300,27 @@ function App() {
                   <Route path="sell-property" element={<RoleProtectedRoute permission="SELL_PROPERTY"><SellPropertyPage /></RoleProtectedRoute>} />
                   <Route path="add-parcel" element={<RoleProtectedRoute permission="ADD_PARCEL"><AddParcelPage /></RoleProtectedRoute>} />
                   <Route path="my-listings" element={<RoleProtectedRoute permission="MY_LISTINGS"><MyListingsPage /></RoleProtectedRoute>} />
+                  
+                  {/* Routes Promoteur */}
+                  <Route path="promoteur/nouveaux-acheteurs" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewBuyersPage /></RoleProtectedRoute>} />
+                  <Route path="promoteur/nouveau-devis" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewQuotePage /></RoleProtectedRoute>} />
+                  
+                  {/* Dashboards modernes par rôle */}
+                  <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
+                  <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
+                  <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
+                  <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><ModernBanqueDashboard /></RoleProtectedRoute>} />
+                  <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
+                  <Route path="mairie" element={<RoleProtectedRoute allowedRoles={['Mairie']}><ModernMairieDashboard /></RoleProtectedRoute>} />
+                  <Route path="notaire" element={<RoleProtectedRoute allowedRoles={['Notaire']}><ModernNotaireDashboard /></RoleProtectedRoute>} />
+                  <Route path="geometre" element={<RoleProtectedRoute allowedRoles={['Géomètre']}><ModernGeometreDashboard /></RoleProtectedRoute>} />
+                  
+                  {/* Routes solutions vers dashboards */}
+                  <Route path="solutions/banques/dashboard" element={<RoleProtectedRoute allowedRoles={['Banque']}><ModernBanqueDashboard /></RoleProtectedRoute>} />
+                  <Route path="solutions/notaires/dashboard" element={<RoleProtectedRoute allowedRoles={['Notaire']}><ModernNotaireDashboard /></RoleProtectedRoute>} />
+                  <Route path="solutions/promoteurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
+                  <Route path="solutions/mairies/dashboard" element={<RoleProtectedRoute allowedRoles={['Mairie']}><ModernMairieDashboard /></RoleProtectedRoute>} />
+                  <Route path="agent-foncier" element={<RoleProtectedRoute allowedRoles={['Agent Foncier']}><ModernAgentFoncierDashboard /></RoleProtectedRoute>} />
                 </Route>
               </Route>
             </Route>

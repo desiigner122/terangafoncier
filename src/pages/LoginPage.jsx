@@ -11,14 +11,14 @@
   LogIn, 
   AlertCircle
 } from 'lucide-react';
-    import { useAuth } from '@/context/SupabaseAuthContext';
+    import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 
     const LoginPage = () => {
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState('');
-      const { signIn, session } = useAuth();
+      const { signIn, session } = useSupabaseAuth();
       const navigate = useNavigate();
       const location = useLocation();
       // toast remplacÃ© par window.safeGlobalToast

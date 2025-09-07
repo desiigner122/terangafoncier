@@ -11,11 +11,11 @@ import {
   UserCheck, 
   Ban
 } from 'lucide-react';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { Can } from '@/components/auth/RoleBasedGuard';
 
 const SellPropertyPage = () => {
-    const { user } = useAuth();
+    const { user } = useSupabaseAuth();
     
     const sellerSteps = [
         { icon: UserCheck, title: "Vérification du Vendeur", description: "Assurez-vous que votre profil est complet et vérifié par nos équipes pour gagner la confiance des acheteurs." },
@@ -126,3 +126,4 @@ const SellPropertyPage = () => {
 };
 
 export default SellPropertyPage;
+

@@ -19,7 +19,7 @@ import React, { useState, useContext, useEffect } from 'react';
     // useToast import supprimÃ© - utilisation window.safeGlobalToast
     import { ComparisonContext } from '@/context/ComparisonContext';
     import InstallmentPaymentModal from '@/components/parcel-detail/InstallmentPaymentModal';
-    import { useAuth } from '@/context/SupabaseAuthContext';
+    import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
     import { supabase } from '@/lib/customSupabaseClient';
 
     const formatPrice = (price) => {
@@ -39,7 +39,7 @@ import React, { useState, useContext, useEffect } from 'react';
 
     const ParcelCard = ({ parcel }) => {
       // toast remplacÃ© par window.safeGlobalToast
-      const { profile } = useAuth();
+      const { profile } = useSupabaseAuth();
       const [isFavorite, setIsFavorite] = useState(false);
       const [isModalOpen, setIsModalOpen] = useState(false);
       const [isVerifiedSeller, setIsVerifiedSeller] = useState(false);

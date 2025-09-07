@@ -1,7 +1,7 @@
 ﻿
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 // useToast import supprimÃ© - utilisation window.safeGlobalToast
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -43,7 +43,7 @@ const FileUploadField = ({ id, label, required, onFileChange, fileName, descript
 );
 
 const VerificationPage = () => {
-  const { user, revalidate } = useAuth();
+  const { user, revalidate } = useSupabaseAuth();
   // toast remplacÃ© par window.safeGlobalToast
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
@@ -193,4 +193,5 @@ const VerificationPage = () => {
 };
 
 export default VerificationPage;
+
 

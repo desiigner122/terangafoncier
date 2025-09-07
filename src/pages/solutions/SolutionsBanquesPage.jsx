@@ -9,14 +9,16 @@ import {
   FileSearch, 
   ArrowRight, 
   LayoutDashboard, 
-  Users
+  Users,
+  Lock,
+  Coins
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { Helmet } from 'react-helmet-async';
 
 const SolutionsBanquesPage = () => {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const navigate = useNavigate();
 
   const handleDashboardAccess = () => {
@@ -60,6 +62,18 @@ const SolutionsBanquesPage = () => {
       icon: BarChart3,
       title: "Suivi de Portefeuille et Analyse de Risque",
       description: "Utilisez notre dashboard pour surveiller l'évolution des zones géographiques où se situent vos actifs et anticiper les tendances pour gérer proactivement votre portefeuille.",
+    },
+    {
+      icon: Lock,
+      title: "🆕 Smart Contracts Bancaires",
+      description: "Automatisez vos prêts immobiliers avec des contrats intelligents blockchain. Déblocage automatique des fonds selon l'avancement des projets, garanties décentralisées et réduction des risques de 60%.",
+      isNew: true
+    },
+    {
+      icon: Coins,
+      title: "🆕 Tokenisation d'Actifs",
+      description: "Proposez à vos clients la tokenisation de leurs biens immobiliers pour une liquidité accrue et de nouveaux produits d'investissement. Fractionner la propriété pour démocratiser l'accès à l'immobilier.",
+      isNew: true
     }
   ];
 
@@ -99,23 +113,36 @@ const SolutionsBanquesPage = () => {
         <section className="py-16 md:py-20">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-blue-700">Nos Solutions pour Votre Institution</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {features.map((feature, index) => (
-                <motion.custom
+                <motion.div
                   key={index}
                   variants={featureVariants}
                   initial="hidden"
                   whileInView="visible"
                   viewport={{ once: true, amount: 0.2 }}
                   custom={index}
-                  className="bg-card p-6 rounded-xl shadow-lg border border-blue-200 hover:shadow-blue-100 transition-shadow flex flex-col items-center text-center"
+                  className={`bg-card p-6 rounded-xl shadow-lg border transition-shadow flex flex-col items-center text-center ${
+                    feature.isNew ? 'border-purple-200 hover:shadow-purple-100 bg-gradient-to-br from-purple-50 to-blue-50' : 'border-blue-200 hover:shadow-blue-100'
+                  }`}
                 >
-                  <div className="p-4 bg-blue-500/10 rounded-full mb-4">
-                    <feature.icon className="h-8 w-8 text-blue-600" />
+                  <div className={`p-4 rounded-full mb-4 ${
+                    feature.isNew ? 'bg-purple-500/10' : 'bg-blue-500/10'
+                  }`}>
+                    <feature.icon className={`h-8 w-8 ${
+                      feature.isNew ? 'text-purple-600' : 'text-blue-600'
+                    }`} />
                   </div>
                   <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
                   <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-                </motion.custom>
+                  {feature.isNew && (
+                    <div className="mt-3">
+                      <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                        Blockchain
+                      </span>
+                    </div>
+                  )}
+                </motion.div>
               ))}
             </div>
           </div>

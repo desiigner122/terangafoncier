@@ -20,7 +20,9 @@ import {
   Building2,
   DollarSign,
   Camera,
-  Phone
+  Phone,
+  LinkIcon,
+  Coins
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -77,6 +79,20 @@ const SolutionsParticuliersPage = () => {
       title: "Paiement Sécurisé",
       description: "Effectuez vos transactions en toute sécurité avec notre système de paiement protégé et nos options de financement flexibles.",
       stats: "Paiements sécurisés 24/7"
+    },
+    {
+      icon: LinkIcon,
+      title: "🆕 Contrats Intelligents",
+      description: "Sécurisez vos achats avec la blockchain : paiements automatisés selon les conditions prédéfinies, traçabilité complète et sécurité maximale.",
+      stats: "100% transparence blockchain",
+      isNew: true
+    },
+    {
+      icon: Coins,
+      title: "🆕 Investissement Fractionné",
+      description: "Investissez dans l'immobilier même avec un petit budget grâce à la tokenisation. Achetez des parts de terrains et générez des revenus locatifs.",
+      stats: "Dès 10 000 FCFA",
+      isNew: true
     }
   ];
 
@@ -262,10 +278,16 @@ const SolutionsParticuliersPage = () => {
                   whileInView="visible"
                   viewport={{ once: true }}
                 >
-                  <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-0 shadow-md">
+                  <Card className={`h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-0 shadow-md ${
+                    feature.isNew ? 'border-purple-200 bg-gradient-to-br from-purple-50 to-blue-50' : ''
+                  }`}>
                     <CardHeader className="text-center pb-4">
-                      <div className="w-16 h-16 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-                        <feature.icon className="h-8 w-8 text-primary" />
+                      <div className={`w-16 h-16 rounded-2xl flex items-center justify-center mx-auto mb-4 ${
+                        feature.isNew ? 'bg-purple-500/10' : 'bg-primary/10'
+                      }`}>
+                        <feature.icon className={`h-8 w-8 ${
+                          feature.isNew ? 'text-purple-600' : 'text-primary'
+                        }`} />
                       </div>
                       <CardTitle className="text-lg font-semibold text-gray-900">
                         {feature.title}
@@ -275,9 +297,18 @@ const SolutionsParticuliersPage = () => {
                       <p className="text-gray-600 mb-4 leading-relaxed">
                         {feature.description}
                       </p>
-                      <Badge variant="secondary" className="bg-primary/10 text-primary">
+                      <Badge variant="secondary" className={
+                        feature.isNew ? 'bg-purple-100 text-purple-800' : 'bg-primary/10 text-primary'
+                      }>
                         {feature.stats}
                       </Badge>
+                      {feature.isNew && (
+                        <div className="mt-3">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            Blockchain
+                          </span>
+                        </div>
+                      )}
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -454,7 +485,7 @@ const SolutionsParticuliersPage = () => {
                     Particulier Sénégal
                   </CardTitle>
                   <div className="text-3xl font-bold mt-2">
-                    {ROLES_CONFIG.PARTICULIER_SENEGAL?.subscription?.price?.toLocaleString()} XOF
+                    {ROLES_CONFIG.PARTICULIER_SENEGAL?.subscription?.basic?.price?.toLocaleString() || '15,000'} XOF
                     <span className="text-sm font-normal opacity-90">/mois</span>
                   </div>
                 </CardHeader>
@@ -497,7 +528,7 @@ const SolutionsParticuliersPage = () => {
                     Particulier Diaspora
                   </CardTitle>
                   <div className="text-3xl font-bold mt-2">
-                    {ROLES_CONFIG.PARTICULIER_DIASPORA?.subscription?.price?.toLocaleString()} XOF
+                    {ROLES_CONFIG.PARTICULIER_DIASPORA?.subscription?.standard?.price?.toLocaleString() || '25,000'} XOF
                     <span className="text-sm font-normal opacity-90">/mois</span>
                   </div>
                 </CardHeader>
@@ -533,6 +564,101 @@ const SolutionsParticuliersPage = () => {
                 </CardContent>
               </Card>
             </div>
+          </div>
+        </section>
+
+        {/* Section Blockchain pour Particuliers */}
+        <section className="py-20 bg-gradient-to-br from-purple-50 via-blue-50 to-indigo-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-16"
+            >
+              <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 text-purple-800 text-sm font-medium mb-6">
+                🆕 Nouvelle Technologie
+              </div>
+              <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
+                L'Immobilier Révolutionné par la Blockchain
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Découvrez comment la technologie blockchain transforme l'achat immobilier : plus de transparence, de sécurité et d'accessibilité pour tous.
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.1 }}
+                className="bg-white p-6 rounded-xl shadow-lg border border-purple-100"
+              >
+                <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-4">
+                  <Link className="h-6 w-6 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Smart Contracts Sécurisés</h3>
+                <p className="text-gray-600 mb-4">
+                  Vos transactions sont automatisées et sécurisées par des contrats intelligents. Paiements conditionnels, 
+                  aucun risque d'arnaque.
+                </p>
+                <div className="text-sm text-purple-700 font-medium">• Sécurité maximale • Automatisation complète</div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.2 }}
+                className="bg-white p-6 rounded-xl shadow-lg border border-purple-100"
+              >
+                <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-4">
+                  <Coins className="h-6 w-6 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Investissement Fractionné</h3>
+                <p className="text-gray-600 mb-4">
+                  Investissez dans l'immobilier même avec un petit budget. Achetez des parts tokenisées 
+                  de propriétés et générez des revenus passifs.
+                </p>
+                <div className="text-sm text-purple-700 font-medium">• Dès 10 000 FCFA • Revenus passifs</div>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: 0.3 }}
+                className="bg-white p-6 rounded-xl shadow-lg border border-purple-100"
+              >
+                <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-4">
+                  <ShieldCheck className="h-6 w-6 text-purple-600" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Transparence Totale</h3>
+                <p className="text-gray-600 mb-4">
+                  Tous les historiques de propriété, transactions et documents sont enregistrés 
+                  de manière immuable sur la blockchain.
+                </p>
+                <div className="text-sm text-purple-700 font-medium">• Historique complet • Données vérifiables</div>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: 0.4 }}
+              className="text-center mt-12"
+            >
+              <Button 
+                size="lg" 
+                onClick={handleDashboardAccess}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
+              >
+                Découvrir les Fonctionnalités Blockchain <ArrowRight className="ml-2 h-5 w-5" />
+              </Button>
+            </motion.div>
           </div>
         </section>
 

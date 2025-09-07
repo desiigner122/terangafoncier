@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -150,7 +150,7 @@ const SavedSearchesSkeleton = () => (
 );
 
 const SavedSearchesPage = () => {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const navigate = useNavigate();
   const [savedSearches, setSavedSearches] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -295,4 +295,5 @@ const SavedSearchesPage = () => {
 };
 
 export default SavedSearchesPage;
+
 

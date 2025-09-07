@@ -123,6 +123,14 @@ const MegaMenu = () => {
             color: 'from-blue-500 to-cyan-500'
           },
           {
+            title: 'Blockchain NFT',
+            icon: ShieldCheck,
+            description: 'Propriétés tokenisées NFT avec sécurité blockchain',
+            href: '/solutions/blockchain',
+            badge: '🆕 Nouveau',
+            color: 'from-yellow-500 to-orange-500'
+          },
+          {
             title: 'Demandes Communales',
             icon: Building,
             description: 'Demandez un terrain communal auprès des mairies',
@@ -158,6 +166,22 @@ const MegaMenu = () => {
             href: '/solutions/investisseurs',
             badge: 'ROI',
             color: 'from-indigo-500 to-purple-500'
+          },
+          {
+            title: 'Notaires',
+            icon: Scale,
+            description: 'Actes blockchain et archivage sécurisé',
+            href: '/solutions/notaires',
+            badge: '🆕 Blockchain',
+            color: 'from-purple-500 to-pink-500'
+          },
+          {
+            title: 'Banques',
+            icon: Banknote,
+            description: 'Solutions financement et smart contracts',
+            href: '/solutions/banques',
+            badge: 'Finance',
+            color: 'from-blue-500 to-indigo-500'
           }
         ]
       }

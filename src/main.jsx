@@ -3,7 +3,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/index.css';
-import { SupabaseAuthProvider } from '@/context/SupabaseAuthContext';
+import { SupabaseAuthProvider } from '@/contexts/SupabaseAuthContextFixed';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 // 🛡️ PATCH GLOBAL ANTI-CRASH TOAST - Import du système de protection

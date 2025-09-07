@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { useAuth } from '@/context/SupabaseAuthContext'; 
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed'; 
 import { useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -16,7 +16,7 @@ import {
 import { Spinner } from '@/components/ui/spinner';
 
 const TestAccountsPage = () => {
-  const { register: supabaseRegister, setSimulatedUser, loading: authLoading } = useAuth();
+  const { register: supabaseRegister, setSimulatedUser, loading: authLoading } = useSupabaseAuth();
   const navigate = useNavigate();
   // toast remplacÃ© par window.safeGlobalToast
   const [loadingAccountId, setLoadingAccountId] = useState(null);
@@ -172,3 +172,4 @@ const TestAccountsPage = () => {
 };
 
 export default TestAccountsPage;
+

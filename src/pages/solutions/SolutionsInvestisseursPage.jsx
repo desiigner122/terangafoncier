@@ -156,7 +156,7 @@ const SolutionsInvestisseursPage = () => {
                   <div className="text-center mb-6">
                     <h3 className="text-2xl font-bold text-red-700 mb-2">Investisseur Immobilier</h3>
                     <div className="text-4xl font-bold text-red-600 mb-2">
-                      {ROLES_CONFIG.INVESTISSEUR_IMMOBILIER.subscription.price.toLocaleString()} XOF
+                      {ROLES_CONFIG.INVESTISSEUR_IMMOBILIER?.subscription?.investor?.price?.toLocaleString() || '100,000'} XOF
                     </div>
                     <p className="text-muted-foreground">par mois</p>
                   </div>
@@ -212,7 +212,7 @@ const SolutionsInvestisseursPage = () => {
                   <div className="text-center mb-6">
                     <h3 className="text-2xl font-bold text-green-700 mb-2">Investisseur Agricole</h3>
                     <div className="text-4xl font-bold text-green-600 mb-2">
-                      {ROLES_CONFIG.INVESTISSEUR_AGRICOLE.subscription.price.toLocaleString()} XOF
+                      {ROLES_CONFIG.INVESTISSEUR_AGRICOLE?.subscription?.agri_investor?.price?.toLocaleString() || '80,000'} XOF
                     </div>
                     <p className="text-muted-foreground">par mois</p>
                   </div>

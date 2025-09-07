@@ -20,7 +20,11 @@ import {
   Target, 
   Zap,
   Landmark,
-  Phone
+  Phone,
+  Lock,
+  Coins,
+  FileText,
+  Database
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
@@ -71,6 +75,14 @@ const HomePage = () => {
 
   const mainFeatures = [
     {
+      icon: Database,
+      title: "Blockchain NFT",
+      description: "Vos propriétés sont tokenisées en NFT sur blockchain pour une sécurité maximale et une traçabilité totale",
+      color: "from-yellow-500 to-orange-500",
+      bgColor: "from-yellow-50 to-orange-50",
+      isNew: true
+    },
+    {
       icon: Globe,
       title: "Achat à Distance",
       description: "Achetez votre terrain au Sénégal depuis n'importe où dans le monde avec visite virtuelle 360°",
@@ -85,18 +97,12 @@ const HomePage = () => {
       bgColor: "from-emerald-50 to-teal-50"
     },
     {
-      icon: CreditCard,
-      title: "Paiements Flexibles",
-      description: "Paiements échelonnés de 12 à 60 mois avec prélèvement automatique sécurisé",
+      icon: Lock,
+      title: "Escrow Intelligent",
+      description: "Transactions sécurisées par smart contracts avec libération automatique des fonds",
       color: "from-purple-500 to-indigo-500", 
-      bgColor: "from-purple-50 to-indigo-50"
-    },
-    {
-      icon: Shield,
-      title: "Sécurité Totale",
-      description: "Toutes vos transactions sont sécurisées par nos notaires et géomètres certifiés",
-      color: "from-orange-500 to-red-500",
-      bgColor: "from-orange-50 to-red-50"
+      bgColor: "from-purple-50 to-indigo-50",
+      isNew: true
     }
   ];
 
@@ -149,6 +155,28 @@ const HomePage = () => {
       </Helmet>
 
       <div className="min-h-screen bg-white">
+        {/* Bandeau Nouveautés */}
+        <motion.div
+          initial={{ opacity: 0, y: -50 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
+          className="bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 text-white py-3 text-center relative overflow-hidden"
+        >
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="relative z-10 flex items-center justify-center gap-3 px-4">
+            <Zap className="h-5 w-5 animate-pulse" />
+            <span className="font-semibold">
+              🎉 NOUVEAUTÉ : Fonctionnalités Avancées disponibles !
+            </span>
+            <Link 
+              to="/fonctionnalites-avancees" 
+              className="bg-white/20 hover:bg-white/30 px-4 py-1 rounded-full text-sm font-medium transition-colors inline-flex items-center gap-2"
+            >
+              Découvrir <ArrowRight className="h-4 w-4" />
+            </Link>
+          </div>
+        </motion.div>
+
         {/* Modern Hero Slider */}
         <ModernHeroSlider />
 
@@ -174,6 +202,58 @@ const HomePage = () => {
           </div>
         </section>
 
+        {/* Fonctionnalités Principales avec Blockchain */}
+        <section className="py-20 bg-white">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-16"
+            >
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Fonctionnalités Révolutionnaires
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Découvrez comment nous révolutionnons l'immobilier sénégalais avec la blockchain et l'IA
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
+              {mainFeatures.map((feature, index) => (
+                <motion.div
+                  key={index}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.8, delay: index * 0.1 }}
+                  className="relative group"
+                >
+                  <Card className="h-full p-6 hover:shadow-xl transition-all duration-300 border-0 bg-gradient-to-br from-gray-50 to-white">
+                    {feature.isNew && (
+                      <div className="absolute -top-2 -right-2">
+                        <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 animate-pulse">
+                          🆕 Nouveau
+                        </Badge>
+                      </div>
+                    )}
+                    <CardContent className="p-0">
+                      <div className={`w-16 h-16 rounded-full bg-gradient-to-r ${feature.color} p-4 mb-6 group-hover:scale-110 transition-transform duration-300`}>
+                        <feature.icon className="w-8 h-8 text-white" />
+                      </div>
+                      <h3 className="text-xl font-bold text-gray-900 mb-3 group-hover:text-blue-600 transition-colors">
+                        {feature.title}
+                      </h3>
+                      <p className="text-gray-600 leading-relaxed">
+                        {feature.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          </div>
+        </section>
+
         {/* Section Problèmes/Solutions */}
         <ProblemSolutionSection />
 
@@ -182,6 +262,130 @@ const HomePage = () => {
 
         {/* Section Demandes Communales */}
         <CommunalLandSection />
+
+        {/* Section Blockchain Innovation */}
+        <section className="py-20 bg-gradient-to-r from-blue-900 via-purple-900 to-indigo-900 text-white relative overflow-hidden">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-16"
+            >
+              <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 mb-4">
+                🚀 Innovation Blockchain
+              </Badge>
+              <h2 className="text-5xl font-bold mb-6">
+                Révolution <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">Blockchain</span>
+              </h2>
+              <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+                Première plateforme foncière au Sénégal à intégrer la technologie blockchain pour une sécurité et transparence absolues
+              </p>
+            </motion.div>
+
+            <div className="grid md:grid-cols-3 gap-8 mb-16">
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.1 }}
+                className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20"
+              >
+                <div className="bg-yellow-500/20 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                  <FileText className="w-8 h-8 text-yellow-400" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4">NFT Propriétés</h3>
+                <p className="text-blue-100 mb-4">
+                  Chaque propriété est tokenisée en NFT unique, garantissant l'authenticité et la propriété exclusive sur la blockchain.
+                </p>
+                <ul className="space-y-2 text-sm text-blue-200">
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Propriété 100% vérifiable</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Transfert instantané</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Valeur certifiée</li>
+                </ul>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.2 }}
+                className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20"
+              >
+                <div className="bg-purple-500/20 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                  <Lock className="w-8 h-8 text-purple-400" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4">Smart Contracts</h3>
+                <p className="text-blue-100 mb-4">
+                  Contrats intelligents automatisés qui exécutent les transactions en toute sécurité sans intermédiaire.
+                </p>
+                <ul className="space-y-2 text-sm text-blue-200">
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Exécution automatique</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Zéro manipulation</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Transparence totale</li>
+                </ul>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.8, delay: 0.3 }}
+                className="bg-white/10 backdrop-blur-lg rounded-2xl p-8 border border-white/20"
+              >
+                <div className="bg-green-500/20 w-16 h-16 rounded-full flex items-center justify-center mb-6">
+                  <Coins className="w-8 h-8 text-green-400" />
+                </div>
+                <h3 className="text-2xl font-bold mb-4">Escrow Décentralisé</h3>
+                <p className="text-blue-100 mb-4">
+                  Système d'escrow décentralisé qui protège acheteurs et vendeurs avec libération automatique des fonds.
+                </p>
+                <ul className="space-y-2 text-sm text-blue-200">
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Fonds sécurisés</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Libération automatique</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Zéro litige</li>
+                </ul>
+              </motion.div>
+            </div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8, delay: 0.4 }}
+              className="text-center"
+            >
+              <div className="bg-gradient-to-r from-yellow-500 to-orange-500 rounded-2xl p-8 max-w-4xl mx-auto">
+                <h3 className="text-2xl font-bold text-white mb-4">
+                  🎯 Pourquoi la Blockchain ?
+                </h3>
+                <div className="grid md:grid-cols-2 gap-6 text-left">
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Sécurité Absolue</h4>
+                    <p className="text-yellow-100 text-sm">
+                      Données immuables et chiffrées, impossibles à falsifier ou pirater
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Transparence Totale</h4>
+                    <p className="text-yellow-100 text-sm">
+                      Toutes les transactions sont publiques et vérifiables par tous
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Coûts Réduits</h4>
+                    <p className="text-yellow-100 text-sm">
+                      Élimination des intermédiaires traditionnels et frais cachés
+                    </p>
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-white mb-2">Accès Global</h4>
+                    <p className="text-yellow-100 text-sm">
+                      Investissez depuis n'importe où dans le monde, 24h/24 et 7j/7
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
 
         {/* Section Diaspora Construction */}
         <DiasporaConstructionSection />

@@ -2,7 +2,7 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { supabase } from '@/lib/customSupabaseClient';
 import { 
   Upload, 
@@ -17,7 +17,7 @@ import {
 import { Alert, AlertDescription } from '@/components/ui/alert';
 
 const VendorVerificationPage = () => {
-  const { profile } = useAuth();
+  const { profile } = useSupabaseAuth();
   const [verificationStatus, setVerificationStatus] = useState('pending');
   const [FileTexts, setFileTexts] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -310,3 +310,4 @@ const VendorVerificationPage = () => {
 };
 
 export default VendorVerificationPage;
+

@@ -876,7 +876,7 @@ const GeometresPage = () => {
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="w-5 h-5" />
-                  <span>+221 77 789 01 23</span>
+                  <span>+221 77 593 42 41</span>
                 </div>
               </div>
             </motion.div>

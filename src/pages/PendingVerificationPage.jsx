@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { 
   Clock, 
   Mail
@@ -11,7 +11,7 @@ import {
 import { Link } from 'react-router-dom';
 
 const PendingVerificationPage = () => {
-  const { user, logout } = useAuth();
+  const { user, logout } = useSupabaseAuth();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/40 p-4">
@@ -54,3 +54,4 @@ const PendingVerificationPage = () => {
 };
 
 export default PendingVerificationPage;
+

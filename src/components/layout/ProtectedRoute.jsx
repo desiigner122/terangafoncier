@@ -1,33 +1,65 @@
 ﻿
 import React from 'react';
 import { Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { hasPermission, getAccessDeniedMessage, getDefaultDashboard } from '@/lib/rbacConfig';
 // useToast import supprimé - utilisation window.safeGlobalToast
 
 const ProtectedRoute = ({ children }) => {
-  const { user, profile, loading } = useAuth();
-  const location = useLocation();
+  try {
+    const authContext = useAuth();
+    const { user, profile, loading } = authContext;
+    const location = useLocation();
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <LoadingSpinner size="large" />
-      </div>
-    );
+    console.log('🛡️ ProtectedRoute state:', { 
+      hasUser: !!user, 
+      hasProfile: !!profile, 
+      loading,
+      userId: user?.id,
+      userEmail: user?.email,
+      profileRole: profile?.role,
+      currentPath: location.pathname
+    });
+
+    if (loading) {
+      console.log('🔄 ProtectedRoute: Loading...');
+      return (
+        <div className="flex items-center justify-center h-screen">
+          <LoadingSpinner size="large" />
+        </div>
+      );
+    }
+
+    // TEMPORARY DEBUG MODE: Allow access without authentication for debugging
+    if (process.env.NODE_ENV === 'development' && location.pathname.includes('debug')) {
+      console.log('🐛 DEBUG MODE: Allowing access without auth');
+      return children ? children : <Outlet />;
+    }
+
+    if (!user) {
+      console.log('🚪 ProtectedRoute: No user, redirecting to login');
+      return <Navigate to="/login" state={{ from: location }} replace />;
+    }
+
+    // VÉRIFICATION CRITIQUE: Bloquer les utilisateurs bannis
+    if (profile && profile.verification_status === 'banned') {
+      console.log('🚫 ProtectedRoute: User is banned');
+      return <Navigate to="/banned" state={{ from: location }} replace />;
+    }
+
+    // TEMPORARY: Allow access even without profile for debugging
+    if (!profile) {
+      console.log('⚠️ User has no profile, but allowing access for debugging');
+    }
+
+    console.log('✅ ProtectedRoute: Access granted');
+    return children ? children : <Outlet />;
+  } catch (error) {
+    console.error('💥 ProtectedRoute error:', error);
+    // Fallback to login if there's any error
+    return <Navigate to="/login" replace />;
   }
-
-  if (!user) {
-    return <Navigate to="/login" state={{ from: location }} replace />;
-  }
-
-  // VÉRIFICATION CRITIQUE: Bloquer les utilisateurs bannis
-  if (profile && profile.verification_status === 'banned') {
-    return <Navigate to="/banned" state={{ from: location }} replace />;
-  }
-
-  return children ? children : <Outlet />;
 };
 
 export const VerifiedRoute = ({ children }) => {

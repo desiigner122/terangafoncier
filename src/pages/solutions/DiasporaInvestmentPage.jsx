@@ -15,16 +15,31 @@ import {
   Phone, 
   FileText, 
   Clock, 
-  Star
+  Star,
+  Database,
+  Lock,
+  Coins
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const DiasporaInvestmentPage = () => {
   const benefits = [
     {
+      icon: Database,
+      title: "Blockchain NFT",
+      description: "Propriétés tokenisées en NFT avec sécurité cryptographique maximale.",
+      isNew: true
+    },
+    {
       icon: Shield,
       title: "Sécurité Garantie",
       description: "Vérifications juridiques complètes et assurance anti-fraude."
+    },
+    {
+      icon: Lock,
+      title: "Smart Contracts",
+      description: "Contrats automatisés qui exécutent les transactions sans intermédiaire.",
+      isNew: true
     },
     {
       icon: TrendingUp,
@@ -32,9 +47,10 @@ const DiasporaInvestmentPage = () => {
       description: "Rendements prévisibles avec reporting détaillé."
     },
     {
-      icon: BarChart3,
-      title: "Diversification",
-      description: "Portefeuille équilibré sur différents secteurs."
+      icon: Coins,
+      title: "Escrow Décentralisé",
+      description: "Fonds sécurisés par blockchain avec libération automatique.",
+      isNew: true
     },
     {
       icon: Clock,
@@ -101,19 +117,92 @@ const DiasporaInvestmentPage = () => {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-16"
+          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-16"
         >
           {benefits.map((benefit, index) => (
-            <Card key={index} className="text-center hover:shadow-lg transition-shadow">
+            <Card key={index} className="text-center hover:shadow-lg transition-shadow relative">
+              {benefit.isNew && (
+                <div className="absolute -top-2 -right-2">
+                  <Badge className="bg-gradient-to-r from-yellow-500 to-orange-500 text-white border-0 animate-pulse">
+                    🆕 Nouveau
+                  </Badge>
+                </div>
+              )}
               <CardContent className="p-6">
-                <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-                  <benefit.icon className="h-6 w-6 text-green-600" />
+                <div className={`w-12 h-12 ${benefit.isNew ? 'bg-gradient-to-r from-yellow-100 to-orange-100' : 'bg-green-100'} rounded-lg flex items-center justify-center mx-auto mb-4`}>
+                  <benefit.icon className={`h-6 w-6 ${benefit.isNew ? 'text-orange-600' : 'text-green-600'}`} />
                 </div>
                 <h3 className="font-semibold mb-2">{benefit.title}</h3>
                 <p className="text-sm text-gray-600">{benefit.description}</p>
               </CardContent>
             </Card>
           ))}
+        </motion.div>
+
+        {/* Section Blockchain Innovation */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.3 }}
+          className="mb-16"
+        >
+          <div className="bg-gradient-to-r from-blue-900 via-purple-900 to-indigo-900 text-white rounded-3xl p-8 md:p-12">
+            <div className="text-center mb-12">
+              <Badge className="bg-yellow-500/20 text-yellow-300 border-yellow-500/30 mb-4">
+                🚀 Innovation Blockchain
+              </Badge>
+              <h2 className="text-4xl font-bold mb-4">
+                Investissement <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-400">Blockchain</span>
+              </h2>
+              <p className="text-xl text-blue-100 max-w-3xl mx-auto">
+                Révolutionnez vos investissements diaspora avec notre technologie blockchain de pointe
+              </p>
+            </div>
+
+            <div className="grid md:grid-cols-3 gap-8">
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <Database className="w-12 h-12 text-yellow-400 mb-4" />
+                <h3 className="text-xl font-bold mb-3">NFT Propriétés</h3>
+                <p className="text-blue-100 mb-4">Chaque investissement devient un NFT unique, prouvant votre propriété sur la blockchain.</p>
+                <ul className="space-y-2 text-sm text-blue-200">
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Propriété vérifiable 24/7</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Transfert mondial instantané</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Valeur certifiée blockchain</li>
+                </ul>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <Lock className="w-12 h-12 text-purple-400 mb-4" />
+                <h3 className="text-xl font-bold mb-3">Smart Contracts</h3>
+                <p className="text-blue-100 mb-4">Investissements automatisés avec contrats intelligents qui s'exécutent seuls.</p>
+                <ul className="space-y-2 text-sm text-blue-200">
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Pas d'intermédiaires</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Exécution automatique</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Transparence totale</li>
+                </ul>
+              </div>
+
+              <div className="bg-white/10 backdrop-blur-lg rounded-2xl p-6 border border-white/20">
+                <Coins className="w-12 h-12 text-green-400 mb-4" />
+                <h3 className="text-xl font-bold mb-3">Revenus Automatisés</h3>
+                <p className="text-blue-100 mb-4">Recevez vos revenus locatifs automatiquement via blockchain, partout dans le monde.</p>
+                <ul className="space-y-2 text-sm text-blue-200">
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Paiements instantanés</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Frais réduits 90%</li>
+                  <li className="flex items-center"><CheckCircle className="w-4 h-4 mr-2 text-green-400" /> Conversion auto crypto/fiat</li>
+                </ul>
+              </div>
+            </div>
+
+            <div className="text-center mt-8">
+              <Button size="lg" className="bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white border-0">
+                <Link to="/blockchain" className="flex items-center">
+                  Découvrir la Blockchain
+                  <ArrowRight className="ml-2 h-5 w-5" />
+                </Link>
+              </Button>
+            </div>
+          </div>
         </motion.div>
 
         {/* Investment Types */}

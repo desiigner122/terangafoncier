@@ -4,6 +4,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Separator } from '@/components/ui/separator';
+import ModernSidebar from '@/components/layout/ModernSidebar';
+import { useUser } from '@/hooks/useUser';
 import { 
   Users, 
   Building2, 
@@ -41,8 +43,11 @@ import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/customSupabaseClient';
 import { ROLES, ROLES_CONFIG, ROLE_GROUPS } from '@/lib/enhancedRbacConfig';
+import { Helmet } from 'react-helmet-async';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 
 const ModernAdminDashboard = () => {
+  const { user, profile } = useUser();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   
@@ -338,29 +343,82 @@ const ModernAdminDashboard = () => {
     );
   }
 
+  // Sidebar items spécifiques à l'admin
+  const adminSidebarItems = [
+    {
+      id: 'users-management',
+      label: 'Gestion Utilisateurs',
+      icon: Users,
+      href: '/admin/users'
+    },
+    {
+      id: 'analytics',
+      label: 'Analytics Avancées',
+      icon: BarChart3,
+      href: '/admin/analytics'
+    },
+    {
+      id: 'content-management',
+      label: 'Gestion Contenu',
+      icon: FileText,
+      href: '/admin/content'
+    },
+    {
+      id: 'system-settings',
+      label: 'Paramètres Système',
+      icon: Settings,
+      href: '/admin/settings'
+    }
+  ];
+
   return (
-    <div className="space-y-8 p-6">
-      {/* En-tête */}
-      <div className="flex justify-between items-center">
-        <div>
-          <h1 className="text-3xl font-bold tracking-tight">Dashboard Administrateur</h1>
-          <p className="text-muted-foreground">
-            Gestion complète de la plateforme Teranga Foncier
-          </p>
+    <div className="flex">
+      <ModernSidebar sidebarItems={adminSidebarItems} currentPage="admin-dashboard" />
+      <div className="flex-1 ml-80 p-6 space-y-8">
+        <Helmet>
+          <title>Dashboard Admin - Teranga Foncier</title>
+          <meta name="description" content="Administration de la plateforme Teranga Foncier" />
+        </Helmet>
+
+        {/* En-tête avec profil */}
+        <div className="bg-gradient-to-r from-blue-600 via-purple-600 to-indigo-600 rounded-2xl p-8 text-white">
+          <div className="flex justify-between items-start">
+            <div className="flex items-center gap-6">
+              <Avatar className="w-20 h-20 border-4 border-white/20">
+                <AvatarImage src={profile?.avatar_url} />
+                <AvatarFallback className="bg-white/20 text-white text-2xl">
+                  {profile?.name 
+                    ? profile.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase()
+                    : user?.email?.[0]?.toUpperCase() || 'AD'
+                  }
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h1 className="text-3xl font-bold tracking-tight">
+                  Dashboard Administrateur
+                </h1>
+                <p className="text-blue-100 text-lg">
+                  Bonjour {profile?.name || user?.email?.split('@')[0]} !
+                </p>
+                <p className="text-blue-200 mt-1">
+                  Gestion complète de la plateforme Teranga Foncier
+                </p>
+              </div>
+            </div>
+            <div className="flex gap-4">
+              <Button asChild variant="outline" className="bg-white/10 hover:bg-white/20 border-white/20 text-white">
+                <Link to="/">
+                  <Globe2 className="w-4 h-4 mr-2" />
+                  Voir le Site
+                </Link>
+              </Button>
+              <Button className="bg-white/10 hover:bg-white/20 border-white/20 text-white">
+                <Download className="w-4 h-4 mr-2" />
+                Export Global
+              </Button>
+            </div>
+          </div>
         </div>
-        <div className="flex gap-4">
-          <Button asChild variant="outline">
-            <Link to="/">
-              <Globe2 className="w-4 h-4 mr-2" />
-              Voir le Site
-            </Link>
-          </Button>
-          <Button>
-            <Download className="w-4 h-4 mr-2" />
-            Export Global
-          </Button>
-        </div>
-      </div>
 
       {/* Onglets principaux */}
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
@@ -477,6 +535,7 @@ const ModernAdminDashboard = () => {
           </div>
         </TabsContent>
       </Tabs>
+      </div>
     </div>
   );
 };

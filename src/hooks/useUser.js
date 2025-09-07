@@ -1,14 +1,15 @@
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 
 /**
  * Hook to get current user information
- * Wraps the useAuth hook for easier access to user data
+ * Wraps the useSupabaseAuth hook for easier access to user data
  */
 export const useUser = () => {
-  const { user, loading, signOut, revalidate } = useAuth();
+  const { user, profile, loading, signOut, revalidate } = useSupabaseAuth();
   
   return {
     user,
+    profile,
     loading,
     signOut,
     revalidate,

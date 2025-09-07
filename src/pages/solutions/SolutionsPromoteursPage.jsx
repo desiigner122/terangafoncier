@@ -14,7 +14,12 @@ import {
   Hammer,
   Camera,
   Calculator,
-  TrendingUp
+  TrendingUp,
+  Search,
+  FileCheck,
+  LinkIcon,
+  Coins,
+  Check
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -67,6 +72,18 @@ const SolutionsPromoteursPage = () => {
           icon: Users,
           title: "Connexion Directe avec les Acheteurs",
           description: "Identifiez les particuliers ayant récemment acquis un terrain nu dans vos zones d'intervention et proposez-leur vos services de construction. Un canal direct pour trouver vos prochains clients.",
+        },
+        {
+          icon: LinkIcon,
+          title: "🆕 Contrats Intelligents de Construction",
+          description: "Automatisez vos contrats de construction avec la blockchain : paiements par étapes, garanties décentralisées, traçabilité complète des matériaux et réduction des litiges de 80%.",
+          isNew: true
+        },
+        {
+          icon: Coins,
+          title: "🆕 Financement Participatif Tokenisé",
+          description: "Levez des fonds pour vos projets grâce à la tokenisation. Permettez aux investisseurs d'acheter des parts de vos développements et partagez les profits automatiquement.",
+          isNew: true
         }
       ];
 
@@ -108,21 +125,34 @@ const SolutionsPromoteursPage = () => {
                 <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-purple-700">Un Écosystème Complet pour Vos Projets</h2>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
                   {features.map((feature, index) => (
-                    <motion.custom
+                    <motion.div
                       key={index}
                       variants={featureVariants}
                       initial="hidden"
                       whileInView="visible"
                       viewport={{ once: true, amount: 0.2 }}
                       custom={index}
-                      className="bg-card p-6 rounded-xl shadow-lg border border-purple-200 hover:shadow-purple-100 transition-shadow flex flex-col items-center text-center"
+                      className={`bg-card p-6 rounded-xl shadow-lg border transition-shadow flex flex-col items-center text-center ${
+                        feature.isNew ? 'border-purple-200 hover:shadow-purple-100 bg-gradient-to-br from-purple-50 to-blue-50' : 'border-purple-200 hover:shadow-purple-100'
+                      }`}
                     >
-                      <div className="p-4 bg-purple-500/10 rounded-full mb-4">
-                          <feature.icon className="h-8 w-8 text-purple-600" />
+                      <div className={`p-4 rounded-full mb-4 ${
+                        feature.isNew ? 'bg-purple-500/10' : 'bg-purple-500/10'
+                      }`}>
+                          <feature.icon className={`h-8 w-8 ${
+                            feature.isNew ? 'text-purple-600' : 'text-purple-600'
+                          }`} />
                       </div>
                       <h3 className="text-xl font-semibold text-foreground mb-2">{feature.title}</h3>
                       <p className="text-muted-foreground text-sm leading-relaxed">{feature.description}</p>
-                    </motion.custom>
+                      {feature.isNew && (
+                        <div className="mt-3">
+                          <span className="inline-flex items-center px-3 py-1 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            Blockchain
+                          </span>
+                        </div>
+                      )}
+                    </motion.div>
                   ))}
                 </div>
               </div>
@@ -166,7 +196,7 @@ const SolutionsPromoteursPage = () => {
                         Promoteur
                       </CardTitle>
                       <div className="text-2xl font-bold mt-2">
-                        {ROLES_CONFIG.PROMOTEUR?.subscription?.price?.toLocaleString()} XOF
+                        {ROLES_CONFIG.PROMOTEUR?.subscription?.contractor?.price?.toLocaleString() || '60,000'} XOF
                         <span className="text-sm font-normal opacity-90">/mois</span>
                       </div>
                     </CardHeader>
@@ -207,7 +237,7 @@ const SolutionsPromoteursPage = () => {
                         Architecte
                       </CardTitle>
                       <div className="text-2xl font-bold mt-2">
-                        {ROLES_CONFIG.ARCHITECTE?.subscription?.price?.toLocaleString()} XOF
+                        {ROLES_CONFIG.ARCHITECTE?.subscription?.designer?.price?.toLocaleString() || '40,000'} XOF
                         <span className="text-sm font-normal opacity-90">/mois</span>
                       </div>
                     </CardHeader>
@@ -248,7 +278,7 @@ const SolutionsPromoteursPage = () => {
                         Constructeur
                       </CardTitle>
                       <div className="text-2xl font-bold mt-2">
-                        {ROLES_CONFIG.CONSTRUCTEUR?.subscription?.price?.toLocaleString()} XOF
+                        {ROLES_CONFIG.CONSTRUCTEUR?.subscription?.builder?.price?.toLocaleString() || '50,000'} XOF
                         <span className="text-sm font-normal opacity-90">/mois</span>
                       </div>
                     </CardHeader>

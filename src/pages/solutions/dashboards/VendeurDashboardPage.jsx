@@ -29,7 +29,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Separator } from '@/components/ui/separator';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { sampleRequests, sampleUsers, sampleParcels } from '@/data';
 import { Link } from 'react-router-dom';
 import { 
@@ -38,7 +38,7 @@ import {
 } from 'recharts';
 
 const VendeurDashboardPage = () => {
-    const { user } = useAuth();
+    const { user } = useSupabaseAuth();
     const [loading, setLoading] = useState(true);
     const [requests, setRequests] = useState([]);
     const [listings, setListings] = useState([]);

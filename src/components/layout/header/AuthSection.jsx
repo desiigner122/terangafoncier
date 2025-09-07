@@ -11,7 +11,7 @@ import {
   Bell, 
   MessageSquare
 } from 'lucide-react';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -26,7 +26,7 @@ const getInitials = (nameOrEmail) => {
 };
 
 const AuthSection = ({ isScrolled }) => {
-  const { user, profile, loading, signOut } = useAuth();
+  const { user, profile, loading, signOut } = useSupabaseAuth();
   const { pathname } = window.location;
   const isHomePage = pathname === '/';
   

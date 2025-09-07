@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/context/SupabaseAuthContext';
+import { useSupabaseAuth } from '@/contexts/SupabaseAuthContextFixed';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -122,7 +122,7 @@ const FavoritesSkeleton = () => (
 );
 
 const MyFavoritesPage = () => {
-  const { user } = useAuth();
+  const { user } = useSupabaseAuth();
   const [favoriteParcels, setFavoriteParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -219,4 +219,5 @@ const MyFavoritesPage = () => {
 };
 
 export default MyFavoritesPage;
+
 

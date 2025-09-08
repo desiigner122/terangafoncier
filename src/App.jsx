@@ -16,13 +16,9 @@ import ModernRegisterPage from '@/pages/ModernRegisterPage';
 import BlockchainRegisterPage from '@/pages/BlockchainRegisterPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import DebugDashboard from '@/pages/DebugDashboard';
-import ParcelsListPage from '@/pages/ParcelsListPage';
-import ParcelDetailPage from '@/pages/ParcelDetailPage';
-import BlockchainParcelDetailPage from '@/pages/BlockchainParcelDetailPage';
 import PromoterProjectsPage from '@/pages/PromoterProjectsPage';
 import ProjectDetailPage from '@/pages/ProjectDetailPage';
 import PromoterConstructionRequestsPage from '@/pages/PromoterConstructionRequestsPage';
-import IntelligentParcelPage from '@/pages/IntelligentParcelPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ContactPage from '@/pages/ContactPage';
 import BlockchainContactPage from '@/pages/BlockchainContactPage';
@@ -31,8 +27,6 @@ import ModernAboutPage from '@/pages/ModernAboutPage';
 import BlockchainAboutPage from '@/pages/BlockchainAboutPage';
 import FoncierBlockchainPage from '@/pages/FoncierBlockchainPage';
 import FoncierSenegalPage from '@/pages/FoncierSenegalPage';
-import ModernTerrainsPage from '@/pages/ModernTerrainsPage';
-import ModernTerrainsBlockchainPage from '@/pages/ModernTerrainsBlockchainPage';
 import TestAccountsPage from '@/pages/TestAccountsPage';
 import MapPage from '@/pages/MapPage';
 import MyRequestsPage from '@/pages/MyRequestsPage';
@@ -46,8 +40,17 @@ import HowItWorksPage from '@/pages/HowItWorksPage';
 import FaqPage from '@/pages/FaqPage';
 import PartnersPage from '@/pages/PartnersPage';
 import SuccessPage from '@/pages/SuccessPage';
+import ParcellesVendeursPage from '@/pages/ParcellesVendeursPage';
+import ParcellesCommunalesPage from '@/pages/ParcellesCommunalesPage';
+import ParcelleDetailPage from '@/pages/ParcelleDetailPage';
+import ZoneCommunaleDetailPage from '@/pages/ZoneCommunaleDetailPage';
+import MunicipalRequestsPage from '@/pages/MunicipalRequestsPage';
+import GuideAttributionPage from '@/pages/GuideAttributionPage';
 import SellPropertyPage from '@/pages/SellPropertyPage';
 import DiasporaGuidePage from '@/pages/DiasporaGuidePage';
+import DocumentsFonciersPage from '@/pages/DocumentsFonciersPage';
+import LoisFoncieresPage from '@/pages/LoisFoncieresPage';
+import GuidesTutorielsPage from '@/pages/GuidesTutorielsPage';
 import ProjectsGuidePage from '@/pages/ProjectsGuidePage';
 import RequestsGuidePage from '@/pages/RequestsGuidePage';
 import ConstructionDistancePage from '@/pages/solutions/ConstructionDistancePage';
@@ -63,7 +66,6 @@ import PriceCalculatorPage from '@/pages/tools/PriceCalculatorPage';
 import InteractiveMapPage from '@/pages/tools/InteractiveMapPage';
 import ToolsMarketAnalysisPage from '@/pages/tools/MarketAnalysisPage';
 import PropertyVerificationPage from '@/pages/tools/PropertyVerificationPage';
-import TerrainsPage from '@/pages/TerrainsPage';
 import CartePage from '@/pages/CartePage';
 import MyListingsPage from '@/pages/MyListingsPage';
 import MyFavoritesPage from '@/pages/MyFavoritesPage';
@@ -97,6 +99,7 @@ import CityDetailPage from '@/pages/CityDetailPage';
 import CommunalLandsPage from '@/pages/CommunalLandsPage';
 import TermsPage from '@/pages/TermsPage';
 import DataProtectionPage from '@/pages/DataProtectionPage';
+import TerrainProgressPage from '@/pages/TerrainProgressPage';
 import { Button } from '@/components/ui/button';
 import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import ScrollToTop from '@/components/layout/ScrollToTop';
@@ -238,15 +241,11 @@ function App() {
               <Route path="debug-dashboard" element={<DebugDashboard />} />
               <Route path="auth-debug" element={<AuthDebugPage />} />
               <Route path="banned" element={<BannedPage />} />
-              <Route path="parcelles" element={<ParcelsListPage />} />
-              <Route path="parcelles/:id" element={<ParcelDetailPage />} />
               <Route path="terrains-communaux" element={<CommunalLandsPage />} />
-              <Route path="parcel-blockchain/:id" element={<BlockchainParcelDetailPage />} />
               <Route path="promoters-projects" element={<PromoterProjectsPage />} />
               <Route path="promoter-requests" element={<PromoterConstructionRequestsPage />} />
               <Route path="project/:id" element={<ProjectDetailPage />} />
               <Route path="promoter-requests" element={<PromoterConstructionRequestsPage />} />
-              <Route path="terrain-intelligent/:id" element={<IntelligentParcelPage />} />
               <Route path="villes/:cityId" element={<CityDetailPage />} />
               <Route path="contact" element={<BlockchainContactPage />} />
               <Route path="about" element={<BlockchainAboutPage />} />
@@ -265,6 +264,15 @@ function App() {
               <Route path="faq" element={<FaqPage />} />
               <Route path="partners" element={<PartnersPage />} />
               <Route path="success" element={<SuccessPage />} />
+              <Route path="terrains" element={<ParcellesVendeursPage />} />
+              <Route path="parcelles-vendeurs" element={<ParcellesVendeursPage />} />
+              <Route path="parcelles-communales" element={<ParcellesCommunalesPage />} />
+              <Route path="zone-communale/:id" element={<ZoneCommunaleDetailPage />} />
+              <Route path="parcelle/:id" element={<ParcelleDetailPage />} />
+              <Route path="parcel-blockchain/:id" element={<ParcelleDetailPage />} />
+              <Route path="municipal-requests" element={<MunicipalRequestsPage />} />
+              <Route path="terrain-progress" element={<TerrainProgressPage />} />
+              <Route path="guide-attribution" element={<GuideAttributionPage />} />
               <Route path="guide-diaspora" element={<DiasporaGuidePage />} />
               <Route path="guide-projets" element={<ProjectsGuidePage />} />
               <Route path="guide-demandes" element={<RequestsGuidePage />} />
@@ -276,6 +284,9 @@ function App() {
               <Route path="cookie-policy" element={<CookiePolicyPage />} />
               <Route path="terms" element={<TermsPage />} />
               <Route path="data-protection" element={<DataProtectionPage />} />
+              <Route path="documents-fonciers" element={<DocumentsFonciersPage />} />
+              <Route path="lois-foncieres" element={<LoisFoncieresPage />} />
+              <Route path="guides-tutoriels" element={<GuidesTutorielsPage />} />
               <Route path="saved-searches" element={<SavedSearchesPage />} />
               <Route path="compare" element={<ComparisonPage />} />
               <Route path="success-stories" element={<SuccessStoriesPage />} />
@@ -298,7 +309,7 @@ function App() {
               <Route path="solutions/geometres" element={<GeometresPage />} />
               
               {/* Pages principales */}
-              <Route path="terrains" element={<ModernTerrainsBlockchainPage />} />
+              <Route path="terrains" element={<ParcellesVendeursPage />} />
               <Route path="foncier-blockchain" element={<FoncierBlockchainPage />} />
               <Route path="foncier-senegal" element={<FoncierSenegalPage />} />
               <Route path="test-accounts" element={<TestAccountsPage />} />

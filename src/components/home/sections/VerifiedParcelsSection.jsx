@@ -8,7 +8,8 @@ import {
   ArrowRight
 } from 'lucide-react';
 import { sampleParcels } from '@/data/sampleData';
-import ParcelCard from '@/components/parcels/ParcelCard';
+// import ParcelCard from '@/components/parcels/ParcelCard'; // Composant supprimé
+import SimpleParcelCard from '@/components/common/SimpleParcelCard';
 
 const VerifiedParcelsSection = () => {
     const verifiedParcels = sampleParcels.filter(p => p.verified).slice(0, 3);
@@ -45,7 +46,7 @@ const VerifiedParcelsSection = () => {
             {verifiedParcels.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {verifiedParcels.map(parcel => (
-                        <ParcelCard key={parcel.id} parcel={parcel} />
+                        <SimpleParcelCard key={parcel.id} parcel={parcel} />
                     ))}
                 </div>
             ) : (

@@ -5,9 +5,10 @@ import { motion } from 'framer-motion';
 import { 
   ArrowRight
 } from 'lucide-react';
-import ParcelCard from '@/components/parcels/ParcelCard';
+// import ParcelCard from '@/components/parcels/ParcelCard'; // Composant supprimé
+import SimpleParcelCard from '@/components/common/SimpleParcelCard';
 import { supabase } from '@/lib/supabaseClient';
-import ParcelListSkeleton from '@/components/parcels/ParcelListSkeleton';
+// import ParcelListSkeleton from '@/components/parcels/ParcelListSkeleton'; // Composant supprimé
 
 const FeaturedParcelsSection = () => {
   const [featuredParcels, setFeaturedParcels] = useState([]);
@@ -46,7 +47,9 @@ const FeaturedParcelsSection = () => {
           Nos Parcelles à la Une
         </motion.h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-           {[...Array(3)].map((_, i) => <ParcelListSkeleton key={i} />)}
+           {[...Array(3)].map((_, i) => (
+             <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-64"></div>
+           ))}
         </div>
       </section>
     );
@@ -76,7 +79,7 @@ const FeaturedParcelsSection = () => {
             viewport={{ once: true, amount: 0.2 }}
             transition={{ duration: 0.5, delay: index * 0.1 }}
           >
-            <ParcelCard parcel={parcel} />
+            <SimpleParcelCard parcel={parcel} />
           </motion.div>
         ))}
       </div>

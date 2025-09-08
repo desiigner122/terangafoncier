@@ -347,7 +347,7 @@ const CommunalLandsPage = () => {
                       <div className="flex items-center justify-between">
                         <div className="text-green-600 font-semibold">{land.price}</div>
                         <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" asChild>
-                          <Link to={`/terrain-communal/${land.id}`}>
+                          <Link to={`/zone-communale/${land.id}`}>
                             Voir détails
                             <ArrowRight className="h-3 w-3 ml-1" />
                           </Link>

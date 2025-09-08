@@ -30,7 +30,10 @@ import {
   Rocket,
   Brain,
   Eye,
-  Sparkles
+  Sparkles,
+  Scale,
+  BookOpen,
+  Building2
 } from 'lucide-react';
 
 const logoUrl = "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6e6f6bf058d3590fd198aa8fadf9d2dd.png";
@@ -71,13 +74,14 @@ const Footer = () => {
       ]
     },
     {
-      title: "🔒 Légal",
+      title: "🔒 Légal & Foncier",
       links: [
         { label: "Mentions Légales", path: "/legal", icon: FileCheck },
         { label: "Politique de Confidentialité", path: "/privacy", icon: Lock },
         { label: "Conditions d'Utilisation", path: "/terms", icon: Shield },
-        { label: "Politique de Cookies", path: "/cookies", icon: Cpu },
-        { label: "RGPD", path: "/rgpd", icon: Eye },
+        { label: "Documents Fonciers", path: "/documents-fonciers", icon: FileText },
+        { label: "Lois Foncières", path: "/lois-foncieres", icon: Scale },
+        { label: "Guides & Tutoriels", path: "/guides-tutoriels", icon: BookOpen },
       ]
     }
   ];

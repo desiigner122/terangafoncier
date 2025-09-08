@@ -32,7 +32,9 @@ import {
   Sparkles,
   Rocket,
   Eye,
-  BookOpen
+  BookOpen,
+  Landmark,
+  Clock
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -65,8 +67,25 @@ const ModernHeader = () => {
   const menuItems = [
     {
       label: 'Terrains',
-      href: '/terrains',
-      key: 'terrains'
+      key: 'terrains',
+      hasDropdown: true,
+      sections: [
+        {
+          title: 'Marché Privé',
+          items: [
+            { label: 'Parcelles Intelligentes', href: '/parcelles-vendeurs', icon: Brain, description: 'Plateforme IA & Blockchain avancée' },
+            { label: 'Vendre ma parcelle', href: '/sell-property', icon: Shield, description: 'Publier avec technologie blockchain' }
+          ]
+        },
+        {
+          title: 'Terrains Publics',
+          items: [
+            { label: 'Demandes d\'Attribution', href: '/parcelles-communales', icon: Landmark, description: 'Terrains communaux sur demande', isNew: true },
+            { label: 'Mes Demandes', href: '/terrain-progress', icon: Clock, description: 'Suivez vos demandes communales' },
+            { label: 'Guide Attribution', href: '/guide-attribution', icon: BookOpen, description: 'Processus et critères d\'éligibilité' }
+          ]
+        }
+      ]
     },
     {
       label: 'Carte',

@@ -103,101 +103,153 @@ const CartePage = () => {
 
   // Propriétés NFT avec données blockchain
   const properties = [
+    // Terrains vendeurs privés
     {
       id: 1,
-      title: "Terrain NFT - Almadies Premium",
+      title: "Terrain Premium - Almadies",
       location: "Almadies, Dakar",
-      price: 125000000,
-      surface: 500,
-      type: "terrain",
-      status: "nft_verified",
+      price: 85000000,
+      surface: 400,
+      type: "vendeur",
+      status: "available",
       coordinates: { lat: 14.7645, lng: -17.5230 },
-      seller_type: "Vendeur Pro",
-      seller_name: "Teranga Développement SA",
-      rating: 4.9,
+      seller_type: "Particulier",
+      seller_name: "Amadou Diallo",
+      rating: 4.8,
       blockchain_verified: true,
-      nft_id: "NFT_TERRAIN_001",
-      smart_contract: "0x1a2b3c4d5e6f7890abcdef",
-      payment_options: ["direct", "banque", "echelonne"],
-      bank_partners: ["UBA", "CBAO", "Crédit Agricole"],
-      construction_monitoring: true,
+      is_municipal: false,
       amenities: ["electricity", "water", "road", "fiber"],
-      description: "Terrain premium tokenisé en NFT avec smart contract automatique. Financement bancaire disponible."
+      description: "Terrain résidentiel avec vue mer partielle"
     },
     {
       id: 2,
-      title: "Terrain commercial - Mermoz",
+      title: "Terrain Commercial - Mermoz",
       location: "Mermoz, Dakar",
-      price: 180000000,
-      surface: 800,
-      type: "terrain",
+      price: 120000000,
+      surface: 600,
+      type: "vendeur",
       status: "available",
       coordinates: { lat: 14.7392, lng: -17.4816 },
-      owner: "Propriétaire Vérifié",
+      seller_type: "Promoteur Pro",
+      seller_name: "SENEGAL AGRO DEVELOPPEMENT",
       rating: 4.9,
       blockchain_verified: true,
-      hash: "0x9876543210fedcba",
+      is_municipal: false,
       amenities: ["electricity", "water", "road"],
       description: "Terrain commercial stratégiquement situé"
     },
     {
       id: 3,
-      title: "Terrain résidentiel - Plateau",
-      location: "Plateau, Dakar",
+      title: "Terrain VIP - Point E",
+      location: "Point E, Dakar",
       price: 95000000,
-      surface: 300,
-      type: "terrain",
-      status: "sold",
-      coordinates: { lat: 14.6937, lng: -17.4441 },
-      owner: "Propriétaire Vérifié",
+      surface: 350,
+      type: "vendeur",
+      status: "available",
+      coordinates: { lat: 14.7169, lng: -17.4477 },
+      seller_type: "Agence Pro",
+      seller_name: "IMMOBILIER DAKAR PREMIUM",
       rating: 4.7,
-      blockchain_verified: false,
-      hash: null,
-      amenities: ["electricity", "water"],
-      description: "Terrain en centre-ville avec accès facilité"
+      blockchain_verified: true,
+      is_municipal: false,
+      amenities: ["electricity", "water", "security"],
+      description: "Terrain dans quartier résidentiel haut standing"
     },
     {
       id: 4,
-      title: "Terrain communal - Pikine",
-      location: "Pikine, Dakar",
-      price: 45000000,
-      surface: 600,
-      type: "terrain",
-      status: "verified",
-      coordinates: { lat: 14.7549, lng: -17.4001 },
-      owner: "Mairie de Pikine",
+      title: "Terrain Résidentiel - Sacré Cœur",
+      location: "Sacré Cœur, Dakar",
+      price: 110000000,
+      surface: 500,
+      type: "vendeur",
+      status: "available",
+      coordinates: { lat: 14.7097, lng: -17.4568 },
+      seller_type: "Particulier",
+      seller_name: "Fatou Sall",
+      rating: 4.6,
+      blockchain_verified: false,
+      is_municipal: false,
+      amenities: ["electricity", "water"],
+      description: "Grand terrain familial"
+    },
+    // Terrains communaux (IDs différents pour éviter conflit)
+    {
+      id: "communal-1",
+      title: "Zone Communale - Guédiawaye",
+      location: "Guédiawaye",
+      price: 250000,
+      surface: 200,
+      type: "communal",
+      status: "available",
+      coordinates: { lat: 14.7667, lng: -17.4167 },
+      municipality: "Commune de Guédiawaye",
       rating: 4.5,
       blockchain_verified: true,
-      hash: "0xabcdef1234567890",
-      amenities: ["electricity", "road"],
-      description: "Terrain communal disponible via demande officielle",
-      is_municipal: true
+      is_municipal: true,
+      amenities: ["electricity", "water", "school"],
+      description: "Terrain communal pour logement social"
+    },
+    {
+      id: "communal-2", 
+      title: "Zone Communale - Pikine",
+      location: "Pikine",
+      price: 200000,
+      surface: 180,
+      type: "communal",
+      status: "available",
+      coordinates: { lat: 14.7547, lng: -17.3969 },
+      municipality: "Commune de Pikine",
+      rating: 4.3,
+      blockchain_verified: true,
+      is_municipal: true,
+      amenities: ["electricity", "water"],
+      description: "Lotissement social en cours de viabilisation"
+    },
+    {
+      id: "communal-3",
+      title: "Zone Communale - Rufisque",
+      location: "Rufisque",
+      price: 150000,
+      surface: 250,
+      type: "communal", 
+      status: "available",
+      coordinates: { lat: 14.7167, lng: -17.2667 },
+      municipality: "Commune de Rufisque",
+      rating: 4.2,
+      blockchain_verified: true,
+      is_municipal: true,
+      amenities: ["electricity"],
+      description: "Terrain communal dans extension urbaine"
     }
   ];
 
   const filteredProperties = properties.filter(property => {
     const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          property.location.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    // Filtrage par onglet (privé vs communal)
+    const matchesTab = activeTab === 'private' ? !property.is_municipal : property.is_municipal;
+    
     let matchesFilter = false;
     
     switch (activeFilter) {
       case 'all':
         matchesFilter = true;
         break;
-      case 'terrain':
-        matchesFilter = property.type === 'terrain';
+      case 'available':
+        matchesFilter = property.status === 'available';
         break;
       case 'verified':
-        matchesFilter = property.status === 'verified' || property.blockchain_verified;
+        matchesFilter = property.blockchain_verified;
         break;
       case 'municipal':
-        matchesFilter = property.is_municipal || property.owner.includes('Mairie');
+        matchesFilter = property.is_municipal;
         break;
       default:
         matchesFilter = property.type === activeFilter || property.status === activeFilter;
     }
     
-    return matchesSearch && matchesFilter;
+    return matchesSearch && matchesFilter && matchesTab;
   });
 
   const getStatusBadge = (status, blockchain_verified) => {
@@ -267,9 +319,8 @@ const CartePage = () => {
               <div className="flex gap-2">
                 {[
                   { key: 'all', label: 'Tout', icon: Target },
-                  { key: 'terrain', label: 'Terrains', icon: MapPin },
-                  { key: 'verified', label: 'Vérifiés', icon: Shield },
-                  { key: 'municipal', label: 'Communaux', icon: Home }
+                  { key: 'available', label: 'Disponibles', icon: MapPin },
+                  { key: 'verified', label: 'Vérifiés Blockchain', icon: Shield }
                 ].map(filter => (
                   <Button
                     key={filter.key}
@@ -285,6 +336,22 @@ const CartePage = () => {
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Onglets pour type de terrain */}
+        <div className="container mx-auto px-4 pb-4">
+          <Tabs value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
+              <TabsTrigger value="private" className="flex items-center gap-2">
+                <Building2 className="w-4 h-4" />
+                Terrains Privés
+              </TabsTrigger>
+              <TabsTrigger value="communal" className="flex items-center gap-2">
+                <Landmark className="w-4 h-4" />
+                Terrains Communaux
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
         </div>
 
         {/* Contenu principal */}
@@ -461,7 +528,11 @@ const CartePage = () => {
                             className="flex-1 text-xs"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate(`/parcel-blockchain/${property.id}`);
+                              if (property.is_municipal) {
+                                navigate(`/zone-communale/${property.id}`);
+                              } else {
+                                navigate(`/parcelle/${property.id}`);
+                              }
                             }}
                           >
                             Voir détails

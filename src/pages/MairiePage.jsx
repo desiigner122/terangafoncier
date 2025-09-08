@@ -19,7 +19,8 @@ import {
   FileSignature, 
   Lightbulb
 } from 'lucide-react';
-import ParcelCard from '@/components/parcels/ParcelCard';
+// import ParcelCard from '@/components/parcels/ParcelCard'; // Composant supprimé
+import SimpleParcelCard from '@/components/common/SimpleParcelCard';
 import { Helmet } from 'react-helmet-async';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -188,7 +189,7 @@ const MairiePage = () => {
         <section className="py-16 md:py-20"><div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12">Opportunités Foncières à {mairie.name.split("Mairie de ")[1]}</h2>
             {parcels.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{parcels.map(parcel => (<ParcelCard key={parcel.id} parcel={parcel} />))}</div>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">{parcels.map(parcel => (<SimpleParcelCard key={parcel.id} parcel={parcel} />))}</div>
             ) : (<p className="text-center text-muted-foreground">Aucune parcelle en vedette pour cette commune pour le moment.</p>)}
             <div className="text-center mt-12"><Button asChild size="lg"><Link to={`/parcelles?zone=${mairie.name.split("Mairie de ")[1]}`}>Voir toutes les parcelles <ArrowRight className="ml-2 h-5 w-5" /></Link></Button></div>
         </div></section>

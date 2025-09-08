@@ -13,7 +13,8 @@ import {
   ArrowRight, 
   CheckCircle
 } from 'lucide-react';
-import ParcelCard from '@/components/parcels/ParcelCard';
+// import ParcelCard from '@/components/parcels/ParcelCard'; // Composant supprimé
+import SimpleParcelCard from '@/components/common/SimpleParcelCard';
 import { Helmet } from 'react-helmet-async';
 
 const regionDataSim = {
@@ -147,7 +148,7 @@ const RegionInvestmentPage = () => {
             {parcels.length > 0 ? (
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {parcels.map(parcel => (
-                  <ParcelCard key={parcel.id} parcel={parcel} />
+                  <SimpleParcelCard key={parcel.id} parcel={parcel} />
                 ))}
               </div>
             ) : (

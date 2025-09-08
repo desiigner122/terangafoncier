@@ -118,40 +118,14 @@ const BlockchainAboutPage = () => {
 
   const teamMembers = [
     {
-      name: "Amadou Diallo",
-      role: "CEO & Co-Fondateur",
-      speciality: "Blockchain & Fintech",
-      experience: "12 ans",
-      education: "MIT - Computer Science",
+      name: "Abdoulaye Diémé",
+      role: "Fondateur & CEO",
+      speciality: "Blockchain & Développement Full-Stack",
+      experience: "8+ ans",
+      education: "Expert en Technologies Web & Blockchain",
       image: "/api/placeholder/120/120",
-      color: "from-blue-500 to-purple-500"
-    },
-    {
-      name: "Fatou Seck",
-      role: "CTO & Co-Fondatrice",
-      speciality: "Intelligence Artificielle",
-      experience: "10 ans",
-      education: "Stanford - AI Engineering",
-      image: "/api/placeholder/120/120",
-      color: "from-purple-500 to-pink-500"
-    },
-    {
-      name: "Ousmane Ba",
-      role: "Directeur Blockchain",
-      speciality: "Smart Contracts",
-      experience: "8 ans",
-      education: "Ethereum Foundation",
-      image: "/api/placeholder/120/120",
-      color: "from-emerald-500 to-teal-500"
-    },
-    {
-      name: "Aïssatou Ndiaye",
-      role: "Directrice Diaspora",
-      speciality: "Relations Internationales",
-      experience: "15 ans",
-      education: "Sciences Po Paris",
-      image: "/api/placeholder/120/120",
-      color: "from-orange-500 to-red-500"
+      color: "from-blue-500 to-purple-500",
+      description: "Entrepreneur passionné et développeur full-stack expérimenté, Abdoulaye révolutionne l'immobilier sénégalais en combinant blockchain et intelligence artificielle pour démocratiser l'accès au foncier."
     }
   ];
 
@@ -437,52 +411,56 @@ const BlockchainAboutPage = () => {
               className="text-center mb-16"
             >
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">
-                L'Équipe d'Experts
+                Le Fondateur
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Des professionnels passionnés qui révolutionnent l'immobilier sénégalais
+                Un entrepreneur visionnaire qui révolutionne l'immobilier sénégalais
               </p>
             </motion.div>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-              {teamMembers.map((member, index) => (
-                <motion.div
-                  key={member.name}
-                  initial={{ opacity: 0, y: 30 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.6, delay: index * 0.1 }}
-                >
-                  <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
-                    <div className={`h-2 bg-gradient-to-r ${member.color}`}></div>
-                    <CardContent className="p-6 text-center">
-                      <div className="w-20 h-20 mx-auto mb-4 rounded-full overflow-hidden">
-                        <img 
-                          src={member.image} 
-                          alt={member.name}
-                          className="w-full h-full object-cover"
-                        />
+            <div className="flex justify-center">
+              <motion.div
+                initial={{ opacity: 0, y: 30 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6 }}
+                className="max-w-md"
+              >
+                <Card className="border-0 shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                  <div className="h-2 bg-gradient-to-r from-blue-500 to-purple-500"></div>
+                  <CardContent className="p-8 text-center">
+                    <div className="w-24 h-24 mx-auto mb-6 rounded-full overflow-hidden">
+                      <img 
+                        src="/api/placeholder/120/120" 
+                        alt="Abdoulaye Diémé"
+                        className="w-full h-full object-cover"
+                      />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Abdoulaye Diémé</h3>
+                    <p className="text-blue-600 font-medium mb-4">Fondateur & CEO</p>
+                    
+                    <div className="space-y-3 mb-6 text-sm text-gray-600">
+                      <div className="flex items-center justify-center gap-2">
+                        <Briefcase className="h-4 w-4" />
+                        <span>Blockchain & Développement Full-Stack</span>
                       </div>
-                      <h3 className="text-xl font-bold text-gray-900 mb-1">{member.name}</h3>
-                      <p className="text-blue-600 font-medium mb-3">{member.role}</p>
-                      
-                      <div className="space-y-2 text-sm text-gray-600">
-                        <div className="flex items-center justify-center gap-1">
-                          <Briefcase className="h-4 w-4" />
-                          <span>{member.speciality}</span>
-                        </div>
-                        <div className="flex items-center justify-center gap-1">
-                          <Calendar className="h-4 w-4" />
-                          <span>{member.experience}</span>
-                        </div>
-                        <div className="flex items-center justify-center gap-1">
-                          <GraduationCap className="h-4 w-4" />
-                          <span className="text-xs">{member.education}</span>
-                        </div>
+                      <div className="flex items-center justify-center gap-2">
+                        <Calendar className="h-4 w-4" />
+                        <span>8+ ans d'expérience</span>
                       </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      <div className="flex items-center justify-center gap-2">
+                        <GraduationCap className="h-4 w-4" />
+                        <span>Expert en Technologies Web & Blockchain</span>
+                      </div>
+                    </div>
+                    
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      Entrepreneur passionné et développeur full-stack expérimenté, Abdoulaye révolutionne 
+                      l'immobilier sénégalais en combinant blockchain et intelligence artificielle pour 
+                      démocratiser l'accès au foncier.
+                    </p>
+                  </CardContent>
+                </Card>
+              </motion.div>
             </div>
           </div>
         </section>

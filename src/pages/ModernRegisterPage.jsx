@@ -371,6 +371,25 @@ const ModernRegisterPage = () => {
 
                                 <Separator />
 
+                                <div className="text-center space-y-3">
+                                    <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
+                                        <h3 className="font-medium text-gray-900 mb-2">Vous êtes un professionnel ?</h3>
+                                        <p className="text-sm text-gray-600 mb-3">
+                                            Promoteur, Banque, Notaire, Géomètre, Agent Foncier, Municipalité
+                                        </p>
+                                        <Link 
+                                            to="/contact" 
+                                            className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                                        >
+                                            <Shield className="w-4 h-4" />
+                                            Nous contacter
+                                            <ArrowRight className="w-4 h-4" />
+                                        </Link>
+                                    </div>
+                                </div>
+
+                                <Separator />
+
                                 <div className="text-center">
                                     <p className="text-sm text-gray-600">
                                         Vous avez déjà un compte ?{' '}
@@ -378,6 +397,22 @@ const ModernRegisterPage = () => {
                                             Se connecter
                                         </Link>
                                     </p>
+                                </div>
+
+                                <Separator />
+
+                                <div className="text-center space-y-3">
+                                    <p className="text-sm text-gray-600">
+                                        Préférez une inscription guidée ?
+                                    </p>
+                                    <Link 
+                                        to="/register-steps" 
+                                        className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all"
+                                    >
+                                        <Zap className="w-4 h-4" />
+                                        Inscription en étapes blockchain
+                                        <ArrowRight className="w-4 h-4" />
+                                    </Link>
                                 </div>
 
                                 <div className="text-center">

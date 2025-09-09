@@ -21,11 +21,13 @@ import {
   Droplets,
   GraduationCap,
   Bus,
-  Navigation
+  Navigation,
+  ExternalLink,
+  User
 } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 
 const regions = [
   "Toutes les régions", "Dakar", "Thiès", "Saint-Louis", "Diourbel", "Louga", 
@@ -88,6 +90,8 @@ const ParcellesVendeursPage = () => {
       type: "Résidentiel",
       seller: "Particulier",
       sellerName: "Amadou FALL",
+      sellerId: "seller-001",
+      sellerType: "vendeur-particulier",
       financing: ["Bancaire", "Échelonné"],
       image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000",
       features: ["Vue mer", "Résidence fermée", "Parking"],
@@ -110,6 +114,8 @@ const ParcellesVendeursPage = () => {
       type: "Agricole",
       seller: "Promoteur Pro",
       sellerName: "SENEGAL AGRO DEVELOPPEMENT",
+      sellerId: "promoter-001",
+      sellerType: "promoteur",
       financing: ["Crypto", "Bancaire"],
       image: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1000",
       features: ["Parking"],
@@ -132,6 +138,8 @@ const ParcellesVendeursPage = () => {
       type: "Commercial",
       seller: "Agence Pro",
       sellerName: "IMMOBILIER DAKAR PREMIUM",
+      sellerId: "agent-001", 
+      sellerType: "agent",
       financing: ["Bancaire", "Échelonné", "Crypto"],
       image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000",
       features: ["Résidence fermée", "Parking"],
@@ -154,6 +162,8 @@ const ParcellesVendeursPage = () => {
       type: "Mixte",
       seller: "Particulier",
       sellerName: "Fatou SECK",
+      sellerId: "seller-002",
+      sellerType: "vendeur-particulier",
       financing: ["Échelonné"],
       image: "https://images.unsplash.com/photo-1448630360428-65456885c650?q=80&w=1000",
       features: ["Vue mer"],
@@ -176,6 +186,8 @@ const ParcellesVendeursPage = () => {
       type: "Industriel",
       seller: "Développeur Pro",
       sellerName: "SÉNÉGAL INDUSTRIAL PARKS",
+      sellerId: "promoter-003",
+      sellerType: "promoteur",
       financing: ["Bancaire", "Crypto"],
       image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1000",
       features: ["Parking"],
@@ -198,6 +210,8 @@ const ParcellesVendeursPage = () => {
       type: "Résidentiel",
       seller: "Particulier",
       sellerName: "Moussa DIAGNE",
+      sellerId: "seller-003",
+      sellerType: "vendeur-particulier",
       financing: ["Bancaire", "Échelonné"],
       image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=1000",
       features: ["Résidence fermée"],
@@ -220,6 +234,8 @@ const ParcellesVendeursPage = () => {
       type: "Résidentiel",
       seller: "Promoteur Pro",
       sellerName: "SALY LUXURY DEVELOPMENT",
+      sellerId: "promoter-004",
+      sellerType: "promoteur",
       financing: ["Bancaire", "Échelonné", "Crypto"],
       image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1000",
       features: ["Vue mer", "Résidence fermée", "Parking"],
@@ -242,6 +258,8 @@ const ParcellesVendeursPage = () => {
       type: "Commercial",
       seller: "Investisseur Pro",
       sellerName: "KAOLACK BUSINESS CENTER",
+      sellerId: "investor-001",
+      sellerType: "investisseur",
       financing: ["Bancaire", "Échelonné"],
       image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000",
       features: ["Parking"],
@@ -252,6 +270,55 @@ const ParcellesVendeursPage = () => {
       isFavorite: false,
       isVerified: true,
       description: "Terrain commercial stratégique en centre-ville"
+    },
+    // Ajout de parcelles communales
+    {
+      id: 9,
+      title: "Lotissement Social - Municipalité de Dakar",
+      location: "Guédiawaye, Dakar",
+      region: "Dakar",
+      city: "Guédiawaye",
+      price: "12 000 000",
+      surface: "200",
+      type: "Résidentiel",
+      seller: "Municipalité",
+      sellerName: "Mairie de Dakar",
+      sellerId: "municipality-001",
+      sellerType: "mairie",
+      financing: ["Bancaire", "Échelonné"],
+      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000",
+      features: ["Prix social", "Titre foncier"],
+      utilities: ["Eau", "Électricité"],
+      access: ["Route pavée", "Transport", "Écoles"],
+      rating: 4.1,
+      views: 89,
+      isFavorite: false,
+      isVerified: true,
+      description: "Programme de logement social municipal"
+    },
+    {
+      id: 10,
+      title: "Zone d'Activité Économique - Thiès",
+      location: "Thiès, Thiès",
+      region: "Thiès",
+      city: "Thiès",
+      price: "25 000 000",
+      surface: "1000",
+      type: "Commercial",
+      seller: "Municipalité",
+      sellerName: "Mairie de Thiès",
+      sellerId: "municipality-002",
+      sellerType: "mairie",
+      financing: ["Bancaire"],
+      image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000",
+      features: ["Zone économique", "Infrastructures"],
+      utilities: ["Eau", "Électricité", "Internet"],
+      access: ["Route pavée", "Transport"],
+      rating: 4.3,
+      views: 156,
+      isFavorite: false,
+      isVerified: true,
+      description: "Zone dédiée aux activités économiques municipales"
     }
   ];
 
@@ -442,6 +509,7 @@ const ParcellesVendeursPage = () => {
                 <SelectItem value="Agence Pro">Agences Pro</SelectItem>
                 <SelectItem value="Développeur Pro">Développeurs Pro</SelectItem>
                 <SelectItem value="Investisseur Pro">Investisseurs Pro</SelectItem>
+                <SelectItem value="Municipalité">Municipalités</SelectItem>
               </SelectContent>
             </Select>
 
@@ -610,8 +678,7 @@ const ParcellesVendeursPage = () => {
                 transition={{ duration: 0.6, delay: index * 0.1 }}
               >
                 <Card 
-                  className="overflow-hidden hover:shadow-2xl transition-all duration-300 cursor-pointer group"
-                  onClick={() => handleParcelleClick(parcelle.id)}
+                  className="overflow-hidden hover:shadow-2xl transition-all duration-300 group"
                 >
                   <div className="relative">
                     <img 
@@ -698,9 +765,33 @@ const ParcellesVendeursPage = () => {
                       </div>
                     </div>
 
-                    <Button className="w-full mt-4 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-                      Voir les détails
-                    </Button>
+                    <div className="flex flex-col gap-2 mt-4">
+                      {/* Bouton Voir le profil du vendeur */}
+                      <Button 
+                        variant="outline" 
+                        className="w-full flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          const profilePath = parcelle.sellerType === 'vendeur-particulier' 
+                            ? `/seller/${parcelle.sellerId}`
+                            : `/${parcelle.sellerType}/${parcelle.sellerId}`;
+                          navigate(profilePath);
+                        }}
+                      >
+                        <User className="w-4 h-4" />
+                        Voir le profil
+                      </Button>
+
+                      <Button 
+                        className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          navigate(`/parcelle/${parcelle.id}`);
+                        }}
+                      >
+                        Voir les détails
+                      </Button>
+                    </div>
                   </CardContent>
                 </Card>
               </motion.div>

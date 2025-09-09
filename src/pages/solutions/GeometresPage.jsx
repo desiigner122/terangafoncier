@@ -22,107 +22,107 @@ import { Helmet } from 'react-helmet-async';
 const GeometresPage = () => {
   const geometreServices = [
     {
-      icon: Satellite,
-      title: "Cartographie par Drone",
-      description: "Relevés topographiques haute précision par drones autonomes",
-      features: ["Précision centimétrique", "Cartographie 3D", "Orthophotos HD"]
+      icon: MapPin,
+      title: "Géolocalisation GPS Précise",
+      description: "Relevés topographiques avec GPS différentiel pour une précision optimale",
+      features: ["GPS RTK centimétrique", "Coordonnées UTM 28N", "Géoréférencement précis"]
     },
     {
       icon: Ruler,
-      title: "Bornage Intelligent",
-      description: "Délimitation assistée par GPS et blockchain pour certification",
-      features: ["GPS RTK", "Certification blockchain", "Historique immutable"]
+      title: "Bornage et Délimitation",
+      description: "Matérialisation des limites de propriétés selon les normes sénégalaises",
+      features: ["Bornes en béton", "Plans de bornage", "Procès-verbaux officiels"]
     },
     {
       icon: Camera,
-      title: "Réalité Augmentée",
-      description: "Visualisation terrain en temps réel avec superposition données",
-      features: ["AR mobile", "Données cadastrales", "Mesures instantanées"]
+      title: "Levés Topographiques",
+      description: "Mesures terrain avec théodolite et station totale moderne",
+      features: ["Station totale", "Carnet de terrain", "Plans topographiques"]
     },
     {
       icon: Shield,
-      title: "Certification Blockchain",
-      description: "Tous vos relevés certifiés et horodatés sur blockchain",
-      features: ["Preuve d'authenticité", "Horodatage", "Accès global"]
+      title: "Certification Numérique",
+      description: "Tous vos relevés certifiés et sécurisés numériquement",
+      features: ["Signature numérique", "Horodatage sécurisé", "Archivage digital"]
     }
   ];
 
   const tools = [
     {
-      name: "TerraScan Pro",
-      description: "Scanner LiDAR mobile haute résolution",
-      specs: ["Portée 150m", "Précision ±2cm", "10,000 points/sec"]
+      name: "Station Totale Leica",
+      description: "Équipement topographique de précision pour levés terrain",
+      specs: ["Précision ±2mm", "Portée 3km", "Laser infrarouge"]
     },
     {
-      name: "GeoCapture AI",
-      description: "Traitement automatisé des données géospatiales",
-      specs: ["IA intégrée", "Reconnaissance auto", "Export multi-format"]
+      name: "GPS RTK Trimble",
+      description: "Récepteur GPS haute précision pour géoréférencement",
+      specs: ["Précision centimétrique", "WAAS/SBAS", "Temps réel"]
     },
     {
-      name: "BlockchainCertify",
-      description: "Certification et horodatage blockchain",
-      specs: ["Ethereum/Polygon", "Smart contracts", "Accès API"]
+      name: "AutoCAD Sénégal",
+      description: "Logiciel de DAO adapté aux normes cadastrales sénégalaises",
+      specs: ["Plans conformes", "Bibliothèques locales", "Export DWG/PDF"]
     }
   ];
 
   const benefits = [
     {
       icon: Zap,
-      title: "Gain de Temps",
-      description: "Réduisez vos délais de 70% avec l'automatisation"
+      title: "Efficacité Terrain",
+      description: "Réduisez vos délais d'intervention de 50% avec nos outils"
     },
     {
       icon: Target,
-      title: "Précision Maximale",
-      description: "Précision centimétrique garantie sur tous vos relevés"
+      title: "Conformité Légale",
+      description: "Tous vos travaux respectent la réglementation sénégalaise"
     },
     {
       icon: Globe,
-      title: "Accès Distant",
-      description: "Consultez vos données depuis n'importe où dans le monde"
+      title: "Couverture Nationale",
+      description: "Intervention sur tout le territoire sénégalais"
     },
     {
       icon: Shield,
-      title: "Certification Légale",
-      description: "Vos relevés ont valeur légale grâce à la blockchain"
+      title: "Validation DDHPJ",
+      description: "Plans et documents conformes aux exigences DDHPJ"
     }
   ];
 
   const pricingTiers = [
     {
       name: "Starter",
-      price: "25,000",
-      period: "/mois",
+      price: "50,000",
+      period: "/mission",
       features: [
-        "5 relevés/mois",
-        "Drone standard",
-        "Support email",
-        "Export PDF"
+        "Bornage simple",
+        "Plan topographique",
+        "Procès-verbal",
+        "Géoréférencement GPS"
       ]
     },
     {
       name: "Professional",
-      price: "75,000",
-      period: "/mois",
+      price: "150,000",
+      period: "/mission",
       features: [
-        "20 relevés/mois",
-        "Drone + LiDAR",
-        "Support prioritaire",
-        "Export multi-format",
-        "Certification blockchain"
+        "Levé topographique complet",
+        "Plan cadastral détaillé",
+        "Coordonnées UTM précises",
+        "Rapport technique",
+        "Certification numérique"
       ],
       popular: true
     },
     {
       name: "Enterprise",
-      price: "150,000",
-      period: "/mois",
+      price: "500,000",
+      period: "/projet",
       features: [
-        "Relevés illimités",
-        "Équipe dédiée",
-        "Formation complète",
-        "API access",
-        "White label"
+        "Projet d'aménagement complet",
+        "Équipe de géomètres dédiée",
+        "Formation équipes",
+        "Support technique continu",
+        "Plans directeurs urbains"
       ]
     }
   ];
@@ -130,23 +130,23 @@ const GeometresPage = () => {
   const processSteps = [
     {
       step: "01",
-      title: "Planification Mission",
-      description: "Définition du périmètre et paramètres de vol"
+      title: "Reconnaissance Terrain",
+      description: "Visite préliminaire et définition du périmètre d'intervention"
     },
     {
       step: "02",
-      title: "Acquisition Données",
-      description: "Vol automatisé et capture haute résolution"
+      title: "Levés Topographiques",
+      description: "Mesures terrain avec station totale et GPS"
     },
     {
       step: "03",
-      title: "Traitement IA",
-      description: "Analyse automatique et génération modèles 3D"
+      title: "Traitement Bureau",
+      description: "Calculs, dessins DAO et préparation des plans"
     },
     {
       step: "04",
-      title: "Certification",
-      description: "Horodatage blockchain et export sécurisé"
+      title: "Livraison Certifiée",
+      description: "Remise des documents avec certification numérique"
     }
   ];
 
@@ -169,24 +169,24 @@ const GeometresPage = () => {
             >
               <Badge className="bg-gradient-to-r from-green-500 to-emerald-500 text-white mb-6">
                 <MapPin className="w-4 h-4 mr-2" />
-                Technologie Avancée
+                Services Professionnels
               </Badge>
               <h1 className="text-5xl md:text-6xl font-bold mb-6">
                 <span className="bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
-                  Géomètres 4.0
+                  Géomètres Sénégal
                 </span>
               </h1>
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Révolutionnez vos relevés topographiques avec nos outils de pointe : 
-                drones autonomes, LiDAR, IA et certification blockchain.
+                Services topographiques professionnels conformes aux normes sénégalaises : 
+                bornage, levés terrain, plans cadastraux et certification numérique.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700">
-                  Essayer Gratuitement
+                  Demander un Devis
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
                 <Button size="lg" variant="outline">
-                  Voir Démo Live
+                  Nos Références
                 </Button>
               </div>
             </motion.div>

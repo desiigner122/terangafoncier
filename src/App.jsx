@@ -18,6 +18,7 @@ import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
 import RegisterPage from '@/pages/RegisterPage';
 import ModernRegisterPage from '@/pages/ModernRegisterPage';
 import BlockchainRegisterPage from '@/pages/BlockchainRegisterPage';
+import MultiStepRegisterPage from '@/pages/MultiStepRegisterPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import DebugDashboard from '@/pages/DebugDashboard';
 import PromoterProjectsPage from '@/pages/PromoterProjectsPage';
@@ -29,6 +30,15 @@ import ContactPage from '@/pages/ContactPage';
 import BlockchainContactPage from '@/pages/BlockchainContactPage';
 import AboutPage from '@/pages/AboutPage';
 import AIFeaturesPage from '@/pages/AIFeaturesPage';
+import UserProfilePage from '@/pages/profiles/UserProfilePage';
+import SellerProfilePage from '@/pages/profiles/SellerProfilePage';
+import PromoterProfilePage from '@/pages/profiles/PromoterProfilePage';
+import BankProfilePage from '@/pages/profiles/BankProfilePage';
+import NotaryProfilePage from '@/pages/profiles/NotaryProfilePage';
+import GeometerProfilePage from '@/pages/profiles/GeometerProfilePage';
+import InvestorProfilePage from '@/pages/profiles/InvestorProfilePage';
+import AgentProfilePage from '@/pages/profiles/AgentProfilePage';
+import MunicipalityProfilePage from '@/pages/profiles/MunicipalityProfilePage';
 import ModernAboutPage from '@/pages/ModernAboutPage';
 import BlockchainAboutPage from '@/pages/BlockchainAboutPage';
 import FoncierBlockchainPage from '@/pages/FoncierBlockchainPage';
@@ -246,7 +256,7 @@ function App() {
               <Route path="login" element={<BlockchainLoginPage />} />
               <Route path="test-auth" element={<TestAuthPage />} />
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
-              <Route path="register" element={<BlockchainRegisterPage />} />
+              <Route path="register" element={<MultiStepRegisterPage />} />
               <Route path="reset-password" element={<ResetPasswordPage />} />
               <Route path="test-account-creation" element={<AccountCreationTestPage />} />
               <Route path="debug-dashboard" element={<DebugDashboard />} />
@@ -259,6 +269,18 @@ function App() {
               <Route path="construction-request/:id" element={<ConstructionRequestDetailPage />} />
               <Route path="project/:id" element={<ProjectDetailPage />} />
               <Route path="promoter-requests" element={<PromoterConstructionRequestsPage />} />
+              
+              {/* Profile Routes */}
+              <Route path="profile/:userType/:userId" element={<UserProfilePage />} />
+              <Route path="seller/:sellerId" element={<SellerProfilePage />} />
+              <Route path="promoter/:promoterId" element={<PromoterProfilePage />} />
+              <Route path="bank/:bankId" element={<BankProfilePage />} />
+              <Route path="notary/:notaryId" element={<NotaryProfilePage />} />
+              <Route path="geometer/:geometerId" element={<GeometerProfilePage />} />
+              <Route path="investor/:investorId" element={<InvestorProfilePage />} />
+              <Route path="agent/:agentId" element={<AgentProfilePage />} />
+              <Route path="municipality/:municipalityId" element={<MunicipalityProfilePage />} />
+              
               <Route path="villes/:cityId" element={<CityDetailPage />} />
               <Route path="contact" element={<BlockchainContactPage />} />
               <Route path="about" element={<BlockchainAboutPage />} />

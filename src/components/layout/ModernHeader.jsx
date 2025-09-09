@@ -119,6 +119,7 @@ const ModernHeader = () => {
           title: 'Particuliers & Professionnels',
           items: [
             { label: 'Particuliers', href: '/solutions/particuliers', icon: Home, description: 'Acheteurs & Vendeurs' },
+            { label: 'Investisseurs', href: '/solutions/investisseurs', icon: TrendingUp, description: 'Opportunités d\'investissement', isNew: true },
             { label: 'Promoteurs', href: '/promoteurs', icon: Building2, description: 'Projets immobiliers avec blockchain', isNew: true },
             { label: 'Agents Fonciers', href: '/solutions/agents', icon: Briefcase, description: 'Outils de vente avancés' },
             { label: 'Géomètres', href: '/solutions/geometres', icon: MapPin, description: 'Cartographie intelligente' },
@@ -129,34 +130,27 @@ const ModernHeader = () => {
       ]
     },
     {
-      label: 'Blockchain',
-      key: 'blockchain',
+      label: 'Outils & Blockchain',
+      key: 'tools-blockchain',
       hasDropdown: true,
       sections: [
         {
-          title: 'Innovations',
+          title: 'Calculateurs & Outils',
+          items: [
+            { label: 'Estimation de prix', href: '/tools/price-calculator', icon: Calculator, description: 'IA de prédiction des prix' },
+            { label: 'Carte interactive', href: '/tools/map', icon: MapPin, description: 'Explorez les terrains disponibles' },
+            { label: 'Analyses de marché', href: '/tools/market-analysis', icon: TrendingUp, description: 'Tendances et insights' },
+            { label: 'Vérificateur de propriété', href: '/tools/property-verification', icon: Shield, description: 'Vérifiez l\'authenticité des titres fonciers' }
+          ]
+        },
+        {
+          title: 'Innovations Blockchain',
           items: [
             { label: 'Capacités IA & Blockchain', href: '/fonctionnalites-avancees', icon: Zap, description: 'Découvrez nos technologies avancées', isNew: true },
             { label: 'Solutions Blockchain', href: '/solutions/blockchain', icon: Shield, description: 'Technologie révolutionnaire', isNew: true },
             { label: 'NFT Propriétés', href: '/nft-properties', icon: Coins, description: 'Tokenisation des biens immobiliers' },
             { label: 'Smart Contracts', href: '/smart-contracts', icon: FileText, description: 'Contrats intelligents automatisés' },
             { label: 'Escrow Décentralisé', href: '/escrow', icon: Shield, description: 'Séquestre sécurisé blockchain' }
-          ]
-        }
-      ]
-    },
-    {
-      label: 'Outils',
-      key: 'tools',
-      hasDropdown: true,
-      sections: [
-        {
-          title: 'Calculateurs & Outils',
-          items: [
-            { label: 'Estimation de prix', href: '/tools/price-calculator', icon: Calculator, description: 'IA de prÃ©diction des prix' },
-            { label: 'Carte interactive', href: '/tools/map', icon: MapPin, description: 'Explorez les terrains disponibles' },
-            { label: 'Analyses de marchÃ©', href: '/tools/market-analysis', icon: TrendingUp, description: 'Tendances et insights' },
-            { label: 'VÃ©rificateur de propriÃ©tÃ©', href: '/tools/property-verification', icon: Shield, description: 'VÃ©rifiez l\'authenticitÃ© des titres fonciers' }
           ]
         }
       ]

@@ -49,9 +49,7 @@ import {
   TrendingDown,
   LineChart,
   PieChart,
-  BarChart3 as BarChart,
-  BarChart3 as Radar,
-  BarChart3 as Gauge,
+  BarChart3,
   Monitor,
   Camera,
   Mic,
@@ -73,8 +71,6 @@ import {
   Trophy
 } from 'lucide-react';
 import { Helmet } from 'react-helmet-async';
-import BlockchainAnalytics from '@/components/advanced/BlockchainAnalytics';
-import AdvancedAIChatbot from '@/components/advanced/AdvancedAIChatbot';
 
 const FonctionnalitesAvanceesPage = () => {
   const [activeDemo, setActiveDemo] = useState('blockchain');
@@ -173,41 +169,6 @@ const FonctionnalitesAvanceesPage = () => {
     }
   ];
 
-  useEffect(() => {
-    // Simulation de mise à jour des données en temps réel
-    const interval = setInterval(() => {
-      setMarketData(prev => ({
-        totalTransactions: prev.totalTransactions + Math.floor(Math.random() * 3),
-        blockchainVerifications: prev.blockchainVerifications + Math.floor(Math.random() * 2),
-        aiPredictions: prev.aiPredictions + Math.floor(Math.random() * 1),
-        securityAlerts: Math.max(0, prev.securityAlerts + Math.floor(Math.random() * 2) - 1)
-      }));
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
-  const simulateAIResponse = async (query) => {
-    setIsProcessing(true);
-    
-    // Trouver le scénario correspondant
-    const scenario = demoScenarios.find(s => 
-      query.toLowerCase().includes(s.query.toLowerCase().split(' ')[0]) ||
-      s.title.toLowerCase().includes(query.toLowerCase().split(' ')[0])
-    ) || demoScenarios[0];
-
-    // Simulation d'un délai de traitement IA
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
-    
-    setAiResponse(scenario.expectedResponse);
-    setIsProcessing(false);
-  };
-
-  const handleAIDemo = async () => {
-    if (!aiQuery.trim()) return;
-    await simulateAIResponse(aiQuery);
-  };
-
   const packages = [
     'ethers@^6.8.0 - Interactions Ethereum & Smart Contracts',
     'web3@^4.2.0 - Client Web3 pour blockchain',
@@ -245,6 +206,41 @@ const FonctionnalitesAvanceesPage = () => {
       compliance: 'RGPD + Lois sénégalaises',
       backup: 'Redondance multi-zone'
     }
+  };
+
+  useEffect(() => {
+    // Simulation de mise à jour des données en temps réel
+    const interval = setInterval(() => {
+      setMarketData(prev => ({
+        totalTransactions: prev.totalTransactions + Math.floor(Math.random() * 3),
+        blockchainVerifications: prev.blockchainVerifications + Math.floor(Math.random() * 2),
+        aiPredictions: prev.aiPredictions + Math.floor(Math.random() * 1),
+        securityAlerts: Math.max(0, prev.securityAlerts + Math.floor(Math.random() * 2) - 1)
+      }));
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
+
+  const simulateAIResponse = async (query) => {
+    setIsProcessing(true);
+    
+    // Trouver le scénario correspondant
+    const scenario = demoScenarios.find(s => 
+      query.toLowerCase().includes(s.query.toLowerCase().split(' ')[0]) ||
+      s.title.toLowerCase().includes(query.toLowerCase().split(' ')[0])
+    ) || demoScenarios[0];
+
+    // Simulation d'un délai de traitement IA
+    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+    
+    setAiResponse(scenario.expectedResponse);
+    setIsProcessing(false);
+  };
+
+  const handleAIDemo = async () => {
+    if (!aiQuery.trim()) return;
+    await simulateAIResponse(aiQuery);
   };
 
   return (
@@ -294,7 +290,7 @@ const FonctionnalitesAvanceesPage = () => {
               <span className="text-6xl md:text-8xl">Avancées</span>
             </h1>
             
-            <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-4xl mx-auto leading-relaxed">
+            <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed">
               Explorez l'avenir de l'immobilier avec notre IA blockchain de pointe, 
               des NFT fonciers innovants et des analytics prédictives
             </p>
@@ -385,7 +381,7 @@ const FonctionnalitesAvanceesPage = () => {
                   transition={{ duration: 0.6, delay: index * 0.1 }}
                   className={`group relative overflow-hidden rounded-2xl border-2 transition-all duration-300 cursor-pointer ${
                     activeDemo === feature.id 
-                      ? `border-${feature.color}-500 shadow-2xl shadow-${feature.color}-500/25` 
+                      ? `border-${feature.color}-500 shadow-2xl` 
                       : 'border-gray-200 hover:border-gray-300'
                   }`}
                   onClick={() => setActiveDemo(feature.id)}
@@ -397,7 +393,7 @@ const FonctionnalitesAvanceesPage = () => {
                       <div className={`p-4 rounded-xl bg-${feature.color}-100`}>
                         <feature.icon className={`h-8 w-8 text-${feature.color}-600`} />
                       </div>
-                      <Badge className={`bg-${feature.color}-100 text-${feature.color}-800 hover:bg-${feature.color}-200`}>
+                      <Badge className={`bg-${feature.color}-100 text-${feature.color}-800`}>
                         {feature.status}
                       </Badge>
                     </div>
@@ -423,7 +419,7 @@ const FonctionnalitesAvanceesPage = () => {
                       <Button 
                         variant="ghost" 
                         size="sm"
-                        className={`text-${feature.color}-600 hover:text-${feature.color}-700 hover:bg-${feature.color}-50`}
+                        className={`text-${feature.color}-600 hover:text-${feature.color}-700`}
                       >
                         En savoir plus
                         <ArrowRight className="ml-2 h-4 w-4" />
@@ -444,259 +440,357 @@ const FonctionnalitesAvanceesPage = () => {
           </div>
         </section>
 
-        {/* Features Grid */}
-        <section className="py-16 md:py-20">
+        {/* Section Demo Interactive */}
+        <section className="py-20 bg-gradient-to-br from-gray-900 via-blue-900 to-purple-900 text-white">
           <div className="container mx-auto px-4">
-            <motion.div
+            <motion.h2
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center mb-16"
+              className="text-4xl md:text-5xl font-bold text-center mb-16"
             >
-              <h2 className="text-3xl md:text-4xl font-bold mb-4">
-                Technologies Intégrées
-              </h2>
-              <p className="text-muted-foreground max-w-2xl mx-auto">
-                Chaque fonctionnalité a été installée et configurée avec succès
-              </p>
-            </motion.div>
+              Démo Interactive
+            </motion.h2>
 
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8 mb-16">
-              {features.map((feature, index) => (
-                <motion.div
-                  key={feature.id}
-                  initial={{ opacity: 0, y: 30 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card 
-                    className={`h-full hover:shadow-lg transition-all cursor-pointer ${
-                      activeDemo === feature.id ? 'ring-2 ring-purple-500' : ''
-                    }`}
-                    onClick={() => setActiveDemo(feature.id)}
+            <Tabs value={activeDemo} onValueChange={setActiveDemo} className="max-w-6xl mx-auto">
+              <TabsList className="grid w-full grid-cols-4 mb-12 bg-black/20 backdrop-blur-sm">
+                {features.map((feature) => (
+                  <TabsTrigger 
+                    key={feature.id} 
+                    value={feature.id} 
+                    className="data-[state=active]:bg-white/20 data-[state=active]:text-white"
                   >
-                    <CardContent className="p-6">
-                      <div className={`w-12 h-12 rounded-lg bg-gradient-to-r from-${feature.color}-500 to-${feature.color}-600 flex items-center justify-center mb-4`}>
-                        <feature.icon className="h-6 w-6 text-white" />
-                      </div>
-                      <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
-                      <p className="text-muted-foreground mb-4">{feature.description}</p>
-                      <Badge className="bg-green-100 text-green-700 text-xs">
-                        {feature.status}
-                      </Badge>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
-
-            {/* Demo Section */}
-            <Tabs value={activeDemo} onValueChange={setActiveDemo}>
-              <TabsList className="grid w-full grid-cols-4">
-                <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
-                <TabsTrigger value="ai">IA</TabsTrigger>
-                <TabsTrigger value="analytics">Analytics</TabsTrigger>
-                <TabsTrigger value="security">Sécurité</TabsTrigger>
+                    <feature.icon className="w-4 h-4 mr-2" />
+                    {feature.title.split(' ')[0]}
+                  </TabsTrigger>
+                ))}
               </TabsList>
-              
-              <TabsContent value="blockchain" className="mt-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Coins className="h-5 w-5 text-purple-600" />
-                      Blockchain Analytics Dashboard
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <BlockchainAnalytics />
-                  </CardContent>
-                </Card>
-              </TabsContent>
-              
-              <TabsContent value="ai" className="mt-8">
-                <div className="grid md:grid-cols-2 gap-8">
-                  <AdvancedAIChatbot />
-                  <Card>
+
+              <TabsContent value="blockchain" className="space-y-8">
+                <div className="grid lg:grid-cols-2 gap-8">
+                  <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
                     <CardHeader>
-                      <CardTitle className="flex items-center gap-2">
-                        <Brain className="h-5 w-5 text-blue-600" />
-                        Capacités IA
+                      <CardTitle className="text-white flex items-center">
+                        <Blocks className="w-5 h-5 mr-2" />
+                        Smart Contract Live
                       </CardTitle>
                     </CardHeader>
-                    <CardContent>
-                      <ul className="space-y-3">
-                        <li className="flex items-center gap-2">
-                          <Badge className="bg-blue-100 text-blue-700">✓</Badge>
-                          Traitement du langage naturel
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Badge className="bg-blue-100 text-blue-700">✓</Badge>
-                          Recommandations personnalisées
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Badge className="bg-blue-100 text-blue-700">✓</Badge>
-                          Analyse prédictive des prix
-                        </li>
-                        <li className="flex items-center gap-2">
-                          <Badge className="bg-blue-100 text-blue-700">✓</Badge>
-                          Classification automatique
-                        </li>
-                      </ul>
+                    <CardContent className="text-gray-300">
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span>Réseau:</span>
+                          <Badge className="bg-purple-600">Polygon Mainnet</Badge>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Gas Price:</span>
+                          <span className="text-green-400">0.02 GWEI</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Contrats déployés:</span>
+                          <span className="text-blue-400">247</span>
+                        </div>
+                        <Progress value={85} className="mt-4" />
+                        <p className="text-sm">85% des transactions sont automatisées</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-black/20 backdrop-blur-sm border-purple-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Trophy className="w-5 h-5 mr-2" />
+                        NFT Fonciers
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-gray-300">
+                      <div className="space-y-4">
+                        <div className="flex justify-between">
+                          <span>NFT créés:</span>
+                          <span className="text-yellow-400">1,247</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Valeur totale:</span>
+                          <span className="text-green-400">2.4B FCFA</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Transactions:</span>
+                          <span className="text-blue-400">892</span>
+                        </div>
+                        <Button className="w-full mt-4 bg-purple-600 hover:bg-purple-700">
+                          Voir mes NFT
+                        </Button>
+                      </div>
                     </CardContent>
                   </Card>
                 </div>
               </TabsContent>
-              
-              <TabsContent value="analytics" className="mt-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BarChart3 className="h-5 w-5 text-green-600" />
-                      Analytics en Temps Réel
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-3 gap-6">
-                      <div className="text-center">
-                        <div className="text-3xl font-bold text-green-600 mb-2">24/7</div>
-                        <p className="text-sm text-muted-foreground">Monitoring continu</p>
+
+              <TabsContent value="ai" className="space-y-8">
+                <div className="grid lg:grid-cols-2 gap-8">
+                  <Card className="bg-black/20 backdrop-blur-sm border-blue-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Brain className="w-5 h-5 mr-2" />
+                        Assistant IA
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-gray-300">
+                      <div className="space-y-4">
+                        <Input 
+                          placeholder="Posez votre question à l'IA..."
+                          value={aiQuery}
+                          onChange={(e) => setAiQuery(e.target.value)}
+                          className="bg-black/30 border-blue-500/30 text-white placeholder:text-gray-400"
+                        />
+                        <div className="flex gap-2 flex-wrap">
+                          {demoScenarios.map((scenario, idx) => (
+                            <Button 
+                              key={idx}
+                              variant="outline" 
+                              size="sm"
+                              onClick={() => setAiQuery(scenario.query)}
+                              className="text-xs bg-blue-500/20 border-blue-500/30 text-blue-300 hover:bg-blue-500/30"
+                            >
+                              {scenario.title}
+                            </Button>
+                          ))}
+                        </div>
+                        <Button 
+                          onClick={handleAIDemo} 
+                          disabled={!aiQuery.trim() || isProcessing}
+                          className="w-full bg-blue-600 hover:bg-blue-700"
+                        >
+                          {isProcessing ? (
+                            <>
+                              <Zap className="w-4 h-4 mr-2 animate-spin" />
+                              IA en traitement...
+                            </>
+                          ) : (
+                            <>
+                              <Brain className="w-4 h-4 mr-2" />
+                              Demander à l'IA
+                            </>
+                          )}
+                        </Button>
                       </div>
-                      <div className="text-center">
-                        <div className="text-3xl font-bold text-blue-600 mb-2">Real-time</div>
-                        <p className="text-sm text-muted-foreground">Données en temps réel</p>
-                      </div>
-                      <div className="text-center">
-                        <div className="text-3xl font-bold text-purple-600 mb-2">AI-Powered</div>
-                        <p className="text-sm text-muted-foreground">Insights intelligents</p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                    </CardContent>
+                  </Card>
+
+                  {aiResponse && (
+                    <Card className="bg-black/20 backdrop-blur-sm border-green-500/30">
+                      <CardHeader>
+                        <CardTitle className="text-white flex items-center">
+                          <CheckCircle className="w-5 h-5 mr-2" />
+                          Réponse IA
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="text-gray-300">
+                        <div className="whitespace-pre-line text-sm leading-relaxed">
+                          {aiResponse}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </div>
               </TabsContent>
-              
-              <TabsContent value="security" className="mt-8">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <Shield className="h-5 w-5 text-red-600" />
-                      Sécurité Enterprise
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="grid md:grid-cols-2 gap-6">
-                      <div>
-                        <h4 className="font-semibold mb-3">Chiffrement</h4>
-                        <ul className="space-y-2 text-sm">
-                          <li>• AES-256 pour les données</li>
-                          <li>• RSA pour les communications</li>
-                          <li>• Hachage SHA-256</li>
-                        </ul>
+
+              <TabsContent value="analytics" className="space-y-8">
+                <div className="grid lg:grid-cols-3 gap-6">
+                  <Card className="bg-black/20 backdrop-blur-sm border-green-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center text-lg">
+                        <TrendingUp className="w-5 h-5 mr-2" />
+                        Marchés
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-gray-300">
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span>Almadies</span>
+                          <span className="text-green-400">+15%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>VDN</span>
+                          <span className="text-green-400">+12%</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span>Sicap</span>
+                          <span className="text-yellow-400">+5%</span>
+                        </div>
                       </div>
-                      <div>
-                        <h4 className="font-semibold mb-3">Authentification</h4>
-                        <ul className="space-y-2 text-sm">
-                          <li>• JWT Tokens sécurisés</li>
-                          <li>• Sessions chiffrées</li>
-                          <li>• Multi-facteurs (à venir)</li>
-                        </ul>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-black/20 backdrop-blur-sm border-green-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center text-lg">
+                        <BarChart3 className="w-5 h-5 mr-2" />
+                        Transactions
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-gray-300">
+                      <div className="text-3xl font-bold text-green-400 mb-2">
+                        {marketData.totalTransactions}
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
+                      <div className="text-sm">Ce mois</div>
+                      <Progress value={78} className="mt-3" />
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-black/20 backdrop-blur-sm border-green-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center text-lg">
+                        <Activity className="w-5 h-5 mr-2" />
+                        Performance
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-gray-300">
+                      <div className="text-3xl font-bold text-blue-400 mb-2">
+                        94.2%
+                      </div>
+                      <div className="text-sm">Précision IA</div>
+                      <Progress value={94} className="mt-3" />
+                    </CardContent>
+                  </Card>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="security" className="space-y-8">
+                <div className="grid lg:grid-cols-2 gap-8">
+                  <Card className="bg-black/20 backdrop-blur-sm border-red-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Shield className="w-5 h-5 mr-2" />
+                        État Sécurité
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-gray-300">
+                      <div className="space-y-4">
+                        <div className="flex items-center justify-between">
+                          <span>Chiffrement</span>
+                          <Badge className="bg-green-600">AES-256</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Authentification</span>
+                          <Badge className="bg-green-600">MFA Actif</Badge>
+                        </div>
+                        <div className="flex items-center justify-between">
+                          <span>Intrusions</span>
+                          <Badge className="bg-red-600">0 détectées</Badge>
+                        </div>
+                        <Progress value={100} className="mt-4" />
+                        <p className="text-sm text-green-400">Sécurité niveau maximum</p>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  <Card className="bg-black/20 backdrop-blur-sm border-red-500/30">
+                    <CardHeader>
+                      <CardTitle className="text-white flex items-center">
+                        <Lock className="w-5 h-5 mr-2" />
+                        Conformité
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-gray-300">
+                      <div className="space-y-3">
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                          <span>RGPD Conforme</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                          <span>Lois Sénégalaises</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                          <span>ISO 27001</span>
+                        </div>
+                        <div className="flex items-center">
+                          <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
+                          <span>SOC 2 Type II</span>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                </div>
               </TabsContent>
             </Tabs>
           </div>
         </section>
 
-        {/* Packages Section */}
-        <section className="py-16 bg-muted/50">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-3xl font-bold mb-4">
-                Packages Installés
-              </h2>
-              <p className="text-muted-foreground">
-                Technologies de pointe intégrées avec succès
-              </p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4">
-              {packages.map((pkg, index) => (
-                <motion.div
-                  key={index}
-                  initial={{ opacity: 0, x: -20 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  viewport={{ once: true }}
-                >
-                  <Card>
+        {/* Modal IA Demo */}
+        <Dialog open={showAIDemo} onOpenChange={setShowAIDemo}>
+          <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle className="flex items-center text-2xl">
+                <Brain className="w-6 h-6 mr-2 text-blue-600" />
+                Assistant IA Blockchain
+              </DialogTitle>
+            </DialogHeader>
+            
+            <div className="space-y-6">
+              <div className="grid md:grid-cols-3 gap-4">
+                {demoScenarios.map((scenario, idx) => (
+                  <Card 
+                    key={idx} 
+                    className="cursor-pointer hover:shadow-lg transition-shadow border-2 hover:border-blue-300"
+                    onClick={() => setAiQuery(scenario.query)}
+                  >
                     <CardContent className="p-4">
-                      <code className="text-sm bg-muted px-2 py-1 rounded block">
-                        {pkg}
-                      </code>
+                      <h4 className="font-semibold mb-2">{scenario.title}</h4>
+                      <p className="text-sm text-gray-600">{scenario.description}</p>
                     </CardContent>
                   </Card>
-                </motion.div>
-              ))}
-            </div>
-          </div>
-        </section>
+                ))}
+              </div>
 
-        {/* Status Section */}
-        <section className="py-16">
-          <div className="container mx-auto px-4">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center"
-            >
-              <Card className="p-8 bg-gradient-to-r from-green-50 to-blue-50 border-green-200">
-                <CardContent className="p-0">
-                  <div className="flex items-center justify-center mb-4">
-                    <Badge className="bg-green-600 text-white px-6 py-2 text-lg">
-                      <Star className="mr-2 h-5 w-5" />
-                      Installation Réussie !
-                    </Badge>
-                  </div>
-                  
-                  <h2 className="text-3xl font-bold mb-4">
-                    Teranga Foncier 2.0 Prêt
-                  </h2>
-                  
-                  <p className="text-muted-foreground mb-6 max-w-2xl mx-auto">
-                    Toutes les fonctionnalités avancées ont été installées avec succès. 
-                    Votre plateforme est maintenant équipée des dernières technologies.
-                  </p>
-                  
-                  <div className="grid md:grid-cols-3 gap-4 text-sm">
-                    <div className="flex items-center justify-center gap-2">
-                      <Activity className="h-4 w-4 text-green-600" />
-                      Serveur opérationnel
+              <div className="space-y-4">
+                <Textarea
+                  placeholder="Posez votre question à notre IA spécialisée en immobilier blockchain..."
+                  value={aiQuery}
+                  onChange={(e) => setAiQuery(e.target.value)}
+                  rows={3}
+                  className="resize-none"
+                />
+                
+                <Button 
+                  onClick={handleAIDemo} 
+                  disabled={!aiQuery.trim() || isProcessing}
+                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                  size="lg"
+                >
+                  {isProcessing ? (
+                    <>
+                      <Zap className="w-5 h-5 mr-2 animate-spin" />
+                      IA en traitement...
+                    </>
+                  ) : (
+                    <>
+                      <Brain className="w-5 h-5 mr-2" />
+                      Demander à l'IA
+                    </>
+                  )}
+                </Button>
+              </div>
+
+              {aiResponse && (
+                <Card className="bg-gradient-to-br from-blue-50 to-purple-50 border-blue-200">
+                  <CardHeader>
+                    <CardTitle className="flex items-center text-blue-700">
+                      <Sparkles className="w-5 h-5 mr-2" />
+                      Réponse de l'IA
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="whitespace-pre-line text-gray-700 leading-relaxed">
+                      {aiResponse}
                     </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <TrendingUp className="h-4 w-4 text-blue-600" />
-                      Performances optimisées
-                    </div>
-                    <div className="flex items-center justify-center gap-2">
-                      <Shield className="h-4 w-4 text-purple-600" />
-                      Sécurité renforcée
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            </motion.div>
-          </div>
-        </section>
+                  </CardContent>
+                </Card>
+              )}
+            </div>
+          </DialogContent>
+        </Dialog>
       </motion.div>
     </>
   );

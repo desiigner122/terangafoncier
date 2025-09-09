@@ -2,6 +2,10 @@ import React from 'react';
 import { Route, Routes, Outlet, Link } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { AIProvider } from '@/hooks/useAI.jsx';
+import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
+import UniversalAIChatbot from '@/components/ai/UniversalAIChatbot';
+import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
 import ModernHeader from '@/components/layout/ModernHeader';
 import BlockchainFooter from '@/components/layout/BlockchainFooter';
 import DashboardLayout from '@/components/layout/DashboardLayout';
@@ -18,11 +22,13 @@ import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
 import DebugDashboard from '@/pages/DebugDashboard';
 import PromoterProjectsPage from '@/pages/PromoterProjectsPage';
 import ProjectDetailPage from '@/pages/ProjectDetailPage';
-import PromoterConstructionRequestsPage from '@/pages/PromoterConstructionRequestsPage';
+import PromoterConstructionRequestsPage from '@/pages/PromoterConstructionRequestsPageNew';
+import ConstructionRequestDetailPage from '@/pages/ConstructionRequestDetailPage';
 import ProfilePage from '@/pages/ProfilePage';
 import ContactPage from '@/pages/ContactPage';
 import BlockchainContactPage from '@/pages/BlockchainContactPage';
 import AboutPage from '@/pages/AboutPage';
+import AIFeaturesPage from '@/pages/AIFeaturesPage';
 import ModernAboutPage from '@/pages/ModernAboutPage';
 import BlockchainAboutPage from '@/pages/BlockchainAboutPage';
 import FoncierBlockchainPage from '@/pages/FoncierBlockchainPage';
@@ -80,6 +86,10 @@ import SimpleDashboard from '@/pages/SimpleDashboard';
 import DashboardRedirect from '@/components/DashboardRedirect';
 import PurchaseProcessPage from '@/pages/PurchaseProcessPage';
 import TestAuthPage from '@/pages/TestAuthPage';
+
+// Pages IA et Analytics
+import TerangaAIPage from '@/pages/TerangaAIPage';
+import AIAnalyticsDashboard from '@/components/analytics/AIAnalyticsDashboard';
 
 // Pages communes nouvelles
 import MessagesPageNew from '@/pages/common/MessagesPage';
@@ -189,6 +199,10 @@ import TransactionsPage from '@/pages/TransactionsPage';
 import VendeurDashboardPage from '@/pages/solutions/dashboards/VendeurDashboardPage';
 import PaymentPage from '@/pages/PaymentPage';
 import VerificationPage from '@/pages/VerificationPage';
+
+// ===== PAGES IA AUTONOME =====
+import AIAssistedTerrainConfigPage from '@/pages/AIAssistedTerrainConfigPage';
+import AutonomousAIDashboard from '@/pages/AutonomousAIDashboard';
 import PendingVerificationPage from '@/pages/PendingVerificationPage';
 import MunicipalLandInfoPage from '@/pages/MunicipalLandInfoPage';
 import AddParcelPage from '@/pages/AddParcelPage';
@@ -205,9 +219,6 @@ import PromoteursPage from '@/pages/PromoteursPage';
 import RejoignezNousPage from '@/pages/RejoignezNousPage';
 import SolutionsPage from '@/pages/SolutionsPage';
 import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
-import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
-import TerrangaFoncierChatbot from '@/components/ai/TerrangaFoncierChatbot';
-import BlockchainAIChatbot from '@/components/chat/BlockchainAIChatbot';
 import ModernGeometreDashboard from '@/pages/dashboards/ModernGeometreDashboard';
 import ModernAgentFoncierDashboard from '@/pages/dashboards/ModernAgentFoncierDashboard';
 
@@ -218,8 +229,7 @@ const PublicLayout = () => (
       <Outlet />
     </main>
     <BlockchainFooter />
-    <TerrangaFoncierChatbot />
-    <BlockchainAIChatbot />
+    <GlobalAIAssistant />
   </div>
 );
 
@@ -228,8 +238,9 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <ComparisonProvider>
-          <ScrollToTop />
-          <Routes>
+          <AIProvider>
+            <ScrollToTop />
+            <Routes>
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />
               <Route path="login" element={<BlockchainLoginPage />} />
@@ -243,7 +254,9 @@ function App() {
               <Route path="banned" element={<BannedPage />} />
               <Route path="terrains-communaux" element={<CommunalLandsPage />} />
               <Route path="promoters-projects" element={<PromoterProjectsPage />} />
+              <Route path="ai-features" element={<AIFeaturesPage />} />
               <Route path="promoter-requests" element={<PromoterConstructionRequestsPage />} />
+              <Route path="construction-request/:id" element={<ConstructionRequestDetailPage />} />
               <Route path="project/:id" element={<ProjectDetailPage />} />
               <Route path="promoter-requests" element={<PromoterConstructionRequestsPage />} />
               <Route path="villes/:cityId" element={<CityDetailPage />} />
@@ -323,6 +336,17 @@ function App() {
               <Route path="tools/map" element={<InteractiveMapPage />} />
               <Route path="tools/market-analysis" element={<ToolsMarketAnalysisPage />} />
               <Route path="tools/property-verification" element={<PropertyVerificationPage />} />
+              
+              {/* IA & Analytics Routes */}
+              <Route path="teranga-ai" element={<TerangaAIPage />} />
+              <Route path="ai-analytics" element={<AIAnalyticsDashboard />} />
+              <Route path="ai-valuation" element={<PriceCalculatorPage />} />
+              <Route path="ai-monitoring" element={<AIAnalyticsDashboard />} />
+              
+              {/* === ROUTES IA AUTONOME === */}
+              <Route path="ai-terrain-config" element={<AIAssistedTerrainConfigPage />} />
+              <Route path="autonomous-dashboard" element={<AutonomousAIDashboard />} />
+              <Route path="ai-chat" element={<UniversalAIChatbot fullScreen={true} />} />
               
               <Route path="fonctionnalites-avancees" element={<FonctionnalitesAvanceesPage />} />
               <Route path="blockchain" element={<BlockchainSolutionsPage />} />
@@ -435,6 +459,11 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <Toaster />
+          
+          {/* IA CONVERSATIONNELLE UNIVERSELLE */}
+          <UniversalAIChatbot isFloating={true} />
+          
+          </AIProvider>
         </ComparisonProvider>
       </HelmetProvider>
     </ErrorBoundary>

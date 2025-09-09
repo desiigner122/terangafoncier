@@ -651,6 +651,268 @@ const PromoteursPage = () => {
           </div>
         </section>
 
+        {/* Solutions de Financement et Paiement Échelonné */}
+        <section className="py-20 bg-gradient-to-br from-gray-50 to-blue-50">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center mb-16"
+            >
+              <Badge className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white px-4 py-2 text-sm font-medium mb-4">
+                💳 Solutions de Financement
+              </Badge>
+              <h2 className="text-4xl font-bold text-gray-900 mb-4">
+                Paiement Échelonné & Financement Bancaire
+              </h2>
+              <p className="text-xl text-gray-600 max-w-3xl mx-auto">
+                Facilitez l'acquisition pour vos clients avec nos solutions de financement flexibles et nos partenariats bancaires exclusifs
+              </p>
+            </motion.div>
+
+            {/* Options de Paiement */}
+            <div className="grid lg:grid-cols-2 gap-12 mb-16">
+              {/* Paiement Échelonné */}
+              <motion.div
+                initial={{ opacity: 0, x: -30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 h-full">
+                  <CardHeader className="bg-gradient-to-r from-emerald-500 to-teal-500 text-white">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <Calculator className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-2xl">Paiement Échelonné</CardTitle>
+                        <p className="text-emerald-100">Flexibilité maximale pour vos clients</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-4 bg-emerald-50 rounded-lg">
+                          <div className="text-2xl font-bold text-emerald-600">10%</div>
+                          <div className="text-sm text-gray-600">Apport initial</div>
+                        </div>
+                        <div className="text-center p-4 bg-emerald-50 rounded-lg">
+                          <div className="text-2xl font-bold text-emerald-600">36 mois</div>
+                          <div className="text-sm text-gray-600">Durée max</div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-gray-900">Options disponibles :</h4>
+                        <ul className="space-y-3">
+                          {[
+                            "Paiement en 3, 6, 12, 24 ou 36 mensualités",
+                            "Taux préférentiel 0% sur 12 mois",
+                            "Possibilité de remboursement anticipé",
+                            "Assurance crédit incluse",
+                            "Gestion automatisée des échéances"
+                          ].map((feature, index) => (
+                            <li key={index} className="flex items-center space-x-3">
+                              <CheckCircle className="w-5 h-5 text-emerald-500 flex-shrink-0" />
+                              <span className="text-gray-700">{feature}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+
+                      <div className="bg-gradient-to-r from-emerald-50 to-teal-50 p-4 rounded-lg">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Zap className="w-5 h-5 text-emerald-600" />
+                          <span className="font-semibold text-emerald-800">Avantage Promoteur</span>
+                        </div>
+                        <p className="text-emerald-700 text-sm">
+                          +47% de conversion grâce à la facilité de paiement. Règlement immédiat pour le promoteur.
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              {/* Financement Bancaire */}
+              <motion.div
+                initial={{ opacity: 0, x: 30 }}
+                whileInView={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.8 }}
+              >
+                <Card className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 h-full">
+                  <CardHeader className="bg-gradient-to-r from-blue-500 to-indigo-500 text-white">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center">
+                        <CreditCard className="w-6 h-6" />
+                      </div>
+                      <div>
+                        <CardTitle className="text-2xl">Financement Bancaire</CardTitle>
+                        <p className="text-blue-100">Partenariats bancaires exclusifs</p>
+                      </div>
+                    </div>
+                  </CardHeader>
+                  <CardContent className="p-8">
+                    <div className="space-y-6">
+                      <div className="grid grid-cols-2 gap-4">
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">12</div>
+                          <div className="text-sm text-gray-600">Banques partenaires</div>
+                        </div>
+                        <div className="text-center p-4 bg-blue-50 rounded-lg">
+                          <div className="text-2xl font-bold text-blue-600">72h</div>
+                          <div className="text-sm text-gray-600">Pré-accord</div>
+                        </div>
+                      </div>
+                      
+                      <div className="space-y-4">
+                        <h4 className="font-semibold text-gray-900">Banques partenaires :</h4>
+                        <div className="grid grid-cols-2 gap-3">
+                          {[
+                            "CBAO Groupe Attijariwafa Bank",
+                            "Société Générale Sénégal",
+                            "Ecobank Sénégal",
+                            "BICIS (BNP Paribas)",
+                            "BOA Sénégal",
+                            "UBA Sénégal"
+                          ].map((bank, index) => (
+                            <div key={index} className="flex items-center space-x-2 p-2 bg-blue-50 rounded">
+                              <Shield className="w-4 h-4 text-blue-500" />
+                              <span className="text-sm text-gray-700">{bank}</span>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      <div className="space-y-3">
+                        <h4 className="font-semibold text-gray-900">Services inclus :</h4>
+                        <ul className="space-y-2">
+                          {[
+                            "Pré-qualification de crédit en 72h",
+                            "Taux préférentiels négociés",
+                            "Financement jusqu'à 85% du projet",
+                            "Accompagnement dossier complet",
+                            "Assurance crédit groupe"
+                          ].map((service, index) => (
+                            <li key={index} className="flex items-center space-x-3">
+                              <CheckCircle className="w-4 h-4 text-blue-500 flex-shrink-0" />
+                              <span className="text-gray-700 text-sm">{service}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+
+            {/* Simulateur de Financement */}
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="bg-white rounded-2xl shadow-xl p-8 mb-12"
+            >
+              <div className="text-center mb-8">
+                <h3 className="text-2xl font-bold text-gray-900 mb-4">Simulateur de Financement</h3>
+                <p className="text-gray-600">Calculez les mensualités pour vos clients</p>
+              </div>
+
+              <div className="grid md:grid-cols-3 gap-8">
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">Prix du bien</label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="25,000,000" 
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <span className="absolute right-3 top-3 text-gray-500">FCFA</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">Apport initial</label>
+                  <div className="relative">
+                    <input 
+                      type="text" 
+                      placeholder="2,500,000" 
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                    <span className="absolute right-3 top-3 text-gray-500">FCFA</span>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <label className="block text-sm font-medium text-gray-700">Durée</label>
+                  <select className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option>15 ans</option>
+                    <option>20 ans</option>
+                    <option>25 ans</option>
+                    <option>30 ans</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="mt-8 text-center">
+                <Button className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-3 text-lg font-semibold">
+                  <Calculator className="mr-2 w-5 h-5" />
+                  Calculer les mensualités
+                </Button>
+              </div>
+
+              <div className="mt-6 p-6 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg">
+                <div className="grid md:grid-cols-3 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold text-blue-600">1,125,000</div>
+                    <div className="text-sm text-gray-600">Mensualité estimée</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-emerald-600">6.5%</div>
+                    <div className="text-sm text-gray-600">Taux préférentiel</div>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-purple-600">85%</div>
+                    <div className="text-sm text-gray-600">Financement max</div>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+
+            {/* CTA Section */}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
+              className="text-center"
+            >
+              <div className="bg-gradient-to-r from-emerald-500 to-blue-500 rounded-2xl p-8 text-white">
+                <h3 className="text-2xl font-bold mb-4">Prêt à faciliter l'acquisition pour vos clients ?</h3>
+                <p className="text-lg mb-6 opacity-90">
+                  Intégrez nos solutions de financement dès aujourd'hui
+                </p>
+                <div className="flex flex-col sm:flex-row gap-4 justify-center">
+                  <Button asChild size="lg" className="bg-white text-emerald-600 hover:bg-gray-100">
+                    <Link to="/contact">
+                      <Phone className="mr-2 w-5 h-5" />
+                      Parler à un expert
+                    </Link>
+                  </Button>
+                  <Button asChild variant="outline" size="lg" className="border-white text-white hover:bg-white/10">
+                    <Link to="/demo">
+                      <Smartphone className="mr-2 w-5 h-5" />
+                      Demander une démo
+                    </Link>
+                  </Button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        </section>
+
         {/* Project Types */}
         <section className="py-20 bg-gradient-to-br from-blue-50 to-indigo-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">

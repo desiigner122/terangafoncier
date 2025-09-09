@@ -43,9 +43,7 @@ import {
   Video,
   Navigation,
   Hammer,
-  Palette as PaintBucket,
   Truck,
-  HardDrive as HardHat,
   Wrench,
   Send,
   Blocks,
@@ -68,9 +66,7 @@ import {
   Settings,
   Bookmark,
   Timer,
-  Maximize2,
-  Palette,
-  HardDrive
+  Maximize2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -102,20 +98,6 @@ const PromoterConstructionRequestsPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState([]);
-
-  // États pour nouvelle demande
-  const [newRequest, setNewRequest] = useState({
-    title: '',
-    type: '',
-    description: '',
-    location: '',
-    budget_min: '',
-    budget_max: '',
-    timeline: '',
-    target_audience: '',
-    contact_preference: 'email',
-    urgent: false
-  });
 
   // Données mockées des demandes de construction
   useEffect(() => {
@@ -368,6 +350,7 @@ const PromoterConstructionRequestsPage = () => {
       setLoading(false);
     }, 1000);
   }, []);
+
   // Filtrage et tri des demandes
   useEffect(() => {
     let filtered = [...requests];
@@ -488,6 +471,7 @@ const PromoterConstructionRequestsPage = () => {
   };
 
   const stats = getStats();
+
   if (loading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
@@ -752,6 +736,8 @@ const PromoterConstructionRequestsPage = () => {
                     isFavorite={favorites.includes(request.id)}
                     onToggleFavorite={() => toggleFavorite(request.id)}
                     onViewDetails={() => navigate(`/construction-request/${request.id}`)}
+                    getStatusInfo={getStatusInfo}
+                    getPriorityColor={getPriorityColor}
                   />
                 ))}
               </div>
@@ -764,7 +750,7 @@ const PromoterConstructionRequestsPage = () => {
 };
 
 // Composant de carte de demande
-const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, onViewDetails }) => {
+const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, onViewDetails, getStatusInfo, getPriorityColor }) => {
   const statusInfo = getStatusInfo(request.status);
   const priorityColor = getPriorityColor(request.priority);
 
@@ -995,4 +981,5 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
     </motion.div>
   );
 };
+
 export default PromoterConstructionRequestsPage;

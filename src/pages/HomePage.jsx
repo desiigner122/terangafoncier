@@ -34,6 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Helmet } from 'react-helmet-async';
 import MarketTickerBar from '@/components/home/MarketTickerBar';
 import LiveMetricsBar from '@/components/home/LiveMetricsBar';
+import AILiveMetricsBar from '@/components/home/AILiveMetricsBar';
 import ProblemSolutionSection from '@/components/home/sections/ProblemSolutionSection';
 import MarketBlockchainSection from '@/components/home/sections/MarketBlockchainSection';
 import CommunalLandsPreview from '@/components/home/CommunalLandsPreview';
@@ -252,8 +253,8 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Live Metrics Bar - Métriques en temps réel juste sous le hero */}
-        <LiveMetricsBar />
+        {/* Live Metrics Bar - Métriques IA en temps réel juste sous le hero */}
+        <AILiveMetricsBar />
 
         {/* Market Blockchain Section */}
         <MarketBlockchainSection />

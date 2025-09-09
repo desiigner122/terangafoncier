@@ -34,11 +34,13 @@ import {
   Eye,
   BookOpen,
   Landmark,
-  Clock
+  Clock,
+  BarChart3
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
+import AISmartNotifications from '@/components/notifications/AISmartNotifications';
 
 const ModernHeader = () => {
   const { user, profile, signOut } = useAuth();
@@ -73,7 +75,7 @@ const ModernHeader = () => {
         {
           title: 'Marché Privé',
           items: [
-            { label: 'Parcelles Intelligentes', href: '/parcelles-vendeurs', icon: Brain, description: 'Plateforme IA & Blockchain avancée' },
+            { label: 'Vendeurs Particuliers', href: '/vendeurs-particuliers', icon: Users, description: 'Terrains de particuliers sécurisés blockchain' },
             { label: 'Vendre ma parcelle', href: '/sell-property', icon: Shield, description: 'Publier avec technologie blockchain' }
           ]
         },
@@ -98,10 +100,10 @@ const ModernHeader = () => {
       hasDropdown: true,
       sections: [
         {
-          title: 'Construction Blockchain',
+          title: 'Projets & Construction',
           items: [
-            { label: 'Projets Promoteurs', href: '/promoteurs', icon: Building2, description: 'Nouveaux projets immobiliers avec blockchain', isNew: true },
             { label: 'Demandes Construction', href: '/promoter-requests', icon: Hammer, description: 'Demandes de particuliers pour construire', isNew: true },
+            { label: 'Projets Promoteurs', href: '/promoters-projects', icon: Building2, description: 'Projets publiés par les promoteurs' },
             { label: 'Guide Projets', href: '/guide-projets', icon: BookOpen, description: 'Comment ça marche avec la blockchain' },
             { label: 'Guide Demandes', href: '/guide-demandes', icon: FileText, description: 'Processus de demande expliqué' }
           ]
@@ -117,6 +119,7 @@ const ModernHeader = () => {
           title: 'Particuliers & Professionnels',
           items: [
             { label: 'Particuliers', href: '/solutions/particuliers', icon: Home, description: 'Acheteurs & Vendeurs' },
+            { label: 'Promoteurs', href: '/promoteurs', icon: Building2, description: 'Projets immobiliers avec blockchain', isNew: true },
             { label: 'Agents Fonciers', href: '/solutions/agents', icon: Briefcase, description: 'Outils de vente avancés' },
             { label: 'Géomètres', href: '/solutions/geometres', icon: MapPin, description: 'Cartographie intelligente' },
             { label: 'Notaires', href: '/solutions/notaires', icon: Scale, description: 'Services blockchain', isNew: true },
@@ -133,11 +136,11 @@ const ModernHeader = () => {
         {
           title: 'Innovations',
           items: [
-            { label: 'FonctionnalitÃ©s AvancÃ©es', href: '/fonctionnalites-avancees', icon: Zap, description: 'IA, Blockchain & Analytics', isNew: true },
-            { label: 'Solutions Blockchain', href: '/solutions/blockchain', icon: Shield, description: 'Technologie rÃ©volutionnaire', isNew: true },
-            { label: 'NFT PropriÃ©tÃ©s', href: '/nft-properties', icon: Coins, description: 'Tokenisation des biens immobiliers' },
-            { label: 'Smart Contracts', href: '/smart-contracts', icon: FileText, description: 'Contrats intelligents automatisÃ©s' },
-            { label: 'Escrow DÃ©centralisÃ©', href: '/escrow', icon: Shield, description: 'SÃ©questre sÃ©curisÃ© blockchain' }
+            { label: 'Capacités IA & Blockchain', href: '/fonctionnalites-avancees', icon: Zap, description: 'Découvrez nos technologies avancées', isNew: true },
+            { label: 'Solutions Blockchain', href: '/solutions/blockchain', icon: Shield, description: 'Technologie révolutionnaire', isNew: true },
+            { label: 'NFT Propriétés', href: '/nft-properties', icon: Coins, description: 'Tokenisation des biens immobiliers' },
+            { label: 'Smart Contracts', href: '/smart-contracts', icon: FileText, description: 'Contrats intelligents automatisés' },
+            { label: 'Escrow Décentralisé', href: '/escrow', icon: Shield, description: 'Séquestre sécurisé blockchain' }
           ]
         }
       ]
@@ -273,11 +276,8 @@ const ModernHeader = () => {
                   <Search className="w-4 h-4" />
                 </Button>
 
-                {/* Notifications */}
-                <Button variant="ghost" size="sm" className="relative hidden md:flex">
-                  <Bell className="w-4 h-4" />
-                  <div className="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div>
-                </Button>
+                {/* Notifications IA Intelligentes */}
+                <AISmartNotifications />
 
                 {/* Dashboard Link */}
                 <Button 

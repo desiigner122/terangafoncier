@@ -66,6 +66,7 @@ const BlockchainFooter = () => {
         { label: "À propos", path: "/about", icon: Users },
         { label: "Contact", path: "/contact", icon: Mail },
         { label: "Blog", path: "/blog", icon: Globe },
+        { label: "Fonctionnalités IA", path: "/ai-features", icon: Brain },
         { label: "FAQ", path: "/faq", icon: ArrowRight },
         { label: "Partenaires", path: "/partners", icon: Users },
         { label: "Histoires de Succès", path: "/success-stories", icon: Award },

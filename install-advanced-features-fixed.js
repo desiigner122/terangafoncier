@@ -116,7 +116,7 @@ export default AdvancedAIChatbot;`;
   const blockchainAnalyticsContent = `import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { LineChart, BarChart, TrendingUp, Activity } from 'lucide-react';
+import { LineChart, BarChart3 as BarChart, TrendingUp, Activity } from 'lucide-react';
 
 const BlockchainAnalytics = () => {
   const [analytics, setAnalytics] = useState({

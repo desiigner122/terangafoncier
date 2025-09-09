@@ -1,43 +1,23 @@
-﻿
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { 
-  AlertTriangle, 
-  Construction
-} from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { AlertTriangle } from 'lucide-react';
 
 const DisputesPage = () => {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.5 }}
-      className="flex items-center justify-center h-full p-4 md:p-6 lg:p-8"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      className="min-h-screen bg-gradient-to-br from-teal-50 to-teal-100 p-6"
     >
-      <Card className="w-full max-w-2xl text-center shadow-xl">
-        <CardHeader>
-          <div className="mx-auto bg-yellow-100 dark:bg-yellow-900/30 p-4 rounded-full w-fit">
-            <Construction className="h-12 w-12 text-yellow-500" />
+      <div className="max-w-7xl mx-auto">
+        <h1 className="text-3xl font-bold text-gray-900 mb-4">Litiges Fonciers</h1>
+        <div className="bg-white rounded-xl p-6 shadow-lg">
+          <div className="text-center py-12">
+            <AlertTriangle className="h-16 w-16 text-teal-600 mx-auto mb-4" />
+            <p className="text-gray-600">Cette page est en cours de développement.</p>
           </div>
-          <CardTitle className="mt-4 text-2xl font-bold">Fonctionnalité en cours de développement</CardTitle>
-          <CardDescription className="text-lg">
-            La gestion des litiges fonciers sera disponible dans la V2 de la plateforme.
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground mb-6">
-            Nous travaillons activement pour vous offrir un outil complet de médiation et de suivi des litiges. Cette fonctionnalité vous permettra d'enregistrer, de suivre et de résoudre les conflits fonciers au sein de votre commune de manière structurée et transparente.
-          </p>
-          <Button asChild>
-            <Link to="/solutions/mairies/dashboard">
-              Retourner au Tableau de Bord
-            </Link>
-          </Button>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
     </motion.div>
   );
 };

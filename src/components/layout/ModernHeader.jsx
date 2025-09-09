@@ -70,6 +70,7 @@ const ModernHeader = () => {
     {
       label: 'Terrains',
       key: 'terrains',
+      href: '/terrains',
       hasDropdown: true,
       sections: [
         {

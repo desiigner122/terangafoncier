@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import ProfileLink from '@/components/common/ProfileLink';
 
 const ParcellesCommunalesPage = () => {
   const navigate = useNavigate();
@@ -24,6 +25,7 @@ const ParcellesCommunalesPage = () => {
       id: 1,
       name: "Zone Résidentielle Keur Massar",
       commune: "Keur Massar",
+      communeId: "keur-massar-001",
       region: "Dakar",
       totalParcels: 150,
       availableParcels: 73,
@@ -40,6 +42,7 @@ const ParcellesCommunalesPage = () => {
       id: 2,
       name: "Lotissement Social Rufisque",
       commune: "Rufisque",
+      communeId: "rufisque-001",
       region: "Dakar",
       totalParcels: 200,
       availableParcels: 156,
@@ -56,6 +59,7 @@ const ParcellesCommunalesPage = () => {
       id: 3,
       name: "Zone Industrielle Diamniadio",
       commune: "Diamniadio",
+      communeId: "diamniadio-001",
       region: "Dakar",
       totalParcels: 50,
       availableParcels: 23,
@@ -240,7 +244,15 @@ const ParcellesCommunalesPage = () => {
           </CardTitle>
           <div className="flex items-center text-gray-600 text-sm">
             <MapPin className="w-4 h-4 mr-1" />
-            {zone.commune}, {zone.region}
+            <ProfileLink 
+              type="municipality" 
+              id={zone.communeId} 
+              className="text-blue-600 hover:text-blue-800 hover:underline"
+              external={true}
+            >
+              {zone.commune}
+            </ProfileLink>
+            , {zone.region}
           </div>
         </CardHeader>
 

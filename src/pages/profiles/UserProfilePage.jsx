@@ -42,6 +42,14 @@ const UserProfilePage = () => {
 
   const loadProfile = async () => {
     setLoading(true);
+    // Vérifier que les paramètres sont présents
+    if (!userType || !userId) {
+      console.error('Paramètres de profil manquants:', { userType, userId });
+      setProfile(null);
+      setLoading(false);
+      return;
+    }
+    
     // Simulation des données de profil selon le type
     const mockProfile = generateMockProfile(userType, userId);
     setProfile(mockProfile);
@@ -49,6 +57,10 @@ const UserProfilePage = () => {
   };
 
   const generateMockProfile = (type, id) => {
+    if (!type || !id) {
+      return null;
+    }
+    
     const baseProfile = {
       id: id,
       type: type,
@@ -182,6 +194,27 @@ const UserProfilePage = () => {
             experience: '12 ans'
           },
           achievements: ['Notaire Assermentée', 'Spécialiste Foncier', 'Médiation Juridique']
+        };
+
+      case 'municipality':
+        return {
+          ...baseProfile,
+          name: 'Mairie de Dakar',
+          title: 'Administration Municipale',
+          avatar: 'https://images.unsplash.com/photo-1555074683-6ad1f02c0d4b?w=150&h=150&fit=crop',
+          location: 'Hôtel de Ville, Dakar',
+          phone: '+221 33 823 90 00',
+          email: 'contact@mairie-dakar.sn',
+          website: 'www.villededakar.sn',
+          description: 'Administration municipale en charge de la gestion des terres communales et de l\'attribution des parcelles aux citoyens selon les critères légaux.',
+          specialties: ['Attribution Terrain', 'Permis de Construire', 'Urbanisme', 'Cadastre Municipal'],
+          stats: {
+            parcels: 2340,
+            attributed: 1850,
+            pending: 490,
+            area: '83 km²'
+          },
+          achievements: ['Digitalisation Services', 'Transparence Administrative', 'Développement Durable']
         };
 
       default:

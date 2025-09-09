@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ProfileLink from '@/components/common/ProfileLink';
 
 const ParcelleDetailPage = () => {
   const { id } = useParams();
@@ -43,6 +44,7 @@ const ParcelleDetailPage = () => {
       surface: "500",
       type: "Résidentiel",
       seller: {
+        id: "seller-001",
         name: "Amadou FALL",
         type: "Particulier",
         phone: "+221 77 123 45 67",
@@ -90,7 +92,11 @@ const ParcelleDetailPage = () => {
           available: true,
           min_down_payment: "30%",
           max_duration: "25 ans",
-          partner_banks: ["CBAO", "UBA", "Banque Atlantique"]
+          partner_banks: [
+            { id: "cbao-001", name: "CBAO" },
+            { id: "uba-001", name: "UBA" },
+            { id: "atlantique-001", name: "Banque Atlantique" }
+          ]
         },
         installment: {
           available: true,
@@ -564,7 +570,16 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                               <span className="text-gray-600">Banques partenaires:</span>
                               <div className="flex flex-wrap gap-1 mt-1">
                                 {parcelle.financing.bank_financing.partner_banks.map((bank, index) => (
-                                  <Badge key={index} variant="outline" className="text-xs">{bank}</Badge>
+                                  <ProfileLink 
+                                    key={index}
+                                    type="bank" 
+                                    id={bank.id} 
+                                    className="text-xs"
+                                  >
+                                    <Badge variant="outline" className="text-xs cursor-pointer hover:bg-blue-50">
+                                      {bank.name}
+                                    </Badge>
+                                  </ProfileLink>
                                 ))}
                               </div>
                             </div>
@@ -1130,7 +1145,14 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                       <Users className="w-6 h-6 text-white" />
                     </div>
                     <div>
-                      <div className="font-medium">{parcelle.seller.name}</div>
+                      <ProfileLink 
+                        type={parcelle.seller.type} 
+                        id={parcelle.seller.id || parcelle.id} 
+                        className="font-medium text-blue-600 hover:text-blue-800 cursor-pointer"
+                        external={true}
+                      >
+                        {parcelle.seller.name}
+                      </ProfileLink>
                       <div className="text-sm text-gray-600">{parcelle.seller.type}</div>
                     </div>
                   </div>

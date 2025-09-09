@@ -48,6 +48,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import ProfileLink from '@/components/common/ProfileLink';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Progress } from '@/components/ui/progress';
@@ -71,6 +72,7 @@ const ProjectDetailPage = () => {
       title: 'Résidence Les Palmiers - Almadies',
       type: 'Immeuble d\'appartements',
       promoter: {
+        id: 'promoter-001',
         name: 'Sénégal Construction SARL',
         rating: 4.8,
         projects_completed: 15,
@@ -945,7 +947,14 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                     <Building2 className="w-6 h-6 text-blue-600" />
                   </div>
                   <div>
-                    <div className="font-medium">{project.promoter.name}</div>
+                    <ProfileLink 
+                      type="promoter" 
+                      id={project.promoter.id || project.id} 
+                      className="font-medium text-blue-600 hover:text-blue-800 cursor-pointer"
+                      external={true}
+                    >
+                      {project.promoter.name}
+                    </ProfileLink>
                     <div className="flex items-center text-sm text-gray-600">
                       <Star className="w-4 h-4 text-yellow-500 fill-current mr-1" />
                       {project.promoter.rating}

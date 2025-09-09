@@ -57,6 +57,7 @@ import FaqPage from '@/pages/FaqPage';
 import PartnersPage from '@/pages/PartnersPage';
 import SuccessPage from '@/pages/SuccessPage';
 import ParcellesVendeursPage from '@/pages/ParcellesVendeursPage';
+import TerrainsVendeursPage from '@/pages/TerrainsVendeursPage';
 import ParcellesCommunalesPage from '@/pages/ParcellesCommunalesPage';
 import ParcelleDetailPage from '@/pages/ParcelleDetailPage';
 import ZoneCommunaleDetailPage from '@/pages/ZoneCommunaleDetailPage';
@@ -299,7 +300,7 @@ function App() {
               <Route path="faq" element={<FaqPage />} />
               <Route path="partners" element={<PartnersPage />} />
               <Route path="success" element={<SuccessPage />} />
-              <Route path="terrains" element={<ParcellesVendeursPage />} />
+              <Route path="terrains" element={<TerrainsVendeursPage />} />
               <Route path="parcelles-vendeurs" element={<ParcellesVendeursPage />} />
               <Route path="parcelles-communales" element={<ParcellesCommunalesPage />} />
               <Route path="zone-communale/:id" element={<ZoneCommunaleDetailPage />} />
@@ -344,7 +345,7 @@ function App() {
               <Route path="solutions/geometres" element={<GeometresPage />} />
               
               {/* Pages principales */}
-              <Route path="terrains" element={<ParcellesVendeursPage />} />
+              <Route path="terrains" element={<TerrainsVendeursPage />} />
               <Route path="foncier-blockchain" element={<FoncierBlockchainPage />} />
               <Route path="foncier-senegal" element={<FoncierSenegalPage />} />
               <Route path="test-accounts" element={<TestAccountsPage />} />

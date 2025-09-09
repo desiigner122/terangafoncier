@@ -31,14 +31,6 @@ import BlockchainContactPage from '@/pages/BlockchainContactPage';
 import AboutPage from '@/pages/AboutPage';
 import AIFeaturesPage from '@/pages/AIFeaturesPage';
 import UserProfilePage from '@/pages/profiles/UserProfilePage';
-import SellerProfilePage from '@/pages/profiles/SellerProfilePage';
-import PromoterProfilePage from '@/pages/profiles/PromoterProfilePage';
-import BankProfilePage from '@/pages/profiles/BankProfilePage';
-import NotaryProfilePage from '@/pages/profiles/NotaryProfilePage';
-import GeometerProfilePage from '@/pages/profiles/GeometerProfilePage';
-import InvestorProfilePage from '@/pages/profiles/InvestorProfilePage';
-import AgentProfilePage from '@/pages/profiles/AgentProfilePage';
-import MunicipalityProfilePage from '@/pages/profiles/MunicipalityProfilePage';
 import ModernAboutPage from '@/pages/ModernAboutPage';
 import BlockchainAboutPage from '@/pages/BlockchainAboutPage';
 import FoncierBlockchainPage from '@/pages/FoncierBlockchainPage';
@@ -273,14 +265,6 @@ function App() {
               
               {/* Profile Routes */}
               <Route path="profile/:userType/:userId" element={<UserProfilePage />} />
-              <Route path="seller/:sellerId" element={<SellerProfilePage />} />
-              <Route path="promoter/:promoterId" element={<PromoterProfilePage />} />
-              <Route path="bank/:bankId" element={<BankProfilePage />} />
-              <Route path="notary/:notaryId" element={<NotaryProfilePage />} />
-              <Route path="geometer/:geometerId" element={<GeometerProfilePage />} />
-              <Route path="investor/:investorId" element={<InvestorProfilePage />} />
-              <Route path="agent/:agentId" element={<AgentProfilePage />} />
-              <Route path="municipality/:municipalityId" element={<MunicipalityProfilePage />} />
               
               <Route path="villes/:cityId" element={<CityDetailPage />} />
               <Route path="contact" element={<BlockchainContactPage />} />

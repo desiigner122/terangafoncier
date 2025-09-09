@@ -21,7 +21,8 @@ import {
   Clock,
   Camera,
   Edit,
-  Settings
+  Settings,
+  AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,19 +42,41 @@ const UserProfilePage = () => {
   }, [userId, userType]);
 
   const loadProfile = async () => {
-    setLoading(true);
-    // Vérifier que les paramètres sont présents
-    if (!userType || !userId) {
-      console.error('Paramètres de profil manquants:', { userType, userId });
-      setProfile(null);
-      setLoading(false);
+    console.log('loadProfile appelé avec:', { userType, userId });
+    
+    if (!setLoading) {
+      console.error('setLoading est undefined!');
       return;
     }
     
-    // Simulation des données de profil selon le type
-    const mockProfile = generateMockProfile(userType, userId);
-    setProfile(mockProfile);
-    setLoading(false);
+    setLoading(true);
+    
+    // Vérifier que les paramètres sont présents
+    if (!userType || !userId) {
+      console.error('Paramètres de profil manquants:', { userType, userId });
+      if (setProfile) setProfile(null);
+      if (setLoading) setLoading(false);
+      // Rediriger vers la page d'accueil si les paramètres sont manquants
+      setTimeout(() => {
+        if (navigate) navigate('/');
+      }, 2000);
+      return;
+    }
+    
+    try {
+      // Simulation des données de profil selon le type
+      const mockProfile = generateMockProfile(userType, userId);
+      if (mockProfile) {
+        if (setProfile) setProfile(mockProfile);
+      } else {
+        console.error('Impossible de générer le profil pour:', { userType, userId });
+        if (setProfile) setProfile(null);
+      }
+    } catch (error) {
+      console.error('Erreur lors du chargement du profil:', error);
+      if (setProfile) setProfile(null);
+    }
+    if (setLoading) setLoading(false);
   };
 
   const generateMockProfile = (type, id) => {
@@ -62,18 +85,19 @@ const UserProfilePage = () => {
     }
     
     const baseProfile = {
-      id: id,
-      type: type,
+      id: String(id),
+      type: String(type),
       createdAt: new Date(2023, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
       isVerified: Math.random() > 0.3,
-      rating: (Math.random() * 2 + 3).toFixed(1),
+      rating: Number((Math.random() * 2 + 3).toFixed(1)),
       reviewCount: Math.floor(Math.random() * 500) + 10,
       followers: Math.floor(Math.random() * 1000) + 50,
       views: Math.floor(Math.random() * 5000) + 100
     };
 
-    switch (type) {
+    switch (String(type).toLowerCase()) {
       case 'vendeur-particulier':
+      case 'seller':
         return {
           ...baseProfile,
           name: 'Amadou Diallo',
@@ -94,6 +118,7 @@ const UserProfilePage = () => {
         };
 
       case 'vendeur-pro':
+      case 'seller-pro':
         return {
           ...baseProfile,
           name: 'Sénégal Immobilier SARL',
@@ -115,6 +140,7 @@ const UserProfilePage = () => {
         };
 
       case 'promoteur':
+      case 'promoter':
         return {
           ...baseProfile,
           name: 'Teranga Construction',
@@ -136,6 +162,7 @@ const UserProfilePage = () => {
         };
 
       case 'banque':
+      case 'bank':
         return {
           ...baseProfile,
           name: 'Banque de l\'Habitat du Sénégal',
@@ -157,6 +184,7 @@ const UserProfilePage = () => {
         };
 
       case 'geometre':
+      case 'geometer':
         return {
           ...baseProfile,
           name: 'Cabinet Géomètre Fall & Associés',
@@ -177,6 +205,7 @@ const UserProfilePage = () => {
         };
 
       case 'notaire':
+      case 'notary':
         return {
           ...baseProfile,
           name: 'Maître Fatou Sow',
@@ -217,19 +246,73 @@ const UserProfilePage = () => {
           achievements: ['Digitalisation Services', 'Transparence Administrative', 'Développement Durable']
         };
 
+      case 'agent':
+      case 'agent-foncier':
+        return {
+          ...baseProfile,
+          name: 'Moussa Ba',
+          title: 'Agent Foncier Certifié',
+          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+          location: 'Sacré-Cœur, Dakar',
+          phone: '+221 77 555 44 33',
+          email: 'moussa.ba@agent-foncier.com',
+          description: 'Agent foncier expérimenté spécialisé dans l\'accompagnement des transactions immobilières. Expert en négociation et conseil.',
+          specialties: ['Négociation', 'Évaluation', 'Conseil Client', 'Documentation'],
+          stats: {
+            deals: 145,
+            clients: 320,
+            commission: '3.5%',
+            satisfaction: '98%'
+          },
+          achievements: ['Agent Certifié', 'Top Performer', 'Client Satisfaction']
+        };
+
+      case 'investor':
+      case 'investisseur':
+        return {
+          ...baseProfile,
+          name: 'Groupe Investissement Teranga',
+          title: 'Fonds d\'Investissement Immobilier',
+          avatar: 'https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=150&h=150&fit=crop',
+          location: 'CBAO, Dakar',
+          phone: '+221 33 889 77 00',
+          email: 'contact@invest-teranga.com',
+          website: 'www.invest-teranga.com',
+          description: 'Fonds d\'investissement spécialisé dans l\'immobilier et le foncier au Sénégal. Partenaire de choix pour vos projets d\'investissement.',
+          specialties: ['Investissement Foncier', 'Capital Risque', 'Développement Projets', 'Conseil Financier'],
+          stats: {
+            portfolio: '12 Milliards FCFA',
+            projects: 45,
+            roi: '15.8%',
+            partners: 23
+          },
+          achievements: ['Fonds Certifié', 'Meilleur ROI 2024', 'Partenaire Stratégique']
+        };
+
       default:
         return baseProfile;
-    }
+      }
   };
 
   const getRoleColor = (type) => {
     const colors = {
       'vendeur-particulier': 'bg-blue-500',
+      'seller': 'bg-blue-500',
       'vendeur-pro': 'bg-purple-500',
+      'seller-pro': 'bg-purple-500',
       'promoteur': 'bg-orange-500',
+      'promoter': 'bg-orange-500',
       'banque': 'bg-green-500',
+      'bank': 'bg-green-500',
       'geometre': 'bg-cyan-500',
-      'notaire': 'bg-indigo-500'
+      'geometer': 'bg-cyan-500',
+      'notaire': 'bg-indigo-500',
+      'notary': 'bg-indigo-500',
+      'municipality': 'bg-red-500',
+      'agent': 'bg-yellow-500',
+      'agent-foncier': 'bg-yellow-500',
+      'investor': 'bg-pink-500',
+      'investisseur': 'bg-pink-500'
     };
     return colors[type] || 'bg-gray-500';
   };
@@ -237,11 +320,22 @@ const UserProfilePage = () => {
   const getRoleIcon = (type) => {
     const icons = {
       'vendeur-particulier': Users,
+      'seller': Users,
       'vendeur-pro': Building2,
+      'seller-pro': Building2,
       'promoteur': Award,
+      'promoter': Award,
       'banque': TrendingUp,
+      'bank': TrendingUp,
       'geometre': MapPin,
-      'notaire': Shield
+      'geometer': MapPin,
+      'notaire': Shield,
+      'notary': Shield,
+      'municipality': Building2,
+      'agent': Users,
+      'agent-foncier': Users,
+      'investor': TrendingUp,
+      'investisseur': TrendingUp
     };
     const IconComponent = icons[type] || Users;
     return <IconComponent className="h-5 w-5" />;
@@ -253,6 +347,25 @@ const UserProfilePage = () => {
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement du profil...</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4">
+            <AlertTriangle className="h-12 w-12 text-red-500 mx-auto mb-4" />
+          </div>
+          <h2 className="text-xl font-bold text-gray-900 mb-2">Profil introuvable</h2>
+          <p className="text-gray-600 mb-4">
+            Les paramètres du profil sont manquants ou invalides.
+          </p>
+          <Button onClick={() => navigate('/')} className="bg-blue-600 hover:bg-blue-700">
+            Retour à l'accueil
+          </Button>
         </div>
       </div>
     );

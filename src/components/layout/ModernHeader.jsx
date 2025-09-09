@@ -76,7 +76,7 @@ const ModernHeader = () => {
         {
           title: 'Marché Privé',
           items: [
-            { label: 'Vendeurs Particuliers', href: '/vendeurs-particuliers', icon: Users, description: 'Terrains de particuliers sécurisés blockchain' },
+            { label: 'Vendeurs Particuliers', href: '/parcelles-vendeurs', icon: Users, description: 'Terrains de particuliers sécurisés blockchain' },
             { label: 'Vendre ma parcelle', href: '/sell-property', icon: Shield, description: 'Publier avec technologie blockchain' }
           ]
         },

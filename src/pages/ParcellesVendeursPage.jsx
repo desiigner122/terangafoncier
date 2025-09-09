@@ -772,9 +772,11 @@ const ParcellesVendeursPage = () => {
                         className="w-full flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
                         onClick={(e) => {
                           e.stopPropagation();
-                          const profilePath = parcelle.sellerType === 'vendeur-particulier' 
-                            ? `/seller/${parcelle.sellerId}`
-                            : `/${parcelle.sellerType}/${parcelle.sellerId}`;
+                          // Mapper le type de vendeur vers le format unifié
+                          const userType = parcelle.sellerType === 'vendeur-particulier' ? 'seller' : 
+                                          parcelle.sellerType === 'vendeur-pro' ? 'seller' : 
+                                          parcelle.sellerType;
+                          const profilePath = `/profile/${userType}/${parcelle.sellerId}`;
                           navigate(profilePath);
                         }}
                       >

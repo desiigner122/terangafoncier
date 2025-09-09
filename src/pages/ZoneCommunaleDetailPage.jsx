@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import ProfileLink from '@/components/common/ProfileLink';
 
 const ZoneCommunaleDetailPage = () => {
   const { id } = useParams();
@@ -35,6 +36,7 @@ const ZoneCommunaleDetailPage = () => {
       id: parseInt(id),
       name: "Zone Résidentielle Keur Massar Phase 2",
       commune: "Keur Massar",
+      communeId: "keur-massar-001",
       region: "Dakar",
       project_type: "Lotissement Social",
       status: "En cours d'attribution",
@@ -342,7 +344,15 @@ L'attribution se fait par tirage au sort public, avec vérification préalable d
                     </CardTitle>
                     <div className="flex items-center text-gray-600 mb-2">
                       <MapPin className="w-4 h-4 mr-2" />
-                      {zone.commune}, {zone.region}
+                      <ProfileLink 
+                        type="municipality" 
+                        id={zone.communeId} 
+                        className="text-blue-600 hover:text-blue-800 hover:underline"
+                        external={true}
+                      >
+                        {zone.commune}
+                      </ProfileLink>
+                      , {zone.region}
                     </div>
                     <div className="flex items-center text-gray-600">
                       <Building2 className="w-4 h-4 mr-2" />
@@ -849,7 +859,17 @@ L'attribution se fait par tirage au sort public, avec vérification préalable d
             <div className="bg-blue-50 p-4 rounded-lg">
               <div className="font-bold text-blue-900">Zone sélectionnée</div>
               <div className="text-blue-700">{zone.name}</div>
-              <div className="text-sm text-blue-600">{zone.commune}, {zone.region}</div>
+              <div className="text-sm text-blue-600">
+                <ProfileLink 
+                  type="municipality" 
+                  id={zone.communeId} 
+                  className="text-blue-600 hover:text-blue-800 hover:underline"
+                  external={true}
+                >
+                  {zone.commune}
+                </ProfileLink>
+                , {zone.region}
+              </div>
             </div>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

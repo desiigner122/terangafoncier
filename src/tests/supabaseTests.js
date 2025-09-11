@@ -1,22 +1,21 @@
-import { config } from 'dotenv';
+﻿import { config } from 'dotenv';
 config({ path: '.env.local' });
 config({ path: '.env' });
 
 import { supabase } from '../lib/supabaseClient.js';
 
-// Test de connexion simple
 async function testConnection() {
   try {
-    console.log('--- Test de connexion Supabase ---');
+    
     console.log('URL:', process.env.VITE_SUPABASE_URL);
-    console.log('Key présente:', !!process.env.VITE_SUPABASE_ANON_KEY);
+    console.log('Key prÃ©sente:', !!process.env.VITE_SUPABASE_ANON_KEY);
 
     const { data, error } = await supabase.from('users').select('count').limit(1);
     if (error) {
       console.log('Erreur de connexion:', error.message);
       return false;
     }
-    console.log('Connexion réussie!');
+    console.log('Connexion rÃ©ussie!');
     return true;
   } catch (e) {
     console.log('Exception:', e.message);
@@ -26,12 +25,12 @@ async function testConnection() {
 
 testConnection();
 
-// Crée une parcelle de test avec is_featured=true
+// CrÃ©e une parcelle de test avec is_featured=true
 export async function createTestParcel() {
   try {
     const { data, error } = await supabase.from('parcels').insert({
       title: 'Parcelle Test',
-      description: 'Parcelle de test générée automatiquement',
+      description: 'Parcelle de test gÃ©nÃ©rÃ©e automatiquement',
       location: 'Test City',
       price: 100000,
       status: 'Disponible',
@@ -39,21 +38,21 @@ export async function createTestParcel() {
       created_at: new Date().toISOString(),
     }).select();
     if (error) {
-      console.error('Erreur création parcelle:', error);
+      console.error('Erreur crÃ©ation parcelle:', error);
       return false;
     }
-    console.log('Parcelle de test créée avec is_featured=true.');
+    
     return true;
   } catch (e) {
-    console.error('Exception création parcelle:', e);
+    console.error('Exception crÃ©ation parcelle:', e);
     return false;
   }
 }
 
 async function runAllTests() {
-  console.log('--- Test 1 : Connexion à Supabase ---');
+  
   const conn = await testSupabaseConnection();
-  console.log('Connexion à Supabase :', conn ? 'OK' : 'ÉCHEC');
+  console.log('Connexion Ã  Supabase :', conn ? 'OK' : 'Ã‰CHEC');
 
   // Email/mot de passe via variables d'environnement ou arguments
   const email = process.env.TEST_EMAIL || process.argv[2] || '';
@@ -61,15 +60,15 @@ async function runAllTests() {
   if (!email || !password) {
     console.warn('Aucun email/mot de passe de test fourni. Ajoutez-les via variables d\'environnement ou arguments.');
   } else {
-    console.log('\n--- Test 2 : Connexion utilisateur ---');
+    
       await createTestUser(email, password);
     const login = await testUserLogin(email, password);
-    console.log('Connexion utilisateur :', login ? 'OK' : 'ÉCHEC');
+    console.log('Connexion utilisateur :', login ? 'OK' : 'Ã‰CHEC');
   }
 
-  console.log('\n--- Test 3 : Création parcelle test ---');
+  
   await createTestParcel();
-  console.log('\n--- Test 4 : Récupération is_featured ---');
+  
   const { data, error } = await supabase
     .from('parcels')
     .select('id, is_featured')
@@ -77,13 +76,13 @@ async function runAllTests() {
     .limit(1);
   if (error) {
     console.error('Error fetching featured parcels:', error);
-    console.log('is_featured (parcels) : ÉCHEC');
+    console.log('is_featured (parcels) : Ã‰CHEC');
   } else if (!data || data.length === 0) {
-    console.warn('Aucune parcelle avec is_featured = true trouvée.');
-    console.log('is_featured (parcels) : ÉCHEC');
+    console.warn('Aucune parcelle avec is_featured = true trouvÃ©e.');
+    console.log('is_featured (parcels) : Ã‰CHEC');
   } else if (typeof data[0].is_featured !== 'boolean') {
     console.warn('Le champ is_featured n\'est pas de type boolean.');
-    console.log('is_featured (parcels) : ÉCHEC');
+    console.log('is_featured (parcels) : Ã‰CHEC');
   } else {
     console.log('is_featured (parcels) : OK');
   }
@@ -91,7 +90,6 @@ async function runAllTests() {
 
 runAllTests();
 
-// Test 1: Connexion à Supabase
 export async function testSupabaseConnection() {
   const { data, error } = await supabase.from('users').select('id').limit(1);
   if (error) {
@@ -101,7 +99,6 @@ export async function testSupabaseConnection() {
   return true;
 }
 
-// Test 2: Connexion utilisateur (à adapter avec un vrai compte)
 export async function testUserLogin(email, password) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password });
   if (error) {
@@ -111,7 +108,6 @@ export async function testUserLogin(email, password) {
   return !!data.session;
 }
 
-// Test 3: Vérification de la colonne is_featured
 export async function testFeaturedParcels() {
   const { data, error } = await supabase
     .from('parcels')

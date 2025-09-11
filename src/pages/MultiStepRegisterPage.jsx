@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ChevronLeft, 
@@ -50,7 +50,7 @@ const MultiStepRegisterPage = () => {
 
   const totalSteps = 4;
 
-  // Configuration des rôles avec design blockchain
+  // Configuration des rÃ´les avec design blockchain
   const roles = [
     {
       id: 'particulier',
@@ -60,7 +60,7 @@ const MultiStepRegisterPage = () => {
       gradient: 'from-blue-500 to-cyan-500',
       badge: 'Essentiel',
       badgeColor: 'bg-blue-100 text-blue-800',
-      benefits: ['Accès complet au marché', 'Outils de recherche avancés', 'Support dédié']
+      benefits: ['AccÃ¨s complet au marchÃ©', 'Outils de recherche avancÃ©s', 'Support dÃ©diÃ©']
     },
     {
       id: 'vendeur-particulier',
@@ -70,27 +70,27 @@ const MultiStepRegisterPage = () => {
       gradient: 'from-green-500 to-emerald-500',
       badge: 'Populaire',
       badgeColor: 'bg-green-100 text-green-800',
-      benefits: ['Publication gratuite', 'Visibilité optimale', 'Gestion simplifiée']
+      benefits: ['Publication gratuite', 'VisibilitÃ© optimale', 'Gestion simplifiÃ©e']
     },
     {
       id: 'vendeur-pro',
       name: 'Vendeur Pro',
-      description: 'Activité professionnelle immobilière',
+      description: 'ActivitÃ© professionnelle immobiliÃ¨re',
       icon: Briefcase,
       gradient: 'from-purple-500 to-violet-500',
       badge: 'Business',
       badgeColor: 'bg-purple-100 text-purple-800',
-      benefits: ['Outils professionnels', 'Analytics avancés', 'Support prioritaire']
+      benefits: ['Outils professionnels', 'Analytics avancÃ©s', 'Support prioritaire']
     },
     {
       id: 'investisseur',
       name: 'Investisseur',
-      description: 'Investissement et développement foncier',
+      description: 'Investissement et dÃ©veloppement foncier',
       icon: Crown,
       gradient: 'from-amber-500 to-orange-500',
       badge: 'Premium',
       badgeColor: 'bg-amber-100 text-amber-800',
-      benefits: ['Analyses de marché', 'Opportunités exclusives', 'Conseil stratégique']
+      benefits: ['Analyses de marchÃ©', 'OpportunitÃ©s exclusives', 'Conseil stratÃ©gique']
     }
   ];
 
@@ -116,9 +116,9 @@ const MultiStepRegisterPage = () => {
 
   const handleSubmit = async () => {
     // Simulation de l'inscription
-    console.log('Données d\'inscription:', formData);
+    console.log('DonnÃ©es d\'inscription:', formData);
     
-    // Redirection selon le rôle
+    // Redirection selon le rÃ´le
     const roleRedirects = {
       'particulier': '/dashboard',
       'vendeur-particulier': '/seller-dashboard',
@@ -157,7 +157,7 @@ const MultiStepRegisterPage = () => {
                 Choisissez votre profil
               </h2>
               <p className="text-gray-600">
-                Sélectionnez le type de compte qui correspond à votre activité
+                SÃ©lectionnez le type de compte qui correspond Ã  votre activitÃ©
               </p>
             </div>
 
@@ -247,11 +247,11 @@ const MultiStepRegisterPage = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div className="space-y-2">
                 <Label htmlFor="firstName" className="text-sm font-medium">
-                  Prénom <span className="text-red-500">*</span>
+                  PrÃ©nom <span className="text-red-500">*</span>
                 </Label>
                 <Input
                   id="firstName"
-                  placeholder="Votre prénom"
+                  YOUR_API_KEY="Votre prÃ©nom"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                   className="h-12"
@@ -264,7 +264,7 @@ const MultiStepRegisterPage = () => {
                 </Label>
                 <Input
                   id="lastName"
-                  placeholder="Votre nom de famille"
+                  YOUR_API_KEY="Votre nom de famille"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
                   className="h-12"
@@ -280,7 +280,7 @@ const MultiStepRegisterPage = () => {
               <Input
                 id="email"
                 type="email"
-                placeholder="votre.email@exemple.com"
+                YOUR_API_KEY="votre.email@exemple.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="h-12"
@@ -290,11 +290,11 @@ const MultiStepRegisterPage = () => {
             <div className="space-y-2">
               <Label htmlFor="phone" className="text-sm font-medium flex items-center gap-2">
                 <Phone className="w-4 h-4" />
-                Téléphone <span className="text-red-500">*</span>
+                TÃ©lÃ©phone <span className="text-red-500">*</span>
               </Label>
               <Input
                 id="phone"
-                placeholder="+221 77 123 45 67"
+                YOUR_API_KEY="+221 77 123 45 67"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 className="h-12"
@@ -331,7 +331,7 @@ const MultiStepRegisterPage = () => {
                 Informations professionnelles
               </h2>
               <p className="text-gray-600">
-                Complétez votre profil professionnel
+                ComplÃ©tez votre profil professionnel
               </p>
             </div>
 
@@ -343,7 +343,7 @@ const MultiStepRegisterPage = () => {
                 </Label>
                 <Input
                   id="company"
-                  placeholder="Nom de votre entreprise"
+                  YOUR_API_KEY="Nom de votre entreprise"
                   value={formData.company}
                   onChange={(e) => handleInputChange('company', e.target.value)}
                   className="h-12"
@@ -353,7 +353,7 @@ const MultiStepRegisterPage = () => {
               <div className="space-y-2">
                 <Label htmlFor="experience" className="text-sm font-medium flex items-center gap-2">
                   <Award className="w-4 h-4" />
-                  Années d'expérience
+                  AnnÃ©es d'expÃ©rience
                 </Label>
                 <select
                   id="experience"
@@ -361,7 +361,7 @@ const MultiStepRegisterPage = () => {
                   onChange={(e) => handleInputChange('experience', e.target.value)}
                   className="w-full h-12 px-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 >
-                  <option value="">Sélectionnez votre expérience</option>
+                  <option value="">SÃ©lectionnez votre expÃ©rience</option>
                   <option value="0-2">0-2 ans</option>
                   <option value="3-5">3-5 ans</option>
                   <option value="6-10">6-10 ans</option>
@@ -370,10 +370,10 @@ const MultiStepRegisterPage = () => {
               </div>
 
               <div className="space-y-3">
-                <Label className="text-sm font-medium">Spécialisations</Label>
+                <Label className="text-sm font-medium">SpÃ©cialisations</Label>
                 <div className="grid grid-cols-2 gap-3">
                   {[
-                    'Résidentiel', 'Commercial', 'Industriel', 'Agricole',
+                    'RÃ©sidentiel', 'Commercial', 'Industriel', 'Agricole',
                     'Tourisme', 'Lotissement', 'Promotion', 'Investissement'
                   ].map((spec) => (
                     <div key={spec} className="flex items-center space-x-2">
@@ -415,10 +415,10 @@ const MultiStepRegisterPage = () => {
                 </div>
               </div>
               <h2 className="text-2xl font-bold bg-gradient-to-r from-red-600 to-orange-600 bg-clip-text text-transparent">
-                Sécurité et finalisation
+                SÃ©curitÃ© et finalisation
               </h2>
               <p className="text-gray-600">
-                Créez un mot de passe sécurisé pour votre compte
+                CrÃ©ez un mot de passe sÃ©curisÃ© pour votre compte
               </p>
             </div>
 
@@ -432,7 +432,7 @@ const MultiStepRegisterPage = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    placeholder="Créez un mot de passe sécurisé"
+                    YOUR_API_KEY="CrÃ©ez un mot de passe sÃ©curisÃ©"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     className="h-12 pr-12"
@@ -458,7 +458,7 @@ const MultiStepRegisterPage = () => {
                 <Input
                   id="confirmPassword"
                   type="password"
-                  placeholder="Confirmez votre mot de passe"
+                  YOUR_API_KEY="Confirmez votre mot de passe"
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                   className="h-12"
@@ -479,7 +479,7 @@ const MultiStepRegisterPage = () => {
                     </a>{' '}
                     et la{' '}
                     <a href="/privacy" className="text-blue-600 hover:underline">
-                      politique de confidentialité
+                      politique de confidentialitÃ©
                     </a>{' '}
                     de Teranga Foncier <span className="text-red-500">*</span>
                   </Label>
@@ -492,7 +492,7 @@ const MultiStepRegisterPage = () => {
                     onCheckedChange={(checked) => handleInputChange('acceptNewsletter', checked)}
                   />
                   <Label htmlFor="newsletter" className="text-sm text-gray-600">
-                    Je souhaite recevoir les actualités et offres de Teranga Foncier
+                    Je souhaite recevoir les actualitÃ©s et offres de Teranga Foncier
                   </Label>
                 </div>
               </div>
@@ -549,7 +549,7 @@ const MultiStepRegisterPage = () => {
               Rejoignez Teranga Foncier
             </h1>
             <p className="text-gray-600 mb-8">
-              La plateforme blockchain de référence pour l'immobilier au Sénégal
+              La plateforme blockchain de rÃ©fÃ©rence pour l'immobilier au SÃ©nÃ©gal
             </p>
 
             {/* Progress Bar */}
@@ -602,12 +602,12 @@ const MultiStepRegisterPage = () => {
                   className="flex items-center gap-2"
                 >
                   <ChevronLeft className="w-4 h-4" />
-                  Précédent
+                  PrÃ©cÃ©dent
                 </Button>
 
                 <div className="flex items-center gap-2 text-sm text-gray-500">
                   <Globe className="w-4 h-4" />
-                  <span>Sécurisé par blockchain</span>
+                  <span>SÃ©curisÃ© par blockchain</span>
                 </div>
 
                 {currentStep < totalSteps ? (
@@ -626,7 +626,7 @@ const MultiStepRegisterPage = () => {
                     className="flex items-center gap-2 bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700"
                   >
                     <CheckCircle className="w-4 h-4" />
-                    Créer mon compte
+                    CrÃ©er mon compte
                   </Button>
                 )}
               </div>
@@ -641,7 +641,7 @@ const MultiStepRegisterPage = () => {
             className="text-center mt-8 text-gray-600"
           >
             <p className="text-sm">
-              Déjà inscrit ?{' '}
+              DÃ©jÃ  inscrit ?{' '}
               <a href="/login" className="text-blue-600 hover:underline font-medium">
                 Connectez-vous ici
               </a>
@@ -659,10 +659,10 @@ const MultiStepRegisterPage = () => {
               <CardContent className="p-6 text-center">
                 <div className="flex items-center justify-center mb-3">
                   <Briefcase className="w-6 h-6 text-blue-600 mr-2" />
-                  <h3 className="font-semibold text-gray-900">Vous êtes un professionnel ?</h3>
+                  <h3 className="font-semibold text-gray-900">Vous Ãªtes un professionnel ?</h3>
                 </div>
                 <p className="text-sm text-gray-600 mb-4">
-                  Promoteur • Banque • Notaire • Géomètre • Agent Foncier • Municipalité
+                  Promoteur â€¢ Banque â€¢ Notaire â€¢ GÃ©omÃ¨tre â€¢ Agent Foncier â€¢ MunicipalitÃ©
                 </p>
                 <a 
                   href="/contact" 

@@ -56,7 +56,7 @@ const AdminSettingsPage = () => {
                         </div>
                         <div className="space-y-2">
                              <Label htmlFor="admin-email">Email de l'administrateur</Label>
-                             <Input type="email" id="admin-email" placeholder="admin@teranga-foncier.sn" defaultValue="notifications@teranga-foncier.sn" />
+                             <Input type="email" id="admin-email" YOUR_API_KEY="admin@teranga-foncier.sn" defaultValue="notifications@teranga-foncier.sn" />
                         </div>
                     </CardContent>
                 </Card>
@@ -69,11 +69,11 @@ const AdminSettingsPage = () => {
                     <CardContent className="grid sm:grid-cols-2 gap-4">
                         <div className="space-y-2">
                              <Label htmlFor="service-fee">Frais de service (pour les acheteurs) en %</Label>
-                             <Input type="number" id="service-fee" placeholder="Ex: 2.5" defaultValue="2.5" />
+                             <Input type="number" id="service-fee" YOUR_API_KEY="Ex: 2.5" defaultValue="2.5" />
                         </div>
                         <div className="space-y-2">
                              <Label htmlFor="seller-commission">Commission vendeur (pour les annonces) en %</Label>
-                             <Input type="number" id="seller-commission" placeholder="Ex: 5" defaultValue="5" />
+                             <Input type="number" id="seller-commission" YOUR_API_KEY="Ex: 5" defaultValue="5" />
                         </div>
                     </CardContent>
                 </Card>

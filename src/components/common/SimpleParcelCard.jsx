@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -17,13 +17,13 @@ const SimpleParcelCard = ({ parcel }) => {
     <Card className="overflow-hidden hover:shadow-lg transition-shadow">
       <div className="relative">
         <img 
-          src={parcel?.image || "/api/placeholder/400/300"} 
+          src={parcel?.image || "/api/YOUR_API_KEY/400/300"} 
           alt={parcel?.title || "Parcelle"}
           className="w-full h-48 object-cover"
         />
         {parcel?.verified && (
           <Badge className="absolute top-2 left-2 bg-green-500 text-white">
-            Vérifié
+            VÃ©rifiÃ©
           </Badge>
         )}
       </div>
@@ -45,7 +45,7 @@ const SimpleParcelCard = ({ parcel }) => {
               {parcel?.price ? formatPrice(parcel.price) : "Prix sur demande"}
             </p>
             <p className="text-sm text-gray-500">
-              {parcel?.surface || "Surface à définir"}
+              {parcel?.surface || "Surface Ã  dÃ©finir"}
             </p>
           </div>
           {parcel?.rating && (
@@ -58,7 +58,7 @@ const SimpleParcelCard = ({ parcel }) => {
 
         <div className="flex gap-2">
           <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-            Voir détails
+            Voir dÃ©tails
           </Button>
         </div>
       </CardContent>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link, useNavigate } from 'react-router-dom';
@@ -36,7 +36,7 @@ const SolutionsParticuliersPage = () => {
 
   const handleDashboardAccess = () => {
     if (user) {
-      navigate('/dashboard'); // Notre nouveau système de redirection intelligente
+      navigate('/dashboard'); // Notre nouveau systÃ¨me de redirection intelligente
     } else {
       navigate('/login', { state: { from: { pathname: '/dashboard' } } });
     }
@@ -58,65 +58,65 @@ const SolutionsParticuliersPage = () => {
   const features = [
     {
       icon: ShieldCheck,
-      title: "Achat 100% Sécurisé",
-      description: "Chaque terrain sur notre plateforme est vérifié juridiquement. Nous nous assurons que tous les documents sont authentiques et que le vendeur est le véritable propriétaire.",
-      stats: "100% des terrains vérifiés"
+      title: "Achat 100% SÃ©curisÃ©",
+      description: "Chaque terrain sur notre plateforme est vÃ©rifiÃ© juridiquement. Nous nous assurons que tous les documents sont authentiques et que le vendeur est le vÃ©ritable propriÃ©taire.",
+      stats: "100% des terrains vÃ©rifiÃ©s"
     },
     {
       icon: MapPin,
-      title: "Géolocalisation Précise",
-      description: "Visualisez avec précision l'emplacement exact de votre futur terrain grâce à notre technologie de cartographie satellite avancée.",
-      stats: "Précision GPS au mètre près"
+      title: "GÃ©olocalisation PrÃ©cise",
+      description: "Visualisez avec prÃ©cision l'emplacement exact de votre futur terrain grÃ¢ce Ã  notre technologie de cartographie satellite avancÃ©e.",
+      stats: "PrÃ©cision GPS au mÃ¨tre prÃ¨s"
     },
     {
       icon: FileSearch,
-      title: "Documentation Complète",
-      description: "Accédez à tous les documents nécessaires : titre foncier, certificat d'urbanisme, plan de situation, et bien plus.",
+      title: "Documentation ComplÃ¨te",
+      description: "AccÃ©dez Ã  tous les documents nÃ©cessaires : titre foncier, certificat d'urbanisme, plan de situation, et bien plus.",
       stats: "Tous documents fournis"
     },
     {
       icon: CreditCard,
-      title: "Paiement Sécurisé",
-      description: "Effectuez vos transactions en toute sécurité avec notre système de paiement protégé et nos options de financement flexibles.",
-      stats: "Paiements sécurisés 24/7"
+      title: "Paiement SÃ©curisÃ©",
+      description: "Effectuez vos transactions en toute sÃ©curitÃ© avec notre systÃ¨me de paiement protÃ©gÃ© et nos options de financement flexibles.",
+      stats: "Paiements sÃ©curisÃ©s 24/7"
     },
     {
       icon: LinkIcon,
-      title: "🆕 Contrats Intelligents",
-      description: "Sécurisez vos achats avec la blockchain : paiements automatisés selon les conditions prédéfinies, traçabilité complète et sécurité maximale.",
+      title: "ðŸ†• Contrats Intelligents",
+      description: "SÃ©curisez vos achats avec la blockchain : paiements automatisÃ©s selon les conditions prÃ©dÃ©finies, traÃ§abilitÃ© complÃ¨te et sÃ©curitÃ© maximale.",
       stats: "100% transparence blockchain",
       isNew: true
     },
     {
       icon: Coins,
-      title: "🆕 Investissement Fractionné",
-      description: "Investissez dans l'immobilier même avec un petit budget grâce à la tokenisation. Achetez des parts de terrains et générez des revenus locatifs.",
-      stats: "Dès 10 000 FCFA",
+      title: "ðŸ†• Investissement FractionnÃ©",
+      description: "Investissez dans l'immobilier mÃªme avec un petit budget grÃ¢ce Ã  la tokenisation. Achetez des parts de terrains et gÃ©nÃ©rez des revenus locatifs.",
+      stats: "DÃ¨s 10 000 FCFA",
       isNew: true
     }
   ];
 
   const solutions = [
     {
-      title: "Catalogue de Terrains Vérifiés",
-      description: "Parcourez notre sélection de terrains certifiés dans tout le Sénégal",
+      title: "Catalogue de Terrains VÃ©rifiÃ©s",
+      description: "Parcourez notre sÃ©lection de terrains certifiÃ©s dans tout le SÃ©nÃ©gal",
       icon: Home,
       href: "/parcelles",
-      features: ["Terrains vérifiés", "Photos HD", "Visites virtuelles", "Prix transparents"]
+      features: ["Terrains vÃ©rifiÃ©s", "Photos HD", "Visites virtuelles", "Prix transparents"]
     },
     {
       title: "Demandes Communales",
-      description: "Accédez aux terrains communaux via un processus transparent",
+      description: "AccÃ©dez aux terrains communaux via un processus transparent",
       icon: Globe,
       href: "/villes",
-      features: ["Processus transparent", "Contact direct mairies", "Suivi en temps réel", "Support dédié"]
+      features: ["Processus transparent", "Contact direct mairies", "Suivi en temps rÃ©el", "Support dÃ©diÃ©"]
     },
     {
-      title: "Accompagnement Personnalisé",
-      description: "Bénéficiez de l'expertise de nos agents fonciers",
+      title: "Accompagnement PersonnalisÃ©",
+      description: "BÃ©nÃ©ficiez de l'expertise de nos agents fonciers",
       icon: UserCheck,
       href: "/agents-fonciers",
-      features: ["Conseils d'experts", "Visite accompagnée", "Négociation", "Support juridique"]
+      features: ["Conseils d'experts", "Visite accompagnÃ©e", "NÃ©gociation", "Support juridique"]
     }
   ];
 
@@ -124,13 +124,13 @@ const SolutionsParticuliersPage = () => {
     {
       step: "01",
       title: "Recherchez",
-      description: "Trouvez votre terrain idéal grâce à nos filtres avancés",
+      description: "Trouvez votre terrain idÃ©al grÃ¢ce Ã  nos filtres avancÃ©s",
       icon: FileSearch
     },
     {
       step: "02", 
-      title: "Vérifiez",
-      description: "Consultez tous les documents et informations vérifiées",
+      title: "VÃ©rifiez",
+      description: "Consultez tous les documents et informations vÃ©rifiÃ©es",
       icon: Eye
     },
     {
@@ -142,7 +142,7 @@ const SolutionsParticuliersPage = () => {
     {
       step: "04",
       title: "Achetez",
-      description: "Finalisez votre achat en toute sécurité",
+      description: "Finalisez votre achat en toute sÃ©curitÃ©",
       icon: ShieldCheck
     }
   ];
@@ -151,19 +151,19 @@ const SolutionsParticuliersPage = () => {
     {
       name: "Fatou Diagne",
       location: "Dakar",
-      text: "Grâce à Teranga Foncier, j'ai trouvé le terrain parfait pour ma maison. Le processus était transparent et sécurisé.",
+      text: "GrÃ¢ce Ã  Teranga Foncier, j'ai trouvÃ© le terrain parfait pour ma maison. Le processus Ã©tait transparent et sÃ©curisÃ©.",
       rating: 5
     },
     {
       name: "Mamadou Ba",
-      location: "Thiès", 
-      text: "Excellent service ! L'équipe m'a accompagné tout au long du processus. Je recommande vivement.",
+      location: "ThiÃ¨s", 
+      text: "Excellent service ! L'Ã©quipe m'a accompagnÃ© tout au long du processus. Je recommande vivement.",
       rating: 5
     },
     {
-      name: "Aïcha Ndiaye",
+      name: "AÃ¯cha Ndiaye",
       location: "Saint-Louis",
-      text: "Interface simple et intuitive. J'ai pu acheter mon terrain depuis l'étranger sans problème.",
+      text: "Interface simple et intuitive. J'ai pu acheter mon terrain depuis l'Ã©tranger sans problÃ¨me.",
       rating: 5
     }
   ];
@@ -171,8 +171,8 @@ const SolutionsParticuliersPage = () => {
   return (
     <>
       <Helmet>
-        <title>Solutions pour Particuliers - Achat de Terrain Sécurisé | Teranga Foncier</title>
-        <meta name="description" content="Achetez votre terrain en toute sécurité au Sénégal. Terrains vérifiés, documentation complète, paiement sécurisé. Trouvez le terrain de vos rêves." />
+        <title>Solutions pour Particuliers - Achat de Terrain SÃ©curisÃ© | Teranga Foncier</title>
+        <meta name="description" content="Achetez votre terrain en toute sÃ©curitÃ© au SÃ©nÃ©gal. Terrains vÃ©rifiÃ©s, documentation complÃ¨te, paiement sÃ©curisÃ©. Trouvez le terrain de vos rÃªves." />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50">
@@ -196,12 +196,12 @@ const SolutionsParticuliersPage = () => {
                 </div>
                 
                 <h1 className="text-4xl md:text-6xl font-bold mb-6 leading-tight">
-                  Achetez Votre Terrain en <span className="text-yellow-300">Toute Sécurité</span>
+                  Achetez Votre Terrain en <span className="text-yellow-300">Toute SÃ©curitÃ©</span>
                 </h1>
                 
                 <p className="text-xl text-blue-100 mb-8 leading-relaxed">
-                  Trouvez et achetez le terrain de vos rêves au Sénégal avec notre processus 100% sécurisé. 
-                  Terrains vérifiés, documentation complète, accompagnement personnalisé.
+                  Trouvez et achetez le terrain de vos rÃªves au SÃ©nÃ©gal avec notre processus 100% sÃ©curisÃ©. 
+                  Terrains vÃ©rifiÃ©s, documentation complÃ¨te, accompagnement personnalisÃ©.
                 </p>
 
                 <div className="flex flex-col sm:flex-row gap-4">
@@ -233,10 +233,10 @@ const SolutionsParticuliersPage = () => {
                   <h3 className="text-xl font-semibold mb-4">Pourquoi choisir Teranga Foncier ?</h3>
                   <div className="space-y-3">
                     {[
-                      "Terrains 100% vérifiés juridiquement",
-                      "Documentation complète fournie", 
-                      "Paiement sécurisé et flexible",
-                      "Accompagnement personnalisé"
+                      "Terrains 100% vÃ©rifiÃ©s juridiquement",
+                      "Documentation complÃ¨te fournie", 
+                      "Paiement sÃ©curisÃ© et flexible",
+                      "Accompagnement personnalisÃ©"
                     ].map((item, index) => (
                       <div key={index} className="flex items-center gap-3">
                         <CheckCircle className="h-5 w-5 text-green-300 flex-shrink-0" />
@@ -261,10 +261,10 @@ const SolutionsParticuliersPage = () => {
               className="text-center mb-16"
             >
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Nos Garanties pour Votre Sécurité
+                Nos Garanties pour Votre SÃ©curitÃ©
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Nous mettons tout en œuvre pour vous offrir une expérience d'achat sécurisée et transparente
+                Nous mettons tout en Å“uvre pour vous offrir une expÃ©rience d'achat sÃ©curisÃ©e et transparente
               </p>
             </motion.div>
 
@@ -328,10 +328,10 @@ const SolutionsParticuliersPage = () => {
               className="text-center mb-16"
             >
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-4">
-                Nos Solutions Adaptées à Vos Besoins
+                Nos Solutions AdaptÃ©es Ã  Vos Besoins
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Que vous recherchiez un terrain résidentiel, commercial ou agricole, nous avons la solution
+                Que vous recherchiez un terrain rÃ©sidentiel, commercial ou agricole, nous avons la solution
               </p>
             </motion.div>
 
@@ -391,7 +391,7 @@ const SolutionsParticuliersPage = () => {
                 Comment Acheter Votre Terrain
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Un processus simple en 4 étapes pour acquérir votre terrain en toute sécurité
+                Un processus simple en 4 Ã©tapes pour acquÃ©rir votre terrain en toute sÃ©curitÃ©
               </p>
             </motion.div>
 
@@ -421,7 +421,7 @@ const SolutionsParticuliersPage = () => {
           </div>
         </section>
 
-        {/* Testimonials Section */}
+        {}
         <section className="py-20 bg-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div
@@ -435,7 +435,7 @@ const SolutionsParticuliersPage = () => {
                 Ce Que Disent Nos Clients
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Des milliers de Sénégalais nous font confiance pour leurs achats fonciers
+                Des milliers de SÃ©nÃ©galais nous font confiance pour leurs achats fonciers
               </p>
             </motion.div>
 
@@ -452,7 +452,7 @@ const SolutionsParticuliersPage = () => {
                     <CardContent className="p-6">
                       <div className="flex mb-4">
                         {[...Array(testimonial.rating)].map((_, i) => (
-                          <div key={i} className="w-5 h-5 text-yellow-400">★</div>
+                          <div key={i} className="w-5 h-5 text-yellow-400">â˜…</div>
                         ))}
                       </div>
                       <p className="text-gray-600 mb-4 italic">"{testimonial.text}"</p>
@@ -473,16 +473,16 @@ const SolutionsParticuliersPage = () => {
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-4 text-green-700">Plans Particuliers</h2>
             <p className="text-center text-muted-foreground mb-12 max-w-2xl mx-auto">
-              Choisissez le plan qui correspond à vos besoins d'investissement
+              Choisissez le plan qui correspond Ã  vos besoins d'investissement
             </p>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-4xl mx-auto">
-              {/* Plan Sénégal */}
+              {/* Plan SÃ©nÃ©gal */}
               <Card className="border-2 border-green-200 shadow-xl">
                 <CardHeader className="text-center bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-t-lg">
                   <CardTitle className="text-2xl flex items-center justify-center gap-2">
                     <Home className="w-6 h-6" />
-                    Particulier Sénégal
+                    Particulier SÃ©nÃ©gal
                   </CardTitle>
                   <div className="text-3xl font-bold mt-2">
                     {ROLES_CONFIG.PARTICULIER_SENEGAL?.subscription?.basic?.price?.toLocaleString() || '15,000'} XOF
@@ -493,7 +493,7 @@ const SolutionsParticuliersPage = () => {
                   <ul className="space-y-3 mb-6">
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span>Recherche terrains avancée</span>
+                      <span>Recherche terrains avancÃ©e</span>
                     </li>
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-green-600" />
@@ -536,15 +536,15 @@ const SolutionsParticuliersPage = () => {
                   <ul className="space-y-3 mb-6">
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-blue-600" />
-                      <span>Tout du plan Sénégal</span>
+                      <span>Tout du plan SÃ©nÃ©gal</span>
                     </li>
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-blue-600" />
-                      <span>Suivi construction à distance</span>
+                      <span>Suivi construction Ã  distance</span>
                     </li>
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-blue-600" />
-                      <span>Photos progression temps réel</span>
+                      <span>Photos progression temps rÃ©el</span>
                     </li>
                     <li className="flex items-center gap-3">
                       <CheckCircle className="w-5 h-5 text-blue-600" />
@@ -578,13 +578,13 @@ const SolutionsParticuliersPage = () => {
               className="text-center mb-16"
             >
               <div className="inline-flex items-center px-4 py-2 rounded-full bg-purple-100 text-purple-800 text-sm font-medium mb-6">
-                🆕 Nouvelle Technologie
+                ðŸ†• Nouvelle Technologie
               </div>
               <h2 className="text-3xl md:text-4xl font-bold text-gray-900 mb-6">
-                L'Immobilier Révolutionné par la Blockchain
+                L'Immobilier RÃ©volutionnÃ© par la Blockchain
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Découvrez comment la technologie blockchain transforme l'achat immobilier : plus de transparence, de sécurité et d'accessibilité pour tous.
+                DÃ©couvrez comment la technologie blockchain transforme l'achat immobilier : plus de transparence, de sÃ©curitÃ© et d'accessibilitÃ© pour tous.
               </p>
             </motion.div>
 
@@ -599,12 +599,12 @@ const SolutionsParticuliersPage = () => {
                 <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-4">
                   <Link className="h-6 w-6 text-purple-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Smart Contracts Sécurisés</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Smart Contracts SÃ©curisÃ©s</h3>
                 <p className="text-gray-600 mb-4">
-                  Vos transactions sont automatisées et sécurisées par des contrats intelligents. Paiements conditionnels, 
+                  Vos transactions sont automatisÃ©es et sÃ©curisÃ©es par des contrats intelligents. Paiements conditionnels, 
                   aucun risque d'arnaque.
                 </p>
-                <div className="text-sm text-purple-700 font-medium">• Sécurité maximale • Automatisation complète</div>
+                <div className="text-sm text-purple-700 font-medium">â€¢ SÃ©curitÃ© maximale â€¢ Automatisation complÃ¨te</div>
               </motion.div>
 
               <motion.div
@@ -617,12 +617,12 @@ const SolutionsParticuliersPage = () => {
                 <div className="w-12 h-12 bg-purple-500/10 rounded-lg flex items-center justify-center mb-4">
                   <Coins className="h-6 w-6 text-purple-600" />
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-3">Investissement Fractionné</h3>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Investissement FractionnÃ©</h3>
                 <p className="text-gray-600 mb-4">
-                  Investissez dans l'immobilier même avec un petit budget. Achetez des parts tokenisées 
-                  de propriétés et générez des revenus passifs.
+                  Investissez dans l'immobilier mÃªme avec un petit budget. Achetez des parts tokenisÃ©es 
+                  de propriÃ©tÃ©s et gÃ©nÃ©rez des revenus passifs.
                 </p>
-                <div className="text-sm text-purple-700 font-medium">• Dès 10 000 FCFA • Revenus passifs</div>
+                <div className="text-sm text-purple-700 font-medium">â€¢ DÃ¨s 10 000 FCFA â€¢ Revenus passifs</div>
               </motion.div>
 
               <motion.div
@@ -637,10 +637,10 @@ const SolutionsParticuliersPage = () => {
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-3">Transparence Totale</h3>
                 <p className="text-gray-600 mb-4">
-                  Tous les historiques de propriété, transactions et documents sont enregistrés 
-                  de manière immuable sur la blockchain.
+                  Tous les historiques de propriÃ©tÃ©, transactions et documents sont enregistrÃ©s 
+                  de maniÃ¨re immuable sur la blockchain.
                 </p>
-                <div className="text-sm text-purple-700 font-medium">• Historique complet • Données vérifiables</div>
+                <div className="text-sm text-purple-700 font-medium">â€¢ Historique complet â€¢ DonnÃ©es vÃ©rifiables</div>
               </motion.div>
             </div>
 
@@ -656,7 +656,7 @@ const SolutionsParticuliersPage = () => {
                 onClick={handleDashboardAccess}
                 className="bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg hover:shadow-xl"
               >
-                Découvrir les Fonctionnalités Blockchain <ArrowRight className="ml-2 h-5 w-5" />
+                DÃ©couvrir les FonctionnalitÃ©s Blockchain <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
             </motion.div>
           </div>
@@ -672,10 +672,10 @@ const SolutionsParticuliersPage = () => {
               transition={{ duration: 0.8 }}
             >
               <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                Prêt à Trouver Votre Terrain Idéal ?
+                PrÃªt Ã  Trouver Votre Terrain IdÃ©al ?
               </h2>
               <p className="text-xl text-blue-100 mb-8">
-                Rejoignez des milliers de propriétaires satisfaits et réalisez votre rêve immobilier
+                Rejoignez des milliers de propriÃ©taires satisfaits et rÃ©alisez votre rÃªve immobilier
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" variant="secondary" asChild className="min-w-[200px]">
@@ -685,7 +685,7 @@ const SolutionsParticuliersPage = () => {
                 </Button>
                 <Button size="lg" variant="outline" asChild className="min-w-[200px] border-white text-white hover:bg-white hover:text-primary">
                   <Link to="/contact">
-                    Parler à un Expert
+                    Parler Ã  un Expert
                   </Link>
                 </Button>
               </div>

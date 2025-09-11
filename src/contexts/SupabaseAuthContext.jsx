@@ -51,7 +51,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return { error };
-  }, [toast]);
+  }, []);
 
   const signIn = useCallback(async (email, password) => {
     const { error } = await supabase.auth.signInWithPassword({
@@ -68,7 +68,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return { error };
-  }, [toast]);
+  }, []);
 
   const signOut = useCallback(async () => {
     const { error } = await supabase.auth.signOut();
@@ -82,7 +82,7 @@ export const AuthProvider = ({ children }) => {
     }
 
     return { error };
-  }, [toast]);
+  }, []);
 
   const value = useMemo(() => ({
     user,

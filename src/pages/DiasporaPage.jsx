@@ -153,7 +153,7 @@ const DiasporaPage = () => {
       location: "Paris, France",
       project: "Villa 4 pièces à Saly",
       content: "J'ai acheté et construit ma maison depuis la France. Le suivi était parfait, j'avais l'impression d'être sur place !",
-      image: "/api/placeholder/60/60",
+      image: "/api/YOUR_API_KEY/60/60",
       rating: 5
     },
     {
@@ -161,7 +161,7 @@ const DiasporaPage = () => {
       location: "New York, USA",
       project: "Terrain + Duplex à Diamniadio",
       content: "Paiements échelonnés parfaits pour mon budget. L'équipe est très professionnelle et disponible 24/7.",
-      image: "/api/placeholder/60/60",
+      image: "/api/YOUR_API_KEY/60/60",
       rating: 5
     },
     {
@@ -169,7 +169,7 @@ const DiasporaPage = () => {
       location: "London, UK",
       project: "Villa 6 pièces à Almadies",
       content: "Les vidéos quotidiennes m'ont permis de suivre chaque détail. Ma maison est exactement comme je l'avais imaginée !",
-      image: "/api/placeholder/60/60",
+      image: "/api/YOUR_API_KEY/60/60",
       rating: 5
     }
   ];
@@ -488,7 +488,7 @@ const DiasporaPage = () => {
           </div>
         </section>
 
-        {/* Testimonials Diaspora */}
+        {}
         <section className="py-20 bg-gray-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <motion.div

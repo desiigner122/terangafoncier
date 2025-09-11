@@ -101,7 +101,7 @@ const RegisterPage = () => {
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
                                     required
-                                    placeholder="Ex: Moussa Diop"
+                                    YOUR_API_KEY="Ex: Moussa Diop"
                                 />
                             </div>
                             <div>
@@ -112,7 +112,7 @@ const RegisterPage = () => {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    placeholder="nom@exemple.com"
+                                    YOUR_API_KEY="nom@exemple.com"
                                 />
                             </div>
                             <div>
@@ -123,7 +123,7 @@ const RegisterPage = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    placeholder="Minimum 6 caractères"
+                                    YOUR_API_KEY="Minimum 6 caractères"
                                     minLength="6"
                                 />
                             </div>
@@ -131,7 +131,7 @@ const RegisterPage = () => {
                                 <Label htmlFor="userType">Type de compte</Label>
                                 <Select onValueChange={setUserType} value={userType}>
                                     <SelectTrigger id="userType">
-                                        <SelectValue placeholder="Sélectionnez un type de compte" />
+                                        <SelectValue YOUR_API_KEY="Sélectionnez un type de compte" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {allowedRoles.map(role => (

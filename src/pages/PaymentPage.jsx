@@ -108,14 +108,14 @@ const PaymentPage = () => {
         return (
           <div className="space-y-4">
             <Select onValueChange={(value) => setPaymentDetails({ provider: value })}>
-              <SelectTrigger><SelectValue placeholder="Choisissez un opérateur" /></SelectTrigger>
+              <SelectTrigger><SelectValue YOUR_API_KEY="Choisissez un opérateur" /></SelectTrigger>
               <SelectContent>
                 {mobileMethod && Array.isArray(mobileMethod.providers) && mobileMethod.providers.map(provider => (
                   <SelectItem key={provider} value={provider}>{provider}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Input type="tel" placeholder="Numéro de téléphone (ex: 771234567)" required />
+            <Input type="tel" YOUR_API_KEY="Numéro de téléphone (ex: 771234567)" required />
           </div>
         );
       }
@@ -123,14 +123,14 @@ const PaymentPage = () => {
         return (
           <div className="space-y-4">
             <Select onValueChange={(value) => setPaymentDetails({ bank: value })}>
-              <SelectTrigger><SelectValue placeholder="Choisissez votre banque" /></SelectTrigger>
+              <SelectTrigger><SelectValue YOUR_API_KEY="Choisissez votre banque" /></SelectTrigger>
               <SelectContent>
                 {partnerBanks.map(bank => (
                   <SelectItem key={bank.id} value={bank.name}>{bank.name}</SelectItem>
                 ))}
               </SelectContent>
             </Select>
-            <Input placeholder="Numéro de référence du virement" required />
+            <Input YOUR_API_KEY="Numéro de référence du virement" required />
             <p className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-md">
               Veuillez effectuer un virement vers le compte IBAN <span className="font-mono">SN012 01010 123456789012 87</span> avec la référence de transaction <span className="font-mono">{transaction.id}</span>.
             </p>
@@ -139,8 +139,8 @@ const PaymentPage = () => {
       case 'check':
         return (
           <div className="space-y-4">
-            <Input placeholder="Numéro du chèque" required />
-            <Input placeholder="Banque émettrice" required />
+            <Input YOUR_API_KEY="Numéro du chèque" required />
+            <Input YOUR_API_KEY="Banque émettrice" required />
             <p className="text-xs text-muted-foreground p-3 bg-muted/50 rounded-md">
               Le chèque doit être libellé à l'ordre de "Teranga Foncier SA" et déposé à notre agence principale.
             </p>

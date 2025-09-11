@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   MessageSquare, Send, Search, Filter, MoreVertical,
@@ -21,7 +21,7 @@ const MessagesPage = () => {
   const [messageText, setMessageText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Données simulées des conversations
+  // DonnÃ©es simulÃ©es des conversations
   const [conversations] = useState([
     {
       id: 1,
@@ -36,21 +36,21 @@ const MessagesPage = () => {
         {
           id: 1,
           sender: 'Aminata Diallo',
-          text: 'Bonjour ! J\'ai vu votre intérêt pour le terrain à Mbour.',
+          text: 'Bonjour ! J\'ai vu votre intÃ©rÃªt pour le terrain Ã  Mbour.',
           timestamp: '14:25',
           read: true
         },
         {
           id: 2,
           sender: 'Moi',
-          text: 'Oui, pouvez-vous me donner plus de détails ?',
+          text: 'Oui, pouvez-vous me donner plus de dÃ©tails ?',
           timestamp: '14:27',
           read: true
         },
         {
           id: 3,
           sender: 'Aminata Diallo',
-          text: 'Le terrain de Mbour est toujours disponible. 500m², titre foncier, proche de la mer.',
+          text: 'Le terrain de Mbour est toujours disponible. 500mÂ², titre foncier, proche de la mer.',
           timestamp: '14:30',
           read: false
         }
@@ -60,7 +60,7 @@ const MessagesPage = () => {
       id: 2,
       name: 'Moussa Promoteur',
       role: 'Promoteur',
-      lastMessage: 'Photos du chantier envoyées',
+      lastMessage: 'Photos du chantier envoyÃ©es',
       timestamp: '12:15',
       unread: 0,
       avatar: null,
@@ -69,7 +69,7 @@ const MessagesPage = () => {
         {
           id: 1,
           sender: 'Moussa Promoteur',
-          text: 'Voici les dernières photos du chantier',
+          text: 'Voici les derniÃ¨res photos du chantier',
           timestamp: '12:15',
           read: true
         }
@@ -79,7 +79,7 @@ const MessagesPage = () => {
       id: 3,
       name: 'Support Teranga',
       role: 'Support',
-      lastMessage: 'Votre demande a été traitée',
+      lastMessage: 'Votre demande a Ã©tÃ© traitÃ©e',
       timestamp: 'Hier',
       unread: 1,
       avatar: null,
@@ -88,7 +88,7 @@ const MessagesPage = () => {
         {
           id: 1,
           sender: 'Support Teranga',
-          text: 'Votre demande a été traitée avec succès.',
+          text: 'Votre demande a Ã©tÃ© traitÃ©e avec succÃ¨s.',
           timestamp: 'Hier',
           read: false
         }
@@ -114,7 +114,7 @@ const MessagesPage = () => {
       <div className="flex-1 ml-80 bg-gray-50">
         <Helmet>
           <title>Messages - Teranga Foncier</title>
-          <meta name="description" content="Messagerie intégrée de Teranga Foncier" />
+          <meta name="description" content="Messagerie intÃ©grÃ©e de Teranga Foncier" />
         </Helmet>
 
         <div className="h-screen flex">
@@ -134,7 +134,7 @@ const MessagesPage = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   type="text"
-                  placeholder="Rechercher une conversation..."
+                  YOUR_API_KEY="Rechercher une conversation..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -271,7 +271,7 @@ const MessagesPage = () => {
                     <div className="flex-1 relative">
                       <Input
                         type="text"
-                        placeholder="Tapez votre message..."
+                        YOUR_API_KEY="Tapez votre message..."
                         value={messageText}
                         onChange={(e) => setMessageText(e.target.value)}
                         onKeyPress={(e) => {
@@ -301,10 +301,10 @@ const MessagesPage = () => {
                 <div className="text-center">
                   <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    Sélectionnez une conversation
+                    SÃ©lectionnez une conversation
                   </h3>
                   <p className="text-gray-500">
-                    Choisissez une conversation pour commencer à échanger
+                    Choisissez une conversation pour commencer Ã  Ã©changer
                   </p>
                 </div>
               </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+﻿import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, 
@@ -50,11 +50,11 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
   // Messages de bienvenue contextuels
   const getWelcomeMessage = () => {
     const welcomeMessages = {
-      'home': 'Bienvenue sur Teranga Foncier ! Je peux vous aider à évaluer des biens, analyser le marché ou vous conseiller.',
+      'home': 'Bienvenue sur Teranga Foncier ! Je peux vous aider Ã  Ã©valuer des biens, analyser le marchÃ© ou vous conseiller.',
       'parcelles': 'Je vois que vous consultez des parcelles. Voulez-vous que j\'analyse les prix ou les tendances de cette zone ?',
-      'construction-requests': 'Besoin d\'aide avec les demandes de construction ? Je peux estimer les coûts ou recommander des promoteurs.',
-      'dashboard': 'Voici votre tableau de bord. Je peux générer des rapports personnalisés ou analyser vos investissements.',
-      'profile': 'Je peux vous aider à optimiser votre profil ou vous donner des conseils d\'investissement personnalisés.'
+      'construction-requests': 'Besoin d\'aide avec les demandes de construction ? Je peux estimer les coÃ»ts ou recommander des promoteurs.',
+      'dashboard': 'Voici votre tableau de bord. Je peux gÃ©nÃ©rer des rapports personnalisÃ©s ou analyser vos investissements.',
+      'profile': 'Je peux vous aider Ã  optimiser votre profil ou vous donner des conseils d\'investissement personnalisÃ©s.'
     };
     
     return welcomeMessages[currentPage] || welcomeMessages['home'];
@@ -69,10 +69,10 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
         content: getWelcomeMessage(),
         timestamp: new Date(),
         suggestions: [
-          'Évaluer un bien',
-          'Analyser le marché',
+          'Ã‰valuer un bien',
+          'Analyser le marchÃ©',
           'Conseils d\'investissement',
-          'Calculer la rentabilité'
+          'Calculer la rentabilitÃ©'
         ]
       }]);
     }
@@ -159,7 +159,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
       const errorMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: 'Désolé, j\'ai rencontré une erreur. Pouvez-vous reformuler votre question ?',
+        content: 'DÃ©solÃ©, j\'ai rencontrÃ© une erreur. Pouvez-vous reformuler votre question ?',
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -175,10 +175,10 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
     setIsAnalyzing(true);
     try {
       const report = await aiService.generateMarketReport();
-      // Logique pour afficher ou télécharger le rapport
-      console.log('Rapport généré:', report);
+      // Logique pour afficher ou tÃ©lÃ©charger le rapport
+      console.log('Rapport gÃ©nÃ©rÃ©:', report);
     } catch (error) {
-      console.error('Erreur génération rapport:', error);
+      console.error('Erreur gÃ©nÃ©ration rapport:', error);
     } finally {
       setIsAnalyzing(false);
     }
@@ -225,7 +225,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
           </div>
           <div>
             <h3 className="font-semibold">Assistant IA Teranga</h3>
-            <p className="text-xs opacity-90">Intelligence immobilière</p>
+            <p className="text-xs opacity-90">Intelligence immobiliÃ¨re</p>
           </div>
         </div>
         
@@ -330,7 +330,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
                 <Input
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
-                  placeholder="Posez votre question..."
+                  YOUR_API_KEY="Posez votre question..."
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   className="flex-1"
                 />
@@ -364,7 +364,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
                           <div className="text-lg font-bold text-blue-600">
                             {insights.priceAnalysis.priceRange.estimated.toLocaleString()} FCFA
                           </div>
-                          <div className="text-xs text-gray-600">Prix estimé</div>
+                          <div className="text-xs text-gray-600">Prix estimÃ©</div>
                         </div>
                         <div className="text-xs space-y-1">
                           <div className="flex justify-between">
@@ -382,7 +382,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm flex items-center gap-2">
                           <TrendingUp className="w-4 h-4" />
-                          Tendance Marché
+                          Tendance MarchÃ©
                         </CardTitle>
                       </CardHeader>
                       <CardContent>
@@ -404,7 +404,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
               ) : (
                 <div className="text-center text-gray-500 text-sm">
                   <BarChart3 className="w-12 h-12 mx-auto mb-2 opacity-50" />
-                  <p>Sélectionnez une propriété pour voir les insights</p>
+                  <p>SÃ©lectionnez une propriÃ©tÃ© pour voir les insights</p>
                 </div>
               )}
             </TabsContent>
@@ -453,16 +453,16 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
                   disabled={isAnalyzing}
                 >
                   <Download className="w-4 h-4 mr-2" />
-                  Générer rapport marché
+                  GÃ©nÃ©rer rapport marchÃ©
                 </Button>
                 
                 <Button
                   variant="outline"
                   className="w-full justify-start text-xs"
-                  onClick={() => handleSuggestionClick('Calculer la rentabilité')}
+                  onClick={() => handleSuggestionClick('Calculer la rentabilitÃ©')}
                 >
                   <Calculator className="w-4 h-4 mr-2" />
-                  Calculateur rentabilité
+                  Calculateur rentabilitÃ©
                 </Button>
                 
                 <Button
@@ -477,10 +477,10 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
                 <Button
                   variant="outline"
                   className="w-full justify-start text-xs"
-                  onClick={() => handleSuggestionClick('Évaluer un bien')}
+                  onClick={() => handleSuggestionClick('Ã‰valuer un bien')}
                 >
                   <Home className="w-4 h-4 mr-2" />
-                  Évaluateur de bien
+                  Ã‰valuateur de bien
                 </Button>
                 
                 <Button

@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+﻿import React, { useState, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Upload, FileText, Image, Video, FileSpreadsheet,
@@ -60,7 +60,7 @@ const UploadsPage = () => {
         avatar: null
       },
       category: 'images',
-      tags: ['photos', 'almadies', 'propriété'],
+      tags: ['photos', 'almadies', 'propriÃ©tÃ©'],
       downloads: 5,
       shared: false,
       url: '/uploads/images/photos_propriete_almadies.zip'
@@ -116,10 +116,10 @@ const UploadsPage = () => {
   ]);
 
   const [folders] = useState([
-    { id: 1, name: 'Documents Légaux', fileCount: 15, size: 45678901 },
+    { id: 1, name: 'Documents LÃ©gaux', fileCount: 15, size: 45678901 },
     { id: 2, name: 'Plans et Cartes', fileCount: 28, size: 123456789 },
-    { id: 3, name: 'Photos Propriétés', fileCount: 156, size: 567890123 },
-    { id: 4, name: 'Vidéos Marketing', fileCount: 8, size: 890123456 },
+    { id: 3, name: 'Photos PropriÃ©tÃ©s', fileCount: 156, size: 567890123 },
+    { id: 4, name: 'VidÃ©os Marketing', fileCount: 8, size: 890123456 },
     { id: 5, name: 'Templates', fileCount: 12, size: 3456789 }
   ]);
 
@@ -174,7 +174,7 @@ const UploadsPage = () => {
           if (newProgress >= 100) {
             clearInterval(uploadSimulation);
             
-            // Ajouter le fichier à la liste après upload
+            // Ajouter le fichier Ã  la liste aprÃ¨s upload
             const newFile = {
               id: fileId,
               name: file.name,
@@ -256,9 +256,9 @@ const UploadsPage = () => {
   };
 
   const downloadFile = (file) => {
-    // Logique de téléchargement
-    console.log('Téléchargement:', file.name);
-    alert(`Téléchargement de ${file.name} en cours...`);
+    // Logique de tÃ©lÃ©chargement
+    console.log('TÃ©lÃ©chargement:', file.name);
+    alert(`TÃ©lÃ©chargement de ${file.name} en cours...`);
   };
 
   const shareFile = (file) => {
@@ -282,12 +282,12 @@ const UploadsPage = () => {
           <meta name="description" content="Centre de gestion des fichiers et uploads de Teranga Foncier" />
         </Helmet>
 
-        {/* En-tête */}
+        {/* En-tÃªte */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Gestion des Fichiers</h1>
             <p className="text-gray-600">
-              {storageStats.files} fichiers • {storageStats.folders} dossiers • {storageStats.used}GB utilisés
+              {storageStats.files} fichiers â€¢ {storageStats.folders} dossiers â€¢ {storageStats.used}GB utilisÃ©s
             </p>
           </div>
           
@@ -327,7 +327,7 @@ const UploadsPage = () => {
                 <div>
                   <h3 className="font-semibold text-lg">Stockage</h3>
                   <p className="text-gray-600">
-                    {storageStats.used}GB utilisés sur {storageStats.total}GB
+                    {storageStats.used}GB utilisÃ©s sur {storageStats.total}GB
                   </p>
                 </div>
               </div>
@@ -335,7 +335,7 @@ const UploadsPage = () => {
                 <div className="text-2xl font-bold text-blue-600">
                   {Math.round((storageStats.used / storageStats.total) * 100)}%
                 </div>
-                <div className="text-sm text-gray-500">Utilisé</div>
+                <div className="text-sm text-gray-500">UtilisÃ©</div>
               </div>
             </div>
             <Progress 
@@ -369,17 +369,17 @@ const UploadsPage = () => {
                   {isDragActive ? (
                     <div>
                       <h3 className="text-lg font-semibold text-blue-600 mb-2">
-                        Déposez vos fichiers ici
+                        DÃ©posez vos fichiers ici
                       </h3>
-                      <p className="text-gray-600">Relâchez pour commencer l'upload</p>
+                      <p className="text-gray-600">RelÃ¢chez pour commencer l'upload</p>
                     </div>
                   ) : (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Glissez-déposez vos fichiers ici
+                        Glissez-dÃ©posez vos fichiers ici
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        ou cliquez pour sélectionner des fichiers
+                        ou cliquez pour sÃ©lectionner des fichiers
                       </p>
                       <Button>
                         <Upload className="w-4 h-4 mr-2" />
@@ -431,7 +431,7 @@ const UploadsPage = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     type="text"
-                    placeholder="Rechercher fichiers..."
+                    YOUR_API_KEY="Rechercher fichiers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 w-80"
@@ -440,26 +440,26 @@ const UploadsPage = () => {
                 
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Type de fichier" />
+                    <SelectValue YOUR_API_KEY="Type de fichier" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les types</SelectItem>
                     <SelectItem value="documents">Documents</SelectItem>
                     <SelectItem value="images">Images</SelectItem>
-                    <SelectItem value="videos">Vidéos</SelectItem>
+                    <SelectItem value="videos">VidÃ©os</SelectItem>
                     <SelectItem value="exports">Exports</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-32">
-                    <SelectValue placeholder="Trier par" />
+                    <SelectValue YOUR_API_KEY="Trier par" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="date">Date</SelectItem>
                     <SelectItem value="name">Nom</SelectItem>
                     <SelectItem value="size">Taille</SelectItem>
-                    <SelectItem value="downloads">Téléchargements</SelectItem>
+                    <SelectItem value="downloads">TÃ©lÃ©chargements</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -474,10 +474,10 @@ const UploadsPage = () => {
 
               {selectedFiles.length > 0 && (
                 <div className="flex items-center space-x-2">
-                  <Badge variant="secondary">{selectedFiles.length} sélectionnés</Badge>
+                  <Badge variant="secondary">{selectedFiles.length} sÃ©lectionnÃ©s</Badge>
                   <Button size="sm" variant="outline">
                     <Download className="w-4 h-4 mr-2" />
-                    Télécharger
+                    TÃ©lÃ©charger
                   </Button>
                   <Button size="sm" variant="outline">
                     <Share2 className="w-4 h-4 mr-2" />
@@ -552,7 +552,7 @@ const UploadsPage = () => {
                           
                           <div className="flex items-center justify-between mt-3 pt-3 border-t">
                             <Badge variant="secondary" className="text-xs">
-                              {file.downloads} téléchargements
+                              {file.downloads} tÃ©lÃ©chargements
                             </Badge>
                             
                             <div className="flex space-x-1">
@@ -606,8 +606,8 @@ const UploadsPage = () => {
                           </th>
                           <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Nom</th>
                           <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Taille</th>
-                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Modifié</th>
-                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Uploadé par</th>
+                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">ModifiÃ©</th>
+                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">UploadÃ© par</th>
                           <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Actions</th>
                         </tr>
                       </thead>
@@ -690,10 +690,10 @@ const UploadsPage = () => {
             {filteredFiles.length === 0 && (
               <div className="text-center py-12">
                 <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun fichier trouvé</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun fichier trouvÃ©</h3>
                 <p className="text-gray-600">
                   {searchTerm || filterType !== 'all' 
-                    ? 'Aucun fichier ne correspond à vos critères'
+                    ? 'Aucun fichier ne correspond Ã  vos critÃ¨res'
                     : 'Commencez par uploader des fichiers'
                   }
                 </p>

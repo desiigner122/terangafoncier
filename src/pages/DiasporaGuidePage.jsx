@@ -232,7 +232,7 @@ const DiasporaGuidePage = () => {
         </div>
       </section>
 
-      {/* Testimonials Section */}
+      {}
       <section className="py-20 px-4">
         <div className="container mx-auto max-w-6xl">
           <motion.div

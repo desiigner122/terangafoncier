@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Home, 
@@ -49,10 +49,10 @@ const ParticularDashboard = () => {
       title: "Villa Moderne - Almadies",
       location: "Almadies, Dakar",
       price: "450,000,000 FCFA",
-      surface: "250 m²",
+      surface: "250 mÂ²",
       bedrooms: 4,
       bathrooms: 3,
-      image: "/api/placeholder/300/200",
+      image: "/api/YOUR_API_KEY/300/200",
       type: "Villa",
       status: "Disponible",
       features: ["Piscine", "Jardin", "Garage", "Climatisation"]
@@ -62,24 +62,24 @@ const ParticularDashboard = () => {
       title: "Appartement Standing - Plateau",
       location: "Plateau, Dakar",
       price: "180,000,000 FCFA",
-      surface: "120 m²",
+      surface: "120 mÂ²",
       bedrooms: 3,
       bathrooms: 2,
-      image: "/api/placeholder/300/200",
+      image: "/api/YOUR_API_KEY/300/200",
       type: "Appartement",
       status: "Disponible",
-      features: ["Vue mer", "Ascenseur", "Parking", "Sécurité"]
+      features: ["Vue mer", "Ascenseur", "Parking", "SÃ©curitÃ©"]
     },
     {
       id: 3,
       title: "Terrain Constructible - Saly",
       location: "Saly, Mbour",
       price: "75,000,000 FCFA",
-      surface: "800 m²",
-      image: "/api/placeholder/300/200",
+      surface: "800 mÂ²",
+      image: "/api/YOUR_API_KEY/300/200",
       type: "Terrain",
       status: "Disponible",
-      features: ["Titre foncier", "Proche plage", "Viabilisé"]
+      features: ["Titre foncier", "Proche plage", "ViabilisÃ©"]
     }
   ];
 
@@ -97,12 +97,12 @@ const ParticularDashboard = () => {
       type: "Information",
       property: "Appartement Standing - Plateau",
       date: "2024-01-14",
-      status: "Répondu",
+      status: "RÃ©pondu",
       statusColor: "bg-green-500"
     },
     {
       id: 3,
-      type: "Négociation",
+      type: "NÃ©gociation",
       property: "Terrain Constructible - Saly",
       date: "2024-01-13",
       status: "En cours",
@@ -173,7 +173,7 @@ const ParticularDashboard = () => {
         
         <div className="flex space-x-2">
           <button className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            Voir détails
+            Voir dÃ©tails
           </button>
           <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
             <Phone size={16} />
@@ -209,7 +209,7 @@ const ParticularDashboard = () => {
             
             <input
               type="text"
-              placeholder="Localisation"
+              YOUR_API_KEY="Localisation"
               className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               value={searchFilters.location}
               onChange={(e) => setSearchFilters({...searchFilters, location: e.target.value})}
@@ -241,7 +241,7 @@ const ParticularDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* Résultats */}
+      {/* RÃ©sultats */}
       <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
         {sampleProperties.map(property => (
           <PropertyCard
@@ -332,7 +332,7 @@ const ParticularDashboard = () => {
         <Card>
           <CardContent className="text-center py-12">
             <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">Section Rendez-vous en développement</p>
+            <p className="text-gray-500">Section Rendez-vous en dÃ©veloppement</p>
           </CardContent>
         </Card>
       );
@@ -348,7 +348,7 @@ const ParticularDashboard = () => {
         <Card>
           <CardContent className="text-center py-12">
             <Settings size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">Section Profil en développement</p>
+            <p className="text-gray-500">Section Profil en dÃ©veloppement</p>
           </CardContent>
         </Card>
       );
@@ -380,7 +380,7 @@ const ParticularDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Menu latéral */}
+          {/* Menu latÃ©ral */}
           <div className="lg:w-64">
             <Card>
               <CardContent className="p-4">

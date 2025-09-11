@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -30,32 +30,32 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate, Link } from 'react-router-dom';
 
 const regions = [
-  "Toutes les régions", "Dakar", "Thiès", "Saint-Louis", "Diourbel", "Louga", 
-  "Fatick", "Kaolack", "Kaffrine", "Tambacounda", "Kédougou", "Kolda", 
-  "Ziguinchor", "Sédhiou", "Matam"
+  "Toutes les rÃ©gions", "Dakar", "ThiÃ¨s", "Saint-Louis", "Diourbel", "Louga", 
+  "Fatick", "Kaolack", "Kaffrine", "Tambacounda", "KÃ©dougou", "Kolda", 
+  "Ziguinchor", "SÃ©dhiou", "Matam"
 ];
 
 const cities = {
-  "Dakar": ["Toutes", "Dakar", "Pikine", "Guédiawaye", "Rufisque"],
-  "Thiès": ["Toutes", "Thiès", "Mbour", "Tivaouane"],
+  "Dakar": ["Toutes", "Dakar", "Pikine", "GuÃ©diawaye", "Rufisque"],
+  "ThiÃ¨s": ["Toutes", "ThiÃ¨s", "Mbour", "Tivaouane"],
   "Saint-Louis": ["Toutes", "Saint-Louis", "Dagana", "Podor"],
-  "Diourbel": ["Toutes", "Diourbel", "Mbacké", "Bambey"],
-  "Louga": ["Toutes", "Louga", "Linguère", "Kébémer"],
+  "Diourbel": ["Toutes", "Diourbel", "MbackÃ©", "Bambey"],
+  "Louga": ["Toutes", "Louga", "LinguÃ¨re", "KÃ©bÃ©mer"],
   "Fatick": ["Toutes", "Fatick", "Foundiougne", "Gossas"],
-  "Kaolack": ["Toutes", "Kaolack", "Nioro du Rip", "Guinguinéo"],
+  "Kaolack": ["Toutes", "Kaolack", "Nioro du Rip", "GuinguinÃ©o"],
   "Kaffrine": ["Toutes", "Kaffrine", "Birkelane", "Koungheul", "Malem-Hodar"],
   "Tambacounda": ["Toutes", "Tambacounda", "Bakel", "Goudiry", "Koumpentoum"],
-  "Kédougou": ["Toutes", "Kédougou", "Saraya", "Salémata"],
-  "Kolda": ["Toutes", "Kolda", "Vélingara", "Médina Yoro Foulah"],
+  "KÃ©dougou": ["Toutes", "KÃ©dougou", "Saraya", "SalÃ©mata"],
+  "Kolda": ["Toutes", "Kolda", "VÃ©lingara", "MÃ©dina Yoro Foulah"],
   "Ziguinchor": ["Toutes", "Ziguinchor", "Oussouye", "Bignona"],
-  "Sédhiou": ["Toutes", "Sédhiou", "Bounkiling", "Goudomp"],
-  "Matam": ["Toutes", "Matam", "Kanel", "Ranérou"]
+  "SÃ©dhiou": ["Toutes", "SÃ©dhiou", "Bounkiling", "Goudomp"],
+  "Matam": ["Toutes", "Matam", "Kanel", "RanÃ©rou"]
 };
 
 const ParcellesVendeursPage = () => {
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedRegion, setSelectedRegion] = useState('Toutes les régions');
+  const [selectedRegion, setSelectedRegion] = useState('Toutes les rÃ©gions');
   const [selectedCity, setSelectedCity] = useState('Toutes');
   const [selectedType, setSelectedType] = useState('Tous');
   const [selectedSeller, setSelectedSeller] = useState('Tous');
@@ -77,38 +77,38 @@ const ParcellesVendeursPage = () => {
     parking: false
   });
 
-  // Données de parcelles avec images réelles et vendeurs variés
+  // DonnÃ©es de parcelles avec images rÃ©elles et vendeurs variÃ©s
   const parcelles = [
     {
       id: 1,
-      title: "Terrain Résidentiel Premium - Almadies",
+      title: "Terrain RÃ©sidentiel Premium - Almadies",
       location: "Almadies, Dakar",
       region: "Dakar",
       city: "Dakar",
       price: "85 000 000",
       surface: "500",
-      type: "Résidentiel",
+      type: "RÃ©sidentiel",
       seller: "Particulier",
       sellerName: "Amadou FALL",
       sellerId: "seller-001",
       sellerType: "vendeur-particulier",
-      financing: ["Bancaire", "Échelonné"],
+      financing: ["Bancaire", "Ã‰chelonnÃ©"],
       image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000",
-      features: ["Vue mer", "Résidence fermée", "Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport", "Écoles"],
+      features: ["Vue mer", "RÃ©sidence fermÃ©e", "Parking"],
+      utilities: ["Eau", "Ã‰lectricitÃ©", "Internet"],
+      access: ["Route pavÃ©e", "Transport", "Ã‰coles"],
       rating: 4.8,
       views: 234,
       isFavorite: false,
       isVerified: true,
-      description: "Magnifique terrain avec vue imprenable sur l'océan"
+      description: "Magnifique terrain avec vue imprenable sur l'ocÃ©an"
     },
     {
       id: 2,
-      title: "Terrain Agricole - Thiès",
-      location: "Thiès, Thiès",
-      region: "Thiès",
-      city: "Thiès",
+      title: "Terrain Agricole - ThiÃ¨s",
+      location: "ThiÃ¨s, ThiÃ¨s",
+      region: "ThiÃ¨s",
+      city: "ThiÃ¨s",
       price: "15 000 000",
       surface: "2000",
       type: "Agricole",
@@ -119,13 +119,13 @@ const ParcellesVendeursPage = () => {
       financing: ["Crypto", "Bancaire"],
       image: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1000",
       features: ["Parking"],
-      utilities: ["Eau", "Électricité"],
-      access: ["Route pavée", "Transport"],
+      utilities: ["Eau", "Ã‰lectricitÃ©"],
+      access: ["Route pavÃ©e", "Transport"],
       rating: 4.5,
       views: 156,
       isFavorite: true,
       isVerified: true,
-      description: "Terrain agricole fertile, idéal pour l'agriculture moderne"
+      description: "Terrain agricole fertile, idÃ©al pour l'agriculture moderne"
     },
     {
       id: 3,
@@ -140,22 +140,22 @@ const ParcellesVendeursPage = () => {
       sellerName: "IMMOBILIER DAKAR PREMIUM",
       sellerId: "agent-001", 
       sellerType: "agent",
-      financing: ["Bancaire", "Échelonné", "Crypto"],
+      financing: ["Bancaire", "Ã‰chelonnÃ©", "Crypto"],
       image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000",
-      features: ["Résidence fermée", "Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport", "Écoles"],
+      features: ["RÃ©sidence fermÃ©e", "Parking"],
+      utilities: ["Eau", "Ã‰lectricitÃ©", "Internet"],
+      access: ["Route pavÃ©e", "Transport", "Ã‰coles"],
       rating: 4.9,
       views: 445,
       isFavorite: false,
       isVerified: true,
-      description: "Emplacement stratégique au cœur des affaires"
+      description: "Emplacement stratÃ©gique au cÅ“ur des affaires"
     },
     {
       id: 4,
       title: "Terrain Mixte - Mbour",
-      location: "Mbour, Thiès",
-      region: "Thiès",
+      location: "Mbour, ThiÃ¨s",
+      region: "ThiÃ¨s",
       city: "Mbour",
       price: "45 000 000",
       surface: "800",
@@ -164,16 +164,16 @@ const ParcellesVendeursPage = () => {
       sellerName: "Fatou SECK",
       sellerId: "seller-002",
       sellerType: "vendeur-particulier",
-      financing: ["Échelonné"],
+      financing: ["Ã‰chelonnÃ©"],
       image: "https://images.unsplash.com/photo-1448630360428-65456885c650?q=80&w=1000",
       features: ["Vue mer"],
-      utilities: ["Eau", "Électricité"],
-      access: ["Route pavée", "Transport"],
+      utilities: ["Eau", "Ã‰lectricitÃ©"],
+      access: ["Route pavÃ©e", "Transport"],
       rating: 4.3,
       views: 178,
       isFavorite: false,
       isVerified: false,
-      description: "Terrain polyvalent proche de la côte"
+      description: "Terrain polyvalent proche de la cÃ´te"
     },
     {
       id: 5,
@@ -184,39 +184,39 @@ const ParcellesVendeursPage = () => {
       price: "200 000 000",
       surface: "5000",
       type: "Industriel",
-      seller: "Développeur Pro",
-      sellerName: "SÉNÉGAL INDUSTRIAL PARKS",
+      seller: "DÃ©veloppeur Pro",
+      sellerName: "SÃ‰NÃ‰GAL INDUSTRIAL PARKS",
       sellerId: "promoter-003",
       sellerType: "promoteur",
       financing: ["Bancaire", "Crypto"],
       image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1000",
       features: ["Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport"],
+      utilities: ["Eau", "Ã‰lectricitÃ©", "Internet"],
+      access: ["Route pavÃ©e", "Transport"],
       rating: 4.7,
       views: 267,
       isFavorite: true,
       isVerified: true,
-      description: "Zone industrielle moderne avec toutes commodités"
+      description: "Zone industrielle moderne avec toutes commoditÃ©s"
     },
     {
       id: 6,
-      title: "Terrain Résidentiel - Saint-Louis",
+      title: "Terrain RÃ©sidentiel - Saint-Louis",
       location: "Saint-Louis, Saint-Louis",
       region: "Saint-Louis",
       city: "Saint-Louis",
       price: "35 000 000",
       surface: "600",
-      type: "Résidentiel",
+      type: "RÃ©sidentiel",
       seller: "Particulier",
       sellerName: "Moussa DIAGNE",
       sellerId: "seller-003",
       sellerType: "vendeur-particulier",
-      financing: ["Bancaire", "Échelonné"],
+      financing: ["Bancaire", "Ã‰chelonnÃ©"],
       image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=1000",
-      features: ["Résidence fermée"],
-      utilities: ["Eau", "Électricité"],
-      access: ["Route pavée", "Écoles"],
+      features: ["RÃ©sidence fermÃ©e"],
+      utilities: ["Eau", "Ã‰lectricitÃ©"],
+      access: ["Route pavÃ©e", "Ã‰coles"],
       rating: 4.4,
       views: 189,
       isFavorite: false,
@@ -226,21 +226,21 @@ const ParcellesVendeursPage = () => {
     {
       id: 7,
       title: "Lotissement de Luxe - Saly",
-      location: "Saly, Thiès",
-      region: "Thiès",
+      location: "Saly, ThiÃ¨s",
+      region: "ThiÃ¨s",
       city: "Mbour",
       price: "75 000 000",
       surface: "400",
-      type: "Résidentiel",
+      type: "RÃ©sidentiel",
       seller: "Promoteur Pro",
       sellerName: "SALY LUXURY DEVELOPMENT",
       sellerId: "promoter-004",
       sellerType: "promoteur",
-      financing: ["Bancaire", "Échelonné", "Crypto"],
+      financing: ["Bancaire", "Ã‰chelonnÃ©", "Crypto"],
       image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1000",
-      features: ["Vue mer", "Résidence fermée", "Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport", "Écoles"],
+      features: ["Vue mer", "RÃ©sidence fermÃ©e", "Parking"],
+      utilities: ["Eau", "Ã‰lectricitÃ©", "Internet"],
+      access: ["Route pavÃ©e", "Transport", "Ã‰coles"],
       rating: 4.6,
       views: 312,
       isFavorite: false,
@@ -260,36 +260,36 @@ const ParcellesVendeursPage = () => {
       sellerName: "KAOLACK BUSINESS CENTER",
       sellerId: "investor-001",
       sellerType: "investisseur",
-      financing: ["Bancaire", "Échelonné"],
+      financing: ["Bancaire", "Ã‰chelonnÃ©"],
       image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000",
       features: ["Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport"],
+      utilities: ["Eau", "Ã‰lectricitÃ©", "Internet"],
+      access: ["Route pavÃ©e", "Transport"],
       rating: 4.2,
       views: 145,
       isFavorite: false,
       isVerified: true,
-      description: "Terrain commercial stratégique en centre-ville"
+      description: "Terrain commercial stratÃ©gique en centre-ville"
     },
     // Ajout de parcelles communales
     {
       id: 9,
-      title: "Lotissement Social - Municipalité de Dakar",
-      location: "Guédiawaye, Dakar",
+      title: "Lotissement Social - MunicipalitÃ© de Dakar",
+      location: "GuÃ©diawaye, Dakar",
       region: "Dakar",
-      city: "Guédiawaye",
+      city: "GuÃ©diawaye",
       price: "12 000 000",
       surface: "200",
-      type: "Résidentiel",
-      seller: "Municipalité",
+      type: "RÃ©sidentiel",
+      seller: "MunicipalitÃ©",
       sellerName: "Mairie de Dakar",
       sellerId: "municipality-001",
       sellerType: "mairie",
-      financing: ["Bancaire", "Échelonné"],
+      financing: ["Bancaire", "Ã‰chelonnÃ©"],
       image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000",
       features: ["Prix social", "Titre foncier"],
-      utilities: ["Eau", "Électricité"],
-      access: ["Route pavée", "Transport", "Écoles"],
+      utilities: ["Eau", "Ã‰lectricitÃ©"],
+      access: ["Route pavÃ©e", "Transport", "Ã‰coles"],
       rating: 4.1,
       views: 89,
       isFavorite: false,
@@ -298,27 +298,27 @@ const ParcellesVendeursPage = () => {
     },
     {
       id: 10,
-      title: "Zone d'Activité Économique - Thiès",
-      location: "Thiès, Thiès",
-      region: "Thiès",
-      city: "Thiès",
+      title: "Zone d'ActivitÃ© Ã‰conomique - ThiÃ¨s",
+      location: "ThiÃ¨s, ThiÃ¨s",
+      region: "ThiÃ¨s",
+      city: "ThiÃ¨s",
       price: "25 000 000",
       surface: "1000",
       type: "Commercial",
-      seller: "Municipalité",
-      sellerName: "Mairie de Thiès",
+      seller: "MunicipalitÃ©",
+      sellerName: "Mairie de ThiÃ¨s",
       sellerId: "municipality-002",
       sellerType: "mairie",
       financing: ["Bancaire"],
       image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000",
-      features: ["Zone économique", "Infrastructures"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport"],
+      features: ["Zone Ã©conomique", "Infrastructures"],
+      utilities: ["Eau", "Ã‰lectricitÃ©", "Internet"],
+      access: ["Route pavÃ©e", "Transport"],
       rating: 4.3,
       views: 156,
       isFavorite: false,
       isVerified: true,
-      description: "Zone dédiée aux activités économiques municipales"
+      description: "Zone dÃ©diÃ©e aux activitÃ©s Ã©conomiques municipales"
     }
   ];
 
@@ -328,31 +328,31 @@ const ParcellesVendeursPage = () => {
       const matchesSearch = parcelle.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                            parcelle.location.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesRegion = selectedRegion === 'Toutes les régions' || parcelle.region === selectedRegion;
+      const matchesRegion = selectedRegion === 'Toutes les rÃ©gions' || parcelle.region === selectedRegion;
       const matchesCity = selectedCity === 'Toutes' || parcelle.city === selectedCity;
       const matchesType = selectedType === 'Tous' || parcelle.type === selectedType;
       const matchesSeller = selectedSeller === 'Tous' || parcelle.seller === selectedSeller;
       const matchesFinancing = selectedFinancing === 'Tous' || 
                               parcelle.financing.some(f => f === selectedFinancing);
 
-      // Filtrage par commodités
+      // Filtrage par commoditÃ©s
       const matchesUtilities = Object.entries(utilities).every(([key, checked]) => {
         if (!checked) return true;
-        const utilityMap = { water: 'Eau', electricity: 'Électricité', internet: 'Internet' };
+        const utilityMap = { water: 'Eau', electricity: 'Ã‰lectricitÃ©', internet: 'Internet' };
         return parcelle.utilities.includes(utilityMap[key]);
       });
 
-      // Filtrage par accès
+      // Filtrage par accÃ¨s
       const matchesAccess = Object.entries(access).every(([key, checked]) => {
         if (!checked) return true;
-        const accessMap = { pavedRoad: 'Route pavée', transport: 'Transport', schools: 'Écoles' };
+        const accessMap = { pavedRoad: 'Route pavÃ©e', transport: 'Transport', schools: 'Ã‰coles' };
         return parcelle.access.includes(accessMap[key]);
       });
 
-      // Filtrage par caractéristiques
+      // Filtrage par caractÃ©ristiques
       const matchesFeatures = Object.entries(features).every(([key, checked]) => {
         if (!checked) return true;
-        const featureMap = { seaView: 'Vue mer', gated: 'Résidence fermée', parking: 'Parking' };
+        const featureMap = { seaView: 'Vue mer', gated: 'RÃ©sidence fermÃ©e', parking: 'Parking' };
         return parcelle.features.includes(featureMap[key]);
       });
 
@@ -361,7 +361,7 @@ const ParcellesVendeursPage = () => {
     });
   }, [searchTerm, selectedRegion, selectedCity, selectedType, selectedSeller, selectedFinancing, utilities, access, features]);
 
-  const availableCities = selectedRegion === 'Toutes les régions' 
+  const availableCities = selectedRegion === 'Toutes les rÃ©gions' 
     ? ["Toutes"] 
     : cities[selectedRegion] || ["Toutes"];
 
@@ -383,7 +383,7 @@ const ParcellesVendeursPage = () => {
 
   const resetFilters = () => {
     setSearchTerm('');
-    setSelectedRegion('Toutes les régions');
+    setSelectedRegion('Toutes les rÃ©gions');
     setSelectedCity('Toutes');
     setSelectedType('Tous');
     setSelectedSeller('Tous');
@@ -409,12 +409,12 @@ const ParcellesVendeursPage = () => {
               Parcelles de <span className="text-yellow-300">Vendeurs</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 max-w-3xl mx-auto">
-              Découvrez les meilleures opportunités foncières proposées par nos vendeurs certifiés
+              DÃ©couvrez les meilleures opportunitÃ©s fonciÃ¨res proposÃ©es par nos vendeurs certifiÃ©s
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                 <Shield className="w-4 h-4 mr-1" />
-                Vendeurs Vérifiés
+                Vendeurs VÃ©rifiÃ©s
               </Badge>
               <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                 <TrendingUp className="w-4 h-4 mr-1" />
@@ -422,7 +422,7 @@ const ParcellesVendeursPage = () => {
               </Badge>
               <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
                 <Star className="w-4 h-4 mr-1" />
-                Qualité Certifiée
+                QualitÃ© CertifiÃ©e
               </Badge>
             </div>
           </motion.div>
@@ -443,7 +443,7 @@ const ParcellesVendeursPage = () => {
               Filtres de Recherche
             </h2>
             <Button onClick={resetFilters} variant="outline" size="sm">
-              Réinitialiser
+              RÃ©initialiser
             </Button>
           </div>
 
@@ -452,7 +452,7 @@ const ParcellesVendeursPage = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                placeholder="Rechercher par titre ou localisation..."
+                YOUR_API_KEY="Rechercher par titre ou localisation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12"
@@ -464,7 +464,7 @@ const ParcellesVendeursPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <Select value={selectedRegion} onValueChange={setSelectedRegion}>
               <SelectTrigger>
-                <SelectValue placeholder="Région" />
+                <SelectValue YOUR_API_KEY="RÃ©gion" />
               </SelectTrigger>
               <SelectContent>
                 {regions.map(region => (
@@ -475,7 +475,7 @@ const ParcellesVendeursPage = () => {
 
             <Select value={selectedCity} onValueChange={setSelectedCity}>
               <SelectTrigger>
-                <SelectValue placeholder="Ville" />
+                <SelectValue YOUR_API_KEY="Ville" />
               </SelectTrigger>
               <SelectContent>
                 {availableCities.map(city => (
@@ -486,11 +486,11 @@ const ParcellesVendeursPage = () => {
 
             <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger>
-                <SelectValue placeholder="Type de terrain" />
+                <SelectValue YOUR_API_KEY="Type de terrain" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Tous">Tous les types</SelectItem>
-                <SelectItem value="Résidentiel">Résidentiel</SelectItem>
+                <SelectItem value="RÃ©sidentiel">RÃ©sidentiel</SelectItem>
                 <SelectItem value="Commercial">Commercial</SelectItem>
                 <SelectItem value="Industriel">Industriel</SelectItem>
                 <SelectItem value="Agricole">Agricole</SelectItem>
@@ -500,27 +500,27 @@ const ParcellesVendeursPage = () => {
 
             <Select value={selectedSeller} onValueChange={setSelectedSeller}>
               <SelectTrigger>
-                <SelectValue placeholder="Type de vendeur" />
+                <SelectValue YOUR_API_KEY="Type de vendeur" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Tous">Tous vendeurs</SelectItem>
                 <SelectItem value="Particulier">Particuliers</SelectItem>
                 <SelectItem value="Promoteur Pro">Promoteurs Pro</SelectItem>
                 <SelectItem value="Agence Pro">Agences Pro</SelectItem>
-                <SelectItem value="Développeur Pro">Développeurs Pro</SelectItem>
+                <SelectItem value="DÃ©veloppeur Pro">DÃ©veloppeurs Pro</SelectItem>
                 <SelectItem value="Investisseur Pro">Investisseurs Pro</SelectItem>
-                <SelectItem value="Municipalité">Municipalités</SelectItem>
+                <SelectItem value="MunicipalitÃ©">MunicipalitÃ©s</SelectItem>
               </SelectContent>
             </Select>
 
             <Select value={selectedFinancing} onValueChange={setSelectedFinancing}>
               <SelectTrigger>
-                <SelectValue placeholder="Financement" />
+                <SelectValue YOUR_API_KEY="Financement" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Tous">Tous</SelectItem>
                 <SelectItem value="Bancaire">Financement bancaire</SelectItem>
-                <SelectItem value="Échelonné">Paiement échelonné</SelectItem>
+                <SelectItem value="Ã‰chelonnÃ©">Paiement Ã©chelonnÃ©</SelectItem>
                 <SelectItem value="Crypto">Crypto-monnaie</SelectItem>
               </SelectContent>
             </Select>
@@ -528,11 +528,11 @@ const ParcellesVendeursPage = () => {
 
           {/* Advanced Filters */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {/* Commodités */}
+            {/* CommoditÃ©s */}
             <div className="space-y-3">
               <h4 className="font-semibold text-gray-900 flex items-center">
                 <Zap className="w-4 h-4 mr-2" />
-                Commodités
+                CommoditÃ©s
               </h4>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -554,7 +554,7 @@ const ParcellesVendeursPage = () => {
                   />
                   <label htmlFor="electricity" className="text-sm flex items-center">
                     <Zap className="w-4 h-4 mr-1 text-yellow-500" />
-                    Électricité
+                    Ã‰lectricitÃ©
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -571,11 +571,11 @@ const ParcellesVendeursPage = () => {
               </div>
             </div>
 
-            {/* Accès */}
+            {/* AccÃ¨s */}
             <div className="space-y-3">
               <h4 className="font-semibold text-gray-900 flex items-center">
                 <Navigation className="w-4 h-4 mr-2" />
-                Accès
+                AccÃ¨s
               </h4>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -586,7 +586,7 @@ const ParcellesVendeursPage = () => {
                   />
                   <label htmlFor="pavedRoad" className="text-sm flex items-center">
                     <Navigation className="w-4 h-4 mr-1 text-gray-600" />
-                    Route pavée
+                    Route pavÃ©e
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -608,17 +608,17 @@ const ParcellesVendeursPage = () => {
                   />
                   <label htmlFor="schools" className="text-sm flex items-center">
                     <GraduationCap className="w-4 h-4 mr-1 text-purple-600" />
-                    Écoles à proximité
+                    Ã‰coles Ã  proximitÃ©
                   </label>
                 </div>
               </div>
             </div>
 
-            {/* Caractéristiques */}
+            {/* CaractÃ©ristiques */}
             <div className="space-y-3">
               <h4 className="font-semibold text-gray-900 flex items-center">
                 <Star className="w-4 h-4 mr-2" />
-                Caractéristiques
+                CaractÃ©ristiques
               </h4>
               <div className="space-y-2">
                 <div className="flex items-center space-x-2">
@@ -638,7 +638,7 @@ const ParcellesVendeursPage = () => {
                     onCheckedChange={() => toggleFeature('gated')}
                   />
                   <label htmlFor="gated" className="text-sm">
-                    Résidence fermée
+                    RÃ©sidence fermÃ©e
                   </label>
                 </div>
                 <div className="flex items-center space-x-2">
@@ -665,7 +665,7 @@ const ParcellesVendeursPage = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-xl font-semibold text-gray-900">
-              {filteredParcelles.length} terrain(s) trouvé(s)
+              {filteredParcelles.length} terrain(s) trouvÃ©(s)
             </h3>
           </div>
 
@@ -690,7 +690,7 @@ const ParcellesVendeursPage = () => {
                       {parcelle.isVerified && (
                         <Badge className="bg-green-500 text-white">
                           <Shield className="w-3 h-3 mr-1" />
-                          Vérifié
+                          VÃ©rifiÃ©
                         </Badge>
                       )}
                       <Badge variant="secondary" className="bg-blue-500 text-white">
@@ -727,7 +727,7 @@ const ParcellesVendeursPage = () => {
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Surface:</span>
-                        <span className="font-medium">{parcelle.surface} m²</span>
+                        <span className="font-medium">{parcelle.surface} mÂ²</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Vendeur:</span>
@@ -754,7 +754,7 @@ const ParcellesVendeursPage = () => {
                           {parseInt(parcelle.price).toLocaleString()} FCFA
                         </div>
                         <div className="text-xs text-gray-500">
-                          {Math.round(parseInt(parcelle.price) / parseInt(parcelle.surface)).toLocaleString()} FCFA/m²
+                          {Math.round(parseInt(parcelle.price) / parseInt(parcelle.surface)).toLocaleString()} FCFA/mÂ²
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-gray-500">
@@ -772,7 +772,7 @@ const ParcellesVendeursPage = () => {
                         className="w-full flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // Mapper le type de vendeur vers le format unifié
+                          // Mapper le type de vendeur vers le format unifiÃ©
                           const userType = parcelle.sellerType === 'vendeur-particulier' ? 'seller' : 
                                           parcelle.sellerType === 'vendeur-pro' ? 'seller' : 
                                           parcelle.sellerType;
@@ -791,7 +791,7 @@ const ParcellesVendeursPage = () => {
                           navigate(`/parcelle/${parcelle.id}`);
                         }}
                       >
-                        Voir les détails
+                        Voir les dÃ©tails
                       </Button>
                     </div>
                   </CardContent>
@@ -804,8 +804,8 @@ const ParcellesVendeursPage = () => {
             <div className="text-center py-12">
               <div className="text-gray-500 mb-4">
                 <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />
-                <h3 className="text-xl font-semibold mb-2">Aucun terrain trouvé</h3>
-                <p>Essayez de modifier vos critères de recherche</p>
+                <h3 className="text-xl font-semibold mb-2">Aucun terrain trouvÃ©</h3>
+                <p>Essayez de modifier vos critÃ¨res de recherche</p>
               </div>
             </div>
           )}

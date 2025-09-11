@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion } from 'framer-motion';
@@ -45,7 +45,7 @@ const CartePage = () => {
   const [mapView, setMapView] = useState('satellite');
   const [activeTab, setActiveTab] = useState('private');
   
-  // Nouveaux états pour fonctionnalités avancées
+  // Nouveaux Ã©tats pour fonctionnalitÃ©s avancÃ©es
   const [showPredictiveAnalysis, setShowPredictiveAnalysis] = useState(false);
   const [showInfrastructureLayer, setShowInfrastructureLayer] = useState(false);
   const [showTransportLayer, setShowTransportLayer] = useState(false);
@@ -55,7 +55,7 @@ const CartePage = () => {
   const [measurementMode, setMeasurementMode] = useState(false);
   const [droneViewMode, setDroneViewMode] = useState(false);
 
-  // Données d'analyse prédictive IA
+  // DonnÃ©es d'analyse prÃ©dictive IA
   const predictiveData = {
     growth_prediction: "+15.2%",
     investment_score: 8.7,
@@ -85,7 +85,7 @@ const CartePage = () => {
     },
     {
       id: 'education',
-      name: 'Écoles',
+      name: 'Ã‰coles',
       icon: Users,
       active: showEducationLayer,
       toggle: () => setShowEducationLayer(!showEducationLayer),
@@ -101,9 +101,9 @@ const CartePage = () => {
     }
   ];
 
-  // Propriétés NFT avec données blockchain
+  // PropriÃ©tÃ©s NFT avec donnÃ©es blockchain
   const properties = [
-    // Terrains vendeurs privés
+    // Terrains vendeurs privÃ©s
     {
       id: 1,
       title: "Terrain Premium - Almadies",
@@ -119,7 +119,7 @@ const CartePage = () => {
       blockchain_verified: true,
       is_municipal: false,
       amenities: ["electricity", "water", "road", "fiber"],
-      description: "Terrain résidentiel avec vue mer partielle"
+      description: "Terrain rÃ©sidentiel avec vue mer partielle"
     },
     {
       id: 2,
@@ -136,7 +136,7 @@ const CartePage = () => {
       blockchain_verified: true,
       is_municipal: false,
       amenities: ["electricity", "water", "road"],
-      description: "Terrain commercial stratégiquement situé"
+      description: "Terrain commercial stratÃ©giquement situÃ©"
     },
     {
       id: 3,
@@ -153,12 +153,12 @@ const CartePage = () => {
       blockchain_verified: true,
       is_municipal: false,
       amenities: ["electricity", "water", "security"],
-      description: "Terrain dans quartier résidentiel haut standing"
+      description: "Terrain dans quartier rÃ©sidentiel haut standing"
     },
     {
       id: 4,
-      title: "Terrain Résidentiel - Sacré Cœur",
-      location: "Sacré Cœur, Dakar",
+      title: "Terrain RÃ©sidentiel - SacrÃ© CÅ“ur",
+      location: "SacrÃ© CÅ“ur, Dakar",
       price: 110000000,
       surface: 500,
       type: "vendeur",
@@ -172,17 +172,17 @@ const CartePage = () => {
       amenities: ["electricity", "water"],
       description: "Grand terrain familial"
     },
-    // Terrains communaux (IDs différents pour éviter conflit)
+    // Terrains communaux (IDs diffÃ©rents pour Ã©viter conflit)
     {
       id: "communal-1",
-      title: "Zone Communale - Guédiawaye",
-      location: "Guédiawaye",
+      title: "Zone Communale - GuÃ©diawaye",
+      location: "GuÃ©diawaye",
       price: 250000,
       surface: 200,
       type: "communal",
       status: "available",
       coordinates: { lat: 14.7667, lng: -17.4167 },
-      municipality: "Commune de Guédiawaye",
+      municipality: "Commune de GuÃ©diawaye",
       rating: 4.5,
       blockchain_verified: true,
       is_municipal: true,
@@ -227,7 +227,7 @@ const CartePage = () => {
     const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          property.location.toLowerCase().includes(searchTerm.toLowerCase());
     
-    // Filtrage par onglet (privé vs communal)
+    // Filtrage par onglet (privÃ© vs communal)
     const matchesTab = activeTab === 'private' ? !property.is_municipal : property.is_municipal;
     
     let matchesFilter = false;
@@ -259,7 +259,7 @@ const CartePage = () => {
     
     switch (status) {
       case 'verified':
-        return <Badge className="bg-blue-100 text-blue-800 border-blue-200"><Eye className="w-3 h-3 mr-1" />Vérifié</Badge>;
+        return <Badge className="bg-blue-100 text-blue-800 border-blue-200"><Eye className="w-3 h-3 mr-1" />VÃ©rifiÃ©</Badge>;
       case 'available':
         return <Badge className="bg-green-100 text-green-800 border-green-200"><Zap className="w-3 h-3 mr-1" />Disponible</Badge>;
       case 'sold':
@@ -282,11 +282,11 @@ const CartePage = () => {
     <>
       <Helmet>
         <title>Carte Interactive - Teranga Foncier</title>
-        <meta name="description" content="Explorez les propriétés sur carte interactive avec vérification blockchain" />
+        <meta name="description" content="Explorez les propriÃ©tÃ©s sur carte interactive avec vÃ©rification blockchain" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-teal-50">
-        {/* En-tête */}
+        {/* En-tÃªte */}
         <div className="bg-white border-b border-gray-200">
           <div className="container mx-auto px-4 py-6">
             <motion.div
@@ -295,10 +295,10 @@ const CartePage = () => {
               className="text-center mb-6"
             >
               <h1 className="text-4xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent mb-2">
-                Carte Interactive des Propriétés
+                Carte Interactive des PropriÃ©tÃ©s
               </h1>
               <p className="text-xl text-gray-600">
-                Explorez les terrains et biens immobiliers vérifiés par blockchain
+                Explorez les terrains et biens immobiliers vÃ©rifiÃ©s par blockchain
               </p>
             </motion.div>
 
@@ -308,7 +308,7 @@ const CartePage = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
                   type="text"
-                  placeholder="Rechercher par lieu ou nom..."
+                  YOUR_API_KEY="Rechercher par lieu ou nom..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 pr-4 py-3"
@@ -320,7 +320,7 @@ const CartePage = () => {
                 {[
                   { key: 'all', label: 'Tout', icon: Target },
                   { key: 'available', label: 'Disponibles', icon: MapPin },
-                  { key: 'verified', label: 'Vérifiés Blockchain', icon: Shield }
+                  { key: 'verified', label: 'VÃ©rifiÃ©s Blockchain', icon: Shield }
                 ].map(filter => (
                   <Button
                     key={filter.key}
@@ -344,7 +344,7 @@ const CartePage = () => {
             <TabsList className="grid w-full grid-cols-2 max-w-md mx-auto">
               <TabsTrigger value="private" className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
-                Terrains Privés
+                Terrains PrivÃ©s
               </TabsTrigger>
               <TabsTrigger value="communal" className="flex items-center gap-2">
                 <Landmark className="w-4 h-4" />
@@ -357,7 +357,7 @@ const CartePage = () => {
         {/* Contenu principal */}
         <div className="container mx-auto px-4 py-6">
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            {/* Carte simulée */}
+            {/* Carte simulÃ©e */}
             <div className="lg:col-span-2">
               <Card className="h-full">
                 <CardHeader className="pb-3">
@@ -383,7 +383,7 @@ const CartePage = () => {
                   <div className="relative h-96 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg overflow-hidden">
                     <div className="absolute inset-0 bg-[url('https://images.unsplash.com/photo-1524661135-423995f22d0b?w=800&h=400&fit=crop&crop=center')] bg-cover bg-center opacity-30"></div>
                     
-                    {/* Marqueurs simulés */}
+                    {/* Marqueurs simulÃ©s */}
                     {filteredProperties.map((property, index) => (
                       <motion.div
                         key={property.id}
@@ -418,15 +418,15 @@ const CartePage = () => {
                           <div className="text-gray-600 mb-1">{selectedProperty.location}</div>
                           <div className="font-bold text-green-600">{formatPrice(selectedProperty.price)}</div>
                           {selectedProperty.blockchain_verified && (
-                            <div className="text-xs text-green-600 mt-1">🔐 Blockchain vérifié</div>
+                            <div className="text-xs text-green-600 mt-1">ðŸ” Blockchain vÃ©rifiÃ©</div>
                           )}
                         </div>
                       </motion.div>
                     )}
 
-                    {/* Légende */}
+                    {/* LÃ©gende */}
                     <div className="absolute bottom-4 left-4 bg-white p-3 rounded-lg shadow-md">
-                      <div className="text-sm font-medium mb-2">Légende</div>
+                      <div className="text-sm font-medium mb-2">LÃ©gende</div>
                       <div className="space-y-1 text-xs">
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-green-600 rounded-full"></div>
@@ -434,7 +434,7 @@ const CartePage = () => {
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-blue-600 rounded-full"></div>
-                          <span>Vérifié</span>
+                          <span>VÃ©rifiÃ©</span>
                         </div>
                         <div className="flex items-center gap-2">
                           <div className="w-3 h-3 bg-gray-400 rounded-full"></div>
@@ -448,7 +448,7 @@ const CartePage = () => {
                   <div className="grid grid-cols-3 gap-4 mt-4">
                     <div className="text-center p-3 bg-green-50 rounded-lg">
                       <div className="text-2xl font-bold text-green-600">{filteredProperties.length}</div>
-                      <div className="text-sm text-gray-600">Propriétés</div>
+                      <div className="text-sm text-gray-600">PropriÃ©tÃ©s</div>
                     </div>
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
                       <div className="text-2xl font-bold text-blue-600">
@@ -467,11 +467,11 @@ const CartePage = () => {
               </Card>
             </div>
 
-            {/* Liste des propriétés */}
+            {/* Liste des propriÃ©tÃ©s */}
             <div className="lg:col-span-1">
               <Card>
                 <CardHeader>
-                  <CardTitle>Propriétés trouvées ({filteredProperties.length})</CardTitle>
+                  <CardTitle>PropriÃ©tÃ©s trouvÃ©es ({filteredProperties.length})</CardTitle>
                 </CardHeader>
                 <CardContent className="p-0">
                   <div className="max-h-96 overflow-y-auto">
@@ -507,14 +507,14 @@ const CartePage = () => {
                         </div>
 
                         <div className="text-xs text-gray-500 mt-1">
-                          {property.surface} m² • {property.amenities.length} commodités
+                          {property.surface} mÂ² â€¢ {property.amenities.length} commoditÃ©s
                         </div>
 
                         {property.blockchain_verified && (
                           <div className="mt-2 p-2 bg-green-50 rounded text-xs">
                             <div className="flex items-center gap-1 text-green-700">
                               <Shield className="w-3 h-3" />
-                              <span className="font-medium">Sécurisé Blockchain</span>
+                              <span className="font-medium">SÃ©curisÃ© Blockchain</span>
                             </div>
                             <div className="text-green-600 font-mono text-xs mt-1">
                               {property.hash}...
@@ -535,7 +535,7 @@ const CartePage = () => {
                               }
                             }}
                           >
-                            Voir détails
+                            Voir dÃ©tails
                           </Button>
                           {property.is_municipal && (
                             <Button size="sm" variant="outline" className="text-xs">

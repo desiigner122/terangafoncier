@@ -415,7 +415,7 @@ const FixedUserActions = ({ user, onUserUpdated, onUserDeleted }) => {
               id="ban-reason"
               value={banReason}
               onChange={(e) => setBanReason(e.target.value)}
-              placeholder="Expliquez la raison du bannissement..."
+              YOUR_API_KEY="Expliquez la raison du bannissement..."
               className="mt-2"
               rows={3}
             />
@@ -451,7 +451,7 @@ const FixedUserActions = ({ user, onUserUpdated, onUserDeleted }) => {
               id="reject-reason"
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
-              placeholder="Expliquez la raison du rejet..."
+              YOUR_API_KEY="Expliquez la raison du rejet..."
               className="mt-2"
               rows={3}
             />
@@ -486,7 +486,7 @@ const FixedUserActions = ({ user, onUserUpdated, onUserDeleted }) => {
             <Label htmlFor="new-role">Nouveau rôle *</Label>
             <Select value={newRole} onValueChange={setNewRole}>
               <SelectTrigger className="mt-2">
-                <SelectValue placeholder="Sélectionnez un nouveau rôle" />
+                <SelectValue YOUR_API_KEY="Sélectionnez un nouveau rôle" />
               </SelectTrigger>
               <SelectContent>
                 {ROLES.map(role => (

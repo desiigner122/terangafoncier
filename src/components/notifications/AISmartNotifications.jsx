@@ -16,14 +16,21 @@ import {
   Clock
 } from 'lucide-react';
 import { advancedAIService } from '@/services/AdvancedAIService';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const AISmartNotifications = () => {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [notifications, setNotifications] = useState([]);
   const [isOpen, setIsOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+
+  // Créer un profil basique depuis les données utilisateur
+  const profile = user ? {
+    role: user.user_metadata?.role,
+    name: user.user_metadata?.name,
+    email: user.email
+  } : null;
 
   useEffect(() => {
     if (user) {

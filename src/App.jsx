@@ -12,6 +12,7 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import HomePage from '@/pages/HomePage';
 import ModernHomePage from '@/pages/ModernHomePage';
 import LoginPage from '@/pages/LoginPage';
+import TempLoginPage from '@/pages/TempLoginPage';
 import ModernLoginPage from '@/pages/ModernLoginPage';
 import BlockchainLoginPage from '@/pages/BlockchainLoginPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
@@ -132,6 +133,20 @@ import AdminParcelsPage from '@/pages/admin/AdminParcelsPage';
 import AdminSystemRequestsPage from '@/pages/admin/AdminSystemRequestsPage';
 import AdminContractsPage from '@/pages/admin/AdminContractsPage';
 import AuthDebugPage from '@/pages/AuthDebugPage';
+import AuthTestPage from '@/pages/AuthTestPage';
+import DashboardSelectorPage from '@/pages/DashboardSelectorPage';
+import QuickAccessPage from '@/pages/QuickAccessPage';
+import QuickDashboardTest from '@/pages/QuickDashboardTest';
+
+// Import des dashboards
+import ParticularDashboard from '@/pages/dashboards/ParticularDashboard';
+import NotaireDashboard from '@/pages/dashboards/NotaireDashboard';
+import GeometreDashboard from '@/pages/dashboards/GeometreDashboard';
+import BanqueDashboard from '@/pages/dashboards/BanqueDashboard';
+import PromoteurDashboard from '@/pages/dashboards/PromoteurDashboard';
+import MunicipaliteDashboard from '@/pages/dashboards/MunicipaliteDashboard';
+import ModernAgentFoncierDashboard from '@/pages/dashboards/ModernAgentFoncierDashboard';
+import ModernMairieDashboard from '@/pages/dashboards/ModernMairieDashboard';
 import AdminReportsPage from '@/pages/admin/AdminReportsPage';
 import AdminLoginPage from '@/pages/AdminLoginPage';
 import AdminBlogPage from '@/pages/admin/AdminBlogPage';
@@ -177,7 +192,6 @@ import ComplianceCheckPage from '@/pages/dashboards/notaire/ComplianceCheckPage'
 import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
 import ModernNotaireDashboard from '@/pages/dashboards/ModernNotaireDashboard';
 import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
-import ModernMairieDashboard from '@/pages/dashboards/ModernMairieDashboard';
 import ModernAcheteurDashboard from '@/pages/dashboards/ModernAcheteurDashboard';
 import ModernVendeurDashboard from '@/pages/dashboards/ModernVendeurDashboard';
 import ModernInvestisseurDashboard from '@/pages/dashboards/ModernInvestisseurDashboard';
@@ -223,7 +237,6 @@ import RejoignezNousPage from '@/pages/RejoignezNousPage';
 import SolutionsPage from '@/pages/SolutionsPage';
 import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
 import ModernGeometreDashboard from '@/pages/dashboards/ModernGeometreDashboard';
-import ModernAgentFoncierDashboard from '@/pages/dashboards/ModernAgentFoncierDashboard';
 
 const PublicLayout = () => (
   <div className="flex flex-col min-h-screen">
@@ -246,7 +259,7 @@ function App() {
             <Routes>
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />
-              <Route path="login" element={<BlockchainLoginPage />} />
+              <Route path="login" element={<TempLoginPage />} />
               <Route path="test-auth" element={<TestAuthPage />} />
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
               <Route path="register" element={<MultiStepRegisterPage />} />
@@ -254,6 +267,10 @@ function App() {
               <Route path="test-account-creation" element={<AccountCreationTestPage />} />
               <Route path="debug-dashboard" element={<DebugDashboard />} />
               <Route path="auth-debug" element={<AuthDebugPage />} />
+              <Route path="auth-test" element={<AuthTestPage />} />
+              <Route path="dashboards" element={<DashboardSelectorPage />} />
+              <Route path="quick-test" element={<QuickDashboardTest />} />
+              <Route path="quick-access" element={<QuickAccessPage />} />
               <Route path="banned" element={<BannedPage />} />
               <Route path="terrains-communaux" element={<CommunalLandsPage />} />
               <Route path="promoters-projects" element={<PromoterProjectsPage />} />
@@ -461,6 +478,17 @@ function App() {
               <Route path="tasks" element={<AgentTasksPage />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
+
+            {/* Routes pour tous les dashboards */}
+            <Route path="/particulier" element={<ProtectedRoute><ParticularDashboard /></ProtectedRoute>} />
+            <Route path="/agent-foncier" element={<ProtectedRoute><ModernAgentFoncierDashboard /></ProtectedRoute>} />
+            <Route path="/notaire" element={<ProtectedRoute><NotaireDashboard /></ProtectedRoute>} />
+            <Route path="/geometre" element={<ProtectedRoute><GeometreDashboard /></ProtectedRoute>} />
+            <Route path="/banque" element={<ProtectedRoute><BanqueDashboard /></ProtectedRoute>} />
+            <Route path="/promoteur" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
+            <Route path="/lotisseur" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
+            <Route path="/mairie" element={<ProtectedRoute><ModernMairieDashboard /></ProtectedRoute>} />
+            <Route path="/municipalite" element={<ProtectedRoute><MunicipaliteDashboard /></ProtectedRoute>} />
 
             <Route path="/access-denied" element={<AccessDeniedPage />} />
             <Route path="*" element={<NotFoundPage />} />

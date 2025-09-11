@@ -128,7 +128,7 @@ const GlobalAnalyticsDashboard = () => {
         <div className="flex items-center gap-3">
           <Select value={timeRange} onValueChange={setTimeRange}>
             <SelectTrigger className="w-40">
-              <SelectValue placeholder="Période" />
+              <SelectValue YOUR_API_KEY="Période" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="24h">Dernières 24h</SelectItem>

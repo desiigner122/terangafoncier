@@ -1,6 +1,6 @@
-/**
- * 🧠 PAGE CONFIGURATION IA ASSISTÉE POUR TERRAINS
- * Système 100% autonome pour configuration de veille et alertes
+﻿/**
+ * ðŸ§  PAGE CONFIGURATION IA ASSISTÃ‰E POUR TERRAINS
+ * SystÃ¨me 100% autonome pour configuration de veille et alertes
  */
 
 import React, { useState, useEffect } from 'react';
@@ -53,28 +53,28 @@ const AIAssistedTerrainConfigPage = () => {
   const [configComplete, setConfigComplete] = useState(false);
   const { toast } = useToast();
 
-  // Zones populaires au Sénégal
+  // Zones populaires au SÃ©nÃ©gal
   const popularZones = [
-    { name: 'Liberté 6', demand: 'Très élevée', priceRange: '25-45M', availability: 'Rare' },
-    { name: 'Almadies', demand: 'Élevée', priceRange: '40-80M', availability: 'Limitée' },
-    { name: 'Sicap Liberté', demand: 'Élevée', priceRange: '20-35M', availability: 'Modérée' },
-    { name: 'Guédiawaye', demand: 'Modérée', priceRange: '15-25M', availability: 'Bonne' },
-    { name: 'Pikine', demand: 'Modérée', priceRange: '10-20M', availability: 'Bonne' },
-    { name: 'Rufisque', demand: 'Modérée', priceRange: '8-15M', availability: 'Très bonne' },
-    { name: 'Thiès', demand: 'Moyenne', priceRange: '5-12M', availability: 'Excellente' },
+    { name: 'LibertÃ© 6', demand: 'TrÃ¨s Ã©levÃ©e', priceRange: '25-45M', availability: 'Rare' },
+    { name: 'Almadies', demand: 'Ã‰levÃ©e', priceRange: '40-80M', availability: 'LimitÃ©e' },
+    { name: 'Sicap LibertÃ©', demand: 'Ã‰levÃ©e', priceRange: '20-35M', availability: 'ModÃ©rÃ©e' },
+    { name: 'GuÃ©diawaye', demand: 'ModÃ©rÃ©e', priceRange: '15-25M', availability: 'Bonne' },
+    { name: 'Pikine', demand: 'ModÃ©rÃ©e', priceRange: '10-20M', availability: 'Bonne' },
+    { name: 'Rufisque', demand: 'ModÃ©rÃ©e', priceRange: '8-15M', availability: 'TrÃ¨s bonne' },
+    { name: 'ThiÃ¨s', demand: 'Moyenne', priceRange: '5-12M', availability: 'Excellente' },
     { name: 'Diamniadio', demand: 'Croissante', priceRange: '12-25M', availability: 'Bonne' }
   ];
 
   const terrainTypes = [
-    { id: 'residentiel', name: 'Résidentiel', icon: Home, description: 'Pour construction de maison' },
-    { id: 'commercial', name: 'Commercial', icon: Building, description: 'Pour activités commerciales' },
-    { id: 'industriel', name: 'Industriel', icon: Settings, description: 'Pour activités industrielles' },
+    { id: 'residentiel', name: 'RÃ©sidentiel', icon: Home, description: 'Pour construction de maison' },
+    { id: 'commercial', name: 'Commercial', icon: Building, description: 'Pour activitÃ©s commerciales' },
+    { id: 'industriel', name: 'Industriel', icon: Settings, description: 'Pour activitÃ©s industrielles' },
     { id: 'agricole', name: 'Agricole', icon: TreePine, description: 'Pour exploitation agricole' },
     { id: 'mixte', name: 'Mixte', icon: Target, description: 'Usage multiple possible' }
   ];
 
   useEffect(() => {
-    // Démarrage de l'analyse IA en arrière-plan
+    // DÃ©marrage de l'analyse IA en arriÃ¨re-plan
     if (step === 1) {
       performInitialAIAnalysis();
     }
@@ -102,29 +102,29 @@ const AIAssistedTerrainConfigPage = () => {
     setIsConfiguring(true);
     
     try {
-      // L'IA configure automatiquement le système de veille
+      // L'IA configure automatiquement le systÃ¨me de veille
       const aiConfig = await autonomousAI.createAssistedConfiguration({
         userPreferences: configuration,
         requestType: 'TERRAIN_MONITORING',
         autonomousMode: true
       });
 
-      // Configuration spéciale pour Liberté 6 si sélectionné
-      if (configuration.zones.includes('Liberté 6')) {
+      // Configuration spÃ©ciale pour LibertÃ© 6 si sÃ©lectionnÃ©
+      if (configuration.zones.includes('LibertÃ© 6')) {
         const liberte6Alert = await autonomousAI.createLiberte6AlertSystem(configuration);
-        console.log('Configuration Liberté 6:', liberte6Alert);
+        console.log('Configuration LibertÃ© 6:', liberte6Alert);
       }
 
       setConfigComplete(true);
       toast({
-        title: "🧠 Configuration IA Terminée !",
-        description: "L'IA surveille maintenant vos zones d'intérêt de manière autonome",
+        title: "ðŸ§  Configuration IA TerminÃ©e !",
+        description: "L'IA surveille maintenant vos zones d'intÃ©rÃªt de maniÃ¨re autonome",
       });
 
     } catch (error) {
       toast({
         title: "Erreur",
-        description: "Problème lors de la configuration IA",
+        description: "ProblÃ¨me lors de la configuration IA",
         variant: "destructive"
       });
     } finally {
@@ -152,11 +152,11 @@ const AIAssistedTerrainConfigPage = () => {
               </motion.div>
 
               <h1 className="text-3xl font-bold text-gray-900 mb-4">
-                🧠 Configuration IA Terminée !
+                ðŸ§  Configuration IA TerminÃ©e !
               </h1>
               
               <p className="text-xl text-gray-600 mb-8">
-                L'Intelligence Artificielle surveille maintenant <strong>{configuration.zones.length} zone(s)</strong> de manière autonome
+                L'Intelligence Artificielle surveille maintenant <strong>{configuration.zones.length} zone(s)</strong> de maniÃ¨re autonome
               </p>
 
               <div className="grid md:grid-cols-2 gap-6 mb-8">
@@ -172,7 +172,7 @@ const AIAssistedTerrainConfigPage = () => {
                       {configuration.zones.map(zone => (
                         <div key={zone} className="flex items-center justify-between">
                           <span>{zone}</span>
-                          <Badge variant="secondary">Surveillé IA</Badge>
+                          <Badge variant="secondary">SurveillÃ© IA</Badge>
                         </div>
                       ))}
                     </div>
@@ -190,11 +190,11 @@ const AIAssistedTerrainConfigPage = () => {
                     <div className="space-y-3">
                       <div className="flex items-center text-sm text-green-600">
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        Analyse de marché continue
+                        Analyse de marchÃ© continue
                       </div>
                       <div className="flex items-center text-sm text-green-600">
                         <CheckCircle className="w-4 h-4 mr-2" />
-                        Détection d'opportunités
+                        DÃ©tection d'opportunitÃ©s
                       </div>
                       <div className="flex items-center text-sm text-green-600">
                         <CheckCircle className="w-4 h-4 mr-2" />
@@ -207,12 +207,12 @@ const AIAssistedTerrainConfigPage = () => {
 
               <div className="bg-blue-50 rounded-2xl p-6 mb-8">
                 <h3 className="text-lg font-semibold text-blue-900 mb-3">
-                  🤖 Promesse de l'IA Autonome
+                  ðŸ¤– Promesse de l'IA Autonome
                 </h3>
                 <p className="text-blue-800">
-                  "Je vais analyser le marché 24h/24, détecter les nouvelles opportunités dans vos zones d'intérêt, 
-                  et vous notifier instantanément. Quand une parcelle apparaîtra à <strong>Liberté 6</strong> ou dans vos autres zones, 
-                  vous serez le premier informé avec mon analyse complète."
+                  "Je vais analyser le marchÃ© 24h/24, dÃ©tecter les nouvelles opportunitÃ©s dans vos zones d'intÃ©rÃªt, 
+                  et vous notifier instantanÃ©ment. Quand une parcelle apparaÃ®tra Ã  <strong>LibertÃ© 6</strong> ou dans vos autres zones, 
+                  vous serez le premier informÃ© avec mon analyse complÃ¨te."
                 </p>
               </div>
 
@@ -242,11 +242,11 @@ const AIAssistedTerrainConfigPage = () => {
             className="text-center mb-8"
           >
             <h1 className="text-4xl font-bold text-gray-900 mb-4">
-              🧠 Configuration IA Assistée
+              ðŸ§  Configuration IA AssistÃ©e
             </h1>
             <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-              L'Intelligence Artificielle va configurer automatiquement votre système de veille personnalisé. 
-              Plus besoin d'attendre, l'IA vous notifiera dès qu'une opportunité apparaît !
+              L'Intelligence Artificielle va configurer automatiquement votre systÃ¨me de veille personnalisÃ©. 
+              Plus besoin d'attendre, l'IA vous notifiera dÃ¨s qu'une opportunitÃ© apparaÃ®t !
             </p>
           </motion.div>
 
@@ -278,7 +278,7 @@ const AIAssistedTerrainConfigPage = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <MapPin className="w-6 h-6 mr-2 text-blue-600" />
-                      1. Sélectionnez vos zones d'intérêt
+                      1. SÃ©lectionnez vos zones d'intÃ©rÃªt
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -304,13 +304,13 @@ const AIAssistedTerrainConfigPage = () => {
                           <div className="space-y-1 text-sm text-gray-600">
                             <div>Demande: {zone.demand}</div>
                             <div>Prix: {zone.priceRange} FCFA</div>
-                            <div>Disponibilité: {zone.availability}</div>
+                            <div>DisponibilitÃ©: {zone.availability}</div>
                           </div>
                         </motion.div>
                       ))}
                     </div>
 
-                    {configuration.zones.includes('Liberté 6') && (
+                    {configuration.zones.includes('LibertÃ© 6') && (
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
@@ -319,11 +319,11 @@ const AIAssistedTerrainConfigPage = () => {
                         <div className="flex items-start">
                           <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 mr-3" />
                           <div>
-                            <h4 className="font-semibold text-amber-800">🎯 Zone Prioritaire Détectée !</h4>
+                            <h4 className="font-semibold text-amber-800">ðŸŽ¯ Zone Prioritaire DÃ©tectÃ©e !</h4>
                             <p className="text-amber-700 text-sm mt-1">
-                              <strong>Liberté 6</strong> est une zone très demandée avec peu de disponibilités. 
-                              L'IA va activer une surveillance renforcée et vous notifiera instantanément 
-                              dès qu'une parcelle ou qu'une demande communale sera disponible.
+                              <strong>LibertÃ© 6</strong> est une zone trÃ¨s demandÃ©e avec peu de disponibilitÃ©s. 
+                              L'IA va activer une surveillance renforcÃ©e et vous notifiera instantanÃ©ment 
+                              dÃ¨s qu'une parcelle ou qu'une demande communale sera disponible.
                             </p>
                           </div>
                         </div>
@@ -357,7 +357,7 @@ const AIAssistedTerrainConfigPage = () => {
                     <CardHeader>
                       <CardTitle className="flex items-center">
                         <Target className="w-6 h-6 mr-2 text-green-600" />
-                        2. Préférences de terrain
+                        2. PrÃ©fÃ©rences de terrain
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-6">
@@ -392,7 +392,7 @@ const AIAssistedTerrainConfigPage = () => {
                         <Label htmlFor="budget" className="text-base font-medium">Budget maximum (FCFA)</Label>
                         <Input
                           id="budget"
-                          placeholder="Ex: 30000000"
+                          YOUR_API_KEY="Ex: 30000000"
                           value={configuration.budget}
                           onChange={(e) => setConfiguration(prev => ({ ...prev, budget: e.target.value }))}
                           className="mt-2"
@@ -401,10 +401,10 @@ const AIAssistedTerrainConfigPage = () => {
 
                       {/* Surface */}
                       <div>
-                        <Label htmlFor="surface" className="text-base font-medium">Surface souhaitée (m²)</Label>
+                        <Label htmlFor="surface" className="text-base font-medium">Surface souhaitÃ©e (mÂ²)</Label>
                         <Input
                           id="surface"
-                          placeholder="Ex: 300"
+                          YOUR_API_KEY="Ex: 300"
                           value={configuration.surface}
                           onChange={(e) => setConfiguration(prev => ({ ...prev, surface: e.target.value }))}
                           className="mt-2"
@@ -422,10 +422,10 @@ const AIAssistedTerrainConfigPage = () => {
                     </CardHeader>
                     <CardContent className="space-y-4">
                       {[
-                        { key: 'newListings', label: 'Nouvelles annonces', icon: '🆕' },
-                        { key: 'priceDrops', label: 'Baisses de prix', icon: '📉' },
-                        { key: 'communalLands', label: 'Terrains communaux', icon: '🏛️' },
-                        { key: 'opportunities', label: 'Opportunités IA', icon: '💎' }
+                        { key: 'newListings', label: 'Nouvelles annonces', icon: 'ðŸ†•' },
+                        { key: 'priceDrops', label: 'Baisses de prix', icon: 'ðŸ“‰' },
+                        { key: 'communalLands', label: 'Terrains communaux', icon: 'ðŸ›ï¸' },
+                        { key: 'opportunities', label: 'OpportunitÃ©s IA', icon: 'ðŸ’Ž' }
                       ].map((alert) => (
                         <div key={alert.key} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                           <div className="flex items-center">
@@ -443,7 +443,7 @@ const AIAssistedTerrainConfigPage = () => {
                               }
                             }))}
                           >
-                            {configuration.notifications[alert.key] ? 'Activé' : 'Désactivé'}
+                            {configuration.notifications[alert.key] ? 'ActivÃ©' : 'DÃ©sactivÃ©'}
                           </Button>
                         </div>
                       ))}
@@ -451,11 +451,11 @@ const AIAssistedTerrainConfigPage = () => {
                       <div className="mt-6 p-4 bg-purple-50 rounded-lg">
                         <div className="flex items-center mb-2">
                           <Brain className="w-5 h-5 text-purple-600 mr-2" />
-                          <span className="font-semibold text-purple-800">IA Personnalisée</span>
+                          <span className="font-semibold text-purple-800">IA PersonnalisÃ©e</span>
                         </div>
                         <p className="text-sm text-purple-700">
-                          L'IA apprendra de vos préférences et ajustera automatiquement 
-                          la pertinence des alertes pour vous proposer les meilleures opportunités.
+                          L'IA apprendra de vos prÃ©fÃ©rences et ajustera automatiquement 
+                          la pertinence des alertes pour vous proposer les meilleures opportunitÃ©s.
                         </p>
                       </div>
                     </CardContent>
@@ -484,16 +484,16 @@ const AIAssistedTerrainConfigPage = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center">
                       <Brain className="w-6 h-6 mr-2 text-purple-600" />
-                      Récapitulatif et Activation IA
+                      RÃ©capitulatif et Activation IA
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="grid md:grid-cols-2 gap-8">
                       <div>
-                        <h3 className="font-semibold text-lg mb-4">Configuration sélectionnée</h3>
+                        <h3 className="font-semibold text-lg mb-4">Configuration sÃ©lectionnÃ©e</h3>
                         <div className="space-y-3">
                           <div>
-                            <span className="font-medium">Zones surveillées:</span>
+                            <span className="font-medium">Zones surveillÃ©es:</span>
                             <div className="flex flex-wrap gap-2 mt-1">
                               {configuration.zones.map(zone => (
                                 <Badge key={zone} variant="secondary">{zone}</Badge>
@@ -512,22 +512,22 @@ const AIAssistedTerrainConfigPage = () => {
                           )}
                           {configuration.surface && (
                             <div>
-                              <span className="font-medium">Surface:</span> {configuration.surface} m²
+                              <span className="font-medium">Surface:</span> {configuration.surface} mÂ²
                             </div>
                           )}
                         </div>
                       </div>
 
                       <div className="bg-gradient-to-br from-blue-50 to-purple-50 p-6 rounded-xl">
-                        <h3 className="font-semibold text-lg mb-4 text-blue-900">🤖 L'IA va maintenant:</h3>
+                        <h3 className="font-semibold text-lg mb-4 text-blue-900">ðŸ¤– L'IA va maintenant:</h3>
                         <div className="space-y-3">
                           {[
                             'Surveiller vos zones 24h/24',
                             'Analyser toutes les nouvelles annonces',
-                            'Détecter les opportunités uniques',
-                            'Vous notifier instantanément',
-                            'Négocier les meilleurs prix',
-                            'Gérer vos demandes communales'
+                            'DÃ©tecter les opportunitÃ©s uniques',
+                            'Vous notifier instantanÃ©ment',
+                            'NÃ©gocier les meilleurs prix',
+                            'GÃ©rer vos demandes communales'
                           ].map((action, index) => (
                             <motion.div
                               key={action}

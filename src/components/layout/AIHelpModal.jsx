@@ -179,7 +179,7 @@ const AIHelpModal = ({ isOpen, onClose }) => {
           <div className="relative">
             <Input
               id="ai-question"
-              placeholder="Ex: Comment vérifier un titre foncier ?"
+              YOUR_API_KEY="Ex: Comment vérifier un titre foncier ?"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="pr-10 h-12 text-base"

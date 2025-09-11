@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 // Dashboard Imports
 import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
@@ -15,13 +15,16 @@ import BanqueDashboard from '@/pages/dashboards/banques/BanqueDashboard';
 
 // Protected Route Component
 const ProtectedRoute = ({ children, allowedRoles }) => {
-  const { user, isAuthenticated } = useAuth();
+  const { user, session } = useAuth();
 
-  if (!isAuthenticated) {
+  if (!session || !user) {
     return <Navigate to="/login" replace />;
   }
 
-  if (allowedRoles && !allowedRoles.includes(user?.role)) {
+  // Pour Supabase, on récupère le rôle depuis les métadonnées
+  const userRole = user.user_metadata?.role;
+  
+  if (allowedRoles && !allowedRoles.includes(userRole)) {
     return <Navigate to="/unauthorized" replace />;
   }
 

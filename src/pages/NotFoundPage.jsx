@@ -44,11 +44,14 @@ const NotFoundPage = () => {
                 </Link>
               </Button>
               
-              <Button asChild variant="outline" size="lg" className="w-full">
-                <Link to="javascript:history.back()" className="flex items-center justify-center gap-2">
-                  <ArrowLeft className="h-4 w-4" />
-                  Page précédente
-                </Link>
+              <Button 
+                variant="outline" 
+                size="lg" 
+                className="w-full flex items-center justify-center gap-2"
+                onClick={() => window.history.back()}
+              >
+                <ArrowLeft className="h-4 w-4" />
+                Page précédente
               </Button>
             </div>
             

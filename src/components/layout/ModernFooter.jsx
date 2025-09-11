@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,7 +33,7 @@ const ModernFooter = () => {
         { label: "Acheter un Terrain", path: "/parcelles", icon: MapPin },
         { label: "Terrain Intelligent", path: "/terrain-intelligent/TF-2024-001", icon: Zap, badge: "Nouveau" },
         { label: "Construction Distance", path: "/solutions/construction-distance", icon: Globe, badge: "Diaspora" },
-        { label: "Investissement Sécurisé", path: "/solutions/investisseurs", icon: TrendingUp },
+        { label: "Investissement SÃ©curisÃ©", path: "/solutions/investisseurs", icon: TrendingUp },
         { label: "Vendre Rapidement", path: "/solutions/vendeurs", icon: Users },
       ]
     },
@@ -50,19 +50,19 @@ const ModernFooter = () => {
     {
       title: "Ressources",
       links: [
-        { label: "Comment ça Marche", path: "/how-it-works", icon: null },
+        { label: "Comment Ã§a Marche", path: "/how-it-works", icon: null },
         { label: "Guide Diaspora", path: "/guide-diaspora", icon: null },
         { label: "Carte Interactive", path: "/map", icon: null },
-        { label: "Blog & Actualités", path: "/blog", icon: null },
+        { label: "Blog & ActualitÃ©s", path: "/blog", icon: null },
         { label: "Support Client", path: "/contact", icon: null },
       ]
     },
     {
-      title: "Légal & Sécurité",
+      title: "LÃ©gal & SÃ©curitÃ©",
       links: [
-        { label: "À Propos", path: "/about", icon: null },
+        { label: "Ã€ Propos", path: "/about", icon: null },
         { label: "Conditions d'Utilisation", path: "/legal", icon: null },
-        { label: "Politique de Confidentialité", path: "/privacy", icon: null },
+        { label: "Politique de ConfidentialitÃ©", path: "/privacy", icon: null },
         { label: "Protection Anti-Fraude", path: "/#anti-fraude", icon: Shield },
         { label: "FAQ", path: "/faq", icon: null },
       ]
@@ -70,9 +70,9 @@ const ModernFooter = () => {
   ];
 
   const stats = [
-    { label: "Terrains Vérifiés", value: "2,500+", icon: Shield },
+    { label: "Terrains VÃ©rifiÃ©s", value: "2,500+", icon: Shield },
     { label: "Clients Satisfaits", value: "1,200+", icon: Users },
-    { label: "Transactions Sécurisées", value: "800+", icon: Award },
+    { label: "Transactions SÃ©curisÃ©es", value: "800+", icon: Award },
     { label: "Professionnels Partenaires", value: "150+", icon: TrendingUp }
   ];
 
@@ -116,13 +116,13 @@ const ModernFooter = () => {
               />
               <div>
                 <span className="text-xl font-bold text-white">Teranga Foncier</span>
-                <div className="text-xs text-primary">La référence du foncier au Sénégal</div>
+                <div className="text-xs text-primary">La rÃ©fÃ©rence du foncier au SÃ©nÃ©gal</div>
               </div>
             </Link>
             
             <p className="text-gray-300 mb-6 leading-relaxed">
-              La première plateforme digitale sécurisée pour l'achat, la vente et la gestion de terrains au Sénégal. 
-              Nous connectons particuliers, professionnels et institutions pour des transactions foncières transparentes.
+              La premiÃ¨re plateforme digitale sÃ©curisÃ©e pour l'achat, la vente et la gestion de terrains au SÃ©nÃ©gal. 
+              Nous connectons particuliers, professionnels et institutions pour des transactions fonciÃ¨res transparentes.
             </p>
 
             {/* Contact CEO */}
@@ -131,7 +131,7 @@ const ModernFooter = () => {
               <div className="space-y-2 text-sm">
                 <div className="flex items-center gap-2">
                   <Users className="h-4 w-4 text-primary" />
-                  <span className="text-gray-300">Abdoulaye Diémé, CEO</span>
+                  <span className="text-gray-300">Abdoulaye DiÃ©mÃ©, CEO</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <Phone className="h-4 w-4 text-primary" />
@@ -148,7 +148,7 @@ const ModernFooter = () => {
               </div>
             </div>
 
-            {/* Réseaux sociaux */}
+            {/* RÃ©seaux sociaux */}
             <div>
               <h4 className="font-semibold text-white mb-3">Suivez-nous</h4>
               <div className="flex gap-3">
@@ -199,15 +199,15 @@ const ModernFooter = () => {
         <div className="container mx-auto px-4 py-8">
           <div className="flex flex-col md:flex-row items-center justify-between gap-6">
             <div>
-              <h3 className="text-lg font-semibold text-white mb-2">Restez Informé</h3>
-              <p className="text-gray-300 text-sm">Recevez nos dernières offres de terrains et actualités du foncier</p>
+              <h3 className="text-lg font-semibold text-white mb-2">Restez InformÃ©</h3>
+              <p className="text-gray-300 text-sm">Recevez nos derniÃ¨res offres de terrains et actualitÃ©s du foncier</p>
             </div>
             
             <div className="flex gap-3 w-full md:w-auto">
               <input
                 type="email"
-                placeholder="Votre email"
-                className="flex-1 md:w-64 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
+                YOUR_API_KEY="Votre email"
+                className="flex-1 md:w-64 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white YOUR_API_KEY-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
               <Button className="px-6 bg-primary hover:bg-primary/90">
                 S'abonner
@@ -217,29 +217,29 @@ const ModernFooter = () => {
         </div>
       </div>
 
-      {/* Copyright et mentions légales */}
+      {/* Copyright et mentions lÃ©gales */}
       <div className="border-t border-gray-800">
         <div className="container mx-auto px-4 py-6">
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-gray-400 text-sm">
-              © {currentYear} Teranga Foncier. Tous droits réservés. 
-              <span className="mx-2">•</span>
-              Fait avec ❤️ au Sénégal
+              Â© {currentYear} Teranga Foncier. Tous droits rÃ©servÃ©s. 
+              <span className="mx-2">â€¢</span>
+              Fait avec â¤ï¸ au SÃ©nÃ©gal
             </div>
             
             <div className="flex items-center gap-6 text-sm">
               <Link to="/legal" className="text-gray-400 hover:text-primary transition-colors">
-                Mentions Légales
+                Mentions LÃ©gales
               </Link>
               <Link to="/privacy" className="text-gray-400 hover:text-primary transition-colors">
-                Confidentialité
+                ConfidentialitÃ©
               </Link>
               <Link to="/cookie-policy" className="text-gray-400 hover:text-primary transition-colors">
                 Cookies
               </Link>
               <div className="flex items-center gap-1 text-gray-400">
                 <Shield className="h-4 w-4" />
-                <span>Site Sécurisé SSL</span>
+                <span>Site SÃ©curisÃ© SSL</span>
               </div>
             </div>
           </div>

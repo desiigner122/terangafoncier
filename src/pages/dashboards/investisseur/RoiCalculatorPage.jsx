@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Calculator, 
@@ -37,19 +37,19 @@ const RoiCalculatorPage = () => {
       label: 'Conservateur',
       color: 'blue',
       multiplier: 0.8,
-      description: 'Scénario prudent avec rendements modérés'
+      description: 'ScÃ©nario prudent avec rendements modÃ©rÃ©s'
     },
     realistic: {
-      label: 'Réaliste',
+      label: 'RÃ©aliste',
       color: 'green',
       multiplier: 1.0,
-      description: 'Scénario basé sur les tendances historiques'
+      description: 'ScÃ©nario basÃ© sur les tendances historiques'
     },
     optimistic: {
       label: 'Optimiste',
       color: 'purple',
       multiplier: 1.2,
-      description: 'Scénario avec conditions favorables'
+      description: 'ScÃ©nario avec conditions favorables'
     }
   };
 
@@ -74,7 +74,7 @@ const RoiCalculatorPage = () => {
     const totalGain = futureValue - totalInvested;
     const totalROI = (totalGain / totalInvested) * 100;
     
-    // Valeur avec appréciation immobilière
+    // Valeur avec apprÃ©ciation immobiliÃ¨re
     const appreciationRate = adjustedAppreciation / 100;
     const propertyValue = inputs.initialInvestment * Math.pow(1 + appreciationRate, inputs.investmentPeriod);
     
@@ -131,10 +131,10 @@ const RoiCalculatorPage = () => {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Calculateur de Rentabilité (ROI)
+            Calculateur de RentabilitÃ© (ROI)
           </h1>
           <p className="text-gray-600">
-            Analysez et projettez la rentabilité de vos investissements immobiliers
+            Analysez et projettez la rentabilitÃ© de vos investissements immobiliers
           </p>
         </motion.div>
 
@@ -149,7 +149,7 @@ const RoiCalculatorPage = () => {
               <div className="flex items-center mb-6">
                 <Calculator className="h-6 w-6 text-indigo-600 mr-3" />
                 <h2 className="text-xl font-semibold text-gray-900">
-                  Paramètres d'Investissement
+                  ParamÃ¨tres d'Investissement
                 </h2>
               </div>
 
@@ -197,7 +197,7 @@ const RoiCalculatorPage = () => {
                 {/* Investment Period */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Période d'Investissement (années)
+                    PÃ©riode d'Investissement (annÃ©es)
                   </label>
                   <input
                     type="number"
@@ -210,7 +210,7 @@ const RoiCalculatorPage = () => {
                 {/* Property Appreciation */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Appréciation Immobilière (% annuel)
+                    ApprÃ©ciation ImmobiliÃ¨re (% annuel)
                   </label>
                   <input
                     type="number"
@@ -237,7 +237,7 @@ const RoiCalculatorPage = () => {
 
                 {/* Advanced Parameters */}
                 <div className="border-t pt-4">
-                  <h3 className="text-sm font-medium text-gray-700 mb-4">Paramètres Avancés</h3>
+                  <h3 className="text-sm font-medium text-gray-700 mb-4">ParamÃ¨tres AvancÃ©s</h3>
                   
                   <div className="space-y-4">
                     <div>
@@ -279,7 +279,7 @@ const RoiCalculatorPage = () => {
           >
             {/* Scenario Selector */}
             <div className="bg-white rounded-xl p-6 shadow-lg mb-6">
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Scénarios de Projection</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">ScÃ©narios de Projection</h3>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {Object.entries(scenarios).map(([key, scenario]) => (
                   <button
@@ -342,12 +342,12 @@ const RoiCalculatorPage = () => {
               <div className="bg-white rounded-xl p-6 shadow-lg">
                 <div className="flex items-center justify-between">
                   <div>
-                    <p className="text-sm text-gray-600">Valeur Immobilière</p>
+                    <p className="text-sm text-gray-600">Valeur ImmobiliÃ¨re</p>
                     <p className="text-2xl font-bold text-gray-900">
                       {formatCurrency(results.propertyValue || 0)}
                     </p>
                     <p className="text-sm text-gray-600 mt-2">
-                      Appréciation: {inputs.propertyAppreciation}%/an
+                      ApprÃ©ciation: {inputs.propertyAppreciation}%/an
                     </p>
                   </div>
                   <div className="p-3 bg-purple-100 rounded-full">
@@ -376,32 +376,32 @@ const RoiCalculatorPage = () => {
 
             {/* Detailed Analysis */}
             <div className="bg-white rounded-xl p-6 shadow-lg">
-              <h3 className="text-lg font-semibold text-gray-900 mb-6">Analyse Détaillée</h3>
+              <h3 className="text-lg font-semibold text-gray-900 mb-6">Analyse DÃ©taillÃ©e</h3>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
-                  <h4 className="font-medium text-gray-700 mb-4">Métriques Clés</h4>
+                  <h4 className="font-medium text-gray-700 mb-4">MÃ©triques ClÃ©s</h4>
                   <div className="space-y-3">
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Rendement Annualisé:</span>
+                      <span className="text-sm text-gray-600">Rendement AnnualisÃ©:</span>
                       <span className="font-medium">
                         {formatPercent((results.annualizedReturn || 0) * 100)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Seuil de Rentabilité:</span>
+                      <span className="text-sm text-gray-600">Seuil de RentabilitÃ©:</span>
                       <span className="font-medium">
                         {(results.breakEvenTime || 0).toFixed(1)} mois
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Valeur Ajustée Inflation:</span>
+                      <span className="text-sm text-gray-600">Valeur AjustÃ©e Inflation:</span>
                       <span className="font-medium">
                         {formatCurrency(results.inflationAdjustedValue || 0)}
                       </span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-sm text-gray-600">Gain Après Impôts:</span>
+                      <span className="text-sm text-gray-600">Gain AprÃ¨s ImpÃ´ts:</span>
                       <span className="font-medium">
                         {formatCurrency(results.afterTaxValue || 0)}
                       </span>
@@ -415,32 +415,32 @@ const RoiCalculatorPage = () => {
                     <div className="flex items-start">
                       <CheckCircle className="h-4 w-4 text-green-600 mr-2 mt-0.5" />
                       <span className="text-sm text-gray-600">
-                        Rentabilité attractive pour un investissement long terme
+                        RentabilitÃ© attractive pour un investissement long terme
                       </span>
                     </div>
                     <div className="flex items-start">
                       <Info className="h-4 w-4 text-blue-600 mr-2 mt-0.5" />
                       <span className="text-sm text-gray-600">
-                        Diversifiez votre portefeuille pour réduire les risques
+                        Diversifiez votre portefeuille pour rÃ©duire les risques
                       </span>
                     </div>
                     <div className="flex items-start">
                       <AlertCircle className="h-4 w-4 text-yellow-600 mr-2 mt-0.5" />
                       <span className="text-sm text-gray-600">
-                        Considérez l'impact de l'inflation sur vos projections
+                        ConsidÃ©rez l'impact de l'inflation sur vos projections
                       </span>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Chart Placeholder */}
+              {/* Chart YOUR_API_KEY */}
               <div className="mt-6 pt-6 border-t">
-                <h4 className="font-medium text-gray-700 mb-4">Évolution de l'Investissement</h4>
+                <h4 className="font-medium text-gray-700 mb-4">Ã‰volution de l'Investissement</h4>
                 <div className="h-64 bg-gradient-to-r from-indigo-100 to-cyan-100 rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <BarChart3 className="h-12 w-12 text-indigo-600 mx-auto mb-4" />
-                    <p className="text-gray-600">Graphique d'évolution en cours de développement</p>
+                    <p className="text-gray-600">Graphique d'Ã©volution en cours de dÃ©veloppement</p>
                     <p className="text-sm text-gray-500 mt-2">
                       Visualisation de la croissance de votre investissement
                     </p>

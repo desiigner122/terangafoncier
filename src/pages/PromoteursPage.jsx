@@ -827,7 +827,7 @@ const PromoteursPage = () => {
                   <div className="relative">
                     <input 
                       type="text" 
-                      placeholder="25,000,000" 
+                      YOUR_API_KEY="25,000,000" 
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <span className="absolute right-3 top-3 text-gray-500">FCFA</span>
@@ -839,7 +839,7 @@ const PromoteursPage = () => {
                   <div className="relative">
                     <input 
                       type="text" 
-                      placeholder="2,500,000" 
+                      YOUR_API_KEY="2,500,000" 
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                     <span className="absolute right-3 top-3 text-gray-500">FCFA</span>

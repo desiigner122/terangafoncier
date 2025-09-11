@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Shield, Search, CheckCircle, AlertTriangle, XCircle, FileText, Eye, Lock, Zap, Users, Award } from 'lucide-react';
@@ -16,7 +16,7 @@ const PropertyVerificationPage = () => {
   const verifyProperty = async () => {
     setIsVerifying(true);
     
-    // Simulation de vérification
+    // Simulation de vÃ©rification
     setTimeout(() => {
       const mockResult = {
         status: 'verified',
@@ -24,10 +24,10 @@ const PropertyVerificationPage = () => {
         isAuthentic: true,
         owner: 'Amadou DIOP',
         location: 'Almadies, Dakar',
-        surface: '500 m²',
+        surface: '500 mÂ²',
         registrationDate: '15 Mars 2020',
-        lastUpdate: '28 Août 2024',
-        notary: 'Maître Fatou SALL',
+        lastUpdate: '28 AoÃ»t 2024',
+        notary: 'MaÃ®tre Fatou SALL',
         encumbrances: [],
         riskScore: 5,
         blockchain: {
@@ -51,18 +51,18 @@ const PropertyVerificationPage = () => {
   const features = [
     {
       icon: Shield,
-      title: "Vérification Blockchain",
-      description: "Chaque titre foncier est enregistré sur la blockchain pour une traçabilité complète"
+      title: "VÃ©rification Blockchain",
+      description: "Chaque titre foncier est enregistrÃ© sur la blockchain pour une traÃ§abilitÃ© complÃ¨te"
     },
     {
       icon: Users,
-      title: "Notaires Certifiés",
-      description: "Vérification par des notaires partenaires agréés par l'État du Sénégal"
+      title: "Notaires CertifiÃ©s",
+      description: "VÃ©rification par des notaires partenaires agrÃ©Ã©s par l'Ã‰tat du SÃ©nÃ©gal"
     },
     {
       icon: Zap,
-      title: "Résultats Instantanés",
-      description: "Obtenez le statut de vérification en quelques secondes"
+      title: "RÃ©sultats InstantanÃ©s",
+      description: "Obtenez le statut de vÃ©rification en quelques secondes"
     }
   ];
 
@@ -95,9 +95,9 @@ const PropertyVerificationPage = () => {
   return (
     <>
       <Helmet>
-        <title>Vérificateur de Propriété - Teranga Foncier</title>
-        <meta name="description" content="Vérifiez l'authenticité de votre titre foncier au Sénégal. Blockchain, notaires certifiés, protection anti-fraude pour sécuriser vos transactions." />
-        <meta name="keywords" content="vérification titre foncier sénégal, authentification propriété, anti-fraude immobilier, blockchain foncier" />
+        <title>VÃ©rificateur de PropriÃ©tÃ© - Teranga Foncier</title>
+        <meta name="description" content="VÃ©rifiez l'authenticitÃ© de votre titre foncier au SÃ©nÃ©gal. Blockchain, notaires certifiÃ©s, protection anti-fraude pour sÃ©curiser vos transactions." />
+        <meta name="keywords" content="vÃ©rification titre foncier sÃ©nÃ©gal, authentification propriÃ©tÃ©, anti-fraude immobilier, blockchain foncier" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-green-50 to-teal-50">
@@ -118,22 +118,22 @@ const PropertyVerificationPage = () => {
               </div>
               
               <h1 className="text-5xl font-bold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent mb-6">
-                Vérificateur de Propriété
+                VÃ©rificateur de PropriÃ©tÃ©
               </h1>
               
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Vérifiez l'authenticité de votre titre foncier en quelques secondes.
+                VÃ©rifiez l'authenticitÃ© de votre titre foncier en quelques secondes.
                 <br />
-                <span className="text-emerald-600 font-semibold">Protection blockchain • Notaires certifiés • Sécurité garantie</span>
+                <span className="text-emerald-600 font-semibold">Protection blockchain â€¢ Notaires certifiÃ©s â€¢ SÃ©curitÃ© garantie</span>
               </p>
 
               <div className="bg-white rounded-2xl p-6 shadow-lg border border-emerald-100 max-w-2xl mx-auto">
                 <div className="flex items-center justify-center mb-4">
                   <Award className="h-6 w-6 text-emerald-600 mr-2" />
-                  <span className="text-emerald-800 font-semibold">98% de fraudes détectées</span>
+                  <span className="text-emerald-800 font-semibold">98% de fraudes dÃ©tectÃ©es</span>
                 </div>
                 <p className="text-gray-600 text-sm">
-                  Plus de 50,000 titres fonciers vérifiés avec succès au Sénégal
+                  Plus de 50,000 titres fonciers vÃ©rifiÃ©s avec succÃ¨s au SÃ©nÃ©gal
                 </p>
               </div>
             </motion.div>
@@ -171,8 +171,8 @@ const PropertyVerificationPage = () => {
             <div className="max-w-4xl mx-auto">
               <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
                 <div className="bg-gradient-to-r from-emerald-600 to-teal-600 p-8">
-                  <h2 className="text-3xl font-bold text-white mb-2">Vérification de Titre Foncier</h2>
-                  <p className="text-emerald-100">Saisissez les informations de votre propriété pour vérification</p>
+                  <h2 className="text-3xl font-bold text-white mb-2">VÃ©rification de Titre Foncier</h2>
+                  <p className="text-emerald-100">Saisissez les informations de votre propriÃ©tÃ© pour vÃ©rification</p>
                 </div>
 
                 <div className="p-8">
@@ -181,11 +181,11 @@ const PropertyVerificationPage = () => {
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           <FileText className="inline h-4 w-4 mr-2" />
-                          Numéro du Titre Foncier
+                          NumÃ©ro du Titre Foncier
                         </label>
                         <input
                           type="text"
-                          placeholder="Ex: TF 12345/DK"
+                          YOUR_API_KEY="Ex: TF 12345/DK"
                           value={verificationData.titleNumber}
                           onChange={(e) => setVerificationData({...verificationData, titleNumber: e.target.value})}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -199,7 +199,7 @@ const PropertyVerificationPage = () => {
                         </label>
                         <input
                           type="text"
-                          placeholder="Ex: Almadies, Dakar"
+                          YOUR_API_KEY="Ex: Almadies, Dakar"
                           value={verificationData.location}
                           onChange={(e) => setVerificationData({...verificationData, location: e.target.value})}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -209,11 +209,11 @@ const PropertyVerificationPage = () => {
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           <Users className="inline h-4 w-4 mr-2" />
-                          Nom du Propriétaire (optionnel)
+                          Nom du PropriÃ©taire (optionnel)
                         </label>
                         <input
                           type="text"
-                          placeholder="Ex: Amadou DIOP"
+                          YOUR_API_KEY="Ex: Amadou DIOP"
                           value={verificationData.ownerName}
                           onChange={(e) => setVerificationData({...verificationData, ownerName: e.target.value})}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -223,10 +223,10 @@ const PropertyVerificationPage = () => {
                       <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                         <div className="flex items-center mb-2">
                           <Lock className="h-4 w-4 text-blue-600 mr-2" />
-                          <span className="text-sm font-semibold text-blue-800">Confidentialité Garantie</span>
+                          <span className="text-sm font-semibold text-blue-800">ConfidentialitÃ© Garantie</span>
                         </div>
                         <p className="text-sm text-blue-700">
-                          Toutes les informations sont chiffrées et protégées. Nous ne stockons aucune donnée personnelle.
+                          Toutes les informations sont chiffrÃ©es et protÃ©gÃ©es. Nous ne stockons aucune donnÃ©e personnelle.
                         </p>
                       </div>
 
@@ -238,12 +238,12 @@ const PropertyVerificationPage = () => {
                         {isVerifying ? (
                           <>
                             <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                            Vérification en cours...
+                            VÃ©rification en cours...
                           </>
                         ) : (
                           <>
                             <Shield className="inline h-5 w-5 mr-2" />
-                            Vérifier la propriété
+                            VÃ©rifier la propriÃ©tÃ©
                           </>
                         )}
                       </button>
@@ -260,28 +260,28 @@ const PropertyVerificationPage = () => {
                           <div className="flex items-center">
                             {getStatusIcon(verificationResult.status)}
                             <h3 className="text-2xl font-bold text-gray-800 ml-3">
-                              Propriété Vérifiée ✓
+                              PropriÃ©tÃ© VÃ©rifiÃ©e âœ“
                             </h3>
                           </div>
                           <div className="text-right">
-                            <div className="text-sm text-gray-600">Score de Sécurité</div>
+                            <div className="text-sm text-gray-600">Score de SÃ©curitÃ©</div>
                             <div className="text-2xl font-bold text-green-600">
                               {verificationResult.riskScore}/5
                             </div>
                           </div>
                         </div>
                         <p className="text-gray-700">
-                          Le titre foncier <strong>{verificationResult.titleNumber}</strong> est authentique et vérifié.
+                          Le titre foncier <strong>{verificationResult.titleNumber}</strong> est authentique et vÃ©rifiÃ©.
                         </p>
                       </div>
 
                       {/* Property Details */}
                       <div className="grid md:grid-cols-2 gap-6">
                         <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                          <h4 className="text-lg font-semibold text-gray-800 mb-4">Informations de la Propriété</h4>
+                          <h4 className="text-lg font-semibold text-gray-800 mb-4">Informations de la PropriÃ©tÃ©</h4>
                           <div className="space-y-3">
                             <div>
-                              <span className="text-sm text-gray-600">Propriétaire:</span>
+                              <span className="text-sm text-gray-600">PropriÃ©taire:</span>
                               <div className="font-semibold">{verificationResult.owner}</div>
                             </div>
                             <div>
@@ -300,18 +300,18 @@ const PropertyVerificationPage = () => {
                         </div>
 
                         <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                          <h4 className="text-lg font-semibold text-gray-800 mb-4">Validation Légale</h4>
+                          <h4 className="text-lg font-semibold text-gray-800 mb-4">Validation LÃ©gale</h4>
                           <div className="space-y-3">
                             <div>
                               <span className="text-sm text-gray-600">Notaire responsable:</span>
                               <div className="font-semibold">{verificationResult.notary}</div>
                             </div>
                             <div>
-                              <span className="text-sm text-gray-600">Dernière mise à jour:</span>
+                              <span className="text-sm text-gray-600">DerniÃ¨re mise Ã  jour:</span>
                               <div className="font-semibold">{verificationResult.lastUpdate}</div>
                             </div>
                             <div>
-                              <span className="text-sm text-gray-600">Charges/Hypothèques:</span>
+                              <span className="text-sm text-gray-600">Charges/HypothÃ¨ques:</span>
                               <div className="font-semibold text-green-600">Aucune</div>
                             </div>
                           </div>
@@ -322,7 +322,7 @@ const PropertyVerificationPage = () => {
                       <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-2xl p-6 border border-blue-200">
                         <h4 className="text-lg font-semibold text-gray-800 mb-4 flex items-center">
                           <Shield className="h-5 w-5 text-blue-600 mr-2" />
-                          Vérification Blockchain
+                          VÃ©rification Blockchain
                         </h4>
                         <div className="grid md:grid-cols-2 gap-4">
                           <div>
@@ -342,7 +342,7 @@ const PropertyVerificationPage = () => {
 
                       {/* Documents */}
                       <div className="bg-white rounded-2xl p-6 border border-gray-200">
-                        <h4 className="text-lg font-semibold text-gray-800 mb-4">Documents Vérifiés</h4>
+                        <h4 className="text-lg font-semibold text-gray-800 mb-4">Documents VÃ©rifiÃ©s</h4>
                         <div className="grid md:grid-cols-2 gap-4">
                           {verificationResult.documents.map((doc, index) => (
                             <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -362,11 +362,11 @@ const PropertyVerificationPage = () => {
                           onClick={() => setVerificationResult(null)}
                           className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-6 py-3 rounded-xl font-semibold hover:from-emerald-700 hover:to-teal-700 transition-all"
                         >
-                          Nouvelle vérification
+                          Nouvelle vÃ©rification
                         </button>
                         <button className="border border-gray-300 text-gray-700 px-6 py-3 rounded-xl font-semibold hover:bg-gray-50 transition-colors flex items-center">
                           <Eye className="h-4 w-4 mr-2" />
-                          Rapport détaillé
+                          Rapport dÃ©taillÃ©
                         </button>
                         <button className="border border-emerald-300 text-emerald-700 px-6 py-3 rounded-xl font-semibold hover:bg-emerald-50 transition-colors">
                           Contacter le notaire
@@ -384,20 +384,20 @@ const PropertyVerificationPage = () => {
         <section className="py-16 bg-white">
           <div className="container mx-auto px-6">
             <div className="max-w-4xl mx-auto text-center">
-              <h2 className="text-3xl font-bold text-gray-800 mb-8">Comment ça fonctionne ?</h2>
+              <h2 className="text-3xl font-bold text-gray-800 mb-8">Comment Ã§a fonctionne ?</h2>
               <div className="grid md:grid-cols-3 gap-8">
                 <div className="text-center">
                   <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-white font-bold text-xl">1</span>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Saisie des données</h3>
-                  <p className="text-gray-600">Entrez le numéro de titre foncier et les informations de base</p>
+                  <h3 className="text-xl font-semibold mb-2">Saisie des donnÃ©es</h3>
+                  <p className="text-gray-600">Entrez le numÃ©ro de titre foncier et les informations de base</p>
                 </div>
                 <div className="text-center">
                   <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-600 rounded-full flex items-center justify-center mx-auto mb-4">
                     <span className="text-white font-bold text-xl">2</span>
                   </div>
-                  <h3 className="text-xl font-semibold mb-2">Vérification croisée</h3>
+                  <h3 className="text-xl font-semibold mb-2">VÃ©rification croisÃ©e</h3>
                   <p className="text-gray-600">Consultation des bases notariales et blockchain</p>
                 </div>
                 <div className="text-center">
@@ -405,7 +405,7 @@ const PropertyVerificationPage = () => {
                     <span className="text-white font-bold text-xl">3</span>
                   </div>
                   <h3 className="text-xl font-semibold mb-2">Rapport complet</h3>
-                  <p className="text-gray-600">Résultat détaillé avec score de sécurité</p>
+                  <p className="text-gray-600">RÃ©sultat dÃ©taillÃ© avec score de sÃ©curitÃ©</p>
                 </div>
               </div>
             </div>
@@ -422,14 +422,14 @@ const PropertyVerificationPage = () => {
               className="max-w-3xl mx-auto"
             >
               <h2 className="text-3xl font-bold text-white mb-6">
-                Protégez-vous contre la fraude foncière
+                ProtÃ©gez-vous contre la fraude fonciÃ¨re
               </h2>
               <p className="text-xl text-emerald-100 mb-8">
-                Utilisez notre système de vérification avant tout achat immobilier au Sénégal
+                Utilisez notre systÃ¨me de vÃ©rification avant tout achat immobilier au SÃ©nÃ©gal
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
                 <button className="bg-white text-emerald-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
-                  Vérifier maintenant
+                  VÃ©rifier maintenant
                 </button>
                 <button className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white hover:text-emerald-600 transition-colors">
                   En savoir plus

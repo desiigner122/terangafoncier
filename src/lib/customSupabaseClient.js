@@ -1,22 +1,13 @@
-﻿// Mock Supabase pour desactiver temporairement les appels DB
-console.warn('Supabase desactive - Mode comptes de test uniquement');
+﻿import { createClient } from '@supabase/supabase-js';
 
-export const supabase = {
-  auth: {
-    getSession: () => Promise.resolve({ data: { session: null }, error: null }),
-    getUser: () => Promise.resolve({ data: { user: null }, error: null }),
-    signInWithPassword: () => Promise.resolve({ data: null, error: new Error('Supabase desactive') }),
-    signOut: () => Promise.resolve({ error: null }),
-    onAuthStateChange: () => ({ data: { subscription: { unsubscribe: () => {} } } })
-  },
-  from: () => ({
-    select: () => ({ data: [], error: null }),
-    insert: () => ({ data: null, error: new Error('DB desactivee') }),
-    update: () => ({ data: null, error: new Error('DB desactivee') }),
-    delete: () => ({ data: null, error: new Error('DB desactivee') }),
-    upsert: () => ({ data: null, error: new Error('DB desactivee') })
-  })
-};
+// Configuration Supabase réactivée - utilise les variables d'environnement
+const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
-export const createClient = () => supabase;
+if (!supabaseUrl || !supabaseAnonKey) {
+  throw new Error('Supabase URL et Anon Key sont requis');
+}
+
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+
 export default supabase;

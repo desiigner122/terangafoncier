@@ -363,7 +363,7 @@ const UserActions = ({ user, onUserUpdated, onUserDeleted }) => {
                 id="ban_reason"
                 value={banReason}
                 onChange={(e) => setBanReason(e.target.value)}
-                placeholder="Expliquez la raison du bannissement..."
+                YOUR_API_KEY="Expliquez la raison du bannissement..."
                 className="mt-1"
               />
             </div>
@@ -414,7 +414,7 @@ const UserActions = ({ user, onUserUpdated, onUserDeleted }) => {
                 id="reject_reason"
                 value={rejectReason}
                 onChange={(e) => setRejectReason(e.target.value)}
-                placeholder="Expliquez la raison du rejet..."
+                YOUR_API_KEY="Expliquez la raison du rejet..."
                 className="mt-1"
               />
             </div>

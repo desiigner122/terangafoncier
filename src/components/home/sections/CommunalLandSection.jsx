@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   MapPin, 
@@ -25,19 +25,19 @@ const CommunalLandSection = () => {
     {
       icon: Euro,
       title: "Prix Accessibles",
-      description: "Terrains communaux jusqu'à 70% moins chers que le marché privé",
-      highlight: "Économies moyennes: 15M FCFA"
+      description: "Terrains communaux jusqu'Ã  70% moins chers que le marchÃ© privÃ©",
+      highlight: "Ã‰conomies moyennes: 15M FCFA"
     },
     {
       icon: Shield,
-      title: "Sécurité Juridique",
-      description: "Titres fonciers délivrés directement par les autorités compétentes",
-      highlight: "100% légal et sécurisé"
+      title: "SÃ©curitÃ© Juridique",
+      description: "Titres fonciers dÃ©livrÃ©s directement par les autoritÃ©s compÃ©tentes",
+      highlight: "100% lÃ©gal et sÃ©curisÃ©"
     },
     {
       icon: Eye,
       title: "Processus Transparent",
-      description: "Suivi en temps réel de votre demande avec notre plateforme",
+      description: "Suivi en temps rÃ©el de votre demande avec notre plateforme",
       highlight: "Transparence totale"
     }
   ];
@@ -45,7 +45,7 @@ const CommunalLandSection = () => {
   const processSteps = [
     {
       step: 1,
-      title: "Dépôt de Demande",
+      title: "DÃ©pÃ´t de Demande",
       description: "Soumettez votre demande en ligne avec les documents requis",
       duration: "1 jour",
       icon: FileText,
@@ -53,8 +53,8 @@ const CommunalLandSection = () => {
     },
     {
       step: 2,
-      title: "Vérification",
-      description: "La mairie vérifie votre éligibilité et vos documents",
+      title: "VÃ©rification",
+      description: "La mairie vÃ©rifie votre Ã©ligibilitÃ© et vos documents",
       duration: "7-14 jours",
       icon: CheckCircle,
       status: "active"
@@ -62,7 +62,7 @@ const CommunalLandSection = () => {
     {
       step: 3,
       title: "Attribution",
-      description: "Attribution du terrain selon les critères de la commune",
+      description: "Attribution du terrain selon les critÃ¨res de la commune",
       duration: "30-60 jours",
       icon: Award,
       status: "active"
@@ -83,15 +83,15 @@ const CommunalLandSection = () => {
       availablePlots: 45,
       averagePrice: "2.5M",
       processingTime: "2-3 mois",
-      image: "/api/placeholder/300/200",
+      image: "/api/YOUR_API_KEY/300/200",
       status: "Disponible"
     },
     {
-      name: "Thiès", 
+      name: "ThiÃ¨s", 
       availablePlots: 78,
       averagePrice: "1.8M",
       processingTime: "2-4 mois",
-      image: "/api/placeholder/300/200",
+      image: "/api/YOUR_API_KEY/300/200",
       status: "Disponible"
     },
     {
@@ -99,7 +99,7 @@ const CommunalLandSection = () => {
       availablePlots: 32,
       averagePrice: "1.2M",
       processingTime: "1-2 mois",
-      image: "/api/placeholder/300/200",
+      image: "/api/YOUR_API_KEY/300/200",
       status: "Disponible"
     },
     {
@@ -107,13 +107,13 @@ const CommunalLandSection = () => {
       availablePlots: 56,
       averagePrice: "2.1M",
       processingTime: "2-3 mois",
-      image: "/api/placeholder/300/200",
+      image: "/api/YOUR_API_KEY/300/200",
       status: "Disponible"
     }
   ];
 
   const requirements = [
-    "Carte d'identité nationale sénégalaise",
+    "Carte d'identitÃ© nationale sÃ©nÃ©galaise",
     "Justificatif de domicile",
     "Certificat de revenus",
     "Extrait de casier judiciaire",
@@ -121,17 +121,17 @@ const CommunalLandSection = () => {
   ];
 
   const stats = [
-    { value: "1,200+", label: "Demandes traitées", subtext: "Cette année" },
+    { value: "1,200+", label: "Demandes traitÃ©es", subtext: "Cette annÃ©e" },
     { value: "89%", label: "Taux d'approbation", subtext: "Dossiers complets" },
-    { value: "45 jours", label: "Délai moyen", subtext: "Traitement complet" },
-    { value: "15M FCFA", label: "Économie moyenne", subtext: "vs marché privé" }
+    { value: "45 jours", label: "DÃ©lai moyen", subtext: "Traitement complet" },
+    { value: "15M FCFA", label: "Ã‰conomie moyenne", subtext: "vs marchÃ© privÃ©" }
   ];
 
   return (
     <section className="py-20 bg-gradient-to-br from-green-50 via-white to-blue-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         
-        {/* En-tête */}
+        {/* En-tÃªte */}
         <div className="text-center mb-16">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -144,11 +144,11 @@ const CommunalLandSection = () => {
               Terrains Communaux
             </Badge>
             <h2 className="text-4xl font-bold text-gray-900 mb-6">
-              Accédez aux Terrains Communaux en Toute Transparence
+              AccÃ©dez aux Terrains Communaux en Toute Transparence
             </h2>
             <p className="text-xl text-gray-600 max-w-4xl mx-auto">
-              Notre plateforme révolutionne l'accès aux terrains communaux avec un processus 
-              transparent, rapide et sécurisé. Obtenez votre terrain à prix social.
+              Notre plateforme rÃ©volutionne l'accÃ¨s aux terrains communaux avec un processus 
+              transparent, rapide et sÃ©curisÃ©. Obtenez votre terrain Ã  prix social.
             </p>
           </motion.div>
         </div>
@@ -178,7 +178,7 @@ const CommunalLandSection = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            💰 Pourquoi Choisir les Terrains Communaux ?
+            ðŸ’° Pourquoi Choisir les Terrains Communaux ?
           </motion.h3>
           
           <div className="grid md:grid-cols-3 gap-8">
@@ -215,7 +215,7 @@ const CommunalLandSection = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            📋 Processus Simplifié
+            ðŸ“‹ Processus SimplifiÃ©
           </motion.h3>
           
           <div className="grid md:grid-cols-4 gap-6">
@@ -238,7 +238,7 @@ const CommunalLandSection = () => {
                     <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <step.icon className="h-8 w-8 text-green-600" />
                     </div>
-                    <div className="text-sm font-bold text-green-600 mb-2">ÉTAPE {step.step}</div>
+                    <div className="text-sm font-bold text-green-600 mb-2">Ã‰TAPE {step.step}</div>
                     <h4 className="font-bold text-gray-900 mb-2">{step.title}</h4>
                     <p className="text-sm text-gray-600 mb-3">{step.description}</p>
                     <Badge variant="outline" className="text-xs">
@@ -260,7 +260,7 @@ const CommunalLandSection = () => {
             whileInView={{ opacity: 1 }}
             viewport={{ once: true }}
           >
-            🏙️ Villes Participantes
+            ðŸ™ï¸ Villes Participantes
           </motion.h3>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -293,7 +293,7 @@ const CommunalLandSection = () => {
                         <span className="font-semibold text-green-600">{city.averagePrice} FCFA</span>
                       </div>
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Délai:</span>
+                        <span className="text-gray-600">DÃ©lai:</span>
                         <span className="font-semibold">{city.processingTime}</span>
                       </div>
                     </div>
@@ -307,7 +307,7 @@ const CommunalLandSection = () => {
           </div>
         </div>
 
-        {/* Conditions d'Éligibilité */}
+        {/* Conditions d'Ã‰ligibilitÃ© */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
@@ -318,7 +318,7 @@ const CommunalLandSection = () => {
           <div className="grid md:grid-cols-2 gap-8">
             <div>
               <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                📄 Documents Requis
+                ðŸ“„ Documents Requis
               </h3>
               <ul className="space-y-3">
                 {requirements.map((req, index) => (
@@ -331,16 +331,16 @@ const CommunalLandSection = () => {
             </div>
             <div>
               <h3 className="text-2xl font-bold text-gray-900 mb-6">
-                ⚡ Processus Accéléré
+                âš¡ Processus AccÃ©lÃ©rÃ©
               </h3>
               <div className="space-y-4">
                 <div className="flex items-center gap-3">
                   <Zap className="h-5 w-5 text-yellow-500" />
-                  <span className="text-gray-700">Dématérialisation complète</span>
+                  <span className="text-gray-700">DÃ©matÃ©rialisation complÃ¨te</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Eye className="h-5 w-5 text-blue-500" />
-                  <span className="text-gray-700">Suivi en temps réel</span>
+                  <span className="text-gray-700">Suivi en temps rÃ©el</span>
                 </div>
                 <div className="flex items-center gap-3">
                   <Calendar className="h-5 w-5 text-green-500" />
@@ -365,11 +365,11 @@ const CommunalLandSection = () => {
           className="text-center"
         >
           <h3 className="text-2xl font-bold text-gray-900 mb-4">
-            Prêt à Faire Votre Demande ?
+            PrÃªt Ã  Faire Votre Demande ?
           </h3>
           <p className="text-gray-600 mb-8 max-w-2xl mx-auto">
-            Rejoignez les centaines de Sénégalais qui ont déjà obtenu leur terrain 
-            communal grâce à notre plateforme transparente.
+            Rejoignez les centaines de SÃ©nÃ©galais qui ont dÃ©jÃ  obtenu leur terrain 
+            communal grÃ¢ce Ã  notre plateforme transparente.
           </p>
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
             <Button size="lg" asChild>

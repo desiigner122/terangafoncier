@@ -26,7 +26,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Helmet } from 'react-helmet-async';
 
 const BlockchainLoginPage = () => {
@@ -141,8 +141,8 @@ const BlockchainLoginPage = () => {
                         type="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                        placeholder="votre@email.com"
+                        className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                        YOUR_API_KEY="votre@email.com"
                         required
                       />
                     </div>
@@ -158,8 +158,8 @@ const BlockchainLoginPage = () => {
                         type={showPassword ? 'text' : 'password'}
                         value={formData.password}
                         onChange={handleInputChange}
-                        className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                        placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        className="pl-10 pr-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                        YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                         required
                       />
                       <button
@@ -306,7 +306,7 @@ const BlockchainLoginPage = () => {
               ))}
             </div>
 
-            {/* Testimonial */}
+            {}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}

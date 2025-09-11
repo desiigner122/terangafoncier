@@ -47,6 +47,7 @@ import {
   AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
   BarChart, Bar, PieChart, Pie, Cell, LineChart, Line
 } from 'recharts';
+import { AIEstimationWidget, AIMarketInsights } from '@/components/AIComponents';
 
 // Fonctions utilitaires
 const getActivityIcon = (type) => {
@@ -486,9 +487,9 @@ const AgentDashboardPage = () => {
               </CardTitle>
               <CardDescription>Gestion et suivi de vos prospects avec actions prioritaires</CardDescription>
               <div className="flex flex-col sm:flex-row flex-wrap items-start sm:items-center gap-2 mt-2">
-                <Input type="search" placeholder="Rechercher par client, parcelle..." className="max-w-xs" />
+                <Input type="search" YOUR_API_KEY="Rechercher par client, parcelle..." className="max-w-xs" />
                 <Select>
-                  <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filtrer par type" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[180px]"><SelectValue YOUR_API_KEY="Filtrer par type" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous types</SelectItem>
                     <SelectItem value="info">Information</SelectItem>
@@ -498,7 +499,7 @@ const AgentDashboardPage = () => {
                   </SelectContent>
                 </Select>
                 <Select>
-                  <SelectTrigger className="w-full sm:w-[180px]"><SelectValue placeholder="Filtrer par statut" /></SelectTrigger>
+                  <SelectTrigger className="w-full sm:w-[180px]"><SelectValue YOUR_API_KEY="Filtrer par statut" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous statuts</SelectItem>
                     <SelectItem value="nouvelle">Nouvelle</SelectItem>
@@ -714,6 +715,12 @@ const AgentDashboardPage = () => {
             </Card>
           </motion.div>
         ))}
+      </div>
+
+      {/* 🚀 WIDGETS IA TERANGA - SPÉCIALISATION AGENTS */}
+      <div className="grid gap-6 md:grid-cols-1 lg:grid-cols-2">
+        <AIEstimationWidget className="w-full" />
+        <AIMarketInsights region="Dakar" className="w-full" />
       </div>
 
       <div className="border-b border-gray-200 dark:border-gray-700">

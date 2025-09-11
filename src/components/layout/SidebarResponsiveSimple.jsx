@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -11,19 +11,19 @@ import {
   Home
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MobileDrawer from '@/components/ui/mobile-drawer';
 
 const logoUrl = "/teranga-foncier-logo.svg";
 
-// Configuration sidebar simplifiÃ©e
+// Configuration sidebar simplifiée
 const getSimpleSidebarConfig = (role) => {
   const baseConfig = [
     { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
     { href: '/profile', label: 'Profil', icon: User },
-    { href: '/settings', label: 'ParamÃ¨tres', icon: Settings }
+    { href: '/settings', label: 'Paramètres', icon: Settings }
   ];
 
   if (role === 'admin') {
@@ -123,7 +123,7 @@ const SidebarContent = ({ onNavigate }) => {
             onClick={handleSignOut}
           >
             <LogOut className="mr-3 h-4 w-4 flex-shrink-0" />
-            DÃ©connexion
+            Déconnexion
           </Button>
         </div>
       )}

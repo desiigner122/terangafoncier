@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ShoppingCart, 
@@ -34,7 +34,7 @@ const PurchaseProcessPage = () => {
       phone: '',
       address: '',
       city: '',
-      country: 'Sénégal'
+      country: 'SÃ©nÃ©gal'
     },
     paymentMethod: '',
     paymentSchedule: 'full',
@@ -48,16 +48,16 @@ const PurchaseProcessPage = () => {
 
   const [property] = useState({
     id: propertyId || '123',
-    title: 'Terrain de 500m² à Almadies',
+    title: 'Terrain de 500mÂ² Ã  Almadies',
     location: 'Almadies, Dakar',
     price: 75000000,
     area: 500,
     type: 'Terrain',
-    description: 'Magnifique terrain viabilisé dans un quartier résidentiel calme',
+    description: 'Magnifique terrain viabilisÃ© dans un quartier rÃ©sidentiel calme',
     images: [
       'https://images.unsplash.com/photo-1500382017468-9049fed747ef?ixlib=rb-1.2.1&auto=format&fit=crop&w=800&q=80'
     ],
-    features: ['Viabilisé', 'Titre foncier', 'Proche des commodités'],
+    features: ['ViabilisÃ©', 'Titre foncier', 'Proche des commoditÃ©s'],
     seller: {
       name: 'Amadou Ndiaye',
       phone: '+221 77 123 45 67',
@@ -68,7 +68,7 @@ const PurchaseProcessPage = () => {
   const steps = [
     { id: 1, title: 'Informations personnelles', icon: User },
     { id: 2, title: 'Mode de paiement', icon: CreditCard },
-    { id: 3, title: 'Documents légaux', icon: FileText },
+    { id: 3, title: 'Documents lÃ©gaux', icon: FileText },
     { id: 4, title: 'Confirmation', icon: Check }
   ];
 
@@ -110,7 +110,7 @@ const PurchaseProcessPage = () => {
       // Simulation d'API call
       await new Promise(resolve => setTimeout(resolve, 3000));
       
-      // Redirection vers page de succès
+      // Redirection vers page de succÃ¨s
       navigate(`/purchase-success/${property.id}`, {
         state: { purchaseData, property }
       });
@@ -133,13 +133,13 @@ const PurchaseProcessPage = () => {
             <h3 className="text-xl font-semibold text-gray-900 mb-6">Informations personnelles</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Prénom</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">PrÃ©nom</label>
                 <input
                   type="text"
                   value={purchaseData.personalInfo.firstName}
                   onChange={(e) => handleInputChange('personalInfo', 'firstName', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Entrez votre prénom"
+                  YOUR_API_KEY="Entrez votre prÃ©nom"
                   required
                 />
               </div>
@@ -150,7 +150,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.lastName}
                   onChange={(e) => handleInputChange('personalInfo', 'lastName', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Entrez votre nom"
+                  YOUR_API_KEY="Entrez votre nom"
                   required
                 />
               </div>
@@ -161,18 +161,18 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.email}
                   onChange={(e) => handleInputChange('personalInfo', 'email', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="votre.email@exemple.com"
+                  YOUR_API_KEY="votre.email@exemple.com"
                   required
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Téléphone</label>
+                <label className="block text-sm font-medium text-gray-700 mb-2">TÃ©lÃ©phone</label>
                 <input
                   type="tel"
                   value={purchaseData.personalInfo.phone}
                   onChange={(e) => handleInputChange('personalInfo', 'phone', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="+221 77 123 45 67"
+                  YOUR_API_KEY="+221 77 123 45 67"
                   required
                 />
               </div>
@@ -183,7 +183,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.address}
                   onChange={(e) => handleInputChange('personalInfo', 'address', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Votre adresse complète"
+                  YOUR_API_KEY="Votre adresse complÃ¨te"
                   required
                 />
               </div>
@@ -194,7 +194,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.city}
                   onChange={(e) => handleInputChange('personalInfo', 'city', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  placeholder="Dakar"
+                  YOUR_API_KEY="Dakar"
                   required
                 />
               </div>
@@ -205,9 +205,9 @@ const PurchaseProcessPage = () => {
                   onChange={(e) => handleInputChange('personalInfo', 'country', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                 >
-                  <option value="Sénégal">Sénégal</option>
+                  <option value="SÃ©nÃ©gal">SÃ©nÃ©gal</option>
                   <option value="France">France</option>
-                  <option value="États-Unis">États-Unis</option>
+                  <option value="Ã‰tats-Unis">Ã‰tats-Unis</option>
                   <option value="Canada">Canada</option>
                   <option value="Autre">Autre</option>
                 </select>
@@ -252,7 +252,7 @@ const PurchaseProcessPage = () => {
                   />
                   <div className="flex-1">
                     <p className="font-medium text-gray-900">Virement bancaire</p>
-                    <p className="text-sm text-gray-600">Paiement sécurisé par virement</p>
+                    <p className="text-sm text-gray-600">Paiement sÃ©curisÃ© par virement</p>
                   </div>
                 </label>
 
@@ -281,7 +281,7 @@ const PurchaseProcessPage = () => {
                     className="mr-3"
                   />
                   <div className="flex-1">
-                    <p className="font-medium text-gray-900">Paiement échelonné</p>
+                    <p className="font-medium text-gray-900">Paiement Ã©chelonnÃ©</p>
                     <p className="text-sm text-gray-600">Payez en plusieurs fois</p>
                   </div>
                 </label>
@@ -289,7 +289,7 @@ const PurchaseProcessPage = () => {
 
               {purchaseData.paymentMethod === 'installments' && (
                 <div className="bg-gray-50 p-4 rounded-lg">
-                  <h5 className="font-medium text-gray-900 mb-3">Options de paiement échelonné</h5>
+                  <h5 className="font-medium text-gray-900 mb-3">Options de paiement Ã©chelonnÃ©</h5>
                   <div className="space-y-2">
                     <label className="flex items-center">
                       <input
@@ -300,7 +300,7 @@ const PurchaseProcessPage = () => {
                         onChange={(e) => setPurchaseData(prev => ({ ...prev, paymentSchedule: e.target.value }))}
                         className="mr-2"
                       />
-                      <span className="text-sm">3 mensualités de {Math.round(property.price / 3).toLocaleString()} FCFA</span>
+                      <span className="text-sm">3 mensualitÃ©s de {Math.round(property.price / 3).toLocaleString()} FCFA</span>
                     </label>
                     <label className="flex items-center">
                       <input
@@ -311,7 +311,7 @@ const PurchaseProcessPage = () => {
                         onChange={(e) => setPurchaseData(prev => ({ ...prev, paymentSchedule: e.target.value }))}
                         className="mr-2"
                       />
-                      <span className="text-sm">6 mensualités de {Math.round(property.price / 6).toLocaleString()} FCFA</span>
+                      <span className="text-sm">6 mensualitÃ©s de {Math.round(property.price / 6).toLocaleString()} FCFA</span>
                     </label>
                     <label className="flex items-center">
                       <input
@@ -322,7 +322,7 @@ const PurchaseProcessPage = () => {
                         onChange={(e) => setPurchaseData(prev => ({ ...prev, paymentSchedule: e.target.value }))}
                         className="mr-2"
                       />
-                      <span className="text-sm">12 mensualités de {Math.round(property.price / 12).toLocaleString()} FCFA</span>
+                      <span className="text-sm">12 mensualitÃ©s de {Math.round(property.price / 12).toLocaleString()} FCFA</span>
                     </label>
                   </div>
                 </div>
@@ -338,7 +338,7 @@ const PurchaseProcessPage = () => {
             animate={{ opacity: 1, x: 0 }}
             className="space-y-6"
           >
-            <h3 className="text-xl font-semibold text-gray-900 mb-6">Documents légaux</h3>
+            <h3 className="text-xl font-semibold text-gray-900 mb-6">Documents lÃ©gaux</h3>
             
             <div className="space-y-6">
               <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
@@ -347,7 +347,7 @@ const PurchaseProcessPage = () => {
                   <div>
                     <h4 className="font-medium text-yellow-800">Documents requis</h4>
                     <p className="text-sm text-yellow-700 mt-1">
-                      Ces documents sont nécessaires pour finaliser votre achat en toute sécurité
+                      Ces documents sont nÃ©cessaires pour finaliser votre achat en toute sÃ©curitÃ©
                     </p>
                   </div>
                 </div>
@@ -356,12 +356,12 @@ const PurchaseProcessPage = () => {
               <div className="space-y-4">
                 <div className="border border-gray-300 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-gray-900">Pièce d'identité</h4>
+                    <h4 className="font-medium text-gray-900">PiÃ¨ce d'identitÃ©</h4>
                     {purchaseData.legalDocuments.identityProof && (
                       <CheckCircle2 className="w-5 h-5 text-green-600" />
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">Carte d'identité, passeport ou permis de conduire</p>
+                  <p className="text-sm text-gray-600 mb-3">Carte d'identitÃ©, passeport ou permis de conduire</p>
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
@@ -388,12 +388,12 @@ const PurchaseProcessPage = () => {
 
                 <div className="border border-gray-300 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
-                    <h4 className="font-medium text-gray-900">Relevé bancaire</h4>
+                    <h4 className="font-medium text-gray-900">RelevÃ© bancaire</h4>
                     {purchaseData.legalDocuments.bankStatement && (
                       <CheckCircle2 className="w-5 h-5 text-green-600" />
                     )}
                   </div>
-                  <p className="text-sm text-gray-600 mb-3">Relevé bancaire des 3 derniers mois</p>
+                  <p className="text-sm text-gray-600 mb-3">RelevÃ© bancaire des 3 derniers mois</p>
                   <input
                     type="file"
                     accept=".pdf,.jpg,.jpeg,.png"
@@ -412,7 +412,7 @@ const PurchaseProcessPage = () => {
                     className="mt-1"
                   />
                   <div className="text-sm text-gray-700">
-                    <p>J'accepte les <a href="#" className="text-blue-600 hover:underline">conditions générales de vente</a> et je certifie que toutes les informations fournies sont exactes.</p>
+                    <p>J'accepte les <a href="#" className="text-blue-600 hover:underline">conditions gÃ©nÃ©rales de vente</a> et je certifie que toutes les informations fournies sont exactes.</p>
                   </div>
                 </label>
               </div>
@@ -433,10 +433,10 @@ const PurchaseProcessPage = () => {
               <div className="flex items-start gap-4">
                 <CheckCircle2 className="w-8 h-8 text-green-600 mt-1" />
                 <div>
-                  <h4 className="font-semibold text-green-800 text-lg">Félicitations !</h4>
+                  <h4 className="font-semibold text-green-800 text-lg">FÃ©licitations !</h4>
                   <p className="text-green-700 mt-1">
-                    Vous êtes sur le point de finaliser l'achat de votre propriété. 
-                    Veuillez vérifier toutes les informations ci-dessous.
+                    Vous Ãªtes sur le point de finaliser l'achat de votre propriÃ©tÃ©. 
+                    Veuillez vÃ©rifier toutes les informations ci-dessous.
                   </p>
                 </div>
               </div>
@@ -463,7 +463,7 @@ const PurchaseProcessPage = () => {
               </div>
 
               <div className="space-y-4">
-                <h4 className="font-semibold text-gray-900">Récapitulatif</h4>
+                <h4 className="font-semibold text-gray-900">RÃ©capitulatif</h4>
                 <div className="bg-white border border-gray-200 rounded-lg p-4 space-y-3">
                   <div className="flex justify-between">
                     <span className="text-gray-600">Acheteur:</span>
@@ -474,7 +474,7 @@ const PurchaseProcessPage = () => {
                     <span className="font-medium">{purchaseData.personalInfo.email}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Téléphone:</span>
+                    <span className="text-gray-600">TÃ©lÃ©phone:</span>
                     <span className="font-medium">{purchaseData.personalInfo.phone}</span>
                   </div>
                   <div className="flex justify-between">
@@ -482,7 +482,7 @@ const PurchaseProcessPage = () => {
                     <span className="font-medium">
                       {purchaseData.paymentMethod === 'bank_transfer' && 'Virement bancaire'}
                       {purchaseData.paymentMethod === 'mobile_money' && 'Mobile Money'}
-                      {purchaseData.paymentMethod === 'installments' && 'Paiement échelonné'}
+                      {purchaseData.paymentMethod === 'installments' && 'Paiement Ã©chelonnÃ©'}
                     </span>
                   </div>
                   <hr />
@@ -498,10 +498,10 @@ const PurchaseProcessPage = () => {
               <div className="flex items-start gap-3">
                 <Shield className="w-6 h-6 text-blue-600 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-blue-800">Transaction sécurisée</h4>
+                  <h4 className="font-medium text-blue-800">Transaction sÃ©curisÃ©e</h4>
                   <p className="text-sm text-blue-700 mt-1">
-                    Votre transaction est protégée par notre système de paiement sécurisé. 
-                    Les fonds seront bloqués en séquestre jusqu'à la finalisation de tous les documents légaux.
+                    Votre transaction est protÃ©gÃ©e par notre systÃ¨me de paiement sÃ©curisÃ©. 
+                    Les fonds seront bloquÃ©s en sÃ©questre jusqu'Ã  la finalisation de tous les documents lÃ©gaux.
                   </p>
                 </div>
               </div>
@@ -595,7 +595,7 @@ const PurchaseProcessPage = () => {
               className="flex items-center gap-2 px-6 py-3 text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               <ArrowLeft className="w-4 h-4" />
-              Précédent
+              PrÃ©cÃ©dent
             </button>
 
             {currentStep < steps.length ? (

@@ -27,7 +27,7 @@ const MarketNewsSection = () => {
     date: new Date(post.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
     excerpt: post.excerpt,
     category: post.category,
-    imagePlaceholder: post.title,
+    imageYOUR_API_KEY: post.title,
     slug: `/blog/${post.slug}`, 
     description: `Actualité du marché immobilier au Sénégal: ${post.title}`
   }));
@@ -61,7 +61,7 @@ const MarketNewsSection = () => {
           <motion.div key={newsItem.id} variants={itemVariants}>
             <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 border rounded-xl bg-card">
               <div className="aspect-video bg-muted relative">
-                 <img  className="w-full h-full object-cover" alt={newsItem.imagePlaceholder} src="https://images.unsplash.com/photo-1667118300849-1872d823219f" />
+                 <img  className="w-full h-full object-cover" alt={newsItem.imageYOUR_API_KEY} src="https://images.unsplash.com/photo-1667118300849-1872d823219f" />
                  <div className="absolute inset-0 bg-black/10"></div>
                  <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
                     {newsItem.category}

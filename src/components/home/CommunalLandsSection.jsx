@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   MapPin, 
@@ -14,37 +14,37 @@ const CommunalLandsSection = () => {
   const communalLands = [
     {
       id: 1,
-      title: "Terrain Communal Thiès",
-      location: "Thiès Centre",
-      surface: "500m²",
+      title: "Terrain Communal ThiÃ¨s",
+      location: "ThiÃ¨s Centre",
+      surface: "500mÂ²",
       requirements: "Dossier complet",
       status: "Attribution ouverte",
-      image: "/api/placeholder/300/200"
+      image: "/api/YOUR_API_KEY/300/200"
     },
     {
       id: 2,
       title: "Parcelle Communale Rufisque",
       location: "Rufisque Est",
-      surface: "750m²", 
-      requirements: "Résidence obligatoire",
+      surface: "750mÂ²", 
+      requirements: "RÃ©sidence obligatoire",
       status: "Attribution ouverte",
-      image: "/api/placeholder/300/200"
+      image: "/api/YOUR_API_KEY/300/200"
     },
     {
       id: 3,
       title: "Terrain Communal Kaolack",
       location: "Kaolack Nord",
-      surface: "400m²",
-      requirements: "Projet défini",
+      surface: "400mÂ²",
+      requirements: "Projet dÃ©fini",
       status: "Attribution ouverte",
-      image: "/api/placeholder/300/200"
+      image: "/api/YOUR_API_KEY/300/200"
     }
   ];
 
   return (
     <section className="py-16 bg-green-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* En-tête */}
+        {/* En-tÃªte */}
         <div className="text-center mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -60,7 +60,7 @@ const CommunalLandsSection = () => {
               Terrains Communaux par Attribution
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Demandez l'attribution de terrains communaux selon les critères officiels
+              Demandez l'attribution de terrains communaux selon les critÃ¨res officiels
             </p>
           </motion.div>
         </div>

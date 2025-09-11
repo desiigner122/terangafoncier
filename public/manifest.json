@@ -1,189 +1,94 @@
-{
-  "name": "Teranga Foncier - Plateforme Immobilière Blockchain & IA",
+﻿{
+  "name": "Teranga Foncier - Plateforme ImmobiliÃ¨re Intelligence Artificielle",
   "short_name": "Teranga Foncier",
-  "description": "La première plateforme immobilière du Sénégal intégrant blockchain, intelligence artificielle et tous les professionnels du secteur",
+  "description": "Plateforme immobiliÃ¨re intelligente avec blockchain et IA pour le SÃ©nÃ©gal",
   "start_url": "/",
   "display": "standalone",
+  "theme_color": "#e67e22",
   "background_color": "#ffffff",
-  "theme_color": "#2563eb",
   "orientation": "portrait-primary",
-  "scope": "/",
-  "categories": ["business", "productivity", "real-estate", "finance"],
-  "lang": "fr",
-  "dir": "ltr",
+  "categories": ["business", "finance", "productivity"],
+  "lang": "fr-SN",
   "icons": [
     {
-      "src": "/icons/icon-72x72.png",
+      "src": "/icon-72x72.png",
       "sizes": "72x72",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-96x96.png",
+      "src": "/icon-96x96.png",
       "sizes": "96x96",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-128x128.png",
+      "src": "/icon-128x128.png",
       "sizes": "128x128",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-144x144.png",
+      "src": "/icon-144x144.png",
       "sizes": "144x144",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-152x152.png",
+      "src": "/icon-152x152.png",
       "sizes": "152x152",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-192x192.png",
+      "src": "/icon-192x192.png",
       "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-384x384.png",
+      "src": "/icon-384x384.png",
       "sizes": "384x384",
-      "type": "image/png",
-      "purpose": "maskable any"
+      "type": "image/png"
     },
     {
-      "src": "/icons/icon-512x512.png",
+      "src": "/icon-512x512.png",
       "sizes": "512x512",
-      "type": "image/png",
-      "purpose": "maskable any"
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshots/desktop-home.png",
-      "sizes": "1280x720",
-      "type": "image/png",
-      "form_factor": "wide",
-      "label": "Page d'accueil sur desktop"
-    },
-    {
-      "src": "/screenshots/mobile-dashboard.png",
-      "sizes": "390x844",
-      "type": "image/png",
-      "form_factor": "narrow",
-      "label": "Dashboard mobile"
+      "type": "image/png"
     }
   ],
   "shortcuts": [
     {
       "name": "Dashboard",
       "short_name": "Dashboard",
-      "description": "Accès rapide au tableau de bord",
+      "description": "AccÃ©der au dashboard principal",
       "url": "/dashboard",
       "icons": [
         {
-          "src": "/icons/shortcut-dashboard.png",
+          "src": "/dashboard-icon.png",
           "sizes": "96x96"
         }
       ]
     },
     {
-      "name": "Recherche",
+      "name": "Rechercher",
       "short_name": "Recherche",
-      "description": "Rechercher des biens immobiliers",
+      "description": "Rechercher des propriÃ©tÃ©s",
       "url": "/search",
       "icons": [
         {
-          "src": "/icons/shortcut-search.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Assistant IA",
-      "short_name": "IA",
-      "description": "Chat avec l'assistant IA",
-      "url": "/chat",
-      "icons": [
-        {
-          "src": "/icons/shortcut-ai.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Notifications",
-      "short_name": "Notifs",
-      "description": "Voir les notifications",
-      "url": "/notifications",
-      "icons": [
-        {
-          "src": "/icons/shortcut-notifications.png",
+          "src": "/search-icon.png",
           "sizes": "96x96"
         }
       ]
     }
   ],
-  "related_applications": [
+  "screenshots": [
     {
-      "platform": "play",
-      "url": "https://play.google.com/store/apps/details?id=com.teranga.foncier",
-      "id": "com.teranga.foncier"
+      "src": "/screenshot-desktop.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
     },
     {
-      "platform": "itunes",
-      "url": "https://apps.apple.com/app/teranga-foncier/id123456789"
+      "src": "/screenshot-mobile.png",
+      "sizes": "540x720",
+      "type": "image/png",
+      "form_factor": "narrow"
     }
-  ],
-  "prefer_related_applications": false,
-  "features": [
-    "offline-support",
-    "push-notifications",
-    "background-sync",
-    "web-share",
-    "geolocation",
-    "camera",
-    "microphone"
-  ],
-  "edge_side_panel": {
-    "preferred_width": 400
-  },
-  "launch_handler": {
-    "client_mode": "focus-existing"
-  },
-  "protocol_handlers": [
-    {
-      "protocol": "web+teranga",
-      "url": "/handle?protocol=%s"
-    }
-  ],
-  "file_handlers": [
-    {
-      "action": "/handle-files",
-      "accept": {
-        "application/pdf": [".pdf"],
-        "image/*": [".jpg", ".jpeg", ".png", ".gif", ".webp"],
-        "application/vnd.ms-excel": [".xls", ".xlsx"]
-      }
-    }
-  ],
-  "share_target": {
-    "action": "/share",
-    "method": "POST",
-    "enctype": "multipart/form-data",
-    "params": {
-      "title": "title",
-      "text": "text",
-      "url": "url",
-      "files": [
-        {
-          "name": "images",
-          "accept": ["image/*"]
-        }
-      ]
-    }
-  }
+  ]
 }

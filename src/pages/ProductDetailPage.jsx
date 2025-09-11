@@ -18,7 +18,7 @@ import {
   ChevronRight
 } from 'lucide-react';
 
-const placeholderImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzc0MTUxIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K";
+const YOUR_API_KEYImage = "data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjMwMCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KICA8cmVjdCB3aWR0aD0iMTAwJSIgaGVpZ2h0PSIxMDAlIiBmaWxsPSIjMzc0MTUxIi8+CiAgPHRleHQgeD0iNTAlIiB5PSI1MCUiIGZvbnQtZmFtaWx5PSJBcmlhbCwgc2Fucy1zZXJpZiIgZm9udC1zaXplPSIxOCIgZmlsbD0iIzlDQTNBRiIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZHk9Ii4zZW0iPk5vIEltYWdlPC90ZXh0Pgo8L3N2Zz4K";
 
 function ProductDetailPage() {
   const { id } = useParams();
@@ -174,7 +174,7 @@ function ProductDetailPage() {
           <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.5 }} className="relative">
             <div className="relative overflow-hidden rounded-lg shadow-2xl h-96 md:h-[500px]">
               <img
-                src={!currentImage?.url ? placeholderImage : currentImage.url}
+                src={!currentImage?.url ? YOUR_API_KEYImage : currentImage.url}
                 alt={product.title}
                 className="w-full h-full object-cover"
               />
@@ -231,7 +231,7 @@ function ProductDetailPage() {
                     }`}
                   >
                     <img
-                      src={!image.url ? placeholderImage : image.url}
+                      src={!image.url ? YOUR_API_KEYImage : image.url}
                       alt={`${product.title} ${index + 1}`}
                       className="w-full h-full object-cover"
                     />

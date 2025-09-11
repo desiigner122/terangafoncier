@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -23,12 +23,12 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useUser();
 
-  // Données utilisateur dynamiques
+  // DonnÃ©es utilisateur dynamiques
   const userName = profile?.full_name || profile?.name || user?.email?.split('@')[0] || 'Utilisateur';
   const userRole = profile?.role || 'PARTICULIER_SENEGAL';
   const userAvatar = profile?.avatar_url || null;
   
-  // Protection robuste pour roleConfig avec fallback par défaut
+  // Protection robuste pour roleConfig avec fallback par dÃ©faut
   const roleConfig = ROLES_CONFIG[userRole] || ROLES_CONFIG.PARTICULIER_SENEGAL || ROLES_CONFIG.particulier_senegal || {
     name: "Particulier",
     color: "bg-blue-600",
@@ -37,11 +37,11 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
     description: "Utilisateur particulier"
   };
 
-  // Notifications non lues (simulé pour l'instant)
+  // Notifications non lues (simulÃ© pour l'instant)
   const unreadNotifications = 3;
   const unreadMessages = 5;
 
-  // Items par défaut du sidebar
+  // Items par dÃ©faut du sidebar
   const defaultItems = [
     {
       id: 'dashboard',
@@ -122,25 +122,25 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
     }
   ];
 
-  // Utiliser les items personnalisés s'ils sont fournis, sinon utiliser les items par défaut
+  // Utiliser les items personnalisÃ©s s'ils sont fournis, sinon utiliser les items par dÃ©faut
   const allItems = sidebarItems.length > 0 ? sidebarItems : defaultItems;
 
-  // Gérer la déconnexion
+  // GÃ©rer la dÃ©connexion
   const handleSignOut = async () => {
     try {
       await signOut();
       navigate('/login');
     } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
+      console.error('Erreur lors de la dÃ©connexion:', error);
     }
   };
 
-  // Gérer le toggle du submenu
+  // GÃ©rer le toggle du submenu
   const toggleSubmenu = (itemId) => {
     setActiveSubmenu(activeSubmenu === itemId ? null : itemId);
   };
 
-  // Vérifier si un item est actif
+  // VÃ©rifier si un item est actif
   const isActive = (href) => {
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
@@ -168,7 +168,7 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
               </Avatar>
               <div className="flex-1 min-w-0">
                 <h3 className="text-sm font-medium text-gray-900 truncate">
-                  Bonjour, {profile?.name || user?.email?.split('@')[0] || 'Utilisateur'} 👋
+                  Bonjour, {profile?.name || user?.email?.split('@')[0] || 'Utilisateur'} ðŸ‘‹
                 </h3>
                 <p className="text-xs text-gray-500 truncate">
                   {roleConfig.label}
@@ -197,7 +197,7 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input
               type="text"
-              placeholder="Recherche rapide..."
+              YOUR_API_KEY="Recherche rapide..."
               className="w-full pl-10 pr-4 py-2 text-sm border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
             />
           </div>
@@ -314,7 +314,7 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
                 size="sm"
                 onClick={() => navigate('/parametres')}
                 className="p-2 hover:bg-gray-100"
-                title="Paramètres"
+                title="ParamÃ¨tres"
               >
                 <Settings className="w-4 h-4" />
               </Button>
@@ -325,10 +325,10 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
             size="sm"
             onClick={handleSignOut}
             className="p-2 hover:bg-red-50 hover:text-red-600"
-            title="Se déconnecter"
+            title="Se dÃ©connecter"
           >
             <LogOut className="w-4 h-4" />
-            {!isCollapsed && <span className="ml-2">Déconnexion</span>}
+            {!isCollapsed && <span className="ml-2">DÃ©connexion</span>}
           </Button>
         </div>
       </div>

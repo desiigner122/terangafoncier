@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Wallet, 
@@ -236,7 +236,7 @@ const BlockchainMainnetDashboard = () => {
 
   const copyToClipboard = (text) => {
     navigator.clipboard.writeText(text);
-    toast.success('Copié dans le presse-papier');
+    toast.success('CopiÃ© dans le presse-papier');
   };
 
   const openInExplorer = (hash) => {
@@ -254,7 +254,7 @@ const BlockchainMainnetDashboard = () => {
             <Wallet className="h-12 w-12 mx-auto mb-4 text-blue-600" />
             <CardTitle>Connecter Votre Wallet</CardTitle>
             <p className="text-sm text-gray-600">
-              Connectez votre wallet pour accéder aux fonctionnalités blockchain
+              Connectez votre wallet pour accÃ©der aux fonctionnalitÃ©s blockchain
             </p>
           </CardHeader>
           <CardContent>
@@ -287,7 +287,7 @@ const BlockchainMainnetDashboard = () => {
         >
           <div>
             <h1 className="text-3xl font-bold text-white">Blockchain Mainnet</h1>
-            <p className="text-blue-200">Gestion décentralisée des actifs immobiliers</p>
+            <p className="text-blue-200">Gestion dÃ©centralisÃ©e des actifs immobiliers</p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -333,7 +333,7 @@ const BlockchainMainnetDashboard = () => {
                   </div>
                 </div>
                 <div>
-                  <Label className="text-blue-200">Réseau</Label>
+                  <Label className="text-blue-200">RÃ©seau</Label>
                   <div className="flex items-center space-x-2 mt-1">
                     <Globe className="h-4 w-4 text-green-400" />
                     <span>{networkInfo?.current?.name}</span>
@@ -398,7 +398,7 @@ const BlockchainMainnetDashboard = () => {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold">{stakingInfo.pendingRewards}</div>
-              <p className="text-xs text-orange-200">Récompenses en attente</p>
+              <p className="text-xs text-orange-200">RÃ©compenses en attente</p>
             </CardContent>
           </Card>
         </motion.div>
@@ -412,7 +412,7 @@ const BlockchainMainnetDashboard = () => {
           <Tabs defaultValue="properties" className="space-y-4">
             <TabsList className="bg-white/10 backdrop-blur-lg border-white/20">
               <TabsTrigger value="properties" className="data-[state=active]:bg-white/20">
-                Propriétés NFT
+                PropriÃ©tÃ©s NFT
               </TabsTrigger>
               <TabsTrigger value="marketplace" className="data-[state=active]:bg-white/20">
                 Marketplace
@@ -434,7 +434,7 @@ const BlockchainMainnetDashboard = () => {
                 {/* Create Property */}
                 <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
                   <CardHeader>
-                    <CardTitle>Créer une Propriété NFT</CardTitle>
+                    <CardTitle>CrÃ©er une PropriÃ©tÃ© NFT</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleCreateProperty} className="space-y-4">
@@ -444,7 +444,7 @@ const BlockchainMainnetDashboard = () => {
                           value={propertyForm.title}
                           onChange={(e) => setPropertyForm(prev => ({ ...prev, title: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          placeholder="Villa moderne à Dakar"
+                          YOUR_API_KEY="Villa moderne Ã  Dakar"
                         />
                       </div>
                       <div>
@@ -453,7 +453,7 @@ const BlockchainMainnetDashboard = () => {
                           value={propertyForm.description}
                           onChange={(e) => setPropertyForm(prev => ({ ...prev, description: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          placeholder="Description détaillée..."
+                          YOUR_API_KEY="Description dÃ©taillÃ©e..."
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -464,7 +464,7 @@ const BlockchainMainnetDashboard = () => {
                             value={propertyForm.price}
                             onChange={(e) => setPropertyForm(prev => ({ ...prev, price: e.target.value }))}
                             className="bg-white/10 border-white/20 text-white"
-                            placeholder="100"
+                            YOUR_API_KEY="100"
                           />
                         </div>
                         <div>
@@ -473,7 +473,7 @@ const BlockchainMainnetDashboard = () => {
                             value={propertyForm.location}
                             onChange={(e) => setPropertyForm(prev => ({ ...prev, location: e.target.value }))}
                             className="bg-white/10 border-white/20 text-white"
-                            placeholder="Dakar, Sénégal"
+                            YOUR_API_KEY="Dakar, SÃ©nÃ©gal"
                           />
                         </div>
                       </div>
@@ -483,7 +483,7 @@ const BlockchainMainnetDashboard = () => {
                           value={propertyForm.imageHash}
                           onChange={(e) => setPropertyForm(prev => ({ ...prev, imageHash: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          placeholder="QmXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                          YOUR_API_KEY="QmXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                         />
                       </div>
                       <Button 
@@ -492,7 +492,7 @@ const BlockchainMainnetDashboard = () => {
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
                       >
                         {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Zap className="h-4 w-4 mr-2" />}
-                        Créer NFT
+                        CrÃ©er NFT
                       </Button>
                     </form>
                   </CardContent>
@@ -501,7 +501,7 @@ const BlockchainMainnetDashboard = () => {
                 {/* My Properties */}
                 <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
                   <CardHeader>
-                    <CardTitle>Mes Propriétés ({properties.length})</CardTitle>
+                    <CardTitle>Mes PropriÃ©tÃ©s ({properties.length})</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3 max-h-80 overflow-y-auto">
@@ -526,7 +526,7 @@ const BlockchainMainnetDashboard = () => {
                       ))}
                       {properties.length === 0 && (
                         <p className="text-center text-gray-400 py-8">
-                          Aucune propriété créée
+                          Aucune propriÃ©tÃ© crÃ©Ã©e
                         </p>
                       )}
                     </div>
@@ -568,7 +568,7 @@ const BlockchainMainnetDashboard = () => {
                     ))}
                     {listings.length === 0 && (
                       <div className="col-span-full text-center text-gray-400 py-8">
-                        Aucune propriété en vente
+                        Aucune propriÃ©tÃ© en vente
                       </div>
                     )}
                   </div>
@@ -590,13 +590,13 @@ const BlockchainMainnetDashboard = () => {
                   <CardContent>
                     <form onSubmit={handleStakeTokens} className="space-y-4">
                       <div>
-                        <Label>Montant à staker</Label>
+                        <Label>Montant Ã  staker</Label>
                         <Input
                           type="number"
                           value={stakeForm.amount}
                           onChange={(e) => setStakeForm({ amount: e.target.value })}
                           className="bg-white/10 border-white/20 text-white"
-                          placeholder="100"
+                          YOUR_API_KEY="100"
                         />
                       </div>
                       <Button 
@@ -619,7 +619,7 @@ const BlockchainMainnetDashboard = () => {
                   <CardContent className="space-y-4">
                     <div>
                       <div className="flex justify-between text-sm">
-                        <span>Total staké dans le protocole</span>
+                        <span>Total stakÃ© dans le protocole</span>
                         <span>{stakingInfo.totalStaked} TERANGA</span>
                       </div>
                       <Progress value={75} className="mt-2" />
@@ -627,14 +627,14 @@ const BlockchainMainnetDashboard = () => {
                     
                     <div>
                       <div className="flex justify-between text-sm">
-                        <span>Vos tokens stakés</span>
+                        <span>Vos tokens stakÃ©s</span>
                         <span>{stakingInfo.stakedAmount} TERANGA</span>
                       </div>
                     </div>
                     
                     <div>
                       <div className="flex justify-between text-sm">
-                        <span>Récompenses disponibles</span>
+                        <span>RÃ©compenses disponibles</span>
                         <span className="text-green-400">{stakingInfo.pendingRewards} TERANGA</span>
                       </div>
                     </div>
@@ -644,7 +644,7 @@ const BlockchainMainnetDashboard = () => {
                       disabled={parseFloat(stakingInfo.pendingRewards) === 0}
                     >
                       <TrendingUp className="h-4 w-4 mr-2" />
-                      Réclamer les récompenses
+                      RÃ©clamer les rÃ©compenses
                     </Button>
                   </CardContent>
                 </Card>
@@ -657,7 +657,7 @@ const BlockchainMainnetDashboard = () => {
                 {/* Create Proposal */}
                 <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
                   <CardHeader>
-                    <CardTitle>Créer une Proposition</CardTitle>
+                    <CardTitle>CrÃ©er une Proposition</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <form onSubmit={handleCreateProposal} className="space-y-4">
@@ -667,11 +667,11 @@ const BlockchainMainnetDashboard = () => {
                           value={proposalForm.description}
                           onChange={(e) => setProposalForm(prev => ({ ...prev, description: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          placeholder="Proposer une nouvelle fonctionnalité..."
+                          YOUR_API_KEY="Proposer une nouvelle fonctionnalitÃ©..."
                         />
                       </div>
                       <div>
-                        <Label>Période de vote (jours)</Label>
+                        <Label>PÃ©riode de vote (jours)</Label>
                         <Input
                           type="number"
                           value={proposalForm.votingPeriod}
@@ -687,7 +687,7 @@ const BlockchainMainnetDashboard = () => {
                         className="w-full bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800"
                       >
                         {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <Vote className="h-4 w-4 mr-2" />}
-                        Créer la proposition
+                        CrÃ©er la proposition
                       </Button>
                     </form>
                   </CardContent>
@@ -753,7 +753,7 @@ const BlockchainMainnetDashboard = () => {
                           value={transferForm.to}
                           onChange={(e) => setTransferForm(prev => ({ ...prev, to: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          placeholder="0x..."
+                          YOUR_API_KEY="0x..."
                         />
                       </div>
                       <div>
@@ -763,7 +763,7 @@ const BlockchainMainnetDashboard = () => {
                           value={transferForm.amount}
                           onChange={(e) => setTransferForm(prev => ({ ...prev, amount: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          placeholder="10"
+                          YOUR_API_KEY="10"
                         />
                       </div>
                       <Button 
@@ -772,7 +772,7 @@ const BlockchainMainnetDashboard = () => {
                         className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800"
                       >
                         {loading ? <RefreshCw className="h-4 w-4 mr-2 animate-spin" /> : <DollarSign className="h-4 w-4 mr-2" />}
-                        Transférer
+                        TransfÃ©rer
                       </Button>
                     </form>
                   </CardContent>
@@ -797,11 +797,11 @@ const BlockchainMainnetDashboard = () => {
                     
                     <div className="space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span>Liquidité fournie</span>
+                        <span>LiquiditÃ© fournie</span>
                         <span>0 TERANGA</span>
                       </div>
                       <div className="flex justify-between text-sm">
-                        <span>Frais collectés</span>
+                        <span>Frais collectÃ©s</span>
                         <span className="text-green-400">0 TERANGA</span>
                       </div>
                     </div>
@@ -811,7 +811,7 @@ const BlockchainMainnetDashboard = () => {
                       disabled
                     >
                       <Activity className="h-4 w-4 mr-2" />
-                      Bientôt disponible
+                      BientÃ´t disponible
                     </Button>
                   </CardContent>
                 </Card>

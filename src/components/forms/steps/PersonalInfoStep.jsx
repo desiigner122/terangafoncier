@@ -62,7 +62,7 @@ const PersonalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               personalErrors.full_name ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Votre nom complet"
+            YOUR_API_KEY="Votre nom complet"
             required
           />
           {personalErrors.full_name && (
@@ -83,7 +83,7 @@ const PersonalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               personalErrors.email ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="votre.email@exemple.com"
+            YOUR_API_KEY="votre.email@exemple.com"
             required
           />
           {personalErrors.email && (
@@ -104,7 +104,7 @@ const PersonalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               personalErrors.phone ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="+221 XX XXX XX XX"
+            YOUR_API_KEY="+221 XX XXX XX XX"
             required
           />
           {personalErrors.phone && (
@@ -148,7 +148,7 @@ const PersonalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               personalErrors.address ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Votre adresse complète (rue, quartier, ville)"
+            YOUR_API_KEY="Votre adresse complète (rue, quartier, ville)"
             required
           />
           {personalErrors.address && (

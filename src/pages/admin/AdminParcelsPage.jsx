@@ -208,7 +208,7 @@ const AdminParcelsPage = () => {
       <Card>
         <CardHeader>
           <div className="flex space-x-2 pt-2">
-            <div className="relative flex-grow"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input type="search" placeholder="Rechercher par nom, référence, vendeur..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
+            <div className="relative flex-grow"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input type="search" YOUR_API_KEY="Rechercher par nom, référence, vendeur..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} /></div>
           </div>
         </CardHeader>
         <CardContent>

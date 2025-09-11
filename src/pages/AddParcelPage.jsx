@@ -128,17 +128,17 @@ const AddParcelPageComponent = () => {
                         <CardContent className="space-y-4">
                             <div>
                                 <Label>Région</Label>
-                                <Select value={formData.region} onValueChange={(v) => handleSelectChange('region', v)}><SelectTrigger><SelectValue placeholder="Sélectionnez une région..." /></SelectTrigger><SelectContent>{senegalRegionsAndDepartments.map(r => <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>)}</SelectContent></Select>
+                                <Select value={formData.region} onValueChange={(v) => handleSelectChange('region', v)}><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez une région..." /></SelectTrigger><SelectContent>{senegalRegionsAndDepartments.map(r => <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>)}</SelectContent></Select>
                             </div>
                             <div>
                                 <Label>Département</Label>
-                                <Select value={formData.department} onValueChange={(v) => handleSelectChange('department', v)} disabled={!formData.region}><SelectTrigger><SelectValue placeholder="Sélectionnez un département..." /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.nom} value={d.nom}>{d.nom}</SelectItem>)}</SelectContent></Select>
+                                <Select value={formData.department} onValueChange={(v) => handleSelectChange('department', v)} disabled={!formData.region}><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez un département..." /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.nom} value={d.nom}>{d.nom}</SelectItem>)}</SelectContent></Select>
                             </div>
                             <div>
                                 <Label>Commune</Label>
-                                <Select value={formData.commune} onValueChange={(v) => handleSelectChange('commune', v)} disabled={!formData.department}><SelectTrigger><SelectValue placeholder="Sélectionnez une commune..." /></SelectTrigger><SelectContent>{communes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
+                                <Select value={formData.commune} onValueChange={(v) => handleSelectChange('commune', v)} disabled={!formData.department}><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez une commune..." /></SelectTrigger><SelectContent>{communes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select>
                             </div>
-                            <div><Label htmlFor="address">Adresse / Lieu-dit</Label><Input id="address" name="address" value={formData.address} onChange={handleChange} placeholder="Ex: Près de la route nationale..."/></div>
+                            <div><Label htmlFor="address">Adresse / Lieu-dit</Label><Input id="address" name="address" value={formData.address} onChange={handleChange} YOUR_API_KEY="Ex: Près de la route nationale..."/></div>
                         </CardContent>
                     </motion.div>
                 );
@@ -150,12 +150,12 @@ const AddParcelPageComponent = () => {
                             <CardDescription>Décrivez les caractéristiques de votre terrain.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div><Label htmlFor="name">Titre de l'annonce</Label><Input id="name" name="name" value={formData.name} onChange={handleChange} placeholder="Ex: Terrain viabilisé à Saly"/></div>
-                            <div><Label htmlFor="description">Description</Label><Textarea id="description" name="description" value={formData.description} onChange={handleChange} placeholder="Décrivez les atouts, l'environnement..."/></div>
-                            <div><Label htmlFor="area">Superficie (m²)</Label><Input id="area" name="area" type="number" value={formData.area} onChange={handleChange} placeholder="Ex: 300"/></div>
+                            <div><Label htmlFor="name">Titre de l'annonce</Label><Input id="name" name="name" value={formData.name} onChange={handleChange} YOUR_API_KEY="Ex: Terrain viabilisé à Saly"/></div>
+                            <div><Label htmlFor="description">Description</Label><Textarea id="description" name="description" value={formData.description} onChange={handleChange} YOUR_API_KEY="Décrivez les atouts, l'environnement..."/></div>
+                            <div><Label htmlFor="area">Superficie (m²)</Label><Input id="area" name="area" type="number" value={formData.area} onChange={handleChange} YOUR_API_KEY="Ex: 300"/></div>
                             <div>
                                 <Label>Type de Parcelle</Label>
-                                <Select value={formData.type} onValueChange={(v) => handleSelectChange('type', v)}><SelectTrigger><SelectValue placeholder="Sélectionnez un type..." /></SelectTrigger><SelectContent>{['Résidentiel', 'Commercial', 'Agricole', 'Industriel'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
+                                <Select value={formData.type} onValueChange={(v) => handleSelectChange('type', v)}><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez un type..." /></SelectTrigger><SelectContent>{['Résidentiel', 'Commercial', 'Agricole', 'Industriel'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select>
                             </div>
                         </CardContent>
                     </motion.div>
@@ -169,14 +169,14 @@ const AddParcelPageComponent = () => {
                         </CardHeader>
                         <CardContent className="space-y-4">
                             {isMairie ? (
-                                <div><Label htmlFor="attributionConditions">Conditions d'attribution</Label><Textarea id="attributionConditions" name="attributionConditions" value={formData.attributionConditions} onChange={handleChange} placeholder="Décrivez les critères et la procédure pour l'attribution de ce terrain..."/></div>
+                                <div><Label htmlFor="attributionConditions">Conditions d'attribution</Label><Textarea id="attributionConditions" name="attributionConditions" value={formData.attributionConditions} onChange={handleChange} YOUR_API_KEY="Décrivez les critères et la procédure pour l'attribution de ce terrain..."/></div>
                             ) : (
                                 <>
-                                    <div><Label htmlFor="price">Prix (FCFA)</Label><Input id="price" name="price" type="number" value={formData.price} onChange={handleChange} placeholder="Ex: 15000000"/></div>
+                                    <div><Label htmlFor="price">Prix (FCFA)</Label><Input id="price" name="price" type="number" value={formData.price} onChange={handleChange} YOUR_API_KEY="Ex: 15000000"/></div>
                                     <div className="flex items-center space-x-2"><Checkbox id="isEligibleForInstallments" name="isEligibleForInstallments" checked={formData.isEligibleForInstallments} onCheckedChange={(c) => handleChange({ target: { name: 'isEligibleForInstallments', type: 'checkbox', checked: c } })}/><Label htmlFor="isEligibleForInstallments">Éligible au paiement échelonné via nos partenaires</Label></div>
                                 </>
                             )}
-                            <div><Label htmlFor="titreFoncier">Numéro du Titre Foncier (si disponible)</Label><Input id="titreFoncier" name="titreFoncier" value={formData.titreFoncier} onChange={handleChange} placeholder="Ex: TF 12345/DK"/></div>
+                            <div><Label htmlFor="titreFoncier">Numéro du Titre Foncier (si disponible)</Label><Input id="titreFoncier" name="titreFoncier" value={formData.titreFoncier} onChange={handleChange} YOUR_API_KEY="Ex: TF 12345/DK"/></div>
                         </CardContent>
                     </motion.div>
                 );

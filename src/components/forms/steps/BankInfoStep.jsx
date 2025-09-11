@@ -83,7 +83,7 @@ const BankInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               bankErrors.bank_name ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Nom officiel de la banque"
+            YOUR_API_KEY="Nom officiel de la banque"
             required
           />
           {bankErrors.bank_name && (
@@ -104,7 +104,7 @@ const BankInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               bankErrors.bank_code ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Code d'identification de la banque"
+            YOUR_API_KEY="Code d'identification de la banque"
             required
           />
           {bankErrors.bank_code && (
@@ -143,7 +143,7 @@ const BankInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             value={formData.swift_code}
             onChange={(e) => handleInputChange('swift_code', e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            placeholder="Code SWIFT pour les transferts internationaux"
+            YOUR_API_KEY="Code SWIFT pour les transferts internationaux"
           />
         </div>
 
@@ -160,7 +160,7 @@ const BankInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               bankErrors.license_number ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Numéro de licence délivrée par la banque centrale"
+            YOUR_API_KEY="Numéro de licence délivrée par la banque centrale"
             required
           />
           {bankErrors.license_number && (
@@ -181,7 +181,7 @@ const BankInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               bankErrors.headquarters_address ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Adresse complète du siège social de la banque"
+            YOUR_API_KEY="Adresse complète du siège social de la banque"
             required
           />
           {bankErrors.headquarters_address && (

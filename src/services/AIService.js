@@ -1,15 +1,15 @@
-// Service IA Central pour Teranga Foncier
+﻿// Service IA Central pour Teranga Foncier
 class AIService {
   constructor() {
-    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || 'demo-key';
+    this.apiKey = import.meta.env.VITE_OPENAI_API_KEY || 'YOUR_API_KEY';
     this.baseURL = 'https://api.openai.com/v1';
     this.isEnabled = true;
     
-    // Cache pour les analyses fréquentes
+    // Cache pour les analyses frÃ©quentes
     this.cache = new Map();
     this.cacheTimeout = 5 * 60 * 1000; // 5 minutes
     
-    // Données de marché en temps réel
+    // DonnÃ©es de marchÃ© en temps rÃ©el
     this.marketData = {
       avgPricePerSqm: {
         'Almadies': 850000,
@@ -31,7 +31,7 @@ class AIService {
     };
   }
 
-  // === ANALYSE DE PRIX ET ÉVALUATION ===
+  // === ANALYSE DE PRIX ET Ã‰VALUATION ===
   async analyzePriceForProperty(propertyData) {
     const cacheKey = `price_${JSON.stringify(propertyData)}`;
     
@@ -45,7 +45,7 @@ class AIService {
     try {
       const analysis = await this.performPriceAnalysis(propertyData);
       
-      // Cache le résultat
+      // Cache le rÃ©sultat
       this.cache.set(cacheKey, {
         data: analysis,
         timestamp: Date.now()
@@ -67,7 +67,7 @@ class AIService {
     // Calculs d'ajustements
     let adjustmentFactor = 1.0;
     
-    // Ajustement par type de propriété
+    // Ajustement par type de propriÃ©tÃ©
     const typeMultipliers = {
       'Villa': 1.3,
       'Appartement': 1.0,
@@ -77,11 +77,11 @@ class AIService {
     };
     adjustmentFactor *= (typeMultipliers[type] || 1.0);
     
-    // Ajustement par caractéristiques
+    // Ajustement par caractÃ©ristiques
     if (features?.includes('Piscine')) adjustmentFactor += 0.15;
     if (features?.includes('Jardin')) adjustmentFactor += 0.08;
     if (features?.includes('Garage')) adjustmentFactor += 0.05;
-    if (features?.includes('Sécurité')) adjustmentFactor += 0.10;
+    if (features?.includes('SÃ©curitÃ©')) adjustmentFactor += 0.10;
     if (features?.includes('Climatisation')) adjustmentFactor += 0.07;
     
     const estimatedPrice = basePrice * surface * adjustmentFactor;
@@ -117,13 +117,13 @@ class AIService {
       },
       analysis: {
         confidence: 0.6,
-        factors: ['Estimation basée sur les données locales'],
-        recommendations: ['Consulter un expert pour une évaluation précise']
+        factors: ['Estimation basÃ©e sur les donnÃ©es locales'],
+        recommendations: ['Consulter un expert pour une Ã©valuation prÃ©cise']
       }
     };
   }
 
-  // === ANALYSE DE MARCHÉ ===
+  // === ANALYSE DE MARCHÃ‰ ===
   async getMarketInsights(zone) {
     const insights = {
       zone,
@@ -145,20 +145,20 @@ class AIService {
       return {
         direction: 'hausse',
         percentage: 12,
-        description: 'Zone en forte croissance avec demande élevée'
+        description: 'Zone en forte croissance avec demande Ã©levÃ©e'
       };
     } else if (isEmerging) {
       return {
-        direction: 'émergente',
+        direction: 'Ã©mergente',
         percentage: 15,
-        description: 'Zone émergente avec fort potentiel d\'investissement'
+        description: 'Zone Ã©mergente avec fort potentiel d\'investissement'
       };
     }
     
     return {
       direction: 'stable',
       percentage: 8,
-      description: 'Marché stable avec croissance modérée'
+      description: 'MarchÃ© stable avec croissance modÃ©rÃ©e'
     };
   }
 
@@ -175,7 +175,7 @@ class AIService {
       if (zone === 'default') continue;
       
       const surfaceAffordable = budget / price;
-      if (surfaceAffordable >= 100) { // Minimum 100m²
+      if (surfaceAffordable >= 100) { // Minimum 100mÂ²
         const zoneRecommendation = {
           zone,
           surfaceMax: Math.floor(surfaceAffordable),
@@ -217,13 +217,13 @@ class AIService {
   analyzeUserIntent(message) {
     const lowerMessage = message.toLowerCase();
     
-    // Mots-clés pour identifier l'intention
+    // Mots-clÃ©s pour identifier l'intention
     const intents = {
-      price_inquiry: ['prix', 'coût', 'tarif', 'budget', 'combien', 'évaluation'],
-      market_question: ['marché', 'tendance', 'évolution', 'croissance', 'zone'],
-      investment_advice: ['investir', 'placement', 'rentabilité', 'conseils', 'stratégie'],
-      property_search: ['cherche', 'trouve', 'propriété', 'terrain', 'villa', 'appartement'],
-      legal_question: ['légal', 'droit', 'loi', 'procédure', 'titre', 'notaire']
+      price_inquiry: ['prix', 'coÃ»t', 'tarif', 'budget', 'combien', 'Ã©valuation'],
+      market_question: ['marchÃ©', 'tendance', 'Ã©volution', 'croissance', 'zone'],
+      investment_advice: ['investir', 'placement', 'rentabilitÃ©', 'conseils', 'stratÃ©gie'],
+      property_search: ['cherche', 'trouve', 'propriÃ©tÃ©', 'terrain', 'villa', 'appartement'],
+      legal_question: ['lÃ©gal', 'droit', 'loi', 'procÃ©dure', 'titre', 'notaire']
     };
     
     for (const [type, keywords] of Object.entries(intents)) {
@@ -240,20 +240,20 @@ class AIService {
       const analysis = await this.analyzePriceForProperty(propertyData);
       return {
         type: 'price_analysis',
-        response: `Basé sur l'analyse de cette propriété, le prix estimé est de ${analysis.priceRange.estimated.toLocaleString()} FCFA. ` +
+        response: `BasÃ© sur l'analyse de cette propriÃ©tÃ©, le prix estimÃ© est de ${analysis.priceRange.estimated.toLocaleString()} FCFA. ` +
                  `La fourchette se situe entre ${analysis.priceRange.min.toLocaleString()} et ${analysis.priceRange.max.toLocaleString()} FCFA.`,
         data: analysis,
         suggestions: [
-          'Voir l\'analyse détaillée',
-          'Comparer avec d\'autres propriétés',
-          'Obtenir une évaluation professionnelle'
+          'Voir l\'analyse dÃ©taillÃ©e',
+          'Comparer avec d\'autres propriÃ©tÃ©s',
+          'Obtenir une Ã©valuation professionnelle'
         ]
       };
     }
     
     return {
       type: 'price_general',
-      response: 'Pour vous donner une estimation précise, j\'ai besoin de plus d\'informations sur la propriété : localisation, surface, type de bien...',
+      response: 'Pour vous donner une estimation prÃ©cise, j\'ai besoin de plus d\'informations sur la propriÃ©tÃ© : localisation, surface, type de bien...',
       suggestions: [
         'Voir les prix par zone',
         'Calculateur de prix',
@@ -278,7 +278,7 @@ class AIService {
   }
 
   async generatePropertyReport(propertyId) {
-    // Rapport détaillé pour une propriété spécifique
+    // Rapport dÃ©taillÃ© pour une propriÃ©tÃ© spÃ©cifique
     const report = {
       propertyId,
       priceAnalysis: await this.analyzePriceForProperty({}),
@@ -299,11 +299,11 @@ class AIService {
     const priceAlerts = await this.checkPriceAlerts(userId);
     notifications.push(...priceAlerts);
     
-    // Opportunités d'investissement
+    // OpportunitÃ©s d'investissement
     const opportunities = await this.checkInvestmentOpportunities(userId);
     notifications.push(...opportunities);
     
-    // Actualités du marché
+    // ActualitÃ©s du marchÃ©
     const marketNews = await this.generateMarketUpdates();
     notifications.push(...marketNews);
     
@@ -316,11 +316,11 @@ class AIService {
     
     const trend = this.getMarketTrend(zone);
     if (trend.direction === 'hausse') score += 20;
-    if (trend.direction === 'émergente') score += 25;
+    if (trend.direction === 'Ã©mergente') score += 25;
     
     // Ajustement selon le profil de risque
     if (riskLevel === 'faible' && trend.direction === 'stable') score += 10;
-    if (riskLevel === 'élevé' && trend.direction === 'émergente') score += 15;
+    if (riskLevel === 'Ã©levÃ©' && trend.direction === 'Ã©mergente') score += 15;
     
     return Math.min(100, score);
   }
@@ -332,10 +332,10 @@ class AIService {
       factors.push(`Localisation: ${propertyData.location}`);
     }
     if (propertyData.surface) {
-      factors.push(`Surface: ${propertyData.surface}m²`);
+      factors.push(`Surface: ${propertyData.surface}mÂ²`);
     }
     if (propertyData.features?.length) {
-      factors.push(`Équipements: ${propertyData.features.join(', ')}`);
+      factors.push(`Ã‰quipements: ${propertyData.features.join(', ')}`);
     }
     
     return factors;
@@ -345,11 +345,11 @@ class AIService {
     const recommendations = [];
     
     if (priceRange.estimated > 100000000) {
-      recommendations.push('Propriété haut de gamme - Marché de niche');
+      recommendations.push('PropriÃ©tÃ© haut de gamme - MarchÃ© de niche');
     }
     
     if (propertyData.location && this.marketData.trends.hotZones.includes(propertyData.location)) {
-      recommendations.push('Zone très demandée - Bon potentiel de plus-value');
+      recommendations.push('Zone trÃ¨s demandÃ©e - Bon potentiel de plus-value');
     }
     
     recommendations.push('Faire inspecter par un expert avant achat');
@@ -357,7 +357,7 @@ class AIService {
     return recommendations;
   }
 
-  // Méthodes placeholder pour les fonctionnalités avancées
+  // MÃ©thodes YOUR_API_KEY pour les fonctionnalitÃ©s avancÃ©es
   async generateMarketPredictions(zone) {
     return {
       nextMonth: { trend: 'stable', change: '+2%' },
@@ -369,16 +369,16 @@ class AIService {
   identifyOpportunities(zone) {
     return [
       'Demande croissante pour les appartements T3',
-      'Nouveaux projets d\'infrastructure prévus',
-      'Zone en cours de développement commercial'
+      'Nouveaux projets d\'infrastructure prÃ©vus',
+      'Zone en cours de dÃ©veloppement commercial'
     ];
   }
 
   assessRisks(zone) {
     return [
-      'Possible saturation du marché à court terme',
-      'Dépendance aux projets gouvernementaux',
-      'Fluctuations des taux d\'intérêt'
+      'Possible saturation du marchÃ© Ã  court terme',
+      'DÃ©pendance aux projets gouvernementaux',
+      'Fluctuations des taux d\'intÃ©rÃªt'
     ];
   }
 
@@ -391,32 +391,32 @@ class AIService {
   }
 
   assessUserRiskProfile(userProfile) {
-    // Analyse simplifiée du profil de risque
-    if (userProfile.age < 35 && userProfile.income > 5000000) return 'élevé';
+    // Analyse simplifiÃ©e du profil de risque
+    if (userProfile.age < 35 && userProfile.income > 5000000) return 'Ã©levÃ©';
     if (userProfile.age > 50) return 'faible';
     return 'moyen';
   }
 
   getInvestmentReasons(zone, userProfile) {
     return [
-      'Croissance démographique soutenue',
-      'Développement des infrastructures',
-      'Potentiel de rentabilité élevé'
+      'Croissance dÃ©mographique soutenue',
+      'DÃ©veloppement des infrastructures',
+      'Potentiel de rentabilitÃ© Ã©levÃ©'
     ];
   }
 
   async checkPriceAlerts(userId) {
-    // Logique pour vérifier les alertes de prix personnalisées
+    // Logique pour vÃ©rifier les alertes de prix personnalisÃ©es
     return [];
   }
 
   async checkInvestmentOpportunities(userId) {
-    // Logique pour identifier les opportunités d'investissement
+    // Logique pour identifier les opportunitÃ©s d'investissement
     return [];
   }
 
   async generateMarketUpdates() {
-    // Génération d'actualités du marché
+    // GÃ©nÃ©ration d'actualitÃ©s du marchÃ©
     return [];
   }
 
@@ -442,22 +442,22 @@ class AIService {
     return {
       overallTrend: 'positive',
       keyDrivers: ['Urbanisation', 'Diaspora', 'Projets PSE'],
-      challenges: ['Financement', 'Réglementation']
+      challenges: ['Financement', 'RÃ©glementation']
     };
   }
 
   async generatePredictions() {
     return {
-      shortTerm: 'Stabilité avec légère hausse',
-      mediumTerm: 'Croissance modérée attendue',
-      longTerm: 'Fort potentiel de développement'
+      shortTerm: 'StabilitÃ© avec lÃ©gÃ¨re hausse',
+      mediumTerm: 'Croissance modÃ©rÃ©e attendue',
+      longTerm: 'Fort potentiel de dÃ©veloppement'
     };
   }
 
   async generateMarketRecommendations() {
     return [
-      'Diversifier les investissements géographiquement',
-      'Privilégier les zones en développement',
+      'Diversifier les investissements gÃ©ographiquement',
+      'PrivilÃ©gier les zones en dÃ©veloppement',
       'Surveiller les annonces gouvernementales'
     ];
   }
@@ -465,41 +465,41 @@ class AIService {
   async handleMarketQuestion(message, context) {
     return {
       type: 'market_info',
-      response: 'Le marché immobilier sénégalais montre une croissance de 8.5% cette année...',
+      response: 'Le marchÃ© immobilier sÃ©nÃ©galais montre une croissance de 8.5% cette annÃ©e...',
       data: await this.getMarketInsights(context.zone || 'Dakar'),
-      suggestions: ['Voir rapport complet', 'Analyser ma zone', 'Alertes personnalisées']
+      suggestions: ['Voir rapport complet', 'Analyser ma zone', 'Alertes personnalisÃ©es']
     };
   }
 
   async handleInvestmentAdvice(message, context) {
     return {
       type: 'investment_advice',
-      response: 'Pour un investissement réussi, je recommande de diversifier...',
-      suggestions: ['Calculer rentabilité', 'Voir opportunités', 'Consulter expert']
+      response: 'Pour un investissement rÃ©ussi, je recommande de diversifier...',
+      suggestions: ['Calculer rentabilitÃ©', 'Voir opportunitÃ©s', 'Consulter expert']
     };
   }
 
   async handlePropertySearch(message, context) {
     return {
       type: 'search_help',
-      response: 'Je peux vous aider à trouver la propriété idéale. Quel est votre budget et vos critères ?',
-      suggestions: ['Recherche avancée', 'Mes favoris', 'Alertes automatiques']
+      response: 'Je peux vous aider Ã  trouver la propriÃ©tÃ© idÃ©ale. Quel est votre budget et vos critÃ¨res ?',
+      suggestions: ['Recherche avancÃ©e', 'Mes favoris', 'Alertes automatiques']
     };
   }
 
   async handleLegalQuestion(message) {
     return {
       type: 'legal_info',
-      response: 'Pour les questions légales, je recommande de consulter un notaire...',
-      suggestions: ['Guide légal', 'Notaires partenaires', 'Documentation']
+      response: 'Pour les questions lÃ©gales, je recommande de consulter un notaire...',
+      suggestions: ['Guide lÃ©gal', 'Notaires partenaires', 'Documentation']
     };
   }
 
   async handleGeneralQuestion(message, context) {
     return {
       type: 'general',
-      response: 'Je suis votre assistant IA pour l\'immobilier au Sénégal. Comment puis-je vous aider ?',
-      suggestions: ['Évaluer un bien', 'Tendances marché', 'Conseils investissement']
+      response: 'Je suis votre assistant IA pour l\'immobilier au SÃ©nÃ©gal. Comment puis-je vous aider ?',
+      suggestions: ['Ã‰valuer un bien', 'Tendances marchÃ©', 'Conseils investissement']
     };
   }
 }

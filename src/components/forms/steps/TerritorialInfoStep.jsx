@@ -60,7 +60,7 @@ const TerritorialInfoStep = ({
               value={formData.municipality_name || ''}
               onChange={(e) => handleInputChange('municipality_name', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Ex: Mairie de Passy"
+              YOUR_API_KEY="Ex: Mairie de Passy"
             />
             {errors.municipality_name && (
               <p className="text-sm text-red-600 mt-1">{errors.municipality_name}</p>
@@ -77,7 +77,7 @@ const TerritorialInfoStep = ({
               value={formData.mayor_name || ''}
               onChange={(e) => handleInputChange('mayor_name', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Ex: M. Amadou Diallo"
+              YOUR_API_KEY="Ex: M. Amadou Diallo"
             />
             {errors.mayor_name && (
               <p className="text-sm text-red-600 mt-1">{errors.mayor_name}</p>
@@ -93,7 +93,7 @@ const TerritorialInfoStep = ({
               value={formData.population || ''}
               onChange={(e) => handleInputChange('population', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Ex: 15000"
+              YOUR_API_KEY="Ex: 15000"
               min="0"
             />
           </div>
@@ -112,7 +112,7 @@ const TerritorialInfoStep = ({
               onChange={(e) => handleInputChange('coverage_areas', e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Décrivez les zones géographiques couvertes par votre banque..."
+              YOUR_API_KEY="Décrivez les zones géographiques couvertes par votre banque..."
             />
             {errors.coverage_areas && (
               <p className="text-sm text-red-600 mt-1">{errors.coverage_areas}</p>
@@ -128,7 +128,7 @@ const TerritorialInfoStep = ({
               value={formData.agency_count || ''}
               onChange={(e) => handleInputChange('agency_count', e.target.value)}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Ex: 5"
+              YOUR_API_KEY="Ex: 5"
               min="0"
             />
           </div>
@@ -147,7 +147,7 @@ const TerritorialInfoStep = ({
               onChange={(e) => handleInputChange('service_area', e.target.value)}
               rows={3}
               className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              placeholder="Décrivez votre zone d'intervention professionnelle..."
+              YOUR_API_KEY="Décrivez votre zone d'intervention professionnelle..."
             />
             {errors.service_area && (
               <p className="text-sm text-red-600 mt-1">{errors.service_area}</p>

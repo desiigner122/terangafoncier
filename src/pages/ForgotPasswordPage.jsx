@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Mail, Send, CheckCircle } from 'lucide-react';
@@ -38,10 +38,10 @@ const ForgotPasswordPage = () => {
       }
 
       setEmailSent(true);
-      setMessage('Un email de réinitialisation a été envoyé à votre adresse email.');
+      setMessage('Un email de rÃ©initialisation a Ã©tÃ© envoyÃ© Ã  votre adresse email.');
     } catch (error) {
       console.error('Password reset error:', error);
-      setError('Erreur lors de l\'envoi de l\'email. Veuillez vérifier votre adresse email.');
+      setError('Erreur lors de l\'envoi de l\'email. Veuillez vÃ©rifier votre adresse email.');
     } finally {
       setLoading(false);
     }
@@ -65,12 +65,12 @@ const ForgotPasswordPage = () => {
               )}
             </div>
             <CardTitle className="text-2xl font-bold text-gray-900">
-              {emailSent ? 'Email envoyé !' : 'Mot de passe oublié ?'}
+              {emailSent ? 'Email envoyÃ© !' : 'Mot de passe oubliÃ© ?'}
             </CardTitle>
             <CardDescription className="text-gray-600">
               {emailSent
-                ? 'Vérifiez votre boîte email pour réinitialiser votre mot de passe'
-                : 'Saisissez votre email pour recevoir un lien de réinitialisation'
+                ? 'VÃ©rifiez votre boÃ®te email pour rÃ©initialiser votre mot de passe'
+                : 'Saisissez votre email pour recevoir un lien de rÃ©initialisation'
               }
             </CardDescription>
           </CardHeader>
@@ -83,7 +83,7 @@ const ForgotPasswordPage = () => {
                   <Input
                     id="email"
                     type="email"
-                    placeholder="votre.email@exemple.com"
+                    YOUR_API_KEY="votre.email@exemple.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -111,7 +111,7 @@ const ForgotPasswordPage = () => {
                   ) : (
                     <div className="flex items-center gap-2">
                       <Send className="h-4 w-4" />
-                      Envoyer le lien de réinitialisation
+                      Envoyer le lien de rÃ©initialisation
                     </div>
                   )}
                 </Button>
@@ -127,7 +127,7 @@ const ForgotPasswordPage = () => {
 
                 <div className="text-center space-y-2">
                   <p className="text-sm text-gray-600">
-                    Vous n'avez pas reçu l'email ?
+                    Vous n'avez pas reÃ§u l'email ?
                   </p>
                   <Button
                     variant="outline"
@@ -149,7 +149,7 @@ const ForgotPasswordPage = () => {
               <Link to="/login">
                 <Button variant="ghost" className="w-full">
                   <ArrowLeft className="h-4 w-4 mr-2" />
-                  Retour à la connexion
+                  Retour Ã  la connexion
                 </Button>
               </Link>
             </div>

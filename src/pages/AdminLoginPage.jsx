@@ -309,8 +309,8 @@ const AdminLoginPage = () => {
                           name="email"
                           value={formData.email}
                           onChange={handleInputChange}
-                          className="pl-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                          placeholder="admin@terangafoncier.com"
+                          className="pl-12 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                          YOUR_API_KEY="admin@terangafoncier.com"
                           disabled={isLoading || isBlocked}
                         />
                       </div>
@@ -331,8 +331,8 @@ const AdminLoginPage = () => {
                           name="password"
                           value={formData.password}
                           onChange={handleInputChange}
-                          className="pl-12 pr-12 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                          className="pl-12 pr-12 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                          YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                           disabled={isLoading || isBlocked}
                         />
                         <button

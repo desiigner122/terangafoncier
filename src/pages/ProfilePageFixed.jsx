@@ -276,7 +276,7 @@ const ProfilePageFixed = () => {
                     disabled={isUpdatingProfile}
                     required 
                     className="h-10"
-                    placeholder="Votre nom complet"
+                    YOUR_API_KEY="Votre nom complet"
                   />
                 </div>
                 <div className="space-y-2">
@@ -287,7 +287,7 @@ const ProfilePageFixed = () => {
                     value={email} 
                     disabled 
                     className="h-10 bg-muted"
-                    placeholder="Votre adresse email"
+                    YOUR_API_KEY="Votre adresse email"
                   />
                 </div>
                 <div className="space-y-2 md:col-span-2">
@@ -299,7 +299,7 @@ const ProfilePageFixed = () => {
                     onChange={(e) => setPhone(e.target.value)} 
                     disabled={isUpdatingProfile}
                     className="h-10"
-                    placeholder="Votre numéro de téléphone"
+                    YOUR_API_KEY="Votre numéro de téléphone"
                   />
                 </div>
               </div>
@@ -336,7 +336,7 @@ const ProfilePageFixed = () => {
                     onChange={(e) => setNewPassword(e.target.value)} 
                     disabled={isUpdatingPassword} 
                     className="h-10" 
-                    placeholder="Nouveau mot de passe"
+                    YOUR_API_KEY="Nouveau mot de passe"
                   />
                 </div>
                 <div className="space-y-2">
@@ -348,7 +348,7 @@ const ProfilePageFixed = () => {
                     onChange={(e) => setConfirmNewPassword(e.target.value)} 
                     disabled={isUpdatingPassword} 
                     className="h-10" 
-                    placeholder="Retapez votre nouveau mot de passe"
+                    YOUR_API_KEY="Retapez votre nouveau mot de passe"
                   />
                 </div>
               </div>

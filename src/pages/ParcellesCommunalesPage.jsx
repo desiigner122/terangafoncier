@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Search, MapPin, Building2, FileText, Calendar, Users, CheckCircle, Clock, AlertCircle } from 'lucide-react';
@@ -19,24 +19,24 @@ const ParcellesCommunalesPage = () => {
   const [filterStatus, setFilterStatus] = useState('all');
   const [selectedZone, setSelectedZone] = useState(null);
 
-  // Données simulées des parcelles/zones communales
+  // DonnÃ©es simulÃ©es des parcelles/zones communales
   const zonesCommunales = [
     {
       id: 1,
-      name: "Zone Résidentielle Keur Massar",
+      name: "Zone RÃ©sidentielle Keur Massar",
       commune: "Keur Massar",
       communeId: "keur-massar-001",
       region: "Dakar",
       totalParcels: 150,
       availableParcels: 73,
-      surface: "300-500m²",
+      surface: "300-500mÂ²",
       feesRange: "450K - 750K FCFA (attribution) + viabilisation",
-      description: "Zone résidentielle moderne avec toutes les commodités",
-      amenities: ["Électricité", "Eau courante", "Routes pavées", "Éclairage public"],
+      description: "Zone rÃ©sidentielle moderne avec toutes les commoditÃ©s",
+      amenities: ["Ã‰lectricitÃ©", "Eau courante", "Routes pavÃ©es", "Ã‰clairage public"],
       status: "active",
       deadline: "2025-12-31",
       image: "https://images.unsplash.com/photo-1517390344737-d75bc62ccd13?w=400&h=300&fit=crop",
-      requirements: ["Revenus stables", "Première acquisition", "Résidence principale"]
+      requirements: ["Revenus stables", "PremiÃ¨re acquisition", "RÃ©sidence principale"]
     },
     {
       id: 2,
@@ -46,14 +46,14 @@ const ParcellesCommunalesPage = () => {
       region: "Dakar",
       totalParcels: 200,
       availableParcels: 156,
-      surface: "250-400m²",
+      surface: "250-400mÂ²",
       feesRange: "375K - 600K FCFA (attribution) + viabilisation",
       description: "Programme de logement social pour familles modestes",
-      amenities: ["Eau", "Électricité préparée", "Transport public"],
+      amenities: ["Eau", "Ã‰lectricitÃ© prÃ©parÃ©e", "Transport public"],
       status: "active",
       deadline: "2025-10-15",
       image: "https://images.unsplash.com/photo-1448630360428-65456885c650?w=400&h=300&fit=crop",
-      requirements: ["Revenus < 200,000 FCFA/mois", "Famille avec enfants", "Première acquisition"]
+      requirements: ["Revenus < 200,000 FCFA/mois", "Famille avec enfants", "PremiÃ¨re acquisition"]
     },
     {
       id: 3,
@@ -63,14 +63,14 @@ const ParcellesCommunalesPage = () => {
       region: "Dakar",
       totalParcels: 50,
       availableParcels: 23,
-      surface: "1000-5000m²",
+      surface: "1000-5000mÂ²",
       priceRange: "20-80 millions FCFA",
-      description: "Zone dédiée aux activités industrielles et commerciales",
-      amenities: ["Électricité industrielle", "Fibre optique", "Route nationale"],
+      description: "Zone dÃ©diÃ©e aux activitÃ©s industrielles et commerciales",
+      amenities: ["Ã‰lectricitÃ© industrielle", "Fibre optique", "Route nationale"],
       status: "coming_soon",
       deadline: "2025-11-30",
       image: "https://images.unsplash.com/photo-1551808525-51a94da548ce?w=400&h=300&fit=crop",
-      requirements: ["Entreprise constituée", "Plan d'affaires", "Emplois créés"]
+      requirements: ["Entreprise constituÃ©e", "Plan d'affaires", "Emplois crÃ©Ã©s"]
     }
   ];
 
@@ -86,8 +86,8 @@ const ParcellesCommunalesPage = () => {
   const getStatusLabel = (status) => {
     switch(status) {
       case 'active': return 'Demandes ouvertes';
-      case 'coming_soon': return 'Bientôt disponible';
-      case 'closed': return 'Demandes fermées';
+      case 'coming_soon': return 'BientÃ´t disponible';
+      case 'closed': return 'Demandes fermÃ©es';
       default: return status;
     }
   };
@@ -133,7 +133,7 @@ const ParcellesCommunalesPage = () => {
             </div>
             
             <div>
-              <Label htmlFor="phone">Téléphone *</Label>
+              <Label htmlFor="phone">TÃ©lÃ©phone *</Label>
               <Input
                 id="phone"
                 value={formData.phone}
@@ -156,7 +156,7 @@ const ParcellesCommunalesPage = () => {
               <Label htmlFor="familySize">Taille de la famille</Label>
               <Select value={formData.familySize} onValueChange={(value) => setFormData({...formData, familySize: value})}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner" />
+                  <SelectValue YOUR_API_KEY="SÃ©lectionner" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1-2">1-2 personnes</SelectItem>
@@ -170,7 +170,7 @@ const ParcellesCommunalesPage = () => {
               <Label htmlFor="income">Revenus mensuels (FCFA)</Label>
               <Select value={formData.income} onValueChange={(value) => setFormData({...formData, income: value})}>
                 <SelectTrigger>
-                  <SelectValue placeholder="Sélectionner" />
+                  <SelectValue YOUR_API_KEY="SÃ©lectionner" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0-100000">0 - 100,000 FCFA</SelectItem>
@@ -187,7 +187,7 @@ const ParcellesCommunalesPage = () => {
                 id="motivation"
                 value={formData.motivation}
                 onChange={(e) => setFormData({...formData, motivation: e.target.value})}
-                placeholder="Expliquez pourquoi vous souhaitez acquérir cette parcelle..."
+                YOUR_API_KEY="Expliquez pourquoi vous souhaitez acquÃ©rir cette parcelle..."
                 required
               />
             </div>
@@ -195,10 +195,10 @@ const ParcellesCommunalesPage = () => {
             <div className="bg-blue-50 p-4 rounded-lg">
               <h4 className="font-medium text-blue-900 mb-2">Documents requis:</h4>
               <ul className="text-sm text-blue-700 space-y-1">
-                <li>• Carte d'identité nationale</li>
-                <li>• Certificat de revenus</li>
-                <li>• Attestation de résidence</li>
-                <li>• Certificat de situation matrimoniale</li>
+                <li>â€¢ Carte d'identitÃ© nationale</li>
+                <li>â€¢ Certificat de revenus</li>
+                <li>â€¢ Attestation de rÃ©sidence</li>
+                <li>â€¢ Certificat de situation matrimoniale</li>
               </ul>
             </div>
             
@@ -281,7 +281,7 @@ const ParcellesCommunalesPage = () => {
           </div>
 
           <div>
-            <p className="font-medium text-gray-700 mb-2">Commodités:</p>
+            <p className="font-medium text-gray-700 mb-2">CommoditÃ©s:</p>
             <div className="flex flex-wrap gap-1">
               {zone.amenities.map((amenity, index) => (
                 <Badge key={index} variant="outline" className="text-xs">
@@ -292,7 +292,7 @@ const ParcellesCommunalesPage = () => {
           </div>
 
           <div>
-            <p className="font-medium text-gray-700 mb-2">Critères requis:</p>
+            <p className="font-medium text-gray-700 mb-2">CritÃ¨res requis:</p>
             <div className="space-y-1">
               {zone.requirements.map((req, index) => (
                 <div key={index} className="flex items-center text-xs text-gray-600">
@@ -316,7 +316,7 @@ const ParcellesCommunalesPage = () => {
               className="flex-1"
               onClick={() => navigate(`/zone-communale/${zone.id}`)}
             >
-              Voir détails
+              Voir dÃ©tails
             </Button>
             {zone.status === 'active' && (
               <div className="flex-1">
@@ -326,7 +326,7 @@ const ParcellesCommunalesPage = () => {
             {zone.status === 'coming_soon' && (
               <Button variant="outline" className="flex-1" disabled>
                 <Clock className="w-4 h-4 mr-2" />
-                Bientôt
+                BientÃ´t
               </Button>
             )}
           </div>
@@ -377,9 +377,9 @@ const ParcellesCommunalesPage = () => {
             <div>
               <h3 className="font-medium text-yellow-800 mb-2">Information importante</h3>
               <p className="text-yellow-700 text-sm">
-                Les parcelles communales sont attribuées selon des critères sociaux spécifiques. 
-                Les demandes sont étudiées par les autorités locales et l'attribution se fait sur 
-                la base du mérite et des besoins familiaux.
+                Les parcelles communales sont attribuÃ©es selon des critÃ¨res sociaux spÃ©cifiques. 
+                Les demandes sont Ã©tudiÃ©es par les autoritÃ©s locales et l'attribution se fait sur 
+                la base du mÃ©rite et des besoins familiaux.
               </p>
             </div>
           </div>
@@ -393,7 +393,7 @@ const ParcellesCommunalesPage = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <Input
-                placeholder="Rechercher par commune, région..."
+                YOUR_API_KEY="Rechercher par commune, rÃ©gion..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12"
@@ -403,25 +403,25 @@ const ParcellesCommunalesPage = () => {
             <div className="flex gap-3">
               <Select value={filterRegion} onValueChange={setFilterRegion}>
                 <SelectTrigger className="w-40">
-                  <SelectValue placeholder="Région" />
+                  <SelectValue YOUR_API_KEY="RÃ©gion" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">Toutes les régions</SelectItem>
+                  <SelectItem value="all">Toutes les rÃ©gions</SelectItem>
                   <SelectItem value="dakar">Dakar</SelectItem>
-                  <SelectItem value="thies">Thiès</SelectItem>
+                  <SelectItem value="thies">ThiÃ¨s</SelectItem>
                   <SelectItem value="saint-louis">Saint-Louis</SelectItem>
                 </SelectContent>
               </Select>
 
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Statut" />
+                  <SelectValue YOUR_API_KEY="Statut" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="active">Demandes ouvertes</SelectItem>
-                  <SelectItem value="coming_soon">Bientôt disponible</SelectItem>
-                  <SelectItem value="closed">Demandes fermées</SelectItem>
+                  <SelectItem value="coming_soon">BientÃ´t disponible</SelectItem>
+                  <SelectItem value="closed">Demandes fermÃ©es</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -457,7 +457,7 @@ const ParcellesCommunalesPage = () => {
               {
                 step: 1,
                 title: "Choisir une zone",
-                description: "Sélectionnez la zone qui correspond à vos besoins",
+                description: "SÃ©lectionnez la zone qui correspond Ã  vos besoins",
                 icon: MapPin
               },
               {
@@ -468,14 +468,14 @@ const ParcellesCommunalesPage = () => {
               },
               {
                 step: 3,
-                title: "Étude du dossier",
-                description: "La mairie étudie votre demande selon les critères",
+                title: "Ã‰tude du dossier",
+                description: "La mairie Ã©tudie votre demande selon les critÃ¨res",
                 icon: Clock
               },
               {
                 step: 4,
                 title: "Attribution",
-                description: "Vous recevez la notification de décision",
+                description: "Vous recevez la notification de dÃ©cision",
                 icon: CheckCircle
               }
             ].map((item) => (
@@ -490,7 +490,7 @@ const ParcellesCommunalesPage = () => {
                   <item.icon className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="text-lg font-bold mb-2">
-                  Étape {item.step}: {item.title}
+                  Ã‰tape {item.step}: {item.title}
                 </h3>
                 <p className="text-gray-600">
                   {item.description}

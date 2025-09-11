@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { 
@@ -42,22 +42,22 @@ const PromoterNewQuotePage = () => {
 
   const projectTypes = [
     'Villa individuelle',
-    'Immeuble résidentiel',
+    'Immeuble rÃ©sidentiel',
     'Complexe commercial',
     'Projet mixte',
-    'Rénovation',
+    'RÃ©novation',
     'Extension'
   ];
 
   const availableServices = [
     { id: 'architecture', name: 'Conception architecturale', price: 5000000 },
-    { id: 'construction', name: 'Construction clé en main', price: 25000000 },
-    { id: 'genie-civil', name: 'Gros œuvre', price: 15000000 },
+    { id: 'construction', name: 'Construction clÃ© en main', price: 25000000 },
+    { id: 'genie-civil', name: 'Gros Å“uvre', price: 15000000 },
     { id: 'finitions', name: 'Finitions haut standing', price: 8000000 },
     { id: 'piscine', name: 'Piscine', price: 6000000 },
-    { id: 'jardinage', name: 'Aménagement paysager', price: 3000000 },
+    { id: 'jardinage', name: 'AmÃ©nagement paysager', price: 3000000 },
     { id: 'suivi', name: 'Suivi de chantier', price: 2000000 },
-    { id: 'demarches', name: 'Démarches administratives', price: 1500000 }
+    { id: 'demarches', name: 'DÃ©marches administratives', price: 1500000 }
   ];
 
   const handleInputChange = (field, value) => {
@@ -99,7 +99,7 @@ const PromoterNewQuotePage = () => {
     // Simulation de soumission
     setTimeout(() => {
       setIsSubmitting(false);
-      window.safeGlobalToast('Devis envoyé avec succès !', 'success');
+      window.safeGlobalToast('Devis envoyÃ© avec succÃ¨s !', 'success');
       // Redirection ou reset du formulaire
     }, 2000);
   };
@@ -108,7 +108,7 @@ const PromoterNewQuotePage = () => {
     <>
       <Helmet>
         <title>Nouveau Devis - Dashboard Promoteur | Teranga Foncier</title>
-        <meta name="description" content="Créez et envoyez un devis personnalisé pour vos services de construction." />
+        <meta name="description" content="CrÃ©ez et envoyez un devis personnalisÃ© pour vos services de construction." />
       </Helmet>
 
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -122,7 +122,7 @@ const PromoterNewQuotePage = () => {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Nouveau Devis</h1>
-            <p className="text-gray-600">Créez un devis personnalisé pour votre client</p>
+            <p className="text-gray-600">CrÃ©ez un devis personnalisÃ© pour votre client</p>
           </div>
         </div>
 
@@ -143,7 +143,7 @@ const PromoterNewQuotePage = () => {
                     id="clientName"
                     value={formData.clientName}
                     onChange={(e) => handleInputChange('clientName', e.target.value)}
-                    placeholder="Ex: Aminata Diallo"
+                    YOUR_API_KEY="Ex: Aminata Diallo"
                     required
                   />
                 </div>
@@ -154,30 +154,30 @@ const PromoterNewQuotePage = () => {
                     type="email"
                     value={formData.clientEmail}
                     onChange={(e) => handleInputChange('clientEmail', e.target.value)}
-                    placeholder="Ex: aminata@email.com"
+                    YOUR_API_KEY="Ex: aminata@email.com"
                     required
                   />
                 </div>
               </div>
               <div>
-                <Label htmlFor="clientPhone">Téléphone *</Label>
+                <Label htmlFor="clientPhone">TÃ©lÃ©phone *</Label>
                 <Input
                   id="clientPhone"
                   value={formData.clientPhone}
                   onChange={(e) => handleInputChange('clientPhone', e.target.value)}
-                  placeholder="Ex: +221 77 123 45 67"
+                  YOUR_API_KEY="Ex: +221 77 123 45 67"
                   required
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Détails du projet */}
+          {/* DÃ©tails du projet */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <FileText className="w-5 h-5 mr-2" />
-                Détails du Projet
+                DÃ©tails du Projet
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -187,7 +187,7 @@ const PromoterNewQuotePage = () => {
                   id="projectTitle"
                   value={formData.projectTitle}
                   onChange={(e) => handleInputChange('projectTitle', e.target.value)}
-                  placeholder="Ex: Villa moderne 4 chambres avec piscine"
+                  YOUR_API_KEY="Ex: Villa moderne 4 chambres avec piscine"
                   required
                 />
               </div>
@@ -197,7 +197,7 @@ const PromoterNewQuotePage = () => {
                   <Label htmlFor="projectType">Type de projet *</Label>
                   <Select onValueChange={(value) => handleInputChange('projectType', value)}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionnez le type" />
+                      <SelectValue YOUR_API_KEY="SÃ©lectionnez le type" />
                     </SelectTrigger>
                     <SelectContent>
                       {projectTypes.map((type) => (
@@ -214,7 +214,7 @@ const PromoterNewQuotePage = () => {
                     id="location"
                     value={formData.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
-                    placeholder="Ex: Almadies, Dakar"
+                    YOUR_API_KEY="Ex: Almadies, Dakar"
                     required
                   />
                 </div>
@@ -227,39 +227,39 @@ const PromoterNewQuotePage = () => {
                     id="budget"
                     value={formData.budget}
                     onChange={(e) => handleInputChange('budget', e.target.value)}
-                    placeholder="Ex: 80-120M FCFA"
+                    YOUR_API_KEY="Ex: 80-120M FCFA"
                   />
                 </div>
                 <div>
-                  <Label htmlFor="timeline">Délai souhaité</Label>
+                  <Label htmlFor="timeline">DÃ©lai souhaitÃ©</Label>
                   <Input
                     id="timeline"
                     value={formData.timeline}
                     onChange={(e) => handleInputChange('timeline', e.target.value)}
-                    placeholder="Ex: 12 mois"
+                    YOUR_API_KEY="Ex: 12 mois"
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="description">Description détaillée</Label>
+                <Label htmlFor="description">Description dÃ©taillÃ©e</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  placeholder="Décrivez les spécificités du projet, les exigences particulières, etc."
+                  YOUR_API_KEY="DÃ©crivez les spÃ©cificitÃ©s du projet, les exigences particuliÃ¨res, etc."
                   rows={4}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Services proposés */}
+          {/* Services proposÃ©s */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <DollarSign className="w-5 h-5 mr-2" />
-                Services Proposés
+                Services ProposÃ©s
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -293,13 +293,13 @@ const PromoterNewQuotePage = () => {
               {formData.services.length > 0 && (
                 <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold">Total estimé:</span>
+                    <span className="text-lg font-semibold">Total estimÃ©:</span>
                     <span className="text-2xl font-bold text-emerald-600">
                       {formatCurrency(calculateTotal())}
                     </span>
                   </div>
                   <p className="text-sm text-emerald-700 mt-2">
-                    Prix indicatif - Devis final après étude détaillée
+                    Prix indicatif - Devis final aprÃ¨s Ã©tude dÃ©taillÃ©e
                   </p>
                 </div>
               )}

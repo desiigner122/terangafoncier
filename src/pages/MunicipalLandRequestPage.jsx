@@ -133,9 +133,9 @@ const MunicipalLandRequestPage = () => {
           <motion.div key={2} initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} className="space-y-4">
             <CardHeader><CardTitle className="flex items-center"><Landmark className="mr-2"/> Détails de la Demande</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div><Label htmlFor="mairie">Mairie Concernée</Label><Select name="mairie" onValueChange={(v) => handleSelectChange('mairie', v)} value={formData.mairie} required><SelectTrigger><SelectValue placeholder="Sélectionnez une mairie" /></SelectTrigger><SelectContent>{mairies.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label htmlFor="purpose">Objet de la Demande</Label><Select name="purpose" onValueChange={(v) => handleSelectChange('purpose', v)} value={formData.purpose} required><SelectTrigger><SelectValue placeholder="Sélectionnez l'objet" /></SelectTrigger><SelectContent>{purposes.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
-              <div><Label htmlFor="areaSought">Superficie Recherchée (m²)</Label><Input id="areaSought" name="areaSought" type="number" placeholder="Ex: 300" value={formData.areaSought} onChange={handleInputChange} required /></div>
+              <div><Label htmlFor="mairie">Mairie Concernée</Label><Select name="mairie" onValueChange={(v) => handleSelectChange('mairie', v)} value={formData.mairie} required><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez une mairie" /></SelectTrigger><SelectContent>{mairies.map(m => <SelectItem key={m} value={m}>{m}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label htmlFor="purpose">Objet de la Demande</Label><Select name="purpose" onValueChange={(v) => handleSelectChange('purpose', v)} value={formData.purpose} required><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez l'objet" /></SelectTrigger><SelectContent>{purposes.map(p => <SelectItem key={p} value={p}>{p}</SelectItem>)}</SelectContent></Select></div>
+              <div><Label htmlFor="areaSought">Superficie Recherchée (m²)</Label><Input id="areaSought" name="areaSought" type="number" YOUR_API_KEY="Ex: 300" value={formData.areaSought} onChange={handleInputChange} required /></div>
             </CardContent>
           </motion.div>
         );
@@ -144,7 +144,7 @@ const MunicipalLandRequestPage = () => {
           <motion.div key={3} initial={{ opacity: 0, x: -50 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 50 }} className="space-y-4">
             <CardHeader><CardTitle className="flex items-center"><FileText className="mr-2"/> Motivation et Pièces Jointes</CardTitle></CardHeader>
             <CardContent className="space-y-4">
-              <div><Label htmlFor="message">Message de Motivation</Label><Textarea id="message" name="message" placeholder="Expliquez votre projet..." value={formData.message} onChange={handleInputChange} rows={5} required /></div>
+              <div><Label htmlFor="message">Message de Motivation</Label><Textarea id="message" name="message" YOUR_API_KEY="Expliquez votre projet..." value={formData.message} onChange={handleInputChange} rows={5} required /></div>
               <div><Label htmlFor="FileTexts">Pièces Jointes</Label><div className="mt-1 flex justify-center px-6 pt-5 pb-6 border-2 border-dashed rounded-md cursor-pointer hover:border-primary transition-colors border-border"><div className="space-y-1 text-center"><UploadCloud className="mx-auto h-12 w-12 text-muted-foreground" /><div className="flex text-sm text-muted-foreground"><label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-medium text-primary hover:text-primary/80"><span>Téléchargez vos fichiers</span><input id="file-upload" name="file-upload" type="file" className="sr-only" multiple onChange={handleFileChange} /></label><p className="pl-1">ou glissez-déposez</p></div><p className="text-xs text-muted-foreground">PDF, JPG, PNG (Max. 5MB)</p>{files.length > 0 && (<ul className="mt-2 text-xs text-foreground list-disc list-inside">{files.map(file => <li key={file.name}>{file.name}</li>)}</ul>)}</div></div></div>
             </CardContent>
           </motion.div>

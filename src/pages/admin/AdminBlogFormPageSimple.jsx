@@ -148,7 +148,7 @@ const AdminBlogFormPageSimple = () => {
                   name="title"
                   value={post.title}
                   onChange={handleChange}
-                  placeholder="Entrez le titre de l'article"
+                  YOUR_API_KEY="Entrez le titre de l'article"
                   required
                   className="text-lg"
                 />
@@ -161,7 +161,7 @@ const AdminBlogFormPageSimple = () => {
                   name="content"
                   value={post.content}
                   onChange={handleChange}
-                  placeholder="Rédigez le contenu de l'article..."
+                  YOUR_API_KEY="Rédigez le contenu de l'article..."
                   className="min-h-[400px] resize-y"
                   required
                 />

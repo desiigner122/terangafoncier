@@ -357,7 +357,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
             id="full_name"
             value={formData.full_name || ''}
             onChange={(e) => updateFormData('full_name', e.target.value)}
-            placeholder="Prénom et nom"
+            YOUR_API_KEY="Prénom et nom"
             required
           />
         </div>
@@ -369,7 +369,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
             type="email"
             value={formData.email || ''}
             onChange={(e) => updateFormData('email', e.target.value)}
-            placeholder="email@exemple.com"
+            YOUR_API_KEY="email@exemple.com"
             required
           />
         </div>
@@ -380,7 +380,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
             id="phone"
             value={formData.phone || ''}
             onChange={(e) => updateFormData('phone', e.target.value)}
-            placeholder="+221 XX XXX XX XX"
+            YOUR_API_KEY="+221 XX XXX XX XX"
             required
           />
         </div>
@@ -391,7 +391,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
             id="address"
             value={formData.address || ''}
             onChange={(e) => updateFormData('address', e.target.value)}
-            placeholder="Adresse complète (optionnel)"
+            YOUR_API_KEY="Adresse complète (optionnel)"
           />
         </div>
       </div>
@@ -420,7 +420,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="company_name"
                   value={formData.company_name || ''}
                   onChange={(e) => updateFormData('company_name', e.target.value)}
-                  placeholder="Nom de votre entreprise"
+                  YOUR_API_KEY="Nom de votre entreprise"
                   required
                 />
               </div>
@@ -430,7 +430,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="business_license"
                   value={formData.business_license || ''}
                   onChange={(e) => updateFormData('business_license', e.target.value)}
-                  placeholder="Numéro de licence commerciale"
+                  YOUR_API_KEY="Numéro de licence commerciale"
                   required
                 />
               </div>
@@ -445,7 +445,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="license_number"
                   value={formData.license_number || ''}
                   onChange={(e) => updateFormData('license_number', e.target.value)}
-                  placeholder="Numéro de licence géomètre"
+                  YOUR_API_KEY="Numéro de licence géomètre"
                   required
                 />
               </div>
@@ -455,7 +455,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="specializations"
                   value={formData.specializations || ''}
                   onChange={(e) => updateFormData('specializations', e.target.value)}
-                  placeholder="Vos domaines de spécialisation"
+                  YOUR_API_KEY="Vos domaines de spécialisation"
                   rows={3}
                 />
               </div>
@@ -470,7 +470,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="office_name"
                   value={formData.office_name || ''}
                   onChange={(e) => updateFormData('office_name', e.target.value)}
-                  placeholder="Nom de votre étude notariale"
+                  YOUR_API_KEY="Nom de votre étude notariale"
                   required
                 />
               </div>
@@ -480,7 +480,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="bar_number"
                   value={formData.bar_number || ''}
                   onChange={(e) => updateFormData('bar_number', e.target.value)}
-                  placeholder="Numéro d'inscription au barreau"
+                  YOUR_API_KEY="Numéro d'inscription au barreau"
                   required
                 />
               </div>
@@ -495,7 +495,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="municipality"
                   value={formData.municipality || ''}
                   onChange={(e) => updateFormData('municipality', e.target.value)}
-                  placeholder="Nom de la commune"
+                  YOUR_API_KEY="Nom de la commune"
                   required
                 />
               </div>
@@ -506,7 +506,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   onValueChange={(value) => updateFormData('position', value)}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Sélectionnez votre poste" />
+                    <SelectValue YOUR_API_KEY="Sélectionnez votre poste" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="maire">Maire</SelectItem>
@@ -528,7 +528,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="bank_name"
                   value={formData.bank_name || ''}
                   onChange={(e) => updateFormData('bank_name', e.target.value)}
-                  placeholder="Nom de votre banque"
+                  YOUR_API_KEY="Nom de votre banque"
                   required
                 />
               </div>
@@ -538,7 +538,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="branch"
                   value={formData.branch || ''}
                   onChange={(e) => updateFormData('branch', e.target.value)}
-                  placeholder="Nom de l'agence"
+                  YOUR_API_KEY="Nom de l'agence"
                   required
                 />
               </div>
@@ -548,7 +548,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="license"
                   value={formData.license || ''}
                   onChange={(e) => updateFormData('license', e.target.value)}
-                  placeholder="Numéro de licence"
+                  YOUR_API_KEY="Numéro de licence"
                   required
                 />
               </div>
@@ -563,7 +563,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="agency"
                   value={formData.agency || ''}
                   onChange={(e) => updateFormData('agency', e.target.value)}
-                  placeholder="Nom de votre agence"
+                  YOUR_API_KEY="Nom de votre agence"
                   required
                 />
               </div>
@@ -573,7 +573,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
                   id="specializations"
                   value={formData.specializations || ''}
                   onChange={(e) => updateFormData('specializations', e.target.value)}
-                  placeholder="Régularisation foncière, titres de propriété, etc."
+                  YOUR_API_KEY="Régularisation foncière, titres de propriété, etc."
                   rows={3}
                 />
               </div>
@@ -620,7 +620,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
           <Label htmlFor="region">Région *</Label>
           <Select value={selectedRegion} onValueChange={setSelectedRegion}>
             <SelectTrigger>
-              <SelectValue placeholder="Sélectionnez une région" />
+              <SelectValue YOUR_API_KEY="Sélectionnez une région" />
             </SelectTrigger>
             <SelectContent>
               {Object.keys(SENEGAL_REGIONS).map(region => (
@@ -635,7 +635,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
             <Label htmlFor="department">Département *</Label>
             <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez un département" />
+                <SelectValue YOUR_API_KEY="Sélectionnez un département" />
               </SelectTrigger>
               <SelectContent>
                 {Object.keys(SENEGAL_REGIONS[selectedRegion] || {}).map(dept => (
@@ -651,7 +651,7 @@ const IntelligentUserWizard = ({ isOpen, onClose, onUserCreated }) => {
             <Label htmlFor="commune">Commune</Label>
             <Select value={selectedCommune} onValueChange={setSelectedCommune}>
               <SelectTrigger>
-                <SelectValue placeholder="Sélectionnez une commune" />
+                <SelectValue YOUR_API_KEY="Sélectionnez une commune" />
               </SelectTrigger>
               <SelectContent>
                 {(SENEGAL_REGIONS[selectedRegion]?.[selectedDepartment] || []).map(commune => (

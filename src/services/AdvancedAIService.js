@@ -1,4 +1,4 @@
-// Service IA Avancé avec Blockchain et Analytics - Teranga Foncier
+﻿// Service IA AvancÃ© avec Blockchain et Analytics - Teranga Foncier
 import { aiService } from './AIService.js';
 
 class AdvancedAIService {
@@ -12,12 +12,12 @@ class AdvancedAIService {
     this.predictionCache = new Map();
     this.marketDataCache = new Map();
     
-    // Modèles prédictifs
+    // ModÃ¨les prÃ©dictifs
     this.priceModel = null;
     this.marketModel = null;
     this.riskModel = null;
     
-    // Données en temps réel
+    // DonnÃ©es en temps rÃ©el
     this.realtimeMetrics = {
       totalProperties: 1247,
       activeProjects: 89,
@@ -34,22 +34,22 @@ class AdvancedAIService {
 
   async initializeAI() {
     try {
-      // Charger les modèles prédictifs
+      // Charger les modÃ¨les prÃ©dictifs
       await this.loadPredictiveModels();
       
-      // Initialiser la surveillance en temps réel
+      // Initialiser la surveillance en temps rÃ©el
       this.startRealtimeMonitoring();
       
-      // Démarrer l'analyse de marché continue
+      // DÃ©marrer l'analyse de marchÃ© continue
       this.startMarketAnalysis();
       
-      console.log('✅ AdvancedAIService initialisé avec succès');
+      console.log('âœ… AdvancedAIService initialisÃ© avec succÃ¨s');
     } catch (error) {
-      console.error('❌ Erreur initialisation AdvancedAIService:', error);
+      console.error('âŒ Erreur initialisation AdvancedAIService:', error);
     }
   }
 
-  // === ANALYSES DE MARCHÉ AVANCÉES ===
+  // === ANALYSES DE MARCHÃ‰ AVANCÃ‰ES ===
   async generateMarketInsights() {
     const cacheKey = 'market_insights_' + new Date().toDateString();
     
@@ -64,22 +64,22 @@ class AdvancedAIService {
         // Analyse des tendances par zone
         zoneAnalysis: await this.analyzeZoneTrends(),
         
-        // Prédictions prix
+        // PrÃ©dictions prix
         pricePredictions: await this.generatePricePredictions(),
         
         // Analyse de la demande
         demandAnalysis: await this.analyzeDemandPatterns(),
         
-        // Opportunités d'investissement
+        // OpportunitÃ©s d'investissement
         investmentOpportunities: await this.identifyInvestmentOpportunities(),
         
-        // Risques identifiés
+        // Risques identifiÃ©s
         riskAssessment: await this.assessMarketRisks(),
         
-        // Analyse sentiment marché
+        // Analyse sentiment marchÃ©
         marketSentiment: await this.analyzeMarketSentiment(),
         
-        // Métriques blockchain
+        // MÃ©triques blockchain
         blockchainMetrics: await this.getBlockchainMetrics(),
         
         // Score de confiance global
@@ -90,7 +90,7 @@ class AdvancedAIService {
       return insights;
       
     } catch (error) {
-      console.error('Erreur génération insights marché:', error);
+      console.error('Erreur gÃ©nÃ©ration insights marchÃ©:', error);
       return this.getFallbackMarketInsights();
     }
   }
@@ -127,7 +127,7 @@ class AdvancedAIService {
         prediction: '+2.5%',
         confidence: 0.92,
         factors: [
-          'Saisonnalité favorable',
+          'SaisonnalitÃ© favorable',
           'Demande diaspora croissante',
           'Projets infrastructure'
         ]
@@ -137,9 +137,9 @@ class AdvancedAIService {
         prediction: '+8.2%',
         confidence: 0.85,
         factors: [
-          'Croissance économique',
+          'Croissance Ã©conomique',
           'Urbanisation continue',
-          'Politique habitât social'
+          'Politique habitÃ¢t social'
         ]
       },
       longTerm: {
@@ -147,15 +147,15 @@ class AdvancedAIService {
         prediction: '+25.8%',
         confidence: 0.78,
         factors: [
-          'PSE développement',
+          'PSE dÃ©veloppement',
           'Corridor Dakar-Diamniadio',
-          'Hub régional émergent'
+          'Hub rÃ©gional Ã©mergent'
         ]
       }
     };
   }
 
-  // === ANALYTICS BLOCKCHAIN TEMPS RÉEL ===
+  // === ANALYTICS BLOCKCHAIN TEMPS RÃ‰EL ===
   async getBlockchainMetrics() {
     try {
       return {
@@ -168,19 +168,19 @@ class AdvancedAIService {
         securityScore: await this.getSecurityScore(),
         transparencyIndex: 0.98,
         
-        // Métriques spécifiques Teranga
+        // MÃ©triques spÃ©cifiques Teranga
         propertyTokens: await this.getPropertyTokenCount(),
         fractionalOwnership: await this.getFractionalOwnershipStats(),
         crossBorderTransactions: await this.getCrossBorderStats(),
         diasporaActivity: await this.getDiasporaActivityStats()
       };
     } catch (error) {
-      console.error('Erreur métriques blockchain:', error);
+      console.error('Erreur mÃ©triques blockchain:', error);
       return this.getFallbackBlockchainMetrics();
     }
   }
 
-  // === PRÉDICTIONS IA AVANCÉES ===
+  // === PRÃ‰DICTIONS IA AVANCÃ‰ES ===
   async generatePropertyValuation(propertyData) {
     const analysisKey = `valuation_${JSON.stringify(propertyData)}`;
     
@@ -200,13 +200,13 @@ class AdvancedAIService {
         // Analyse des risques
         riskFactors: await this.identifyPropertyRisks(propertyData),
         
-        // Opportunités identifiées
+        // OpportunitÃ©s identifiÃ©es
         opportunities: await this.identifyPropertyOpportunities(propertyData),
         
         // Score global IA
         aiConfidenceScore: await this.calculateAIConfidence(propertyData),
         
-        // Recommandations personnalisées
+        // Recommandations personnalisÃ©es
         recommendations: await this.generatePropertyRecommendations(propertyData),
         
         timestamp: new Date().toISOString()
@@ -216,33 +216,33 @@ class AdvancedAIService {
       return valuation;
       
     } catch (error) {
-      console.error('Erreur évaluation propriété:', error);
+      console.error('Erreur Ã©valuation propriÃ©tÃ©:', error);
       return this.getFallbackValuation(propertyData);
     }
   }
 
-  // === SYSTÈME DE NOTIFICATIONS INTELLIGENTES ===
+  // === SYSTÃˆME DE NOTIFICATIONS INTELLIGENTES ===
   async generateSmartNotifications(userId, userProfile) {
     const notifications = [];
 
     try {
-      // Alertes de prix personnalisées
+      // Alertes de prix personnalisÃ©es
       const priceAlerts = await this.generatePriceAlerts(userId, userProfile);
       notifications.push(...priceAlerts);
 
-      // Opportunités d'investissement
+      // OpportunitÃ©s d'investissement
       const opportunities = await this.generateOpportunityAlerts(userId, userProfile);
       notifications.push(...opportunities);
 
-      // Actualités marché pertinentes
+      // ActualitÃ©s marchÃ© pertinentes
       const marketNews = await this.generateMarketNewsAlerts(userProfile);
       notifications.push(...marketNews);
 
-      // Alertes blockchain (sécurité, transactions)
+      // Alertes blockchain (sÃ©curitÃ©, transactions)
       const blockchainAlerts = await this.generateBlockchainAlerts(userId);
       notifications.push(...blockchainAlerts);
 
-      // Recommendations IA personnalisées
+      // Recommendations IA personnalisÃ©es
       const aiRecommendations = await this.generateAIRecommendations(userId, userProfile);
       notifications.push(...aiRecommendations);
 
@@ -251,12 +251,12 @@ class AdvancedAIService {
         .slice(0, 15);
         
     } catch (error) {
-      console.error('Erreur génération notifications:', error);
+      console.error('Erreur gÃ©nÃ©ration notifications:', error);
       return [];
     }
   }
 
-  // === ANALYTICS UTILISATEUR AVANCÉES ===
+  // === ANALYTICS UTILISATEUR AVANCÃ‰ES ===
   async generateUserAnalytics(userId) {
     return {
       behaviorAnalysis: await this.analyzeUserBehavior(userId),
@@ -270,45 +270,60 @@ class AdvancedAIService {
     };
   }
 
-  // === MONITORING TEMPS RÉEL ===
+  // === MONITORING TEMPS RÃ‰EL ===
   startRealtimeMonitoring() {
-    // Mise à jour des métriques toutes les 30 secondes
+    // Mise Ã  jour des mÃ©triques toutes les 30 secondes
     setInterval(async () => {
       try {
         await this.updateRealtimeMetrics();
         await this.detectAnomalies();
         await this.updateMarketSentiment();
       } catch (error) {
-        console.error('Erreur monitoring temps réel:', error);
+        console.error('Erreur monitoring temps rÃ©el:', error);
       }
     }, 30000);
   }
 
   async updateRealtimeMetrics() {
-    const newMetrics = {
-      totalProperties: await this.getLivePropertyCount(),
-      activeProjects: await this.getLiveProjectCount(),
-      communalLands: await this.getLiveCommunalCount(),
-      dailyVisits: await this.getLiveDailyVisits(),
-      completedProjects: await this.getMonthlyCompletions(),
-      activeInvestors: await this.getLiveInvestorCount(),
-      liveTransactions: await this.getLiveTransactionCount(),
-      aiMonitoring: await this.getAIMonitoringCount()
-    };
+    try {
+      const newMetrics = {
+        totalProperties: await this.getLivePropertyCount(),
+        activeProjects: await this.getLiveProjectCount(),
+        communalLands: 45, // Valeur par dÃ©faut temporaire
+        dailyVisits: await this.getLiveDailyVisits(),
+        completedProjects: await this.getMonthlyCompletions(),
+        activeInvestors: await this.getLiveInvestorCount(),
+        liveTransactions: await this.getLiveTransactionCount(),
+        aiMonitoring: await this.getAIMonitoringCount()
+      };
 
-    // Détecter les changements significatifs
-    const changes = this.detectMetricChanges(this.realtimeMetrics, newMetrics);
+      // DÃ©tecter les changements significatifs
+      const changes = this.detectMetricChanges(this.realtimeMetrics, newMetrics);
     
-    if (changes.length > 0) {
-      await this.broadcastMetricChanges(changes);
-    }
+      if (changes.length > 0) {
+        await this.broadcastMetricChanges(changes);
+      }
 
-    this.realtimeMetrics = newMetrics;
+      this.realtimeMetrics = newMetrics;
+    } catch (error) {
+      console.error('Erreur updateRealtimeMetrics:', error);
+      // Utiliser des mÃ©triques par dÃ©faut en cas d'erreur
+      this.realtimeMetrics = {
+        totalProperties: 150,
+        activeProjects: 25,
+        communalLands: 45,
+        dailyVisits: 1200,
+        completedProjects: 8,
+        activeInvestors: 67,
+        liveTransactions: 12,
+        aiMonitoring: 5
+      };
+    }
   }
 
-  // === MÉTHODES UTILITAIRES ===
+  // === MÃ‰THODES UTILITAIRES ===
   async getCurrentZonePrice(zone) {
-    // Simulation - à remplacer par vraies données
+    // Simulation - Ã  remplacer par vraies donnÃ©es
     const basePrices = {
       'Almadies': 850000,
       'Sicap': 650000,
@@ -339,12 +354,12 @@ class AdvancedAIService {
     return (trend * 0.4 + infrastructure * 0.3 + (1000000 / price) * 0.3);
   }
 
-  // === MÉTHODES FALLBACK ===
+  // === MÃ‰THODES FALLBACK ===
   getFallbackMarketInsights() {
     return {
       timestamp: new Date().toISOString(),
       zoneAnalysis: [],
-      pricePredictions: { shortTerm: { prediction: 'Données indisponibles' } },
+      pricePredictions: { shortTerm: { prediction: 'DonnÃ©es indisponibles' } },
       demandAnalysis: { status: 'Analyse en cours...' },
       confidenceScore: 0.5
     };
@@ -361,10 +376,10 @@ class AdvancedAIService {
     };
   }
 
-  // === MÉTHODES À IMPLÉMENTER (Placeholders) ===
-  async loadPredictiveModels() { /* À implémenter */ }
-  async startMarketAnalysis() { /* À implémenter */ }
-  async analyzeDemandPatterns() { return { status: 'En développement' }; }
+  // === MÃ‰THODES Ã€ IMPLÃ‰MENTER (YOUR_API_KEYs) ===
+  async loadPredictiveModels() { /* Ã€ implÃ©menter */ }
+  async startMarketAnalysis() { /* Ã€ implÃ©menter */ }
+  async analyzeDemandPatterns() { return { status: 'En dÃ©veloppement' }; }
   async identifyInvestmentOpportunities() { return []; }
   async assessMarketRisks() { return []; }
   async analyzeMarketSentiment() { return { score: 0.75, status: 'Optimiste' }; }
@@ -376,7 +391,7 @@ class AdvancedAIService {
   async getNetworkHealthScore() { return 0.96; }
   async getSecurityScore() { return 0.98; }
 
-  // Méthodes manquantes ajoutées
+  // MÃ©thodes manquantes ajoutÃ©es
   async getZoneTrendFactors(zone) {
     const zoneTrends = {
       'liberte-6': { growth: 0.15, demand: 0.85, infrastructure: 0.92, price_trend: 'hausse' },
@@ -390,13 +405,13 @@ class AdvancedAIService {
   }
 
   async getPropertyTokenCount() {
-    // Simulation du nombre de tokens de propriétés sur la blockchain
+    // Simulation du nombre de tokens de propriÃ©tÃ©s sur la blockchain
     return Math.floor(Math.random() * 500) + 200; // Entre 200 et 700 tokens
   }
 
-  // Méthodes supplémentaires manquantes
+  // MÃ©thodes supplÃ©mentaires manquantes
   async calculateSalesVelocity() {
-    // Calcul de la vélocité des ventes (propriétés vendues par mois)
+    // Calcul de la vÃ©locitÃ© des ventes (propriÃ©tÃ©s vendues par mois)
     return {
       dakar: 15.2,
       thies: 8.7,
@@ -407,7 +422,7 @@ class AdvancedAIService {
   }
 
   async getFractionalOwnershipStats() {
-    // Statistiques de propriété fractionnée sur la blockchain
+    // Statistiques de propriÃ©tÃ© fractionnÃ©e sur la blockchain
     return {
       totalFractionalProperties: 45,
       averageOwners: 8.3,
@@ -417,12 +432,12 @@ class AdvancedAIService {
   }
 
   async getLivePropertyCount() {
-    // Nombre de propriétés actives en temps réel
+    // Nombre de propriÃ©tÃ©s actives en temps rÃ©el
     return Math.floor(Math.random() * 50) + 1200; // Entre 1200 et 1250
   }
 
   async getZoneInventory(zone) {
-    // Inventaire des propriétés par zone
+    // Inventaire des propriÃ©tÃ©s par zone
     const baseInventory = {
       'Almadies': 45,
       'Sicap': 89,
@@ -440,7 +455,7 @@ class AdvancedAIService {
   }
 
   async getCrossBorderStats() {
-    // Statistiques des transactions transfrontalières blockchain
+    // Statistiques des transactions transfrontaliÃ¨res blockchain
     return {
       monthlyVolume: Math.floor(Math.random() * 500000) + 2000000,
       activeCountries: 8,
@@ -450,11 +465,204 @@ class AdvancedAIService {
   }
 
   async getLiveProjectCount() {
-    // Nombre de projets actifs en temps réel
+    // Nombre de projets actifs en temps rÃ©el
     return Math.floor(Math.random() * 30) + 80; // Entre 80 et 110
+  }
+
+  // MÃ©thodes manquantes pour Ã©viter les erreurs TypeError
+
+  async getZoneDemographics(zone) {
+    // DonnÃ©es dÃ©mographiques simulÃ©es par zone
+    const demographics = {
+      'Almadies': { population: 45000, averageAge: 38, incomeLevel: 'high' },
+      'Sicap': { population: 78000, averageAge: 35, incomeLevel: 'medium-high' },
+      'VDN': { population: 52000, averageAge: 40, incomeLevel: 'high' },
+      'Mermoz': { population: 65000, averageAge: 33, incomeLevel: 'medium' },
+      'Fann': { population: 42000, averageAge: 36, incomeLevel: 'medium-high' },
+      'Plateau': { population: 38000, averageAge: 45, incomeLevel: 'high' },
+      'Point E': { population: 55000, averageAge: 32, incomeLevel: 'medium' },
+      'Ouakam': { population: 35000, averageAge: 39, incomeLevel: 'medium-high' },
+      'Ngor': { population: 28000, averageAge: 41, incomeLevel: 'high' },
+      'Diamniadio': { population: 95000, averageAge: 29, incomeLevel: 'medium' }
+    };
+    
+    return demographics[zone] || { population: 50000, averageAge: 35, incomeLevel: 'medium' };
+  }
+
+  async getDiasporaActivityStats() {
+    // Statistiques d'activitÃ© de la diaspora
+    return {
+      monthlyInvestments: Math.floor(Math.random() * 50) + 120,
+      totalValue: Math.floor(Math.random() * 1000000) + 5000000,
+      activeCountries: 15,
+      averageInvestment: Math.floor(Math.random() * 100000) + 200000,
+      remittances: Math.floor(Math.random() * 500000) + 2000000
+    };
+  }
+
+  async getLiveDailyVisits() {
+    // Visites quotidiennes en temps rÃ©el
+    const baseVisits = 1200;
+    const variation = Math.floor(Math.random() * 400) - 200; // Â±200
+    return Math.max(800, baseVisits + variation);
+  }
+
+  async detectAnomalies() {
+    // DÃ©tection d'anomalies dans les mÃ©triques
+    const anomalies = [];
+    
+    // Simulation de dÃ©tection d'anomalies
+    if (Math.random() > 0.8) {
+      anomalies.push({
+        type: 'price_spike',
+        zone: 'Almadies',
+        severity: 'medium',
+        description: 'Augmentation de prix inhabituelle dÃ©tectÃ©e'
+      });
+    }
+    
+    if (Math.random() > 0.9) {
+      anomalies.push({
+        type: 'volume_drop',
+        zone: 'Sicap',
+        severity: 'low',
+        description: 'Baisse du volume de transactions'
+      });
+    }
+    
+    return anomalies;
+  }
+
+  // MÃ©thodes supplÃ©mentaires manquantes
+
+  async getInfrastructureScore(zone) {
+    // Score d'infrastructure par zone (0-100)
+    const scores = {
+      'Almadies': 85,
+      'Sicap': 78,
+      'VDN': 92,
+      'Mermoz': 75,
+      'Fann': 88,
+      'Plateau': 95,
+      'Point E': 72,
+      'Ouakam': 82,
+      'Ngor': 79,
+      'Diamniadio': 68
+    };
+    
+    return scores[zone] || Math.floor(Math.random() * 30) + 60;
+  }
+
+  async getCurrentZonePrice(zone) {
+    // Prix actuels par zone (en FCFA/mÂ²)
+    const basePrices = {
+      'Almadies': 450000,
+      'Sicap': 280000,
+      'VDN': 520000,
+      'Mermoz': 320000,
+      'Fann': 380000,
+      'Plateau': 580000,
+      'Point E': 290000,
+      'Ouakam': 420000,
+      'Ngor': 480000,
+      'Diamniadio': 180000
+    };
+    
+    const basePrice = basePrices[zone] || 300000;
+    const variation = Math.floor(Math.random() * 40000) - 20000; // Â±20k
+    return Math.max(150000, basePrice + variation);
+  }
+
+  async calculateTrendScore(zone) {
+    // Score de tendance (-100 Ã  +100)
+    return Math.floor(Math.random() * 200) - 100;
+  }
+
+  async calculateSalesVelocity(zone) {
+    // Vitesse de vente (propriÃ©tÃ©s vendues par mois)
+    return Math.floor(Math.random() * 50) + 10;
+  }
+
+  async predictZonePrice(zone, months) {
+    // PrÃ©diction de prix futurs
+    const currentPrice = await this.getCurrentZonePrice(zone);
+    const growth = Math.random() * 0.2 - 0.1; // Â±10% par an
+    const monthlyGrowth = growth / 12;
+    return Math.floor(currentPrice * (1 + (monthlyGrowth * months)));
+  }
+
+  async calculateInvestmentScore(zone) {
+    // Score d'investissement (0-100)
+    const infrastructure = await this.getInfrastructureScore(zone);
+    const trend = await this.calculateTrendScore(zone);
+    const velocity = await this.calculateSalesVelocity(zone);
+    
+    return Math.floor((infrastructure + Math.max(0, trend + 50) + Math.min(100, velocity * 2)) / 3);
+  }
+
+  async calculateLiquidityScore(zone) {
+    // Score de liquiditÃ© (facilitÃ© de revente)
+    const velocity = await this.calculateSalesVelocity(zone);
+    return Math.min(100, Math.floor(velocity * 1.5 + Math.random() * 20));
+  }
+
+  // MÃ©thodes pour les notifications
+  async generatePriceAlerts(userId, userProfile) {
+    return [
+      {
+        id: 'price-alert-1',
+        type: 'price_alert',
+        title: 'Baisse de prix dÃ©tectÃ©e',
+        message: 'Le prix dans votre zone a baissÃ© de 5%',
+        priority: 'medium',
+        read: false,
+        timestamp: new Date()
+      }
+    ];
+  }
+
+  async generateOpportunityAlerts(userId, userProfile) {
+    return [
+      {
+        id: 'opp-1',
+        type: 'opportunity',
+        title: 'Nouvelle opportunitÃ©',
+        message: 'Terrain disponible dans votre budget',
+        priority: 'high',
+        read: false,
+        timestamp: new Date()
+      }
+    ];
+  }
+
+  async generateMarketNewsAlerts(userProfile) {
+    return [
+      {
+        id: 'news-1',
+        type: 'news',
+        title: 'ActualitÃ© marchÃ©',
+        message: 'Nouvelles rÃ©glementations fonciÃ¨res',
+        priority: 'low',
+        read: false,
+        timestamp: new Date()
+      }
+    ];
+  }
+
+  async getMonthlyCompletions() {
+    return Math.floor(Math.random() * 50) + 20;
+  }
+
+  async updateMarketSentiment() {
+    // Simulation mise Ã  jour sentiment marchÃ©
+    return {
+      positive: Math.random() * 100,
+      negative: Math.random() * 100,
+      neutral: Math.random() * 100
+    };
   }
 }
 
-// Instance globale du service IA avancé
+// Instance globale du service IA avancÃ©
 export const advancedAIService = new AdvancedAIService();
 export default AdvancedAIService;

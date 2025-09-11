@@ -1,7 +1,7 @@
-/**
- * 🧠 IA CONVERSATIONNELLE UNIVERSELLE
+﻿/**
+ * ðŸ§  IA CONVERSATIONNELLE UNIVERSELLE
  * Assistant IA qui remplace l'intervention humaine sur toute la plateforme
- * Expertise foncière + lutte anti-fraude + facilitation acquisition
+ * Expertise fonciÃ¨re + lutte anti-fraude + facilitation acquisition
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -33,7 +33,7 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { autonomousAI } from '@/services/AutonomousAIService';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
   const { user } = useAuth();
@@ -46,7 +46,7 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    // Message de bienvenue personnalisé selon le rôle
+    // Message de bienvenue personnalisÃ© selon le rÃ´le
     initializeConversation();
   }, [user]);
 
@@ -71,64 +71,64 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
   const generateWelcomeMessage = async (userRole) => {
     const welcomeMessages = {
       particulier: {
-        text: "🏠 Bonjour ! Je suis votre expert IA foncier personnel. En tant qu'intelligence artificielle spécialisée dans l'immobilier sénégalais, je peux vous aider à trouver le terrain parfait, analyser les opportunités d'investissement, et vous guider dans toutes vos démarches. Comment puis-je vous assister aujourd'hui ?",
+        text: "ðŸ  Bonjour ! Je suis votre expert IA foncier personnel. En tant qu'intelligence artificielle spÃ©cialisÃ©e dans l'immobilier sÃ©nÃ©galais, je peux vous aider Ã  trouver le terrain parfait, analyser les opportunitÃ©s d'investissement, et vous guider dans toutes vos dÃ©marches. Comment puis-je vous assister aujourd'hui ?",
         suggestedActions: [
-          "Rechercher un terrain à Liberté 6",
+          "Rechercher un terrain Ã  LibertÃ© 6",
           "Analyser mes investissements",
           "Configurer des alertes IA",
-          "Comprendre les prix du marché"
+          "Comprendre les prix du marchÃ©"
         ],
-        insights: "🧠 J'ai détecté 3 nouvelles opportunités dans vos zones d'intérêt"
+        insights: "ðŸ§  J'ai dÃ©tectÃ© 3 nouvelles opportunitÃ©s dans vos zones d'intÃ©rÃªt"
       },
       banque: {
-        text: "🏦 Bienvenue ! Je suis votre assistant IA spécialisé dans les services financiers immobiliers. Je peux analyser les dossiers de crédit, évaluer les risques, optimiser votre portefeuille et automatiser vos processus d'approbation. Mon expertise couvre la lutte anti-fraude et l'évaluation des garanties foncières.",
+        text: "ðŸ¦ Bienvenue ! Je suis votre assistant IA spÃ©cialisÃ© dans les services financiers immobiliers. Je peux analyser les dossiers de crÃ©dit, Ã©valuer les risques, optimiser votre portefeuille et automatiser vos processus d'approbation. Mon expertise couvre la lutte anti-fraude et l'Ã©valuation des garanties fonciÃ¨res.",
         suggestedActions: [
-          "Analyser les demandes de crédit",
-          "Évaluer les risques portfolio",
+          "Analyser les demandes de crÃ©dit",
+          "Ã‰valuer les risques portfolio",
           "Optimiser les taux",
-          "Détecter les fraudes"
+          "DÃ©tecter les fraudes"
         ],
-        insights: "💰 127 dossiers pré-analysés nécessitent votre validation"
+        insights: "ðŸ’° 127 dossiers prÃ©-analysÃ©s nÃ©cessitent votre validation"
       },
       vendeur_particulier: {
-        text: "🏪 Salut ! En tant qu'IA commerciale experte, je vais révolutionner vos ventes. Je peux optimiser vos prix, générer des leads qualifiés, négocier avec les acheteurs, et automatiser votre marketing. Mon algorithme analyse le marché en temps réel pour maximiser vos profits.",
+        text: "ðŸª Salut ! En tant qu'IA commerciale experte, je vais rÃ©volutionner vos ventes. Je peux optimiser vos prix, gÃ©nÃ©rer des leads qualifiÃ©s, nÃ©gocier avec les acheteurs, et automatiser votre marketing. Mon algorithme analyse le marchÃ© en temps rÃ©el pour maximiser vos profits.",
         suggestedActions: [
           "Optimiser mes prix de vente",
-          "Générer des leads qualifiés",
+          "GÃ©nÃ©rer des leads qualifiÃ©s",
           "Analyser la concurrence",
           "Automatiser mes annonces"
         ],
-        insights: "📈 47 nouveaux leads qualifiés générés cette semaine"
+        insights: "ðŸ“ˆ 47 nouveaux leads qualifiÃ©s gÃ©nÃ©rÃ©s cette semaine"
       },
       mairie: {
-        text: "🏛️ Bonjour ! Je suis votre IA administrative municipale. Je surveille votre territoire, traite les demandes communales, détecte les fraudes foncières et optimise vos services citoyens. Mon système de surveillance territoriale protège votre commune 24h/24.",
+        text: "ðŸ›ï¸ Bonjour ! Je suis votre IA administrative municipale. Je surveille votre territoire, traite les demandes communales, dÃ©tecte les fraudes fonciÃ¨res et optimise vos services citoyens. Mon systÃ¨me de surveillance territoriale protÃ¨ge votre commune 24h/24.",
         suggestedActions: [
           "Surveiller les terrains",
           "Traiter demandes communales",
-          "Détecter les fraudes",
+          "DÃ©tecter les fraudes",
           "Analyser l'urbanisation"
         ],
-        insights: "🚨 12 alertes territoriales nécessitent votre attention"
+        insights: "ðŸš¨ 12 alertes territoriales nÃ©cessitent votre attention"
       },
       agent_foncier: {
-        text: "👨‍💼 Bonjour ! Je suis votre IA experte en médiation foncière. Je facilite les transactions, vérifie l'authenticité des documents, détecte les conflits potentiels et optimise vos négociations. Mon expertise juridique vous protège contre toute fraude.",
+        text: "ðŸ‘¨â€ðŸ’¼ Bonjour ! Je suis votre IA experte en mÃ©diation fonciÃ¨re. Je facilite les transactions, vÃ©rifie l'authenticitÃ© des documents, dÃ©tecte les conflits potentiels et optimise vos nÃ©gociations. Mon expertise juridique vous protÃ¨ge contre toute fraude.",
         suggestedActions: [
-          "Vérifier un titre foncier",
+          "VÃ©rifier un titre foncier",
           "Analyser une transaction",
-          "Détecter les conflits",
-          "Optimiser une négociation"
+          "DÃ©tecter les conflits",
+          "Optimiser une nÃ©gociation"
         ],
-        insights: "⚖️ 3 conflits potentiels détectés nécessitent médiation"
+        insights: "âš–ï¸ 3 conflits potentiels dÃ©tectÃ©s nÃ©cessitent mÃ©diation"
       },
       visiteur: {
-        text: "👋 Bienvenue sur Teranga Foncier ! Je suis l'IA qui révolutionne l'immobilier au Sénégal. Expert en foncier, lutte anti-fraude et facilitation d'acquisition, je vous guide dans toutes vos démarches. Posez-moi n'importe quelle question sur l'immobilier sénégalais !",
+        text: "ðŸ‘‹ Bienvenue sur Teranga Foncier ! Je suis l'IA qui rÃ©volutionne l'immobilier au SÃ©nÃ©gal. Expert en foncier, lutte anti-fraude et facilitation d'acquisition, je vous guide dans toutes vos dÃ©marches. Posez-moi n'importe quelle question sur l'immobilier sÃ©nÃ©galais !",
         suggestedActions: [
           "Comment acheter un terrain ?",
-          "Quels sont les prix à Dakar ?",
-          "Comment éviter les fraudes ?",
-          "Découvrir Teranga Foncier"
+          "Quels sont les prix Ã  Dakar ?",
+          "Comment Ã©viter les fraudes ?",
+          "DÃ©couvrir Teranga Foncier"
         ],
-        insights: "🌟 Plateforme 100% sécurisée par blockchain et IA"
+        insights: "ðŸŒŸ Plateforme 100% sÃ©curisÃ©e par blockchain et IA"
       }
     };
 
@@ -139,72 +139,72 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
     const message = userMessage.toLowerCase();
     const userRole = user?.user_metadata?.role || 'visiteur';
 
-    // Détection d'intention et réponses intelligentes
+    // DÃ©tection d'intention et rÃ©ponses intelligentes
     if (message.includes('terrain') || message.includes('parcelle')) {
       return {
-        response: `🏞️ Excellente question sur les terrains ! En tant qu'expert IA immobilier, je peux vous aider à trouver le terrain parfait. 
+        response: `ðŸžï¸ Excellente question sur les terrains ! En tant qu'expert IA immobilier, je peux vous aider Ã  trouver le terrain parfait. 
 
 Sur Teranga Foncier, nous avons plusieurs options :
-• **Terrains privés** : Plus de 2,500 parcelles vérifiées par blockchain
-• **Terrains communaux** : Demandes d'attribution simplifiées  
-• **Terrains promoteurs** : Projets résidentiels et commerciaux
+â€¢ **Terrains privÃ©s** : Plus de 2,500 parcelles vÃ©rifiÃ©es par blockchain
+â€¢ **Terrains communaux** : Demandes d'attribution simplifiÃ©es  
+â€¢ **Terrains promoteurs** : Projets rÃ©sidentiels et commerciaux
 
-Quel type de terrain vous intéresse ? Dans quelle zone de Dakar ou du Sénégal ?`,
+Quel type de terrain vous intÃ©resse ? Dans quelle zone de Dakar ou du SÃ©nÃ©gal ?`,
         actions: [
-          "Chercher terrains à Liberté 6",
+          "Chercher terrains Ã  LibertÃ© 6",
           "Voir terrains communaux",
           "Prix moyens par zone",
-          "Vérification légale terrain"
+          "VÃ©rification lÃ©gale terrain"
         ],
-        insights: "💡 J'ai analysé 156 terrains disponibles dans vos critères",
+        insights: "ðŸ’¡ J'ai analysÃ© 156 terrains disponibles dans vos critÃ¨res",
         confidence: 95,
-        nextQuestions: ["Dans quelle zone ?", "Quel budget ?", "Usage prévu ?"]
+        nextQuestions: ["Dans quelle zone ?", "Quel budget ?", "Usage prÃ©vu ?"]
       };
     }
 
-    if (message.includes('prix') || message.includes('coût') || message.includes('budget')) {
+    if (message.includes('prix') || message.includes('coÃ»t') || message.includes('budget')) {
       return {
-        response: `💰 Parlons budget ! Mes algorithmes analysent en temps réel les prix du marché immobilier sénégalais.
+        response: `ðŸ’° Parlons budget ! Mes algorithmes analysent en temps rÃ©el les prix du marchÃ© immobilier sÃ©nÃ©galais.
 
-**Prix moyens actuels (analyse IA temps réel) :**
-• **Liberté 6** : 180,000 - 250,000 FCFA/m²
-• **Almadies** : 300,000 - 450,000 FCFA/m²  
-• **Guédiawaye** : 45,000 - 80,000 FCFA/m²
-• **Mbao** : 35,000 - 60,000 FCFA/m²
+**Prix moyens actuels (analyse IA temps rÃ©el) :**
+â€¢ **LibertÃ© 6** : 180,000 - 250,000 FCFA/mÂ²
+â€¢ **Almadies** : 300,000 - 450,000 FCFA/mÂ²  
+â€¢ **GuÃ©diawaye** : 45,000 - 80,000 FCFA/mÂ²
+â€¢ **Mbao** : 35,000 - 60,000 FCFA/mÂ²
 
-Je peux analyser votre budget et vous proposer les meilleures opportunités !`,
+Je peux analyser votre budget et vous proposer les meilleures opportunitÃ©s !`,
         actions: [
           "Analyser mon budget",
-          "Opportunités à moins de 100k/m²",
-          "Prédictions prix 6 mois",
-          "Négocier avec l'IA"
+          "OpportunitÃ©s Ã  moins de 100k/mÂ²",
+          "PrÃ©dictions prix 6 mois",
+          "NÃ©gocier avec l'IA"
         ],
-        insights: "📈 Les prix ont augmenté de 12% cette année à Dakar",
+        insights: "ðŸ“ˆ Les prix ont augmentÃ© de 12% cette annÃ©e Ã  Dakar",
         confidence: 92,
         nextQuestions: ["Votre budget maximum ?", "Zone prioritaire ?"]
       };
     }
 
-    if (message.includes('fraude') || message.includes('arnaque') || message.includes('sécurité')) {
+    if (message.includes('fraude') || message.includes('arnaque') || message.includes('sÃ©curitÃ©')) {
       return {
-        response: `🛡️ La sécurité, c'est notre priorité absolue ! Mon système anti-fraude blockchain analyse chaque transaction.
+        response: `ðŸ›¡ï¸ La sÃ©curitÃ©, c'est notre prioritÃ© absolue ! Mon systÃ¨me anti-fraude blockchain analyse chaque transaction.
 
-**Protection IA avancée :**
-• ✅ Vérification automatique des titres fonciers
-• ✅ Analyse des vendeurs et historiques
-• ✅ Détection des faux documents (IA vision)
-• ✅ Smart contracts pour transactions sécurisées
-• ✅ Escrow automatisé avec libération conditionnelle
+**Protection IA avancÃ©e :**
+â€¢ âœ… VÃ©rification automatique des titres fonciers
+â€¢ âœ… Analyse des vendeurs et historiques
+â€¢ âœ… DÃ©tection des faux documents (IA vision)
+â€¢ âœ… Smart contracts pour transactions sÃ©curisÃ©es
+â€¢ âœ… Escrow automatisÃ© avec libÃ©ration conditionnelle
 
-**Signaux d'alerte détectés automatiquement :**
-🚨 Prix anormalement bas, 🚨 Documents suspects, 🚨 Vendeurs non vérifiés`,
+**Signaux d'alerte dÃ©tectÃ©s automatiquement :**
+ðŸš¨ Prix anormalement bas, ðŸš¨ Documents suspects, ðŸš¨ Vendeurs non vÃ©rifiÃ©s`,
         actions: [
-          "Vérifier un vendeur",
+          "VÃ©rifier un vendeur",
           "Analyser un document",
           "Guide anti-fraude",
           "Signaler une fraude"
         ],
-        insights: "🔍 213 tentatives de fraude bloquées ce mois",
+        insights: "ðŸ” 213 tentatives de fraude bloquÃ©es ce mois",
         confidence: 98,
         nextQuestions: ["Avez-vous un doute sur une transaction ?"]
       };
@@ -212,75 +212,75 @@ Je peux analyser votre budget et vous proposer les meilleures opportunités !`,
 
     if (message.includes('projet') || message.includes('promoteur') || message.includes('construction')) {
       return {
-        response: `🏗️ Les projets promoteurs, mon domaine d'expertise ! J'analyse tous les projets en temps réel.
+        response: `ðŸ—ï¸ Les projets promoteurs, mon domaine d'expertise ! J'analyse tous les projets en temps rÃ©el.
 
-**Projets analysés actuellement :**
-• **Résidentiels** : 47 projets vérifiés (villas, appartements)
-• **Commerciaux** : 23 complexes en développement  
-• **Mixtes** : 12 projets résidence + commerce
+**Projets analysÃ©s actuellement :**
+â€¢ **RÃ©sidentiels** : 47 projets vÃ©rifiÃ©s (villas, appartements)
+â€¢ **Commerciaux** : 23 complexes en dÃ©veloppement  
+â€¢ **Mixtes** : 12 projets rÃ©sidence + commerce
 
-Mon IA évalue chaque promoteur sur :
-✅ Historique financier, ✅ Qualité constructions, ✅ Respect délais, ✅ Satisfaction clients
+Mon IA Ã©value chaque promoteur sur :
+âœ… Historique financier, âœ… QualitÃ© constructions, âœ… Respect dÃ©lais, âœ… Satisfaction clients
 
-Quel type de projet vous intéresse ?`,
+Quel type de projet vous intÃ©resse ?`,
         actions: [
           "Voir tous les projets",
-          "Projets à Liberté 6",
-          "Évaluer un promoteur",
+          "Projets Ã  LibertÃ© 6",
+          "Ã‰valuer un promoteur",
           "Demande de construction"
         ],
-        insights: "🏢 3 nouveaux projets certifiés cette semaine",
+        insights: "ðŸ¢ 3 nouveaux projets certifiÃ©s cette semaine",
         confidence: 94,
-        nextQuestions: ["Type de bien recherché ?", "Budget prévu ?"]
+        nextQuestions: ["Type de bien recherchÃ© ?", "Budget prÃ©vu ?"]
       };
     }
 
     if (message.includes('help') || message.includes('aide') || message.includes('comment')) {
       return {
-        response: `🤖 Je suis votre assistant IA personnel pour l'immobilier sénégalais ! 
+        response: `ðŸ¤– Je suis votre assistant IA personnel pour l'immobilier sÃ©nÃ©galais ! 
 
-**Mes capacités d'expert :**
-• 🔍 Recherche et analyse de terrains
-• 💰 Évaluation de prix et négociation  
-• 🛡️ Détection de fraudes et vérifications
-• 📋 Suivi de projets et demandes
-• 🏗️ Conseils construction et promoteurs
-• 📊 Analyses de marché temps réel
+**Mes capacitÃ©s d'expert :**
+â€¢ ðŸ” Recherche et analyse de terrains
+â€¢ ðŸ’° Ã‰valuation de prix et nÃ©gociation  
+â€¢ ðŸ›¡ï¸ DÃ©tection de fraudes et vÃ©rifications
+â€¢ ðŸ“‹ Suivi de projets et demandes
+â€¢ ðŸ—ï¸ Conseils construction et promoteurs
+â€¢ ðŸ“Š Analyses de marchÃ© temps rÃ©el
 
 **Questions populaires :**
-"Terrain à Liberté 6", "Prix Almadies", "Éviter fraudes", "Meilleurs promoteurs"
+"Terrain Ã  LibertÃ© 6", "Prix Almadies", "Ã‰viter fraudes", "Meilleurs promoteurs"
 
 Que souhaitez-vous savoir ?`,
         actions: [
           "Rechercher un terrain",
-          "Vérifier des prix", 
-          "Analyser sécurité",
-          "Guide débutant"
+          "VÃ©rifier des prix", 
+          "Analyser sÃ©curitÃ©",
+          "Guide dÃ©butant"
         ],
-        insights: "💡 Plus de 10,000 questions traitées avec 96% de satisfaction",
+        insights: "ðŸ’¡ Plus de 10,000 questions traitÃ©es avec 96% de satisfaction",
         confidence: 99,
         nextQuestions: ["Par quoi commencer ?"]
       };
     }
 
-    // Réponse générale intelligente
+    // RÃ©ponse gÃ©nÃ©rale intelligente
     return {
-      response: `🧠 Merci pour votre message ! En tant qu'IA experte en immobilier sénégalais, je comprends que vous vous intéressez à notre plateforme.
+      response: `ðŸ§  Merci pour votre message ! En tant qu'IA experte en immobilier sÃ©nÃ©galais, je comprends que vous vous intÃ©ressez Ã  notre plateforme.
 
 Je peux vous aider avec :
-• **Recherche de terrains** et évaluation de prix
-• **Vérification anti-fraude** et sécurisation de transactions  
-• **Analyse de projets** promoteurs et opportunités d'investissement
-• **Guides et conseils** personnalisés selon votre profil
+â€¢ **Recherche de terrains** et Ã©valuation de prix
+â€¢ **VÃ©rification anti-fraude** et sÃ©curisation de transactions  
+â€¢ **Analyse de projets** promoteurs et opportunitÃ©s d'investissement
+â€¢ **Guides et conseils** personnalisÃ©s selon votre profil
 
-Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
+Pouvez-vous prÃ©ciser votre besoin pour que je vous aide au mieux ?`,
       actions: [
         "Chercher un terrain",
-        "Vérifier une offre",
+        "VÃ©rifier une offre",
         "Conseils investissement", 
-        "Questions fréquentes"
+        "Questions frÃ©quentes"
       ],
-      insights: "🎯 Je m'adapte à vos besoins spécifiques",
+      insights: "ðŸŽ¯ Je m'adapte Ã  vos besoins spÃ©cifiques",
       confidence: 85,
       nextQuestions: ["Quel est votre objectif principal ?"]
     };
@@ -302,7 +302,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
     setIsTyping(true);
 
     try {
-      // Simulation de réflexion IA (délai réaliste)
+      // Simulation de rÃ©flexion IA (dÃ©lai rÃ©aliste)
       await new Promise(resolve => setTimeout(resolve, 1500));
 
       // Logique conversationnelle intelligente
@@ -327,7 +327,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
       const errorMessage = {
         id: Date.now() + 1,
         type: 'ai',
-        content: "🤖 Excusez-moi, je réfléchis à votre demande. Pouvez-vous reformuler ou être plus spécifique ?",
+        content: "ðŸ¤– Excusez-moi, je rÃ©flÃ©chis Ã  votre demande. Pouvez-vous reformuler ou Ãªtre plus spÃ©cifique ?",
         timestamp: new Date()
       };
       setMessages(prev => [...prev, errorMessage]);
@@ -356,7 +356,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
             </div>
             <div>
               <h3 className="font-semibold">Assistant IA Teranga</h3>
-              <p className="text-sm opacity-90">Expert Foncier • Anti-Fraude • Facilitation</p>
+              <p className="text-sm opacity-90">Expert Foncier â€¢ Anti-Fraude â€¢ Facilitation</p>
             </div>
           </div>
           <div className="flex items-center space-x-2">
@@ -371,7 +371,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
                 onClick={() => setIsOpen(false)}
                 className="text-white hover:bg-white hover:bg-opacity-20"
               >
-                ✕
+                âœ•
               </Button>
             )}
           </div>
@@ -401,7 +401,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
                     <span className="text-xs font-medium text-purple-600">IA Expert</span>
                     {message.confidence && (
                       <Badge variant="secondary" className="ml-2 text-xs">
-                        {Math.round(message.confidence * 100)}% sûr
+                        {Math.round(message.confidence * 100)}% sÃ»r
                       </Badge>
                     )}
                   </div>
@@ -436,14 +436,14 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
 
                 {message.nextQuestions && (
                   <div className="mt-2">
-                    <p className="text-xs text-gray-600 mb-1">Questions suggérées :</p>
+                    <p className="text-xs text-gray-600 mb-1">Questions suggÃ©rÃ©es :</p>
                     {message.nextQuestions.map((question, index) => (
                       <button
                         key={index}
                         onClick={() => handleQuickAction(question)}
                         className="block text-xs text-blue-600 hover:underline mb-1"
                       >
-                        • {question}
+                        â€¢ {question}
                       </button>
                     ))}
                   </div>
@@ -484,7 +484,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
                     className="w-2 h-2 bg-purple-600 rounded-full"
                   />
                 </div>
-                <span className="ml-2 text-xs text-gray-600">L'IA réfléchit...</span>
+                <span className="ml-2 text-xs text-gray-600">L'IA rÃ©flÃ©chit...</span>
               </div>
             </div>
           </motion.div>
@@ -499,7 +499,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
           <Input
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
-            placeholder="Posez votre question à l'IA expert..."
+            YOUR_API_KEY="Posez votre question Ã  l'IA expert..."
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             className="flex-1"
           />
@@ -515,10 +515,10 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
         {/* Quick actions */}
         <div className="flex flex-wrap gap-2 mt-2">
           {[
-            "💰 Prix du marché", 
-            "🔍 Rechercher terrain", 
-            "🚨 Éviter fraudes", 
-            "📊 Analyser investissement"
+            "ðŸ’° Prix du marchÃ©", 
+            "ðŸ” Rechercher terrain", 
+            "ðŸš¨ Ã‰viter fraudes", 
+            "ðŸ“Š Analyser investissement"
           ].map((action) => (
             <Button
               key={action}
@@ -541,7 +541,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
         <div className="container mx-auto px-4 py-8">
           <div className="max-w-4xl mx-auto">
             <div className="mb-6">
-              <h1 className="text-3xl font-bold text-gray-900 mb-2">🧠 Assistant IA Conversationnel</h1>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">ðŸ§  Assistant IA Conversationnel</h1>
               <p className="text-gray-600">Intelligence Artificielle experte en foncier, anti-fraude et facilitation d'acquisition</p>
             </div>
             <div className="h-[600px]">

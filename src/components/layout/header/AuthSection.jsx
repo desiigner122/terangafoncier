@@ -1,4 +1,4 @@
-ï»¿import React from 'react';
+import React from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -11,7 +11,7 @@ import {
   Bell, 
   MessageSquare
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -94,11 +94,11 @@ const AuthSection = ({ isScrolled }) => {
                 <Link to="/profile"><User className="mr-2 h-4 w-4" /> Mon Profil</Link>
               </DropdownMenuItem>
               <DropdownMenuItem asChild>
-                <Link to="/settings"><Settings className="mr-2 h-4 w-4" /> ParamÃ¨tres</Link>
+                <Link to="/settings"><Settings className="mr-2 h-4 w-4" /> Paramètres</Link>
               </DropdownMenuItem>
               <DropdownMenuSeparator />
               <DropdownMenuItem onClick={signOut} className="text-red-600 focus:text-red-600 focus:bg-red-50 dark:focus:bg-red-900/40">
-                <LogOut className="mr-2 h-4 w-4" /> DÃ©connexion
+                <LogOut className="mr-2 h-4 w-4" /> Déconnexion
               </DropdownMenuItem>
             </DropdownMenuContent>
           </DropdownMenu>

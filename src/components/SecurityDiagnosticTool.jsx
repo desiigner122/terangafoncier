@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -148,7 +148,7 @@ const SecurityDiagnosticTool = () => {
                 <div className="flex items-center space-x-2">
                   <Search className="h-4 w-4" />
                   <Input
-                    placeholder="Rechercher une permission..."
+                    YOUR_API_KEY="Rechercher une permission..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -210,7 +210,7 @@ const SecurityDiagnosticTool = () => {
             </div>
           </TabsContent>
 
-          {/* Tests d'accès */}
+          {}
           <TabsContent value="test" className="space-y-6">
             <Card>
               <CardHeader>
@@ -284,28 +284,28 @@ const SecurityDiagnosticTool = () => {
                   <Alert className="border-green-200 bg-green-50">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800">
-                      ✅ Système RBAC initialisé et fonctionnel
+                      ? Système RBAC initialisé et fonctionnel
                     </AlertDescription>
                   </Alert>
 
                   <Alert className="border-green-200 bg-green-50">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800">
-                      ✅ {Object.keys(ROLES).length} rôles définis avec des permissions distinctes
+                      ? {Object.keys(ROLES).length} rôles définis avec des permissions distinctes
                     </AlertDescription>
                   </Alert>
 
                   <Alert className="border-green-200 bg-green-50">
                     <CheckCircle className="h-4 w-4 text-green-600" />
                     <AlertDescription className="text-green-800">
-                      ✅ Routes critiques protégées (MY_REQUESTS, FAVORITES, etc.)
+                      ? Routes critiques protégées (MY_REQUESTS, FAVORITES, etc.)
                     </AlertDescription>
                   </Alert>
 
                   <Alert className="border-blue-200 bg-blue-50">
                     <Eye className="h-4 w-4 text-blue-600" />
                     <AlertDescription className="text-blue-800">
-                      📊 Monitoring continu des accès recommandé
+                      ?? Monitoring continu des accès recommandé
                     </AlertDescription>
                   </Alert>
                 </div>

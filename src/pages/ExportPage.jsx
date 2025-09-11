@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Download, FileSpreadsheet, Calendar, Users, Building,
@@ -38,19 +38,19 @@ const ExportPage = () => {
       columns: [
         { id: 'name', label: 'Nom complet', selected: true },
         { id: 'email', label: 'Email', selected: true },
-        { id: 'phone', label: 'Téléphone', selected: true },
-        { id: 'role', label: 'Rôle', selected: true },
+        { id: 'phone', label: 'TÃ©lÃ©phone', selected: true },
+        { id: 'role', label: 'RÃ´le', selected: true },
         { id: 'status', label: 'Statut', selected: true },
         { id: 'location', label: 'Localisation', selected: false },
-        { id: 'interests', label: 'Centres d\'intérêt', selected: false },
+        { id: 'interests', label: 'Centres d\'intÃ©rÃªt', selected: false },
         { id: 'dealValue', label: 'Valeur potentielle', selected: true },
         { id: 'lastContact', label: 'Dernier contact', selected: false },
-        { id: 'score', label: 'Score qualité', selected: false },
+        { id: 'score', label: 'Score qualitÃ©', selected: false },
         { id: 'notes', label: 'Notes', selected: false }
       ]
     },
     properties: {
-      title: 'Propriétés & Terrains',
+      title: 'PropriÃ©tÃ©s & Terrains',
       description: 'Export de l\'inventaire complet',
       icon: Building,
       color: 'text-green-500',
@@ -65,7 +65,7 @@ const ExportPage = () => {
         { id: 'seller', label: 'Vendeur', selected: false },
         { id: 'dateAdded', label: 'Date d\'ajout', selected: false },
         { id: 'views', label: 'Nombre de vues', selected: false },
-        { id: 'features', label: 'Caractéristiques', selected: false },
+        { id: 'features', label: 'CaractÃ©ristiques', selected: false },
         { id: 'description', label: 'Description', selected: false }
       ]
     },
@@ -89,8 +89,8 @@ const ExportPage = () => {
       ]
     },
     analytics: {
-      title: 'Données Analytiques',
-      description: 'Statistiques et métriques de performance',
+      title: 'DonnÃ©es Analytiques',
+      description: 'Statistiques et mÃ©triques de performance',
       icon: BarChart3,
       color: 'text-orange-500',
       totalRecords: 365,
@@ -98,11 +98,11 @@ const ExportPage = () => {
         { id: 'date', label: 'Date', selected: true },
         { id: 'visitors', label: 'Visiteurs', selected: true },
         { id: 'pageViews', label: 'Pages vues', selected: true },
-        { id: 'leads', label: 'Leads générés', selected: true },
+        { id: 'leads', label: 'Leads gÃ©nÃ©rÃ©s', selected: true },
         { id: 'conversions', label: 'Conversions', selected: true },
         { id: 'revenue', label: 'Chiffre d\'affaires', selected: false },
         { id: 'bounceRate', label: 'Taux de rebond', selected: false },
-        { id: 'avgSession', label: 'Durée moyenne session', selected: false },
+        { id: 'avgSession', label: 'DurÃ©e moyenne session', selected: false },
         { id: 'topPages', label: 'Pages populaires', selected: false },
         { id: 'sources', label: 'Sources de trafic', selected: false }
       ]
@@ -140,7 +140,7 @@ const ExportPage = () => {
   ]);
 
   useEffect(() => {
-    // Initialiser les colonnes sélectionnées
+    // Initialiser les colonnes sÃ©lectionnÃ©es
     const initialSelected = {};
     Object.keys(exportConfigs).forEach(key => {
       initialSelected[key] = {};
@@ -186,11 +186,11 @@ const ExportPage = () => {
       setExportProgress(i);
     }
 
-    // Générer le nom du fichier
+    // GÃ©nÃ©rer le nom du fichier
     const timestamp = new Date().toISOString().slice(0, 10).replace(/-/g, '');
     const filename = `${exportType}_export_${timestamp}.${exportFormat === 'excel' ? 'xlsx' : 'csv'}`;
 
-    // Simuler le téléchargement
+    // Simuler le tÃ©lÃ©chargement
     console.log(`Export ${exportType}:`, {
       filename,
       selectedColumns: selectedCols,
@@ -199,7 +199,7 @@ const ExportPage = () => {
       totalRecords: config.totalRecords
     });
 
-    alert(`Export ${config.title} terminé !\nFichier: ${filename}\nColonnes: ${selectedCols.length}\nFormat: ${exportFormat.toUpperCase()}`);
+    alert(`Export ${config.title} terminÃ© !\nFichier: ${filename}\nColonnes: ${selectedCols.length}\nFormat: ${exportFormat.toUpperCase()}`);
 
     setIsExporting(false);
     setExportProgress(0);
@@ -233,14 +233,14 @@ const ExportPage = () => {
       <div className="flex-1 ml-80 p-6 bg-gray-50 min-h-screen">
         <Helmet>
           <title>Exports Excel - Teranga Foncier</title>
-          <meta name="description" content="Centre d'export des données de Teranga Foncier" />
+          <meta name="description" content="Centre d'export des donnÃ©es de Teranga Foncier" />
         </Helmet>
 
-        {/* En-tête */}
+        {/* En-tÃªte */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Centre d'Export</h1>
-            <p className="text-gray-600">Exportez vos données en Excel ou CSV</p>
+            <p className="text-gray-600">Exportez vos donnÃ©es en Excel ou CSV</p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -256,7 +256,7 @@ const ExportPage = () => {
             
             <Button variant="outline">
               <Settings className="w-4 h-4 mr-2" />
-              Paramètres
+              ParamÃ¨tres
             </Button>
           </div>
         </div>
@@ -272,7 +272,7 @@ const ExportPage = () => {
                   </div>
                   <div>
                     <h3 className="font-semibold text-blue-900">Export en cours...</h3>
-                    <p className="text-sm text-blue-600">Génération du fichier {exportFormat.toUpperCase()}</p>
+                    <p className="text-sm text-blue-600">GÃ©nÃ©ration du fichier {exportFormat.toUpperCase()}</p>
                   </div>
                 </div>
                 <div className="text-right">
@@ -316,16 +316,16 @@ const ExportPage = () => {
                             </div>
                           </div>
                           <Badge variant="secondary">
-                            {config.totalRecords} entrées
+                            {config.totalRecords} entrÃ©es
                           </Badge>
                         </div>
                       </CardHeader>
                       
                       <CardContent className="space-y-4">
-                        {/* Sélection des colonnes */}
+                        {/* SÃ©lection des colonnes */}
                         <div>
                           <div className="flex items-center justify-between mb-3">
-                            <h4 className="font-medium">Colonnes à exporter ({selectedCount}/{totalColumns})</h4>
+                            <h4 className="font-medium">Colonnes Ã  exporter ({selectedCount}/{totalColumns})</h4>
                             <div className="flex space-x-2">
                               <Button 
                                 size="sm" 
@@ -368,18 +368,18 @@ const ExportPage = () => {
                           <h4 className="font-medium mb-3">Filtres (optionnel)</h4>
                           <div className="space-y-3">
                             <div>
-                              <label className="text-sm font-medium">Période</label>
+                              <label className="text-sm font-medium">PÃ©riode</label>
                               <div className="flex space-x-2 mt-1">
                                 <DatePicker
                                   selected={dateRange.start}
                                   onChange={(date) => setDateRange(prev => ({ ...prev, start: date }))}
-                                  placeholderText="Date de début"
+                                  YOUR_API_KEYText="Date de dÃ©but"
                                   className="flex-1"
                                 />
                                 <DatePicker
                                   selected={dateRange.end}
                                   onChange={(date) => setDateRange(prev => ({ ...prev, end: date }))}
-                                  placeholderText="Date de fin"
+                                  YOUR_API_KEYText="Date de fin"
                                   className="flex-1"
                                 />
                               </div>
@@ -394,7 +394,7 @@ const ExportPage = () => {
                           disabled={isExporting || selectedCount === 0}
                         >
                           <Download className="w-4 h-4 mr-2" />
-                          Exporter {selectedCount > 0 ? `(${selectedCount} colonnes)` : '(Sélectionnez des colonnes)'}
+                          Exporter {selectedCount > 0 ? `(${selectedCount} colonnes)` : '(SÃ©lectionnez des colonnes)'}
                         </Button>
                       </CardContent>
                     </Card>
@@ -429,7 +429,7 @@ const ExportPage = () => {
                           <div>
                             <h4 className="font-medium">{export_item.filename}</h4>
                             <p className="text-sm text-gray-600">
-                              {config?.title} • {export_item.records} entrées • {export_item.size}
+                              {config?.title} â€¢ {export_item.records} entrÃ©es â€¢ {export_item.size}
                             </p>
                             <p className="text-xs text-gray-500">
                               {new Date(export_item.date).toLocaleString('fr-FR')}
@@ -441,8 +441,8 @@ const ExportPage = () => {
                           <div className="flex items-center space-x-2">
                             {getStatusIcon(export_item.status)}
                             <Badge className={getStatusColor(export_item.status)}>
-                              {export_item.status === 'completed' ? 'Terminé' : 
-                               export_item.status === 'failed' ? 'Échec' : 'En cours'}
+                              {export_item.status === 'completed' ? 'TerminÃ©' : 
+                               export_item.status === 'failed' ? 'Ã‰chec' : 'En cours'}
                             </Badge>
                           </div>
                           
@@ -470,7 +470,7 @@ const ExportPage = () => {
                     <div className="text-center py-12">
                       <FileSpreadsheet className="w-12 h-12 text-gray-400 mx-auto mb-4" />
                       <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun export</h3>
-                      <p className="text-gray-600">Vos exports apparaîtront ici une fois créés</p>
+                      <p className="text-gray-600">Vos exports apparaÃ®tront ici une fois crÃ©Ã©s</p>
                     </div>
                   )}
                 </div>

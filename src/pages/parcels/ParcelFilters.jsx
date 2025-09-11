@@ -117,7 +117,7 @@ const ParcelFilters = ({ filters: initialFiltersFromProps, onFilterChange, onRes
               id="search"
               name="search"
               type="search"
-              placeholder="Nom, réf, description..."
+              YOUR_API_KEY="Nom, réf, description..."
               value={internalFilters.search}
               onChange={handleInputChange}
               className="pl-10"
@@ -130,7 +130,7 @@ const ParcelFilters = ({ filters: initialFiltersFromProps, onFilterChange, onRes
           <label htmlFor="zone" className="text-sm font-medium text-muted-foreground">Zone</label>
           <Select name="zone" value={internalFilters.zone} onValueChange={(value) => handleSelectChange('zone', value)}>
             <SelectTrigger id="zone" className="mt-1">
-              <SelectValue placeholder="Toutes les zones" />
+              <SelectValue YOUR_API_KEY="Toutes les zones" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Toutes les zones</SelectItem>
@@ -143,7 +143,7 @@ const ParcelFilters = ({ filters: initialFiltersFromProps, onFilterChange, onRes
           <label htmlFor="ownerType" className="text-sm font-medium text-muted-foreground">Type de Vendeur</label>
           <Select name="ownerType" value={internalFilters.ownerType} onValueChange={(value) => handleSelectChange('ownerType', value)}>
             <SelectTrigger id="ownerType" className="mt-1">
-              <SelectValue placeholder="Tous types de vendeurs" />
+              <SelectValue YOUR_API_KEY="Tous types de vendeurs" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous types</SelectItem>
@@ -155,22 +155,22 @@ const ParcelFilters = ({ filters: initialFiltersFromProps, onFilterChange, onRes
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="minPrice" className="text-sm font-medium text-muted-foreground">Prix Min (FCFA)</label>
-            <Input id="minPrice" name="minPrice" type="number" placeholder="Ex: 5M" value={internalFilters.minPrice} onChange={handleInputChange} className="mt-1"/>
+            <Input id="minPrice" name="minPrice" type="number" YOUR_API_KEY="Ex: 5M" value={internalFilters.minPrice} onChange={handleInputChange} className="mt-1"/>
           </div>
           <div>
             <label htmlFor="maxPrice" className="text-sm font-medium text-muted-foreground">Prix Max (FCFA)</label>
-            <Input id="maxPrice" name="maxPrice" type="number" placeholder="Ex: 50M" value={internalFilters.maxPrice} onChange={handleInputChange} className="mt-1"/>
+            <Input id="maxPrice" name="maxPrice" type="number" YOUR_API_KEY="Ex: 50M" value={internalFilters.maxPrice} onChange={handleInputChange} className="mt-1"/>
           </div>
         </div>
 
         <div className="grid grid-cols-2 gap-3">
           <div>
             <label htmlFor="minArea" className="text-sm font-medium text-muted-foreground">Surface Min (m²)</label>
-            <Input id="minArea" name="minArea" type="number" placeholder="Ex: 150" value={internalFilters.minArea} onChange={handleInputChange} className="mt-1"/>
+            <Input id="minArea" name="minArea" type="number" YOUR_API_KEY="Ex: 150" value={internalFilters.minArea} onChange={handleInputChange} className="mt-1"/>
           </div>
           <div>
             <label htmlFor="maxArea" className="text-sm font-medium text-muted-foreground">Surface Max (m²)</label>
-            <Input id="maxArea" name="maxArea" type="number" placeholder="Ex: 1000" value={internalFilters.maxArea} onChange={handleInputChange} className="mt-1"/>
+            <Input id="maxArea" name="maxArea" type="number" YOUR_API_KEY="Ex: 1000" value={internalFilters.maxArea} onChange={handleInputChange} className="mt-1"/>
           </div>
         </div>
 
@@ -178,7 +178,7 @@ const ParcelFilters = ({ filters: initialFiltersFromProps, onFilterChange, onRes
           <label htmlFor="legalStatus" className="text-sm font-medium text-muted-foreground">Statut Juridique</label>
           <Select name="legalStatus" value={internalFilters.legalStatus} onValueChange={(value) => handleSelectChange('legalStatus', value)}>
             <SelectTrigger id="legalStatus" className="mt-1">
-              <SelectValue placeholder="Tous statuts" />
+              <SelectValue YOUR_API_KEY="Tous statuts" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous statuts</SelectItem>
@@ -191,7 +191,7 @@ const ParcelFilters = ({ filters: initialFiltersFromProps, onFilterChange, onRes
           <label htmlFor="zoneType" className="text-sm font-medium text-muted-foreground">Type de Zone</label>
           <Select name="zoneType" value={internalFilters.zoneType} onValueChange={(value) => handleSelectChange('zoneType', value)}>
             <SelectTrigger id="zoneType" className="mt-1">
-              <SelectValue placeholder="Tous types" />
+              <SelectValue YOUR_API_KEY="Tous types" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value="all">Tous types</SelectItem>
@@ -209,7 +209,7 @@ const ParcelFilters = ({ filters: initialFiltersFromProps, onFilterChange, onRes
           <label htmlFor="sortBy" className="text-sm font-medium text-muted-foreground">Trier par</label>
           <Select name="sortBy" value={internalFilters.sortBy} onValueChange={(value) => handleSelectChange('sortBy', value)}>
             <SelectTrigger id="sortBy" className="mt-1">
-              <SelectValue placeholder="Trier par" />
+              <SelectValue YOUR_API_KEY="Trier par" />
             </SelectTrigger>
             <SelectContent>
               {sortOptions.map(option => <SelectItem key={option.value} value={option.value}>{option.label}</SelectItem>)}

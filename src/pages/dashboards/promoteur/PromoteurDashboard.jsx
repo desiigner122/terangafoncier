@@ -41,6 +41,7 @@ import { Progress } from '@/components/ui/progress';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
+import { AIEstimationWidget, AIMarketInsights } from '@/components/AIComponents';
 
 const PromoteurDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -207,6 +208,12 @@ const PromoteurDashboard = () => {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <AIAssistantWidget userRole="Promoteur" dashboardData={dashboardData} />
           <BlockchainWidget userRole="Promoteur" />
+        </div>
+
+        {/* 🚀 NOUVEAUX WIDGETS IA TERANGA - PROMOTEURS */}
+        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <AIEstimationWidget className="w-full" />
+          <AIMarketInsights region="Dakar" className="w-full" />
         </div>
 
         {/* Key Metrics */}

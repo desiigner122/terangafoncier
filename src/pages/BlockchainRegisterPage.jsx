@@ -173,8 +173,8 @@ const BlockchainRegisterPage = () => {
                     name="firstName"
                     value={formData.firstName}
                     onChange={handleInputChange}
-                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                    placeholder="Votre prÃ©nom"
+                    className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                    YOUR_API_KEY="Votre prÃ©nom"
                     required
                   />
                 </div>
@@ -189,8 +189,8 @@ const BlockchainRegisterPage = () => {
                     name="lastName"
                     value={formData.lastName}
                     onChange={handleInputChange}
-                    className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                    placeholder="Votre nom"
+                    className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                    YOUR_API_KEY="Votre nom"
                     required
                   />
                 </div>
@@ -207,8 +207,8 @@ const BlockchainRegisterPage = () => {
                   type="email"
                   value={formData.email}
                   onChange={handleInputChange}
-                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                  placeholder="votre@email.com"
+                  className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                  YOUR_API_KEY="votre@email.com"
                   required
                 />
               </div>
@@ -223,8 +223,8 @@ const BlockchainRegisterPage = () => {
                   name="phone"
                   value={formData.phone}
                   onChange={handleInputChange}
-                  className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                  placeholder="+221 XX XXX XX XX"
+                  className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                  YOUR_API_KEY="+221 XX XXX XX XX"
                   required
                 />
               </div>
@@ -269,7 +269,7 @@ const BlockchainRegisterPage = () => {
               <Label className="text-white/90">Localisation</Label>
               <Select value={formData.location} onValueChange={(value) => handleSelectChange('location', value)}>
                 <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue placeholder="SÃ©lectionnez votre rÃ©gion" />
+                  <SelectValue YOUR_API_KEY="SÃ©lectionnez votre rÃ©gion" />
                 </SelectTrigger>
                 <SelectContent>
                   {senegalRegions.map((region) => (
@@ -299,8 +299,8 @@ const BlockchainRegisterPage = () => {
                   type={showPassword ? 'text' : 'password'}
                   value={formData.password}
                   onChange={handleInputChange}
-                  className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  className="pl-10 pr-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                  YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   required
                 />
                 <button
@@ -342,8 +342,8 @@ const BlockchainRegisterPage = () => {
                   type={showConfirmPassword ? 'text' : 'password'}
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
-                  className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
-                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  className="pl-10 pr-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
+                  YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   required
                 />
                 <button

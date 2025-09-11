@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Mail, 
@@ -47,7 +47,7 @@ const BlockchainContactPage = () => {
 
   const contactCategories = [
     { value: 'blockchain', label: 'Questions Blockchain/NFT', icon: Blocks },
-    { value: 'investment', label: 'Opportunités Investissement', icon: TrendingUp },
+    { value: 'investment', label: 'OpportunitÃ©s Investissement', icon: TrendingUp },
     { value: 'diaspora', label: 'Services Diaspora', icon: Globe },
     { value: 'construction', label: 'Suivi Construction', icon: Building },
     { value: 'technical', label: 'Support Technique', icon: Headphones },
@@ -56,16 +56,16 @@ const BlockchainContactPage = () => {
   ];
 
   const urgencyLevels = [
-    { value: 'low', label: 'Basse - Réponse sous 48h', color: 'text-green-400' },
-    { value: 'normal', label: 'Normale - Réponse sous 24h', color: 'text-blue-400' },
-    { value: 'high', label: 'Élevée - Réponse sous 4h', color: 'text-orange-400' },
-    { value: 'urgent', label: 'Urgente - Réponse immédiate', color: 'text-red-400' }
+    { value: 'low', label: 'Basse - RÃ©ponse sous 48h', color: 'text-green-400' },
+    { value: 'normal', label: 'Normale - RÃ©ponse sous 24h', color: 'text-blue-400' },
+    { value: 'high', label: 'Ã‰levÃ©e - RÃ©ponse sous 4h', color: 'text-orange-400' },
+    { value: 'urgent', label: 'Urgente - RÃ©ponse immÃ©diate', color: 'text-red-400' }
   ];
 
   const contactMethods = [
     {
       icon: Phone,
-      title: 'Téléphone',
+      title: 'TÃ©lÃ©phone',
       primary: '+221 33 XXX XX XX',
       secondary: '+221 77 XXX XX XX',
       description: 'Support direct 9h-18h',
@@ -76,7 +76,7 @@ const BlockchainContactPage = () => {
       title: 'Email',
       primary: 'contact@terangafoncier.com',
       secondary: 'support@terangafoncier.com',
-      description: 'Réponse sous 2h en moyenne',
+      description: 'RÃ©ponse sous 2h en moyenne',
       color: 'from-blue-500 to-cyan-500'
     },
     {
@@ -84,15 +84,15 @@ const BlockchainContactPage = () => {
       title: 'Chat IA',
       primary: 'Assistant TERRA-IA',
       secondary: 'Disponible 24/7',
-      description: 'Réponses instantanées',
+      description: 'RÃ©ponses instantanÃ©es',
       color: 'from-purple-500 to-pink-500'
     },
     {
       icon: Calendar,
       title: 'Rendez-vous',
-      primary: 'Consultation personnalisée',
-      secondary: 'Visio ou présentiel',
-      description: 'Expertise dédiée',
+      primary: 'Consultation personnalisÃ©e',
+      secondary: 'Visio ou prÃ©sentiel',
+      description: 'Expertise dÃ©diÃ©e',
       color: 'from-orange-500 to-red-500'
     }
   ];
@@ -100,32 +100,32 @@ const BlockchainContactPage = () => {
   const officeLocations = [
     {
       city: 'Dakar',
-      address: 'Plateau, Avenue Léopold Sédar Senghor',
-      description: 'Siège Social & Hub Innovation',
+      address: 'Plateau, Avenue LÃ©opold SÃ©dar Senghor',
+      description: 'SiÃ¨ge Social & Hub Innovation',
       hours: 'Lun-Ven: 8h-18h, Sam: 9h-13h',
       color: 'from-blue-500 to-purple-500'
     },
     {
-      city: 'Thiès',
-      address: 'Centre-ville, près de la Gare',
-      description: 'Antenne Régionale',
+      city: 'ThiÃ¨s',
+      address: 'Centre-ville, prÃ¨s de la Gare',
+      description: 'Antenne RÃ©gionale',
       hours: 'Lun-Ven: 9h-17h',
       color: 'from-emerald-500 to-teal-500'
     },
     {
       city: 'Saint-Louis',
-      address: 'Île de Saint-Louis, Rue Blaise Diagne',
-      description: 'Bureau Régional Nord',
+      address: 'ÃŽle de Saint-Louis, Rue Blaise Diagne',
+      description: 'Bureau RÃ©gional Nord',
       hours: 'Lun-Ven: 9h-17h',
       color: 'from-orange-500 to-red-500'
     }
   ];
 
   const supportStats = [
-    { label: 'Temps Réponse Moyen', value: '2h', icon: Clock },
+    { label: 'Temps RÃ©ponse Moyen', value: '2h', icon: Clock },
     { label: 'Satisfaction Client', value: '98.5%', icon: Star },
-    { label: 'Demandes Traitées/Jour', value: '150+', icon: MessageSquare },
-    { label: 'Langues Supportées', value: '4', icon: Globe }
+    { label: 'Demandes TraitÃ©es/Jour', value: '150+', icon: MessageSquare },
+    { label: 'Langues SupportÃ©es', value: '4', icon: Globe }
   ];
 
   const handleInputChange = (e) => {
@@ -167,7 +167,7 @@ const BlockchainContactPage = () => {
     <>
       <Helmet>
         <title>Contact - Teranga Foncier | Support Blockchain 24/7</title>
-        <meta name="description" content="Contactez notre équipe d'experts blockchain immobilier. Support multicanal, réponse rapide et assistance personnalisée." />
+        <meta name="description" content="Contactez notre Ã©quipe d'experts blockchain immobilier. Support multicanal, rÃ©ponse rapide et assistance personnalisÃ©e." />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -216,8 +216,8 @@ const BlockchainContactPage = () => {
               </h1>
               
               <p className="text-xl lg:text-2xl text-white/90 mb-8 leading-relaxed">
-                Une question sur nos solutions blockchain ? Notre équipe d'experts est là pour vous accompagner 
-                dans votre projet immobilier au Sénégal
+                Une question sur nos solutions blockchain ? Notre Ã©quipe d'experts est lÃ  pour vous accompagner 
+                dans votre projet immobilier au SÃ©nÃ©gal
               </p>
 
               {/* Support Stats */}
@@ -256,7 +256,7 @@ const BlockchainContactPage = () => {
                 Plusieurs Moyens de Nous Contacter
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Choisissez le canal qui vous convient le mieux pour obtenir une assistance rapide et personnalisée
+                Choisissez le canal qui vous convient le mieux pour obtenir une assistance rapide et personnalisÃ©e
               </p>
             </motion.div>
 
@@ -303,7 +303,7 @@ const BlockchainContactPage = () => {
                       Envoyez-nous un Message
                     </CardTitle>
                     <p className="text-gray-600">
-                      Décrivez votre projet ou votre question, nous vous répondrons rapidement
+                      DÃ©crivez votre projet ou votre question, nous vous rÃ©pondrons rapidement
                     </p>
                   </CardHeader>
                   <CardContent>
@@ -311,7 +311,7 @@ const BlockchainContactPage = () => {
                       <Alert className="mb-6 bg-green-50 border-green-200 text-green-800">
                         <CheckCircle className="h-4 w-4" />
                         <AlertDescription>
-                          Votre message a été envoyé avec succès ! Nous vous répondrons dans les plus brefs délais.
+                          Votre message a Ã©tÃ© envoyÃ© avec succÃ¨s ! Nous vous rÃ©pondrons dans les plus brefs dÃ©lais.
                         </AlertDescription>
                       </Alert>
                     )}
@@ -325,7 +325,7 @@ const BlockchainContactPage = () => {
                             name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            placeholder="Votre nom complet"
+                            YOUR_API_KEY="Votre nom complet"
                             required
                           />
                         </div>
@@ -337,7 +337,7 @@ const BlockchainContactPage = () => {
                             type="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            placeholder="votre@email.com"
+                            YOUR_API_KEY="votre@email.com"
                             required
                           />
                         </div>
@@ -345,20 +345,20 @@ const BlockchainContactPage = () => {
 
                       <div className="grid md:grid-cols-2 gap-4">
                         <div className="space-y-2">
-                          <Label htmlFor="phone">Téléphone</Label>
+                          <Label htmlFor="phone">TÃ©lÃ©phone</Label>
                           <Input
                             id="phone"
                             name="phone"
                             value={formData.phone}
                             onChange={handleInputChange}
-                            placeholder="+221 XX XXX XX XX"
+                            YOUR_API_KEY="+221 XX XXX XX XX"
                           />
                         </div>
                         <div className="space-y-2">
-                          <Label>Catégorie</Label>
+                          <Label>CatÃ©gorie</Label>
                           <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
                             <SelectTrigger>
-                              <SelectValue placeholder="Choisir une catégorie" />
+                              <SelectValue YOUR_API_KEY="Choisir une catÃ©gorie" />
                             </SelectTrigger>
                             <SelectContent>
                               {contactCategories.map((category) => (
@@ -378,7 +378,7 @@ const BlockchainContactPage = () => {
                           name="subject"
                           value={formData.subject}
                           onChange={handleInputChange}
-                          placeholder="Résumé de votre demande"
+                          YOUR_API_KEY="RÃ©sumÃ© de votre demande"
                           required
                         />
                       </div>
@@ -407,7 +407,7 @@ const BlockchainContactPage = () => {
                           rows={6}
                           value={formData.message}
                           onChange={handleInputChange}
-                          placeholder="Décrivez votre projet, votre question ou votre besoin en détail..."
+                          YOUR_API_KEY="DÃ©crivez votre projet, votre question ou votre besoin en dÃ©tail..."
                           required
                         />
                       </div>
@@ -443,10 +443,10 @@ const BlockchainContactPage = () => {
               >
                 <div>
                   <h3 className="text-2xl font-bold text-gray-900 mb-4">
-                    Nos Bureaux au Sénégal
+                    Nos Bureaux au SÃ©nÃ©gal
                   </h3>
                   <p className="text-gray-600 mb-6">
-                    Retrouvez-nous dans nos différentes antennes pour un accompagnement de proximité
+                    Retrouvez-nous dans nos diffÃ©rentes antennes pour un accompagnement de proximitÃ©
                   </p>
                 </div>
 
@@ -481,9 +481,9 @@ const BlockchainContactPage = () => {
                 {/* Quick Contact Card */}
                 <Card className="border-0 bg-gradient-to-r from-blue-600 to-purple-600 text-white">
                   <CardContent className="p-6">
-                    <h4 className="text-xl font-bold mb-3">Besoin d'une Réponse Immédiate ?</h4>
+                    <h4 className="text-xl font-bold mb-3">Besoin d'une RÃ©ponse ImmÃ©diate ?</h4>
                     <p className="text-white/90 mb-4">
-                      Notre assistant IA TERRA est disponible 24/7 pour répondre à vos questions sur la blockchain immobilière
+                      Notre assistant IA TERRA est disponible 24/7 pour rÃ©pondre Ã  vos questions sur la blockchain immobiliÃ¨re
                     </p>
                     <Button className="bg-white text-blue-600 hover:bg-white/90">
                       <Brain className="mr-2 h-4 w-4" />

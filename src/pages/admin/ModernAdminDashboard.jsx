@@ -45,6 +45,7 @@ import { supabase } from '@/lib/customSupabaseClient';
 import { ROLES, ROLES_CONFIG, ROLE_GROUPS } from '@/lib/enhancedRbacConfig';
 import { Helmet } from 'react-helmet-async';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { AIEstimationWidget, AIMarketInsights } from '@/components/AIComponents';
 
 const ModernAdminDashboard = () => {
   const { user, profile } = useUser();
@@ -465,6 +466,12 @@ const ModernAdminDashboard = () => {
               change={15}
               description="Terrains disponibles"
             />
+          </div>
+
+          {/* 🚀 WIDGETS IA TERANGA - NIVEAU ADMIN */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <AIEstimationWidget className="w-full" />
+            <AIMarketInsights region="Dakar" className="w-full" />
           </div>
 
           {/* Graphique revenus */}

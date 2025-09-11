@@ -122,7 +122,7 @@ const TestAuthPage = () => {
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
-                      placeholder="admin@terangafoncier.sn"
+                      YOUR_API_KEY="admin@terangafoncier.sn"
                       required
                     />
                   </div>
@@ -133,7 +133,7 @@ const TestAuthPage = () => {
                       type="password"
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      placeholder="TerrangaAdmin2024!"
+                      YOUR_API_KEY="TerrangaAdmin2024!"
                       required
                     />
                   </div>

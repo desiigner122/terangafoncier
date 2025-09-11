@@ -369,7 +369,7 @@ const UserRoleManagement = () => {
                     id="full_name"
                     value={formData.full_name}
                     onChange={(e) => setFormData({...formData, full_name: e.target.value})}
-                    placeholder="Jean Dupont"
+                    YOUR_API_KEY="Jean Dupont"
                   />
                 </div>
                 
@@ -380,7 +380,7 @@ const UserRoleManagement = () => {
                     type="email"
                     value={formData.email}
                     onChange={(e) => setFormData({...formData, email: e.target.value})}
-                    placeholder="jean@example.com"
+                    YOUR_API_KEY="jean@example.com"
                   />
                 </div>
                 
@@ -390,7 +390,7 @@ const UserRoleManagement = () => {
                     id="phone"
                     value={formData.phone}
                     onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                    placeholder="+221 77 123 45 67"
+                    YOUR_API_KEY="+221 77 123 45 67"
                   />
                 </div>
                 
@@ -422,7 +422,7 @@ const UserRoleManagement = () => {
                     id="region"
                     value={formData.region}
                     onChange={(e) => setFormData({...formData, region: e.target.value})}
-                    placeholder="Dakar"
+                    YOUR_API_KEY="Dakar"
                   />
                 </div>
                 
@@ -432,7 +432,7 @@ const UserRoleManagement = () => {
                     id="departement"
                     value={formData.departement}
                     onChange={(e) => setFormData({...formData, departement: e.target.value})}
-                    placeholder="Dakar"
+                    YOUR_API_KEY="Dakar"
                   />
                 </div>
                 
@@ -442,7 +442,7 @@ const UserRoleManagement = () => {
                     id="address"
                     value={formData.address}
                     onChange={(e) => setFormData({...formData, address: e.target.value})}
-                    placeholder="Adresse complète..."
+                    YOUR_API_KEY="Adresse complète..."
                   />
                 </div>
               </div>
@@ -468,7 +468,7 @@ const UserRoleManagement = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
-                  placeholder="Rechercher par nom, email ou téléphone..."
+                  YOUR_API_KEY="Rechercher par nom, email ou téléphone..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -478,7 +478,7 @@ const UserRoleManagement = () => {
             
             <Select value={selectedRole} onValueChange={setSelectedRole}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filtrer par rôle" />
+                <SelectValue YOUR_API_KEY="Filtrer par rôle" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les rôles</SelectItem>
@@ -492,7 +492,7 @@ const UserRoleManagement = () => {
             
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger className="w-48">
-                <SelectValue placeholder="Filtrer par statut" />
+                <SelectValue YOUR_API_KEY="Filtrer par statut" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>

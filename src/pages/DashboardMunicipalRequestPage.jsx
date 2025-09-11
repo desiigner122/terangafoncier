@@ -189,9 +189,9 @@ const safeToast = (message, type = 'default') => {
                             <CardDescription>Sélectionnez la commune où vous souhaitez obtenir un terrain.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div><Label>Région</Label><Select onValueChange={(v) => setValue('region', v)}><SelectTrigger><SelectValue placeholder="Sélectionnez une région..." /></SelectTrigger><SelectContent>{senegalRegionsAndDepartments.map(r => <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>)}</SelectContent></Select></div>
-                            <div><Label>Département</Label><Select onValueChange={(v) => setValue('department', v)} disabled={!watchedRegion}><SelectTrigger><SelectValue placeholder="Sélectionnez un département..." /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.nom} value={d.nom}>{d.nom}</SelectItem>)}</SelectContent></Select></div>
-                            <div><Label>Commune</Label><Select onValueChange={(v) => setValue('commune', v)} disabled={!watchedDepartment}><SelectTrigger><SelectValue placeholder="Sélectionnez une commune..." /></SelectTrigger><SelectContent>{communes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+                            <div><Label>Région</Label><Select onValueChange={(v) => setValue('region', v)}><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez une région..." /></SelectTrigger><SelectContent>{senegalRegionsAndDepartments.map(r => <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>)}</SelectContent></Select></div>
+                            <div><Label>Département</Label><Select onValueChange={(v) => setValue('department', v)} disabled={!watchedRegion}><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez un département..." /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.nom} value={d.nom}>{d.nom}</SelectItem>)}</SelectContent></Select></div>
+                            <div><Label>Commune</Label><Select onValueChange={(v) => setValue('commune', v)} disabled={!watchedDepartment}><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez une commune..." /></SelectTrigger><SelectContent>{communes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
                         </CardContent>
                     </motion.div>
                 );
@@ -203,8 +203,8 @@ const safeToast = (message, type = 'default') => {
                             <CardDescription>Expliquez votre projet et joignez les pièces requises.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div><Label htmlFor="project_type">Type de projet</Label><Select onValueChange={(v) => setValue('project_type', v)}><SelectTrigger><SelectValue placeholder="Sélectionnez le type de projet..." /></SelectTrigger><SelectContent>{['Habitation', 'Commercial', 'Agricole', 'Industriel'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
-                            <div><Label htmlFor="motivation">Motivation de votre demande</Label><Textarea id="motivation" placeholder="Décrivez votre projet, son impact, et pourquoi vous sollicitez un terrain dans cette commune..." {...register('motivation', { required: true })} /></div>
+                            <div><Label htmlFor="project_type">Type de projet</Label><Select onValueChange={(v) => setValue('project_type', v)}><SelectTrigger><SelectValue YOUR_API_KEY="Sélectionnez le type de projet..." /></SelectTrigger><SelectContent>{['Habitation', 'Commercial', 'Agricole', 'Industriel'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
+                            <div><Label htmlFor="motivation">Motivation de votre demande</Label><Textarea id="motivation" YOUR_API_KEY="Décrivez votre projet, son impact, et pourquoi vous sollicitez un terrain dans cette commune..." {...register('motivation', { required: true })} /></div>
                             <div><Label htmlFor="FileTexts">FileTexts Justificatifs</Label><Input id="FileTexts" type="file" multiple {...register('FileTexts')} /><p className="text-xs text-muted-foreground mt-1">Joindre CNI, plan de financement, etc.</p></div>
                         </CardContent>
                     </motion.div>

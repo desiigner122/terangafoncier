@@ -42,8 +42,8 @@ const AdminContractsPage = () => {
      doc.text(`Parcelle: ${contract.parcelId}`, 10, 40);
      doc.text(`Statut: ${contract.status}`, 10, 50);
      doc.text("--------------------------------------------------", 10, 60);
-     doc.text("Contenu du contrat (placeholder)...", 10, 70);
-     doc.text("Signatures (placeholder)...", 10, 100);
+     doc.text("Contenu du contrat (YOUR_API_KEY)...", 10, 70);
+     doc.text("Signatures (YOUR_API_KEY)...", 10, 100);
      doc.save(`contrat_${contract.id}.pdf`);
 
      window.safeGlobalToast({
@@ -80,7 +80,7 @@ const AdminContractsPage = () => {
            <div className="flex space-x-2 pt-4">
               <div className="relative flex-1">
                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                 <Input placeholder="Rechercher par ID, Parcelle, Client..." className="pl-8" />
+                 <Input YOUR_API_KEY="Rechercher par ID, Parcelle, Client..." className="pl-8" />
               </div>
               <Button variant="outline" onClick={() => handleSimulatedAction("Ouverture des filtres de contrats.")}><Filter className="mr-2 h-4 w-4"/> Filtrer</Button>
            </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { 
   MapPin, 
@@ -19,47 +19,47 @@ const SellersSection = () => {
       title: "Villa R+2 Almadies",
       seller: "Moussa Diop",
       location: "Almadies, Dakar",
-      surface: "400m²",
+      surface: "400mÂ²",
       price: "85M FCFA",
       rating: 4.8,
       verified: true,
-      image: "/api/placeholder/300/200"
+      image: "/api/YOUR_API_KEY/300/200"
     },
     {
       id: 2,
-      title: "Terrain Résidentiel Keur Massar",
+      title: "Terrain RÃ©sidentiel Keur Massar",
       seller: "Awa Ndiaye",
       location: "Keur Massar",
-      surface: "600m²",
+      surface: "600mÂ²",
       price: "25M FCFA",
       rating: 4.6,
       verified: true,
-      image: "/api/placeholder/300/200"
+      image: "/api/YOUR_API_KEY/300/200"
     }
   ];
 
   const professionalSellers = [
     {
       id: 1,
-      title: "Résidence Les Palmiers",
+      title: "RÃ©sidence Les Palmiers",
       seller: "Teranga Immobilier",
-      location: "Guédiawaye",
+      location: "GuÃ©diawaye",
       units: "12 appartements",
       priceRange: "35-50M FCFA",
       rating: 4.9,
       verified: true,
-      image: "/api/placeholder/300/200"
+      image: "/api/YOUR_API_KEY/300/200"
     },
     {
       id: 2,
       title: "Lotissement Moderne",
-      seller: "Sénégal Construction",
-      location: "Sébikotane",
+      seller: "SÃ©nÃ©gal Construction",
+      location: "SÃ©bikotane",
       units: "50 parcelles",
       priceRange: "15-30M FCFA",
       rating: 4.7,
       verified: true,
-      image: "/api/placeholder/300/200"
+      image: "/api/YOUR_API_KEY/300/200"
     }
   ];
 
@@ -81,13 +81,13 @@ const SellersSection = () => {
                 Vendeurs Particuliers
               </Badge>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                Propriétés de Particuliers
+                PropriÃ©tÃ©s de Particuliers
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Biens immobiliers vendus directement par leurs propriétaires
+                Biens immobiliers vendus directement par leurs propriÃ©taires
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Transactions et communications via votre dashboard sécurisé
+                Transactions et communications via votre dashboard sÃ©curisÃ©
               </p>
             </motion.div>
           </div>
@@ -111,7 +111,7 @@ const SellersSection = () => {
                     {property.verified && (
                       <Badge className="absolute top-3 right-3 bg-blue-500 text-white">
                         <Verified className="h-3 w-3 mr-1" />
-                        Vérifié
+                        VÃ©rifiÃ©
                       </Badge>
                     )}
                   </div>
@@ -133,7 +133,7 @@ const SellersSection = () => {
                       <span className="font-bold text-blue-600">{property.price}</span>
                     </div>
                     <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                      Voir détails
+                      Voir dÃ©tails
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </CardContent>
@@ -144,7 +144,7 @@ const SellersSection = () => {
 
           <div className="text-center">
             <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white">
-              Accéder au dashboard vendeurs particuliers
+              AccÃ©der au dashboard vendeurs particuliers
             </Button>
           </div>
         </div>
@@ -166,10 +166,10 @@ const SellersSection = () => {
                 Projets Immobiliers Professionnels
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Développements immobiliers par des professionnels certifiés
+                DÃ©veloppements immobiliers par des professionnels certifiÃ©s
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Négociations et suivi via votre dashboard personnalisé
+                NÃ©gociations et suivi via votre dashboard personnalisÃ©
               </p>
             </motion.div>
           </div>
@@ -193,7 +193,7 @@ const SellersSection = () => {
                     {project.verified && (
                       <Badge className="absolute top-3 right-3 bg-purple-500 text-white">
                         <Verified className="h-3 w-3 mr-1" />
-                        Certifié
+                        CertifiÃ©
                       </Badge>
                     )}
                   </div>
@@ -226,7 +226,7 @@ const SellersSection = () => {
 
           <div className="text-center">
             <Button size="lg" variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white">
-              Accéder au dashboard projets professionnels
+              AccÃ©der au dashboard projets professionnels
             </Button>
           </div>
         </div>

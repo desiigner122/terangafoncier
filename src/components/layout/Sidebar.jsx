@@ -1,4 +1,4 @@
-ï»¿
+
 import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { 
@@ -29,7 +29,7 @@ import {
   Home
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getSidebarConfig } from './sidebarConfig';
@@ -110,7 +110,7 @@ const Sidebar = () => {
     useEffect(() => {
         const fetchNotificationsCount = async () => {
             if (user) {
-                // FIX: Utiliser 'read' au lieu de 'is_read' pour correspondre Ã  la structure DB
+                // FIX: Utiliser 'read' au lieu de 'is_read' pour correspondre à la structure DB
                 const { count: generalCount } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false);
                 const { count: requestsCount } = await supabase.from('requests').select('*', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ['En cours', 'Nouvelle']);
                 setNotifications({
@@ -172,7 +172,7 @@ const Sidebar = () => {
               
               <Button variant="ghost" className="w-full justify-start text-red-400 hover:bg-red-500/20 hover:text-red-300" onClick={signOut}>
                   <LogOut className="mr-3 h-5 w-5" />
-                  DÃ©connexion
+                  Déconnexion
               </Button>
          </div>
        )}

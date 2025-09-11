@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   TrendingUp, 
@@ -107,12 +107,12 @@ const DeFiNFTMarketplace = () => {
     {
       id: 1,
       name: 'Teranga Properties',
-      description: 'Propriétés immobilières tokenisées au Sénégal',
+      description: 'PropriÃ©tÃ©s immobiliÃ¨res tokenisÃ©es au SÃ©nÃ©gal',
       floorPrice: '50',
       volume: '12,500',
       items: 1245,
       owners: 892,
-      image: '/api/placeholder/400/300'
+      image: '/api/YOUR_API_KEY/400/300'
     },
     {
       id: 2,
@@ -122,7 +122,7 @@ const DeFiNFTMarketplace = () => {
       volume: '45,800',
       items: 156,
       owners: 98,
-      image: '/api/placeholder/400/300'
+      image: '/api/YOUR_API_KEY/400/300'
     }
   ]);
 
@@ -133,7 +133,7 @@ const DeFiNFTMarketplace = () => {
       name: 'Villa Moderne Almadies',
       collection: 'Teranga Properties',
       price: '75',
-      image: '/api/placeholder/300/300',
+      image: '/api/YOUR_API_KEY/300/300',
       seller: '0x1234...5678',
       rarity: 'Rare',
       traits: ['Prime Location', 'Ocean View', 'Modern Design']
@@ -144,7 +144,7 @@ const DeFiNFTMarketplace = () => {
       name: 'Appartement Centre-Ville',
       collection: 'Teranga Properties',
       price: '35',
-      image: '/api/placeholder/300/300',
+      image: '/api/YOUR_API_KEY/300/300',
       seller: '0x8765...4321',
       rarity: 'Common',
       traits: ['City Center', 'Furnished', 'Parking']
@@ -209,17 +209,17 @@ const DeFiNFTMarketplace = () => {
 
     setLoading(true);
     try {
-      toast.loading('Échange en cours...', { id: 'swap' });
+      toast.loading('Ã‰change en cours...', { id: 'swap' });
       
       // Simulate swap transaction
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      toast.success(`Échange réussi: ${swapForm.fromAmount} ${swapForm.fromToken} → ${swapForm.toAmount} ${swapForm.toToken}`, { id: 'swap' });
+      toast.success(`Ã‰change rÃ©ussi: ${swapForm.fromAmount} ${swapForm.fromToken} â†’ ${swapForm.toAmount} ${swapForm.toToken}`, { id: 'swap' });
       
       setSwapForm(prev => ({ ...prev, fromAmount: '', toAmount: '' }));
       await loadDeFiData();
     } catch (error) {
-      toast.error('Erreur lors de l\'échange', { id: 'swap' });
+      toast.error('Erreur lors de l\'Ã©change', { id: 'swap' });
     } finally {
       setLoading(false);
     }
@@ -233,17 +233,17 @@ const DeFiNFTMarketplace = () => {
 
     setLoading(true);
     try {
-      toast.loading('Ajout de liquidité...', { id: 'liquidity' });
+      toast.loading('Ajout de liquiditÃ©...', { id: 'liquidity' });
       
       // Simulate liquidity addition
       await new Promise(resolve => setTimeout(resolve, 2500));
       
-      toast.success(`Liquidité ajoutée: ${liquidityForm.amountA} ${liquidityForm.tokenA} + ${liquidityForm.amountB} ${liquidityForm.tokenB}`, { id: 'liquidity' });
+      toast.success(`LiquiditÃ© ajoutÃ©e: ${liquidityForm.amountA} ${liquidityForm.tokenA} + ${liquidityForm.amountB} ${liquidityForm.tokenB}`, { id: 'liquidity' });
       
       setLiquidityForm(prev => ({ ...prev, amountA: '', amountB: '' }));
       await loadDeFiData();
     } catch (error) {
-      toast.error('Erreur lors de l\'ajout de liquidité', { id: 'liquidity' });
+      toast.error('Erreur lors de l\'ajout de liquiditÃ©', { id: 'liquidity' });
     } finally {
       setLoading(false);
     }
@@ -282,7 +282,7 @@ const DeFiNFTMarketplace = () => {
       // Simulate NFT purchase
       await new Promise(resolve => setTimeout(resolve, 2000));
       
-      toast.success(`NFT acheté pour ${price} MATIC!`, { id: 'buy-nft' });
+      toast.success(`NFT achetÃ© pour ${price} MATIC!`, { id: 'buy-nft' });
       
       // Remove from listings
       setNftListings(listings => listings.filter(nft => nft.id !== nftId));
@@ -303,7 +303,7 @@ const DeFiNFTMarketplace = () => {
           className="text-center"
         >
           <h1 className="text-4xl font-bold text-white mb-2">DeFi & NFT Marketplace</h1>
-          <p className="text-purple-200">Écosystème financier décentralisé pour l'immobilier</p>
+          <p className="text-purple-200">Ã‰cosystÃ¨me financier dÃ©centralisÃ© pour l'immobilier</p>
         </motion.div>
 
         {/* Stats Overview */}
@@ -343,7 +343,7 @@ const DeFiNFTMarketplace = () => {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center">
                 <Coins className="h-4 w-4 mr-2" />
-                Ma Liquidité
+                Ma LiquiditÃ©
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -356,7 +356,7 @@ const DeFiNFTMarketplace = () => {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-medium flex items-center">
                 <Target className="h-4 w-4 mr-2" />
-                Récompenses
+                RÃ©compenses
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -375,10 +375,10 @@ const DeFiNFTMarketplace = () => {
           <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
             <TabsList className="bg-white/10 backdrop-blur-lg border-white/20 grid grid-cols-5">
               <TabsTrigger value="swap" className="data-[state=active]:bg-white/20 text-white">
-                Échange
+                Ã‰change
               </TabsTrigger>
               <TabsTrigger value="liquidity" className="data-[state=active]:bg-white/20 text-white">
-                Liquidité
+                LiquiditÃ©
               </TabsTrigger>
               <TabsTrigger value="farming" className="data-[state=active]:bg-white/20 text-white">
                 Farming
@@ -398,7 +398,7 @@ const DeFiNFTMarketplace = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <ArrowUpDown className="h-5 w-5" />
-                      <span>Échange de Tokens</span>
+                      <span>Ã‰change de Tokens</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -414,7 +414,7 @@ const DeFiNFTMarketplace = () => {
                           value={swapForm.fromAmount}
                           onChange={(e) => handleSwapAmountChange(e.target.value, 'fromAmount')}
                           className="bg-transparent border-0 text-xl font-bold p-0 focus:ring-0"
-                          placeholder="0.0"
+                          YOUR_API_KEY="0.0"
                         />
                         <Button 
                           variant="outline" 
@@ -456,7 +456,7 @@ const DeFiNFTMarketplace = () => {
                           value={swapForm.toAmount}
                           onChange={(e) => handleSwapAmountChange(e.target.value, 'toAmount')}
                           className="bg-transparent border-0 text-xl font-bold p-0 focus:ring-0"
-                          placeholder="0.0"
+                          YOUR_API_KEY="0.0"
                         />
                         <Button 
                           variant="outline" 
@@ -490,7 +490,7 @@ const DeFiNFTMarketplace = () => {
 
                     {/* Slippage Settings */}
                     <div className="space-y-2">
-                      <Label>Slippage toléré: {swapForm.slippage}%</Label>
+                      <Label>Slippage tolÃ©rÃ©: {swapForm.slippage}%</Label>
                       <Slider
                         value={[swapForm.slippage]}
                         onValueChange={(value) => setSwapForm(prev => ({ ...prev, slippage: value[0] }))}
@@ -511,7 +511,7 @@ const DeFiNFTMarketplace = () => {
                       ) : (
                         <Zap className="h-4 w-4 mr-2" />
                       )}
-                      Échanger
+                      Ã‰changer
                     </Button>
                   </CardContent>
                 </Card>
@@ -519,7 +519,7 @@ const DeFiNFTMarketplace = () => {
                 {/* Swap Statistics */}
                 <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
                   <CardHeader>
-                    <CardTitle>Statistiques d'Échange</CardTitle>
+                    <CardTitle>Statistiques d'Ã‰change</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
@@ -529,7 +529,7 @@ const DeFiNFTMarketplace = () => {
                       </div>
                       <div className="text-center">
                         <div className="text-2xl font-bold text-green-400">142</div>
-                        <div className="text-xs text-gray-400">Échanges réalisés</div>
+                        <div className="text-xs text-gray-400">Ã‰changes rÃ©alisÃ©s</div>
                       </div>
                     </div>
                     
@@ -554,7 +554,7 @@ const DeFiNFTMarketplace = () => {
                     <Alert className="border-blue-200 bg-blue-50/10">
                       <Info className="h-4 w-4" />
                       <AlertDescription className="text-blue-200">
-                        Les échanges sont automatiquement optimisés pour minimiser les frais et le slippage.
+                        Les Ã©changes sont automatiquement optimisÃ©s pour minimiser les frais et le slippage.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
@@ -569,7 +569,7 @@ const DeFiNFTMarketplace = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Coins className="h-5 w-5" />
-                      <span>Ajouter de la Liquidité</span>
+                      <span>Ajouter de la LiquiditÃ©</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
@@ -581,7 +581,7 @@ const DeFiNFTMarketplace = () => {
                         value={liquidityForm.amountA}
                         onChange={(e) => setLiquidityForm(prev => ({ ...prev, amountA: e.target.value }))}
                         className="bg-white/10 border-white/20 text-white"
-                        placeholder="0.0"
+                        YOUR_API_KEY="0.0"
                       />
                       <div className="text-xs text-gray-400 mt-1">Balance: 8,456.78 TERANGA</div>
                     </div>
@@ -594,7 +594,7 @@ const DeFiNFTMarketplace = () => {
                         value={liquidityForm.amountB}
                         onChange={(e) => setLiquidityForm(prev => ({ ...prev, amountB: e.target.value }))}
                         className="bg-white/10 border-white/20 text-white"
-                        placeholder="0.0"
+                        YOUR_API_KEY="0.0"
                       />
                       <div className="text-xs text-gray-400 mt-1">Balance: 1,250.50 MATIC</div>
                     </div>
@@ -607,7 +607,7 @@ const DeFiNFTMarketplace = () => {
                           <span>0.125%</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Tokens LP à recevoir</span>
+                          <span>Tokens LP Ã  recevoir</span>
                           <span>145.67 LP</span>
                         </div>
                         <div className="flex justify-between">
@@ -627,7 +627,7 @@ const DeFiNFTMarketplace = () => {
                       ) : (
                         <Coins className="h-4 w-4 mr-2" />
                       )}
-                      Ajouter la liquidité
+                      Ajouter la liquiditÃ©
                     </Button>
                   </CardContent>
                 </Card>
@@ -635,7 +635,7 @@ const DeFiNFTMarketplace = () => {
                 {/* My Liquidity Positions */}
                 <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
                   <CardHeader>
-                    <CardTitle>Mes Positions de Liquidité</CardTitle>
+                    <CardTitle>Mes Positions de LiquiditÃ©</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
                     <div className="bg-white/5 rounded-lg p-3">
@@ -648,16 +648,16 @@ const DeFiNFTMarketplace = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-gray-400">Liquidité:</span>
+                          <span className="text-gray-400">LiquiditÃ©:</span>
                           <div className="font-bold">$1,250.00</div>
                         </div>
                         <div>
-                          <span className="text-gray-400">Frais collectés:</span>
+                          <span className="text-gray-400">Frais collectÃ©s:</span>
                           <div className="font-bold text-green-400">$45.60</div>
                         </div>
                       </div>
                       <Button size="sm" variant="outline" className="w-full mt-2 border-white/20 text-white hover:bg-white/10">
-                        Retirer la liquidité
+                        Retirer la liquiditÃ©
                       </Button>
                     </div>
 
@@ -671,23 +671,23 @@ const DeFiNFTMarketplace = () => {
                       </div>
                       <div className="grid grid-cols-2 gap-4 text-sm">
                         <div>
-                          <span className="text-gray-400">Liquidité:</span>
+                          <span className="text-gray-400">LiquiditÃ©:</span>
                           <div className="font-bold">$850.00</div>
                         </div>
                         <div>
-                          <span className="text-gray-400">Frais collectés:</span>
+                          <span className="text-gray-400">Frais collectÃ©s:</span>
                           <div className="font-bold text-green-400">$32.10</div>
                         </div>
                       </div>
                       <Button size="sm" variant="outline" className="w-full mt-2 border-white/20 text-white hover:bg-white/10">
-                        Retirer la liquidité
+                        Retirer la liquiditÃ©
                       </Button>
                     </div>
 
                     <Alert className="border-yellow-200 bg-yellow-50/10">
                       <AlertTriangle className="h-4 w-4" />
                       <AlertDescription className="text-yellow-200">
-                        La fourniture de liquidité comporte des risques de pertes impermanentes.
+                        La fourniture de liquiditÃ© comporte des risques de pertes impermanentes.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
@@ -735,7 +735,7 @@ const DeFiNFTMarketplace = () => {
                           <span className="font-bold">{pool.myStake || '0'} LP</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span>Récompenses:</span>
+                          <span>RÃ©compenses:</span>
                           <span className="font-bold text-green-400">{pool.rewards || '0'} TERANGA</span>
                         </div>
                       </div>
@@ -743,7 +743,7 @@ const DeFiNFTMarketplace = () => {
                       <div className="space-y-2">
                         <Input
                           type="number"
-                          placeholder="Montant à staker"
+                          YOUR_API_KEY="Montant Ã  staker"
                           className="bg-white/10 border-white/20 text-white"
                           id={`stake-${pool.id}`}
                         />
@@ -766,7 +766,7 @@ const DeFiNFTMarketplace = () => {
                           className="w-full border-green-600 text-green-600 hover:bg-green-600 hover:text-white"
                         >
                           <TrendingUp className="h-4 w-4 mr-2" />
-                          Réclamer ({pool.rewards} TERANGA)
+                          RÃ©clamer ({pool.rewards} TERANGA)
                         </Button>
                       )}
                     </CardContent>
@@ -802,7 +802,7 @@ const DeFiNFTMarketplace = () => {
                           <div className="font-bold">{collection.items.toLocaleString()}</div>
                         </div>
                         <div>
-                          <span className="text-gray-400 text-sm">Propriétaires</span>
+                          <span className="text-gray-400 text-sm">PropriÃ©taires</span>
                           <div className="font-bold">{collection.owners}</div>
                         </div>
                       </div>
@@ -881,9 +881,9 @@ const DeFiNFTMarketplace = () => {
               {nftListings.length === 0 && (
                 <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
                   <CardContent className="text-center py-12">
-                    <div className="text-6xl mb-4">🎨</div>
+                    <div className="text-6xl mb-4">ðŸŽ¨</div>
                     <h3 className="text-xl font-bold mb-2">Aucun NFT disponible</h3>
-                    <p className="text-gray-400">Les NFT achetés apparaîtront dans votre portefeuille</p>
+                    <p className="text-gray-400">Les NFT achetÃ©s apparaÃ®tront dans votre portefeuille</p>
                   </CardContent>
                 </Card>
               )}

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { useAuth } from '@/contexts/AuthProvider';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -28,12 +28,12 @@ const TestAccountsPage = () => {
       email: 'admin@test.com',
       password: 'test123',
       role: 'admin',
-      name: 'Maître Aminata Sall',
+      name: 'MaÃ®tre Aminata Sall',
       title: 'Notaire Principal',
-      description: 'Accès complet au système - Gestion des utilisateurs et supervision',
+      description: 'AccÃ¨s complet au systÃ¨me - Gestion des utilisateurs et supervision',
       icon: Shield,
       color: 'bg-red-500',
-      features: ['Gestion utilisateurs', 'Supervision générale', 'Rapports avancés']
+      features: ['Gestion utilisateurs', 'Supervision gÃ©nÃ©rale', 'Rapports avancÃ©s']
     },
     {
       email: 'agent@test.com',
@@ -41,10 +41,10 @@ const TestAccountsPage = () => {
       role: 'agent_foncier',
       name: 'Moussa Diallo',
       title: 'Agent Foncier',
-      description: 'Gestion des transactions immobilières et accompagnement clients',
+      description: 'Gestion des transactions immobiliÃ¨res et accompagnement clients',
       icon: User,
       color: 'bg-blue-500',
-      features: ['Transactions immobilières', 'Gestion clients', 'Estimations']
+      features: ['Transactions immobiliÃ¨res', 'Gestion clients', 'Estimations']
     },
     {
       email: 'mairie@test.com',
@@ -52,7 +52,7 @@ const TestAccountsPage = () => {
       role: 'mairie',
       name: 'Mairie de Dakar',
       title: 'Services Municipaux',
-      description: 'Gestion administrative et délivrance de documents officiels',
+      description: 'Gestion administrative et dÃ©livrance de documents officiels',
       icon: Building,
       color: 'bg-green-500',
       features: ['Documents officiels', 'Autorisations', 'Urbanisme']
@@ -62,11 +62,11 @@ const TestAccountsPage = () => {
       password: 'test123',
       role: 'geometre',
       name: 'Fatou Ndiaye',
-      title: 'Géomètre Expert',
-      description: 'Mesures et délimitations de terrains, expertise technique',
+      title: 'GÃ©omÃ¨tre Expert',
+      description: 'Mesures et dÃ©limitations de terrains, expertise technique',
       icon: Calculator,
       color: 'bg-yellow-500',
-      features: ['Mesures terrain', 'Plans techniques', 'Délimitations']
+      features: ['Mesures terrain', 'Plans techniques', 'DÃ©limitations']
     },
     {
       email: 'banque@test.com',
@@ -74,10 +74,10 @@ const TestAccountsPage = () => {
       role: 'banque',
       name: 'Banque Atlantique',
       title: 'Institution Bancaire',
-      description: 'Services financiers et crédits immobiliers',
+      description: 'Services financiers et crÃ©dits immobiliers',
       icon: Banknote,
       color: 'bg-purple-500',
-      features: ['Crédits immobiliers', 'Évaluations', 'Financement']
+      features: ['CrÃ©dits immobiliers', 'Ã‰valuations', 'Financement']
     },
     {
       email: 'vendeur-particulier@test.com',
@@ -85,32 +85,32 @@ const TestAccountsPage = () => {
       role: 'vendeur_particulier',
       name: 'Ibrahima Sarr',
       title: 'Vendeur Particulier',
-      description: 'Vente de propriétés personnelles et familiales',
+      description: 'Vente de propriÃ©tÃ©s personnelles et familiales',
       icon: Home,
       color: 'bg-orange-500',
-      features: ['Vente propriétés', 'Gestion annonces', 'Négociations']
+      features: ['Vente propriÃ©tÃ©s', 'Gestion annonces', 'NÃ©gociations']
     },
     {
       email: 'promoteur@test.com',
       password: 'test123',
       role: 'promoteur',
-      name: 'SOGEA Sénégal',
+      name: 'SOGEA SÃ©nÃ©gal',
       title: 'Promoteur Immobilier',
-      description: 'Développement de projets immobiliers de grande envergure',
+      description: 'DÃ©veloppement de projets immobiliers de grande envergure',
       icon: Building,
       color: 'bg-indigo-500',
-      features: ['Projets immobiliers', 'Développement', 'Construction']
+      features: ['Projets immobiliers', 'DÃ©veloppement', 'Construction']
     },
     {
       email: 'investisseur@test.com',
       password: 'test123',
       role: 'investisseur',
-      name: 'Capital Invest Sénégal',
+      name: 'Capital Invest SÃ©nÃ©gal',
       title: 'Investisseur',
-      description: 'Investissements stratégiques et opportunités de marché',
+      description: 'Investissements stratÃ©giques et opportunitÃ©s de marchÃ©',
       icon: TrendingUp,
       color: 'bg-emerald-500',
-      features: ['Investissements', 'Opportunités', 'Portefeuille']
+      features: ['Investissements', 'OpportunitÃ©s', 'Portefeuille']
     },
     {
       email: 'particulier@test.com',
@@ -118,21 +118,21 @@ const TestAccountsPage = () => {
       role: 'particulier',
       name: 'Aminata Diop',
       title: 'Particulier',
-      description: 'Recherche et achat de propriétés pour usage personnel',
+      description: 'Recherche et achat de propriÃ©tÃ©s pour usage personnel',
       icon: Users,
       color: 'bg-pink-500',
-      features: ['Recherche propriétés', 'Favoris', 'Comparaisons']
+      features: ['Recherche propriÃ©tÃ©s', 'Favoris', 'Comparaisons']
     },
     {
       email: 'diaspora@test.com',
       password: 'test123',
       role: 'diaspora',
       name: 'Mamadou Ba',
-      title: 'Diaspora Sénégalaise',
-      description: 'Investissement depuis l\'étranger avec accompagnement spécialisé',
+      title: 'Diaspora SÃ©nÃ©galaise',
+      description: 'Investissement depuis l\'Ã©tranger avec accompagnement spÃ©cialisÃ©',
       icon: Globe,
       color: 'bg-cyan-500',
-      features: ['Investissement diaspora', 'Suivi à distance', 'Conseil spécialisé']
+      features: ['Investissement diaspora', 'Suivi Ã  distance', 'Conseil spÃ©cialisÃ©']
     }
   ];
 
@@ -140,8 +140,8 @@ const TestAccountsPage = () => {
     try {
       await login(account.email, account.password);
       toast({
-        title: "Connexion réussie",
-        description: `Connecté en tant que ${account.name}`,
+        title: "Connexion rÃ©ussie",
+        description: `ConnectÃ© en tant que ${account.name}`,
       });
     } catch (error) {
       toast({
@@ -157,8 +157,8 @@ const TestAccountsPage = () => {
     setCopiedEmail(text);
     setTimeout(() => setCopiedEmail(null), 2000);
     toast({
-      title: "Copié",
-      description: `${type} copié dans le presse-papiers`,
+      title: "CopiÃ©",
+      description: `${type} copiÃ© dans le presse-papiers`,
     });
   };
 
@@ -171,12 +171,12 @@ const TestAccountsPage = () => {
             Comptes de Test - Teranga Foncier
           </h1>
           <p className="text-gray-600 text-lg max-w-2xl mx-auto">
-            Explorez la plateforme avec différents types d'utilisateurs. 
-            Chaque compte offre des fonctionnalités spécifiques selon le rôle.
+            Explorez la plateforme avec diffÃ©rents types d'utilisateurs. 
+            Chaque compte offre des fonctionnalitÃ©s spÃ©cifiques selon le rÃ´le.
           </p>
         </div>
 
-        {/* Test Accounts Grid */}
+        {}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {testAccounts.map((account, index) => {
             const IconComponent = account.icon;
@@ -242,7 +242,7 @@ const TestAccountsPage = () => {
                   {/* Features */}
                   <div className="space-y-2">
                     <h4 className="text-xs font-semibold text-gray-700 uppercase tracking-wide">
-                      Fonctionnalités principales
+                      FonctionnalitÃ©s principales
                     </h4>
                     <div className="flex flex-wrap gap-1">
                       {account.features.map((feature, idx) => (
@@ -271,13 +271,13 @@ const TestAccountsPage = () => {
         <div className="mt-12 text-center">
           <div className="bg-white rounded-lg shadow-md p-6 max-w-2xl mx-auto">
             <h3 className="text-lg font-semibold text-gray-800 mb-3">
-              💡 Informations importantes
+              ðŸ’¡ Informations importantes
             </h3>
             <div className="text-sm text-gray-600 space-y-2">
-              <p>• Tous les comptes utilisent le mot de passe : <code className="bg-gray-100 px-2 py-1 rounded">test123</code></p>
-              <p>• Chaque rôle offre des fonctionnalités et un dashboard spécifiques</p>
-              <p>• Les données sont simulées pour la démonstration</p>
-              <p>• Utilisez "Connexion Rapide" ou copiez les identifiants manuellement</p>
+              <p>â€¢ Tous les comptes utilisent le mot de passe : <code className="bg-gray-100 px-2 py-1 rounded">test123</code></p>
+              <p>â€¢ Chaque rÃ´le offre des fonctionnalitÃ©s et un dashboard spÃ©cifiques</p>
+              <p>â€¢ Les donnÃ©es sont simulÃ©es pour la dÃ©monstration</p>
+              <p>â€¢ Utilisez "Connexion Rapide" ou copiez les identifiants manuellement</p>
             </div>
           </div>
         </div>

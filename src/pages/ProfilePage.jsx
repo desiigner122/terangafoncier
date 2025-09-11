@@ -61,8 +61,7 @@ const ProfilePage = () => {
       setEmail(user.email || '');
     }
     
-    // Tester la connectivité du bucket avatars
-    testAvatarsBucket().then(isReady => {
+        testAvatarsBucket().then(isReady => {
       if (isReady) {
         console.log('✅ Bucket avatars prêt pour upload');
       } else {
@@ -222,16 +221,16 @@ const ProfilePage = () => {
                 <div className="md:col-span-2 space-y-4">
                   <div className="grid gap-2">
                     <Label htmlFor="profile-name">Nom Complet / Raison Sociale</Label>
-                    <Input id="profile-name" value={fullName} onChange={(e) => setFullName(e.target.value)} disabled={isUpdatingProfile} placeholder="Votre nom complet" className="h-10"/>
+                    <Input id="profile-name" value={fullName} onChange={(e) => setFullName(e.target.value)} disabled={isUpdatingProfile} YOUR_API_KEY="Votre nom complet" className="h-10"/>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="profile-email">Adresse Email</Label>
-                    <Input id="profile-email" type="email" value={email} disabled placeholder="Votre adresse email"/>
+                    <Input id="profile-email" type="email" value={email} disabled YOUR_API_KEY="Votre adresse email"/>
                     <p className="text-xs text-muted-foreground">Pour changer d'email, veuillez contacter le support.</p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="profile-phone">Numéro de Téléphone</Label>
-                    <Input id="profile-phone" type="tel" value={phone || ''} onChange={(e) => setPhone(e.target.value)} disabled={isUpdatingProfile} placeholder="+221 XX XXX XX XX" className="h-10"/>
+                    <Input id="profile-phone" type="tel" value={phone || ''} onChange={(e) => setPhone(e.target.value)} disabled={isUpdatingProfile} YOUR_API_KEY="+221 XX XXX XX XX" className="h-10"/>
                   </div>
               </div>
             </CardContent>
@@ -254,11 +253,11 @@ const ProfilePage = () => {
             <form onSubmit={handlePasswordUpdate} className="space-y-4">
               <div className="grid gap-2">
                 <Label htmlFor="new-password">Nouveau Mot de Passe</Label>
-                <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={isUpdatingPassword} required className="h-10" placeholder="Minimum 6 caractères"/>
+                <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={isUpdatingPassword} required className="h-10" YOUR_API_KEY="Minimum 6 caractères"/>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="confirm-new-password">Confirmer le Nouveau Mot de Passe</Label>
-                <Input id="confirm-new-password" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} disabled={isUpdatingPassword} required className="h-10" placeholder="Retapez votre nouveau mot de passe"/>
+                <Input id="confirm-new-password" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} disabled={isUpdatingPassword} required className="h-10" YOUR_API_KEY="Retapez votre nouveau mot de passe"/>
               </div>
               <Button type="submit" disabled={isUpdatingPassword} className="w-full sm:w-auto">
                 <ShieldCheck className="mr-2 h-4 w-4" /> {isUpdatingPassword ? 'Mise à jour...' : 'Changer'}

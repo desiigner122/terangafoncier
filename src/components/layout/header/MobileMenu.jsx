@@ -1,4 +1,4 @@
-ï»¿import React, { useState } from 'react';
+import React, { useState } from 'react';
 import { NavLink, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { 
@@ -21,13 +21,13 @@ import {
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const publicNavItems = [
   { title: 'Accueil', href: '/' },
   { title: 'Terrains', href: '/parcelles' },
   { title: 'Carte', href: '/map' },
-  { title: 'Comment Ã§a marche', href: '/how-it-works' },
+  { title: 'Comment ça marche', href: '/how-it-works' },
   { title: 'Contact', href: '/contact' },
 ];
 
@@ -40,16 +40,16 @@ const dashboardNavItems = [
 ]
 
 const solutions = [
-  { title: 'Banques & Finances', href: '/solutions/banques', description: 'Ã‰valuez les garanties et analysez les risques fonciers.', icon: Banknote },
-  { title: 'Promoteurs', href: '/solutions/promoteurs', description: 'Identifiez des opportunitÃ©s et suivez vos projets de construction.', icon: Building },
-  { title: 'Investisseurs', href: '/solutions/investisseurs', description: 'Suivez votre portefeuille et dÃ©tectez les meilleures opportunitÃ©s.', icon: TrendingUp },
-  { title: 'Agriculteurs', href: '/solutions/agriculteurs', description: 'GÃ©rez vos parcelles, suivez la mÃ©tÃ©o et analysez vos sols.', icon: Leaf },
+  { title: 'Banques & Finances', href: '/solutions/banques', description: 'Évaluez les garanties et analysez les risques fonciers.', icon: Banknote },
+  { title: 'Promoteurs', href: '/solutions/promoteurs', description: 'Identifiez des opportunités et suivez vos projets de construction.', icon: Building },
+  { title: 'Investisseurs', href: '/solutions/investisseurs', description: 'Suivez votre portefeuille et détectez les meilleures opportunités.', icon: TrendingUp },
+  { title: 'Agriculteurs', href: '/solutions/agriculteurs', description: 'Gérez vos parcelles, suivez la météo et analysez vos sols.', icon: Leaf },
 ];
 
 const diasporaSolutions = [
-  { title: 'Construction Ã  Distance', href: '/solutions/construction-distance', description: 'Pilotez votre projet depuis l\'Ã©tranger.', icon: Home, isNew: true },
-  { title: 'Investissement Diaspora', href: '/solutions/diaspora-investment', description: 'Investissez dans l\'immobilier sÃ©nÃ©galais.', icon: Globe, isNew: true },
-  { title: 'Suivi Projet Live', href: '/solutions/project-monitoring', description: 'Surveillez vos travaux en temps rÃ©el.', icon: Plane, isNew: true },
+  { title: 'Construction à Distance', href: '/solutions/construction-distance', description: 'Pilotez votre projet depuis l\'étranger.', icon: Home, isNew: true },
+  { title: 'Investissement Diaspora', href: '/solutions/diaspora-investment', description: 'Investissez dans l\'immobilier sénégalais.', icon: Globe, isNew: true },
+  { title: 'Suivi Projet Live', href: '/solutions/project-monitoring', description: 'Surveillez vos travaux en temps réel.', icon: Plane, isNew: true },
 ];
 
 const CollapsibleMobileMenu = ({ title, items, onClose }) => {

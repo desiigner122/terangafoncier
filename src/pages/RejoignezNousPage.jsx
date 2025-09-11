@@ -652,7 +652,7 @@ const RejoignezNousPage = () => {
                           onChange={handleInputChange}
                           required
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Votre nom complet"
+                          YOUR_API_KEY="Votre nom complet"
                         />
                       </div>
                       <div>
@@ -666,7 +666,7 @@ const RejoignezNousPage = () => {
                           onChange={handleInputChange}
                           required
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="votre@email.com"
+                          YOUR_API_KEY="votre@email.com"
                         />
                       </div>
                     </div>
@@ -683,7 +683,7 @@ const RejoignezNousPage = () => {
                           onChange={handleInputChange}
                           required
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="+221 XX XXX XX XX"
+                          YOUR_API_KEY="+221 XX XXX XX XX"
                         />
                       </div>
                       <div>
@@ -716,7 +716,7 @@ const RejoignezNousPage = () => {
                           value={formData.entreprise}
                           onChange={handleInputChange}
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Nom de votre entreprise"
+                          YOUR_API_KEY="Nom de votre entreprise"
                         />
                       </div>
                       <div>
@@ -730,7 +730,7 @@ const RejoignezNousPage = () => {
                           onChange={handleInputChange}
                           required
                           className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                          placeholder="Ville, Pays"
+                          YOUR_API_KEY="Ville, Pays"
                         />
                       </div>
                     </div>
@@ -763,7 +763,7 @@ const RejoignezNousPage = () => {
                         onChange={handleInputChange}
                         rows="4"
                         className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                        placeholder="Parlez-nous de votre projet, vos objectifs, vos questions..."
+                        YOUR_API_KEY="Parlez-nous de votre projet, vos objectifs, vos questions..."
                       ></textarea>
                     </div>
 

@@ -70,7 +70,7 @@ const AgentClientsPage = () => {
             <div className="relative flex-grow">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input 
-                placeholder="Rechercher un client..." 
+                YOUR_API_KEY="Rechercher un client..." 
                 className="pl-8"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
@@ -78,7 +78,7 @@ const AgentClientsPage = () => {
             </div>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
               <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Statut" />
+                <SelectValue YOUR_API_KEY="Statut" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>

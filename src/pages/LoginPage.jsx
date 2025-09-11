@@ -11,7 +11,7 @@
   LogIn, 
   AlertCircle
 } from 'lucide-react';
-    import { useAuth } from '@/contexts/AuthProvider';
+    import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
     const LoginPage = () => {
       const [email, setEmail] = useState('');
@@ -80,7 +80,7 @@
                   <Input
                     id="email"
                     type="email"
-                    placeholder="nom@exemple.com"
+                    YOUR_API_KEY="nom@exemple.com"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -95,7 +95,7 @@
                   <Input
                     id="password"
                     type="password"
-                    placeholder="********"
+                    YOUR_API_KEY="********"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}

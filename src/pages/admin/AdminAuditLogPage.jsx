@@ -110,24 +110,24 @@ const AdminAuditLogPage = () => {
         <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="relative">
                 <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                <Input placeholder="Rechercher..." className="pl-8" value={filters.searchTerm} onChange={e => handleFilterChange('searchTerm', e.target.value)} />
+                <Input YOUR_API_KEY="Rechercher..." className="pl-8" value={filters.searchTerm} onChange={e => handleFilterChange('searchTerm', e.target.value)} />
             </div>
             <Select onValueChange={value => handleFilterChange('user', value === 'all' ? '' : value)} value={filters.user}>
-                <SelectTrigger><SelectValue placeholder="Filtrer par utilisateur" /></SelectTrigger>
+                <SelectTrigger><SelectValue YOUR_API_KEY="Filtrer par utilisateur" /></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">Tous les utilisateurs</SelectItem>
                     {uniqueUsers.map(user => <SelectItem key={user} value={user}>{user}</SelectItem>)}
                 </SelectContent>
             </Select>
              <Select onValueChange={value => handleFilterChange('action', value === 'all' ? '' : value)} value={filters.action}>
-                <SelectTrigger><SelectValue placeholder="Filtrer par action" /></SelectTrigger>
+                <SelectTrigger><SelectValue YOUR_API_KEY="Filtrer par action" /></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">Toutes les actions</SelectItem>
                      {uniqueActions.map(action => <SelectItem key={action} value={action}>{action}</SelectItem>)}
                 </SelectContent>
             </Select>
             <Select onValueChange={value => handleFilterChange('entity', value === 'all' ? '' : value)} value={filters.entity}>
-                <SelectTrigger><SelectValue placeholder="Filtrer par entité" /></SelectTrigger>
+                <SelectTrigger><SelectValue YOUR_API_KEY="Filtrer par entité" /></SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">Toutes les entités</SelectItem>
                      {uniqueEntities.map(entity => <SelectItem key={entity} value={entity}>{entity}</SelectItem>)}

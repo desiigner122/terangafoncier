@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
@@ -31,22 +31,22 @@ const ConstructionRequestDetailPage = () => {
   const [showPaymentModal, setShowPaymentModal] = useState(false);
 
   useEffect(() => {
-    // Simulation de chargement des données de la demande de construction
+    // Simulation de chargement des donnÃ©es de la demande de construction
     const mockRequestData = {
       id: parseInt(id),
       title: "Villa Moderne avec Piscine - Almadies",
       client: "Fatou Diallo",
       location: {
-        address: "Almadies, Dakar, Sénégal",
+        address: "Almadies, Dakar, SÃ©nÃ©gal",
         coordinates: { latitude: 14.7536, longitude: -17.3159 },
-        zone: "Zone résidentielle premium"
+        zone: "Zone rÃ©sidentielle premium"
       },
       
-      // Détails du projet
-      projectType: "Construction résidentielle",
+      // DÃ©tails du projet
+      projectType: "Construction rÃ©sidentielle",
       buildingType: "Villa individuelle",
-      surface: "400m²",
-      terrain: "800m²",
+      surface: "400mÂ²",
+      terrain: "800mÂ²",
       rooms: "5 chambres, 3 salles de bain",
       floors: 2,
       
@@ -73,39 +73,39 @@ const ConstructionRequestDetailPage = () => {
       submittedDate: "2024-12-15",
       lastUpdate: "2025-01-05",
       
-      // Spécifications techniques
+      // SpÃ©cifications techniques
       specifications: {
         style: "Moderne contemporain",
-        materials: ["Béton armé", "Carrelage premium", "Aluminium"],
-        features: ["Piscine", "Garage 2 voitures", "Jardin paysager", "Système solaire"],
-        standards: ["Norme BCEAO", "Certification énergétique", "Normes sismiques"]
+        materials: ["BÃ©ton armÃ©", "Carrelage premium", "Aluminium"],
+        features: ["Piscine", "Garage 2 voitures", "Jardin paysager", "SystÃ¨me solaire"],
+        standards: ["Norme BCEAO", "Certification Ã©nergÃ©tique", "Normes sismiques"]
       },
       
       // Images et documents
       images: [
         'https://images.unsplash.com/photo-1570129477492-45c003edd2be?w=800&h=600&fit=crop', // Plan architectural
         'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop', // Terrain vue
-        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop', // Style souhaité
+        'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop', // Style souhaitÃ©
         'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=800&h=600&fit=crop'  // Inspiration
       ],
       
       documents: [
-        { name: 'Titre de Propriété', type: 'PDF', size: '1.2 MB', verified: true },
-        { name: 'Plans Préliminaires', type: 'PDF', size: '3.4 MB', verified: true },
-        { name: 'Étude de Faisabilité', type: 'PDF', size: '2.1 MB', verified: false },
+        { name: 'Titre de PropriÃ©tÃ©', type: 'PDF', size: '1.2 MB', verified: true },
+        { name: 'Plans PrÃ©liminaires', type: 'PDF', size: '3.4 MB', verified: true },
+        { name: 'Ã‰tude de FaisabilitÃ©', type: 'PDF', size: '2.1 MB', verified: false },
         { name: 'Dossier Bancaire', type: 'PDF', size: '0.8 MB', verified: true }
       ],
       
-      // Critères pour promoteurs
+      // CritÃ¨res pour promoteurs
       promoterCriteria: [
-        "Expérience minimum 5 ans construction villa",
-        "Portfolio projets résidentiels premium",
+        "ExpÃ©rience minimum 5 ans construction villa",
+        "Portfolio projets rÃ©sidentiels premium",
         "Certification BCEAO et assurances",
-        "Capacité financement partiel projet",
-        "Références clients vérifiables"
+        "CapacitÃ© financement partiel projet",
+        "RÃ©fÃ©rences clients vÃ©rifiables"
       ],
       
-      // Blockchain et sécurisation
+      // Blockchain et sÃ©curisation
       blockchain: {
         contractAddress: "0x742d35Cc6532C02bAB11789DA4D9A87d3b8C7421",
         tokenized: true,
@@ -114,13 +114,13 @@ const ConstructionRequestDetailPage = () => {
         escrowAmount: 5000000,
         milestones: [
           { phase: "Fondations", percentage: 25, amount: 15000000, status: "pending" },
-          { phase: "Élévation", percentage: 50, amount: 30000000, status: "pending" },
+          { phase: "Ã‰lÃ©vation", percentage: 50, amount: 30000000, status: "pending" },
           { phase: "Toiture", percentage: 75, amount: 20000000, status: "pending" },
           { phase: "Finitions", percentage: 100, amount: 20000000, status: "pending" }
         ]
       },
       
-      // Offres reçues
+      // Offres reÃ§ues
       proposals: [
         {
           promoterId: 1,
@@ -129,8 +129,8 @@ const ConstructionRequestDetailPage = () => {
           experience: "12 ans",
           proposedBudget: 82000000,
           timeline: "8 mois",
-          advantages: ["Prix compétitif", "Délai respecté", "Garantie 10 ans"],
-          status: "En négociation"
+          advantages: ["Prix compÃ©titif", "DÃ©lai respectÃ©", "Garantie 10 ans"],
+          status: "En nÃ©gociation"
         },
         {
           promoterId: 2,
@@ -139,8 +139,8 @@ const ConstructionRequestDetailPage = () => {
           experience: "15 ans",
           proposedBudget: 87000000,
           timeline: "7 mois",
-          advantages: ["Matériaux premium", "Design personnalisé", "Service clé en main"],
-          status: "Proposition reçue"
+          advantages: ["MatÃ©riaux premium", "Design personnalisÃ©", "Service clÃ© en main"],
+          status: "Proposition reÃ§ue"
         }
       ],
       
@@ -164,9 +164,9 @@ const ConstructionRequestDetailPage = () => {
     switch (status) {
       case 'Recherche promoteur':
         return { icon: <Building2 className="w-4 h-4" />, color: 'bg-blue-100 text-blue-800', bgColor: 'bg-blue-50' };
-      case 'En négociation':
+      case 'En nÃ©gociation':
         return { icon: <MessageCircle className="w-4 h-4" />, color: 'bg-orange-100 text-orange-800', bgColor: 'bg-orange-50' };
-      case 'Contrat signé':
+      case 'Contrat signÃ©':
         return { icon: <CheckCircle className="w-4 h-4" />, color: 'bg-green-100 text-green-800', bgColor: 'bg-green-50' };
       case 'En construction':
         return { icon: <Hammer className="w-4 h-4" />, color: 'bg-purple-100 text-purple-800', bgColor: 'bg-purple-50' };
@@ -200,7 +200,7 @@ const ConstructionRequestDetailPage = () => {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center">
         <div className="text-center">
-          <h2 className="text-2xl font-bold text-gray-600 mb-4">Demande non trouvée</h2>
+          <h2 className="text-2xl font-bold text-gray-600 mb-4">Demande non trouvÃ©e</h2>
           <Button onClick={() => navigate('/promoter-requests')}>
             Retour aux demandes
           </Button>
@@ -215,7 +215,7 @@ const ConstructionRequestDetailPage = () => {
     <>
       <Helmet>
         <title>{request.title} - Demande de Construction | Teranga Foncier</title>
-        <meta name="description" content={`Demande de construction: ${request.title}. Budget: ${request.budget.estimated.toLocaleString()} FCFA. Blockchain sécurisé.`} />
+        <meta name="description" content={`Demande de construction: ${request.title}. Budget: ${request.budget.estimated.toLocaleString()} FCFA. Blockchain sÃ©curisÃ©.`} />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -238,7 +238,7 @@ const ConstructionRequestDetailPage = () => {
                   <span className="ml-1">{request.status}</span>
                 </Badge>
                 <Badge className={getPriorityColor(request.priority)}>
-                  Priorité {request.priority}
+                  PrioritÃ© {request.priority}
                 </Badge>
               </div>
             </div>
@@ -335,7 +335,7 @@ const ConstructionRequestDetailPage = () => {
             <Tabs defaultValue="overview" className="space-y-8">
               <TabsList className="grid w-full grid-cols-5 lg:w-auto">
                 <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-                <TabsTrigger value="specifications">Spécifications</TabsTrigger>
+                <TabsTrigger value="specifications">SpÃ©cifications</TabsTrigger>
                 <TabsTrigger value="blockchain">Blockchain</TabsTrigger>
                 <TabsTrigger value="proposals">Propositions</TabsTrigger>
                 <TabsTrigger value="contact">Contact</TabsTrigger>
@@ -350,7 +350,7 @@ const ConstructionRequestDetailPage = () => {
                       <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                           <Info className="w-5 h-5" />
-                          Détails du Projet
+                          DÃ©tails du Projet
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="space-y-4">
@@ -368,8 +368,8 @@ const ConstructionRequestDetailPage = () => {
                             <p className="font-semibold">{request.terrain}</p>
                           </div>
                           <div>
-                            <span className="text-sm font-medium text-gray-500">Nombre d'étages</span>
-                            <p className="font-semibold">{request.floors} étages</p>
+                            <span className="text-sm font-medium text-gray-500">Nombre d'Ã©tages</span>
+                            <p className="font-semibold">{request.floors} Ã©tages</p>
                           </div>
                           <div className="md:col-span-2">
                             <span className="text-sm font-medium text-gray-500">Configuration</span>
@@ -392,7 +392,7 @@ const ConstructionRequestDetailPage = () => {
                             <div className="text-3xl font-bold text-blue-600 mb-2">
                               {request.budget.estimated.toLocaleString()} FCFA
                             </div>
-                            <p className="text-gray-600">Budget total estimé</p>
+                            <p className="text-gray-600">Budget total estimÃ©</p>
                           </div>
                           
                           <div className="grid md:grid-cols-3 gap-4">
@@ -412,7 +412,7 @@ const ConstructionRequestDetailPage = () => {
                               <div className="text-xl font-bold text-purple-600">
                                 {request.budget.breakdown.equipement.toLocaleString()}
                               </div>
-                              <div className="text-sm text-gray-600">Équipement</div>
+                              <div className="text-sm text-gray-600">Ã‰quipement</div>
                             </div>
                           </div>
 
@@ -426,13 +426,13 @@ const ConstructionRequestDetailPage = () => {
                                 </span>
                               </div>
                               <div className="flex justify-between">
-                                <span>Crédit bancaire:</span>
+                                <span>CrÃ©dit bancaire:</span>
                                 <span className="font-semibold text-blue-600">
                                   {request.budget.financing.bankLoan.toLocaleString()} FCFA
                                 </span>
                               </div>
                               <div className="flex justify-between border-t pt-2">
-                                <span className="font-semibold">Recherché:</span>
+                                <span className="font-semibold">RecherchÃ©:</span>
                                 <span className="font-semibold text-orange-600">
                                   {request.budget.financing.remainingNeeded.toLocaleString()} FCFA
                                 </span>
@@ -463,7 +463,7 @@ const ConstructionRequestDetailPage = () => {
                           <p className="font-semibold">{new Date(request.submittedDate).toLocaleDateString('fr-FR')}</p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">Dernière mise à jour</span>
+                          <span className="text-sm font-medium text-gray-500">DerniÃ¨re mise Ã  jour</span>
                           <p className="font-semibold">{new Date(request.lastUpdate).toLocaleDateString('fr-FR')}</p>
                         </div>
                       </CardContent>
@@ -504,12 +504,12 @@ const ConstructionRequestDetailPage = () => {
                 </div>
               </TabsContent>
 
-              {/* Spécifications techniques */}
+              {/* SpÃ©cifications techniques */}
               <TabsContent value="specifications" className="space-y-6">
                 <div className="grid lg:grid-cols-2 gap-8">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Style et Matériaux</CardTitle>
+                      <CardTitle>Style et MatÃ©riaux</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div>
@@ -517,7 +517,7 @@ const ConstructionRequestDetailPage = () => {
                         <p className="font-semibold">{request.specifications.style}</p>
                       </div>
                       <div>
-                        <span className="text-sm font-medium text-gray-500 block mb-2">Matériaux préférés</span>
+                        <span className="text-sm font-medium text-gray-500 block mb-2">MatÃ©riaux prÃ©fÃ©rÃ©s</span>
                         <div className="flex flex-wrap gap-2">
                           {request.specifications.materials.map((material, index) => (
                             <Badge key={index} variant="secondary">{material}</Badge>
@@ -529,7 +529,7 @@ const ConstructionRequestDetailPage = () => {
 
                   <Card>
                     <CardHeader>
-                      <CardTitle>Équipements Spéciaux</CardTitle>
+                      <CardTitle>Ã‰quipements SpÃ©ciaux</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="space-y-3">
@@ -587,7 +587,7 @@ const ConstructionRequestDetailPage = () => {
                           <p className="font-semibold">{request.blockchain.nftId}</p>
                         </div>
                         <div>
-                          <span className="text-sm font-medium text-gray-500">Montant en séquestre</span>
+                          <span className="text-sm font-medium text-gray-500">Montant en sÃ©questre</span>
                           <p className="font-semibold text-green-600">{request.blockchain.escrowAmount.toLocaleString()} FCFA</p>
                         </div>
                       </div>
@@ -605,7 +605,7 @@ const ConstructionRequestDetailPage = () => {
                             <div className="flex justify-between items-center">
                               <span className="font-medium">{milestone.phase}</span>
                               <Badge variant={milestone.status === 'pending' ? 'secondary' : 'default'}>
-                                {milestone.status === 'pending' ? 'En attente' : 'Complété'}
+                                {milestone.status === 'pending' ? 'En attente' : 'ComplÃ©tÃ©'}
                               </Badge>
                             </div>
                             <div className="flex justify-between text-sm text-gray-600">
@@ -621,7 +621,7 @@ const ConstructionRequestDetailPage = () => {
                 </div>
               </TabsContent>
 
-              {/* Propositions reçues */}
+              {/* Propositions reÃ§ues */}
               <TabsContent value="proposals" className="space-y-6">
                 <div className="space-y-6">
                   {request.proposals.map((proposal, index) => (
@@ -642,7 +642,7 @@ const ConstructionRequestDetailPage = () => {
                             </div>
                           </div>
                           <Badge className={
-                            proposal.status === 'En négociation' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
+                            proposal.status === 'En nÃ©gociation' ? 'bg-orange-100 text-orange-800' : 'bg-blue-100 text-blue-800'
                           }>
                             {proposal.status}
                           </Badge>
@@ -653,11 +653,11 @@ const ConstructionRequestDetailPage = () => {
                             <div className="text-2xl font-bold text-blue-600">
                               {proposal.proposedBudget.toLocaleString()} FCFA
                             </div>
-                            <div className="text-sm text-gray-600">Budget proposé</div>
+                            <div className="text-sm text-gray-600">Budget proposÃ©</div>
                           </div>
                           <div className="text-center p-4 bg-green-50 rounded-lg">
                             <div className="text-2xl font-bold text-green-600">{proposal.timeline}</div>
-                            <div className="text-sm text-gray-600">Délai de réalisation</div>
+                            <div className="text-sm text-gray-600">DÃ©lai de rÃ©alisation</div>
                           </div>
                           <div className="text-center p-4 bg-purple-50 rounded-lg">
                             <div className="text-2xl font-bold text-purple-600">{proposal.advantages.length}</div>
@@ -685,7 +685,7 @@ const ConstructionRequestDetailPage = () => {
                             <MessageCircle className="w-4 h-4 mr-2" />
                             Contacter
                           </Button>
-                          {proposal.status === 'Proposition reçue' && (
+                          {proposal.status === 'Proposition reÃ§ue' && (
                             <Button size="sm" variant="outline" className="flex-1">
                               <CheckCircle className="w-4 h-4 mr-2" />
                               Accepter
@@ -701,10 +701,10 @@ const ConstructionRequestDetailPage = () => {
                       <CardContent className="text-center py-12">
                         <Building2 className="w-16 h-16 text-gray-300 mx-auto mb-4" />
                         <h3 className="text-xl font-semibold text-gray-600 mb-2">
-                          Aucune proposition reçue
+                          Aucune proposition reÃ§ue
                         </h3>
                         <p className="text-gray-500 mb-6">
-                          Soyez le premier promoteur à proposer vos services pour ce projet
+                          Soyez le premier promoteur Ã  proposer vos services pour ce projet
                         </p>
                         <Button onClick={() => setShowProposalModal(true)}>
                           <Hammer className="w-4 h-4 mr-2" />
@@ -746,7 +746,7 @@ const ConstructionRequestDetailPage = () => {
                     </div>
 
                     <div className="border-t pt-6">
-                      <h4 className="font-semibold mb-4">Critères de Sélection Promoteur</h4>
+                      <h4 className="font-semibold mb-4">CritÃ¨res de SÃ©lection Promoteur</h4>
                       <div className="space-y-3">
                         {request.promoterCriteria.map((criteria, index) => (
                           <div key={index} className="flex items-start gap-2">
@@ -777,9 +777,9 @@ const ConstructionRequestDetailPage = () => {
         {/* CTA Section */}
         <section className="py-12 bg-gradient-to-r from-blue-600 to-indigo-600">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center text-white">
-            <h2 className="text-3xl font-bold mb-4">Intéressé par ce projet ?</h2>
+            <h2 className="text-3xl font-bold mb-4">IntÃ©ressÃ© par ce projet ?</h2>
             <p className="text-xl mb-8 opacity-90">
-              Contactez le client ou soumettez votre proposition dès maintenant
+              Contactez le client ou soumettez votre proposition dÃ¨s maintenant
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button 
@@ -838,14 +838,14 @@ const ConstructionRequestDetailPage = () => {
           <div className="space-y-6">
             <div className="grid md:grid-cols-2 gap-4">
               <div>
-                <Label>Budget proposé (FCFA)</Label>
-                <Input placeholder="75,000,000" />
+                <Label>Budget proposÃ© (FCFA)</Label>
+                <Input YOUR_API_KEY="75,000,000" />
               </div>
               <div>
-                <Label>Délai de réalisation</Label>
+                <Label>DÃ©lai de rÃ©alisation</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue placeholder="Choisir" />
+                    <SelectValue YOUR_API_KEY="Choisir" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="6">6 mois</SelectItem>
@@ -859,19 +859,19 @@ const ConstructionRequestDetailPage = () => {
             </div>
             
             <div>
-              <Label>Message de présentation</Label>
+              <Label>Message de prÃ©sentation</Label>
               <Textarea 
-                placeholder="Présentez votre entreprise, votre expérience et vos points forts pour ce projet..."
+                YOUR_API_KEY="PrÃ©sentez votre entreprise, votre expÃ©rience et vos points forts pour ce projet..."
                 rows={4}
               />
             </div>
 
             <div>
-              <Label>Documents à joindre</Label>
+              <Label>Documents Ã  joindre</Label>
               <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
                 <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
                 <p className="text-gray-600">Glissez vos fichiers ici ou cliquez pour parcourir</p>
-                <p className="text-sm text-gray-500 mt-1">Portfolio, certifications, références...</p>
+                <p className="text-sm text-gray-500 mt-1">Portfolio, certifications, rÃ©fÃ©rences...</p>
               </div>
             </div>
 

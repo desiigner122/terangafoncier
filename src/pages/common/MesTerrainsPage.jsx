@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,7 @@ const MesTerrainsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
-  // Statuts des propriétés
+  // Statuts des propriÃ©tÃ©s
   const propertyStatuses = {
     active: { label: 'Active', color: 'bg-green-500', textColor: 'text-green-700' },
     pending: { label: 'En attente', color: 'bg-yellow-500', textColor: 'text-yellow-700' },
@@ -47,39 +47,39 @@ const MesTerrainsPage = () => {
     inactive: { label: 'Inactive', color: 'bg-red-500', textColor: 'text-red-700' }
   };
 
-  // Données simulées pour les propriétés
+  // DonnÃ©es simulÃ©es pour les propriÃ©tÃ©s
   const mockProperties = [
     {
       id: 1,
-      title: 'Terrain résidentiel Almadies',
-      description: 'Magnifique terrain de 500m² situé dans le quartier prisé des Almadies, proche de la mer.',
+      title: 'Terrain rÃ©sidentiel Almadies',
+      description: 'Magnifique terrain de 500mÂ² situÃ© dans le quartier prisÃ© des Almadies, proche de la mer.',
       location: 'Almadies, Dakar',
       area: 500,
       price: 125000000,
       currency: 'FCFA',
       status: 'active',
       type: 'residential',
-      images: ['/api/placeholder/400/300', '/api/placeholder/400/300'],
+      images: ['/api/YOUR_API_KEY/400/300', '/api/YOUR_API_KEY/400/300'],
       createdAt: new Date('2024-01-15'),
       updatedAt: new Date('2024-01-20'),
       views: 45,
       favorites: 8,
       inquiries: 3,
-      features: ['Proche mer', 'Zone résidentielle', 'Accès facile'],
+      features: ['Proche mer', 'Zone rÃ©sidentielle', 'AccÃ¨s facile'],
       owner: profile?.role === 'VENDEUR',
       isFavorite: false
     },
     {
       id: 2,
       title: 'Terrain commercial Plateau',
-      description: 'Emplacement stratégique au cœur du Plateau pour projet commercial ou bureau.',
+      description: 'Emplacement stratÃ©gique au cÅ“ur du Plateau pour projet commercial ou bureau.',
       location: 'Plateau, Dakar',
       area: 300,
       price: 200000000,
       currency: 'FCFA',
       status: 'pending',
       type: 'commercial',
-      images: ['/api/placeholder/400/300'],
+      images: ['/api/YOUR_API_KEY/400/300'],
       createdAt: new Date('2024-01-10'),
       updatedAt: new Date('2024-01-22'),
       views: 67,
@@ -91,50 +91,50 @@ const MesTerrainsPage = () => {
     },
     {
       id: 3,
-      title: 'Terrain agricole Thiès',
-      description: 'Grande parcelle agricole fertile, idéale pour l\'agriculture moderne.',
-      location: 'Thiès, Région de Thiès',
+      title: 'Terrain agricole ThiÃ¨s',
+      description: 'Grande parcelle agricole fertile, idÃ©ale pour l\'agriculture moderne.',
+      location: 'ThiÃ¨s, RÃ©gion de ThiÃ¨s',
       area: 2000,
       price: 50000000,
       currency: 'FCFA',
       status: 'active',
       type: 'agricultural',
-      images: ['/api/placeholder/400/300', '/api/placeholder/400/300', '/api/placeholder/400/300'],
+      images: ['/api/YOUR_API_KEY/400/300', '/api/YOUR_API_KEY/400/300', '/api/YOUR_API_KEY/400/300'],
       createdAt: new Date('2024-01-05'),
       updatedAt: new Date('2024-01-18'),
       views: 23,
       favorites: 4,
       inquiries: 2,
-      features: ['Sol fertile', 'Irrigation possible', 'Accès route'],
+      features: ['Sol fertile', 'Irrigation possible', 'AccÃ¨s route'],
       owner: profile?.role !== 'VENDEUR',
       isFavorite: false
     },
     {
       id: 4,
       title: 'Terrain industriel Rufisque',
-      description: 'Zone industrielle avec toutes les commodités pour projet manufacturier.',
+      description: 'Zone industrielle avec toutes les commoditÃ©s pour projet manufacturier.',
       location: 'Rufisque, Dakar',
       area: 1500,
       price: 180000000,
       currency: 'FCFA',
       status: 'sold',
       type: 'industrial',
-      images: ['/api/placeholder/400/300'],
+      images: ['/api/YOUR_API_KEY/400/300'],
       createdAt: new Date('2023-12-20'),
       updatedAt: new Date('2024-01-10'),
       views: 89,
       favorites: 15,
       inquiries: 12,
-      features: ['Zone industrielle', 'Électricité 3 phases', 'Sécurité'],
+      features: ['Zone industrielle', 'Ã‰lectricitÃ© 3 phases', 'SÃ©curitÃ©'],
       owner: profile?.role === 'VENDEUR',
       isFavorite: false
     }
   ];
 
   useEffect(() => {
-    // Simuler le chargement des propriétés
+    // Simuler le chargement des propriÃ©tÃ©s
     setTimeout(() => {
-      // Filtrer selon le rôle de l'utilisateur
+      // Filtrer selon le rÃ´le de l'utilisateur
       if (profile?.role === 'VENDEUR') {
         setProperties(mockProperties.filter(p => p.owner));
       } else {
@@ -144,7 +144,7 @@ const MesTerrainsPage = () => {
     }, 1000);
   }, [profile]);
 
-  // Filtrer les propriétés
+  // Filtrer les propriÃ©tÃ©s
   const filteredProperties = properties.filter(property => {
     const matchesSearch = property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          property.location.toLowerCase().includes(searchTerm.toLowerCase());
@@ -167,14 +167,14 @@ const MesTerrainsPage = () => {
     return new Intl.NumberFormat('fr-FR').format(price) + ' ' + currency;
   };
 
-  // Obtenir l'icône du type
+  // Obtenir l'icÃ´ne du type
   const getTypeIcon = (type) => {
     switch (type) {
-      case 'residential': return '🏠';
-      case 'commercial': return '🏢';
-      case 'agricultural': return '🌾';
-      case 'industrial': return '🏭';
-      default: return '📍';
+      case 'residential': return 'ðŸ ';
+      case 'commercial': return 'ðŸ¢';
+      case 'agricultural': return 'ðŸŒ¾';
+      case 'industrial': return 'ðŸ­';
+      default: return 'ðŸ“';
     }
   };
 
@@ -202,11 +202,11 @@ const MesTerrainsPage = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <MapPin className="w-8 h-8 text-primary" />
-            {profile?.role === 'VENDEUR' ? 'Mes Propriétés' : 'Mes Terrains'}
+            {profile?.role === 'VENDEUR' ? 'Mes PropriÃ©tÃ©s' : 'Mes Terrains'}
           </h1>
           <p className="text-gray-600 mt-2">
             {profile?.role === 'VENDEUR' 
-              ? 'Gérez vos annonces et suivez leurs performances' 
+              ? 'GÃ©rez vos annonces et suivez leurs performances' 
               : 'Suivez vos terrains favoris et vos investissements'
             }
           </p>
@@ -221,7 +221,7 @@ const MesTerrainsPage = () => {
           {profile?.role === 'VENDEUR' && (
             <Button>
               <Plus className="w-4 h-4 mr-2" />
-              Ajouter une propriété
+              Ajouter une propriÃ©tÃ©
             </Button>
           )}
         </div>
@@ -274,7 +274,7 @@ const MesTerrainsPage = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                 <Input 
-                  placeholder="Rechercher des propriétés..."
+                  YOUR_API_KEY="Rechercher des propriÃ©tÃ©s..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -295,7 +295,7 @@ const MesTerrainsPage = () => {
         </CardContent>
       </Card>
 
-      {/* Liste des propriétés */}
+      {/* Liste des propriÃ©tÃ©s */}
       <div className="space-y-6">
         {viewMode === 'grid' ? (
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -364,7 +364,7 @@ const MesTerrainsPage = () => {
                             {formatPrice(property.price, property.currency)}
                           </div>
                           <div className="text-sm text-gray-600">
-                            {property.area}m² • {(property.price / property.area).toLocaleString()} FCFA/m²
+                            {property.area}mÂ² â€¢ {(property.price / property.area).toLocaleString()} FCFA/mÂ²
                           </div>
                         </div>
                         <div className="text-right text-sm text-gray-600">
@@ -391,7 +391,7 @@ const MesTerrainsPage = () => {
 
                       <div className="flex items-center justify-between pt-3 border-t">
                         <div className="text-xs text-gray-500">
-                          Mis à jour {property.updatedAt.toLocaleDateString('fr-FR')}
+                          Mis Ã  jour {property.updatedAt.toLocaleDateString('fr-FR')}
                         </div>
                         <div className="flex items-center gap-1">
                           <Button variant="outline" size="sm">
@@ -457,7 +457,7 @@ const MesTerrainsPage = () => {
                                 {formatPrice(property.price, property.currency)}
                               </div>
                               <div className="text-sm text-gray-600">
-                                {property.area}m²
+                                {property.area}mÂ²
                               </div>
                             </div>
                             
@@ -513,19 +513,19 @@ const MesTerrainsPage = () => {
         {filteredProperties.length === 0 && (
           <div className="text-center py-12">
             <MapPin className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-500 mb-2">Aucune propriété trouvée</h3>
+            <h3 className="text-lg font-semibold text-gray-500 mb-2">Aucune propriÃ©tÃ© trouvÃ©e</h3>
             <p className="text-gray-400 mb-4">
               {searchTerm 
                 ? 'Essayez de modifier votre recherche' 
                 : profile?.role === 'VENDEUR' 
-                  ? 'Commencez par ajouter votre première propriété'
+                  ? 'Commencez par ajouter votre premiÃ¨re propriÃ©tÃ©'
                   : 'Commencez par explorer nos terrains disponibles'
               }
             </p>
             {profile?.role === 'VENDEUR' && (
               <Button>
                 <Plus className="w-4 h-4 mr-2" />
-                Ajouter une propriété
+                Ajouter une propriÃ©tÃ©
               </Button>
             )}
           </div>

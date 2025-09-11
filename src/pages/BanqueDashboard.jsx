@@ -22,6 +22,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
+import { AIEstimationWidget, AIMarketInsights } from '../components/AIComponents';
 
 const BanqueDashboard = () => {
   const [activeSection, setActiveSection] = useState('credits');
@@ -638,6 +639,12 @@ const BanqueDashboard = () => {
               </div>
             </motion.div>
           ))}
+        </div>
+
+        {/* 🚀 WIDGETS IA TERANGA - SPÉCIALISATION BANQUES */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+          <AIEstimationWidget className="w-full" />
+          <AIMarketInsights region="Dakar" className="w-full" />
         </div>
 
         <div className="flex flex-col lg:flex-row gap-8">

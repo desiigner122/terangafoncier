@@ -116,7 +116,7 @@ const SecurityInfoStep = ({ data, errors, onNext, isLoading, role }) => {
               className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 securityErrors.password ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Créez un mot de passe sécurisé"
+              YOUR_API_KEY="Créez un mot de passe sécurisé"
               required
             />
             <button
@@ -150,7 +150,7 @@ const SecurityInfoStep = ({ data, errors, onNext, isLoading, role }) => {
               className={`w-full px-3 py-2 pr-10 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 securityErrors.confirmPassword ? 'border-red-500' : 'border-gray-300'
               }`}
-              placeholder="Confirmez votre mot de passe"
+              YOUR_API_KEY="Confirmez votre mot de passe"
               required
             />
             <button

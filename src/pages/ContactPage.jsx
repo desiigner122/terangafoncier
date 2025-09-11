@@ -256,7 +256,7 @@ const ContactPage = () => {
                             id="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            placeholder="Votre nom complet"
+                            YOUR_API_KEY="Votre nom complet"
                             required
                           />
                         </div>
@@ -267,7 +267,7 @@ const ContactPage = () => {
                             type="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            placeholder="votre@email.com"
+                            YOUR_API_KEY="votre@email.com"
                             required
                           />
                         </div>
@@ -280,7 +280,7 @@ const ContactPage = () => {
                             id="phone"
                             value={formData.phone}
                             onChange={handleInputChange}
-                            placeholder="+221 XX XXX XX XX"
+                            YOUR_API_KEY="+221 XX XXX XX XX"
                           />
                         </div>
                         <div>
@@ -290,7 +290,7 @@ const ContactPage = () => {
                             onValueChange={(value) => handleSelectChange('category', value)}
                           >
                             <SelectTrigger>
-                              <SelectValue placeholder="Choisissez une catégorie" />
+                              <SelectValue YOUR_API_KEY="Choisissez une catégorie" />
                             </SelectTrigger>
                             <SelectContent>
                               <SelectItem value="terrain">Achat de terrain</SelectItem>
@@ -310,7 +310,7 @@ const ContactPage = () => {
                           id="subject"
                           value={formData.subject}
                           onChange={handleInputChange}
-                          placeholder="Le sujet de votre message"
+                          YOUR_API_KEY="Le sujet de votre message"
                           required
                         />
                       </div>
@@ -321,7 +321,7 @@ const ContactPage = () => {
                           id="message"
                           value={formData.message}
                           onChange={handleInputChange}
-                          placeholder="Décrivez votre projet ou votre question en détail..."
+                          YOUR_API_KEY="Décrivez votre projet ou votre question en détail..."
                           rows={5}
                           required
                         />

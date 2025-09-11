@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -89,7 +89,7 @@ const PromoterConstructionRequestsPage = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   
-  // États pour les demandes
+  // Ã‰tats pour les demandes
   const [requests, setRequests] = useState([]);
   const [filteredRequests, setFilteredRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -103,7 +103,7 @@ const PromoterConstructionRequestsPage = () => {
   const [showFilters, setShowFilters] = useState(false);
   const [favorites, setFavorites] = useState([]);
 
-  // États pour nouvelle demande
+  // Ã‰tats pour nouvelle demande
   const [newRequest, setNewRequest] = useState({
     title: '',
     type: '',
@@ -117,7 +117,7 @@ const PromoterConstructionRequestsPage = () => {
     urgent: false
   });
 
-  // Données mockées des demandes de construction
+  // DonnÃ©es mockÃ©es des demandes de construction
   useEffect(() => {
     const mockRequests = [
       {
@@ -141,8 +141,8 @@ const PromoterConstructionRequestsPage = () => {
           verified: true
         },
         details: {
-          surface: '400m²',
-          terrain: '800m²',
+          surface: '400mÂ²',
+          terrain: '800mÂ²',
           rooms: '5 chambres, 3 salles de bain',
           features: ['Piscine', 'Garage 2 voitures', 'Jardin paysager', 'Panneaux solaires'],
           style: 'Moderne contemporain'
@@ -162,11 +162,11 @@ const PromoterConstructionRequestsPage = () => {
       },
       {
         id: 2,
-        title: 'Résidence de 8 Appartements - Sicap',
-        type: 'Immeuble résidentiel',
-        status: 'En négociation',
+        title: 'RÃ©sidence de 8 Appartements - Sicap',
+        type: 'Immeuble rÃ©sidentiel',
+        status: 'En nÃ©gociation',
         priority: 'Moyenne',
-        location: 'Sicap Liberté, Dakar',
+        location: 'Sicap LibertÃ©, Dakar',
         budget: {
           min: 200000000,
           max: 280000000,
@@ -181,10 +181,10 @@ const PromoterConstructionRequestsPage = () => {
           verified: true
         },
         details: {
-          surface: '1200m²',
-          terrain: '600m²',
+          surface: '1200mÂ²',
+          terrain: '600mÂ²',
           rooms: '8 appartements (T3 et T4)',
-          features: ['Ascenseur', 'Parking souterrain', 'Terrasse commune', 'Système sécurité'],
+          features: ['Ascenseur', 'Parking souterrain', 'Terrasse commune', 'SystÃ¨me sÃ©curitÃ©'],
           style: 'Moderne urbain'
         },
         timeline: '12-15 mois',
@@ -213,7 +213,7 @@ const PromoterConstructionRequestsPage = () => {
           estimated: 600000000
         },
         client: {
-          name: 'SCI Développement Rufisque',
+          name: 'SCI DÃ©veloppement Rufisque',
           type: 'SCI',
           location: 'Rufisque',
           phone: '+221 33 987 65 43',
@@ -221,10 +221,10 @@ const PromoterConstructionRequestsPage = () => {
           verified: true
         },
         details: {
-          surface: '3000m²',
-          terrain: '5000m²',
-          rooms: '50 boutiques + supermarché + restaurants',
-          features: ['Parking 200 places', 'Climatisation centrale', 'Groupe électrogène', 'Sécurité 24h'],
+          surface: '3000mÂ²',
+          terrain: '5000mÂ²',
+          rooms: '50 boutiques + supermarchÃ© + restaurants',
+          features: ['Parking 200 places', 'Climatisation centrale', 'Groupe Ã©lectrogÃ¨ne', 'SÃ©curitÃ© 24h'],
           style: 'Architecture moderne'
         },
         timeline: '18-24 mois',
@@ -242,11 +242,11 @@ const PromoterConstructionRequestsPage = () => {
       },
       {
         id: 4,
-        title: 'Rénovation Villa Coloniale - Fann',
-        type: 'Rénovation',
+        title: 'RÃ©novation Villa Coloniale - Fann',
+        type: 'RÃ©novation',
         status: 'Urgent',
         priority: 'Haute',
-        location: 'Fann Résidence, Dakar',
+        location: 'Fann RÃ©sidence, Dakar',
         budget: {
           min: 35000000,
           max: 55000000,
@@ -261,11 +261,11 @@ const PromoterConstructionRequestsPage = () => {
           verified: false
         },
         details: {
-          surface: '250m²',
-          terrain: '400m²',
+          surface: '250mÂ²',
+          terrain: '400mÂ²',
           rooms: '4 chambres + salon + bureau',
-          features: ['Conservation caractère colonial', 'Modernisation électricité', 'Nouvelle plomberie', 'Jardin'],
-          style: 'Colonial rénové'
+          features: ['Conservation caractÃ¨re colonial', 'Modernisation Ã©lectricitÃ©', 'Nouvelle plomberie', 'Jardin'],
+          style: 'Colonial rÃ©novÃ©'
         },
         timeline: '4-6 mois',
         deadline: '2025-04-01',
@@ -282,9 +282,9 @@ const PromoterConstructionRequestsPage = () => {
       },
       {
         id: 5,
-        title: 'Complexe Résidentiel - VDN',
-        type: 'Complexe résidentiel',
-        status: 'Étude de faisabilité',
+        title: 'Complexe RÃ©sidentiel - VDN',
+        type: 'Complexe rÃ©sidentiel',
+        status: 'Ã‰tude de faisabilitÃ©',
         priority: 'Moyenne',
         location: 'VDN, Dakar',
         budget: {
@@ -293,7 +293,7 @@ const PromoterConstructionRequestsPage = () => {
           estimated: 1500000000
         },
         client: {
-          name: 'Promo Habitat Sénégal',
+          name: 'Promo Habitat SÃ©nÃ©gal',
           type: 'Promoteur',
           location: 'Dakar',
           phone: '+221 33 456 78 90',
@@ -301,11 +301,11 @@ const PromoterConstructionRequestsPage = () => {
           verified: true
         },
         details: {
-          surface: '8000m²',
-          terrain: '15000m²',
-          rooms: '120 logements (F2 à F5)',
+          surface: '8000mÂ²',
+          terrain: '15000mÂ²',
+          rooms: '120 logements (F2 Ã  F5)',
           features: ['Piscine commune', 'Salle de sport', 'Espaces verts', 'Gardiennage', 'Playground'],
-          style: 'Résidentiel haut standing'
+          style: 'RÃ©sidentiel haut standing'
         },
         timeline: '30-36 mois',
         deadline: '2026-01-01',
@@ -324,7 +324,7 @@ const PromoterConstructionRequestsPage = () => {
         id: 6,
         title: 'Bureaux Modernes - Mermoz',
         type: 'Bureau',
-        status: 'Financement confirmé',
+        status: 'Financement confirmÃ©',
         priority: 'Basse',
         location: 'Mermoz, Dakar',
         budget: {
@@ -341,10 +341,10 @@ const PromoterConstructionRequestsPage = () => {
           verified: true
         },
         details: {
-          surface: '800m²',
-          terrain: '1000m²',
-          rooms: 'Open space + 10 bureaux privés + salles réunion',
-          features: ['Fibre optique', 'Climatisation', 'Parkings', 'Système audiovisuel'],
+          surface: '800mÂ²',
+          terrain: '1000mÂ²',
+          rooms: 'Open space + 10 bureaux privÃ©s + salles rÃ©union',
+          features: ['Fibre optique', 'Climatisation', 'Parkings', 'SystÃ¨me audiovisuel'],
           style: 'Moderne tech'
         },
         timeline: '8-12 mois',
@@ -440,15 +440,15 @@ const PromoterConstructionRequestsPage = () => {
     switch (status) {
       case 'Recherche promoteur':
         return { color: 'bg-blue-100 text-blue-800', icon: <Building2 className="w-4 h-4" /> };
-      case 'En négociation':
+      case 'En nÃ©gociation':
         return { color: 'bg-orange-100 text-orange-800', icon: <MessageSquare className="w-4 h-4" /> };
       case 'Urgent':
         return { color: 'bg-red-100 text-red-800', icon: <AlertCircle className="w-4 h-4" /> };
-      case 'Financement confirmé':
+      case 'Financement confirmÃ©':
         return { color: 'bg-green-100 text-green-800', icon: <CheckCircle className="w-4 h-4" /> };
       case 'Ouvert aux propositions':
         return { color: 'bg-purple-100 text-purple-800', icon: <Hammer className="w-4 h-4" /> };
-      case 'Étude de faisabilité':
+      case 'Ã‰tude de faisabilitÃ©':
         return { color: 'bg-yellow-100 text-yellow-800', icon: <FileText className="w-4 h-4" /> };
       default:
         return { color: 'bg-gray-100 text-gray-800', icon: <Clock className="w-4 h-4" /> };
@@ -504,7 +504,7 @@ const PromoterConstructionRequestsPage = () => {
     <>
       <Helmet>
         <title>Demandes de Construction - Promoteurs | Teranga Foncier</title>
-        <meta name="description" content="Découvrez les demandes de construction de villas, immeubles et projets immobiliers au Sénégal. Sécurisé par blockchain." />
+        <meta name="description" content="DÃ©couvrez les demandes de construction de villas, immeubles et projets immobiliers au SÃ©nÃ©gal. SÃ©curisÃ© par blockchain." />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
@@ -521,7 +521,7 @@ const PromoterConstructionRequestsPage = () => {
                 Demandes de <span className="text-yellow-300">Construction</span>
               </h1>
               <p className="text-xl md:text-2xl mb-8 opacity-90">
-                Découvrez des projets immobiliers sécurisés par blockchain
+                DÃ©couvrez des projets immobiliers sÃ©curisÃ©s par blockchain
               </p>
               
               {/* Statistiques */}
@@ -578,7 +578,7 @@ const PromoterConstructionRequestsPage = () => {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
-                  placeholder="Rechercher par titre, lieu, client..."
+                  YOUR_API_KEY="Rechercher par titre, lieu, client..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -589,30 +589,30 @@ const PromoterConstructionRequestsPage = () => {
               <div className="flex items-center gap-3 flex-wrap">
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Tous les statuts" />
+                    <SelectValue YOUR_API_KEY="Tous les statuts" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les statuts</SelectItem>
                     <SelectItem value="Recherche promoteur">Recherche promoteur</SelectItem>
-                    <SelectItem value="En négociation">En négociation</SelectItem>
+                    <SelectItem value="En nÃ©gociation">En nÃ©gociation</SelectItem>
                     <SelectItem value="Urgent">Urgent</SelectItem>
-                    <SelectItem value="Financement confirmé">Financement confirmé</SelectItem>
+                    <SelectItem value="Financement confirmÃ©">Financement confirmÃ©</SelectItem>
                     <SelectItem value="Ouvert aux propositions">Ouvert aux propositions</SelectItem>
-                    <SelectItem value="Étude de faisabilité">Étude de faisabilité</SelectItem>
+                    <SelectItem value="Ã‰tude de faisabilitÃ©">Ã‰tude de faisabilitÃ©</SelectItem>
                   </SelectContent>
                 </Select>
 
                 <Select value={selectedType} onValueChange={setSelectedType}>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Type de projet" />
+                    <SelectValue YOUR_API_KEY="Type de projet" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les types</SelectItem>
                     <SelectItem value="Villa individuelle">Villa individuelle</SelectItem>
-                    <SelectItem value="Immeuble résidentiel">Immeuble résidentiel</SelectItem>
+                    <SelectItem value="Immeuble rÃ©sidentiel">Immeuble rÃ©sidentiel</SelectItem>
                     <SelectItem value="Commercial">Commercial</SelectItem>
-                    <SelectItem value="Rénovation">Rénovation</SelectItem>
-                    <SelectItem value="Complexe résidentiel">Complexe résidentiel</SelectItem>
+                    <SelectItem value="RÃ©novation">RÃ©novation</SelectItem>
+                    <SelectItem value="Complexe rÃ©sidentiel">Complexe rÃ©sidentiel</SelectItem>
                     <SelectItem value="Bureau">Bureau</SelectItem>
                   </SelectContent>
                 </Select>
@@ -623,7 +623,7 @@ const PromoterConstructionRequestsPage = () => {
                   className="flex items-center gap-2"
                 >
                   <Filter className="w-4 h-4" />
-                  Filtres avancés
+                  Filtres avancÃ©s
                 </Button>
 
                 <div className="flex items-center gap-2">
@@ -645,7 +645,7 @@ const PromoterConstructionRequestsPage = () => {
               </div>
             </div>
 
-            {/* Filtres avancés (repliables) */}
+            {/* Filtres avancÃ©s (repliables) */}
             <AnimatePresence>
               {showFilters && (
                 <motion.div
@@ -659,7 +659,7 @@ const PromoterConstructionRequestsPage = () => {
                       <Label>Gamme de prix</Label>
                       <Select value={selectedPriceRange} onValueChange={setSelectedPriceRange}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Toutes les gammes" />
+                          <SelectValue YOUR_API_KEY="Toutes les gammes" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Toutes les gammes</SelectItem>
@@ -675,7 +675,7 @@ const PromoterConstructionRequestsPage = () => {
                       <Label>Localisation</Label>
                       <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Toutes les zones" />
+                          <SelectValue YOUR_API_KEY="Toutes les zones" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Toutes les zones</SelectItem>
@@ -693,13 +693,13 @@ const PromoterConstructionRequestsPage = () => {
                       <Label>Trier par</Label>
                       <Select value={sortBy} onValueChange={setSortBy}>
                         <SelectTrigger>
-                          <SelectValue placeholder="Trier par" />
+                          <SelectValue YOUR_API_KEY="Trier par" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="latest">Plus récents</SelectItem>
-                          <SelectItem value="budget_high">Budget décroissant</SelectItem>
+                          <SelectItem value="latest">Plus rÃ©cents</SelectItem>
+                          <SelectItem value="budget_high">Budget dÃ©croissant</SelectItem>
                           <SelectItem value="budget_low">Budget croissant</SelectItem>
-                          <SelectItem value="deadline">Échéance proche</SelectItem>
+                          <SelectItem value="deadline">Ã‰chÃ©ance proche</SelectItem>
                           <SelectItem value="proposals">Nombre de propositions</SelectItem>
                         </SelectContent>
                       </Select>
@@ -722,10 +722,10 @@ const PromoterConstructionRequestsPage = () => {
               >
                 <Building2 className="w-24 h-24 text-gray-300 mx-auto mb-6" />
                 <h3 className="text-2xl font-semibold text-gray-600 mb-4">
-                  Aucune demande trouvée
+                  Aucune demande trouvÃ©e
                 </h3>
                 <p className="text-gray-500 mb-6">
-                  Essayez de modifier vos critères de recherche
+                  Essayez de modifier vos critÃ¨res de recherche
                 </p>
                 <Button onClick={() => {
                   setSearchTerm('');
@@ -734,7 +734,7 @@ const PromoterConstructionRequestsPage = () => {
                   setSelectedPriceRange('all');
                   setSelectedLocation('all');
                 }}>
-                  Réinitialiser les filtres
+                  RÃ©initialiser les filtres
                 </Button>
               </motion.div>
             ) : (
@@ -843,7 +843,7 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
 
               <div className="flex items-center gap-2 text-gray-600">
                 <Calendar className="w-4 h-4" />
-                <span className="text-sm">Échéance: {new Date(request.deadline).toLocaleDateString('fr-FR')}</span>
+                <span className="text-sm">Ã‰chÃ©ance: {new Date(request.deadline).toLocaleDateString('fr-FR')}</span>
               </div>
             </div>
 
@@ -886,7 +886,7 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
                 }}
               >
                 <Eye className="w-4 h-4 mr-2" />
-                Voir détails
+                Voir dÃ©tails
               </Button>
               <Button 
                 size="sm" 
@@ -948,7 +948,7 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
                   <p className="font-semibold">{request.details.surface}</p>
                 </div>
                 <div>
-                  <span className="text-sm text-gray-500">Délai</span>
+                  <span className="text-sm text-gray-500">DÃ©lai</span>
                   <p className="font-semibold">{request.timeline}</p>
                 </div>
                 <div>
@@ -960,9 +960,9 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-4 text-sm text-gray-500">
                   <span>Par {request.client.name}</span>
-                  <span>•</span>
+                  <span>â€¢</span>
                   <span>{new Date(request.created_date).toLocaleDateString('fr-FR')}</span>
-                  <span>•</span>
+                  <span>â€¢</span>
                   <span>{request.views} vues</span>
                 </div>
 
@@ -984,7 +984,7 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
                   </Button>
                   <Button size="sm">
                     <Eye className="w-4 h-4 mr-2" />
-                    Voir détails
+                    Voir dÃ©tails
                   </Button>
                 </div>
               </div>

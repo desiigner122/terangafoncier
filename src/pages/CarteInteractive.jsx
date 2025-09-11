@@ -284,7 +284,7 @@ const CarteInteractive = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <Input
-                  placeholder="Rechercher terrain par lieu, prix..."
+                  YOUR_API_KEY="Rechercher terrain par lieu, prix..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="pl-10 w-64"
@@ -571,7 +571,7 @@ const CarteInteractive = () => {
                         <label className="block text-sm font-medium mb-1">Type d'alerte</label>
                         <Select>
                           <SelectTrigger>
-                            <SelectValue placeholder="Choisir le type" />
+                            <SelectValue YOUR_API_KEY="Choisir le type" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="price">Baisse de prix</SelectItem>
@@ -586,7 +586,7 @@ const CarteInteractive = () => {
                         <label className="block text-sm font-medium mb-1">Zone géographique</label>
                         <Select>
                           <SelectTrigger>
-                            <SelectValue placeholder="Sélectionner une zone" />
+                            <SelectValue YOUR_API_KEY="Sélectionner une zone" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="dakar">Dakar</SelectItem>

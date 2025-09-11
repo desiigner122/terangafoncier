@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect, useRef } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { 
   User, 
   LogOut, 
@@ -43,7 +43,7 @@ import { Badge } from '@/components/ui/badge';
 import AISmartNotifications from '@/components/notifications/AISmartNotifications';
 
 const ModernHeader = () => {
-  const { user, profile, signOut } = useAuth();
+  const { user, session, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -158,7 +158,7 @@ const ModernHeader = () => {
     }
   ];
 
-  const dashboardPath = user?.profile?.role ? `/dashboard/${user.profile.role.toLowerCase()}` : '/dashboard';
+  const dashboardPath = user?.user_metadata?.role ? `/dashboard/${user.user_metadata.role.toLowerCase()}` : '/dashboard';
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200/50 shadow-sm">
@@ -264,6 +264,17 @@ const ModernHeader = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-4">
+            {/* Accès Dashboards (toujours visible) */}
+            <Button 
+              variant="ghost" 
+              size="sm"
+              onClick={() => navigate('/dashboards')}
+              className="hidden md:flex items-center space-x-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
+            >
+              <Zap className="w-4 h-4" />
+              <span>Dashboards</span>
+            </Button>
+
             {user ? (
               <>
                 {/* Search */}
@@ -291,9 +302,9 @@ const ModernHeader = () => {
                     onClick={() => setActiveDropdown(activeDropdown === 'user' ? null : 'user')}
                   >
                     <Avatar className="w-8 h-8">
-                      <AvatarImage src={profile?.avatar_url} />
+                      <AvatarImage src={user?.user_metadata?.avatar_url} />
                       <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white">
-                        {profile?.nom?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                        {user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                       </AvatarFallback>
                     </Avatar>
                     <ChevronDown className="w-4 h-4 text-gray-500" />
@@ -310,19 +321,19 @@ const ModernHeader = () => {
                         <div className="p-4 border-b border-gray-100">
                           <div className="flex items-center space-x-3">
                             <Avatar className="w-12 h-12">
-                              <AvatarImage src={profile?.avatar_url} />
+                              <AvatarImage src={user?.user_metadata?.avatar_url} />
                               <AvatarFallback className="bg-gradient-to-br from-blue-500 to-purple-500 text-white">
-                                {profile?.nom?.charAt(0) || 'U'}
+                                {user?.user_metadata?.name?.charAt(0) || user?.email?.charAt(0) || 'U'}
                               </AvatarFallback>
                             </Avatar>
                             <div>
                               <p className="font-semibold text-gray-900">
-                                {profile?.nom || 'Utilisateur'}
+                                {user?.user_metadata?.name || 'Utilisateur'}
                               </p>
                               <p className="text-sm text-gray-500">{user.email}</p>
-                              {profile?.role && (
+                              {user?.user_metadata?.role && (
                                 <Badge variant="outline" className="text-xs mt-1">
-                                  {profile.role}
+                                  {user.user_metadata.role}
                                 </Badge>
                               )}
                             </div>

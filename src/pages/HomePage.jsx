@@ -53,28 +53,28 @@ const HomePage = () => {
       role: "Diaspora - France", 
       content: "Financement bancaire approuvé en 48h et suivi construction en temps réel depuis Paris. Révolutionnaire !",
       rating: 5,
-      avatar: "/api/placeholder/60/60"
+      avatar: "/api/YOUR_API_KEY/60/60"
     },
     {
       name: "Moussa Seck",
       role: "Investisseur - Dakar",
       content: "Partenariat bancaire UBA facilite tout. NFT blockchain sécurise mes investissements terrains.",
       rating: 5,
-      avatar: "/api/placeholder/60/60"
+      avatar: "/api/YOUR_API_KEY/60/60"
     },
     {
       name: "Fatou Ba",
       role: "Diaspora - USA",
       content: "Crédit Agricole approuve directement sur plateforme. Photos quotidiennes de ma construction !",
       rating: 5,
-      avatar: "/api/placeholder/60/60"
+      avatar: "/api/YOUR_API_KEY/60/60"
     },
     {
       name: "Ibrahim Touré",
       role: "Mairie - Thiès",
       content: "Demandes de terrains communaux simplifiées. Blockchain transparent pour tous citoyens.",
       rating: 5,
-      avatar: "/api/placeholder/60/60"
+      avatar: "/api/YOUR_API_KEY/60/60"
     }
   ];
 
@@ -279,7 +279,7 @@ const HomePage = () => {
         {/* Information Processus Dashboard */}
         <DashboardProcessInfo />
 
-        {/* Testimonials Dynamiques */}
+        {}
         <section className="py-20 bg-gray-50">
           {/* Background Pattern */}
           <div className="absolute inset-0 opacity-5">
@@ -466,7 +466,7 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Testimonials Dynamiques */}
+        {}
         <section className="py-20 bg-gray-50">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
             <motion.div
@@ -516,7 +516,7 @@ const HomePage = () => {
               </div>
             </motion.div>
 
-            {/* Testimonial Indicators */}
+            {}
             <div className="flex justify-center mt-6 space-x-2">
               {testimonials.map((_, index) => (
                 <button

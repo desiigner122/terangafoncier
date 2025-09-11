@@ -1,4 +1,4 @@
-ï»¿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { NavLink, Link, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -31,7 +31,7 @@ import {
   ChevronLeft
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getSidebarConfig } from './sidebarConfig';
@@ -143,7 +143,7 @@ const SidebarContent = ({ onNavigate }) => {
       if (!user) return;
       
       try {
-        // Mock notifications - Supabase dÃ©sactivÃ©
+        // Mock notifications - Supabase désactivé
         console.log('SidebarResponsive: Mock loading notifications for user:', user.id);
         
         setNotifications({
@@ -231,7 +231,7 @@ const SidebarContent = ({ onNavigate }) => {
             onClick={handleSignOut}
           >
             <LogOut className="mr-3 h-4 w-4 flex-shrink-0" />
-            DÃ©connexion
+            Déconnexion
           </Button>
         </div>
       )}

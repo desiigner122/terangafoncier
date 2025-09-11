@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -90,98 +90,98 @@ const FonctionnalitesAvanceesPage = () => {
       id: 'blockchain',
       icon: Coins,
       title: 'Blockchain & NFT',
-      description: 'Tokenisation de propriétés, smart contracts automatisés, et NFT fonciers',
+      description: 'Tokenisation de propriÃ©tÃ©s, smart contracts automatisÃ©s, et NFT fonciers',
       color: 'purple',
-      status: '✅ Actif',
+      status: 'âœ… Actif',
       capabilities: [
         'Tokenisation automatique des biens',
         'Smart contracts pour les ventes',
-        'NFT avec métadonnées complètes',
-        'Escrow décentralisé',
+        'NFT avec mÃ©tadonnÃ©es complÃ¨tes',
+        'Escrow dÃ©centralisÃ©',
         'Historique immutable'
       ]
     },
     {
       id: 'ai',
       icon: Brain,
-      title: 'IA Prédictive',
-      description: 'Assistant IA avancé, analyse de marché prédictive, et recommandations personnalisées',
+      title: 'IA PrÃ©dictive',
+      description: 'Assistant IA avancÃ©, analyse de marchÃ© prÃ©dictive, et recommandations personnalisÃ©es',
       color: 'blue',
-      status: '✅ Actif',
+      status: 'âœ… Actif',
       capabilities: [
-        'Chatbot multilingue (Français, Wolof, Anglais)',
-        'Prédiction des prix immobiliers',
-        'Analyse de rentabilité automatique',
-        'Recommandations personnalisées',
-        'Détection de fraudes'
+        'Chatbot multilingue (FranÃ§ais, Wolof, Anglais)',
+        'PrÃ©diction des prix immobiliers',
+        'Analyse de rentabilitÃ© automatique',
+        'Recommandations personnalisÃ©es',
+        'DÃ©tection de fraudes'
       ]
     },
     {
       id: 'analytics',
       icon: BarChart3,
-      title: 'Analytics Temps Réel',
-      description: 'Tableaux de bord interactifs, métriques blockchain en temps réel, insights marché',
+      title: 'Analytics Temps RÃ©el',
+      description: 'Tableaux de bord interactifs, mÃ©triques blockchain en temps rÃ©el, insights marchÃ©',
       color: 'green',
-      status: '✅ Actif',
+      status: 'âœ… Actif',
       capabilities: [
-        'Dashboard temps réel',
-        'Métriques blockchain',
+        'Dashboard temps rÃ©el',
+        'MÃ©triques blockchain',
         'Analyse de tendances',
-        'Rapports automatisés',
-        'KPI personnalisés'
+        'Rapports automatisÃ©s',
+        'KPI personnalisÃ©s'
       ]
     },
     {
       id: 'security',
       icon: Shield,
-      title: 'Sécurité Avancée',
-      description: 'Chiffrement quantique, authentification biométrique, audit automatisé',
+      title: 'SÃ©curitÃ© AvancÃ©e',
+      description: 'Chiffrement quantique, authentification biomÃ©trique, audit automatisÃ©',
       color: 'red',
-      status: '✅ Actif',
+      status: 'âœ… Actif',
       capabilities: [
         'Chiffrement AES-256',
         'Authentification 2FA/MFA',
         'Audit trails complets',
-        'Détection d\'intrusion',
-        'Backup décentralisé'
+        'DÃ©tection d\'intrusion',
+        'Backup dÃ©centralisÃ©'
       ]
     }
   ];
 
   const demoScenarios = [
     {
-      title: "Analyse de Propriété IA",
-      description: "L'IA analyse une propriété et prédit sa valeur future",
-      query: "Analyse cette villa de 300m² à Almadies avec piscine, construite en 2020",
-      expectedResponse: "🏠 **Analyse IA - Villa Almadies**\n\n📊 **Valeur estimée**: 95-110M FCFA\n📈 **Prédiction 2025**: +15% (110-125M FCFA)\n\n**Facteurs positifs:**\n✓ Localisation premium (Almadies)\n✓ Surface attractive (300m²)\n✓ Équipements de qualité (piscine)\n✓ Construction récente (2020)\n\n**Recommandations:**\n• Excellent potentiel d'investissement\n• Demande forte dans cette zone\n• Valorisation attendue: 15-20% sur 3 ans"
+      title: "Analyse de PropriÃ©tÃ© IA",
+      description: "L'IA analyse une propriÃ©tÃ© et prÃ©dit sa valeur future",
+      query: "Analyse cette villa de 300mÂ² Ã  Almadies avec piscine, construite en 2020",
+      expectedResponse: "ðŸ  **Analyse IA - Villa Almadies**\n\nðŸ“Š **Valeur estimÃ©e**: 95-110M FCFA\nðŸ“ˆ **PrÃ©diction 2025**: +15% (110-125M FCFA)\n\n**Facteurs positifs:**\nâœ“ Localisation premium (Almadies)\nâœ“ Surface attractive (300mÂ²)\nâœ“ Ã‰quipements de qualitÃ© (piscine)\nâœ“ Construction rÃ©cente (2020)\n\n**Recommandations:**\nâ€¢ Excellent potentiel d'investissement\nâ€¢ Demande forte dans cette zone\nâ€¢ Valorisation attendue: 15-20% sur 3 ans"
     },
     {
       title: "Conseil Investissement Diaspora",
       description: "Assistant pour investisseurs de la diaspora",
-      query: "Je vis en France, quel type de bien acheter à Dakar avec 50M FCFA?",
-      expectedResponse: "🌍 **Conseil Diaspora - Budget 50M FCFA**\n\n🎯 **Recommandations optimales:**\n\n**Option 1: Appartement Sicap** (45-50M)\n• Rendement locatif: 8-10%\n• Facilité de gestion à distance\n• Forte demande locative\n\n**Option 2: Terrain VDN** (40-48M)\n• Potentiel de valorisation: +25% sur 5 ans\n• Construction différée possible\n• Zone en développement\n\n**Services diaspora inclus:**\n✓ Gestion locative à distance\n✓ Suivi travaux via blockchain\n✓ Transferts sécurisés\n✓ Reporting mensuel"
+      query: "Je vis en France, quel type de bien acheter Ã  Dakar avec 50M FCFA?",
+      expectedResponse: "ðŸŒ **Conseil Diaspora - Budget 50M FCFA**\n\nðŸŽ¯ **Recommandations optimales:**\n\n**Option 1: Appartement Sicap** (45-50M)\nâ€¢ Rendement locatif: 8-10%\nâ€¢ FacilitÃ© de gestion Ã  distance\nâ€¢ Forte demande locative\n\n**Option 2: Terrain VDN** (40-48M)\nâ€¢ Potentiel de valorisation: +25% sur 5 ans\nâ€¢ Construction diffÃ©rÃ©e possible\nâ€¢ Zone en dÃ©veloppement\n\n**Services diaspora inclus:**\nâœ“ Gestion locative Ã  distance\nâœ“ Suivi travaux via blockchain\nâœ“ Transferts sÃ©curisÃ©s\nâœ“ Reporting mensuel"
     },
     {
-      title: "Vérification Blockchain",
-      description: "Vérification automatique d'un bien immobilier",
-      query: "Vérifier la propriété TER-NFT-2024-001247",
-      expectedResponse: "🔗 **Vérification Blockchain**\n\n✅ **Statut**: Propriété vérifiée\n🏷️ **NFT ID**: TER-NFT-2024-001247\n📍 **Localisation**: Almadies, Lot 45\n\n**Historique blockchain:**\n• 15/01/2024: Tokenisation initiale\n• 20/01/2024: Vérification cadastrale\n• 25/01/2024: Audit géomètre\n\n**Documents vérifiés:**\n✓ Titre foncier original\n✓ Certificat d'urbanisme\n✓ Plan géomètre\n✓ Quitus fiscal\n\n🛡️ **Sécurité**: Niveau Maximum"
+      title: "VÃ©rification Blockchain",
+      description: "VÃ©rification automatique d'un bien immobilier",
+      query: "VÃ©rifier la propriÃ©tÃ© TER-NFT-2024-001247",
+      expectedResponse: "ðŸ”— **VÃ©rification Blockchain**\n\nâœ… **Statut**: PropriÃ©tÃ© vÃ©rifiÃ©e\nðŸ·ï¸ **NFT ID**: TER-NFT-2024-001247\nðŸ“ **Localisation**: Almadies, Lot 45\n\n**Historique blockchain:**\nâ€¢ 15/01/2024: Tokenisation initiale\nâ€¢ 20/01/2024: VÃ©rification cadastrale\nâ€¢ 25/01/2024: Audit gÃ©omÃ¨tre\n\n**Documents vÃ©rifiÃ©s:**\nâœ“ Titre foncier original\nâœ“ Certificat d'urbanisme\nâœ“ Plan gÃ©omÃ¨tre\nâœ“ Quitus fiscal\n\nðŸ›¡ï¸ **SÃ©curitÃ©**: Niveau Maximum"
     }
   ];
 
   const packages = [
     'ethers@^6.8.0 - Interactions Ethereum & Smart Contracts',
     'web3@^4.2.0 - Client Web3 pour blockchain',
-    'brain.js@^1.6.1 - Réseaux de neurones JavaScript',
+    'brain.js@^1.6.1 - RÃ©seaux de neurones JavaScript',
     '@tensorflow/tfjs@^4.20.0 - Machine Learning navigateur',
     'crypto-js@^4.2.0 - Chiffrement et hachage',
-    'jsonwebtoken@^9.0.2 - Authentification JWT sécurisée',
-    'socket.io-client@^4.7.0 - Communication temps réel',
+    'jsonwebtoken@^9.0.2 - Authentification JWT sÃ©curisÃ©e',
+    'socket.io-client@^4.7.0 - Communication temps rÃ©el',
     'natural@^6.8.0 - Traitement langage naturel',
-    'ipfs-http-client@^60.0.0 - Stockage décentralisé IPFS',
+    'ipfs-http-client@^60.0.0 - Stockage dÃ©centralisÃ© IPFS',
     'wagmi@^1.4.0 - Hooks React pour Web3',
     'viem@^1.18.0 - Interface Ethereum TypeScript',
-    '@chainlink/contracts@^0.8.0 - Oracles décentralisés'
+    '@chainlink/contracts@^0.8.0 - Oracles dÃ©centralisÃ©s'
   ];
 
   const technicalSpecs = {
@@ -190,26 +190,26 @@ const FonctionnalitesAvanceesPage = () => {
       consensus: 'Proof of Stake',
       tps: '65,000 transactions/seconde',
       finality: '2-3 secondes',
-      gasOptimization: 'Layer 2 optimisé'
+      gasOptimization: 'Layer 2 optimisÃ©'
     },
     ai: {
-      model: 'GPT-4 + Modèles locaux',
-      languages: 'Français, Wolof, Anglais',
-      accuracy: '94.2% sur données foncières',
-      processing: 'Temps réel + batch',
-      training: 'Données Sénégal + Global'
+      model: 'GPT-4 + ModÃ¨les locaux',
+      languages: 'FranÃ§ais, Wolof, Anglais',
+      accuracy: '94.2% sur donnÃ©es fonciÃ¨res',
+      processing: 'Temps rÃ©el + batch',
+      training: 'DonnÃ©es SÃ©nÃ©gal + Global'
     },
     security: {
       encryption: 'AES-256 + RSA-4096',
-      authentication: '2FA/MFA + Biométrie',
-      audit: 'Smart contracts vérifiés',
-      compliance: 'RGPD + Lois sénégalaises',
+      authentication: '2FA/MFA + BiomÃ©trie',
+      audit: 'Smart contracts vÃ©rifiÃ©s',
+      compliance: 'RGPD + Lois sÃ©nÃ©galaises',
       backup: 'Redondance multi-zone'
     }
   };
 
   useEffect(() => {
-    // Simulation de mise à jour des données en temps réel
+    // Simulation de mise Ã  jour des donnÃ©es en temps rÃ©el
     const interval = setInterval(() => {
       setMarketData(prev => ({
         totalTransactions: prev.totalTransactions + Math.floor(Math.random() * 3),
@@ -225,13 +225,13 @@ const FonctionnalitesAvanceesPage = () => {
   const simulateAIResponse = async (query) => {
     setIsProcessing(true);
     
-    // Trouver le scénario correspondant
+    // Trouver le scÃ©nario correspondant
     const scenario = demoScenarios.find(s => 
       query.toLowerCase().includes(s.query.toLowerCase().split(' ')[0]) ||
       s.title.toLowerCase().includes(query.toLowerCase().split(' ')[0])
     ) || demoScenarios[0];
 
-    // Simulation d'un délai de traitement IA
+    // Simulation d'un dÃ©lai de traitement IA
     await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
     
     setAiResponse(scenario.expectedResponse);
@@ -246,8 +246,8 @@ const FonctionnalitesAvanceesPage = () => {
   return (
     <>
       <Helmet>
-        <title>IA Blockchain Avancée | Teranga Foncier</title>
-        <meta name="description" content="Découvrez l'IA blockchain de Teranga Foncier : smart contracts, NFT fonciers, analytics temps réel et sécurité quantique." />
+        <title>IA Blockchain AvancÃ©e | Teranga Foncier</title>
+        <meta name="description" content="DÃ©couvrez l'IA blockchain de Teranga Foncier : smart contracts, NFT fonciers, analytics temps rÃ©el et sÃ©curitÃ© quantique." />
       </Helmet>
 
       <motion.div
@@ -282,20 +282,20 @@ const FonctionnalitesAvanceesPage = () => {
           >
             <Badge className="mb-6 bg-gradient-to-r from-purple-600 to-blue-600 text-white hover:from-purple-700 hover:to-blue-700 text-lg px-6 py-2">
               <Sparkles className="mr-2 h-5 w-5" />
-              IA Blockchain Nouvelle Génération
+              IA Blockchain Nouvelle GÃ©nÃ©ration
             </Badge>
             
             <h1 className="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-purple-600 via-blue-600 to-green-600 bg-clip-text text-transparent">
-              Fonctionnalités <br />
-              <span className="text-6xl md:text-8xl">Avancées</span>
+              FonctionnalitÃ©s <br />
+              <span className="text-6xl md:text-8xl">AvancÃ©es</span>
             </h1>
             
             <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-4xl mx-auto leading-relaxed">
               Explorez l'avenir de l'immobilier avec notre IA blockchain de pointe, 
-              des NFT fonciers innovants et des analytics prédictives
+              des NFT fonciers innovants et des analytics prÃ©dictives
             </p>
 
-            {/* Statistiques temps réel */}
+            {/* Statistiques temps rÃ©el */}
             <motion.div
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
@@ -317,7 +317,7 @@ const FonctionnalitesAvanceesPage = () => {
                 <div className="text-3xl font-bold text-blue-600 mb-2">
                   {marketData.blockchainVerifications}
                 </div>
-                <div className="text-sm text-gray-600">Vérifications IA</div>
+                <div className="text-sm text-gray-600">VÃ©rifications IA</div>
                 <div className="flex items-center mt-2 text-green-600">
                   <CheckCircle className="w-4 h-4 mr-1" />
                   <span className="text-xs">100% fiables</span>
@@ -328,10 +328,10 @@ const FonctionnalitesAvanceesPage = () => {
                 <div className="text-3xl font-bold text-green-600 mb-2">
                   {marketData.aiPredictions}
                 </div>
-                <div className="text-sm text-gray-600">Prédictions IA</div>
+                <div className="text-sm text-gray-600">PrÃ©dictions IA</div>
                 <div className="flex items-center mt-2 text-blue-600">
                   <Brain className="w-4 h-4 mr-1" />
-                  <span className="text-xs">94.2% précision</span>
+                  <span className="text-xs">94.2% prÃ©cision</span>
                 </div>
               </div>
               
@@ -339,7 +339,7 @@ const FonctionnalitesAvanceesPage = () => {
                 <div className="text-3xl font-bold text-red-600 mb-2">
                   {marketData.securityAlerts}
                 </div>
-                <div className="text-sm text-gray-600">Alertes Sécurité</div>
+                <div className="text-sm text-gray-600">Alertes SÃ©curitÃ©</div>
                 <div className="flex items-center mt-2 text-green-600">
                   <Shield className="w-4 h-4 mr-1" />
                   <span className="text-xs">Niveau Max</span>
@@ -360,7 +360,7 @@ const FonctionnalitesAvanceesPage = () => {
           </motion.div>
         </section>
 
-        {/* Section des fonctionnalités principales */}
+        {/* Section des fonctionnalitÃ©s principales */}
         <section className="py-20 bg-white/50 backdrop-blur-sm">
           <div className="container mx-auto px-4">
             <motion.h2
@@ -449,7 +449,7 @@ const FonctionnalitesAvanceesPage = () => {
               transition={{ duration: 0.6 }}
               className="text-4xl md:text-5xl font-bold text-center mb-16"
             >
-              Démo Interactive
+              DÃ©mo Interactive
             </motion.h2>
 
             <Tabs value={activeDemo} onValueChange={setActiveDemo} className="max-w-6xl mx-auto">
@@ -478,7 +478,7 @@ const FonctionnalitesAvanceesPage = () => {
                     <CardContent className="text-gray-300">
                       <div className="space-y-4">
                         <div className="flex justify-between">
-                          <span>Réseau:</span>
+                          <span>RÃ©seau:</span>
                           <Badge className="bg-purple-600">Polygon Mainnet</Badge>
                         </div>
                         <div className="flex justify-between">
@@ -486,11 +486,11 @@ const FonctionnalitesAvanceesPage = () => {
                           <span className="text-green-400">0.02 GWEI</span>
                         </div>
                         <div className="flex justify-between">
-                          <span>Contrats déployés:</span>
+                          <span>Contrats dÃ©ployÃ©s:</span>
                           <span className="text-blue-400">247</span>
                         </div>
                         <Progress value={85} className="mt-4" />
-                        <p className="text-sm">85% des transactions sont automatisées</p>
+                        <p className="text-sm">85% des transactions sont automatisÃ©es</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -505,7 +505,7 @@ const FonctionnalitesAvanceesPage = () => {
                     <CardContent className="text-gray-300">
                       <div className="space-y-4">
                         <div className="flex justify-between">
-                          <span>NFT créés:</span>
+                          <span>NFT crÃ©Ã©s:</span>
                           <span className="text-yellow-400">1,247</span>
                         </div>
                         <div className="flex justify-between">
@@ -537,10 +537,10 @@ const FonctionnalitesAvanceesPage = () => {
                     <CardContent className="text-gray-300">
                       <div className="space-y-4">
                         <Input 
-                          placeholder="Posez votre question à l'IA..."
+                          YOUR_API_KEY="Posez votre question Ã  l'IA..."
                           value={aiQuery}
                           onChange={(e) => setAiQuery(e.target.value)}
-                          className="bg-black/30 border-blue-500/30 text-white placeholder:text-gray-400"
+                          className="bg-black/30 border-blue-500/30 text-white YOUR_API_KEY:text-gray-400"
                         />
                         <div className="flex gap-2 flex-wrap">
                           {demoScenarios.map((scenario, idx) => (
@@ -568,7 +568,7 @@ const FonctionnalitesAvanceesPage = () => {
                           ) : (
                             <>
                               <Brain className="w-4 h-4 mr-2" />
-                              Demander à l'IA
+                              Demander Ã  l'IA
                             </>
                           )}
                         </Button>
@@ -581,7 +581,7 @@ const FonctionnalitesAvanceesPage = () => {
                       <CardHeader>
                         <CardTitle className="text-white flex items-center">
                           <CheckCircle className="w-5 h-5 mr-2" />
-                          Réponse IA
+                          RÃ©ponse IA
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="text-gray-300">
@@ -600,7 +600,7 @@ const FonctionnalitesAvanceesPage = () => {
                     <CardHeader>
                       <CardTitle className="text-white flex items-center text-lg">
                         <TrendingUp className="w-5 h-5 mr-2" />
-                        Marchés
+                        MarchÃ©s
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="text-gray-300">
@@ -648,7 +648,7 @@ const FonctionnalitesAvanceesPage = () => {
                       <div className="text-3xl font-bold text-blue-400 mb-2">
                         94.2%
                       </div>
-                      <div className="text-sm">Précision IA</div>
+                      <div className="text-sm">PrÃ©cision IA</div>
                       <Progress value={94} className="mt-3" />
                     </CardContent>
                   </Card>
@@ -661,7 +661,7 @@ const FonctionnalitesAvanceesPage = () => {
                     <CardHeader>
                       <CardTitle className="text-white flex items-center">
                         <Shield className="w-5 h-5 mr-2" />
-                        État Sécurité
+                        Ã‰tat SÃ©curitÃ©
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="text-gray-300">
@@ -676,10 +676,10 @@ const FonctionnalitesAvanceesPage = () => {
                         </div>
                         <div className="flex items-center justify-between">
                           <span>Intrusions</span>
-                          <Badge className="bg-red-600">0 détectées</Badge>
+                          <Badge className="bg-red-600">0 dÃ©tectÃ©es</Badge>
                         </div>
                         <Progress value={100} className="mt-4" />
-                        <p className="text-sm text-green-400">Sécurité niveau maximum</p>
+                        <p className="text-sm text-green-400">SÃ©curitÃ© niveau maximum</p>
                       </div>
                     </CardContent>
                   </Card>
@@ -688,7 +688,7 @@ const FonctionnalitesAvanceesPage = () => {
                     <CardHeader>
                       <CardTitle className="text-white flex items-center">
                         <Lock className="w-5 h-5 mr-2" />
-                        Conformité
+                        ConformitÃ©
                       </CardTitle>
                     </CardHeader>
                     <CardContent className="text-gray-300">
@@ -699,7 +699,7 @@ const FonctionnalitesAvanceesPage = () => {
                         </div>
                         <div className="flex items-center">
                           <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
-                          <span>Lois Sénégalaises</span>
+                          <span>Lois SÃ©nÃ©galaises</span>
                         </div>
                         <div className="flex items-center">
                           <CheckCircle className="w-4 h-4 mr-2 text-green-400" />
@@ -746,7 +746,7 @@ const FonctionnalitesAvanceesPage = () => {
 
               <div className="space-y-4">
                 <Textarea
-                  placeholder="Posez votre question à notre IA spécialisée en immobilier blockchain..."
+                  YOUR_API_KEY="Posez votre question Ã  notre IA spÃ©cialisÃ©e en immobilier blockchain..."
                   value={aiQuery}
                   onChange={(e) => setAiQuery(e.target.value)}
                   rows={3}
@@ -767,7 +767,7 @@ const FonctionnalitesAvanceesPage = () => {
                   ) : (
                     <>
                       <Brain className="w-5 h-5 mr-2" />
-                      Demander à l'IA
+                      Demander Ã  l'IA
                     </>
                   )}
                 </Button>
@@ -778,7 +778,7 @@ const FonctionnalitesAvanceesPage = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center text-blue-700">
                       <Sparkles className="w-5 h-5 mr-2" />
-                      Réponse de l'IA
+                      RÃ©ponse de l'IA
                     </CardTitle>
                   </CardHeader>
                   <CardContent>

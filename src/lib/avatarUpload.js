@@ -1,14 +1,14 @@
-// ================================================================
+﻿// ================================================================
 // CORRECTION UPLOAD AVATAR - ProfilePage
 // Corrige l'erreur "Bucket avatars non disponible"
 // ================================================================
 
 import { supabase } from '@/lib/customSupabaseClient';
 
-// Fonction pour créer le bucket avatars s'il n'existe pas
+// Fonction pour crÃ©er le bucket avatars s'il n'existe pas
 export const ensureAvatarsBucket = async () => {
   try {
-    // Vérifier si le bucket existe
+    // VÃ©rifier si le bucket existe
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
     
     if (listError) {
@@ -19,9 +19,9 @@ export const ensureAvatarsBucket = async () => {
     const avatarsBucket = buckets.find(bucket => bucket.id === 'avatars');
     
     if (!avatarsBucket) {
-      console.log('🔧 Bucket avatars manquant, tentative de création...');
+      console.log('ðŸ”§ Bucket avatars manquant, tentative de crÃ©ation...');
       
-      // Tenter de créer le bucket
+      // Tenter de crÃ©er le bucket
       const { data, error: createError } = await supabase.storage.createBucket('avatars', {
         public: true,
         fileSizeLimit: 5242880, // 5MB
@@ -29,31 +29,31 @@ export const ensureAvatarsBucket = async () => {
       });
       
       if (createError) {
-        console.error('❌ Erreur création bucket:', createError);
+        console.error('âŒ Erreur crÃ©ation bucket:', createError);
         
-        // Essayer méthode alternative via SQL
-        console.log('🔄 Tentative création via SQL...');
+        // Essayer mÃ©thode alternative via SQL
+        console.log('ðŸ”„ Tentative crÃ©ation via SQL...');
         const { data: sqlData, error: sqlError } = await supabase.rpc('create_avatars_bucket');
         
         if (sqlError) {
-          console.error('❌ Erreur SQL bucket:', sqlError);
+          console.error('âŒ Erreur SQL bucket:', sqlError);
           return false;
         }
       }
       
-      console.log('✅ Bucket avatars créé avec succès');
+      console.log('âœ… Bucket avatars crÃ©Ã© avec succÃ¨s');
     } else {
-      console.log('✅ Bucket avatars existe déjà');
+      console.log('âœ… Bucket avatars existe dÃ©jÃ ');
     }
     
     return true;
   } catch (error) {
-    console.error('❌ Erreur ensureAvatarsBucket:', error);
+    console.error('âŒ Erreur ensureAvatarsBucket:', error);
     return false;
   }
 };
 
-// Upload avatar sécurisé avec gestion du bucket
+// Upload avatar sÃ©curisÃ© avec gestion du bucket
 export const uploadAvatar = async (file, userId) => {
   try {
     // S'assurer que le bucket existe
@@ -63,12 +63,12 @@ export const uploadAvatar = async (file, userId) => {
       throw new Error('Bucket avatars non disponible. Contactez l\'administrateur.');
     }
     
-    // Préparer le fichier
+    // PrÃ©parer le fichier
     const fileExt = file.name.split('.').pop();
     const fileName = `${userId}-${Date.now()}.${fileExt}`;
     const filePath = fileName; // Pas de sous-dossier pour simplifier
     
-    console.log('📤 Upload avatar:', filePath);
+    console.log('ðŸ“¤ Upload avatar:', filePath);
     
     // Upload le fichier
     const { data, error } = await supabase.storage
@@ -79,7 +79,7 @@ export const uploadAvatar = async (file, userId) => {
       });
     
     if (error) {
-      console.error('❌ Erreur upload:', error);
+      console.error('âŒ Erreur upload:', error);
       throw error;
     }
     
@@ -90,7 +90,7 @@ export const uploadAvatar = async (file, userId) => {
     
     const publicUrl = urlData.publicUrl;
     
-    console.log('✅ Avatar uploadé:', publicUrl);
+    console.log('âœ… Avatar uploadÃ©:', publicUrl);
     
     return {
       success: true,
@@ -99,7 +99,7 @@ export const uploadAvatar = async (file, userId) => {
     };
     
   } catch (error) {
-    console.error('❌ Erreur uploadAvatar:', error);
+    console.error('âŒ Erreur uploadAvatar:', error);
     return {
       success: false,
       error: error.message
@@ -121,17 +121,16 @@ export const deleteOldAvatar = async (avatarUrl) => {
         .remove([fileName]);
       
       if (error) {
-        console.warn('⚠️ Erreur suppression ancien avatar:', error);
+        console.warn('âš ï¸ Erreur suppression ancien avatar:', error);
       } else {
-        console.log('🗑️ Ancien avatar supprimé:', fileName);
+        console.log('ðŸ—‘ï¸ Ancien avatar supprimÃ©:', fileName);
       }
     }
   } catch (error) {
-    console.warn('⚠️ Erreur deleteOldAvatar:', error);
+    console.warn('âš ï¸ Erreur deleteOldAvatar:', error);
   }
 };
 
-// Test de connectivité bucket
 export const testAvatarsBucket = async () => {
   try {
     const { data, error } = await supabase.storage
@@ -139,14 +138,14 @@ export const testAvatarsBucket = async () => {
       .list('', { limit: 1 });
     
     if (error) {
-      console.error('❌ Test bucket échoué:', error);
+      console.error('âŒ Test bucket Ã©chouÃ©:', error);
       return false;
     }
     
-    console.log('✅ Bucket avatars accessible');
+    console.log('âœ… Bucket avatars accessible');
     return true;
   } catch (error) {
-    console.error('❌ Test bucket erreur:', error);
+    console.error('âŒ Test bucket erreur:', error);
     return false;
   }
 };

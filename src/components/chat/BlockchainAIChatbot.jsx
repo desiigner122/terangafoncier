@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageCircle, 
@@ -33,7 +33,7 @@ const BlockchainAIChatbot = () => {
     {
       id: 1,
       type: 'bot',
-      content: "👋 Salut ! Je suis **TERRA-IA**, votre assistant blockchain immobilier intelligent. Comment puis-je vous aider aujourd'hui ?",
+      content: "ðŸ‘‹ Salut ! Je suis **TERRA-IA**, votre assistant blockchain immobilier intelligent. Comment puis-je vous aider aujourd'hui ?",
       timestamp: new Date()
     }
   ]);
@@ -47,171 +47,171 @@ const BlockchainAIChatbot = () => {
     {
       icon: MapPin,
       text: "Terrains disponibles",
-      action: "Montrez-moi les terrains disponibles avec vérification blockchain"
+      action: "Montrez-moi les terrains disponibles avec vÃ©rification blockchain"
     },
     {
       icon: Calculator,
       text: "Calculer prix",
-      action: "Calculer le prix d'un terrain à Dakar"
+      action: "Calculer le prix d'un terrain Ã  Dakar"
     },
     {
       icon: Shield,
-      text: "Vérification blockchain",
-      action: "Comment fonctionne la vérification blockchain des propriétés ?"
+      text: "VÃ©rification blockchain",
+      action: "Comment fonctionne la vÃ©rification blockchain des propriÃ©tÃ©s ?"
     },
     {
       icon: TrendingUp,
-      text: "Marché immobilier",
-      action: "Analyse du marché immobilier sénégalais actuel"
+      text: "MarchÃ© immobilier",
+      action: "Analyse du marchÃ© immobilier sÃ©nÃ©galais actuel"
     }
   ];
 
-  // Réponses prédéfinies intelligentes avec blockchain
+  // RÃ©ponses prÃ©dÃ©finies intelligentes avec blockchain
   const aiResponses = {
     terrains: {
       keywords: ['terrain', 'parcelle', 'lot', 'disponible', 'acheter'],
-      response: `🏞️ **Terrains Vérifiés Blockchain**
+      response: `ðŸžï¸ **Terrains VÃ©rifiÃ©s Blockchain**
 
-Voici nos terrains certifiés :
+Voici nos terrains certifiÃ©s :
 
-📍 **Dakar - Almadies** 
-• 500m² - 45M FCFA ✅ Vérifié
-• Titre foncier blockchain sécurisé
+ðŸ“ **Dakar - Almadies** 
+â€¢ 500mÂ² - 45M FCFA âœ… VÃ©rifiÃ©
+â€¢ Titre foncier blockchain sÃ©curisÃ©
 
-📍 **Thiès - Centre**
-• 1000m² - 25M FCFA ✅ Vérifié  
-• Smart contract activé
+ðŸ“ **ThiÃ¨s - Centre**
+â€¢ 1000mÂ² - 25M FCFA âœ… VÃ©rifiÃ©  
+â€¢ Smart contract activÃ©
 
-📍 **Mbour - Résidentiel**
-• 750m² - 18M FCFA ✅ Vérifié
-• NFT propriété disponible
+ðŸ“ **Mbour - RÃ©sidentiel**
+â€¢ 750mÂ² - 18M FCFA âœ… VÃ©rifiÃ©
+â€¢ NFT propriÃ©tÃ© disponible
 
-🔗 Tous nos terrains sont vérifiés par blockchain et incluent :
-• Certificat NFT de propriété
-• Smart contract automatisé
-• Historique transparent
-• Paiement crypto accepté
+ðŸ”— Tous nos terrains sont vÃ©rifiÃ©s par blockchain et incluent :
+â€¢ Certificat NFT de propriÃ©tÃ©
+â€¢ Smart contract automatisÃ©
+â€¢ Historique transparent
+â€¢ Paiement crypto acceptÃ©
 
-Voulez-vous plus de détails sur une zone spécifique ?`
+Voulez-vous plus de dÃ©tails sur une zone spÃ©cifique ?`
     },
     
     blockchain: {
-      keywords: ['blockchain', 'vérification', 'sécurité', 'nft', 'crypto', 'smart contract'],
-      response: `⛓️ **Technologie Blockchain Teranga**
+      keywords: ['blockchain', 'vÃ©rification', 'sÃ©curitÃ©', 'nft', 'crypto', 'smart contract'],
+      response: `â›“ï¸ **Technologie Blockchain Teranga**
 
-Notre plateforme révolutionnaire utilise :
+Notre plateforme rÃ©volutionnaire utilise :
 
-🔐 **Vérification Blockchain**
-• Chaque propriété a un hash unique
-• Impossibilité de falsification
-• Transparence totale des transactions
+ðŸ” **VÃ©rification Blockchain**
+â€¢ Chaque propriÃ©tÃ© a un hash unique
+â€¢ ImpossibilitÃ© de falsification
+â€¢ Transparence totale des transactions
 
-💎 **NFT Propriétés** 
-• Certificat numérique de propriété
-• Transférable instantanément
-• Stockage décentralisé sécurisé
+ðŸ’Ž **NFT PropriÃ©tÃ©s** 
+â€¢ Certificat numÃ©rique de propriÃ©tÃ©
+â€¢ TransfÃ©rable instantanÃ©ment
+â€¢ Stockage dÃ©centralisÃ© sÃ©curisÃ©
 
-🤖 **Smart Contracts**
-• Paiements automatisés
-• Conditions pré-programmées
-• Exécution sans intermédiaire
+ðŸ¤– **Smart Contracts**
+â€¢ Paiements automatisÃ©s
+â€¢ Conditions prÃ©-programmÃ©es
+â€¢ ExÃ©cution sans intermÃ©diaire
 
-🚀 **Avantages uniques :**
-• Réduction des fraudes à 0%
-• Transactions 10x plus rapides  
-• Coûts réduits de 60%
-• Sécurité maximale garantie
+ðŸš€ **Avantages uniques :**
+â€¢ RÃ©duction des fraudes Ã  0%
+â€¢ Transactions 10x plus rapides  
+â€¢ CoÃ»ts rÃ©duits de 60%
+â€¢ SÃ©curitÃ© maximale garantie
 
-Souhaitez-vous voir un exemple de vérification blockchain ?`
+Souhaitez-vous voir un exemple de vÃ©rification blockchain ?`
     },
 
     prix: {
-      keywords: ['prix', 'coût', 'calculer', 'tarif', 'budget'],
-      response: `💰 **Calculateur Prix IA**
+      keywords: ['prix', 'coÃ»t', 'calculer', 'tarif', 'budget'],
+      response: `ðŸ’° **Calculateur Prix IA**
 
-Prix moyens par région (mise à jour blockchain) :
+Prix moyens par rÃ©gion (mise Ã  jour blockchain) :
 
-📊 **Dakar Métropolitaine**
-• Centre-ville : 80-120k FCFA/m²
-• Almadies : 60-90k FCFA/m² 
-• Parcelles Assainies : 45-65k FCFA/m²
+ðŸ“Š **Dakar MÃ©tropolitaine**
+â€¢ Centre-ville : 80-120k FCFA/mÂ²
+â€¢ Almadies : 60-90k FCFA/mÂ² 
+â€¢ Parcelles Assainies : 45-65k FCFA/mÂ²
 
-📊 **Régions**
-• Thiès : 15-35k FCFA/m²
-• Saint-Louis : 12-25k FCFA/m²
-• Mbour : 20-40k FCFA/m²
+ðŸ“Š **RÃ©gions**
+â€¢ ThiÃ¨s : 15-35k FCFA/mÂ²
+â€¢ Saint-Louis : 12-25k FCFA/mÂ²
+â€¢ Mbour : 20-40k FCFA/mÂ²
 
-🎯 **Facteurs de prix IA :**
-✅ Proximité mer/ville
-✅ Infrastructures disponibles  
-✅ Potentiel d'investissement
-✅ Sécurité blockchain
+ðŸŽ¯ **Facteurs de prix IA :**
+âœ… ProximitÃ© mer/ville
+âœ… Infrastructures disponibles  
+âœ… Potentiel d'investissement
+âœ… SÃ©curitÃ© blockchain
 
-💡 **Astuce :** Nos algorithmes d'IA analysent +50 critères pour un prix optimal !
+ðŸ’¡ **Astuce :** Nos algorithmes d'IA analysent +50 critÃ¨res pour un prix optimal !
 
-Quelle zone vous intéresse pour un calcul précis ?`
+Quelle zone vous intÃ©resse pour un calcul prÃ©cis ?`
     },
 
     marche: {
-      keywords: ['marché', 'investissement', 'tendance', 'analyse', 'évolution'],
-      response: `📈 **Analyse Marché IA - Temps Réel**
+      keywords: ['marchÃ©', 'investissement', 'tendance', 'analyse', 'Ã©volution'],
+      response: `ðŸ“ˆ **Analyse MarchÃ© IA - Temps RÃ©el**
 
-**État du Marché (Blockchain Data):**
+**Ã‰tat du MarchÃ© (Blockchain Data):**
 
-🔥 **Tendances Actuelles**
-• +15% croissance terrains Dakar (6 mois)
-• +8% demande diaspora sénégalaise
-• +25% adoption paiements crypto
+ðŸ”¥ **Tendances Actuelles**
+â€¢ +15% croissance terrains Dakar (6 mois)
+â€¢ +8% demande diaspora sÃ©nÃ©galaise
+â€¢ +25% adoption paiements crypto
 
-🎯 **Opportunités Détectées par IA**
-• Thiès : Potentiel +40% (5 ans)
-• Mbour : Zone touristique en expansion
-• Rufisque : Infrastructure en développement
+ðŸŽ¯ **OpportunitÃ©s DÃ©tectÃ©es par IA**
+â€¢ ThiÃ¨s : Potentiel +40% (5 ans)
+â€¢ Mbour : Zone touristique en expansion
+â€¢ Rufisque : Infrastructure en dÃ©veloppement
 
-⚡ **Alertes Blockchain**
-• 🟢 Marché stable et croissant
-• 🟢 Liquidité excellente  
-• 🟢 Sécurité maximale
+âš¡ **Alertes Blockchain**
+â€¢ ðŸŸ¢ MarchÃ© stable et croissant
+â€¢ ðŸŸ¢ LiquiditÃ© excellente  
+â€¢ ðŸŸ¢ SÃ©curitÃ© maximale
 
-📱 **Prédictions IA 2024**
-• Croissance prévue : +12-18%
-• Zones émergentes identifiées
-• ROI optimal : 8-15% annuel
+ðŸ“± **PrÃ©dictions IA 2024**
+â€¢ Croissance prÃ©vue : +12-18%
+â€¢ Zones Ã©mergentes identifiÃ©es
+â€¢ ROI optimal : 8-15% annuel
 
-Voulez-vous une analyse personnalisée de votre profil d'investissement ?`
+Voulez-vous une analyse personnalisÃ©e de votre profil d'investissement ?`
     },
 
     help: {
-      keywords: ['aide', 'comment', 'help', 'assistance', 'problème'],
-      response: `🤖 **TERRA-IA - Assistant Intelligent**
+      keywords: ['aide', 'comment', 'help', 'assistance', 'problÃ¨me'],
+      response: `ðŸ¤– **TERRA-IA - Assistant Intelligent**
 
 Je peux vous aider avec :
 
-🏡 **Recherche de Propriétés**
-• Filtres intelligents IA
-• Recommandations personnalisées
-• Comparaison automatique
+ðŸ¡ **Recherche de PropriÃ©tÃ©s**
+â€¢ Filtres intelligents IA
+â€¢ Recommandations personnalisÃ©es
+â€¢ Comparaison automatique
 
-⛓️ **Blockchain & Crypto**
-• Vérification propriétés
-• Paiements cryptomonnaies
-• Smart contracts expliqués
+â›“ï¸ **Blockchain & Crypto**
+â€¢ VÃ©rification propriÃ©tÃ©s
+â€¢ Paiements cryptomonnaies
+â€¢ Smart contracts expliquÃ©s
 
-📊 **Analyses & Calculs**
-• Évaluation prix terrain
-• Simulation financement
-• Prédictions marché
+ðŸ“Š **Analyses & Calculs**
+â€¢ Ã‰valuation prix terrain
+â€¢ Simulation financement
+â€¢ PrÃ©dictions marchÃ©
 
-🔐 **Sécurité & Légal**
-• Vérification documents
-• Processus d'achat sécurisé
-• Conseils juridiques IA
+ðŸ” **SÃ©curitÃ© & LÃ©gal**
+â€¢ VÃ©rification documents
+â€¢ Processus d'achat sÃ©curisÃ©
+â€¢ Conseils juridiques IA
 
-💬 **Questions fréquentes :**
-• "Montrez-moi des terrains à [ville]"
-• "Comment fonctionne la blockchain ?"
-• "Calculer prix terrain 500m²"
-• "Analyse investissement [région]"
+ðŸ’¬ **Questions frÃ©quentes :**
+â€¢ "Montrez-moi des terrains Ã  [ville]"
+â€¢ "Comment fonctionne la blockchain ?"
+â€¢ "Calculer prix terrain 500mÂ²"
+â€¢ "Analyse investissement [rÃ©gion]"
 
 Quelle est votre question ?`
     }
@@ -228,27 +228,27 @@ Quelle est votre question ?`
   const getAIResponse = (message) => {
     const lowerMessage = message.toLowerCase();
     
-    // Recherche de mots-clés dans les réponses prédéfinies
+    // Recherche de mots-clÃ©s dans les rÃ©ponses prÃ©dÃ©finies
     for (const [key, responseData] of Object.entries(aiResponses)) {
       if (responseData.keywords.some(keyword => lowerMessage.includes(keyword))) {
         return responseData.response;
       }
     }
 
-    // Réponse par défaut avec suggestions
-    return `🤔 Je n'ai pas trouvé d'information spécifique sur "${message}".
+    // RÃ©ponse par dÃ©faut avec suggestions
+    return `ðŸ¤” Je n'ai pas trouvÃ© d'information spÃ©cifique sur "${message}".
 
 Voici ce que je peux faire pour vous :
 
-🔍 **Recherches populaires :**
-• "Terrains disponibles Dakar"
-• "Prix moyen terrain Thiès"  
-• "Comment fonctionne la blockchain"
-• "Analyse marché immobilier"
+ðŸ” **Recherches populaires :**
+â€¢ "Terrains disponibles Dakar"
+â€¢ "Prix moyen terrain ThiÃ¨s"  
+â€¢ "Comment fonctionne la blockchain"
+â€¢ "Analyse marchÃ© immobilier"
 
-💡 **Astuce :** Soyez plus spécifique pour des réponses précises !
+ðŸ’¡ **Astuce :** Soyez plus spÃ©cifique pour des rÃ©ponses prÃ©cises !
 
-Ou choisissez une action rapide ci-dessous 👇`;
+Ou choisissez une action rapide ci-dessous ðŸ‘‡`;
   };
 
   const handleSendMessage = async () => {
@@ -266,7 +266,7 @@ Ou choisissez une action rapide ci-dessous 👇`;
     setIsTyping(true);
     setShowQuickActions(false);
 
-    // Simulation délai réponse IA
+    // Simulation dÃ©lai rÃ©ponse IA
     setTimeout(() => {
       const aiResponse = {
         id: Date.now() + 1,
@@ -311,7 +311,7 @@ Ou choisissez une action rapide ci-dessous 👇`;
               {/* Animation de particules */}
               <div className="absolute inset-0 bg-gradient-to-r from-blue-400/20 to-purple-400/20 animate-pulse"></div>
               
-              {/* Icône avec animation */}
+              {/* IcÃ´ne avec animation */}
               <div className="relative z-10 flex items-center justify-center">
                 <MessageCircle className="h-8 w-8 text-white group-hover:scale-110 transition-transform" />
                 <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-400 rounded-full border-2 border-white animate-pulse"></div>
@@ -335,7 +335,7 @@ Ou choisissez une action rapide ci-dessous 👇`;
                 Assistant IA Blockchain
               </div>
               <p className="text-xs text-gray-600 mt-1">
-                Trouvez votre terrain idéal avec l'IA !
+                Trouvez votre terrain idÃ©al avec l'IA !
               </p>
             </motion.div>
           </motion.div>
@@ -357,7 +357,7 @@ Ou choisissez une action rapide ci-dessous 👇`;
               <div className="relative z-10 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <Avatar className="h-10 w-10 border-2 border-white/30">
-                    <AvatarImage src="/api/placeholder/40/40" />
+                    <AvatarImage src="/api/YOUR_API_KEY/40/40" />
                     <AvatarFallback className="bg-white/20 text-white">
                       <Bot className="h-5 w-5" />
                     </AvatarFallback>
@@ -488,7 +488,7 @@ Ou choisissez une action rapide ci-dessous 👇`;
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  placeholder="Posez votre question..."
+                  YOUR_API_KEY="Posez votre question..."
                   className="flex-1 border-gray-300 focus:border-blue-500 rounded-xl"
                   disabled={isTyping}
                 />
@@ -504,7 +504,7 @@ Ou choisissez une action rapide ci-dessous 👇`;
               {/* Indicateur IA */}
               <div className="flex items-center justify-center mt-2 text-xs text-gray-500">
                 <Brain className="h-3 w-3 mr-1" />
-                Alimenté par l'IA Blockchain Teranga
+                AlimentÃ© par l'IA Blockchain Teranga
               </div>
             </div>
           </motion.div>

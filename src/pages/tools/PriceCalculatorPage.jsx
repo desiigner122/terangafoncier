@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Calculator, TrendingUp, MapPin, Home, DollarSign, Info, Zap, Shield, Target } from 'lucide-react';
@@ -16,7 +16,7 @@ const PriceCalculatorPage = () => {
 
   const locations = [
     { value: 'dakar', label: 'Dakar', multiplier: 2.5 },
-    { value: 'thies', label: 'Thiès', multiplier: 1.8 },
+    { value: 'thies', label: 'ThiÃ¨s', multiplier: 1.8 },
     { value: 'saint-louis', label: 'Saint-Louis', multiplier: 1.5 },
     { value: 'kaolack', label: 'Kaolack', multiplier: 1.3 },
     { value: 'ziguinchor', label: 'Ziguinchor', multiplier: 1.4 },
@@ -31,12 +31,12 @@ const PriceCalculatorPage = () => {
   ];
 
   const amenities = [
-    { value: 'electricity', label: 'Électricité', bonus: 0.15 },
+    { value: 'electricity', label: 'Ã‰lectricitÃ©', bonus: 0.15 },
     { value: 'water', label: 'Eau courante', bonus: 0.12 },
-    { value: 'road', label: 'Route bitumée', bonus: 0.10 },
-    { value: 'school', label: 'École à proximité', bonus: 0.08 },
-    { value: 'hospital', label: 'Hôpital à proximité', bonus: 0.07 },
-    { value: 'market', label: 'Marché à proximité', bonus: 0.05 }
+    { value: 'road', label: 'Route bitumÃ©e', bonus: 0.10 },
+    { value: 'school', label: 'Ã‰cole Ã  proximitÃ©', bonus: 0.08 },
+    { value: 'hospital', label: 'HÃ´pital Ã  proximitÃ©', bonus: 0.07 },
+    { value: 'market', label: 'MarchÃ© Ã  proximitÃ©', bonus: 0.05 }
   ];
 
   const calculatePrice = () => {
@@ -56,7 +56,7 @@ const PriceCalculatorPage = () => {
       finalPrice *= 0.7;
     }
 
-    // Bonus commodités
+    // Bonus commoditÃ©s
     let amenityBonus = 0;
     formData.amenities.forEach(amenity => {
       const amenityData = amenities.find(a => a.value === amenity);
@@ -65,7 +65,7 @@ const PriceCalculatorPage = () => {
 
     finalPrice *= (1 + amenityBonus);
 
-    // ROI estimé
+    // ROI estimÃ©
     const monthlyRent = finalPrice * 0.008; // 0.8% par mois
     const yearlyRent = monthlyRent * 12;
     const roi = (yearlyRent / finalPrice) * 100;
@@ -93,13 +93,13 @@ const PriceCalculatorPage = () => {
   const features = [
     {
       icon: Shield,
-      title: "Données Certifiées",
-      description: "Prix basés sur les transactions notariées réelles au Sénégal"
+      title: "DonnÃ©es CertifiÃ©es",
+      description: "Prix basÃ©s sur les transactions notariÃ©es rÃ©elles au SÃ©nÃ©gal"
     },
     {
       icon: Zap,
-      title: "IA Prédictive",
-      description: "Algorithme d'intelligence artificielle pour des estimations précises"
+      title: "IA PrÃ©dictive",
+      description: "Algorithme d'intelligence artificielle pour des estimations prÃ©cises"
     },
     {
       icon: Target,
@@ -112,8 +112,8 @@ const PriceCalculatorPage = () => {
     <>
       <Helmet>
         <title>Calculateur de Prix Immobilier - Teranga Foncier</title>
-        <meta name="description" content="Estimez le prix de votre propriété au Sénégal avec notre IA. Calcul ROI, analyse de marché et données certifiées pour éviter la fraude foncière." />
-        <meta name="keywords" content="prix immobilier sénégal, estimation terrain, calculateur ROI, investissement foncier" />
+        <meta name="description" content="Estimez le prix de votre propriÃ©tÃ© au SÃ©nÃ©gal avec notre IA. Calcul ROI, analyse de marchÃ© et donnÃ©es certifiÃ©es pour Ã©viter la fraude fonciÃ¨re." />
+        <meta name="keywords" content="prix immobilier sÃ©nÃ©gal, estimation terrain, calculateur ROI, investissement foncier" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
@@ -138,9 +138,9 @@ const PriceCalculatorPage = () => {
               </h1>
               
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Estimez précisément la valeur de votre propriété au Sénégal avec notre IA.
+                Estimez prÃ©cisÃ©ment la valeur de votre propriÃ©tÃ© au SÃ©nÃ©gal avec notre IA.
                 <br />
-                <span className="text-blue-600 font-semibold">Données certifiées • Calcul ROI • Protection anti-fraude</span>
+                <span className="text-blue-600 font-semibold">DonnÃ©es certifiÃ©es â€¢ Calcul ROI â€¢ Protection anti-fraude</span>
               </p>
             </motion.div>
           </div>
@@ -177,8 +177,8 @@ const PriceCalculatorPage = () => {
             <div className="max-w-4xl mx-auto">
               <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
                 <div className="bg-gradient-to-r from-blue-600 to-purple-600 p-8">
-                  <h2 className="text-3xl font-bold text-white mb-2">Estimation Immobilière</h2>
-                  <p className="text-blue-100">Remplissez les informations pour obtenir une estimation précise</p>
+                  <h2 className="text-3xl font-bold text-white mb-2">Estimation ImmobiliÃ¨re</h2>
+                  <p className="text-blue-100">Remplissez les informations pour obtenir une estimation prÃ©cise</p>
                 </div>
 
                 <div className="p-8">
@@ -188,7 +188,7 @@ const PriceCalculatorPage = () => {
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           <Home className="inline h-4 w-4 mr-2" />
-                          Type de propriété
+                          Type de propriÃ©tÃ©
                         </label>
                         <select
                           value={formData.propertyType}
@@ -204,11 +204,11 @@ const PriceCalculatorPage = () => {
                       <div>
                         <label className="block text-sm font-semibold text-gray-700 mb-2">
                           <TrendingUp className="inline h-4 w-4 mr-2" />
-                          Surface (m²)
+                          Surface (mÂ²)
                         </label>
                         <input
                           type="number"
-                          placeholder="Ex: 500"
+                          YOUR_API_KEY="Ex: 500"
                           value={formData.surface}
                           onChange={(e) => setFormData({...formData, surface: e.target.value})}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -251,7 +251,7 @@ const PriceCalculatorPage = () => {
                       </div>
 
                       <div>
-                        <label className="block text-sm font-semibold text-gray-700 mb-3">Commodités disponibles</label>
+                        <label className="block text-sm font-semibold text-gray-700 mb-3">CommoditÃ©s disponibles</label>
                         <div className="grid grid-cols-2 gap-3">
                           {amenities.map(amenity => (
                             <label key={amenity.value} className="flex items-center cursor-pointer">
@@ -277,7 +277,7 @@ const PriceCalculatorPage = () => {
                       </button>
                     </div>
 
-                    {/* Résultats */}
+                    {/* RÃ©sultats */}
                     {result && (
                       <motion.div
                         initial={{ opacity: 0, x: 30 }}
@@ -291,7 +291,7 @@ const PriceCalculatorPage = () => {
 
                         <div className="space-y-4">
                           <div className="bg-white rounded-xl p-4 shadow-sm">
-                            <div className="text-sm text-gray-600">Prix estimé</div>
+                            <div className="text-sm text-gray-600">Prix estimÃ©</div>
                             <div className="text-3xl font-bold text-green-600">
                               {result.estimatedPrice.toLocaleString()} CFA
                             </div>
@@ -316,11 +316,11 @@ const PriceCalculatorPage = () => {
                           <div className="bg-blue-50 rounded-xl p-4 border border-blue-200">
                             <div className="flex items-center mb-2">
                               <Info className="h-4 w-4 text-blue-600 mr-2" />
-                              <span className="text-sm font-semibold text-blue-800">Détails</span>
+                              <span className="text-sm font-semibold text-blue-800">DÃ©tails</span>
                             </div>
                             <div className="text-sm text-blue-700">
-                              <div>{result.propertyType} de {result.surface}m²</div>
-                              <div>Situé à {result.location}</div>
+                              <div>{result.propertyType} de {result.surface}mÂ²</div>
+                              <div>SituÃ© Ã  {result.location}</div>
                               <div>Revenu locatif annuel: {result.yearlyRent.toLocaleString()} CFA</div>
                             </div>
                           </div>
@@ -344,14 +344,14 @@ const PriceCalculatorPage = () => {
               className="max-w-3xl mx-auto"
             >
               <h2 className="text-3xl font-bold text-white mb-6">
-                Prêt à investir en toute sécurité ?
+                PrÃªt Ã  investir en toute sÃ©curitÃ© ?
               </h2>
               <p className="text-xl text-blue-100 mb-8">
-                Utilisez nos outils pour sécuriser vos investissements fonciers au Sénégal
+                Utilisez nos outils pour sÃ©curiser vos investissements fonciers au SÃ©nÃ©gal
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
                 <button className="bg-white text-blue-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
-                  Vérifier un titre foncier
+                  VÃ©rifier un titre foncier
                 </button>
                 <button className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white hover:text-blue-600 transition-colors">
                   Contacter un notaire

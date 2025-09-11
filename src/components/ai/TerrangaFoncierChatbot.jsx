@@ -12,7 +12,7 @@ import {
   User, 
   Sparkles
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const TerrangaFoncierChatbot = ({ className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -34,39 +34,39 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
   const faqDatabase = {
     // Questions sur les services
     "comment acheter terrain": {
-      response: "🏠 **Acheter un terrain sur Teranga Foncier :**\n\n1. **Parcourez** notre catalogue de terrains disponibles\n2. **Contactez** le vendeur via notre messagerie sécurisée\n3. **Vérifiez** les FileTexts fonciers avec nos notaires partenaires\n4. **Finalisez** la transaction avec accompagnement juridique\n\n✅ Tous nos terrains sont vérifiés et géolocalisés !",
+      response: "?? **Acheter un terrain sur Teranga Foncier :**\n\n1. **Parcourez** notre catalogue de terrains disponibles\n2. **Contactez** le vendeur via notre messagerie sécurisée\n3. **Vérifiez** les FileTexts fonciers avec nos notaires partenaires\n4. **Finalisez** la transaction avec accompagnement juridique\n\n? Tous nos terrains sont vérifiés et géolocalisés !",
       keywords: ["acheter", "terrain", "achat", "propriété", "parcelle"]
     },
     "comment vendre terrain": {
-      response: "💰 **Vendre votre terrain :**\n\n1. **Créez** votre annonce avec photos et description\n2. **Uploadez** vos FileTexts fonciers\n3. **Attendez** la vérification par nos experts\n4. **Recevez** des offres d'acheteurs qualifiés\n\n📋 **FileTexts requis :** Titre foncier, carte d'identité, justificatif de domicile",
+      response: "?? **Vendre votre terrain :**\n\n1. **Créez** votre annonce avec photos et description\n2. **Uploadez** vos FileTexts fonciers\n3. **Attendez** la vérification par nos experts\n4. **Recevez** des offres d'acheteurs qualifiés\n\n?? **FileTexts requis :** Titre foncier, carte d'identité, justificatif de domicile",
       keywords: ["vendre", "vente", "vendeur", "annonce", "mettre en vente"]
     },
     "comment devenir vendeur": {
-      response: "🎯 **Devenir vendeur sur Teranga Foncier :**\n\n1. **Connectez-vous** à votre compte\n2. **Cliquez** sur \"Devenir Vendeur\" dans votre profil\n3. **Soumettez** vos FileTexts (CNI, justificatif domicile)\n4. **Attendez** la validation (24-48h)\n\n🔍 **Avantages :** Commission réduite, outils marketing, support dédié",
+      response: "?? **Devenir vendeur sur Teranga Foncier :**\n\n1. **Connectez-vous** à votre compte\n2. **Cliquez** sur \"Devenir Vendeur\" dans votre profil\n3. **Soumettez** vos FileTexts (CNI, justificatif domicile)\n4. **Attendez** la validation (24-48h)\n\n?? **Avantages :** Commission réduite, outils marketing, support dédié",
       keywords: ["devenir vendeur", "vendeur", "comment devenir", "inscription vendeur"]
     },
     "prix commission": {
-      response: "💳 **Nos commissions :**\n\n• **Particuliers :** 2% du prix de vente\n• **Vendeurs Pro :** 1.5% du prix de vente\n• **Primo-vendeurs :** 1% les 6 premiers mois\n\n🎁 **Promotion :** Première vente gratuite pour les nouveaux inscrits !",
+      response: "?? **Nos commissions :**\n\n• **Particuliers :** 2% du prix de vente\n• **Vendeurs Pro :** 1.5% du prix de vente\n• **Primo-vendeurs :** 1% les 6 premiers mois\n\n?? **Promotion :** Première vente gratuite pour les nouveaux inscrits !",
       keywords: ["prix", "commission", "frais", "coût", "tarif"]
     },
     "FileTexts requis": {
-      response: "📄 **FileTexts nécessaires :**\n\n**Pour vendre :**\n• Titre foncier ou acte de vente\n• Carte d'identité nationale\n• Justificatif de domicile récent\n\n**Pour acheter :**\n• Carte d'identité\n• Justificatif de revenus\n• Attestation bancaire\n\n✅ Tous les FileTexts sont vérifiés par nos notaires partenaires",
+      response: "?? **FileTexts nécessaires :**\n\n**Pour vendre :**\n• Titre foncier ou acte de vente\n• Carte d'identité nationale\n• Justificatif de domicile récent\n\n**Pour acheter :**\n• Carte d'identité\n• Justificatif de revenus\n• Attestation bancaire\n\n? Tous les FileTexts sont vérifiés par nos notaires partenaires",
       keywords: ["FileTexts", "papiers", "requis", "nécessaires", "titre foncier"]
     },
     "financement crédit": {
-      response: "🏦 **Solutions de financement :**\n\nNos **banques partenaires** :\n• **CBAO** - Crédit habitat jusqu'à 80%\n• **BOA** - Crédit terrain jusqu'à 70%\n• **Ecobank** - Solutions personnalisées\n\n📞 **Simulation gratuite** avec nos conseillers financiers\n💡 **Conseil :** Préparez votre dossier en amont !",
+      response: "?? **Solutions de financement :**\n\nNos **banques partenaires** :\n• **CBAO** - Crédit habitat jusqu'à 80%\n• **BOA** - Crédit terrain jusqu'à 70%\n• **Ecobank** - Solutions personnalisées\n\n?? **Simulation gratuite** avec nos conseillers financiers\n?? **Conseil :** Préparez votre dossier en amont !",
       keywords: ["financement", "crédit", "banque", "prêt", "financer"]
     },
     "régions disponibles": {
-      response: "🗺️ **Teranga Foncier couvre tout le Sénégal :**\n\n**Principales régions :**\n• Dakar & Banlieue (plus de 500 terrains)\n• Thiès & Mbour (zone touristique)\n• Saint-Louis (patrimoine historique)\n• Kaolack (centre commercial)\n• Ziguinchor (Casamance)\n\n📍 **14 régions** couvertes avec géolocalisation précise",
+      response: "??? **Teranga Foncier couvre tout le Sénégal :**\n\n**Principales régions :**\n• Dakar & Banlieue (plus de 500 terrains)\n• Thiès & Mbour (zone touristique)\n• Saint-Louis (patrimoine historique)\n• Kaolack (centre commercial)\n• Ziguinchor (Casamance)\n\n?? **14 régions** couvertes avec géolocalisation précise",
       keywords: ["régions", "où", "zones", "secteurs", "localisation", "dakar", "thiès"]
     },
     "sécurité transaction": {
-      response: "🔒 **Sécurité garantie :**\n\n• **Vérification** : Tous les terrains sont contrôlés\n• **Notaires** : Authentification par professionnels\n• **Géomètres** : Délimitation précise\n• **Assurance** : Protection jusqu'à 50M FCFA\n\n⚖️ **Support juridique** inclus dans toutes nos transactions",
+      response: "?? **Sécurité garantie :**\n\n• **Vérification** : Tous les terrains sont contrôlés\n• **Notaires** : Authentification par professionnels\n• **Géomètres** : Délimitation précise\n• **Assurance** : Protection jusqu'à 50M FCFA\n\n?? **Support juridique** inclus dans toutes nos transactions",
       keywords: ["sécurité", "sûr", "arnaque", "fiable", "confiance", "protection"]
     },
     "contact support": {
-      response: "📞 **Contactez notre support :**\n\n• **Téléphone :** +221 77 593 42 41\n• **WhatsApp :** +221 77 593 42 41  \n• **Email :** support@terangafoncier.com\n• **Chat :** Directement sur la plateforme\n\n⏰ **Horaires :** Lun-Ven 8h-22h, Sam-Dim 9h-20h\n🚀 **Réponse moyenne :** 24 heures maximum",
+      response: "?? **Contactez notre support :**\n\n• **Téléphone :** +221 77 593 42 41\n• **WhatsApp :** +221 77 593 42 41  \n• **Email :** support@terangafoncier.com\n• **Chat :** Directement sur la plateforme\n\n? **Horaires :** Lun-Ven 8h-22h, Sam-Dim 9h-20h\n?? **Réponse moyenne :** 24 heures maximum",
       keywords: ["contact", "support", "aide", "assistance", "problème", "téléphone"]
     }
   };
@@ -77,13 +77,13 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
     const userRole = user?.role || user?.user_type || 'Particulier';
     
     const roleMessages = {
-      'Particulier': `Bonjour ${userName} ! 👋 Je suis votre assistant Teranga Foncier. Je peux vous aider à trouver le terrain parfait ou répondre à vos questions sur l'immobilier au Sénégal.`,
-      'Vendeur Particulier': `Bonjour ${userName} ! 💼 En tant que vendeur, je peux vous aider à optimiser vos annonces, comprendre les démarches de vente et maximiser vos chances de transaction.`,
-      'Vendeur Pro': `Bonjour ${userName} ! 🏢 Je suis là pour vous accompagner dans vos ventes professionnelles, la gestion de votre portfolio et l'optimisation de votre activité.`,
-      'Banque': `Bonjour ${userName} ! 🏦 Je peux vous renseigner sur les solutions de financement, les partenariats et l'intégration de vos services bancaires.`,
-      'Notaire': `Bonjour ${userName} ! ⚖️ Je suis disponible pour toutes questions sur la vérification des actes, les procédures d'authentification et la sécurisation des transactions.`,
-      'Agent Foncier': `Bonjour ${userName} ! 🏢 Je peux vous aider avec les vérifications foncières, les procédures administratives et la gestion des dossiers.`,
-      'Mairie': `Bonjour ${userName} ! 🏛️ Je suis à votre disposition pour les questions sur les demandes municipales, les autorisations et les démarches administratives.`
+      'Particulier': `Bonjour ${userName} ! ?? Je suis votre assistant Teranga Foncier. Je peux vous aider à trouver le terrain parfait ou répondre à vos questions sur l'immobilier au Sénégal.`,
+      'Vendeur Particulier': `Bonjour ${userName} ! ?? En tant que vendeur, je peux vous aider à optimiser vos annonces, comprendre les démarches de vente et maximiser vos chances de transaction.`,
+      'Vendeur Pro': `Bonjour ${userName} ! ?? Je suis là pour vous accompagner dans vos ventes professionnelles, la gestion de votre portfolio et l'optimisation de votre activité.`,
+      'Banque': `Bonjour ${userName} ! ?? Je peux vous renseigner sur les solutions de financement, les partenariats et l'intégration de vos services bancaires.`,
+      'Notaire': `Bonjour ${userName} ! ?? Je suis disponible pour toutes questions sur la vérification des actes, les procédures d'authentification et la sécurisation des transactions.`,
+      'Agent Foncier': `Bonjour ${userName} ! ?? Je peux vous aider avec les vérifications foncières, les procédures administratives et la gestion des dossiers.`,
+      'Mairie': `Bonjour ${userName} ! ??? Je suis à votre disposition pour les questions sur les demandes municipales, les autorisations et les démarches administratives.`
     };
 
     return roleMessages[userRole] || roleMessages['Particulier'];
@@ -139,15 +139,15 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
     
     if (lowerMessage.includes('bonjour') || lowerMessage.includes('salut') || lowerMessage.includes('bonsoir') || lowerMessage.includes('bonne soirée')) {
       const greeting = lowerMessage.includes('bonsoir') || lowerMessage.includes('bonne soirée') ? 'Bonsoir' : 'Bonjour';
-      return `${greeting} ! 😊 Je suis ravi de vous aider. En tant que ${userRole}, quelles sont vos questions sur Teranga Foncier ?`;
+      return `${greeting} ! ?? Je suis ravi de vous aider. En tant que ${userRole}, quelles sont vos questions sur Teranga Foncier ?`;
     }
 
     if (lowerMessage.includes('merci')) {
-      return "De rien ! 😊 N'hésitez pas si vous avez d'autres questions. Je suis là pour vous aider à réussir sur Teranga Foncier ! 🏠✨";
+      return "De rien ! ?? N'hésitez pas si vous avez d'autres questions. Je suis là pour vous aider à réussir sur Teranga Foncier ! ???";
     }
 
     // Réponse par défaut intelligente
-    return `🤖 Je n'ai pas trouvé d'information spécifique sur "${message}". \n\nVoici ce que je peux vous aider à comprendre :\n• Acheter ou vendre un terrain\n• Procédures et documents\n• Financement et crédits\n• Sécurité des transactions\n\n💬 Reformulez votre question ou contactez notre support au +221 77 593 42 41`;
+    return `?? Je n'ai pas trouvé d'information spécifique sur "${message}". \n\nVoici ce que je peux vous aider à comprendre :\n• Acheter ou vendre un terrain\n• Procédures et documents\n• Financement et crédits\n• Sécurité des transactions\n\n?? Reformulez votre question ou contactez notre support au +221 77 593 42 41`;
   };
 
   const handleSendMessage = () => {
@@ -304,7 +304,7 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
                     <Input
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      placeholder="Posez votre question..."
+                      YOUR_API_KEY="Posez votre question..."
                       onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                       className="flex-1"
                       disabled={isTyping}

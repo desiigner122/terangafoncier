@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Users, Plus, Search, Filter, MoreVertical, Edit, Trash2,
@@ -24,7 +24,7 @@ const CRMPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
 
-  // Données simulées CRM
+  // DonnÃ©es simulÃ©es CRM
   const [crmStats] = useState({
     totalContacts: 247,
     activeLeads: 42,
@@ -44,11 +44,11 @@ const CRMPage = () => {
       role: 'Acheteur Diaspora',
       status: 'lead',
       location: 'Paris, France',
-      interests: ['Terrain résidentiel', 'Construction'],
+      interests: ['Terrain rÃ©sidentiel', 'Construction'],
       lastContact: '2024-03-15',
       dealValue: 15000000,
       avatar: null,
-      notes: 'Intéressée par un terrain à Mbour pour construction maison familiale',
+      notes: 'IntÃ©ressÃ©e par un terrain Ã  Mbour pour construction maison familiale',
       score: 85
     },
     {
@@ -58,12 +58,12 @@ const CRMPage = () => {
       phone: '+221 76 987 65 43',
       role: 'Promoteur',
       status: 'client',
-      location: 'Dakar, Sénégal',
+      location: 'Dakar, SÃ©nÃ©gal',
       interests: ['Terrain commercial', 'Investissement'],
       lastContact: '2024-03-14',
       dealValue: 35000000,
       avatar: null,
-      notes: 'Projet de résidence haut standing en cours',
+      notes: 'Projet de rÃ©sidence haut standing en cours',
       score: 92
     },
     {
@@ -73,7 +73,7 @@ const CRMPage = () => {
       phone: '+221 78 456 78 90',
       role: 'Particulier',
       status: 'prospect',
-      location: 'Thiès, Sénégal',
+      location: 'ThiÃ¨s, SÃ©nÃ©gal',
       interests: ['Terrain agricole'],
       lastContact: '2024-03-13',
       dealValue: 8000000,
@@ -89,14 +89,14 @@ const CRMPage = () => {
       title: 'Terrain Mbour - Diallo',
       contactId: 1,
       value: 15000000,
-      stage: 'Négociation',
+      stage: 'NÃ©gociation',
       probability: 70,
       expectedClose: '2024-03-30',
       lastActivity: '2024-03-15'
     },
     {
       id: 2,
-      title: 'Résidence Almadies - Seck',
+      title: 'RÃ©sidence Almadies - Seck',
       contactId: 2,
       value: 35000000,
       stage: 'Proposition',
@@ -110,7 +110,7 @@ const CRMPage = () => {
     {
       id: 1,
       type: 'call',
-      description: 'Appel téléphonique avec Aminata Diallo',
+      description: 'Appel tÃ©lÃ©phonique avec Aminata Diallo',
       contactId: 1,
       timestamp: '2024-03-15T14:30:00Z',
       outcome: 'Positive'
@@ -129,7 +129,7 @@ const CRMPage = () => {
       description: 'Visite terrain avec Moussa Seck',
       contactId: 2,
       timestamp: '2024-03-14T16:00:00Z',
-      outcome: 'Très positive'
+      outcome: 'TrÃ¨s positive'
     }
   ]);
 
@@ -144,7 +144,7 @@ const CRMPage = () => {
     'Prospection': 'bg-blue-500',
     'Qualification': 'bg-yellow-500',
     'Proposition': 'bg-orange-500',
-    'Négociation': 'bg-purple-500',
+    'NÃ©gociation': 'bg-purple-500',
     'Fermeture': 'bg-green-500'
   };
 
@@ -166,7 +166,7 @@ const CRMPage = () => {
   const exportToExcel = () => {
     // Logique d'export Excel ici
     console.log('Export Excel des contacts...');
-    alert('Export Excel en cours de développement');
+    alert('Export Excel en cours de dÃ©veloppement');
   };
 
   const getActivityIcon = (type) => {
@@ -188,14 +188,14 @@ const CRMPage = () => {
       <div className="flex-1 ml-80 p-6 bg-gray-50 min-h-screen">
         <Helmet>
           <title>CRM - Teranga Foncier</title>
-          <meta name="description" content="Système de gestion client de Teranga Foncier" />
+          <meta name="description" content="SystÃ¨me de gestion client de Teranga Foncier" />
         </Helmet>
 
-        {/* En-tête */}
+        {/* En-tÃªte */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">CRM - Gestion Clients</h1>
-            <p className="text-gray-600">Gérez vos contacts, prospects et ventes</p>
+            <p className="text-gray-600">GÃ©rez vos contacts, prospects et ventes</p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -210,7 +210,7 @@ const CRMPage = () => {
           </div>
         </div>
 
-        {/* Statistiques générales */}
+        {/* Statistiques gÃ©nÃ©rales */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <Card>
             <CardContent className="p-6">
@@ -242,7 +242,7 @@ const CRMPage = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Ventes Réalisées</p>
+                  <p className="text-sm text-gray-600">Ventes RÃ©alisÃ©es</p>
                   <p className="text-2xl font-bold">{crmStats.convertedSales}</p>
                   <p className="text-xs text-green-600">Ce mois</p>
                 </div>
@@ -271,7 +271,7 @@ const CRMPage = () => {
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="contacts">Contacts ({contacts.length})</TabsTrigger>
             <TabsTrigger value="deals">Affaires ({deals.length})</TabsTrigger>
-            <TabsTrigger value="activities">Activités ({activities.length})</TabsTrigger>
+            <TabsTrigger value="activities">ActivitÃ©s ({activities.length})</TabsTrigger>
           </TabsList>
 
           {/* Vue d'ensemble */}
@@ -312,12 +312,12 @@ const CRMPage = () => {
                 </CardContent>
               </Card>
 
-              {/* Activités récentes */}
+              {/* ActivitÃ©s rÃ©centes */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Activity className="w-5 h-5" />
-                    Activités Récentes
+                    ActivitÃ©s RÃ©centes
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -332,7 +332,7 @@ const CRMPage = () => {
                           <div className="flex-1 min-w-0">
                             <p className="text-sm font-medium">{activity.description}</p>
                             <p className="text-xs text-gray-500">
-                              {contact?.name} • {new Date(activity.timestamp).toLocaleDateString('fr-FR')}
+                              {contact?.name} â€¢ {new Date(activity.timestamp).toLocaleDateString('fr-FR')}
                             </p>
                           </div>
                           <Badge variant="secondary" className="text-xs">
@@ -356,7 +356,7 @@ const CRMPage = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     type="text"
-                    placeholder="Rechercher contacts..."
+                    YOUR_API_KEY="Rechercher contacts..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 w-80"
@@ -365,7 +365,7 @@ const CRMPage = () => {
                 
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-48">
-                    <SelectValue placeholder="Filtrer par statut" />
+                    <SelectValue YOUR_API_KEY="Filtrer par statut" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les statuts</SelectItem>
@@ -445,7 +445,7 @@ const CRMPage = () => {
                       </div>
                       
                       <div className="text-xs text-gray-600 mb-4">
-                        <strong>Intérêts:</strong> {contact.interests.join(', ')}
+                        <strong>IntÃ©rÃªts:</strong> {contact.interests.join(', ')}
                       </div>
                       
                       <div className="text-xs text-gray-500 mb-4 line-clamp-2">
@@ -486,9 +486,9 @@ const CRMPage = () => {
                         <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Affaire</th>
                         <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Contact</th>
                         <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Valeur</th>
-                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Étape</th>
-                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Probabilité</th>
-                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Fermeture prévue</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Ã‰tape</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">ProbabilitÃ©</th>
+                        <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Fermeture prÃ©vue</th>
                         <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Actions</th>
                       </tr>
                     </thead>
@@ -500,7 +500,7 @@ const CRMPage = () => {
                             <td className="px-6 py-4">
                               <div className="font-medium text-gray-900">{deal.title}</div>
                               <div className="text-sm text-gray-500">
-                                Dernière activité: {new Date(deal.lastActivity).toLocaleDateString('fr-FR')}
+                                DerniÃ¨re activitÃ©: {new Date(deal.lastActivity).toLocaleDateString('fr-FR')}
                               </div>
                             </td>
                             <td className="px-6 py-4">
@@ -553,11 +553,11 @@ const CRMPage = () => {
             </Card>
           </TabsContent>
 
-          {/* Activités */}
+          {/* ActivitÃ©s */}
           <TabsContent value="activities" className="space-y-6">
             <Card>
               <CardHeader>
-                <CardTitle>Historique des Activités</CardTitle>
+                <CardTitle>Historique des ActivitÃ©s</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -574,7 +574,7 @@ const CRMPage = () => {
                             <Badge variant="secondary">{activity.outcome}</Badge>
                           </div>
                           <p className="text-sm text-gray-600 mt-1">
-                            Contact: {contact?.name} • {new Date(activity.timestamp).toLocaleString('fr-FR')}
+                            Contact: {contact?.name} â€¢ {new Date(activity.timestamp).toLocaleString('fr-FR')}
                           </p>
                         </div>
                       </div>

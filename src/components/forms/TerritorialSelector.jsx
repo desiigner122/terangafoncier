@@ -111,7 +111,7 @@ const TerritorialSelector = ({
     onChange, 
     options, 
     loading, 
-    placeholder,
+    YOUR_API_KEY,
     error,
     disabled = false
   }) => (
@@ -134,7 +134,7 @@ const TerritorialSelector = ({
           `}
         >
           <option value="">
-            {loading ? 'Chargement...' : placeholder}
+            {loading ? 'Chargement...' : YOUR_API_KEY}
           </option>
           {options.map((option) => (
             <option key={option.id} value={option.id}>
@@ -165,7 +165,7 @@ const TerritorialSelector = ({
           onChange={handleRegionChange}
           options={regions}
           loading={loading.regions}
-          placeholder="Sélectionnez une région"
+          YOUR_API_KEY="Sélectionnez une région"
           error={errors.region_id}
         />
       )}
@@ -178,7 +178,7 @@ const TerritorialSelector = ({
           onChange={handleDepartmentChange}
           options={departments}
           loading={loading.departments}
-          placeholder={formData.region_id ? "Sélectionnez un département" : "Sélectionnez d'abord une région"}
+          YOUR_API_KEY={formData.region_id ? "Sélectionnez un département" : "Sélectionnez d'abord une région"}
           error={errors.department_id}
           disabled={!formData.region_id}
         />
@@ -192,7 +192,7 @@ const TerritorialSelector = ({
           onChange={handleCommuneChange}
           options={communes}
           loading={loading.communes}
-          placeholder={formData.department_id ? "Sélectionnez une commune" : "Sélectionnez d'abord un département"}
+          YOUR_API_KEY={formData.department_id ? "Sélectionnez une commune" : "Sélectionnez d'abord un département"}
           error={errors.commune_id}
           disabled={!formData.department_id}
         />

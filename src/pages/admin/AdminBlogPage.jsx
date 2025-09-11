@@ -96,7 +96,7 @@ const AdminBlogPage = () => {
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 type="search"
-                placeholder="Rechercher par titre ou catégorie..."
+                YOUR_API_KEY="Rechercher par titre ou catégorie..."
                 className="pl-8 w-full md:w-1/3"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}

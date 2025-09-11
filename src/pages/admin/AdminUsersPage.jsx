@@ -259,7 +259,7 @@ const AdminUsersPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Input
-                placeholder="Rechercher par nom, email, téléphone..."
+                YOUR_API_KEY="Rechercher par nom, email, téléphone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full"
@@ -268,7 +268,7 @@ const AdminUsersPage = () => {
             
             <Select value={selectedRole} onValueChange={setSelectedRole}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrer par rôle" />
+                <SelectValue YOUR_API_KEY="Filtrer par rôle" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les rôles</SelectItem>
@@ -280,7 +280,7 @@ const AdminUsersPage = () => {
             
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrer par statut" />
+                <SelectValue YOUR_API_KEY="Filtrer par statut" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les statuts</SelectItem>
@@ -292,7 +292,7 @@ const AdminUsersPage = () => {
             
             <Select value={selectedVerification} onValueChange={setSelectedVerification}>
               <SelectTrigger>
-                <SelectValue placeholder="Filtrer par vérification" />
+                <SelectValue YOUR_API_KEY="Filtrer par vérification" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Toutes les vérifications</SelectItem>

@@ -1,7 +1,7 @@
 ﻿
 import React from 'react';
 import { Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { hasPermission, getAccessDeniedMessage, getDefaultDashboard } from '@/lib/rbacConfig';
 // useToast import supprimé - utilisation window.safeGlobalToast
@@ -9,16 +9,23 @@ import { hasPermission, getAccessDeniedMessage, getDefaultDashboard } from '@/li
 const ProtectedRoute = ({ children }) => {
   try {
     const authContext = useAuth();
-    const { user, profile, loading } = authContext;
+    const { user, session, loading } = authContext;
     const location = useLocation();
+
+    // Créer un profil basique depuis les données utilisateur
+    const profile = user ? {
+      verification_status: user.user_metadata?.verification_status || 'active',
+      role: user.user_metadata?.role,
+      email: user.email
+    } : null;
 
     console.log('🛡️ ProtectedRoute state:', { 
       hasUser: !!user, 
-      hasProfile: !!profile, 
+      hasSession: !!session, 
       loading,
       userId: user?.id,
       userEmail: user?.email,
-      profileRole: profile?.role,
+      userRole: user?.user_metadata?.role,
       currentPath: location.pathname
     });
 
@@ -37,7 +44,7 @@ const ProtectedRoute = ({ children }) => {
       return children ? children : <Outlet />;
     }
 
-    if (!user) {
+    if (!session || !user) {
       console.log('🚪 ProtectedRoute: No user, redirecting to login');
       return <Navigate to="/login" state={{ from: location }} replace />;
     }

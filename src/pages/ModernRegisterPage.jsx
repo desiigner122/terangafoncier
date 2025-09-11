@@ -26,7 +26,7 @@ import {
 import { Helmet } from 'react-helmet-async';
 import { supabase } from '@/lib/customSupabaseClient';
 
-const logoUrl = "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6e6f6bf058d3590fd198aa8fadf9d2dd.png";
+const logoUrl = "/images/logo.png";
 
 const allowedRoles = ['Particulier', 'Vendeur Particulier', 'Vendeur Pro', 'Investisseur'];
 

@@ -23,7 +23,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
-const logoUrl = "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6e6f6bf058d3590fd198aa8fadf9d2dd.png";
+const logoUrl = "/images/logo.png";
 
 const ModernLoginPage = () => {
   const [email, setEmail] = useState('');

@@ -52,7 +52,7 @@ const ModernAboutPage = () => {
   const teamMember = {
     name: "Abdoulaye Diémé",
     role: "Fondateur & CEO",
-    imgUrl: "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/b56900731c6de95f42d124444209a813.jpg",
+    imgUrl: "/images/team-member.jpg",
     imgAlt: "Portrait d'Abdoulaye Diémé, fondateur de Teranga Foncier",
     linkedin: "https://www.linkedin.com/in/abdoulaye-di%C3%A9m%C3%A9-58136a1b1/",
     phone: "+221 77 593 42 41",

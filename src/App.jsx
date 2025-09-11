@@ -12,7 +12,6 @@ import DashboardLayout from '@/components/layout/DashboardLayout';
 import HomePage from '@/pages/HomePage';
 import ModernHomePage from '@/pages/ModernHomePage';
 import LoginPage from '@/pages/LoginPage';
-import TempLoginPage from '@/pages/TempLoginPage';
 import ModernLoginPage from '@/pages/ModernLoginPage';
 import BlockchainLoginPage from '@/pages/BlockchainLoginPage';
 import ForgotPasswordPage from '@/pages/ForgotPasswordPage';
@@ -36,7 +35,6 @@ import ModernAboutPage from '@/pages/ModernAboutPage';
 import BlockchainAboutPage from '@/pages/BlockchainAboutPage';
 import FoncierBlockchainPage from '@/pages/FoncierBlockchainPage';
 import FoncierSenegalPage from '@/pages/FoncierSenegalPage';
-import TestAccountsPage from '@/pages/TestAccountsPage';
 import MapPage from '@/pages/MapPage';
 import MyRequestsPage from '@/pages/MyRequestsPage';
 import SettingsPage from '@/pages/SettingsPage';
@@ -89,7 +87,6 @@ import SecureMessagingPage from '@/pages/SecureMessagingPage';
 import SimpleDashboard from '@/pages/SimpleDashboard';
 import DashboardRedirect from '@/components/DashboardRedirect';
 import PurchaseProcessPage from '@/pages/PurchaseProcessPage';
-import TestAuthPage from '@/pages/TestAuthPage';
 
 // Pages IA et Analytics
 import TerangaAIPage from '@/pages/TerangaAIPage';
@@ -108,7 +105,6 @@ import DocumentsPage from '@/pages/DocumentsPage';
 import CRMPage from '@/pages/CRMPage';
 import ExportPage from '@/pages/ExportPage';
 import UploadsPage from '@/pages/UploadsPage';
-import UserProfileTestPage from '@/pages/UserProfileTestPage';
 import CityDetailPage from '@/pages/CityDetailPage';
 import CommunalLandsPage from '@/pages/CommunalLandsPage';
 import TermsPage from '@/pages/TermsPage';
@@ -133,10 +129,6 @@ import AdminParcelsPage from '@/pages/admin/AdminParcelsPage';
 import AdminSystemRequestsPage from '@/pages/admin/AdminSystemRequestsPage';
 import AdminContractsPage from '@/pages/admin/AdminContractsPage';
 import AuthDebugPage from '@/pages/AuthDebugPage';
-import AuthTestPage from '@/pages/AuthTestPage';
-import DashboardSelectorPage from '@/pages/DashboardSelectorPage';
-import QuickAccessPage from '@/pages/QuickAccessPage';
-import QuickDashboardTest from '@/pages/QuickDashboardTest';
 
 // Import des dashboards
 import ParticularDashboard from '@/pages/dashboards/ParticularDashboard';
@@ -200,7 +192,6 @@ import BanquesDashboardPage from '@/pages/solutions/dashboards/BanquesDashboardP
 import InvestisseursDashboardPage from '@/pages/solutions/dashboards/InvestisseursDashboardPage';
 import PromoteursDashboardPage from '@/pages/solutions/dashboards/PromoteursDashboardPage';
 import MairiesDashboardPage from '@/pages/solutions/dashboards/MairiesDashboardPage';
-import AccountCreationTestPage from '@/pages/AccountCreationTestPage';
 import NotairesDashboardPage from '@/pages/solutions/dashboards/NotairesDashboardPage';
 import AccessDeniedPage from '@/components/AccessDeniedPage';
 import SecurityDiagnosticTool from '@/components/SecurityDiagnosticTool';
@@ -259,18 +250,12 @@ function App() {
             <Routes>
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />
-              <Route path="login" element={<TempLoginPage />} />
-              <Route path="test-auth" element={<TestAuthPage />} />
+              <Route path="login" element={<ModernLoginPage />} />
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
               <Route path="register" element={<MultiStepRegisterPage />} />
               <Route path="reset-password" element={<ResetPasswordPage />} />
-              <Route path="test-account-creation" element={<AccountCreationTestPage />} />
               <Route path="debug-dashboard" element={<DebugDashboard />} />
               <Route path="auth-debug" element={<AuthDebugPage />} />
-              <Route path="auth-test" element={<AuthTestPage />} />
-              <Route path="dashboards" element={<DashboardSelectorPage />} />
-              <Route path="quick-test" element={<QuickDashboardTest />} />
-              <Route path="quick-access" element={<QuickAccessPage />} />
               <Route path="banned" element={<BannedPage />} />
               <Route path="terrains-communaux" element={<CommunalLandsPage />} />
               <Route path="promoters-projects" element={<PromoterProjectsPage />} />
@@ -349,7 +334,6 @@ function App() {
               <Route path="terrains" element={<TerrainsVendeursPage />} />
               <Route path="foncier-blockchain" element={<FoncierBlockchainPage />} />
               <Route path="foncier-senegal" element={<FoncierSenegalPage />} />
-              <Route path="test-accounts" element={<TestAccountsPage />} />
               <Route path="carte" element={<CartePage />} />
               
               {/* Admin Login - Accessible sans authentification */}
@@ -414,7 +398,6 @@ function App() {
                   <Route path="crm" element={<CRMPage />} />
                   <Route path="export" element={<ExportPage />} />
                   <Route path="uploads" element={<UploadsPage />} />
-                  <Route path="user-test" element={<UserProfileTestPage />} />
                   <Route path="messaging" element={<SecureMessagingPage />} />
                   <Route path="case-tracking/:id" element={<CaseTrackingPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />

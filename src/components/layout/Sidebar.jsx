@@ -37,7 +37,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/customSupabaseClient';
 import BecomeSellerButton from '@/components/auth/BecomeSellerButton';
 
-const logoUrl = "https://horizons-cdn.hostinger.com/bcc20f7d-f81b-4a6f-9229-7d6ba486204e/6e6f6bf058d3590fd198aa8fadf9d2dd.png";
+const logoUrl = "/images/logo.png";
 
 const NavItem = ({ item, active, hasNotification }) => (
   <div className={cn(
@@ -110,7 +110,7 @@ const Sidebar = () => {
     useEffect(() => {
         const fetchNotificationsCount = async () => {
             if (user) {
-                // FIX: Utiliser 'read' au lieu de 'is_read' pour correspondre à la structure DB
+                // FIX: Utiliser 'read' au lieu de 'is_read' pour correspondre ï¿½ la structure DB
                 const { count: generalCount } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false);
                 const { count: requestsCount } = await supabase.from('requests').select('*', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ['En cours', 'Nouvelle']);
                 setNotifications({
@@ -172,7 +172,7 @@ const Sidebar = () => {
               
               <Button variant="ghost" className="w-full justify-start text-red-400 hover:bg-red-500/20 hover:text-red-300" onClick={signOut}>
                   <LogOut className="mr-3 h-5 w-5" />
-                  Déconnexion
+                  Dï¿½connexion
               </Button>
          </div>
        )}

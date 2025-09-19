@@ -29,33 +29,33 @@ const SuccessStoriesPage = () => {
       name: 'Aminata Diallo',
       role: 'Diaspora - France',
       category: 'diaspora',
-      story: 'J\'ai achetÃ© mon terrain depuis Paris et suivi ma construction en temps rÃ©el grÃ¢ce Ã  Teranga Foncier.',
+      story: 'J\'ai acheté mon terrain depuis Paris et suivi ma construction en temps réel grâce Ï  Teranga Foncier.',
       investment: '25M FCFA',
       location: 'Saly, Mbour',
       timeline: '8 mois',
       image: '/api/YOUR_API_KEY/100/100',
       rating: 5,
-      highlights: ['Suivi construction', 'Mandataire de confiance', 'Livraison Ã  temps']
+      highlights: ['Suivi construction', 'Mandataire de confiance', 'Livraison Ï  temps']
     },
     {
       id: 2,
       name: 'Moussa Seck',
       role: 'Promoteur',
       category: 'promoteur',
-      story: 'Nous avons vendu 85% de notre programme en 6 mois grÃ¢ce au rÃ©seau diaspora de Teranga Foncier.',
+      story: 'Nous avons vendu 85% de notre programme en 6 mois grâce au réseau diaspora de Teranga Foncier.',
       investment: '2.5 Milliards FCFA',
       location: 'VDN, Dakar',
       timeline: '6 mois',
       image: '/api/YOUR_API_KEY/100/100',
       rating: 5,
-      highlights: ['Commercialisation accÃ©lÃ©rÃ©e', 'RÃ©seau diaspora', '85% vendus']
+      highlights: ['Commercialisation accélérée', 'Réseau diaspora', '85% vendus']
     },
     {
       id: 3,
       name: 'Fatou Ba',
-      role: 'Particulier SÃ©nÃ©gal',
+      role: 'Particulier Sénégal',
       category: 'particulier',
-      story: 'Premier achat immobilier facilitÃ©. Documentation complÃ¨te et accompagnement juridique parfait.',
+      story: 'Premier achat immobilier facilité. Documentation complète et accompagnement juridique parfait.',
       investment: '18M FCFA',
       location: 'Bargny, Rufisque',
       timeline: '3 mois',
@@ -68,22 +68,22 @@ const SuccessStoriesPage = () => {
       name: 'Banque Atlantique',
       role: 'Partenaire Bancaire',
       category: 'banque',
-      story: 'Nos crÃ©dits fonciers ont augmentÃ© de 340% grÃ¢ce au partenariat avec Teranga Foncier.',
+      story: 'Nos crédits fonciers ont augmenté de 340% grâce au partenariat avec Teranga Foncier.',
       investment: '12 Milliards FCFA',
       location: 'National',
       timeline: '12 mois',
       image: '/api/YOUR_API_KEY/100/100',
       rating: 5,
-      highlights: ['+340% crÃ©dits', 'Risque rÃ©duit', 'ClientÃ¨le qualifiÃ©e']
+      highlights: ['+340% crédits', 'Risque réduit', 'Clientèle qualifiée']
     },
     {
       id: 5,
-      name: 'Mairie de ThiÃ¨s',
-      role: 'CollectivitÃ© Locale',
+      name: 'Mairie de Thiès',
+      role: 'Collectivité Locale',
       category: 'mairie',
-      story: 'Attribution transparente de 200+ parcelles communales. Revenus municipaux multipliÃ©s par 4.',
+      story: 'Attribution transparente de 200+ parcelles communales. Revenus municipaux multipliés par 4.',
       investment: '800M FCFA',
-      location: 'ThiÃ¨s',
+      location: 'Thiès',
       timeline: '18 mois',
       image: '/api/YOUR_API_KEY/100/100',
       rating: 5,
@@ -94,7 +94,7 @@ const SuccessStoriesPage = () => {
       name: 'Omar Ndiaye',
       role: 'Diaspora - USA',
       category: 'diaspora',
-      story: 'Investissement immobilier depuis New York. ROI de 28% en 2 ans grÃ¢ce aux conseils Teranga.',
+      story: 'Investissement immobilier depuis New York. ROI de 28% en 2 ans grâce aux conseils Teranga.',
       investment: '45M FCFA',
       location: 'Lac Rose, Dakar',
       timeline: '24 mois',
@@ -119,16 +119,16 @@ const SuccessStoriesPage = () => {
 
   const stats = [
     { label: 'Clients satisfaits', value: '2,500+', icon: Users },
-    { label: 'Taux de rÃ©ussite', value: '98.5%', icon: CheckCircle },
-    { label: 'Investissements facilitÃ©s', value: '45 Milliards FCFA', icon: Calculator },
+    { label: 'Taux de réussite', value: '98.5%', icon: CheckCircle },
+    { label: 'Investissements facilités', value: '45 Milliards FCFA', icon: Calculator },
     { label: 'ROI moyen diaspora', value: '24%', icon: TrendingUp }
   ];
 
   return (
     <>
       <Helmet>
-        <title>Success Stories - TÃ©moignages Clients | Teranga Foncier</title>
-        <meta name="description" content="DÃ©couvrez les tÃ©moignages de nos clients : diaspora, promoteurs, particuliers. +2500 projets rÃ©ussis, 98.5% de satisfaction." />
+        <title>Success Stories - Témoignages Clients | Teranga Foncier</title>
+        <meta name="description" content="Découvrez les témoignages de nos clients : diaspora, promoteurs, particuliers. +2500 projets réussis, 98.5% de satisfaction." />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
@@ -144,12 +144,12 @@ const SuccessStoriesPage = () => {
                 Success Stories
               </Badge>
               <h1 className="text-4xl md:text-6xl font-bold text-gray-900 mb-6">
-                Ils ont rÃ©ussi avec
+                Ils ont réussi avec
                 <span className="text-emerald-600"> Teranga Foncier</span>
               </h1>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                DÃ©couvrez comment nos clients transforment leurs projets immobiliers en succÃ¨s. 
-                De la diaspora aux promoteurs, tous tÃ©moignent de notre excellence.
+                Découvrez comment nos clients transforment leurs projets immobiliers en succès. 
+                De la diaspora aux promoteurs, tous témoignent de notre excellence.
               </p>
             </motion.div>
           </div>
@@ -243,13 +243,13 @@ const SuccessStoriesPage = () => {
                           <span className="font-semibold">{story.location}</span>
                         </div>
                         <div className="flex justify-between text-sm">
-                          <span className="text-gray-600">DÃ©lai:</span>
+                          <span className="text-gray-600">Délai:</span>
                           <span className="font-semibold">{story.timeline}</span>
                         </div>
                       </div>
 
                       <div className="mt-4">
-                        <p className="text-sm font-medium text-gray-900 mb-2">Points clÃ©s:</p>
+                        <p className="text-sm font-medium text-gray-900 mb-2">Points clés:</p>
                         <div className="flex flex-wrap gap-2">
                           {story.highlights.map((highlight, i) => (
                             <Badge key={i} variant="secondary" className="text-xs">
@@ -276,10 +276,10 @@ const SuccessStoriesPage = () => {
               className="text-white"
             >
               <h2 className="text-4xl md:text-5xl font-bold mb-6">
-                PrÃªt Ã  Ã©crire votre success story ?
+                Prêt Ï  écrire votre success story ?
               </h2>
               <p className="text-xl mb-8 text-emerald-100">
-                Rejoignez des milliers de clients satisfaits qui ont concrÃ©tisÃ© leurs projets immobiliers avec nous.
+                Rejoignez des milliers de clients satisfaits qui ont concrétisé leurs projets immobiliers avec nous.
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button 
@@ -299,7 +299,7 @@ const SuccessStoriesPage = () => {
                   className="border-2 border-white text-white hover:bg-white hover:text-emerald-600 px-8 py-4 text-lg font-semibold"
                 >
                   <Link to="/contact">
-                    Parler Ã  un Expert
+                    Parler Ï  un Expert
                     <Phone className="ml-2 w-5 h-5" />
                   </Link>
                 </Button>

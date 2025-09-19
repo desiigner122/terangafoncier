@@ -5,7 +5,7 @@ import { motion } from 'framer-motion';
 import { getProduct, getProductQuantities } from '@/api/EcommerceApi';
 import { Button } from '@/components/ui/button';
 import { useCart } from '@/hooks/useCart';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { 
   ShoppingCart, 
   Loader2, 
@@ -30,7 +30,7 @@ function ProductDetailPage() {
   const [quantity, setQuantity] = useState(1);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
   const { addToCart } = useCart();
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   const handleAddToCart = useCallback(async () => {
     if (product && selectedVariant) {

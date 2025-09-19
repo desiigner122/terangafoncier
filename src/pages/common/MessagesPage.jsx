@@ -36,7 +36,7 @@ const MessagesPage = () => {
   const [activeTab, setActiveTab] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
 
-  // DonnÃ©es simulÃ©es pour les conversations
+  // Données simulées pour les conversations
   const mockConversations = [
     {
       id: 1,
@@ -47,7 +47,7 @@ const MessagesPage = () => {
         status: 'online'
       },
       lastMessage: {
-        content: 'Merci pour les informations sur le terrain Ã  Almadies. Pouvons-nous programmer une visite ?',
+        content: 'Merci pour les informations sur le terrain Ï  Almadies. Pouvons-nous programmer une visite ?',
         timestamp: new Date(Date.now() - 5 * 60 * 1000),
         isRead: false,
         sender: 'them'
@@ -55,13 +55,13 @@ const MessagesPage = () => {
       messages: [
         {
           id: 1,
-          content: 'Bonjour, je suis intÃ©ressÃ© par votre terrain Ã  Almadies.',
+          content: 'Bonjour, je suis intéressé par votre terrain Ï  Almadies.',
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
           sender: 'them'
         },
         {
           id: 2,
-          content: 'Bonjour Amadou, merci pour votre intÃ©rÃªt. Le terrain fait 500mÂ² et est bien situÃ©.',
+          content: 'Bonjour Amadou, merci pour votre intérêt. Le terrain fait 500mÂ² et est bien situé.',
           timestamp: new Date(Date.now() - 1 * 60 * 60 * 1000),
           sender: 'me'
         },
@@ -84,7 +84,7 @@ const MessagesPage = () => {
         status: 'offline'
       },
       lastMessage: {
-        content: 'Le dossier de financement a Ã©tÃ© approuvÃ©. FÃ©licitations !',
+        content: 'Le dossier de financement a été approuvé. Félicitations !',
         timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
         isRead: true,
         sender: 'them'
@@ -92,7 +92,7 @@ const MessagesPage = () => {
       messages: [
         {
           id: 1,
-          content: 'Votre demande de financement est en cours d\'Ã©tude.',
+          content: 'Votre demande de financement est en cours d\'étude.',
           timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
           sender: 'them'
         },
@@ -104,7 +104,7 @@ const MessagesPage = () => {
         },
         {
           id: 3,
-          content: 'Le dossier de financement a Ã©tÃ© approuvÃ©. FÃ©licitations !',
+          content: 'Le dossier de financement a été approuvé. Félicitations !',
           timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
           sender: 'them'
         }
@@ -121,7 +121,7 @@ const MessagesPage = () => {
         status: 'online'
       },
       lastMessage: {
-        content: 'Votre demande de support a Ã©tÃ© rÃ©solue. N\'hÃ©sitez pas si vous avez d\'autres questions.',
+        content: 'Votre demande de support a été résolue. N\'hésitez pas si vous avez d\'autres questions.',
         timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
         isRead: true,
         sender: 'them'
@@ -129,13 +129,13 @@ const MessagesPage = () => {
       messages: [
         {
           id: 1,
-          content: 'Bonjour, j\'ai un problÃ¨me avec l\'upload de documents.',
+          content: 'Bonjour, j\'ai un problème avec l\'upload de documents.',
           timestamp: new Date(Date.now() - 25 * 60 * 60 * 1000),
           sender: 'me'
         },
         {
           id: 2,
-          content: 'Nous avons identifiÃ© le problÃ¨me et l\'avons rÃ©solu.',
+          content: 'Nous avons identifié le problème et l\'avons résolu.',
           timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
           sender: 'them'
         }
@@ -206,7 +206,7 @@ const MessagesPage = () => {
     return timestamp.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
-  // Obtenir la couleur du rÃ´le
+  // Obtenir la couleur du rôle
   const getRoleColor = (role) => {
     const colors = {
       PROMOTEUR: 'bg-orange-500',
@@ -235,7 +235,7 @@ const MessagesPage = () => {
             <MessageSquare className="w-8 h-8 text-primary" />
             Messagerie
           </h1>
-          <p className="text-gray-600 mt-2">GÃ©rez vos conversations avec les autres utilisateurs</p>
+          <p className="text-gray-600 mt-2">Gérez vos conversations avec les autres utilisateurs</p>
         </div>
         <Button>
           <Send className="w-4 h-4 mr-2" />
@@ -427,8 +427,8 @@ const MessagesPage = () => {
             <CardContent className="flex items-center justify-center h-full">
               <div className="text-center">
                 <MessageSquare className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                <h3 className="text-lg font-semibold text-gray-500 mb-2">SÃ©lectionnez une conversation</h3>
-                <p className="text-gray-400">Choisissez une conversation pour commencer Ã  discuter</p>
+                <h3 className="text-lg font-semibold text-gray-500 mb-2">Sélectionnez une conversation</h3>
+                <p className="text-gray-400">Choisissez une conversation pour commencer Ï  discuter</p>
               </div>
             </CardContent>
           )}

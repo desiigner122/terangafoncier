@@ -23,12 +23,12 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
   const navigate = useNavigate();
   const { user, profile, signOut } = useUser();
 
-  // DonnÃ©es utilisateur dynamiques
+  // Données utilisateur dynamiques
   const userName = profile?.full_name || profile?.name || user?.email?.split('@')[0] || 'Utilisateur';
   const userRole = profile?.role || 'PARTICULIER_SENEGAL';
   const userAvatar = profile?.avatar_url || null;
   
-  // Protection robuste pour roleConfig avec fallback par dÃ©faut
+  // Protection robuste pour roleConfig avec fallback par défaut
   const roleConfig = ROLES_CONFIG[userRole] || ROLES_CONFIG.PARTICULIER_SENEGAL || ROLES_CONFIG.particulier_senegal || {
     name: "Particulier",
     color: "bg-blue-600",
@@ -37,11 +37,11 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
     description: "Utilisateur particulier"
   };
 
-  // Notifications non lues (simulÃ© pour l'instant)
+  // Notifications non lues (simulé pour l'instant)
   const unreadNotifications = 3;
   const unreadMessages = 5;
 
-  // Items par dÃ©faut du sidebar
+  // Items par défaut du sidebar
   const defaultItems = [
     {
       id: 'dashboard',
@@ -122,25 +122,25 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
     }
   ];
 
-  // Utiliser les items personnalisÃ©s s'ils sont fournis, sinon utiliser les items par dÃ©faut
+  // Utiliser les items personnalisés s'ils sont fournis, sinon utiliser les items par défaut
   const allItems = sidebarItems.length > 0 ? sidebarItems : defaultItems;
 
-  // GÃ©rer la dÃ©connexion
+  // Gérer la déconnexion
   const handleSignOut = async () => {
     try {
       await signOut();
       navigate('/login');
     } catch (error) {
-      console.error('Erreur lors de la dÃ©connexion:', error);
+      console.error('Erreur lors de la déconnexion:', error);
     }
   };
 
-  // GÃ©rer le toggle du submenu
+  // Gérer le toggle du submenu
   const toggleSubmenu = (itemId) => {
     setActiveSubmenu(activeSubmenu === itemId ? null : itemId);
   };
 
-  // VÃ©rifier si un item est actif
+  // Vérifier si un item est actif
   const isActive = (href) => {
     return location.pathname === href || location.pathname.startsWith(href + '/');
   };
@@ -314,7 +314,7 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
                 size="sm"
                 onClick={() => navigate('/parametres')}
                 className="p-2 hover:bg-gray-100"
-                title="ParamÃ¨tres"
+                title="Paramètres"
               >
                 <Settings className="w-4 h-4" />
               </Button>
@@ -325,10 +325,10 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
             size="sm"
             onClick={handleSignOut}
             className="p-2 hover:bg-red-50 hover:text-red-600"
-            title="Se dÃ©connecter"
+            title="Se déconnecter"
           >
             <LogOut className="w-4 h-4" />
-            {!isCollapsed && <span className="ml-2">DÃ©connexion</span>}
+            {!isCollapsed && <span className="ml-2">Déconnexion</span>}
           </Button>
         </div>
       </div>

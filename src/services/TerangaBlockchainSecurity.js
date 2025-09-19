@@ -1,12 +1,12 @@
 ﻿/**
- * ðŸ” TERANGA BLOCKCHAIN SECURITY SERVICE - PRIORITÃ‰ 1 COMPLETE
+ * ðŸ” TERANGA BLOCKCHAIN SECURITY SERVICE - PRIORITÉ 1 COMPLETE
  * ============================================================
  * 
- * SÃ©curitÃ© Blockchain AvancÃ©e pour Titres Fonciers SÃ©nÃ©gal
- * - Hachage spÃ©cialisÃ© titres fonciers sur blockchain
- * - VÃ©rification automatique documents authentiques
+ * Sécurité Blockchain Avancée pour Titres Fonciers Sénégal
+ * - Hachage spécialisé titres fonciers sur blockchain
+ * - Vérification automatique documents authentiques
  * - Trail audit immutable complet
- * - Signature numÃ©rique et certificats
+ * - Signature numérique et certificats
  * 
  * Version: 1.0 Production Ready
  * Date: Septembre 2025
@@ -31,7 +31,7 @@ class TerangaBlockchainSecurity {
     this.version = '1.0';
     this.initialized = false;
     
-    // Configuration blockchain spÃ©cialisÃ©e SÃ©nÃ©gal
+    // Configuration blockchain spécialisée Sénégal
     this.blockchainConfig = {
       network: 'SENEGAL_LAND_REGISTRY',
       hashAlgorithm: 'SHA-256',
@@ -40,9 +40,9 @@ class TerangaBlockchainSecurity {
       authorities: ['CONSERVATION_FONCIERE', 'NOTAIRE', 'PREFECTURE']
     };
     
-    // Structure hachage spÃ©cialisÃ©e titres fonciers
+    // Structure hachage spécialisée titres fonciers
     this.landTitleHashStructure = {
-      // DonnÃ©es obligatoires selon droit foncier sÃ©nÃ©galais
+      // Données obligatoires selon droit foncier sénégalais
       requiredFields: [
         'numero_titre',
         'superficie_hectares',
@@ -55,7 +55,7 @@ class TerangaBlockchainSecurity {
         'date_immatriculation',
         'conservation_fonciere'
       ],
-      // DonnÃ©es optionnelles pour enrichissement
+      // Données optionnelles pour enrichissement
       optionalFields: [
         'limites_naturelles',
         'servitudes',
@@ -64,11 +64,11 @@ class TerangaBlockchainSecurity {
       ]
     };
     
-    // Cache pour optimiser les vÃ©rifications
+    // Cache pour optimiser les vérifications
     this.verificationCache = new Map();
     this.auditTrail = [];
     
-    // MÃ©triques de sÃ©curitÃ©
+    // Métriques de sécurité
     this.securityMetrics = {
       documentsHashed: 0,
       verificationsPerformed: 0,
@@ -87,7 +87,7 @@ class TerangaBlockchainSecurity {
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ”§ INITIALISATION SYSTÃˆME SÃ‰CURISÃ‰
+  // ðŸ”§ INITIALISATION SYSTÏˆME SÉCURISÉ
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async initialize() {
@@ -100,7 +100,7 @@ class TerangaBlockchainSecurity {
       // Initialiser trail audit
       await this.initializeAuditTrail();
       
-      // VÃ©rifier connexion blockchain
+      // Vérifier connexion blockchain
       await this.testBlockchainConnectivity();
       
       // Charger certificats authorities
@@ -108,17 +108,17 @@ class TerangaBlockchainSecurity {
       
       this.initialized = true;
       
-      console.log('âœ… Blockchain Security initialisÃ© avec succÃ¨s');
+      console.log('✅ Blockchain Security initialisé avec succès');
       
       return {
         success: true,
         version: this.version,
         capabilities: [
-          'ðŸ” Hachage spÃ©cialisÃ© titres fonciers',
-          'ðŸ“„ VÃ©rification automatique documents',  
+          'ðŸ” Hachage spécialisé titres fonciers',
+          'ðŸ“„ Vérification automatique documents',  
           'ðŸ” Trail audit immutable',
-          'ðŸ›¡ï¸ DÃ©tection fraude avancÃ©e',
-          'ðŸ“œ Certificats numÃ©riques'
+          'ðŸ›¡ï¸ Détection fraude avancée',
+          'ðŸ“œ Certificats numériques'
         ]
       };
 
@@ -153,7 +153,7 @@ class TerangaBlockchainSecurity {
         });
       }
 
-      console.log('âœ… Patterns de fraude chargÃ©s');
+      console.log('✅ Patterns de fraude chargés');
     } catch (error) {
       console.warn('âš ï¸ Impossible de charger patterns fraude:', error.message);
     }
@@ -162,43 +162,43 @@ class TerangaBlockchainSecurity {
   async initializeAuditTrail() {
     console.log('ðŸ“‹ Initialisation trail audit...');
     
-    // CrÃ©er table audit si n'existe pas
+    // Créer table audit si n'existe pas
     try {
       await supabase.rpc('create_audit_trail_if_not_exists');
-      console.log('âœ… Trail audit initialisÃ©');
+      console.log('✅ Trail audit initialisé');
     } catch (error) {
       console.warn('âš ï¸ Trail audit utilisant fallback local');
     }
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ” HACHAGE SPÃ‰CIALISÃ‰ TITRES FONCIERS
+  // ðŸ” HACHAGE SPÉCIALISÉ TITRES FONCIERS
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async hashLandTitle(landTitleData) {
-    console.log('ðŸ” Hachage spÃ©cialisÃ© titre foncier...');
+    console.log('ðŸ” Hachage spécialisé titre foncier...');
     
     try {
-      // 1. Valider structure donnÃ©es obligatoires
+      // 1. Valider structure données obligatoires
       const validation = this.validateLandTitleStructure(landTitleData);
       if (!validation.isValid) {
-        throw new Error(`DonnÃ©es manquantes: ${validation.missingFields.join(', ')}`);
+        throw new Error(`Données manquantes: ${validation.missingFields.join(', ')}`);
       }
 
-      // 2. Normaliser les donnÃ©es selon standard sÃ©nÃ©galais
+      // 2. Normaliser les données selon standard sénégalais
       const normalizedData = this.normalizeLandTitleData(landTitleData);
       
-      // 3. CrÃ©er structure hachage spÃ©cialisÃ©e
+      // 3. Créer structure hachage spécialisée
       const hashStructure = this.createSpecializedHashStructure(normalizedData);
       
-      // 4. GÃ©nÃ©rer hash principal avec salt unique
+      // 4. Générer hash principal avec salt unique
       const salt = randomBytes(32).toString('hex');
       const mainHash = this.generateSecureHash(hashStructure, salt);
       
-      // 5. CrÃ©er hashes de vÃ©rification secondaires
+      // 5. Créer hashes de vérification secondaires
       const verificationHashes = this.generateVerificationHashes(normalizedData);
       
-      // 6. GÃ©nÃ©rer certificat numÃ©rique
+      // 6. Générer certificat numérique
       const certificate = await this.generateDigitalCertificate(
         normalizedData, 
         mainHash, 
@@ -217,13 +217,13 @@ class TerangaBlockchainSecurity {
         mainHash,
         salt,
         
-        // Hashes de vÃ©rification
+        // Hashes de vérification
         verificationHashes,
         
-        // Certificat numÃ©rique
+        // Certificat numérique
         certificate,
         
-        // MÃ©tadonnÃ©es sÃ©curisÃ©es
+        // Métadonnées sécurisées
         metadata: {
           algorithm: this.blockchainConfig.hashAlgorithm,
           timestamp: new Date().toISOString(),
@@ -241,7 +241,7 @@ class TerangaBlockchainSecurity {
         }
       };
 
-      // Mise Ã  jour mÃ©triques
+      // Mise Ï  jour métriques
       this.securityMetrics.documentsHashed++;
       
       return result;
@@ -267,10 +267,10 @@ class TerangaBlockchainSecurity {
   }
 
   normalizeLandTitleData(data) {
-    console.log('ðŸ“ Normalisation donnÃ©es titre foncier...');
+    console.log('ðŸ“ Normalisation données titre foncier...');
     
     return {
-      // Champs obligatoires normalisÃ©s
+      // Champs obligatoires normalisés
       numero_titre: data.numero_titre.toString().toUpperCase().trim(),
       superficie_hectares: parseFloat(data.superficie_hectares).toFixed(4),
       coordonnees_gps: this.normalizeGPSCoordinates(data.coordonnees_gps),
@@ -282,12 +282,12 @@ class TerangaBlockchainSecurity {
       date_immatriculation: new Date(data.date_immatriculation).toISOString().split('T')[0],
       conservation_fonciere: data.conservation_fonciere.toUpperCase().trim(),
       
-      // Champs optionnels si prÃ©sents
+      // Champs optionnels si présents
       ...(data.limites_naturelles && { limites_naturelles: data.limites_naturelles }),
       ...(data.servitudes && { servitudes: data.servitudes }),
       ...(data.hypotheques && { hypotheques: data.hypotheques }),
       
-      // MÃ©tadonnÃ©es automatiques
+      // Métadonnées automatiques
       normalized_timestamp: new Date().toISOString(),
       normalization_version: '1.0'
     };
@@ -306,16 +306,16 @@ class TerangaBlockchainSecurity {
   }
 
   createSpecializedHashStructure(normalizedData) {
-    // Structure spÃ©cialisÃ©e pour titres fonciers sÃ©nÃ©galais
+    // Structure spécialisée pour titres fonciers sénégalais
     return {
-      // Bloc 1: IdentitÃ© unique du titre
+      // Bloc 1: Identité unique du titre
       identityBlock: [
         normalizedData.numero_titre,
         normalizedData.conservation_fonciere,
         normalizedData.date_immatriculation
       ].join('|'),
       
-      // Bloc 2: Localisation gÃ©ographique
+      // Bloc 2: Localisation géographique
       locationBlock: [
         normalizedData.region,
         normalizedData.departement,
@@ -323,7 +323,7 @@ class TerangaBlockchainSecurity {
         `${normalizedData.coordonnees_gps.lat},${normalizedData.coordonnees_gps.lng}`
       ].join('|'),
       
-      // Bloc 3: PropriÃ©taire et superficie
+      // Bloc 3: Propriétaire et superficie
       propertyBlock: [
         normalizedData.proprietaire_nom,
         normalizedData.proprietaire_nin,
@@ -340,7 +340,7 @@ class TerangaBlockchainSecurity {
   }
 
   generateSecureHash(hashStructure, salt) {
-    // ConcatÃ©ner tous les blocs
+    // Concaténer tous les blocs
     const dataToHash = [
       hashStructure.identityBlock,
       hashStructure.locationBlock, 
@@ -349,7 +349,7 @@ class TerangaBlockchainSecurity {
       salt
     ].join('::');
 
-    // GÃ©nÃ©rer hash principal
+    // Générer hash principal
     return createHash(this.blockchainConfig.hashAlgorithm)
       .update(dataToHash, 'utf8')
       .digest('hex');
@@ -357,17 +357,17 @@ class TerangaBlockchainSecurity {
 
   generateVerificationHashes(normalizedData) {
     return {
-      // Hash identitÃ© pour vÃ©rification rapide
+      // Hash identité pour vérification rapide
       identityHash: createHash('sha256')
         .update(`${normalizedData.numero_titre}:${normalizedData.proprietaire_nin}`)
         .digest('hex').substring(0, 16),
         
-      // Hash localisation pour dÃ©tection doublons
+      // Hash localisation pour détection doublons
       locationHash: createHash('sha256')
         .update(`${normalizedData.coordonnees_gps.lat}:${normalizedData.coordonnees_gps.lng}`)
         .digest('hex').substring(0, 16),
         
-      // Hash superficie pour cohÃ©rence
+      // Hash superficie pour cohérence
       propertyHash: createHash('sha256')
         .update(`${normalizedData.superficie_hectares}:${normalizedData.commune}`)
         .digest('hex').substring(0, 16)
@@ -375,11 +375,11 @@ class TerangaBlockchainSecurity {
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ“„ VÃ‰RIFICATION AUTOMATIQUE DOCUMENTS
+  // ðŸ“„ VÉRIFICATION AUTOMATIQUE DOCUMENTS
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async verifyDocumentAuthenticity(documentData, expectedHash = null) {
-    console.log('ðŸ“„ VÃ©rification automatique document...');
+    console.log('ðŸ“„ Vérification automatique document...');
     
     try {
       const verification = {
@@ -389,30 +389,30 @@ class TerangaBlockchainSecurity {
         results: {}
       };
 
-      // 1. VÃ©rification structure document
+      // 1. Vérification structure document
       verification.results.structureCheck = await this.verifyDocumentStructure(documentData);
       
-      // 2. VÃ©rification hash si fourni
+      // 2. Vérification hash si fourni
       if (expectedHash) {
         verification.results.hashCheck = await this.verifyDocumentHash(documentData, expectedHash);
       }
       
-      // 3. VÃ©rification signature autoritÃ©
+      // 3. Vérification signature autorité
       verification.results.authorityCheck = await this.verifyAuthoritySignature(documentData);
       
-      // 4. VÃ©rification contre patterns de fraude
+      // 4. Vérification contre patterns de fraude
       verification.results.fraudCheck = await this.checkAgainstFraudPatterns(documentData);
       
-      // 5. VÃ©rification cohÃ©rence donnÃ©es
+      // 5. Vérification cohérence données
       verification.results.consistencyCheck = await this.verifyDataConsistency(documentData);
       
       // 6. Score de confiance global
       verification.confidenceScore = this.calculateVerificationScore(verification.results);
       
-      // 7. DÃ©terminer statut final
+      // 7. Déterminer statut final
       verification.status = this.determineVerificationStatus(verification.confidenceScore);
       
-      // 8. Actions automatiques si nÃ©cessaire
+      // 8. Actions automatiques si nécessaire
       if (verification.status === 'REJECTED' || verification.confidenceScore < 0.7) {
         await this.handleSuspiciousDocument(documentData, verification);
       }
@@ -424,7 +424,7 @@ class TerangaBlockchainSecurity {
         confidenceScore: verification.confidenceScore
       });
 
-      // Mise Ã  jour mÃ©triques
+      // Mise Ï  jour métriques
       this.securityMetrics.verificationsPerformed++;
       if (verification.results.fraudCheck.suspiciousActivity) {
         this.securityMetrics.fraudAttempts++;
@@ -433,7 +433,7 @@ class TerangaBlockchainSecurity {
       return verification;
 
     } catch (error) {
-      console.error('âŒ Erreur vÃ©rification document:', error);
+      console.error('âŒ Erreur vérification document:', error);
       return {
         status: 'ERROR',
         error: error.message,
@@ -443,7 +443,7 @@ class TerangaBlockchainSecurity {
   }
 
   async verifyDocumentStructure(documentData) {
-    console.log('ðŸ” VÃ©rification structure document...');
+    console.log('ðŸ” Vérification structure document...');
     
     const checks = {
       hasRequiredFields: false,
@@ -454,7 +454,7 @@ class TerangaBlockchainSecurity {
     };
 
     try {
-      // VÃ©rifier champs obligatoires selon type
+      // Vérifier champs obligatoires selon type
       if (documentData.type === 'TITRE_FONCIER') {
         const requiredFields = this.landTitleHashStructure.requiredFields;
         const hasAll = requiredFields.every(field => documentData[field]);
@@ -462,11 +462,11 @@ class TerangaBlockchainSecurity {
         checks.score += hasAll ? 25 : 0;
       }
 
-      // VÃ©rifier type document valide
+      // Vérifier type document valide
       checks.validDocumentType = this.blockchainConfig.documentTypes.includes(documentData.type);
       checks.score += checks.validDocumentType ? 25 : 0;
 
-      // VÃ©rifier dates cohÃ©rentes
+      // Vérifier dates cohérentes
       if (documentData.date_immatriculation) {
         const dateImmat = new Date(documentData.date_immatriculation);
         const now = new Date();
@@ -474,9 +474,9 @@ class TerangaBlockchainSecurity {
         checks.score += checks.validDates ? 25 : 0;
       }
 
-      // VÃ©rifier identifiants (NIN format sÃ©nÃ©galais)
+      // Vérifier identifiants (NIN format sénégalais)
       if (documentData.proprietaire_nin) {
-        const ninPattern = /^[0-9]{13}$/; // NIN sÃ©nÃ©galais = 13 chiffres
+        const ninPattern = /^[0-9]{13}$/; // NIN sénégalais = 13 chiffres
         checks.validIdentifiers = ninPattern.test(documentData.proprietaire_nin);
         checks.score += checks.validIdentifiers ? 25 : 0;
       }
@@ -484,14 +484,14 @@ class TerangaBlockchainSecurity {
       checks.passed = checks.score >= 75; // Seuil 75%
 
     } catch (error) {
-      console.error('âŒ Erreur vÃ©rification structure:', error);
+      console.error('âŒ Erreur vérification structure:', error);
     }
 
     return checks;
   }
 
   async verifyAuthoritySignature(documentData) {
-    console.log('ðŸ›¡ï¸ VÃ©rification signature autoritÃ©...');
+    console.log('ðŸ›¡ï¸ Vérification signature autorité...');
     
     const signatureCheck = {
       hasSignature: false,
@@ -501,13 +501,13 @@ class TerangaBlockchainSecurity {
     };
 
     try {
-      // VÃ©rifier prÃ©sence signature
+      // Vérifier présence signature
       if (documentData.signature || documentData.digital_signature) {
         signatureCheck.hasSignature = true;
         signatureCheck.score += 30;
       }
 
-      // VÃ©rifier autoritÃ© Ã©mettrice
+      // Vérifier autorité émettrice
       if (documentData.conservation_fonciere) {
         const validAuthorities = [
           'CONSERVATION_FONCIERE_DAKAR',
@@ -523,7 +523,7 @@ class TerangaBlockchainSecurity {
         signatureCheck.score += signatureCheck.validAuthority ? 40 : 0;
       }
 
-      // VÃ©rification signature numÃ©rique (simulÃ©e pour dÃ©mo)
+      // Vérification signature numérique (simulée pour démo)
       if (documentData.digital_signature) {
         signatureCheck.signatureValid = await this.validateDigitalSignature(
           documentData.digital_signature,
@@ -535,14 +535,14 @@ class TerangaBlockchainSecurity {
       signatureCheck.passed = signatureCheck.score >= 70;
 
     } catch (error) {
-      console.error('âŒ Erreur vÃ©rification signature:', error);
+      console.error('âŒ Erreur vérification signature:', error);
     }
 
     return signatureCheck;
   }
 
   async checkAgainstFraudPatterns(documentData) {
-    console.log('ðŸš¨ VÃ©rification patterns de fraude...');
+    console.log('ðŸš¨ Vérification patterns de fraude...');
     
     const fraudCheck = {
       duplicateTitle: false,
@@ -554,7 +554,7 @@ class TerangaBlockchainSecurity {
     };
 
     try {
-      // VÃ©rifier titre dupliquÃ©
+      // Vérifier titre dupliqué
       if (documentData.numero_titre) {
         fraudCheck.duplicateTitle = this.fraudPatterns.duplicateTitles.has(
           documentData.numero_titre
@@ -562,7 +562,7 @@ class TerangaBlockchainSecurity {
         if (fraudCheck.duplicateTitle) fraudCheck.riskScore += 40;
       }
 
-      // VÃ©rifier NIN blacklistÃ©
+      // Vérifier NIN blacklisté
       if (documentData.proprietaire_nin) {
         fraudCheck.blacklistedNIN = this.fraudPatterns.blacklistedNIN.has(
           documentData.proprietaire_nin
@@ -570,7 +570,7 @@ class TerangaBlockchainSecurity {
         if (fraudCheck.blacklistedNIN) fraudCheck.riskScore += 30;
       }
 
-      // VÃ©rifier coordonnÃ©es suspectes
+      // Vérifier coordonnées suspectes
       if (documentData.coordonnees_gps) {
         fraudCheck.suspiciousCoordinates = this.checkSuspiciousCoordinates(
           documentData.coordonnees_gps
@@ -578,7 +578,7 @@ class TerangaBlockchainSecurity {
         if (fraudCheck.suspiciousCoordinates) fraudCheck.riskScore += 20;
       }
 
-      // VÃ©rifier notaire invalide
+      // Vérifier notaire invalide
       if (documentData.notaire) {
         fraudCheck.invalidNotary = this.fraudPatterns.invalidNotaries.has(
           documentData.notaire
@@ -586,19 +586,19 @@ class TerangaBlockchainSecurity {
         if (fraudCheck.invalidNotary) fraudCheck.riskScore += 10;
       }
 
-      // Ã‰valuer activitÃ© suspecte globale
+      // Évaluer activité suspecte globale
       fraudCheck.suspiciousActivity = fraudCheck.riskScore > 30;
 
     } catch (error) {
-      console.error('âŒ Erreur vÃ©rification fraude:', error);
-      fraudCheck.riskScore += 20; // PÃ©nalitÃ© erreur
+      console.error('âŒ Erreur vérification fraude:', error);
+      fraudCheck.riskScore += 20; // Pénalité erreur
     }
 
     return fraudCheck;
   }
 
   checkSuspiciousCoordinates(coords) {
-    // CoordonnÃ©es du SÃ©nÃ©gal approximatives
+    // Coordonnées du Sénégal approximatives
     const senegalBounds = {
       north: 16.691,
       south: 12.307,
@@ -609,7 +609,7 @@ class TerangaBlockchainSecurity {
     const lat = parseFloat(coords.lat || coords.latitude);
     const lng = parseFloat(coords.lng || coords.longitude);
 
-    // VÃ©rifier si dans les limites du SÃ©nÃ©gal
+    // Vérifier si dans les limites du Sénégal
     return lat < senegalBounds.south || lat > senegalBounds.north ||
            lng < senegalBounds.west || lng > senegalBounds.east;
   }
@@ -618,7 +618,7 @@ class TerangaBlockchainSecurity {
     let totalScore = 0;
     let maxScore = 0;
 
-    // Poids des diffÃ©rentes vÃ©rifications
+    // Poids des différentes vérifications
     const weights = {
       structureCheck: 30,
       authorityCheck: 25, 
@@ -673,10 +673,10 @@ class TerangaBlockchainSecurity {
         version: this.version
       };
 
-      // Calculer hash de cette entrÃ©e
+      // Calculer hash de cette entrée
       auditEntry.hash = this.calculateAuditEntryHash(auditEntry);
 
-      // Ajouter Ã  trail local
+      // Ajouter Ï  trail local
       this.auditTrail.push(auditEntry);
 
       // Sauvegarder dans Supabase
@@ -696,7 +696,7 @@ class TerangaBlockchainSecurity {
         console.warn('âš ï¸ Impossible de sauvegarder audit en DB:', dbError.message);
       }
 
-      // Mise Ã  jour mÃ©triques
+      // Mise Ï  jour métriques
       this.securityMetrics.auditTrailEntries++;
 
       return auditEntry;
@@ -734,7 +734,7 @@ class TerangaBlockchainSecurity {
   }
 
   async verifyAuditTrailIntegrity() {
-    console.log('ðŸ” VÃ©rification intÃ©gritÃ© trail audit...');
+    console.log('ðŸ” Vérification intégrité trail audit...');
     
     const verification = {
       totalEntries: this.auditTrail.length,
@@ -747,7 +747,7 @@ class TerangaBlockchainSecurity {
       for (let i = 0; i < this.auditTrail.length; i++) {
         const entry = this.auditTrail[i];
         
-        // VÃ©rifier hash de l'entrÃ©e
+        // Vérifier hash de l'entrée
         const recalculatedHash = this.calculateAuditEntryHash({
           ...entry,
           hash: null // Exclure le hash actuel du calcul
@@ -763,7 +763,7 @@ class TerangaBlockchainSecurity {
           verification.hashChainValid = false;
         }
 
-        // VÃ©rifier chaÃ®nage avec entrÃ©e prÃ©cÃ©dente
+        // Vérifier chaînage avec entrée précédente
         if (i > 0) {
           const previousEntry = this.auditTrail[i - 1];
           if (entry.previousHash !== previousEntry.hash) {
@@ -782,7 +782,7 @@ class TerangaBlockchainSecurity {
       return verification;
 
     } catch (error) {
-      console.error('âŒ Erreur vÃ©rification audit trail:', error);
+      console.error('âŒ Erreur vérification audit trail:', error);
       return {
         ...verification,
         error: error.message,
@@ -792,11 +792,11 @@ class TerangaBlockchainSecurity {
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ“œ CERTIFICATS NUMÃ‰RIQUES
+  // ðŸ“œ CERTIFICATS NUMÉRIQUES
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async generateDigitalCertificate(landTitleData, mainHash, verificationHashes) {
-    console.log('ðŸ“œ GÃ©nÃ©ration certificat numÃ©rique...');
+    console.log('ðŸ“œ Génération certificat numérique...');
     
     try {
       const certificate = {
@@ -805,7 +805,7 @@ class TerangaBlockchainSecurity {
         validUntil: this.calculateCertificateExpiry(),
         issuer: 'TERANGA_BLOCKCHAIN_AUTHORITY',
         
-        // DonnÃ©es du titre
+        // Données du titre
         subject: {
           titleNumber: landTitleData.numero_titre,
           owner: landTitleData.proprietaire_nom,
@@ -823,7 +823,7 @@ class TerangaBlockchainSecurity {
           chainOfTrust: []
         },
         
-        // Validations effectuÃ©es
+        // Validations effectuées
         validations: {
           documentsVerified: true,
           authorityValidated: true,
@@ -831,7 +831,7 @@ class TerangaBlockchainSecurity {
           structureValid: true
         },
         
-        // MÃ©tadonnÃ©es
+        // Métadonnées
         metadata: {
           algorithm: this.blockchainConfig.hashAlgorithm,
           version: this.version,
@@ -840,22 +840,22 @@ class TerangaBlockchainSecurity {
         }
       };
 
-      // GÃ©nÃ©rer signature du certificat
+      // Générer signature du certificat
       certificate.security.certificateSignature = await this.signCertificate(certificate);
       
-      // Ã‰tablir chaÃ®ne de confiance
+      // Établir chaîne de confiance
       certificate.security.chainOfTrust = await this.establishChainOfTrust(certificate);
 
       // Sauvegarder certificat
       await this.saveCertificate(certificate);
 
-      // Mise Ã  jour mÃ©triques
+      // Mise Ï  jour métriques
       this.securityMetrics.certificatesIssued++;
 
       return certificate;
 
     } catch (error) {
-      console.error('âŒ Erreur gÃ©nÃ©ration certificat:', error);
+      console.error('âŒ Erreur génération certificat:', error);
       throw new Error(`Certificat impossible: ${error.message}`);
     }
   }
@@ -867,14 +867,14 @@ class TerangaBlockchainSecurity {
   }
 
   calculateCertificateExpiry() {
-    // Certificats valides 5 ans (durÃ©e standard titres fonciers)
+    // Certificats valides 5 ans (durée standard titres fonciers)
     const expiry = new Date();
     expiry.setFullYear(expiry.getFullYear() + 5);
     return expiry.toISOString();
   }
 
   async signCertificate(certificate) {
-    // Simuler signature RSA (en production, utiliser vraie clÃ© privÃ©e)
+    // Simuler signature RSA (en production, utiliser vraie clé privée)
     const dataToSign = JSON.stringify({
       certificateId: certificate.certificateId,
       subject: certificate.subject,
@@ -928,7 +928,7 @@ class TerangaBlockchainSecurity {
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ“Š MÃ‰TRIQUES ET MONITORING
+  // ðŸ“Š MÉTRIQUES ET MONITORING
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   getSecurityMetrics() {
@@ -958,18 +958,18 @@ class TerangaBlockchainSecurity {
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async testBlockchainConnectivity() {
-    // Simuler test de connectivitÃ© blockchain
+    // Simuler test de connectivité blockchain
     
     return new Promise(resolve => setTimeout(() => resolve(true), 100));
   }
 
   async loadAuthorityCertificates() {
-    console.log('ðŸ“œ Chargement certificats autoritÃ©s...');
-    // En production, charger vrais certificats des autoritÃ©s sÃ©nÃ©galaises
+    console.log('ðŸ“œ Chargement certificats autorités...');
+    // En production, charger vrais certificats des autorités sénégalaises
   }
 
   async validateDigitalSignature(signature, documentData) {
-    // Simuler validation signature numÃ©rique
+    // Simuler validation signature numérique
     return signature && signature.length > 10;
   }
 
@@ -1000,8 +1000,8 @@ class TerangaBlockchainSecurity {
   }
 
   areCoordinatesConsistent(coords, commune) {
-    // VÃ©rifier si coordinates cohÃ©rentes avec la commune dÃ©clarÃ©e
-    return true; // ImplÃ©mentation simplifiÃ©e
+    // Vérifier si coordinates cohérentes avec la commune déclarée
+    return true; // Implémentation simplifiée
   }
 
   areDatesLogical(dateImmat) {
@@ -1021,7 +1021,7 @@ class TerangaBlockchainSecurity {
       timestamp: new Date().toISOString()
     });
 
-    // TODO: Notifications aux autoritÃ©s, blocage, etc.
+    // TODO: Notifications aux autorités, blocage, etc.
   }
 }
 

@@ -33,16 +33,16 @@ const ParcelleDetailPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('direct'); // direct, installment, bank, crypto
 
   useEffect(() => {
-    // Simulation de chargement des donnÃ©es de la parcelle
+    // Simulation de chargement des données de la parcelle
     const mockParcelleData = {
       id: parseInt(id),
-      title: "Terrain RÃ©sidentiel Premium - Almadies",
-      location: "Almadies, Dakar, SÃ©nÃ©gal",
+      title: "Terrain Résidentiel Premium - Almadies",
+      location: "Almadies, Dakar, Sénégal",
       region: "Dakar",
       city: "Dakar",
       price: "85000000",
       surface: "500",
-      type: "RÃ©sidentiel",
+      type: "Résidentiel",
       seller: {
         id: "seller-001",
         name: "Amadou FALL",
@@ -54,40 +54,40 @@ const ParcelleDetailPage = () => {
         properties_sold: 12
       },
       
-      // Localisation prÃ©cise
+      // Localisation précise
       address: {
-        full: "Route des Almadies, Parcelle NÂ°147, Dakar, SÃ©nÃ©gal",
+        full: "Route des Almadies, Parcelle NÂ°147, Dakar, Sénégal",
         coordinates: {
           latitude: 14.7381,
           longitude: -17.5094
         },
         nearby_landmarks: [
-          "UniversitÃ© Cheikh Anta Diop (8 km)",
-          "AÃ©roport LÃ©opold SÃ©dar Senghor (12 km)",
+          "Université Cheikh Anta Diop (8 km)",
+          "Aéroport Léopold Sédar Senghor (12 km)",
           "Plage des Almadies (1.5 km)",
           "Centre commercial Sea Plaza (2 km)"
         ]
       },
 
-      // CoordonnÃ©es pour compatibilitÃ©
+      // Coordonnées pour compatibilité
       coordinates: {
         lat: 14.7381,
         lng: -17.5094
       },
 
-      // CaractÃ©ristiques
+      // Caractéristiques
       features: {
-        main: ["Vue mer panoramique", "RÃ©sidence fermÃ©e sÃ©curisÃ©e", "Parking privÃ©"],
-        utilities: ["Eau courante", "Ã‰lectricitÃ© SENELEC", "Internet fibre optique"],
-        access: ["Route pavÃ©e", "Transport public", "Ã‰coles Ã  proximitÃ©"],
-        zoning: "Zone rÃ©sidentielle R3",
+        main: ["Vue mer panoramique", "Résidence fermée sécurisée", "Parking privé"],
+        utilities: ["Eau courante", "Électricité SENELEC", "Internet fibre optique"],
+        access: ["Route pavée", "Transport public", "Écoles Ï  proximité"],
+        zoning: "Zone résidentielle R3",
         buildable_ratio: "0.6",
         max_floors: 4
       },
 
       // Options de financement
       financing: {
-        methods: ["Bancaire", "Ã‰chelonnÃ©", "Crypto-monnaie"],
+        methods: ["Bancaire", "Échelonné", "Crypto-monnaie"],
         bank_financing: {
           available: true,
           min_down_payment: "30%",
@@ -129,7 +129,7 @@ const ParcelleDetailPage = () => {
         investment_potential: 8.8,
         infrastructure: 9.0,
         price_vs_market: 8.9,
-        growth_prediction: "15-20% dans les 3 prochaines annÃ©es"
+        growth_prediction: "15-20% dans les 3 prochaines années"
       },
 
       // Images
@@ -141,12 +141,12 @@ const ParcelleDetailPage = () => {
         "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1000"
       ],
 
-      // Documents lÃ©gaux
+      // Documents légaux
       documents: [
         { name: "Titre Foncier", type: "PDF", size: "2.4 MB", verified: true },
         { name: "Plan de bornage", type: "PDF", size: "1.8 MB", verified: true },
         { name: "Certificat d'urbanisme", type: "PDF", size: "1.2 MB", verified: true },
-        { name: "Photos aÃ©riennes", type: "PDF", size: "5.1 MB", verified: false }
+        { name: "Photos aériennes", type: "PDF", size: "5.1 MB", verified: false }
       ],
 
       // Historique des prix
@@ -167,33 +167,33 @@ const ParcelleDetailPage = () => {
 
       description: `ðŸ–ï¸ **TERRAIN EXCEPTIONNEL AVEC VUE MER - ALMADIES**
 
-DÃ©couvrez ce magnifique terrain de 500mÂ² situÃ© dans le quartier prestigieux des Almadies, offrant une vue mer panoramique imprenable. Cette parcelle exceptionnelle reprÃ©sente une opportunitÃ© unique d'investissement dans l'un des secteurs les plus recherchÃ©s de Dakar.
+Découvrez ce magnifique terrain de 500mÂ² situé dans le quartier prestigieux des Almadies, offrant une vue mer panoramique imprenable. Cette parcelle exceptionnelle représente une opportunité unique d'investissement dans l'un des secteurs les plus recherchés de Dakar.
 
 ðŸŒŸ **ATOUTS MAJEURS**
-â€¢ Vue mer panoramique Ã  180Â°
-â€¢ RÃ©sidence fermÃ©e avec sÃ©curitÃ© 24h/24
-â€¢ ProximitÃ© immÃ©diate de la plage (1,5 km)
-â€¢ Infrastructure complÃ¨te (eau, Ã©lectricitÃ©, internet)
-â€¢ Zone rÃ©sidentielle haut de gamme
+â€¢ Vue mer panoramique Ï  180Â°
+â€¢ Résidence fermée avec sécurité 24h/24
+â€¢ Proximité immédiate de la plage (1,5 km)
+â€¢ Infrastructure complète (eau, électricité, internet)
+â€¢ Zone résidentielle haut de gamme
 
 ðŸ—ï¸ **POTENTIEL DE CONSTRUCTION**
 â€¢ Coefficient d'emprise au sol: 0.6
-â€¢ Hauteur maximum: 4 Ã©tages (R+3)
-â€¢ PossibilitÃ© villa de luxe ou immeuble rÃ©sidentiel
-â€¢ AccÃ¨s direct vÃ©hicule et parking privÃ©
+â€¢ Hauteur maximum: 4 étages (R+3)
+â€¢ Possibilité villa de luxe ou immeuble résidentiel
+â€¢ Accès direct véhicule et parking privé
 
 ðŸ’° **FINANCEMENT FLEXIBLE**
 â€¢ Financement bancaire disponible (30% d'apport)
-â€¢ Paiement Ã©chelonnÃ© sur 5 ans possible
-â€¢ Acceptation crypto-monnaies avec 5% de rÃ©duction
+â€¢ Paiement échelonné sur 5 ans possible
+â€¢ Acceptation crypto-monnaies avec 5% de réduction
 
-ðŸ” **SÃ‰CURITÃ‰ BLOCKCHAIN**
-â€¢ PropriÃ©tÃ© tokenisÃ©e en NFT
+ðŸ” **SÉCURITÉ BLOCKCHAIN**
+â€¢ Propriété tokenisée en NFT
 â€¢ Smart contract sur blockchain Polygon
-â€¢ Transparence et sÃ©curitÃ© maximales
-â€¢ Transfert de propriÃ©tÃ© instantanÃ©
+â€¢ Transparence et sécurité maximales
+â€¢ Transfert de propriété instantané
 
-Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartiers les plus prisÃ©s de Dakar, alliant prestige, rentabilitÃ© et innovation technologique.`
+Cette parcelle représente un investissement d'exception dans l'un des quartiers les plus prisés de Dakar, alliant prestige, rentabilité et innovation technologique.`
     };
 
     setTimeout(() => {
@@ -230,7 +230,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
     setIsFavorite(!isFavorite);
   };
 
-  // Calcul intelligent des prix selon la mÃ©thode de paiement
+  // Calcul intelligent des prix selon la méthode de paiement
   const getPaymentInfo = () => {
     if (!parcelle) return null;
     
@@ -238,7 +238,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
     
     switch (paymentMethod) {
       case 'direct':
-        // 5% de rÃ©duction pour paiement direct
+        // 5% de réduction pour paiement direct
         const directPrice = basePrice * 0.95;
         return {
           totalPrice: directPrice,
@@ -246,8 +246,8 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
           savings: formatPrice((basePrice - directPrice).toString()),
           method: 'Paiement direct',
           title: 'Achat Direct Comptant',
-          description: 'Paiement comptant avec 5% de rÃ©duction',
-          benefits: ['5% de rÃ©duction immÃ©diate', 'Transfert de propriÃ©tÃ© instantanÃ©', 'Aucun frais de dossier']
+          description: 'Paiement comptant avec 5% de réduction',
+          benefits: ['5% de réduction immédiate', 'Transfert de propriété instantané', 'Aucun frais de dossier']
         };
         
       case 'installment':
@@ -259,16 +259,16 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
           displayPrice: formatPrice(installmentPrice.toString()),
           monthlyPayment: formatPrice(monthlyPayment.toString()),
           duration: '60 mois',
-          method: 'Paiement Ã©chelonnÃ©',
-          title: 'Paiement Ã‰chelonnÃ© Flexible',
+          method: 'Paiement échelonné',
+          title: 'Paiement Échelonné Flexible',
           description: 'Paiement en plusieurs fois sur 5 ans',
-          benefits: ['Apport minimum 20%', 'Paiement Ã©talÃ© sur 5 ans', 'Taux fixe garanti']
+          benefits: ['Apport minimum 20%', 'Paiement étalé sur 5 ans', 'Taux fixe garanti']
         };
         
       case 'bank':
         // Prix normal + frais bancaires
         const bankPrice = basePrice * 1.02;
-        const monthlyBankPayment = (bankPrice * 0.7) / 300; // 25 ans, 70% financÃ©
+        const monthlyBankPayment = (bankPrice * 0.7) / 300; // 25 ans, 70% financé
         return {
           totalPrice: bankPrice,
           displayPrice: formatPrice(bankPrice.toString()),
@@ -277,12 +277,12 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
           duration: '25 ans',
           method: 'Financement bancaire',
           title: 'Financement Bancaire Partenaire',
-          description: 'CrÃ©dit immobilier avec banques partenaires',
-          benefits: ['Apport 30% minimum', 'Taux prÃ©fÃ©rentiel', 'Accompagnement expert']
+          description: 'Crédit immobilier avec banques partenaires',
+          benefits: ['Apport 30% minimum', 'Taux préférentiel', 'Accompagnement expert']
         };
 
       case 'crypto':
-        // 3% de rÃ©duction pour paiement crypto
+        // 3% de réduction pour paiement crypto
         const cryptoPrice = basePrice * 0.97;
         return {
           totalPrice: cryptoPrice,
@@ -290,8 +290,8 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
           savings: formatPrice((basePrice - cryptoPrice).toString()),
           method: 'Paiement Crypto',
           title: 'Paiement Cryptocurrency',
-          description: 'Bitcoin, Ethereum, USDT - Transaction blockchain sÃ©curisÃ©e',
-          benefits: ['3% de rÃ©duction crypto', 'Transaction instantanÃ©e', 'Anonymat prÃ©servÃ©', 'Frais de rÃ©seau minimaux']
+          description: 'Bitcoin, Ethereum, USDT - Transaction blockchain sécurisée',
+          benefits: ['3% de réduction crypto', 'Transaction instantanée', 'Anonymat préservé', 'Frais de réseau minimaux']
         };
         
       default:
@@ -316,7 +316,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
             className="w-16 h-16 border-4 border-blue-500 border-t-transparent rounded-full mx-auto mb-4"
           />
           <div className="text-lg font-medium text-gray-700">Chargement de la parcelle...</div>
-          <div className="text-sm text-gray-500 mt-2">RÃ©cupÃ©ration des informations blockchain</div>
+          <div className="text-sm text-gray-500 mt-2">Récupération des informations blockchain</div>
         </div>
       </div>
     );
@@ -327,8 +327,8 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
         <div className="text-center">
           <AlertTriangle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
-          <div className="text-lg font-medium text-gray-700">Parcelle non trouvÃ©e</div>
-          <div className="text-sm text-gray-500 mt-2">Cette parcelle n'existe pas ou a Ã©tÃ© supprimÃ©e</div>
+          <div className="text-lg font-medium text-gray-700">Parcelle non trouvée</div>
+          <div className="text-sm text-gray-500 mt-2">Cette parcelle n'existe pas ou a été supprimée</div>
           <Button onClick={() => navigate('/parcelles-vendeurs')} className="mt-4">
             Retour aux parcelles
           </Button>
@@ -341,7 +341,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Helmet>
         <title>{parcelle.title} | Teranga Foncier</title>
-        <meta name="description" content={`${parcelle.title} - ${parcelle.surface}mÂ² Ã  ${formatPrice(parcelle.price)} dans ${parcelle.location}`} />
+        <meta name="description" content={`${parcelle.title} - ${parcelle.surface}mÂ² Ï  ${formatPrice(parcelle.price)} dans ${parcelle.location}`} />
       </Helmet>
 
       {/* Header avec navigation */}
@@ -360,7 +360,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
             <div className="flex items-center gap-2">
               <Button variant="outline" size="sm" onClick={toggleFavorite}>
                 <Heart className={`w-4 h-4 mr-1 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
-                {isFavorite ? 'SauvegardÃ©' : 'Sauvegarder'}
+                {isFavorite ? 'Sauvegardé' : 'Sauvegarder'}
               </Button>
               <Button variant="outline" size="sm">
                 <Share2 className="w-4 h-4 mr-1" />
@@ -389,7 +389,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                   {parcelle.seller.verified && (
                     <Badge className="bg-green-500 text-white">
                       <Shield className="w-3 h-3 mr-1" />
-                      VÃ©rifiÃ©
+                      Vérifié
                     </Badge>
                   )}
                   <Badge variant="secondary" className="bg-blue-500 text-white">
@@ -478,11 +478,11 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
               </CardContent>
             </Card>
 
-            {/* Onglets dÃ©taillÃ©s */}
+            {/* Onglets détaillés */}
             <Card>
               <Tabs defaultValue="caracteristiques" className="w-full">
                 <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="caracteristiques">CaractÃ©ristiques</TabsTrigger>
+                  <TabsTrigger value="caracteristiques">Caractéristiques</TabsTrigger>
                   <TabsTrigger value="financement">Financement</TabsTrigger>
                   <TabsTrigger value="nft">NFT & Blockchain</TabsTrigger>
                   <TabsTrigger value="documents">Documents</TabsTrigger>
@@ -491,7 +491,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                 <TabsContent value="caracteristiques" className="mt-6">
                   <div className="space-y-6">
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">CaractÃ©ristiques principales</h3>
+                      <h3 className="text-lg font-semibold mb-4">Caractéristiques principales</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {parcelle.features.main.map((feature, index) => (
                           <div key={index} className="flex items-center">
@@ -503,7 +503,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">CommoditÃ©s</h3>
+                      <h3 className="text-lg font-semibold mb-4">Commodités</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {parcelle.features.utilities.map((utility, index) => (
                           <div key={index} className="flex items-center">
@@ -515,7 +515,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                     </div>
 
                     <div>
-                      <h3 className="text-lg font-semibold mb-4">AccÃ¨s et transport</h3>
+                      <h3 className="text-lg font-semibold mb-4">Accès et transport</h3>
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         {parcelle.features.access.map((access, index) => (
                           <div key={index} className="flex items-center">
@@ -539,7 +539,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                         </div>
                         <div>
                           <span className="text-gray-600">Hauteur max:</span>
-                          <span className="ml-2 font-medium">{parcelle.features.max_floors} Ã©tages</span>
+                          <span className="ml-2 font-medium">{parcelle.features.max_floors} étages</span>
                         </div>
                       </div>
                     </div>
@@ -563,7 +563,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                               <div className="font-medium">{parcelle.financing.bank_financing.min_down_payment}</div>
                             </div>
                             <div>
-                              <span className="text-gray-600">DurÃ©e maximum:</span>
+                              <span className="text-gray-600">Durée maximum:</span>
                               <div className="font-medium">{parcelle.financing.bank_financing.max_duration}</div>
                             </div>
                             <div>
@@ -591,7 +591,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                         <CardContent className="p-4">
                           <div className="flex items-center mb-3">
                             <CreditCard className="w-5 h-5 text-green-500 mr-2" />
-                            <h4 className="font-semibold">Paiement Ã©chelonnÃ©</h4>
+                            <h4 className="font-semibold">Paiement échelonné</h4>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
                             <div>
@@ -599,11 +599,11 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                               <div className="font-medium">{parcelle.financing.installment.min_down_payment}</div>
                             </div>
                             <div>
-                              <span className="text-gray-600">MensualitÃ©:</span>
+                              <span className="text-gray-600">Mensualité:</span>
                               <div className="font-medium">{formatPrice(parcelle.financing.installment.monthly_payment)}</div>
                             </div>
                             <div>
-                              <span className="text-gray-600">DurÃ©e:</span>
+                              <span className="text-gray-600">Durée:</span>
                               <div className="font-medium">{parcelle.financing.installment.duration}</div>
                             </div>
                           </div>
@@ -615,10 +615,10 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                           <div className="flex items-center mb-3">
                             <Bitcoin className="w-5 h-5 text-purple-500 mr-2" />
                             <h4 className="font-semibold">Crypto-monnaie</h4>
-                            <Badge className="ml-2 bg-purple-100 text-purple-700">-{parcelle.financing.crypto.discount} de rÃ©duction</Badge>
+                            <Badge className="ml-2 bg-purple-100 text-purple-700">-{parcelle.financing.crypto.discount} de réduction</Badge>
                           </div>
                           <div>
-                            <span className="text-gray-600 text-sm">Devises acceptÃ©es:</span>
+                            <span className="text-gray-600 text-sm">Devises acceptées:</span>
                             <div className="flex flex-wrap gap-1 mt-1">
                               {parcelle.financing.crypto.accepted_currencies.map((currency, index) => (
                                 <Badge key={index} variant="outline" className="text-xs">{currency}</Badge>
@@ -634,7 +634,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                 <TabsContent value="nft" className="mt-6">
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">PropriÃ©tÃ© TokenisÃ©e NFT</h3>
+                      <h3 className="text-lg font-semibold">Propriété Tokenisée NFT</h3>
                       <Badge className="bg-purple-500 text-white">
                         <Bitcoin className="w-3 h-3 mr-1" />
                         Actif
@@ -671,7 +671,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                               </div>
                             </div>
                             <div>
-                              <span className="text-gray-600">PropriÃ©taire actuel:</span>
+                              <span className="text-gray-600">Propriétaire actuel:</span>
                               <div className="font-mono bg-white px-2 py-1 rounded mt-1 break-all">
                                 {parcelle.nft.current_owner}
                               </div>
@@ -698,14 +698,14 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                         <div className="flex items-start">
                           <Shield className="w-5 h-5 text-green-500 mr-3 mt-0.5" />
                           <div>
-                            <div className="font-medium text-sm">SÃ©curitÃ© maximale</div>
-                            <div className="text-xs text-gray-600">PropriÃ©tÃ© immutable sur blockchain</div>
+                            <div className="font-medium text-sm">Sécurité maximale</div>
+                            <div className="text-xs text-gray-600">Propriété immutable sur blockchain</div>
                           </div>
                         </div>
                         <div className="flex items-start">
                           <TrendingUp className="w-5 h-5 text-blue-500 mr-3 mt-0.5" />
                           <div>
-                            <div className="font-medium text-sm">Transfert instantanÃ©</div>
+                            <div className="font-medium text-sm">Transfert instantané</div>
                             <div className="text-xs text-gray-600">Transaction en quelques minutes</div>
                           </div>
                         </div>
@@ -713,14 +713,14 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                           <Globe className="w-5 h-5 text-purple-500 mr-3 mt-0.5" />
                           <div>
                             <div className="font-medium text-sm">Transparence totale</div>
-                            <div className="text-xs text-gray-600">Historique public vÃ©rifiable</div>
+                            <div className="text-xs text-gray-600">Historique public vérifiable</div>
                           </div>
                         </div>
                         <div className="flex items-start">
                           <Euro className="w-5 h-5 text-yellow-500 mr-3 mt-0.5" />
                           <div>
-                            <div className="font-medium text-sm">Frais rÃ©duits</div>
-                            <div className="text-xs text-gray-600">Pas d'intermÃ©diaires traditionnels</div>
+                            <div className="font-medium text-sm">Frais réduits</div>
+                            <div className="text-xs text-gray-600">Pas d'intermédiaires traditionnels</div>
                           </div>
                         </div>
                       </div>
@@ -730,7 +730,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
 
                 <TabsContent value="documents" className="mt-6">
                   <div className="space-y-6">
-                    <h3 className="text-lg font-semibold">Documents lÃ©gaux</h3>
+                    <h3 className="text-lg font-semibold">Documents légaux</h3>
                     
                     <div className="space-y-3">
                       {parcelle.documents.map((doc, index) => (
@@ -746,12 +746,12 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                             {doc.verified && (
                               <Badge className="bg-green-100 text-green-700">
                                 <CheckCircle className="w-3 h-3 mr-1" />
-                                VÃ©rifiÃ©
+                                Vérifié
                               </Badge>
                             )}
                             <Button variant="outline" size="sm">
                               <Download className="w-4 h-4 mr-1" />
-                              TÃ©lÃ©charger
+                              Télécharger
                             </Button>
                           </div>
                         </div>
@@ -762,10 +762,10 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                       <div className="flex items-start">
                         <Info className="w-5 h-5 text-blue-500 mr-3 mt-0.5" />
                         <div className="text-sm">
-                          <div className="font-medium text-blue-900 mb-1">Documents vÃ©rifiÃ©s</div>
+                          <div className="font-medium text-blue-900 mb-1">Documents vérifiés</div>
                           <div className="text-blue-700">
-                            Tous les documents marquÃ©s comme "VÃ©rifiÃ©" ont Ã©tÃ© contrÃ´lÃ©s par nos experts lÃ©gaux 
-                            et sont conformes Ã  la rÃ©glementation sÃ©nÃ©galaise.
+                            Tous les documents marqués comme "Vérifié" ont été contrôlés par nos experts légaux 
+                            et sont conformes Ï  la réglementation sénégalaise.
                           </div>
                         </div>
                       </div>
@@ -820,7 +820,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                     </div>
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span>Prix vs marchÃ©</span>
+                        <span>Prix vs marché</span>
                         <span>{parcelle.ai_score.price_vs_market}/10</span>
                       </div>
                       <Progress value={parcelle.ai_score.price_vs_market * 10} className="h-2" />
@@ -828,14 +828,14 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                   </div>
 
                   <div className="bg-green-50 p-3 rounded-lg">
-                    <div className="text-sm font-medium text-green-800 mb-1">PrÃ©diction de croissance</div>
+                    <div className="text-sm font-medium text-green-800 mb-1">Prédiction de croissance</div>
                     <div className="text-sm text-green-700">{parcelle.ai_score.growth_prediction}</div>
                   </div>
                 </div>
               </CardContent>
             </Card>
 
-            {/* SystÃ¨me de Paiement Intelligent Blockchain */}
+            {/* Système de Paiement Intelligent Blockchain */}
             <Card className="bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
               <CardHeader>
                 <CardTitle className="flex items-center text-lg">
@@ -855,7 +855,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                   <div>
                     <h4 className="font-semibold mb-4 flex items-center">
                       <Shield className="w-4 h-4 mr-2 text-indigo-600" />
-                      Modes de Paiement SÃ©curisÃ©s
+                      Modes de Paiement Sécurisés
                     </h4>
                     <div className="grid grid-cols-1 gap-3">
                       
@@ -882,12 +882,12 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                             </div>
                             <div>
                               <div className="font-semibold">Paiement Direct</div>
-                              <div className="text-sm text-gray-600">Transaction instantanÃ©e</div>
+                              <div className="text-sm text-gray-600">Transaction instantanée</div>
                             </div>
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-green-600">-5%</div>
-                            <div className="text-xs text-gray-500">RÃ©duction</div>
+                            <div className="text-xs text-gray-500">Réduction</div>
                           </div>
                         </div>
                         {paymentMethod === 'direct' && (
@@ -898,17 +898,17 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                           >
                             <div className="flex items-center text-sm text-indigo-700 mb-2">
                               <CheckCircle className="w-4 h-4 mr-2" />
-                              Transaction blockchain sÃ©curisÃ©e
+                              Transaction blockchain sécurisée
                             </div>
                             <div className="flex items-center text-sm text-indigo-700">
                               <CheckCircle className="w-4 h-4 mr-2" />
-                              Transfert de propriÃ©tÃ© immÃ©diat
+                              Transfert de propriété immédiat
                             </div>
                           </motion.div>
                         )}
                       </motion.div>
 
-                      {/* Paiement Ã‰chelonnÃ© */}
+                      {/* Paiement Échelonné */}
                       <motion.div
                         whileHover={{ scale: 1.02 }}
                         className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
@@ -930,8 +930,8 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                               }`} />
                             </div>
                             <div>
-                              <div className="font-semibold">Paiement Ã‰chelonnÃ©</div>
-                              <div className="text-sm text-gray-600">Jusqu'Ã  24 mois</div>
+                              <div className="font-semibold">Paiement Échelonné</div>
+                              <div className="text-sm text-gray-600">Jusqu'Ï  24 mois</div>
                             </div>
                           </div>
                           <div className="text-right">
@@ -948,11 +948,11 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex items-center text-indigo-700">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                Smart contracts automatisÃ©s
+                                Smart contracts automatisés
                               </div>
                               <div className="flex items-center text-indigo-700">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                PropriÃ©tÃ© progressive
+                                Propriété progressive
                               </div>
                             </div>
                           </motion.div>
@@ -982,7 +982,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                             </div>
                             <div>
                               <div className="font-semibold">Financement Bancaire</div>
-                              <div className="text-sm text-gray-600">Jusqu'Ã  80% du montant</div>
+                              <div className="text-sm text-gray-600">Jusqu'Ï  80% du montant</div>
                             </div>
                           </div>
                           <div className="text-right">
@@ -999,11 +999,11 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex items-center text-indigo-700">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                PrÃ©approbation en 24h
+                                Préapprobation en 24h
                               </div>
                               <div className="flex items-center text-indigo-700">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                Partenaires bancaires certifiÃ©s
+                                Partenaires bancaires certifiés
                               </div>
                             </div>
                           </motion.div>
@@ -1041,7 +1041,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                           </div>
                           <div className="text-right">
                             <div className="text-lg font-bold text-orange-600">-3%</div>
-                            <div className="text-xs text-gray-500">RÃ©duction</div>
+                            <div className="text-xs text-gray-500">Réduction</div>
                           </div>
                         </div>
                         {paymentMethod === 'crypto' && (
@@ -1053,11 +1053,11 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                             <div className="grid grid-cols-2 gap-2 text-sm">
                               <div className="flex items-center text-indigo-700">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                Transaction instantanÃ©e
+                                Transaction instantanée
                               </div>
                               <div className="flex items-center text-indigo-700">
                                 <CheckCircle className="w-4 h-4 mr-2" />
-                                Anonymat prÃ©servÃ©
+                                Anonymat préservé
                               </div>
                             </div>
                           </motion.div>
@@ -1066,7 +1066,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                     </div>
                   </div>
 
-                  {/* RÃ©sumÃ© du paiement */}
+                  {/* Résumé du paiement */}
                   <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6 rounded-xl">
                     <div className="text-center">
                       <div className="text-sm opacity-90 mb-1">Prix Total</div>
@@ -1089,11 +1089,11 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                       <div className="flex items-center justify-center text-xs space-x-4">
                         <div className="flex items-center">
                           <Shield className="w-3 h-3 mr-1" />
-                          SÃ©curisÃ© Blockchain
+                          Sécurisé Blockchain
                         </div>
                         <div className="flex items-center">
                           <Zap className="w-3 h-3 mr-1" />
-                          IA OptimisÃ©
+                          IA Optimisé
                         </div>
                         <div className="flex items-center">
                           <Globe className="w-3 h-3 mr-1" />
@@ -1166,24 +1166,24 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                   </div>
 
                   <div className="flex items-center justify-between text-sm">
-                    <span className="text-gray-600">PropriÃ©tÃ©s vendues:</span>
+                    <span className="text-gray-600">Propriétés vendues:</span>
                     <span className="font-medium">{parcelle.seller.properties_sold}</span>
                   </div>
 
                   {parcelle.seller.verified && (
                     <div className="flex items-center text-sm text-green-600">
                       <Shield className="w-4 h-4 mr-1" />
-                      <span>Vendeur vÃ©rifiÃ©</span>
+                      <span>Vendeur vérifié</span>
                     </div>
                   )}
 
-                  {/* Note sur la confidentialitÃ© */}
+                  {/* Note sur la confidentialité */}
                   <div className="bg-blue-50 p-3 rounded-lg">
                     <div className="flex items-start">
                       <Info className="w-4 h-4 text-blue-500 mr-2 mt-0.5" />
                       <div className="text-xs text-blue-700">
-                        <div className="font-medium mb-1">Protection des donnÃ©es</div>
-                        <div>Les informations de contact du vendeur sont protÃ©gÃ©es. Utilisez le bouton "Initier l'achat" pour commencer la transaction en toute sÃ©curitÃ©.</div>
+                        <div className="font-medium mb-1">Protection des données</div>
+                        <div>Les informations de contact du vendeur sont protégées. Utilisez le bouton "Initier l'achat" pour commencer la transaction en toute sécurité.</div>
                       </div>
                     </div>
                   </div>
@@ -1209,7 +1209,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                   </div>
 
                   <div>
-                    <div className="font-medium text-sm text-gray-700 mb-2">Points de repÃ¨re</div>
+                    <div className="font-medium text-sm text-gray-700 mb-2">Points de repère</div>
                     <div className="space-y-2">
                       {parcelle.address.nearby_landmarks.map((landmark, index) => (
                         <div key={index} className="flex items-center text-sm text-gray-600">
@@ -1220,14 +1220,14 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                     </div>
                   </div>
 
-                  {/* Carte interactive intÃ©grÃ©e */}
+                  {/* Carte interactive intégrée */}
                   <div>
                     <div className="font-medium text-sm text-gray-700 mb-2">Carte du terrain</div>
                     <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden border">
                       <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100">
                         {/* Simulation de carte interactive */}
                         <div className="relative w-full h-full">
-                          {/* Zone de terrain simulÃ©e */}
+                          {/* Zone de terrain simulée */}
                           <div 
                             className="absolute bg-red-500 border-2 border-red-600 opacity-80"
                             style={{
@@ -1239,17 +1239,17 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                             }}
                           ></div>
                           
-                          {/* Points de repÃ¨re simulÃ©s */}
+                          {/* Points de repère simulés */}
                           <div className="absolute top-2 left-2 bg-white px-2 py-1 rounded text-xs font-medium shadow">
                             Terrain: {parcelle.surface} mÂ²
                           </div>
                           
-                          {/* CoordonnÃ©es GPS */}
+                          {/* Coordonnées GPS */}
                           <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
                             GPS: {parcelle.coordinates.lat}, {parcelle.coordinates.lng}
                           </div>
                           
-                          {/* ContrÃ´les de zoom simulÃ©s */}
+                          {/* Contrôles de zoom simulés */}
                           <div className="absolute top-2 right-2 bg-white rounded shadow-lg">
                             <button className="w-8 h-8 text-gray-600 hover:text-gray-800 hover:bg-gray-50 flex items-center justify-center border-b">
                               +
@@ -1259,7 +1259,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                             </button>
                           </div>
 
-                          {/* Ã‰chelle */}
+                          {/* Échelle */}
                           <div className="absolute bottom-2 right-2 bg-white px-2 py-1 rounded text-xs">
                             100m
                           </div>
@@ -1275,7 +1275,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                       className="w-full text-sm"
                     >
                       <Map className="w-4 h-4 mr-2" />
-                      Carte plein Ã©cran
+                      Carte plein écran
                     </Button>
                     <Button 
                       onClick={openGoogleMaps} 
@@ -1305,7 +1305,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
               <Input id="name" YOUR_API_KEY="Nom complet" />
             </div>
             <div>
-              <Label htmlFor="phone">TÃ©lÃ©phone</Label>
+              <Label htmlFor="phone">Téléphone</Label>
               <Input id="phone" YOUR_API_KEY="+221 XX XXX XX XX" />
             </div>
             <div>
@@ -1316,7 +1316,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
               <Label htmlFor="message">Message</Label>
               <Textarea
                 id="message"
-                YOUR_API_KEY="Je suis intÃ©ressÃ©(e) par cette parcelle..."
+                YOUR_API_KEY="Je suis intéressé(e) par cette parcelle..."
                 rows={4}
               />
             </div>
@@ -1359,7 +1359,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                     </div>
                     
                     <div>
-                      <div className="font-medium text-sm text-gray-700 mb-1">CoordonnÃ©es GPS</div>
+                      <div className="font-medium text-sm text-gray-700 mb-1">Coordonnées GPS</div>
                       <div className="text-sm text-gray-600 space-y-1">
                         <div className="bg-blue-50 p-2 rounded">
                           Lat: {parcelle.address.coordinates.latitude}
@@ -1371,7 +1371,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                     </div>
 
                     <div>
-                      <div className="font-medium text-sm text-gray-700 mb-2">Points de repÃ¨re</div>
+                      <div className="font-medium text-sm text-gray-700 mb-2">Points de repère</div>
                       <div className="space-y-1">
                         {parcelle.address.nearby_landmarks.map((landmark, index) => (
                           <div key={index} className="flex items-start text-xs text-gray-600">
@@ -1418,7 +1418,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                         <div className="absolute top-1/4 left-1/4">
                           <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow"></div>
                           <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-white px-1 py-0.5 rounded text-xs shadow border">
-                            UniversitÃ©
+                            Université
                           </div>
                         </div>
                         
@@ -1441,7 +1441,7 @@ Cette parcelle reprÃ©sente un investissement d'exception dans l'un des quartie
                         <div className="flex items-start">
                           <Info className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
                           <div className="text-xs text-gray-600">
-                            <strong>Carte interactive simulÃ©e</strong><br />
+                            <strong>Carte interactive simulée</strong><br />
                             Cliquez sur "Ouvrir dans Google Maps" pour la localisation exacte avec navigation GPS.
                           </div>
                         </div>

@@ -1,5 +1,5 @@
 ﻿/**
- * ðŸŽ¯ INTERFACE AI DASHBOARD - INTÃ‰GRATION TERANGA AI
+ * ðŸŽ¯ INTERFACE AI DASHBOARD - INTÉGRATION TERANGA AI
  * =================================================
  * 
  * Interface utilisateur pour services IA dans les dashboards
@@ -62,7 +62,7 @@ export const AIEstimationWidget = ({ className = '' }) => {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">
-            ðŸ  Type de propriÃ©tÃ©
+            ðŸ  Type de propriété
           </label>
           <select 
             value={formData.type}
@@ -98,16 +98,16 @@ export const AIEstimationWidget = ({ className = '' }) => {
         </button>
       </div>
 
-      {/* RÃ©sultats */}
+      {/* Résultats */}
       {estimation && (
         <div className="border-t pt-6">
           <h4 className="text-lg font-semibold mb-4 text-green-700">
-            ðŸ“Š RÃ©sultat de l'estimation
+            ðŸ“Š Résultat de l'estimation
           </h4>
           
           <div className="grid grid-cols-2 gap-4">
             <div className="bg-green-50 p-4 rounded-lg">
-              <p className="text-sm text-gray-600">Prix estimÃ©</p>
+              <p className="text-sm text-gray-600">Prix estimé</p>
               <p className="text-2xl font-bold text-green-700">
                 {estimation.prix_estime_fcfa.toLocaleString()} FCFA
               </p>
@@ -123,7 +123,7 @@ export const AIEstimationWidget = ({ className = '' }) => {
 
           <div className="mt-4 grid grid-cols-2 gap-4">
             <div className="bg-orange-50 p-3 rounded-lg">
-              <p className="text-sm text-gray-600">Tendance marchÃ©</p>
+              <p className="text-sm text-gray-600">Tendance marché</p>
               <p className="font-semibold text-orange-700 capitalize">
                 {estimation.tendance === 'hausse' ? 'ðŸ“ˆ' : 'ðŸ“Š'} {estimation.tendance}
               </p>
@@ -132,13 +132,13 @@ export const AIEstimationWidget = ({ className = '' }) => {
             <div className="bg-purple-50 p-3 rounded-lg">
               <p className="text-sm text-gray-600">Niveau demande</p>
               <p className="font-semibold text-purple-700 capitalize">
-                {estimation.demande === 'trÃ¨s_forte' ? 'ðŸ”¥' : 'ðŸ“Š'} {estimation.demande}
+                {estimation.demande === 'très_forte' ? 'ðŸ”¥' : 'ðŸ“Š'} {estimation.demande}
               </p>
             </div>
           </div>
 
           <div className="mt-4 text-xs text-gray-500 text-center">
-            Estimation basÃ©e sur donnÃ©es marchÃ© SÃ©nÃ©gal â€¢ Zone: {estimation.zone}
+            Estimation basée sur données marché Sénégal â€¢ Zone: {estimation.zone}
           </div>
         </div>
       )}
@@ -182,7 +182,7 @@ export const AIMarketInsights = ({ region = 'Dakar', className = '' }) => {
     return (
       <div className={`bg-white rounded-xl shadow-lg p-6 ${className}`}>
         <div className="text-center text-gray-500">
-          âŒ Impossible de charger les insights marchÃ©
+          âŒ Impossible de charger les insights marché
         </div>
       </div>
     );
@@ -191,14 +191,14 @@ export const AIMarketInsights = ({ region = 'Dakar', className = '' }) => {
   return (
     <div className={`bg-white rounded-xl shadow-lg p-6 ${className}`}>
       <h3 className="text-xl font-bold mb-4 text-gray-800">
-        ðŸ“ˆ Insights MarchÃ© {region}
+        ðŸ“ˆ Insights Marché {region}
       </h3>
 
       <div className="space-y-6">
-        {/* Tendances gÃ©nÃ©rales */}
+        {/* Tendances générales */}
         <div className="bg-gradient-to-r from-green-50 to-blue-50 p-4 rounded-lg">
           <h4 className="font-semibold text-gray-800 mb-2">
-            ðŸŽ¯ Tendances GÃ©nÃ©rales
+            ðŸŽ¯ Tendances Générales
           </h4>
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div>
@@ -249,7 +249,7 @@ export const AIMarketInsights = ({ region = 'Dakar', className = '' }) => {
       </div>
 
       <div className="mt-4 text-xs text-gray-500 text-center">
-        DerniÃ¨re mise Ã  jour: {new Date(insights.derniere_maj).toLocaleDateString()}
+        Dernière mise Ï  jour: {new Date(insights.derniere_maj).toLocaleDateString()}
       </div>
     </div>
   );

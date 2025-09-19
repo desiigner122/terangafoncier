@@ -46,14 +46,14 @@ const AIChatbot = () => {
     const welcomeMessage = {
       id: Date.now(),
       type: 'ai',
-      content: "ðŸ‘‹ Salut ! Je suis **Teranga AI**, votre assistant intelligent pour l'immobilier au SÃ©nÃ©gal.\n\nJe combine l'**Intelligence Artificielle** et la **Blockchain** pour vous offrir :\n\nðŸ§  **Analyses de marchÃ©** en temps rÃ©el\nðŸ“Š **PrÃ©dictions de prix** prÃ©cises\nðŸ” **Transactions sÃ©curisÃ©es** blockchain\nðŸŽ¯ **Recommandations personnalisÃ©es**\n\nComment puis-je vous aider aujourd'hui ?",
+      content: "ðŸ‘‹ Salut ! Je suis **Teranga AI**, votre assistant intelligent pour l'immobilier au Sénégal.\n\nJe combine l'**Intelligence Artificielle** et la **Blockchain** pour vous offrir :\n\nðŸ§  **Analyses de marché** en temps réel\nðŸ“Š **Prédictions de prix** précises\nðŸ” **Transactions sécurisées** blockchain\nðŸŽ¯ **Recommandations personnalisées**\n\nComment puis-je vous aider aujourd'hui ?",
       timestamp: new Date(),
       suggestions: [
-        "ðŸ’° Analyser les prix du marchÃ©",
+        "ðŸ’° Analyser les prix du marché",
         "ðŸ“ Trouver les meilleures zones d'investissement", 
-        "ðŸ”® PrÃ©dictions de prix Ã  court terme",
+        "ðŸ”® Prédictions de prix Ï  court terme",
         "â›“ï¸ Status de mes transactions blockchain",
-        "ðŸ  Ã‰valuer une propriÃ©tÃ© avec l'IA"
+        "ðŸ  Évaluer une propriété avec l'IA"
       ]
     };
 
@@ -79,7 +79,7 @@ const AIChatbot = () => {
     setInputValue('');
     setIsTyping(true);
 
-    // Analyser le message et gÃ©nÃ©rer une rÃ©ponse
+    // Analyser le message et générer une réponse
     try {
       const response = await generateAIResponse(messageText);
       
@@ -87,10 +87,10 @@ const AIChatbot = () => {
         setMessages(prev => [...prev, response]);
         setSuggestions(response.suggestions || []);
         setIsTyping(false);
-      }, 1500); // Simule le temps de rÃ©flexion de l'IA
+      }, 1500); // Simule le temps de réflexion de l'IA
 
     } catch (error) {
-      console.error('Erreur gÃ©nÃ©ration rÃ©ponse IA:', error);
+      console.error('Erreur génération réponse IA:', error);
       setIsTyping(false);
     }
   };
@@ -107,9 +107,9 @@ const AIChatbot = () => {
       switch (intent.type) {
         case 'price_analysis':
           const priceData = await advancedAIService.generateMarketInsights();
-          content = `ðŸ“Š **Analyse de marchÃ© actuelle :**\n\n`;
-          content += `ðŸ’¹ **Tendance gÃ©nÃ©rale :** ${priceData.marketSentiment?.status || 'Optimiste'}\n`;
-          content += `ðŸ“ˆ **PrÃ©diction court terme :** ${priceData.pricePredictions?.shortTerm?.prediction || '+2.5%'}\n`;
+          content = `ðŸ“Š **Analyse de marché actuelle :**\n\n`;
+          content += `ðŸ’¹ **Tendance générale :** ${priceData.marketSentiment?.status || 'Optimiste'}\n`;
+          content += `ðŸ“ˆ **Prédiction court terme :** ${priceData.pricePredictions?.shortTerm?.prediction || '+2.5%'}\n`;
           content += `ðŸŽ¯ **Confiance IA :** ${((priceData.confidenceScore || 0.89) * 100).toFixed(1)}%\n\n`;
           content += `**Top 3 zones performantes :**\n`;
           
@@ -121,9 +121,9 @@ const AIChatbot = () => {
 
           suggestions = [
             "ðŸ† Voir le classement complet des zones",
-            "ðŸ’° Calculer ma capacitÃ© d'investissement",
-            "ðŸ“Š Analyser une zone spÃ©cifique",
-            "ðŸ”® PrÃ©dictions Ã  long terme"
+            "ðŸ’° Calculer ma capacité d'investissement",
+            "ðŸ“Š Analyser une zone spécifique",
+            "ðŸ”® Prédictions Ï  long terme"
           ];
           data = priceData;
           break;
@@ -132,21 +132,21 @@ const AIChatbot = () => {
           content = `ðŸŽ¯ **Recommandations d'investissement par zone :**\n\n`;
           content += `ðŸ¥‡ **Almadies** - Zone premium en forte croissance\n`;
           content += `ðŸ’° Prix moyen: 850,000 FCFA/mÂ²\n`;
-          content += `ðŸ“ˆ Tendance: +12% cette annÃ©e\n\n`;
+          content += `ðŸ“ˆ Tendance: +12% cette année\n\n`;
           
-          content += `ðŸ¥ˆ **Diamniadio** - Zone Ã©mergente Ã  fort potentiel\n`;
+          content += `ðŸ¥ˆ **Diamniadio** - Zone émergente Ï  fort potentiel\n`;
           content += `ðŸ’° Prix moyen: 450,000 FCFA/mÂ²\n`;
-          content += `ðŸ“ˆ Tendance: +15% cette annÃ©e\n\n`;
+          content += `ðŸ“ˆ Tendance: +15% cette année\n\n`;
           
-          content += `ðŸ¥‰ **VDN** - Ã‰quilibre parfait prix/qualitÃ©\n`;
+          content += `ðŸ¥‰ **VDN** - Équilibre parfait prix/qualité\n`;
           content += `ðŸ’° Prix moyen: 750,000 FCFA/mÂ²\n`;
-          content += `ðŸ“ˆ Tendance: +9% cette annÃ©e`;
+          content += `ðŸ“ˆ Tendance: +9% cette année`;
 
           suggestions = [
-            "ðŸ“ Analyser Almadies en dÃ©tail",
-            "ðŸš€ Pourquoi investir Ã  Diamniadio ?",
+            "ðŸ“ Analyser Almadies en détail",
+            "ðŸš€ Pourquoi investir Ï  Diamniadio ?",
             "ðŸ“Š Comparer toutes les zones",
-            "ðŸ’¡ Conseils d'investissement personnalisÃ©s"
+            "ðŸ’¡ Conseils d'investissement personnalisés"
           ];
           break;
 
@@ -155,96 +155,96 @@ const AIChatbot = () => {
           content = `â›“ï¸ **Status Blockchain Teranga :**\n\n`;
           content += `ðŸ”¥ **Transactions totales :** ${blockchainData.totalTransactions || '15,247'}\n`;
           content += `ðŸ’Ž **Smart contracts actifs :** ${blockchainData.activeContracts || '89'}\n`;
-          content += `ðŸ  **NFT PropriÃ©tÃ©s :** ${blockchainData.nftProperties || '342'}\n`;
+          content += `ðŸ  **NFT Propriétés :** ${blockchainData.nftProperties || '342'}\n`;
           content += `ðŸ’° **Volume journalier :** ${blockchainData.dailyVolume || '2.4'}M FCFA\n`;
-          content += `ðŸ›¡ï¸ **Score sÃ©curitÃ© :** ${((blockchainData.securityScore || 0.98) * 100).toFixed(1)}%\n`;
-          content += `âš¡ **SantÃ© rÃ©seau :** ${((blockchainData.networkHealth || 0.96) * 100).toFixed(1)}%`;
+          content += `ðŸ›¡ï¸ **Score sécurité :** ${((blockchainData.securityScore || 0.98) * 100).toFixed(1)}%\n`;
+          content += `âš¡ **Santé réseau :** ${((blockchainData.networkHealth || 0.96) * 100).toFixed(1)}%`;
 
           suggestions = [
             "ðŸ” Voir mes transactions",
-            "ðŸ“ˆ Analytics blockchain dÃ©taillÃ©es", 
-            "ðŸ  CrÃ©er un NFT propriÃ©tÃ©",
+            "ðŸ“ˆ Analytics blockchain détaillées", 
+            "ðŸ  Créer un NFT propriété",
             "ðŸ’¼ Status de mes contrats"
           ];
           data = blockchainData;
           break;
 
         case 'property_valuation':
-          content = `ðŸ  **Ã‰valuation IA de propriÃ©tÃ© :**\n\n`;
-          content += `Pour une Ã©valuation prÃ©cise, j'ai besoin de quelques informations :\n\n`;
+          content = `ðŸ  **Évaluation IA de propriété :**\n\n`;
+          content += `Pour une évaluation précise, j'ai besoin de quelques informations :\n\n`;
           content += `ðŸ“ **Localisation :** Quelle zone ?\n`;
           content += `ðŸ“ **Surface :** Combien de mÂ² ?\n`;
           content += `ðŸ  **Type :** Villa, appartement, terrain ?\n`;
-          content += `â­ **Ã‰quipements :** Piscine, jardin, garage ?\n\n`;
-          content += `Mon IA analysera ensuite **15+ facteurs** pour vous donner une estimation ultra-prÃ©cise !`;
+          content += `â­ **Équipements :** Piscine, jardin, garage ?\n\n`;
+          content += `Mon IA analysera ensuite **15+ facteurs** pour vous donner une estimation ultra-précise !`;
 
           suggestions = [
-            "ðŸ“ Ã‰valuer Ã  Almadies",
-            "ðŸ  Ã‰valuer une villa avec piscine",
-            "ðŸ“Š Voir un exemple d'Ã©valuation",
+            "ðŸ“ Évaluer Ï  Almadies",
+            "ðŸ  Évaluer une villa avec piscine",
+            "ðŸ“Š Voir un exemple d'évaluation",
             "ðŸ’° Calculateur de prix rapide"
           ];
           break;
 
         case 'investment_advice':
           content = `ðŸ’¡ **Conseils d'investissement IA :**\n\n`;
-          content += `**ðŸŽ¯ StratÃ©gie recommandÃ©e pour 2024 :**\n\n`;
-          content += `1. **Diversification gÃ©ographique** - RÃ©partir entre zones matures et Ã©mergentes\n`;
+          content += `**ðŸŽ¯ Stratégie recommandée pour 2024 :**\n\n`;
+          content += `1. **Diversification géographique** - Répartir entre zones matures et émergentes\n`;
           content += `2. **Focus Diaspora** - Profiter du boom des investissements internationaux\n`;
-          content += `3. **Blockchain first** - SÃ©curiser avec des NFT propriÃ©tÃ©s\n`;
+          content += `3. **Blockchain first** - Sécuriser avec des NFT propriétés\n`;
           content += `4. **IA monitoring** - Surveillance continue de vos investissements\n\n`;
-          content += `**ðŸ’° Budget recommandÃ© :** Commencer avec minimum 50M FCFA pour une diversification efficace`;
+          content += `**ðŸ’° Budget recommandé :** Commencer avec minimum 50M FCFA pour une diversification efficace`;
 
           suggestions = [
             "ðŸ“Š Analyser mon profil d'investisseur",
-            "ðŸ’° Calculer ma capacitÃ© d'emprunt",
-            "ðŸŽ¯ StratÃ©gie pour la diaspora",
-            "âš¡ OpportunitÃ©s actuelles"
+            "ðŸ’° Calculer ma capacité d'emprunt",
+            "ðŸŽ¯ Stratégie pour la diaspora",
+            "âš¡ Opportunités actuelles"
           ];
           break;
 
         case 'market_trends':
-          content = `ðŸ“ˆ **Tendances marchÃ© 2024 :**\n\n`;
-          content += `ðŸ”¥ **Croissance gÃ©nÃ©rale :** +8.5% sur l'annÃ©e\n`;
+          content = `ðŸ“ˆ **Tendances marché 2024 :**\n\n`;
+          content += `ðŸ”¥ **Croissance générale :** +8.5% sur l'année\n`;
           content += `ðŸ† **Zones leaders :** Almadies, Ngor (+12%)\n`;
-          content += `ðŸš€ **Zones Ã©mergentes :** Diamniadio, Lac Rose (+15%)\n`;
+          content += `ðŸš€ **Zones émergentes :** Diamniadio, Lac Rose (+15%)\n`;
           content += `ðŸ’Ž **Segment premium :** Demande forte diaspora\n`;
-          content += `ðŸ  **Type recherchÃ© :** Villas 3-4 chambres\n`;
+          content += `ðŸ  **Type recherché :** Villas 3-4 chambres\n`;
           content += `â›“ï¸ **Innovation :** Boom des transactions blockchain\n\n`;
-          content += `**ðŸ”® PrÃ©diction 2025 :** Consolidation des gains avec une croissance plus modÃ©rÃ©e (+6-8%)`;
+          content += `**ðŸ”® Prédiction 2025 :** Consolidation des gains avec une croissance plus modérée (+6-8%)`;
 
           suggestions = [
-            "ðŸ“Š DÃ©tails par zone",
+            "ðŸ“Š Détails par zone",
             "ðŸ’° Impact sur mes investissements",
-            "ðŸ”® PrÃ©dictions long terme",
-            "ðŸŽ¯ OpportunitÃ©s Ã  saisir"
+            "ðŸ”® Prédictions long terme",
+            "ðŸŽ¯ Opportunités Ï  saisir"
           ];
           break;
 
         default:
-          content = `ðŸ¤” Je comprends que vous vous intÃ©ressez Ã  l'immobilier ! \n\n`;
-          content += `Voici comment je peux vous aider avec mon **IA avancÃ©e** :\n\n`;
-          content += `ðŸ§  **Analyses intelligentes** du marchÃ©\n`;
-          content += `ðŸ’° **Ã‰valuations prÃ©cises** de propriÃ©tÃ©s\n`;
-          content += `ðŸ“Š **PrÃ©dictions fiables** des prix\n`;
-          content += `â›“ï¸ **SÃ©curisation blockchain** de vos transactions\n`;
-          content += `ðŸŽ¯ **Recommandations personnalisÃ©es** d'investissement`;
+          content = `ðŸ¤” Je comprends que vous vous intéressez Ï  l'immobilier ! \n\n`;
+          content += `Voici comment je peux vous aider avec mon **IA avancée** :\n\n`;
+          content += `ðŸ§  **Analyses intelligentes** du marché\n`;
+          content += `ðŸ’° **Évaluations précises** de propriétés\n`;
+          content += `ðŸ“Š **Prédictions fiables** des prix\n`;
+          content += `â›“ï¸ **Sécurisation blockchain** de vos transactions\n`;
+          content += `ðŸŽ¯ **Recommandations personnalisées** d'investissement`;
 
           suggestions = [
             "ðŸ’° Analyser les prix actuels",
             "ðŸ“ Meilleures zones d'investissement",
-            "ðŸ  Ã‰valuer une propriÃ©tÃ©", 
+            "ðŸ  Évaluer une propriété", 
             "â›“ï¸ Status blockchain",
-            "ðŸ“ˆ Tendances du marchÃ©"
+            "ðŸ“ˆ Tendances du marché"
           ];
       }
 
     } catch (error) {
-      content = "âš ï¸ DÃ©solÃ©, je rencontre une difficultÃ© technique. Pouvez-vous reformuler votre question ?";
+      content = "âš ï¸ Désolé, je rencontre une difficulté technique. Pouvez-vous reformuler votre question ?";
       suggestions = [
         "ðŸ’° Analyser les prix",
         "ðŸ“ Recommandations zones",
-        "ðŸ”„ RÃ©essayer"
+        "ðŸ”„ Réessayer"
       ];
     }
 
@@ -262,7 +262,7 @@ const AIChatbot = () => {
   const analyzeIntent = (message) => {
     const lowerMessage = message.toLowerCase();
     
-    if (lowerMessage.includes('prix') || lowerMessage.includes('marchÃ©') || lowerMessage.includes('Ã©volution')) {
+    if (lowerMessage.includes('prix') || lowerMessage.includes('marché') || lowerMessage.includes('évolution')) {
       return { type: 'price_analysis', confidence: 0.9 };
     }
     
@@ -274,15 +274,15 @@ const AIChatbot = () => {
       return { type: 'blockchain_status', confidence: 0.9 };
     }
     
-    if (lowerMessage.includes('Ã©valuer') || lowerMessage.includes('estimer') || lowerMessage.includes('propriÃ©tÃ©')) {
+    if (lowerMessage.includes('évaluer') || lowerMessage.includes('estimer') || lowerMessage.includes('propriété')) {
       return { type: 'property_valuation', confidence: 0.8 };
     }
     
-    if (lowerMessage.includes('conseil') || lowerMessage.includes('stratÃ©gie') || lowerMessage.includes('placement')) {
+    if (lowerMessage.includes('conseil') || lowerMessage.includes('stratégie') || lowerMessage.includes('placement')) {
       return { type: 'investment_advice', confidence: 0.8 };
     }
     
-    if (lowerMessage.includes('tendance') || lowerMessage.includes('futur') || lowerMessage.includes('prÃ©diction')) {
+    if (lowerMessage.includes('tendance') || lowerMessage.includes('futur') || lowerMessage.includes('prédiction')) {
       return { type: 'market_trends', confidence: 0.8 };
     }
     
@@ -403,7 +403,7 @@ const AIChatbot = () => {
                 <div className="bg-gray-100 p-3 rounded-2xl mr-4">
                   <div className="flex items-center gap-2">
                     <Brain className="h-4 w-4 text-cyan-500 animate-pulse" />
-                    <span className="text-sm text-gray-600">L'IA rÃ©flÃ©chit...</span>
+                    <span className="text-sm text-gray-600">L'IA réfléchit...</span>
                     <div className="flex gap-1">
                       {[0, 1, 2].map((i) => (
                         <div

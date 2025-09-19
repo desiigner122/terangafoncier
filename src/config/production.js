@@ -6,7 +6,7 @@ export const PRODUCTION_CONFIG = {
   // Environnement
   NODE_ENV: 'production',
   
-  // SÃ©curitÃ©
+  // Sécurité
   SECURITY: {
     enableConsoleLog: false,
     enableDebugMode: false,
@@ -21,7 +21,7 @@ export const PRODUCTION_CONFIG = {
     enableMockData: false
   },
   
-  // Base de donnÃ©es
+  // Base de données
   DATABASE: {
     enableDemoData: false,
     enableTestUsers: false,

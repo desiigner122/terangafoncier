@@ -14,8 +14,8 @@ const CommunalLandsSection = () => {
   const communalLands = [
     {
       id: 1,
-      title: "Terrain Communal ThiÃ¨s",
-      location: "ThiÃ¨s Centre",
+      title: "Terrain Communal Thiès",
+      location: "Thiès Centre",
       surface: "500mÂ²",
       requirements: "Dossier complet",
       status: "Attribution ouverte",
@@ -26,7 +26,7 @@ const CommunalLandsSection = () => {
       title: "Parcelle Communale Rufisque",
       location: "Rufisque Est",
       surface: "750mÂ²", 
-      requirements: "RÃ©sidence obligatoire",
+      requirements: "Résidence obligatoire",
       status: "Attribution ouverte",
       image: "/api/YOUR_API_KEY/300/200"
     },
@@ -35,7 +35,7 @@ const CommunalLandsSection = () => {
       title: "Terrain Communal Kaolack",
       location: "Kaolack Nord",
       surface: "400mÂ²",
-      requirements: "Projet dÃ©fini",
+      requirements: "Projet défini",
       status: "Attribution ouverte",
       image: "/api/YOUR_API_KEY/300/200"
     }
@@ -44,7 +44,7 @@ const CommunalLandsSection = () => {
   return (
     <section className="py-16 bg-green-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* En-tÃªte */}
+        {/* En-tête */}
         <div className="text-center mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -60,7 +60,7 @@ const CommunalLandsSection = () => {
               Terrains Communaux par Attribution
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              Demandez l'attribution de terrains communaux selon les critÃ¨res officiels
+              Demandez l'attribution de terrains communaux selon les critères officiels
             </p>
           </motion.div>
         </div>

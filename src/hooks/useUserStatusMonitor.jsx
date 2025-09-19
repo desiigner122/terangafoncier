@@ -2,12 +2,12 @@
 import { useAuth } from '@/contexts/AuthProvider';
 import { useNavigate } from 'react-router-dom';
 import userStatusManager from '@/lib/userStatusManager';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 export const useUserStatusMonitor = () => {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   const handleUserStatusChange = useCallback(async (change) => {
     if (!user) return;

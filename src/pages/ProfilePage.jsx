@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { useAuth } from '@/context/AuthContext';
 import { avatarManager } from '@/lib/avatarManager';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { motion } from 'framer-motion';
 import { 
   User, 
@@ -37,7 +37,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 const ProfilePage = () => {
   const { user, updateUserProfile, logout } = useAuth();
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
 

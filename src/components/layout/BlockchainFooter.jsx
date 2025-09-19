@@ -43,10 +43,10 @@ const BlockchainFooter = () => {
       title: "Solutions",
       links: [
         { label: "Particuliers", path: "/solutions/particuliers", icon: Users },
-        { label: "Construction Ã  Distance", path: "/solutions/construction-distance", icon: Globe },
+        { label: "Construction Ï  Distance", path: "/solutions/construction-distance", icon: Globe },
         { label: "Surveillance de Projets", path: "/solutions/project-monitoring", icon: Eye },
         { label: "Investissement Diaspora", path: "/solutions/diaspora-investment", icon: Smartphone },
-        { label: "Comment Ã§a marche", path: "/how-it-works", icon: ArrowRight },
+        { label: "Comment ça marche", path: "/how-it-works", icon: ArrowRight },
       ]
     },
     {
@@ -55,7 +55,7 @@ const BlockchainFooter = () => {
         { label: "Banques", path: "/banques", icon: CreditCard },
         { label: "Agents Fonciers", path: "/agents-fonciers", icon: Shield },
         { label: "Notaires", path: "/notaires", icon: FileCheck },
-        { label: "GÃ©omÃ¨tres", path: "/geometres", icon: MapPin },
+        { label: "Géomètres", path: "/geometres", icon: MapPin },
         { label: "Promoteurs", path: "/promoteurs", icon: Rocket },
         { label: "Rejoignez-nous", path: "/rejoignez-nous", icon: ArrowRight },
       ]
@@ -63,34 +63,34 @@ const BlockchainFooter = () => {
     {
       title: "Informations",
       links: [
-        { label: "Ã€ propos", path: "/about", icon: Users },
+        { label: "À propos", path: "/about", icon: Users },
         { label: "Contact", path: "/contact", icon: Mail },
         { label: "Blog", path: "/blog", icon: Globe },
-        { label: "FonctionnalitÃ©s IA", path: "/ai-features", icon: Brain },
+        { label: "Fonctionnalités IA", path: "/ai-features", icon: Brain },
         { label: "FAQ", path: "/faq", icon: ArrowRight },
         { label: "Partenaires", path: "/partners", icon: Users },
-        { label: "Histoires de SuccÃ¨s", path: "/success-stories", icon: Award },
+        { label: "Histoires de Succès", path: "/success-stories", icon: Award },
       ]
     },
     {
-      title: "LÃ©gal",
+      title: "Légal",
       links: [
-        { label: "Mentions LÃ©gales", path: "/legal", icon: FileCheck },
-        { label: "Politique de ConfidentialitÃ©", path: "/privacy", icon: Shield },
+        { label: "Mentions Légales", path: "/legal", icon: FileCheck },
+        { label: "Politique de Confidentialité", path: "/privacy", icon: Shield },
         { label: "Politique des Cookies", path: "/cookie-policy", icon: Lock },
         { label: "Conditions d'Utilisation", path: "/terms", icon: FileCheck },
-        { label: "Protection des DonnÃ©es", path: "/data-protection", icon: Shield },
+        { label: "Protection des Données", path: "/data-protection", icon: Shield },
       ]
     }
   ];
 
   const blockchainStats = [
     { label: "Transactions Blockchain", value: "5,847+", icon: Blocks, trend: "+23%" },
-    { label: "Terrains VÃ©rifiÃ©s", value: "2,500+", icon: Shield, trend: "+12%" },
+    { label: "Terrains Vérifiés", value: "2,500+", icon: Shield, trend: "+12%" },
     { label: "Smart Contracts", value: "1,250+", icon: Cpu, trend: "+45%" },
     { label: "Utilisateurs Crypto", value: "892+", icon: Coins, trend: "+67%" },
-    { label: "Partenaires CertifiÃ©s", value: "150+", icon: Fingerprint, trend: "+8%" },
-    { label: "NFT PropriÃ©tÃ©s", value: "734+", icon: Sparkles, trend: "+89%" }
+    { label: "Partenaires Certifiés", value: "150+", icon: Fingerprint, trend: "+8%" },
+    { label: "NFT Propriétés", value: "734+", icon: Sparkles, trend: "+89%" }
   ];
 
   const socialLinks = [
@@ -116,9 +116,9 @@ const BlockchainFooter = () => {
         <div className="container mx-auto px-4 py-12">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-teal-400 bg-clip-text text-transparent mb-2">
-              ðŸš€ Ã‰cosystÃ¨me Blockchain en Temps RÃ©el
+              ðŸš€ Écosystème Blockchain en Temps Réel
             </h3>
-            <p className="text-gray-300">DonnÃ©es vÃ©rifiÃ©es et transparentes</p>
+            <p className="text-gray-300">Données vérifiées et transparentes</p>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {blockchainStats.map((stat, index) => (
@@ -158,14 +158,14 @@ const BlockchainFooter = () => {
                   Teranga Foncier
                 </span>
                 <div className="text-xs bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent font-semibold">
-                  ðŸ”— Blockchain Immobilier SÃ©nÃ©gal
+                  ðŸ”— Blockchain Immobilier Sénégal
                 </div>
               </div>
             </Link>
             
             <p className="text-gray-300 mb-6 leading-relaxed">
-              ðŸš€ La premiÃ¨re plateforme blockchain immobiliÃ¨re du SÃ©nÃ©gal. Transactions sÃ©curisÃ©es, 
-              vÃ©rification automatisÃ©e et smart contracts pour un immobilier transparent et fiable.
+              ðŸš€ La première plateforme blockchain immobilière du Sénégal. Transactions sécurisées, 
+              vérification automatisée et smart contracts pour un immobilier transparent et fiable.
             </p>
 
             {/* Badges de certification */}
@@ -184,7 +184,7 @@ const BlockchainFooter = () => {
               </Badge>
             </div>
 
-            {/* Contact CEO avec thÃ¨me blockchain */}
+            {/* Contact CEO avec thème blockchain */}
             <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-purple-400/30 transition-all duration-300 mb-6">
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
                 <Rocket className="w-4 h-4 text-purple-400" />
@@ -196,7 +196,7 @@ const BlockchainFooter = () => {
                     <Users className="h-4 w-4 text-white" />
                   </div>
                   <div>
-                    <div className="text-white font-medium">Abdoulaye DiÃ©mÃ©</div>
+                    <div className="text-white font-medium">Abdoulaye Diémé</div>
                     <div className="text-purple-300 text-xs">CEO & Blockchain Architect</div>
                   </div>
                 </div>
@@ -219,11 +219,11 @@ const BlockchainFooter = () => {
               </div>
             </div>
 
-            {/* RÃ©seaux sociaux blockchain */}
+            {/* Réseaux sociaux blockchain */}
             <div>
               <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
                 <Globe className="w-4 h-4 text-teal-400" />
-                CommunautÃ© Blockchain
+                Communauté Blockchain
               </h4>
               <div className="flex gap-3">
                 {socialLinks.map((social, index) => (
@@ -281,7 +281,7 @@ const BlockchainFooter = () => {
               Newsletter Blockchain IA
             </h3>
             <p className="text-gray-300 text-sm">
-              ðŸš€ Recevez les derniÃ¨res innovations blockchain, analyses IA du marchÃ© et opportunitÃ©s exclusives
+              ðŸš€ Recevez les dernières innovations blockchain, analyses IA du marché et opportunités exclusives
             </p>
           </div>
           
@@ -301,7 +301,7 @@ const BlockchainFooter = () => {
               </Button>
             </div>
             <p className="text-xs text-gray-400 mt-3 text-center">
-              ðŸ”’ Vos donnÃ©es sont protÃ©gÃ©es par blockchain â€¢ DÃ©sabonnement en un clic
+              ðŸ”’ Vos données sont protégées par blockchain â€¢ Désabonnement en un clic
             </p>
           </div>
         </div>
@@ -313,10 +313,10 @@ const BlockchainFooter = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-gray-400 text-sm flex items-center gap-2">
               <Blocks className="w-4 h-4 text-blue-400" />
-              Â© {currentYear} Teranga Foncier Blockchain. Tous droits rÃ©servÃ©s. 
+              Â© {currentYear} Teranga Foncier Blockchain. Tous droits réservés. 
               <span className="mx-2">â€¢</span>
               <span className="flex items-center gap-1">
-                Fait avec ðŸ’œ au SÃ©nÃ©gal 
+                Fait avec ðŸ’œ au Sénégal 
                 <Database className="w-3 h-3 text-purple-400 ml-1" />
               </span>
             </div>
@@ -340,7 +340,7 @@ const BlockchainFooter = () => {
                   <span className="text-xs">SSL Blockchain</span>
                 </div>
                 <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></div>
-                <span className="text-xs">Site Ultra-SÃ©curisÃ©</span>
+                <span className="text-xs">Site Ultra-Sécurisé</span>
               </div>
             </div>
           </div>

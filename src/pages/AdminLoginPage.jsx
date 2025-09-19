@@ -57,7 +57,7 @@ const AdminLoginPage = () => {
     visible: { opacity: 1, y: 0 }
   };
 
-  // Redirection si dÃ©jÃ  connectÃ©
+  // Redirection si déjÏ  connecté
   useEffect(() => {
     if (user && !loading) {
       navigate('/admin/dashboard');
@@ -84,7 +84,7 @@ const AdminLoginPage = () => {
       [name]: value
     }));
     
-    // Effacer l'erreur du champ modifiÃ©
+    // Effacer l'erreur du champ modifié
     if (errors[name]) {
       setErrors(prev => ({
         ...prev,
@@ -105,7 +105,7 @@ const AdminLoginPage = () => {
     if (!formData.password) {
       newErrors.password = 'Le mot de passe est requis';
     } else if (formData.password.length < 6) {
-      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractÃ¨res';
+      newErrors.password = 'Le mot de passe doit contenir au moins 6 caractères';
     }
 
     setErrors(newErrors);
@@ -132,9 +132,9 @@ const AdminLoginPage = () => {
         throw error;
       }
 
-      // VÃ©rifier si l'utilisateur a le rÃ´le admin
+      // Vérifier si l'utilisateur a le rôle admin
       if (data.user) {
-        // RÃ©cupÃ©rer le profil utilisateur pour vÃ©rifier le rÃ´le
+        // Récupérer le profil utilisateur pour vérifier le rôle
         const { data: profile } = await supabase
           .from('profiles')
           .select('role')
@@ -144,7 +144,7 @@ const AdminLoginPage = () => {
         if (profile && profile.role === 'admin') {
           navigate('/admin/dashboard');
         } else {
-          throw new Error('AccÃ¨s non autorisÃ© - RÃ´le administrateur requis');
+          throw new Error('Accès non autorisé - Rôle administrateur requis');
         }
       }
 
@@ -157,7 +157,7 @@ const AdminLoginPage = () => {
         setIsBlocked(true);
         setBlockTimer(30); // 30 secondes de blocage
         setErrors({
-          general: 'Trop de tentatives Ã©chouÃ©es. Veuillez patienter 30 secondes.'
+          general: 'Trop de tentatives échouées. Veuillez patienter 30 secondes.'
         });
       } else {
         setErrors({
@@ -169,7 +169,7 @@ const AdminLoginPage = () => {
     }
   };
 
-  // Particules de fond animÃ©es
+  // Particules de fond animées
   const backgroundParticles = Array.from({ length: 20 }, (_, i) => (
     <motion.div
       key={i}
@@ -202,7 +202,7 @@ const AdminLoginPage = () => {
     <>
       <Helmet>
         <title>Administration - Teranga Foncier</title>
-        <meta name="description" content="Interface d'administration sÃ©curisÃ©e - Teranga Foncier" />
+        <meta name="description" content="Interface d'administration sécurisée - Teranga Foncier" />
         <meta name="robots" content="noindex, nofollow" />
       </Helmet>
 
@@ -232,11 +232,11 @@ const AdminLoginPage = () => {
                 Administration
               </h1>
               <p className="text-blue-200">
-                Interface sÃ©curisÃ©e Teranga Foncier
+                Interface sécurisée Teranga Foncier
               </p>
             </motion.div>
 
-            {/* Badges de sÃ©curitÃ© */}
+            {/* Badges de sécurité */}
             <motion.div variants={itemVariants} className="flex justify-center gap-2 mb-6">
               <Badge className="bg-green-500/20 text-green-300 border-green-500/30">
                 <Fingerprint className="w-3 h-3 mr-1" />
@@ -258,12 +258,12 @@ const AdminLoginPage = () => {
                 <CardHeader>
                   <CardTitle className="text-white text-center flex items-center justify-center gap-2">
                     <Lock className="w-5 h-5" />
-                    Connexion SÃ©curisÃ©e
+                    Connexion Sécurisée
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
                   <form onSubmit={handleSubmit} className="space-y-4">
-                    {/* Alerte gÃ©nÃ©rale */}
+                    {/* Alerte générale */}
                     <AnimatePresence>
                       {errors.general && (
                         <motion.div
@@ -290,7 +290,7 @@ const AdminLoginPage = () => {
                           <Alert className="bg-orange-500/20 border-orange-500/30 text-orange-300">
                             <Zap className="h-4 w-4" />
                             <AlertDescription>
-                              Compte temporairement bloquÃ©. DÃ©blocage dans {blockTimer}s
+                              Compte temporairement bloqué. Déblocage dans {blockTimer}s
                             </AlertDescription>
                           </Alert>
                         </motion.div>
@@ -368,7 +368,7 @@ const AdminLoginPage = () => {
                       {isLoading ? (
                         <div className="flex items-center gap-2">
                           <div className="animate-spin w-4 h-4 border-2 border-white border-t-transparent rounded-full"></div>
-                          VÃ©rification...
+                          Vérification...
                         </div>
                       ) : (
                         <div className="flex items-center gap-2">
@@ -385,18 +385,18 @@ const AdminLoginPage = () => {
                       to="/"
                       className="text-sm text-blue-300 hover:text-blue-200 transition-colors"
                     >
-                      â† Retour Ã  l'accueil
+                      â† Retour Ï  l'accueil
                     </Link>
                   </div>
                 </CardContent>
               </Card>
             </motion.div>
 
-            {/* Informations de sÃ©curitÃ© */}
+            {/* Informations de sécurité */}
             <motion.div variants={itemVariants} className="mt-6 text-center">
               <div className="flex items-center justify-center gap-2 text-white/60 text-sm">
                 <Database className="w-4 h-4" />
-                <span>Interface protÃ©gÃ©e par blockchain</span>
+                <span>Interface protégée par blockchain</span>
               </div>
             </motion.div>
           </motion.div>

@@ -53,17 +53,17 @@ const VendeurDashboard = () => {
     properties: [
       {
         id: 1,
-        title: 'Terrain rÃ©sidentiel SacrÃ©-CÅ“ur',
-        location: 'SacrÃ©-CÅ“ur, Dakar',
+        title: 'Terrain résidentiel Sacré-CÅ“ur',
+        location: 'Sacré-CÅ“ur, Dakar',
         price: 35000000,
         size: '800mÂ²',
         status: 'Actif',
         views: 156,
         inquiries: 12,
         datePosted: '2024-03-15',
-        verificationStatus: 'VÃ©rifiÃ©',
+        verificationStatus: 'Vérifié',
         photos: 8,
-        type: 'RÃ©sidentiel'
+        type: 'Résidentiel'
       },
       {
         id: 2,
@@ -85,14 +85,14 @@ const VendeurDashboard = () => {
       inquiriesThisMonth: 45,
       averageViewsPerListing: 155,
       conversionRate: 12.5,
-      topPerformingProperty: 'Terrain rÃ©sidentiel SacrÃ©-CÅ“ur'
+      topPerformingProperty: 'Terrain résidentiel Sacré-CÅ“ur'
     },
     inquiries: [
       {
         id: 1,
-        propertyTitle: 'Terrain rÃ©sidentiel SacrÃ©-CÅ“ur',
+        propertyTitle: 'Terrain résidentiel Sacré-CÅ“ur',
         buyerName: 'M. Diallo',
-        message: 'IntÃ©ressÃ© par une visite cette semaine',
+        message: 'Intéressé par une visite cette semaine',
         date: '2024-03-20',
         status: 'Nouveau',
         phone: '+221 77 123 45 67'
@@ -101,16 +101,16 @@ const VendeurDashboard = () => {
         id: 2,
         propertyTitle: 'Parcelle commerciale Plateau',
         buyerName: 'Mme Fall',
-        message: 'PossibilitÃ© de nÃ©gociation du prix?',
+        message: 'Possibilité de négociation du prix?',
         date: '2024-03-19',
-        status: 'RÃ©pondu',
+        status: 'Répondu',
         phone: '+221 76 987 65 43'
       }
     ]
   });
 
   useEffect(() => {
-    // Simulation chargement des donnÃ©es
+    // Simulation chargement des données
     setTimeout(() => {
       setLoading(false);
     }, 1500);
@@ -127,13 +127,13 @@ const VendeurDashboard = () => {
     const colors = {
       'Actif': 'bg-green-500',
       'En attente': 'bg-yellow-500',
-      'RejetÃ©': 'bg-red-500',
+      'Rejeté': 'bg-red-500',
       'Vendu': 'bg-blue-500',
       'Suspendu': 'bg-gray-500',
-      'VÃ©rifiÃ©': 'bg-green-500',
+      'Vérifié': 'bg-green-500',
       'En cours': 'bg-yellow-500',
       'Nouveau': 'bg-blue-500',
-      'RÃ©pondu': 'bg-green-500'
+      'Répondu': 'bg-green-500'
     };
     return colors[status] || 'bg-gray-500';
   };
@@ -182,9 +182,9 @@ const VendeurDashboard = () => {
                   verificationStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
                 }`}></div>
                 <div>
-                  <p className="font-medium">Profil VÃ©rifiÃ©</p>
+                  <p className="font-medium">Profil Vérifié</p>
                   <p className="text-sm text-gray-600">
-                    {verificationStatus === 'verified' ? 'CertifiÃ©' : 'En attente'}
+                    {verificationStatus === 'verified' ? 'Certifié' : 'En attente'}
                   </p>
                 </div>
                 <CheckCircle className="h-5 w-5 text-green-500" />
@@ -245,7 +245,7 @@ const VendeurDashboard = () => {
             <TabsTrigger value="properties">Mes Biens</TabsTrigger>
             <TabsTrigger value="inquiries">Demandes</TabsTrigger>
             <TabsTrigger value="analytics">Analytics</TabsTrigger>
-            <TabsTrigger value="settings">ParamÃ¨tres</TabsTrigger>
+            <TabsTrigger value="settings">Paramètres</TabsTrigger>
           </TabsList>
 
           {/* Overview Tab */}
@@ -305,7 +305,7 @@ const VendeurDashboard = () => {
                     </div>
                     <div>
                       <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm">Taux rÃ©ponse</span>
+                        <span className="text-sm">Taux réponse</span>
                         <span className="text-sm font-medium">95%</span>
                       </div>
                       <Progress value={95} className="h-2" />
@@ -319,7 +319,7 @@ const VendeurDashboard = () => {
                 <CardHeader>
                   <CardTitle className="flex items-center">
                     <Clock className="h-5 w-5 mr-2 text-purple-600" />
-                    ActivitÃ© RÃ©cente
+                    Activité Récente
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
@@ -327,21 +327,21 @@ const VendeurDashboard = () => {
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
                       <div>
-                        <p className="text-sm font-medium">Nouvelle demande reÃ§ue</p>
+                        <p className="text-sm font-medium">Nouvelle demande reçue</p>
                         <p className="text-xs text-gray-500">Il y a 1 heure</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
                       <div>
-                        <p className="text-sm font-medium">Bien ajoutÃ© avec succÃ¨s</p>
+                        <p className="text-sm font-medium">Bien ajouté avec succès</p>
                         <p className="text-xs text-gray-500">Il y a 3 heures</p>
                       </div>
                     </div>
                     <div className="flex items-start space-x-3">
                       <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2"></div>
                       <div>
-                        <p className="text-sm font-medium">VÃ©rification en cours</p>
+                        <p className="text-sm font-medium">Vérification en cours</p>
                         <p className="text-xs text-gray-500">Hier</p>
                       </div>
                     </div>
@@ -447,7 +447,7 @@ const VendeurDashboard = () => {
                             <Camera className="h-4 w-4 mr-1" />
                             {property.photos} photos
                           </span>
-                          <span>PubliÃ© le {new Date(property.datePosted).toLocaleDateString('fr-FR')}</span>
+                          <span>Publié le {new Date(property.datePosted).toLocaleDateString('fr-FR')}</span>
                         </div>
                       </div>
 
@@ -505,7 +505,7 @@ const VendeurDashboard = () => {
                             <p className="font-medium">{inquiry.buyerName}</p>
                           </div>
                           <div>
-                            <p className="text-sm text-gray-600">TÃ©lÃ©phone</p>
+                            <p className="text-sm text-gray-600">Téléphone</p>
                             <p className="font-medium">{inquiry.phone}</p>
                           </div>
                           <div>
@@ -523,7 +523,7 @@ const VendeurDashboard = () => {
                       <div className="flex flex-col space-y-2 ml-4">
                         <Button size="sm">
                           <MessageSquare className="h-4 w-4 mr-1" />
-                          RÃ©pondre
+                          Répondre
                         </Button>
                         <Button size="sm" variant="outline">
                           <User className="h-4 w-4 mr-1" />
@@ -605,14 +605,14 @@ const VendeurDashboard = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Performance des Annonces</CardTitle>
-                <CardDescription>Ã‰volution des vues et demandes sur les 6 derniers mois</CardDescription>
+                <CardDescription>Évolution des vues et demandes sur les 6 derniers mois</CardDescription>
               </CardHeader>
               <CardContent>
                 <div className="h-64 bg-gray-50 rounded-lg flex items-center justify-center">
                   <div className="text-center">
                     <BarChart3 className="h-12 w-12 text-gray-400 mx-auto mb-2" />
                     <p className="text-gray-500">Graphique de performance</p>
-                    <p className="text-sm text-gray-400">IntÃ©gration charts Ã  venir</p>
+                    <p className="text-sm text-gray-400">Intégration charts Ï  venir</p>
                   </div>
                 </div>
               </CardContent>
@@ -621,47 +621,47 @@ const VendeurDashboard = () => {
 
           {/* Settings Tab */}
           <TabsContent value="settings" className="space-y-6">
-            <h2 className="text-2xl font-bold">ParamÃ¨tres du Vendeur</h2>
+            <h2 className="text-2xl font-bold">Paramètres du Vendeur</h2>
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
                   <CardTitle>Notifications</CardTitle>
-                  <CardDescription>GÃ©rez vos prÃ©fÃ©rences de notifications</CardDescription>
+                  <CardDescription>Gérez vos préférences de notifications</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span>Nouvelles demandes</span>
-                    <Button size="sm" variant="outline">ActivÃ©</Button>
+                    <Button size="sm" variant="outline">Activé</Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Vues de biens</span>
-                    <Button size="sm" variant="outline">ActivÃ©</Button>
+                    <Button size="sm" variant="outline">Activé</Button>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span>Rappels de vÃ©rification</span>
-                    <Button size="sm" variant="outline">ActivÃ©</Button>
+                    <span>Rappels de vérification</span>
+                    <Button size="sm" variant="outline">Activé</Button>
                   </div>
                 </CardContent>
               </Card>
 
               <Card>
                 <CardHeader>
-                  <CardTitle>ConfidentialitÃ©</CardTitle>
-                  <CardDescription>ContrÃ´lez la visibilitÃ© de vos informations</CardDescription>
+                  <CardTitle>Confidentialité</CardTitle>
+                  <CardDescription>Contrôlez la visibilité de vos informations</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span>Profil public</span>
-                    <Button size="sm" variant="outline">ActivÃ©</Button>
+                    <Button size="sm" variant="outline">Activé</Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Contact direct</span>
-                    <Button size="sm" variant="outline">ActivÃ©</Button>
+                    <Button size="sm" variant="outline">Activé</Button>
                   </div>
                   <div className="flex items-center justify-between">
                     <span>Statistiques publiques</span>
-                    <Button size="sm" variant="outline">DÃ©sactivÃ©</Button>
+                    <Button size="sm" variant="outline">Désactivé</Button>
                   </div>
                 </CardContent>
               </Card>

@@ -55,14 +55,14 @@ const ModernRegisterPage = () => {
         }
 
         if (password.length < 6) {
-            setError('Le mot de passe doit contenir au moins 6 caractÃ¨res.');
+            setError('Le mot de passe doit contenir au moins 6 caractères.');
             setLoading(false);
             return;
         }
 
         try {
             if (!userType) {
-                throw new Error("Veuillez sÃ©lectionner un type de compte.");
+                throw new Error("Veuillez sélectionner un type de compte.");
             }
             
             const { error: signUpError } = await supabase.auth.signUp({
@@ -81,8 +81,8 @@ const ModernRegisterPage = () => {
             if (signUpError) throw signUpError;
 
             window.safeGlobalToast({
-                title: "Compte crÃ©Ã© avec succÃ¨s !",
-                description: "VÃ©rifiez votre email pour activer votre compte.",
+                title: "Compte créé avec succès !",
+                description: "Vérifiez votre email pour activer votre compte.",
                 className: "bg-green-500 text-white",
             });
 
@@ -91,8 +91,8 @@ const ModernRegisterPage = () => {
         } catch (err) {
             console.error("Registration error:", err);
             const errorMessage = err.message.includes('User already registered') 
-                ? "Un compte existe dÃ©jÃ  avec cet email."
-                : "Une erreur est survenue lors de la crÃ©ation du compte.";
+                ? "Un compte existe déjÏ  avec cet email."
+                : "Une erreur est survenue lors de la création du compte.";
             setError(errorMessage);
             window.safeGlobalToast({
                 title: "Erreur",
@@ -108,7 +108,7 @@ const ModernRegisterPage = () => {
         { 
             value: 'Particulier', 
             label: 'Particulier', 
-            description: 'Je cherche Ã  acheter un terrain',
+            description: 'Je cherche Ï  acheter un terrain',
             icon: Home,
             color: 'from-emerald-500 to-teal-500'
         },
@@ -136,19 +136,19 @@ const ModernRegisterPage = () => {
     ];
 
     const benefits = [
-        "AccÃ¨s immÃ©diat Ã  2,500+ terrains",
-        "VÃ©rification juridique incluse",
-        "Paiements sÃ©curisÃ©s et flexibles",
-        "Support client dÃ©diÃ© 24/7",
-        "Outils d'investissement avancÃ©s"
+        "Accès immédiat Ï  2,500+ terrains",
+        "Vérification juridique incluse",
+        "Paiements sécurisés et flexibles",
+        "Support client dédié 24/7",
+        "Outils d'investissement avancés"
     ];
 
     return (
         <>
             <Helmet>
-                <title>CrÃ©er un Compte - Rejoignez Teranga Foncier</title>
-                <meta name="description" content="CrÃ©ez votre compte Teranga Foncier et accÃ©dez Ã  la plus grande plateforme fonciÃ¨re du SÃ©nÃ©gal. Inscription gratuite et sÃ©curisÃ©e." />
-                <meta name="keywords" content="inscription Teranga Foncier, crÃ©er compte, acheter terrain SÃ©nÃ©gal, investissement foncier" />
+                <title>Créer un Compte - Rejoignez Teranga Foncier</title>
+                <meta name="description" content="Créez votre compte Teranga Foncier et accédez Ï  la plus grande plateforme foncière du Sénégal. Inscription gratuite et sécurisée." />
+                <meta name="keywords" content="inscription Teranga Foncier, créer compte, acheter terrain Sénégal, investissement foncier" />
             </Helmet>
 
             <div className="min-h-screen bg-gradient-to-br from-gray-50 via-emerald-50 to-teal-50 flex">
@@ -160,7 +160,7 @@ const ModernRegisterPage = () => {
                             <img src={logoUrl} alt="Teranga Foncier" className="w-12 h-12" />
                             <div>
                                 <span className="text-2xl font-bold text-white">Teranga Foncier</span>
-                                <div className="text-emerald-200 text-sm">Rejoignez la rÃ©volution fonciÃ¨re</div>
+                                <div className="text-emerald-200 text-sm">Rejoignez la révolution foncière</div>
                             </div>
                         </Link>
 
@@ -176,8 +176,8 @@ const ModernRegisterPage = () => {
                             </h1>
                             
                             <p className="text-xl text-emerald-100 leading-relaxed">
-                                CrÃ©ez votre compte gratuitement et accÃ©dez Ã  la plus grande plateforme 
-                                fonciÃ¨re du SÃ©nÃ©gal. Achetez, vendez et investissez en toute sÃ©curitÃ©.
+                                Créez votre compte gratuitement et accédez Ï  la plus grande plateforme 
+                                foncière du Sénégal. Achetez, vendez et investissez en toute sécurité.
                             </p>
 
                             <div className="space-y-3">
@@ -235,9 +235,9 @@ const ModernRegisterPage = () => {
 
                         <Card className="shadow-2xl border-0 bg-white/80 backdrop-blur-sm">
                             <CardHeader className="text-center space-y-2">
-                                <CardTitle className="text-2xl font-bold text-gray-900">CrÃ©er votre compte</CardTitle>
+                                <CardTitle className="text-2xl font-bold text-gray-900">Créer votre compte</CardTitle>
                                 <CardDescription className="text-gray-600">
-                                    Rejoignez la communautÃ© Teranga Foncier gratuitement
+                                    Rejoignez la communauté Teranga Foncier gratuitement
                                 </CardDescription>
                             </CardHeader>
 
@@ -275,7 +275,7 @@ const ModernRegisterPage = () => {
                                         <Label htmlFor="userType" className="text-gray-700">Type de compte</Label>
                                         <Select value={userType} onValueChange={setUserType} required>
                                             <SelectTrigger className="h-12 border-gray-200 focus:border-emerald-500">
-                                                <SelectValue YOUR_API_KEY="SÃ©lectionnez votre profil" />
+                                                <SelectValue YOUR_API_KEY="Sélectionnez votre profil" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {roleOptions.map((role) => (
@@ -299,7 +299,7 @@ const ModernRegisterPage = () => {
                                             <Input
                                                 id="password"
                                                 type={showPassword ? "text" : "password"}
-                                                YOUR_API_KEY="Minimum 6 caractÃ¨res"
+                                                YOUR_API_KEY="Minimum 6 caractères"
                                                 required
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
@@ -358,12 +358,12 @@ const ModernRegisterPage = () => {
                                         {loading ? (
                                             <div className="flex items-center gap-2">
                                                 <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                                                CrÃ©ation en cours...
+                                                Création en cours...
                                             </div>
                                         ) : (
                                             <div className="flex items-center gap-2">
                                                 <UserPlus className="w-4 h-4" />
-                                                CrÃ©er mon compte
+                                                Créer mon compte
                                             </div>
                                         )}
                                     </Button>
@@ -373,9 +373,9 @@ const ModernRegisterPage = () => {
 
                                 <div className="text-center space-y-3">
                                     <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200">
-                                        <h3 className="font-medium text-gray-900 mb-2">Vous Ãªtes un professionnel ?</h3>
+                                        <h3 className="font-medium text-gray-900 mb-2">Vous êtes un professionnel ?</h3>
                                         <p className="text-sm text-gray-600 mb-3">
-                                            Promoteur, Banque, Notaire, GÃ©omÃ¨tre, Agent Foncier, MunicipalitÃ©
+                                            Promoteur, Banque, Notaire, Géomètre, Agent Foncier, Municipalité
                                         </p>
                                         <Link 
                                             to="/contact" 
@@ -392,7 +392,7 @@ const ModernRegisterPage = () => {
 
                                 <div className="text-center">
                                     <p className="text-sm text-gray-600">
-                                        Vous avez dÃ©jÃ  un compte ?{' '}
+                                        Vous avez déjÏ  un compte ?{' '}
                                         <Link to="/login" className="text-emerald-600 hover:text-emerald-700 font-medium">
                                             Se connecter
                                         </Link>
@@ -403,24 +403,24 @@ const ModernRegisterPage = () => {
 
                                 <div className="text-center space-y-3">
                                     <p className="text-sm text-gray-600">
-                                        PrÃ©fÃ©rez une inscription guidÃ©e ?
+                                        Préférez une inscription guidée ?
                                     </p>
                                     <Link 
                                         to="/register-steps" 
                                         className="inline-flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg text-sm font-medium hover:from-blue-700 hover:to-purple-700 transition-all"
                                     >
                                         <Zap className="w-4 h-4" />
-                                        Inscription en Ã©tapes blockchain
+                                        Inscription en étapes blockchain
                                         <ArrowRight className="w-4 h-4" />
                                     </Link>
                                 </div>
 
                                 <div className="text-center">
                                     <p className="text-xs text-gray-500">
-                                        En crÃ©ant un compte, vous acceptez nos{' '}
+                                        En créant un compte, vous acceptez nos{' '}
                                         <Link to="/legal" className="text-emerald-600 hover:underline">conditions d'utilisation</Link>{' '}
                                         et notre{' '}
-                                        <Link to="/privacy" className="text-emerald-600 hover:underline">politique de confidentialitÃ©</Link>.
+                                        <Link to="/privacy" className="text-emerald-600 hover:underline">politique de confidentialité</Link>.
                                     </p>
                                 </div>
                             </CardContent>
@@ -431,7 +431,7 @@ const ModernRegisterPage = () => {
                                 to="/" 
                                 className="text-sm text-gray-500 hover:text-emerald-600 transition-colors"
                             >
-                                â† Retour Ã  l'accueil
+                                â† Retour Ï  l'accueil
                             </Link>
                         </div>
                     </motion.div>

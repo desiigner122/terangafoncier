@@ -8,11 +8,11 @@ import {
   Banknote, 
   FileSignature
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { useAuth } from '@/context/AuthContext';
 
 const ParcelActionsCard = ({ parcel, onInstallmentClick }) => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const { user } = useAuth();
 
   const handleAction = (message) => {

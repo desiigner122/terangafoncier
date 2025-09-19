@@ -53,7 +53,7 @@ const TerrainsVendeursPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('price_asc');
 
-  // DonnÃ©es mockÃ©es enrichies des terrains avec statut blockchain
+  // Données mockées enrichies des terrains avec statut blockchain
   useEffect(() => {
     const mockProperties = [
       {
@@ -64,8 +64,8 @@ const TerrainsVendeursPage = () => {
         area: "Plateau",
         size: 500,
         price: 75000000,
-        type: "RÃ©sidentiel",
-        description: "Terrain de prestige au cÅ“ur du Plateau, idÃ©al pour villa moderne. AccÃ¨s facile, environnement sÃ©curisÃ©.",
+        type: "Résidentiel",
+        description: "Terrain de prestige au cÅ“ur du Plateau, idéal pour villa moderne. Accès facile, environnement sécurisé.",
         image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=400&fit=crop",
         verification_status: "verified",
         blockchain_hash: "0x1a2b3c4d5e6f7890abcdef1234567890",
@@ -79,25 +79,25 @@ const TerrainsVendeursPage = () => {
         legal_documents: ["Titre foncier", "Attestation mairie", "Plan cadastral"],
         blockchain_confirmations: 156,
         rating: 4.8,
-        features: ["Ã‰lectricitÃ©", "Eau courante", "Ã‰gouts", "Route goudronnÃ©e"],
-        nearby: ["Ã‰cole", "HÃ´pital", "MarchÃ©", "Transport public"]
+        features: ["Électricité", "Eau courante", "Égouts", "Route goudronnée"],
+        nearby: ["École", "Hôpital", "Marché", "Transport public"]
       },
       {
         id: 2,
-        title: "Terrain Commercial 1200mÂ² - ThiÃ¨s Centre",
-        region: "ThiÃ¨s",
-        city: "ThiÃ¨s",
+        title: "Terrain Commercial 1200mÂ² - Thiès Centre",
+        region: "Thiès",
+        city: "Thiès",
         area: "Centre-ville",
         size: 1200,
         price: 48000000,
         type: "Commercial",
-        description: "Emplacement stratÃ©gique pour commerce ou bureaux. Forte frÃ©quentation, potentiel d'investissement Ã©levÃ©.",
+        description: "Emplacement stratégique pour commerce ou bureaux. Forte fréquentation, potentiel d'investissement élevé.",
         image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop",
         verification_status: "pending",
         blockchain_hash: "pending",
         notary_validated: false,
         title_deed_number: "TF-TH-2024-045",
-        owner: "Entreprise SÃ©nÃ©gal Commerce",
+        owner: "Entreprise Sénégal Commerce",
         owner_type: "Professionnel",
         posted_date: "2024-01-20",
         views: 89,
@@ -105,45 +105,45 @@ const TerrainsVendeursPage = () => {
         legal_documents: ["Titre foncier", "Plan cadastral"],
         blockchain_confirmations: 0,
         rating: 4.2,
-        features: ["Ã‰lectricitÃ©", "Eau courante", "Parkings"],
-        nearby: ["Banque", "Poste", "Gare routiÃ¨re"]
+        features: ["Électricité", "Eau courante", "Parkings"],
+        nearby: ["Banque", "Poste", "Gare routière"]
       },
       {
         id: 3,
         title: "Terrain Agricole 2000mÂ² - Saint-Louis",
         region: "Saint-Louis",
         city: "Saint-Louis", 
-        area: "PÃ©riphÃ©rie",
+        area: "Périphérie",
         size: 2000,
         price: 25000000,
         type: "Agricole",
-        description: "Terrain fertile avec accÃ¨s Ã  l'irrigation. Parfait pour agriculture moderne ou Ã©levage.",
+        description: "Terrain fertile avec accès Ï  l'irrigation. Parfait pour agriculture moderne ou élevage.",
         image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&h=400&fit=crop",
         verification_status: "verified",
         blockchain_hash: "0x9876543210fedcba0987654321abcdef",
         notary_validated: true,
         title_deed_number: "TF-SL-2024-078",
-        owner: "CoopÃ©rative Agricole du Nord",
-        owner_type: "CoopÃ©rative",
+        owner: "Coopérative Agricole du Nord",
+        owner_type: "Coopérative",
         posted_date: "2024-01-10",
         views: 156,
         favorites: 8,
-        legal_documents: ["Titre foncier", "Attestation mairie", "Plan cadastral", "Ã‰tude de sol"],
+        legal_documents: ["Titre foncier", "Attestation mairie", "Plan cadastral", "Étude de sol"],
         blockchain_confirmations: 89,
         rating: 4.5,
-        features: ["Irrigation", "AccÃ¨s route", "Sol fertile"],
-        nearby: ["MarchÃ© de gros", "EntrepÃ´ts", "Transport"]
+        features: ["Irrigation", "Accès route", "Sol fertile"],
+        nearby: ["Marché de gros", "Entrepôts", "Transport"]
       },
       {
         id: 4,
-        title: "Terrain RÃ©sidentiel 800mÂ² - Mbour Plage",
-        region: "ThiÃ¨s",
+        title: "Terrain Résidentiel 800mÂ² - Mbour Plage",
+        region: "Thiès",
         city: "Mbour",
-        area: "Zone cÃ´tiÃ¨re",
+        area: "Zone côtière",
         size: 800,
         price: 65000000,
-        type: "RÃ©sidentiel",
-        description: "Terrain face Ã  l'ocÃ©an, zone touristique en dÃ©veloppement. IdÃ©al pour rÃ©sidence secondaire.",
+        type: "Résidentiel",
+        description: "Terrain face Ï  l'océan, zone touristique en développement. Idéal pour résidence secondaire.",
         image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop",
         verification_status: "verified",
         blockchain_hash: "0xabcdef1234567890fedcba0987654321",
@@ -157,8 +157,8 @@ const TerrainsVendeursPage = () => {
         legal_documents: ["Titre foncier", "Attestation mairie", "Plan cadastral"],
         blockchain_confirmations: 145,
         rating: 4.9,
-        features: ["Vue mer", "Ã‰lectricitÃ©", "Eau courante", "SÃ©curitÃ©"],
-        nearby: ["Plage", "Restaurants", "HÃ´tels", "AÃ©roport"]
+        features: ["Vue mer", "Électricité", "Eau courante", "Sécurité"],
+        nearby: ["Plage", "Restaurants", "Hôtels", "Aéroport"]
       },
       {
         id: 5,
@@ -169,22 +169,22 @@ const TerrainsVendeursPage = () => {
         size: 5000,
         price: 120000000,
         type: "Industriel",
-        description: "Grande parcelle pour activitÃ©s industrielles. AccÃ¨s direct Ã  l'autoroute et au port.",
+        description: "Grande parcelle pour activités industrielles. Accès direct Ï  l'autoroute et au port.",
         image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&h=400&fit=crop",
         verification_status: "verified",
         blockchain_hash: "0x5555666677778888aaabbbcccddd9999",
         notary_validated: true,
         title_deed_number: "TF-RF-2024-067",
-        owner: "SociÃ©tÃ© Industrielle Moderne",
-        owner_type: "SociÃ©tÃ©",
+        owner: "Société Industrielle Moderne",
+        owner_type: "Société",
         posted_date: "2024-01-30",
         views: 78,
         favorites: 3,
-        legal_documents: ["Titre foncier", "Permis de construire", "Ã‰tude d'impact"],
+        legal_documents: ["Titre foncier", "Permis de construire", "Étude d'impact"],
         blockchain_confirmations: 203,
         rating: 4.3,
-        features: ["AccÃ¨s autoroute", "Ã‰lectricitÃ© haute tension", "SÃ©curitÃ©"],
-        nearby: ["Port", "AÃ©roport", "Douanes", "Banques"]
+        features: ["Accès autoroute", "Électricité haute tension", "Sécurité"],
+        nearby: ["Port", "Aéroport", "Douanes", "Banques"]
       }
     ];
 
@@ -247,7 +247,7 @@ const TerrainsVendeursPage = () => {
 
   const getTypeIcon = (type) => {
     switch(type) {
-      case 'RÃ©sidentiel': return <Home className="w-4 h-4" />;
+      case 'Résidentiel': return <Home className="w-4 h-4" />;
       case 'Commercial': return <Store className="w-4 h-4" />;
       case 'Industriel': return <Building2 className="w-4 h-4" />;
       case 'Agricole': return <Tractor className="w-4 h-4" />;
@@ -258,11 +258,11 @@ const TerrainsVendeursPage = () => {
   const getVerificationBadge = (status) => {
     switch(status) {
       case 'verified':
-        return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />VÃ©rifiÃ©</Badge>;
+        return <Badge className="bg-green-100 text-green-800 border-green-200"><CheckCircle className="w-3 h-3 mr-1" />Vérifié</Badge>;
       case 'pending':
         return <Badge className="bg-yellow-100 text-yellow-800 border-yellow-200"><Clock className="w-3 h-3 mr-1" />En cours</Badge>;
       default:
-        return <Badge className="bg-gray-100 text-gray-800 border-gray-200"><AlertTriangle className="w-3 h-3 mr-1" />Non vÃ©rifiÃ©</Badge>;
+        return <Badge className="bg-gray-100 text-gray-800 border-gray-200"><AlertTriangle className="w-3 h-3 mr-1" />Non vérifié</Badge>;
     }
   };
 
@@ -363,7 +363,7 @@ const TerrainsVendeursPage = () => {
           <Button asChild className="flex-1">
             <Link to={`/terrains/${property.id}`}>
               <Eye className="w-4 h-4 mr-2" />
-              Voir dÃ©tails
+              Voir détails
             </Link>
           </Button>
           <Button variant="outline" size="icon">
@@ -389,8 +389,8 @@ const TerrainsVendeursPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <Helmet>
-        <title>Terrains de Vendeurs - MarchÃ© PrivÃ© | Teranga Foncier</title>
-        <meta name="description" content="DÃ©couvrez notre sÃ©lection de terrains mis en vente par des particuliers et professionnels. Tous types : rÃ©sidentiel, commercial, industriel, agricole." />
+        <title>Terrains de Vendeurs - Marché Privé | Teranga Foncier</title>
+        <meta name="description" content="Découvrez notre sélection de terrains mis en vente par des particuliers et professionnels. Tous types : résidentiel, commercial, industriel, agricole." />
       </Helmet>
 
       {/* Hero Section */}
@@ -406,20 +406,20 @@ const TerrainsVendeursPage = () => {
               Terrains de <span className="text-yellow-400">Vendeurs</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 opacity-90">
-              DÃ©couvrez {filteredProperties.length} terrains de qualitÃ© mis en vente par des particuliers et professionnels
+              Découvrez {filteredProperties.length} terrains de qualité mis en vente par des particuliers et professionnels
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                 <Shield className="w-4 h-4" />
-                <span>VÃ©rification Blockchain</span>
+                <span>Vérification Blockchain</span>
               </div>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                 <Verified className="w-4 h-4" />
-                <span>Titres AuthentifiÃ©s</span>
+                <span>Titres Authentifiés</span>
               </div>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                 <Lock className="w-4 h-4" />
-                <span>Transactions SÃ©curisÃ©es</span>
+                <span>Transactions Sécurisées</span>
               </div>
             </div>
           </motion.div>
@@ -448,7 +448,7 @@ const TerrainsVendeursPage = () => {
                 size="sm"
                 onClick={() => setSelectedRegion('all')}
               >
-                Toutes rÃ©gions
+                Toutes régions
               </Button>
               <Button
                 variant={selectedRegion === 'Dakar' ? 'default' : 'outline'}
@@ -458,11 +458,11 @@ const TerrainsVendeursPage = () => {
                 Dakar
               </Button>
               <Button
-                variant={selectedRegion === 'ThiÃ¨s' ? 'default' : 'outline'}
+                variant={selectedRegion === 'Thiès' ? 'default' : 'outline'}
                 size="sm"
-                onClick={() => setSelectedRegion('ThiÃ¨s')}
+                onClick={() => setSelectedRegion('Thiès')}
               >
-                ThiÃ¨s
+                Thiès
               </Button>
             </div>
 
@@ -489,11 +489,11 @@ const TerrainsVendeursPage = () => {
                 className="px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               >
                 <option value="price_asc">Prix croissant</option>
-                <option value="price_desc">Prix dÃ©croissant</option>
-                <option value="date_desc">Plus rÃ©cents</option>
+                <option value="price_desc">Prix décroissant</option>
+                <option value="date_desc">Plus récents</option>
                 <option value="size_desc">Plus grands</option>
                 <option value="views_desc">Plus populaires</option>
-                <option value="rating_desc">Mieux notÃ©s</option>
+                <option value="rating_desc">Mieux notés</option>
               </select>
             </div>
           </div>
@@ -505,7 +505,7 @@ const TerrainsVendeursPage = () => {
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between mb-8">
             <h2 className="text-2xl font-bold text-gray-900">
-              {filteredProperties.length} terrain{filteredProperties.length > 1 ? 's' : ''} trouvÃ©{filteredProperties.length > 1 ? 's' : ''}
+              {filteredProperties.length} terrain{filteredProperties.length > 1 ? 's' : ''} trouvé{filteredProperties.length > 1 ? 's' : ''}
             </h2>
             <Button
               variant="outline"
@@ -527,10 +527,10 @@ const TerrainsVendeursPage = () => {
                 <Search className="w-full h-full" />
               </div>
               <h3 className="text-2xl font-bold text-gray-600 mb-4">
-                Aucun terrain trouvÃ©
+                Aucun terrain trouvé
               </h3>
               <p className="text-gray-500 mb-8">
-                Essayez de modifier vos critÃ¨res de recherche
+                Essayez de modifier vos critères de recherche
               </p>
               <Button onClick={() => {
                 setSearchTerm('');
@@ -539,7 +539,7 @@ const TerrainsVendeursPage = () => {
                 setPriceRange('all');
                 setVerificationFilter('all');
               }}>
-                RÃ©initialiser les filtres
+                Réinitialiser les filtres
               </Button>
             </motion.div>
           ) : (
@@ -573,7 +573,7 @@ const TerrainsVendeursPage = () => {
               Vous voulez vendre votre terrain ?
             </h2>
             <p className="text-xl mb-8 opacity-90">
-              Rejoignez notre plateforme et bÃ©nÃ©ficiez de la technologie blockchain pour sÃ©curiser vos transactions
+              Rejoignez notre plateforme et bénéficiez de la technologie blockchain pour sécuriser vos transactions
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <Button asChild size="lg" className="bg-white text-green-600 hover:bg-gray-100">

@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { 
   ArrowLeft, 
   Smartphone, 
@@ -32,7 +32,7 @@ const formatPrice = (price) => new Intl.NumberFormat('fr-SN', { style: 'currency
 const PaymentPage = () => {
   const { transactionId } = useParams();
   const navigate = useNavigate();
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   const [transaction, setTransaction] = useState(null);
   const [selectedMethod, setSelectedMethod] = useState('');

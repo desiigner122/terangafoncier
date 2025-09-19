@@ -69,24 +69,24 @@ const BlockchainLoginPage = () => {
   };
 
   const platformStats = [
-    { label: "Utilisateurs SÃ©curisÃ©s", value: "8.2K+", icon: Users },
+    { label: "Utilisateurs Sécurisés", value: "8.2K+", icon: Users },
     { label: "Blockchain Transactions", value: "2.8K+", icon: Database },
-    { label: "Taux de SÃ©curitÃ©", value: "99.9%", icon: Shield },
+    { label: "Taux de Sécurité", value: "99.9%", icon: Shield },
     { label: "IA Monitoring", value: "24/7", icon: Brain }
   ];
 
   const securityFeatures = [
-    { icon: Shield, title: "Authentification Blockchain", desc: "SÃ©curitÃ© cryptographique avancÃ©e" },
+    { icon: Shield, title: "Authentification Blockchain", desc: "Sécurité cryptographique avancée" },
     { icon: Lock, title: "2FA Disponible", desc: "Double authentification optionnelle" },
-    { icon: Database, title: "DonnÃ©es ChiffrÃ©es", desc: "Chiffrement de bout en bout" },
-    { icon: Eye, title: "AccÃ¨s SÃ©curisÃ©", desc: "Surveillance en temps rÃ©el" }
+    { icon: Database, title: "Données Chiffrées", desc: "Chiffrement de bout en bout" },
+    { icon: Eye, title: "Accès Sécurisé", desc: "Surveillance en temps réel" }
   ];
 
   return (
     <>
       <Helmet>
-        <title>Connexion SÃ©curisÃ©e - Teranga Foncier Blockchain</title>
-        <meta name="description" content="Connexion sÃ©curisÃ©e Ã  votre compte Teranga Foncier. AccÃ©dez Ã  votre portefeuille blockchain immobilier." />
+        <title>Connexion Sécurisée - Teranga Foncier Blockchain</title>
+        <meta name="description" content="Connexion sécurisée Ï  votre compte Teranga Foncier. Accédez Ï  votre portefeuille blockchain immobilier." />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 flex">
@@ -110,16 +110,16 @@ const BlockchainLoginPage = () => {
                 </motion.div>
                 
                 <CardTitle className="text-2xl font-bold text-white mb-2">
-                  Connexion SÃ©curisÃ©e
+                  Connexion Sécurisée
                 </CardTitle>
                 
                 <p className="text-white/70">
-                  AccÃ©dez Ã  votre portefeuille blockchain immobilier
+                  Accédez Ï  votre portefeuille blockchain immobilier
                 </p>
                 
                 <Badge className="mt-3 bg-green-500/20 text-green-400 border-green-500/30">
                   <Shield className="w-3 h-3 mr-1" />
-                  SÃ©curisÃ© par Blockchain
+                  Sécurisé par Blockchain
                 </Badge>
               </CardHeader>
 
@@ -190,7 +190,7 @@ const BlockchainLoginPage = () => {
                       to="/forgot-password" 
                       className="text-sm text-blue-400 hover:text-blue-300 transition-colors"
                     >
-                      Mot de passe oubliÃ©?
+                      Mot de passe oublié?
                     </Link>
                   </div>
 
@@ -220,14 +220,14 @@ const BlockchainLoginPage = () => {
                       to="/register" 
                       className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
                     >
-                      CrÃ©er un compte
+                      Créer un compte
                     </Link>
                   </p>
                 </div>
 
                 {/* Security Features */}
                 <div className="pt-6 border-t border-white/10">
-                  <p className="text-xs text-white/50 text-center mb-4">SÃ©curitÃ© Garantie</p>
+                  <p className="text-xs text-white/50 text-center mb-4">Sécurité Garantie</p>
                   <div className="grid grid-cols-2 gap-3">
                     {securityFeatures.map((feature, index) => (
                       <div key={index} className="flex items-center gap-2">
@@ -254,11 +254,11 @@ const BlockchainLoginPage = () => {
               <h1 className="text-4xl font-bold text-white mb-4">
                 Plateforme Blockchain
                 <span className="block bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
-                  ImmobiliÃ¨re #1
+                  Immobilière #1
                 </span>
               </h1>
               <p className="text-xl text-white/80 leading-relaxed">
-                Rejoignez la rÃ©volution de l'immobilier au SÃ©nÃ©gal avec la technologie blockchain
+                Rejoignez la révolution de l'immobilier au Sénégal avec la technologie blockchain
               </p>
             </div>
 
@@ -285,7 +285,7 @@ const BlockchainLoginPage = () => {
             {/* Security Features Detail */}
             <div className="space-y-4">
               <h3 className="text-xl font-semibold text-white mb-4">
-                SÃ©curitÃ© AvancÃ©e
+                Sécurité Avancée
               </h3>
               {securityFeatures.map((feature, index) => (
                 <motion.div
@@ -319,7 +319,7 @@ const BlockchainLoginPage = () => {
                 ))}
               </div>
               <blockquote className="text-white/90 italic mb-3">
-                "La sÃ©curitÃ© blockchain me permet d'investir sereinement depuis la France. 
+                "La sécurité blockchain me permet d'investir sereinement depuis la France. 
                 Excellente plateforme!"
               </blockquote>
               <div className="flex items-center gap-3">

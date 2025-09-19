@@ -4,10 +4,10 @@ import { Button } from '@/components/ui/button';
 import { 
   PlayCircle
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 const VideoPresentationSection = () => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   const handlePlayVideo = () => {
     window.safeGlobalToast({

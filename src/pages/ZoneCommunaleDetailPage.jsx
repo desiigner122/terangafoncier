@@ -31,28 +31,28 @@ const ZoneCommunaleDetailPage = () => {
   const [applicationProgress, setApplicationProgress] = useState(0);
 
   useEffect(() => {
-    // Simulation de chargement des donnÃ©es de la zone communale
+    // Simulation de chargement des données de la zone communale
     const mockZoneData = {
       id: parseInt(id),
-      name: "Zone RÃ©sidentielle Keur Massar Phase 2",
+      name: "Zone Résidentielle Keur Massar Phase 2",
       commune: "Keur Massar",
       communeId: "keur-massar-001",
       region: "Dakar",
       project_type: "Lotissement Social",
       status: "En cours d'attribution",
       
-      // Localisation et coordonnÃ©es GPS
+      // Localisation et coordonnées GPS
       location: {
-        address: "Keur Massar Phase 2, Route de Rufisque, Dakar, SÃ©nÃ©gal",
+        address: "Keur Massar Phase 2, Route de Rufisque, Dakar, Sénégal",
         coordinates: {
           latitude: 14.7536,
           longitude: -17.3159
         },
         nearby_landmarks: [
-          "UniversitÃ© Cheikh Anta Diop (15 km)",
-          "AÃ©roport International Blaise Diagne (25 km)",
+          "Université Cheikh Anta Diop (15 km)",
+          "Aéroport International Blaise Diagne (25 km)",
           "Centre commercial Keur Massar (2 km)",
-          "HÃ´pital RÃ©gional de Keur Massar (3 km)"
+          "Hôpital Régional de Keur Massar (3 km)"
         ],
         accessibility: {
           main_roads: ["Route Nationale N1", "Route de Rufisque"],
@@ -61,7 +61,7 @@ const ZoneCommunaleDetailPage = () => {
         }
       },
       
-      // Informations gÃ©nÃ©rales
+      // Informations générales
       total_parcels: 200,
       available_parcels: 147,
       allocated_parcels: 53,
@@ -78,33 +78,33 @@ const ZoneCommunaleDetailPage = () => {
       // Calendrier et processus
       application_deadline: "2025-03-15",
       selection_date: "2025-03-25",
-      allocation_method: "Tirage au sort transparent avec critÃ¨res sociaux",
+      allocation_method: "Tirage au sort transparent avec critères sociaux",
       delivery_date: "2025-09-30",
       
-      // Infrastructure et Ã©quipements
+      // Infrastructure et équipements
       infrastructure: {
-        completed: ["Voiries principales", "Ã‰vacuation eaux pluviales", "Bornage parcelles"],
-        in_progress: ["RÃ©seau Ã©lectrique", "Adduction d'eau", "Ã‰clairage public"],
-        planned: ["Fibres optiques", "Espaces verts", "Ã‰quipements sociaux"]
+        completed: ["Voiries principales", "Évacuation eaux pluviales", "Bornage parcelles"],
+        in_progress: ["Réseau électrique", "Adduction d'eau", "Éclairage public"],
+        planned: ["Fibres optiques", "Espaces verts", "Équipements sociaux"]
       },
       
-      // CritÃ¨res d'Ã©ligibilitÃ©
+      // Critères d'éligibilité
       eligibility_criteria: [
-        "NationalitÃ© sÃ©nÃ©galaise ou rÃ©sidence de 5 ans minimum",
+        "Nationalité sénégalaise ou résidence de 5 ans minimum",
         "Revenus familiaux entre 200,000 et 800,000 FCFA/mois",
-        "Ne pas possÃ©der de terrain ou logement dans la rÃ©gion",
-        "Engagement Ã  construire dans les 3 ans",
-        "RÃ©sidence principale obligatoire"
+        "Ne pas posséder de terrain ou logement dans la région",
+        "Engagement Ï  construire dans les 3 ans",
+        "Résidence principale obligatoire"
       ],
       
       // Documents requis
       required_documents: [
-        "Copie certifiÃ©e carte d'identitÃ© nationale",
-        "Certificat de rÃ©sidence rÃ©cent (moins de 3 mois)",
+        "Copie certifiée carte d'identité nationale",
+        "Certificat de résidence récent (moins de 3 mois)",
         "Justificatifs de revenus (3 derniers bulletins de salaire)",
-        "Attestation de non-propriÃ©tÃ© fonciÃ¨re",
-        "Certificat de cÃ©libat ou extrait d'acte de mariage",
-        "Acte de naissance des enfants Ã  charge",
+        "Attestation de non-propriété foncière",
+        "Certificat de célibat ou extrait d'acte de mariage",
+        "Acte de naissance des enfants Ï  charge",
         "Projet architectural sommaire"
       ],
       
@@ -114,22 +114,22 @@ const ZoneCommunaleDetailPage = () => {
         title: "Directrice de l'Urbanisme",
         phone: "+221 33 834 67 89",
         email: "urbanisme@keurmassar.sn",
-        office_address: "Mairie de Keur Massar, Avenue LÃ©opold SÃ©dar Senghor",
-        office_hours: "Lundi Ã  Vendredi: 8h00 - 17h00, Samedi: 8h00 - 12h00"
+        office_address: "Mairie de Keur Massar, Avenue Léopold Sédar Senghor",
+        office_hours: "Lundi Ï  Vendredi: 8h00 - 17h00, Samedi: 8h00 - 12h00"
       },
       
       // Images et documentation
       images: [
         'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=800&h=600&fit=crop', // Plan de masse
-        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop', // Vue aÃ©rienne
+        'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop', // Vue aérienne
         'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=800&h=600&fit=crop', // Infrastructure en cours
-        'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=800&h=600&fit=crop'  // Ã‰quipements prÃ©vus
+        'https://images.unsplash.com/photo-1582407947304-fd86f028f716?w=800&h=600&fit=crop'  // Équipements prévus
       ],
       
       documents: [
         { name: 'Plan de Lotissement Officiel', type: 'PDF', size: '2.3 MB', verified: true },
-        { name: 'ArrÃªtÃ© de CrÃ©ation de la Zone', type: 'PDF', size: '0.8 MB', verified: true },
-        { name: 'Ã‰tude d\'Impact Environnemental', type: 'PDF', size: '5.1 MB', verified: true },
+        { name: 'Arrêté de Création de la Zone', type: 'PDF', size: '0.8 MB', verified: true },
+        { name: 'Étude d\'Impact Environnemental', type: 'PDF', size: '5.1 MB', verified: true },
         { name: 'Cahier des Charges', type: 'PDF', size: '1.2 MB', verified: true },
         { name: 'Guide de Construction', type: 'PDF', size: '3.4 MB', verified: false }
       ],
@@ -143,38 +143,38 @@ const ZoneCommunaleDetailPage = () => {
         average_processing_time: "45 jours"
       },
       
-      // Ã‰quipements sociaux prÃ©vus
+      // Équipements sociaux prévus
       social_facilities: [
-        { type: "Ã‰cole primaire", status: "PlanifiÃ©", distance: "500m" },
-        { type: "Centre de santÃ©", status: "En Ã©tude", distance: "800m" },
-        { type: "MarchÃ© de proximitÃ©", status: "ApprouvÃ©", distance: "1.2km" },
-        { type: "Terrain de sport", status: "PlanifiÃ©", distance: "600m" },
-        { type: "MosquÃ©e", status: "Site rÃ©servÃ©", distance: "400m" }
+        { type: "École primaire", status: "Planifié", distance: "500m" },
+        { type: "Centre de santé", status: "En étude", distance: "800m" },
+        { type: "Marché de proximité", status: "Approuvé", distance: "1.2km" },
+        { type: "Terrain de sport", status: "Planifié", distance: "600m" },
+        { type: "Mosquée", status: "Site réservé", distance: "400m" }
       ],
       
-      // Transport et accessibilitÃ©
+      // Transport et accessibilité
       transport: {
         bus_lines: ["Ligne 12", "Ligne 23"],
         nearest_brt_station: "Keur Massar Centre - 2.1km",
-        taxi_availability: "TrÃ¨s bonne",
-        road_quality: "Routes principales pavÃ©es, secondaires en cours"
+        taxi_availability: "Très bonne",
+        road_quality: "Routes principales pavées, secondaires en cours"
       },
       
       description: `ðŸ˜ï¸ **Projet de Lotissement Social Keur Massar Phase 2**
 
-Cette nouvelle zone rÃ©sidentielle s'inscrit dans le programme national de facilitation de l'accÃ¨s au logement pour les familles Ã  revenus moyens. SituÃ©e dans la commune dynamique de Keur Massar, cette zone offre un cadre de vie moderne avec toutes les commoditÃ©s nÃ©cessaires.
+Cette nouvelle zone résidentielle s'inscrit dans le programme national de facilitation de l'accès au logement pour les familles Ï  revenus moyens. Située dans la commune dynamique de Keur Massar, cette zone offre un cadre de vie moderne avec toutes les commodités nécessaires.
 
-ðŸŒ **DÃ©veloppement Durable**
-Le projet intÃ¨gre les principes du dÃ©veloppement durable avec des espaces verts, une gestion Ã©cologique des eaux pluviales et l'utilisation d'Ã©nergies renouvelables pour l'Ã©clairage public.
+ðŸŒ **Développement Durable**
+Le projet intègre les principes du développement durable avec des espaces verts, une gestion écologique des eaux pluviales et l'utilisation d'énergies renouvelables pour l'éclairage public.
 
 ðŸ—ï¸ **Infrastructure Moderne**
-Toutes les parcelles bÃ©nÃ©ficieront d'un accÃ¨s direct Ã  l'Ã©lectricitÃ©, l'eau courante, l'assainissement et la fibre optique. Les voiries sont conÃ§ues selon les normes internationales.
+Toutes les parcelles bénéficieront d'un accès direct Ï  l'électricité, l'eau courante, l'assainissement et la fibre optique. Les voiries sont conçues selon les normes internationales.
 
-ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦ **PrioritÃ© aux Familles**
-Le processus d'attribution privilÃ©gie les familles avec enfants, les jeunes couples et les primo-accÃ©dants, dans un souci d'Ã©quitÃ© sociale et de mixitÃ© gÃ©nÃ©rationnelle.
+ðŸ‘¨â€ðŸ‘©â€ðŸ‘§â€ðŸ‘¦ **Priorité aux Familles**
+Le processus d'attribution privilégie les familles avec enfants, les jeunes couples et les primo-accédants, dans un souci d'équité sociale et de mixité générationnelle.
 
 ðŸ“‹ **Processus Transparent**
-L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alable des critÃ¨res d'Ã©ligibilitÃ© et notation selon une grille objective.`
+L'attribution se fait par tirage au sort public, avec vérification préalable des critères d'éligibilité et notation selon une grille objective.`
     };
 
     // Simulation du chargement
@@ -229,7 +229,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
             className="w-16 h-16 border-4 border-green-500 border-t-transparent rounded-full mx-auto mb-4"
           />
           <div className="text-lg font-medium text-gray-700">Chargement de la zone communale...</div>
-          <div className="text-sm text-gray-500 mt-2">RÃ©cupÃ©ration des informations officielles</div>
+          <div className="text-sm text-gray-500 mt-2">Récupération des informations officielles</div>
         </div>
       </div>
     );
@@ -240,8 +240,8 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <AlertTriangle className="w-16 h-16 text-red-500 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Zone non trouvÃ©e</h2>
-          <p className="text-gray-600 mb-4">La zone communale demandÃ©e n'existe pas ou n'est plus disponible.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Zone non trouvée</h2>
+          <p className="text-gray-600 mb-4">La zone communale demandée n'existe pas ou n'est plus disponible.</p>
           <Button onClick={() => navigate('/parcelles-communales')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour aux zones communales
@@ -360,7 +360,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     </div>
                   </div>
                   <div className="text-right">
-                    <div className="text-sm text-gray-500 mb-1">Frais d'attribution Ã  partir de</div>
+                    <div className="text-sm text-gray-500 mb-1">Frais d'attribution Ï  partir de</div>
                     <div className="text-2xl font-bold text-green-600">
                       {formatPrice(Math.min(...Object.values(zone.size_distribution).map(s => s.attribution_fees)))}
                     </div>
@@ -377,7 +377,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <div className="text-2xl font-bold text-blue-600">{zone.statistics.applications_received}</div>
-                    <div className="text-sm text-gray-600">Demandes ReÃ§ues</div>
+                    <div className="text-sm text-gray-600">Demandes Reçues</div>
                   </div>
                   <div className="text-center p-4 bg-yellow-50 rounded-lg">
                     <div className="text-2xl font-bold text-yellow-600">{zone.statistics.success_rate}</div>
@@ -400,10 +400,10 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                       }`} />
                       <div>
                         <div className="font-bold">
-                          {daysUntilDeadline <= 7 ? 'Attention - DÃ©lai expirant bientÃ´t !' : 'Rappel - Date limite approche'}
+                          {daysUntilDeadline <= 7 ? 'Attention - Délai expirant bientôt !' : 'Rappel - Date limite approche'}
                         </div>
                         <div className="text-sm">
-                          Plus que {daysUntilDeadline} jours pour dÃ©poser votre dossier de candidature.
+                          Plus que {daysUntilDeadline} jours pour déposer votre dossier de candidature.
                         </div>
                       </div>
                     </div>
@@ -419,13 +419,13 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
               </CardContent>
             </Card>
 
-            {/* Onglets dÃ©taillÃ©s */}
+            {/* Onglets détaillés */}
             <Card>
               <Tabs defaultValue="parcels" className="w-full">
                 <TabsList className="grid w-full grid-cols-5">
                   <TabsTrigger value="parcels">Parcelles</TabsTrigger>
                   <TabsTrigger value="infrastructure">Infrastructure</TabsTrigger>
-                  <TabsTrigger value="eligibility">Ã‰ligibilitÃ©</TabsTrigger>
+                  <TabsTrigger value="eligibility">Éligibilité</TabsTrigger>
                   <TabsTrigger value="process">Processus</TabsTrigger>
                   <TabsTrigger value="documents">Documents</TabsTrigger>
                 </TabsList>
@@ -433,7 +433,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                 {/* Onglet Parcelles */}
                 <TabsContent value="parcels" className="p-6">
                   <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-gray-900">RÃ©partition des Parcelles</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Répartition des Parcelles</h3>
                     
                     <div className="space-y-4">
                       {Object.entries(zone.size_distribution).map(([size, info]) => (
@@ -459,13 +459,13 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     </div>
 
                     <div className="bg-blue-50 p-4 rounded-lg">
-                      <h4 className="font-bold text-gray-900 mb-2">ModalitÃ©s de Paiement des Frais</h4>
+                      <h4 className="font-bold text-gray-900 mb-2">Modalités de Paiement des Frais</h4>
                       <ul className="text-sm space-y-1">
-                        <li>â€¢ Frais d'attribution : Ã€ payer Ã  la signature (non remboursable)</li>
-                        <li>â€¢ Frais de viabilisation : Ã‰chelonnement possible sur 3 ans</li>
-                        <li>â€¢ Taux d'intÃ©rÃªt viabilisation : 2% par an</li>
-                        <li>â€¢ PÃ©nalitÃ©s de retard : 0.5% par mois</li>
-                        <li>â€¢ DÃ©lai de construction : Maximum 3 ans aprÃ¨s attribution</li>
+                        <li>â€¢ Frais d'attribution : À payer Ï  la signature (non remboursable)</li>
+                        <li>â€¢ Frais de viabilisation : Échelonnement possible sur 3 ans</li>
+                        <li>â€¢ Taux d'intérêt viabilisation : 2% par an</li>
+                        <li>â€¢ Pénalités de retard : 0.5% par mois</li>
+                        <li>â€¢ Délai de construction : Maximum 3 ans après attribution</li>
                       </ul>
                     </div>
                   </div>
@@ -474,11 +474,11 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                 {/* Onglet Infrastructure */}
                 <TabsContent value="infrastructure" className="p-6">
                   <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-gray-900">Ã‰tat d'Avancement des Travaux</h3>
+                    <h3 className="text-lg font-bold text-gray-900">État d'Avancement des Travaux</h3>
                     
                     <div className="space-y-4">
                       <div>
-                        <h4 className="font-bold text-green-600 mb-3">âœ… Travaux TerminÃ©s</h4>
+                        <h4 className="font-bold text-green-600 mb-3">✅ Travaux Terminés</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {zone.infrastructure.completed.map((item, index) => (
                             <div key={index} className="flex items-center p-3 bg-green-50 rounded-lg">
@@ -502,7 +502,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                       </div>
 
                       <div>
-                        <h4 className="font-bold text-gray-600 mb-3">ðŸ“‹ Travaux PlanifiÃ©s</h4>
+                        <h4 className="font-bold text-gray-600 mb-3">ðŸ“‹ Travaux Planifiés</h4>
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                           {zone.infrastructure.planned.map((item, index) => (
                             <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
@@ -515,7 +515,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     </div>
 
                     <div>
-                      <h4 className="font-bold text-gray-900 mb-4">Ã‰quipements Sociaux PrÃ©vus</h4>
+                      <h4 className="font-bold text-gray-900 mb-4">Équipements Sociaux Prévus</h4>
                       <div className="space-y-3">
                         {zone.social_facilities.map((facility, index) => (
                           <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
@@ -526,7 +526,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                                 <div className="text-sm text-gray-600">Distance: {facility.distance}</div>
                               </div>
                             </div>
-                            <Badge variant={facility.status === 'PlanifiÃ©' ? 'default' : facility.status === 'ApprouvÃ©' ? 'secondary' : 'outline'}>
+                            <Badge variant={facility.status === 'Planifié' ? 'default' : facility.status === 'Approuvé' ? 'secondary' : 'outline'}>
                               {facility.status}
                             </Badge>
                           </div>
@@ -536,10 +536,10 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                   </div>
                 </TabsContent>
 
-                {/* Onglet Ã‰ligibilitÃ© */}
+                {/* Onglet Éligibilité */}
                 <TabsContent value="eligibility" className="p-6">
                   <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-gray-900">CritÃ¨res d'Ã‰ligibilitÃ©</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Critères d'Éligibilité</h3>
                     
                     <div className="space-y-3">
                       {zone.eligibility_criteria.map((criterion, index) => (
@@ -556,8 +556,8 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                         <div>
                           <div className="font-bold text-yellow-800">Important</div>
                           <div className="text-yellow-700 text-sm mt-1">
-                            Tous les critÃ¨res doivent Ãªtre respectÃ©s pour Ãªtre Ã©ligible. 
-                            Une vÃ©rification rigoureuse sera effectuÃ©e lors de l'instruction du dossier.
+                            Tous les critères doivent être respectés pour être éligible. 
+                            Une vérification rigoureuse sera effectuée lors de l'instruction du dossier.
                           </div>
                         </div>
                       </div>
@@ -586,7 +586,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                       <div className="flex items-center p-4 bg-blue-50 rounded-lg">
                         <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center mr-4">1</div>
                         <div>
-                          <div className="font-bold">DÃ©pÃ´t de Candidature</div>
+                          <div className="font-bold">Dépôt de Candidature</div>
                           <div className="text-sm text-gray-600">Avant le {new Date(zone.application_deadline).toLocaleDateString('fr-FR')}</div>
                         </div>
                       </div>
@@ -595,7 +595,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                         <div className="w-8 h-8 bg-yellow-600 text-white rounded-full flex items-center justify-center mr-4">2</div>
                         <div>
                           <div className="font-bold">Instruction des Dossiers</div>
-                          <div className="text-sm text-gray-600">VÃ©rification des critÃ¨res d'Ã©ligibilitÃ©</div>
+                          <div className="text-sm text-gray-600">Vérification des critères d'éligibilité</div>
                         </div>
                       </div>
                       
@@ -603,7 +603,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                         <div className="w-8 h-8 bg-purple-600 text-white rounded-full flex items-center justify-center mr-4">3</div>
                         <div>
                           <div className="font-bold">Tirage au Sort</div>
-                          <div className="text-sm text-gray-600">Le {new Date(zone.selection_date).toLocaleDateString('fr-FR')} en sÃ©ance publique</div>
+                          <div className="text-sm text-gray-600">Le {new Date(zone.selection_date).toLocaleDateString('fr-FR')} en séance publique</div>
                         </div>
                       </div>
                       
@@ -620,7 +620,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                       <h4 className="font-bold text-gray-900 mb-3">Statistiques du Processus</h4>
                       <div className="grid grid-cols-2 gap-4">
                         <div>
-                          <div className="text-sm text-gray-600">Demandes reÃ§ues</div>
+                          <div className="text-sm text-gray-600">Demandes reçues</div>
                           <div className="text-lg font-bold">{zone.statistics.applications_received}</div>
                         </div>
                         <div>
@@ -650,12 +650,12 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                           {doc.verified && (
                             <Badge className="bg-green-500 text-white">
                               <Shield className="w-3 h-3 mr-1" />
-                              VÃ©rifiÃ©
+                              Vérifié
                             </Badge>
                           )}
                           <Button size="sm" variant="outline">
                             <Download className="w-4 h-4 mr-1" />
-                            TÃ©lÃ©charger
+                            Télécharger
                           </Button>
                         </div>
                       </div>
@@ -675,7 +675,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                 <div className="space-y-4">
                   <Button onClick={handleApply} className="w-full bg-green-600 hover:bg-green-700">
                     <Upload className="w-4 h-4 mr-2" />
-                    DÃ©poser ma Candidature
+                    Déposer ma Candidature
                   </Button>
                   
                   <Button onClick={handleContact} variant="outline" className="w-full">
@@ -741,7 +741,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {/* Adresse complÃ¨te */}
+                  {/* Adresse complète */}
                   <div>
                     <div className="font-medium text-sm text-gray-700 mb-2">Adresse exacte</div>
                     <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
@@ -749,18 +749,18 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     </div>
                   </div>
 
-                  {/* CoordonnÃ©es GPS */}
+                  {/* Coordonnées GPS */}
                   <div>
-                    <div className="font-medium text-sm text-gray-700 mb-2">CoordonnÃ©es GPS</div>
+                    <div className="font-medium text-sm text-gray-700 mb-2">Coordonnées GPS</div>
                     <div className="text-sm text-gray-600 bg-blue-50 p-3 rounded-lg">
                       <div>Latitude: {zone.location.coordinates.latitude}</div>
                       <div>Longitude: {zone.location.coordinates.longitude}</div>
                     </div>
                   </div>
 
-                  {/* Points de repÃ¨re */}
+                  {/* Points de repère */}
                   <div>
-                    <div className="font-medium text-sm text-gray-700 mb-2">Points de repÃ¨re</div>
+                    <div className="font-medium text-sm text-gray-700 mb-2">Points de repère</div>
                     <div className="space-y-2">
                       {zone.location.nearby_landmarks.map((landmark, index) => (
                         <div key={index} className="flex items-center text-sm text-gray-600">
@@ -794,10 +794,10 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
               </CardContent>
             </Card>
 
-            {/* Transport et AccÃ¨s */}
+            {/* Transport et Accès */}
             <Card>
               <CardHeader>
-                <CardTitle className="text-lg">Transport & AccÃ¨s</CardTitle>
+                <CardTitle className="text-lg">Transport & Accès</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
@@ -816,7 +816,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                   </div>
                   
                   <div>
-                    <div className="font-medium text-sm text-gray-700">QualitÃ© des routes</div>
+                    <div className="font-medium text-sm text-gray-700">Qualité des routes</div>
                     <div className="text-sm text-gray-600">{zone.transport.road_quality}</div>
                   </div>
                 </div>
@@ -839,7 +839,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     <span className="text-sm text-blue-600">{new Date(zone.selection_date).toLocaleDateString('fr-FR')}</span>
                   </div>
                   <div className="flex items-center justify-between p-2 bg-green-50 rounded">
-                    <span className="text-sm font-medium">Livraison prÃ©vue</span>
+                    <span className="text-sm font-medium">Livraison prévue</span>
                     <span className="text-sm text-green-600">{new Date(zone.delivery_date).toLocaleDateString('fr-FR')}</span>
                   </div>
                 </div>
@@ -853,11 +853,11 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
       <Dialog open={showApplicationModal} onOpenChange={setShowApplicationModal}>
         <DialogContent className="max-w-2xl">
           <DialogHeader>
-            <DialogTitle>DÃ©poser une Candidature</DialogTitle>
+            <DialogTitle>Déposer une Candidature</DialogTitle>
           </DialogHeader>
           <div className="space-y-6">
             <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="font-bold text-blue-900">Zone sÃ©lectionnÃ©e</div>
+              <div className="font-bold text-blue-900">Zone sélectionnée</div>
               <div className="text-blue-700">{zone.name}</div>
               <div className="text-sm text-blue-600">
                 <ProfileLink 
@@ -874,15 +874,15 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
             
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
-                <Label>PrÃ©nom et Nom</Label>
-                <Input YOUR_API_KEY="PrÃ©nom NOM" />
+                <Label>Prénom et Nom</Label>
+                <Input YOUR_API_KEY="Prénom NOM" />
               </div>
               <div>
                 <Label>Email</Label>
                 <Input type="email" YOUR_API_KEY="email@exemple.com" />
               </div>
               <div>
-                <Label>TÃ©lÃ©phone</Label>
+                <Label>Téléphone</Label>
                 <Input YOUR_API_KEY="+221 XX XXX XX XX" />
               </div>
               <div>
@@ -892,9 +892,9 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     <SelectValue YOUR_API_KEY="Choisir" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="celibataire">CÃ©libataire</SelectItem>
-                    <SelectItem value="marie">MariÃ©(e)</SelectItem>
-                    <SelectItem value="divorce">DivorcÃ©(e)</SelectItem>
+                    <SelectItem value="celibataire">Célibataire</SelectItem>
+                    <SelectItem value="marie">Marié(e)</SelectItem>
+                    <SelectItem value="divorce">Divorcé(e)</SelectItem>
                     <SelectItem value="veuf">Veuf/Veuve</SelectItem>
                   </SelectContent>
                 </Select>
@@ -904,7 +904,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                 <Input type="number" YOUR_API_KEY="500000" />
               </div>
               <div>
-                <Label>Taille de parcelle souhaitÃ©e</Label>
+                <Label>Taille de parcelle souhaitée</Label>
                 <Select>
                   <SelectTrigger>
                     <SelectValue YOUR_API_KEY="Choisir" />
@@ -928,7 +928,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
 
             <div className="bg-yellow-50 p-4 rounded-lg">
               <div className="text-sm text-yellow-800">
-                <strong>Prochaine Ã©tape :</strong> AprÃ¨s validation de ce formulaire, vous recevrez un email avec la liste complÃ¨te des documents Ã  fournir et les modalitÃ©s de dÃ©pÃ´t physique du dossier.
+                <strong>Prochaine étape :</strong> Après validation de ce formulaire, vous recevrez un email avec la liste complète des documents Ï  fournir et les modalités de dépôt physique du dossier.
               </div>
             </div>
             
@@ -960,7 +960,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
             
             <div>
               <Label>Votre nom</Label>
-              <Input YOUR_API_KEY="PrÃ©nom NOM" />
+              <Input YOUR_API_KEY="Prénom NOM" />
             </div>
             <div>
               <Label>Email</Label>
@@ -973,7 +973,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                   <SelectValue YOUR_API_KEY="Choisir le sujet" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="eligibilite">Question sur l'Ã©ligibilitÃ©</SelectItem>
+                  <SelectItem value="eligibilite">Question sur l'éligibilité</SelectItem>
                   <SelectItem value="documents">Documents requis</SelectItem>
                   <SelectItem value="processus">Processus d'attribution</SelectItem>
                   <SelectItem value="visite">Demande de visite du site</SelectItem>
@@ -1026,7 +1026,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     </div>
                     
                     <div>
-                      <div className="font-medium text-sm text-gray-700 mb-1">CoordonnÃ©es GPS</div>
+                      <div className="font-medium text-sm text-gray-700 mb-1">Coordonnées GPS</div>
                       <div className="text-sm text-gray-600 space-y-1">
                         <div className="bg-blue-50 p-2 rounded">
                           Lat: {zone?.location?.coordinates?.latitude}
@@ -1038,7 +1038,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     </div>
 
                     <div>
-                      <div className="font-medium text-sm text-gray-700 mb-2">AccessibilitÃ©</div>
+                      <div className="font-medium text-sm text-gray-700 mb-2">Accessibilité</div>
                       <div className="space-y-2">
                         <div>
                           <div className="text-xs text-gray-500">Routes principales</div>
@@ -1058,7 +1058,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     </div>
 
                     <div>
-                      <div className="font-medium text-sm text-gray-700 mb-2">Points de repÃ¨re</div>
+                      <div className="font-medium text-sm text-gray-700 mb-2">Points de repère</div>
                       <div className="space-y-1">
                         {zone?.location?.nearby_landmarks?.map((landmark, index) => (
                           <div key={index} className="flex items-start text-xs text-gray-600">
@@ -1090,7 +1090,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                     <div className="w-full h-full bg-gray-100 rounded-lg flex items-center justify-center relative overflow-hidden">
                       {/* Simulation d'une carte */}
                       <div className="absolute inset-0 bg-gradient-to-br from-green-100 via-blue-100 to-green-50">
-                        {/* Routes principales simulÃ©es */}
+                        {/* Routes principales simulées */}
                         <div className="absolute top-20 left-0 w-full h-2 bg-gray-300 opacity-50"></div>
                         <div className="absolute top-32 left-0 w-full h-1 bg-gray-400 opacity-30"></div>
                         <div className="absolute left-20 top-0 w-2 h-full bg-gray-300 opacity-50"></div>
@@ -1108,18 +1108,18 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                           </div>
                         </div>
 
-                        {/* Points de repÃ¨re simulÃ©s */}
+                        {/* Points de repère simulés */}
                         <div className="absolute top-1/4 left-1/4">
                           <div className="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow"></div>
                           <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-white px-1 py-0.5 rounded text-xs shadow border">
-                            UniversitÃ©
+                            Université
                           </div>
                         </div>
                         
                         <div className="absolute top-3/4 right-1/4">
                           <div className="w-4 h-4 bg-green-500 rounded-full border-2 border-white shadow"></div>
                           <div className="absolute top-5 left-1/2 transform -translate-x-1/2 bg-white px-1 py-0.5 rounded text-xs shadow border">
-                            HÃ´pital
+                            Hôpital
                           </div>
                         </div>
 
@@ -1136,7 +1136,7 @@ L'attribution se fait par tirage au sort public, avec vÃ©rification prÃ©alab
                         <div className="flex items-start">
                           <Info className="w-4 h-4 text-blue-500 mr-2 mt-0.5 flex-shrink-0" />
                           <div className="text-xs text-gray-600">
-                            <strong>Carte interactive simulÃ©e</strong><br />
+                            <strong>Carte interactive simulée</strong><br />
                             Cliquez sur "Ouvrir dans Google Maps" pour voir la localisation exacte avec navigation GPS.
                           </div>
                         </div>

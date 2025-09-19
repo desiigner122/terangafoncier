@@ -31,7 +31,7 @@ const GuidesTutorielsPage = () => {
   const categories = [
     { id: 'all', name: 'Tous les guides', count: 24 },
     { id: 'achat', name: 'Achat de terrain', count: 8 },
-    { id: 'vente', name: 'Vente de propriÃ©tÃ©', count: 6 },
+    { id: 'vente', name: 'Vente de propriété', count: 6 },
     { id: 'juridique', name: 'Aspects juridiques', count: 5 },
     { id: 'financement', name: 'Financement', count: 5 }
   ];
@@ -39,97 +39,97 @@ const GuidesTutorielsPage = () => {
   const guidesPopulaires = [
     {
       id: 1,
-      title: "Guide complet pour acheter un terrain au SÃ©nÃ©gal",
-      description: "Tout ce qu'il faut savoir pour acheter un terrain en toute sÃ©curitÃ©",
+      title: "Guide complet pour acheter un terrain au Sénégal",
+      description: "Tout ce qu'il faut savoir pour acheter un terrain en toute sécurité",
       type: "Guide PDF",
       category: "achat",
       duree: "30 min",
-      niveau: "DÃ©butant",
+      niveau: "Débutant",
       vues: 15420,
       likes: 1250,
       rating: 4.8,
       image: "/api/YOUR_API_KEY/300/200",
-      tags: ["Terrain", "Achat", "SÃ©curitÃ©", "Documents"],
+      tags: ["Terrain", "Achat", "Sécurité", "Documents"],
       author: "Me Fatou Diallo",
       date: "2024-01-15"
     },
     {
       id: 2,
-      title: "VÃ©rification des documents fonciers : Check-list complÃ¨te",
-      description: "Comment vÃ©rifier l'authenticitÃ© et la validitÃ© des documents",
-      type: "VidÃ©o Tutorial",
+      title: "Vérification des documents fonciers : Check-list complète",
+      description: "Comment vérifier l'authenticité et la validité des documents",
+      type: "Vidéo Tutorial",
       category: "juridique",
       duree: "25 min",
-      niveau: "IntermÃ©diaire",
+      niveau: "Intermédiaire",
       vues: 12800,
       likes: 980,
       rating: 4.9,
       image: "/api/YOUR_API_KEY/300/200",
-      tags: ["Documents", "VÃ©rification", "SÃ©curitÃ©"],
+      tags: ["Documents", "Vérification", "Sécurité"],
       author: "Dr Moussa Sow",
       date: "2024-01-10"
     },
     {
       id: 3,
-      title: "Financement immobilier : Options et stratÃ©gies",
-      description: "DÃ©couvrez toutes les options de financement disponibles",
+      title: "Financement immobilier : Options et stratégies",
+      description: "Découvrez toutes les options de financement disponibles",
       type: "Guide PDF",
       category: "financement",
       duree: "45 min",
-      niveau: "AvancÃ©",
+      niveau: "Avancé",
       vues: 9650,
       likes: 720,
       rating: 4.7,
       image: "/api/YOUR_API_KEY/300/200",
-      tags: ["Financement", "Banques", "CrÃ©dit"],
+      tags: ["Financement", "Banques", "Crédit"],
       author: "Amadou Ba",
       date: "2024-01-05"
     },
     {
       id: 4,
-      title: "NÃ©gociation immobiliÃ¨re : Techniques et conseils",
-      description: "MaÃ®trisez l'art de la nÃ©gociation pour obtenir le meilleur prix",
-      type: "SÃ©rie VidÃ©o",
+      title: "Négociation immobilière : Techniques et conseils",
+      description: "Maîtrisez l'art de la négociation pour obtenir le meilleur prix",
+      type: "Série Vidéo",
       category: "achat",
       duree: "60 min",
-      niveau: "IntermÃ©diaire",
+      niveau: "Intermédiaire",
       vues: 8900,
       likes: 650,
       rating: 4.6,
       image: "/api/YOUR_API_KEY/300/200",
-      tags: ["NÃ©gociation", "Prix", "StratÃ©gie"],
-      author: "AÃ¯cha Ndoye",
+      tags: ["Négociation", "Prix", "Stratégie"],
+      author: "Aïcha Ndoye",
       date: "2023-12-28"
     },
     {
       id: 5,
-      title: "ProcÃ©dures d'immatriculation pas Ã  pas",
-      description: "Guide dÃ©taillÃ© pour immatriculer votre terrain",
+      title: "Procédures d'immatriculation pas Ï  pas",
+      description: "Guide détaillé pour immatriculer votre terrain",
       type: "Guide Interactif",
       category: "juridique",
       duree: "40 min",
-      niveau: "DÃ©butant",
+      niveau: "Débutant",
       vues: 11200,
       likes: 890,
       rating: 4.8,
       image: "/api/YOUR_API_KEY/300/200",
-      tags: ["Immatriculation", "ProcÃ©dures", "Administration"],
+      tags: ["Immatriculation", "Procédures", "Administration"],
       author: "Service Juridique",
       date: "2023-12-20"
     },
     {
       id: 6,
-      title: "Vendre rapidement : Marketing et prÃ©sentation",
-      description: "Techniques pour vendre votre propriÃ©tÃ© dans les meilleurs dÃ©lais",
+      title: "Vendre rapidement : Marketing et présentation",
+      description: "Techniques pour vendre votre propriété dans les meilleurs délais",
       type: "Webinar",
       category: "vente",
       duree: "35 min",
-      niveau: "IntermÃ©diaire",
+      niveau: "Intermédiaire",
       vues: 7800,
       likes: 520,
       rating: 4.5,
       image: "/api/YOUR_API_KEY/300/200",
-      tags: ["Vente", "Marketing", "PrÃ©sentation"],
+      tags: ["Vente", "Marketing", "Présentation"],
       author: "Khadija Tall",
       date: "2023-12-15"
     }
@@ -143,19 +143,19 @@ const GuidesTutorielsPage = () => {
       type: "Tutorial de base"
     },
     {
-      title: "Recherche avancÃ©e de terrains",
+      title: "Recherche avancée de terrains",
       duree: "8 min",
       vues: 18900,
-      type: "FonctionnalitÃ©"
+      type: "Fonctionnalité"
     },
     {
-      title: "SystÃ¨me de paiement intelligent",
+      title: "Système de paiement intelligent",
       duree: "15 min",
       vues: 14200,
-      type: "FonctionnalitÃ©"
+      type: "Fonctionnalité"
     },
     {
-      title: "VÃ©rification blockchain des documents",
+      title: "Vérification blockchain des documents",
       duree: "10 min",
       vues: 11800,
       type: "Technologie"
@@ -173,8 +173,8 @@ const GuidesTutorielsPage = () => {
   const getTypeIcon = (type) => {
     switch(type) {
       case 'Guide PDF': return FileText;
-      case 'VidÃ©o Tutorial': return Video;
-      case 'SÃ©rie VidÃ©o': return Video;
+      case 'Vidéo Tutorial': return Video;
+      case 'Série Vidéo': return Video;
       case 'Guide Interactif': return BookOpen;
       case 'Webinar': return Video;
       default: return FileText;
@@ -183,9 +183,9 @@ const GuidesTutorielsPage = () => {
 
   const getNiveauColor = (niveau) => {
     switch(niveau) {
-      case 'DÃ©butant': return 'green';
-      case 'IntermÃ©diaire': return 'orange';
-      case 'AvancÃ©': return 'red';
+      case 'Débutant': return 'green';
+      case 'Intermédiaire': return 'orange';
+      case 'Avancé': return 'red';
       default: return 'gray';
     }
   };
@@ -194,7 +194,7 @@ const GuidesTutorielsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 to-white pt-24">
       <Helmet>
         <title>Guides et Tutoriels - Apprenez l'Immobilier | Teranga Foncier</title>
-        <meta name="description" content="Guides complets, tutoriels vidÃ©o et ressources pour maÃ®triser l'immobilier au SÃ©nÃ©gal. Formation gratuite par des experts." />
+        <meta name="description" content="Guides complets, tutoriels vidéo et ressources pour maîtriser l'immobilier au Sénégal. Formation gratuite par des experts." />
       </Helmet>
 
       <div className="container mx-auto px-4 py-16 max-w-7xl">
@@ -213,8 +213,8 @@ const GuidesTutorielsPage = () => {
             <span className="block text-green-600">Immobiliers</span>
           </h1>
           <p className="text-xl text-gray-600 mb-8 max-w-3xl mx-auto">
-            MaÃ®trisez tous les aspects de l'immobilier sÃ©nÃ©galais avec nos guides experts, 
-            tutoriels vidÃ©o et formations pratiques.
+            Maîtrisez tous les aspects de l'immobilier sénégalais avec nos guides experts, 
+            tutoriels vidéo et formations pratiques.
           </p>
         </motion.div>
 
@@ -273,7 +273,7 @@ const GuidesTutorielsPage = () => {
             <CardContent className="p-4 text-center">
               <Video className="w-8 h-8 text-blue-600 mx-auto mb-2" />
               <div className="text-2xl font-bold">16</div>
-              <div className="text-sm text-gray-600">Tutoriels VidÃ©o</div>
+              <div className="text-sm text-gray-600">Tutoriels Vidéo</div>
             </CardContent>
           </Card>
           <Card>
@@ -303,7 +303,7 @@ const GuidesTutorielsPage = () => {
             <h2 className="text-3xl font-bold">Guides Populaires</h2>
             <div className="flex items-center text-sm text-gray-600">
               <TrendingUp className="w-4 h-4 mr-2" />
-              {filteredGuides.length} rÃ©sultat(s)
+              {filteredGuides.length} résultat(s)
             </div>
           </div>
 
@@ -380,7 +380,7 @@ const GuidesTutorielsPage = () => {
                       </div>
 
                       <Button className="w-full">
-                        {guide.type.includes('VidÃ©o') ? (
+                        {guide.type.includes('Vidéo') ? (
                           <>
                             <Play className="w-4 h-4 mr-2" />
                             Regarder
@@ -388,7 +388,7 @@ const GuidesTutorielsPage = () => {
                         ) : (
                           <>
                             <Download className="w-4 h-4 mr-2" />
-                            TÃ©lÃ©charger
+                            Télécharger
                           </>
                         )}
                       </Button>
@@ -400,14 +400,14 @@ const GuidesTutorielsPage = () => {
           </div>
         </motion.div>
 
-        {/* Tutoriels VidÃ©o */}
+        {/* Tutoriels Vidéo */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
           className="mb-16"
         >
-          <h2 className="text-3xl font-bold text-center mb-12">Tutoriels VidÃ©o de la Plateforme</h2>
+          <h2 className="text-3xl font-bold text-center mb-12">Tutoriels Vidéo de la Plateforme</h2>
           <div className="grid md:grid-cols-2 gap-6">
             {tutorielsVideo.map((tutorial, index) => (
               <Card key={index} className="hover:shadow-lg transition-shadow">
@@ -443,7 +443,7 @@ const GuidesTutorielsPage = () => {
           </div>
         </motion.div>
 
-        {/* Formation PersonnalisÃ©e */}
+        {/* Formation Personnalisée */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -456,16 +456,16 @@ const GuidesTutorielsPage = () => {
                 <div>
                   <div className="flex items-center mb-4">
                     <Award className="w-8 h-8 mr-3" />
-                    <h2 className="text-2xl font-bold">Formation PersonnalisÃ©e</h2>
+                    <h2 className="text-2xl font-bold">Formation Personnalisée</h2>
                   </div>
                   <p className="text-green-100 mb-4">
-                    BÃ©nÃ©ficiez d'un accompagnement personnalisÃ© avec nos experts pour 
-                    maÃ®triser parfaitement tous les aspects de l'immobilier sÃ©nÃ©galais.
+                    Bénéficiez d'un accompagnement personnalisé avec nos experts pour 
+                    maîtriser parfaitement tous les aspects de l'immobilier sénégalais.
                   </p>
                   <div className="space-y-2">
                     <div className="flex items-center">
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      <span className="text-sm">Session 1-Ã -1 avec un expert</span>
+                      <span className="text-sm">Session 1-Ï -1 avec un expert</span>
                     </div>
                     <div className="flex items-center">
                       <CheckCircle className="w-4 h-4 mr-2" />
@@ -473,7 +473,7 @@ const GuidesTutorielsPage = () => {
                     </div>
                     <div className="flex items-center">
                       <CheckCircle className="w-4 h-4 mr-2" />
-                      <span className="text-sm">Suivi personnalisÃ©</span>
+                      <span className="text-sm">Suivi personnalisé</span>
                     </div>
                   </div>
                 </div>
@@ -482,7 +482,7 @@ const GuidesTutorielsPage = () => {
                     Demander une Formation
                     <MessageCircle className="ml-2 h-5 w-5" />
                   </Button>
-                  <p className="text-sm text-green-200">PremiÃ¨re consultation gratuite</p>
+                  <p className="text-sm text-green-200">Première consultation gratuite</p>
                 </div>
               </div>
             </CardContent>
@@ -498,14 +498,14 @@ const GuidesTutorielsPage = () => {
         >
           <Card className="bg-gray-50">
             <CardContent className="p-8">
-              <h2 className="text-2xl font-bold mb-4">Contribuez Ã  la CommunautÃ©</h2>
+              <h2 className="text-2xl font-bold mb-4">Contribuez Ï  la Communauté</h2>
               <p className="text-gray-600 mb-6">
-                Partagez votre expertise et aidez d'autres utilisateurs en crÃ©ant vos propres guides
+                Partagez votre expertise et aidez d'autres utilisateurs en créant vos propres guides
               </p>
               <div className="flex flex-col sm:flex-row gap-4 justify-center">
                 <Button size="lg" className="bg-green-600 hover:bg-green-700">
                   <BookOpen className="mr-2 h-4 w-4" />
-                  CrÃ©er un Guide
+                  Créer un Guide
                 </Button>
                 <Button size="lg" variant="outline">
                   <Video className="mr-2 h-4 w-4" />

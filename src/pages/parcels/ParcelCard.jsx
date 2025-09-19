@@ -14,7 +14,7 @@ import {
   Percent, 
   Landmark
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { ComparisonContext } from '@/context/ComparisonContext';
 import InstallmentPaymentModal from '@/components/parcel-detail/InstallmentPaymentModal';
 
@@ -34,7 +34,7 @@ const getStatusVariant = (status) => {
 };
 
 const ParcelCard = ({ parcel }) => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const [isFavorite, setIsFavorite] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const { comparisonList, addToCompare, removeFromCompare } = useContext(ComparisonContext);

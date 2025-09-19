@@ -46,7 +46,7 @@ const ModernLoginPage = () => {
       
       window.safeGlobalToast({
           title: `Bienvenue !`,
-          description: "Connexion rÃ©ussie. Redirection en cours...",
+          description: "Connexion réussie. Redirection en cours...",
           className: "bg-green-500 text-white",
       });
     } catch (err) {
@@ -56,7 +56,7 @@ const ModernLoginPage = () => {
         : "Une erreur est survenue lors de la connexion.";
       setError(errorMessage);
       window.safeGlobalToast({
-        title: "Ã‰chec de la Connexion",
+        title: "Échec de la Connexion",
         description: errorMessage,
         className: "bg-red-500 text-white",
       });
@@ -104,19 +104,19 @@ const ModernLoginPage = () => {
 
             <div className="space-y-4">
               <h2 className="text-2xl font-semibold text-gray-800">
-                Simplifiez vos transactions fonciÃ¨res
+                Simplifiez vos transactions foncières
               </h2>
               <p className="text-gray-600 text-lg leading-relaxed">
-                Une plateforme moderne et sÃ©curisÃ©e pour tous vos besoins en matiÃ¨re fonciÃ¨re au SÃ©nÃ©gal.
+                Une plateforme moderne et sécurisée pour tous vos besoins en matière foncière au Sénégal.
               </p>
             </div>
 
             <div className="grid grid-cols-1 gap-4">
               {[
-                { icon: Shield, title: "SÃ©curisÃ©", desc: "Transactions 100% sÃ©curisÃ©es" },
-                { icon: Users, title: "Multi-rÃ´les", desc: "Plateforme pour tous les acteurs" },
-                { icon: Zap, title: "Rapide", desc: "Traitement accÃ©lÃ©rÃ© des dossiers" },
-                { icon: Globe, title: "National", desc: "Couverture du territoire sÃ©nÃ©galais" }
+                { icon: Shield, title: "Sécurisé", desc: "Transactions 100% sécurisées" },
+                { icon: Users, title: "Multi-rôles", desc: "Plateforme pour tous les acteurs" },
+                { icon: Zap, title: "Rapide", desc: "Traitement accéléré des dossiers" },
+                { icon: Globe, title: "National", desc: "Couverture du territoire sénégalais" }
               ].map((feature, index) => (
                 <motion.div
                   key={index}
@@ -155,7 +155,7 @@ const ModernLoginPage = () => {
                   Connexion
                 </CardTitle>
                 <CardDescription className="text-gray-600">
-                  AccÃ©dez Ã  votre espace personnel
+                  Accédez Ï  votre espace personnel
                 </CardDescription>
               </div>
             </CardHeader>
@@ -224,7 +224,7 @@ const ModernLoginPage = () => {
                     to="/forgot-password" 
                     className="text-sm text-blue-600 hover:text-blue-800 transition-colors"
                   >
-                    Mot de passe oubliÃ© ?
+                    Mot de passe oublié ?
                   </Link>
                 </div>
 
@@ -284,7 +284,7 @@ const ModernLoginPage = () => {
               <p className="text-center text-sm text-gray-600 w-full">
                 Pas encore de compte ?{' '}
                 <Link to="/register" className="text-blue-600 hover:text-blue-800 font-medium transition-colors">
-                  CrÃ©er un compte
+                  Créer un compte
                 </Link>
               </p>
             </CardFooter>

@@ -21,7 +21,7 @@ const MessagesPage = () => {
   const [messageText, setMessageText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // DonnÃ©es simulÃ©es des conversations
+  // Données simulées des conversations
   const [conversations] = useState([
     {
       id: 1,
@@ -36,14 +36,14 @@ const MessagesPage = () => {
         {
           id: 1,
           sender: 'Aminata Diallo',
-          text: 'Bonjour ! J\'ai vu votre intÃ©rÃªt pour le terrain Ã  Mbour.',
+          text: 'Bonjour ! J\'ai vu votre intérêt pour le terrain Ï  Mbour.',
           timestamp: '14:25',
           read: true
         },
         {
           id: 2,
           sender: 'Moi',
-          text: 'Oui, pouvez-vous me donner plus de dÃ©tails ?',
+          text: 'Oui, pouvez-vous me donner plus de détails ?',
           timestamp: '14:27',
           read: true
         },
@@ -60,7 +60,7 @@ const MessagesPage = () => {
       id: 2,
       name: 'Moussa Promoteur',
       role: 'Promoteur',
-      lastMessage: 'Photos du chantier envoyÃ©es',
+      lastMessage: 'Photos du chantier envoyées',
       timestamp: '12:15',
       unread: 0,
       avatar: null,
@@ -69,7 +69,7 @@ const MessagesPage = () => {
         {
           id: 1,
           sender: 'Moussa Promoteur',
-          text: 'Voici les derniÃ¨res photos du chantier',
+          text: 'Voici les dernières photos du chantier',
           timestamp: '12:15',
           read: true
         }
@@ -79,7 +79,7 @@ const MessagesPage = () => {
       id: 3,
       name: 'Support Teranga',
       role: 'Support',
-      lastMessage: 'Votre demande a Ã©tÃ© traitÃ©e',
+      lastMessage: 'Votre demande a été traitée',
       timestamp: 'Hier',
       unread: 1,
       avatar: null,
@@ -88,7 +88,7 @@ const MessagesPage = () => {
         {
           id: 1,
           sender: 'Support Teranga',
-          text: 'Votre demande a Ã©tÃ© traitÃ©e avec succÃ¨s.',
+          text: 'Votre demande a été traitée avec succès.',
           timestamp: 'Hier',
           read: false
         }
@@ -114,7 +114,7 @@ const MessagesPage = () => {
       <div className="flex-1 ml-80 bg-gray-50">
         <Helmet>
           <title>Messages - Teranga Foncier</title>
-          <meta name="description" content="Messagerie intÃ©grÃ©e de Teranga Foncier" />
+          <meta name="description" content="Messagerie intégrée de Teranga Foncier" />
         </Helmet>
 
         <div className="h-screen flex">
@@ -301,10 +301,10 @@ const MessagesPage = () => {
                 <div className="text-center">
                   <MessageSquare className="w-16 h-16 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">
-                    SÃ©lectionnez une conversation
+                    Sélectionnez une conversation
                   </h3>
                   <p className="text-gray-500">
-                    Choisissez une conversation pour commencer Ã  Ã©changer
+                    Choisissez une conversation pour commencer Ï  échanger
                   </p>
                 </div>
               </div>

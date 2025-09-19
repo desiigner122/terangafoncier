@@ -16,7 +16,7 @@ const PopularCitiesSection = () => {
     {
       id: 1,
       name: "Dakar",
-      region: "RÃ©gion de Dakar",
+      region: "Région de Dakar",
       properties: 1247,
       averagePrice: "45M FCFA",
       growth: "+12%",
@@ -25,8 +25,8 @@ const PopularCitiesSection = () => {
     },
     {
       id: 2,
-      name: "ThiÃ¨s",
-      region: "RÃ©gion de ThiÃ¨s",
+      name: "Thiès",
+      region: "Région de Thiès",
       properties: 834,
       averagePrice: "18M FCFA",
       growth: "+25%",
@@ -36,17 +36,17 @@ const PopularCitiesSection = () => {
     {
       id: 3,
       name: "Saint-Louis",
-      region: "RÃ©gion de Saint-Louis",
+      region: "Région de Saint-Louis",
       properties: 456,
       averagePrice: "15M FCFA",
       growth: "+18%",
       image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["ÃŽle", "Sor", "Ndar Tout"]
+      hotspots: ["Île", "Sor", "Ndar Tout"]
     },
     {
       id: 4,
       name: "Kaolack",
-      region: "RÃ©gion de Kaolack",
+      region: "Région de Kaolack",
       properties: 523,
       averagePrice: "12M FCFA",
       growth: "+20%",
@@ -56,29 +56,29 @@ const PopularCitiesSection = () => {
     {
       id: 5,
       name: "Ziguinchor",
-      region: "RÃ©gion de Ziguinchor",
+      region: "Région de Ziguinchor",
       properties: 289,
       averagePrice: "14M FCFA",
       growth: "+15%",
       image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["Centre", "TilÃ¨ne", "KandÃ©"]
+      hotspots: ["Centre", "Tilène", "Kandé"]
     },
     {
       id: 6,
       name: "Diourbel",
-      region: "RÃ©gion de Diourbel",
+      region: "Région de Diourbel",
       properties: 378,
       averagePrice: "10M FCFA",
       growth: "+22%",
       image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["Touba", "MbackÃ©", "Bambey"]
+      hotspots: ["Touba", "Mbacké", "Bambey"]
     }
   ];
 
   return (
     <section className="py-16 bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        {/* En-tÃªte */}
+        {/* En-tête */}
         <div className="text-center mb-12">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -91,10 +91,10 @@ const PopularCitiesSection = () => {
               Villes Populaires
             </Badge>
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Villes les Plus DemandÃ©es
+              Villes les Plus Demandées
             </h2>
             <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-              DÃ©couvrez les destinations immobiliÃ¨res les plus prisÃ©es du SÃ©nÃ©gal
+              Découvrez les destinations immobilières les plus prisées du Sénégal
             </p>
           </motion.div>
         </div>
@@ -132,7 +132,7 @@ const PopularCitiesSection = () => {
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600 flex items-center">
                         <Home className="h-4 w-4 mr-1" />
-                        PropriÃ©tÃ©s
+                        Propriétés
                       </span>
                       <span className="font-semibold text-gray-900">{city.properties}</span>
                     </div>
@@ -175,11 +175,11 @@ const PopularCitiesSection = () => {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
             <div>
               <div className="text-2xl font-bold text-orange-600">14+</div>
-              <div className="text-sm text-gray-600">RÃ©gions couvertes</div>
+              <div className="text-sm text-gray-600">Régions couvertes</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">3,750</div>
-              <div className="text-sm text-gray-600">PropriÃ©tÃ©s disponibles</div>
+              <div className="text-sm text-gray-600">Propriétés disponibles</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">+19%</div>
@@ -187,7 +187,7 @@ const PopularCitiesSection = () => {
             </div>
             <div>
               <div className="text-2xl font-bold text-orange-600">72h</div>
-              <div className="text-sm text-gray-600">Temps de rÃ©ponse moyen</div>
+              <div className="text-sm text-gray-600">Temps de réponse moyen</div>
             </div>
           </div>
         </motion.div>

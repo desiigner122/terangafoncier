@@ -14,7 +14,7 @@ import {
   Trash2, 
   ArrowRight
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
 import { supabase } from '@/lib/customSupabaseClient';
 
@@ -95,7 +95,7 @@ const NotificationsPage = () => {
   const [notifications, setNotifications] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   const fetchNotifications = async () => {
     if (!user) {

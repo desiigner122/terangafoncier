@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { 
   Save, 
   ArrowLeft
@@ -16,7 +16,7 @@ import {
 const AdminBlogFormPageSimple = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const isEditing = Boolean(id);
 
   const [post, setPost] = useState({

@@ -17,12 +17,12 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/customSupabaseClient';
 
 const MyRequestsPage = () => {
     const { user } = useAuth();
-    // toast remplacÃ© par window.safeGlobalToast
+    // toast remplacé par window.safeGlobalToast
     const [loading, setLoading] = useState(true);
     const [mySentRequests, setMySentRequests] = useState([]);
     const [myReceivedRequests, setMyReceivedRequests] = useState([]);

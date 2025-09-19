@@ -65,15 +65,15 @@ const ProjectDetailPage = () => {
   const [showPreOrderModal, setShowPreOrderModal] = useState(false);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
 
-  // DonnÃ©es mockÃ©es du projet
+  // Données mockées du projet
   useEffect(() => {
     const mockProjectData = {
       id: id || 'PROJ-001',
-      title: 'RÃ©sidence Les Palmiers - Almadies',
+      title: 'Résidence Les Palmiers - Almadies',
       type: 'Immeuble d\'appartements',
       promoter: {
         id: 'promoter-001',
-        name: 'SÃ©nÃ©gal Construction SARL',
+        name: 'Sénégal Construction SARL',
         rating: 4.8,
         projects_completed: 15,
         phone: '+221 77 123 45 67',
@@ -82,7 +82,7 @@ const ProjectDetailPage = () => {
         address: 'Avenue Bourguiba, Dakar',
         license: 'BTP-SN-2019-456',
         founded: 2015,
-        specialties: ['Immeubles rÃ©sidentiels', 'Villas de luxe', 'Centres commerciaux']
+        specialties: ['Immeubles résidentiels', 'Villas de luxe', 'Centres commerciaux']
       },
       location: 'Almadies, Dakar',
       coordinates: { lat: 14.7645, lng: -17.4966 },
@@ -109,18 +109,18 @@ const ProjectDetailPage = () => {
       
       features: [
         'Piscine communautaire avec deck',
-        'Salle de sport Ã©quipÃ©e',
-        'Parking souterrain sÃ©curisÃ©',
-        'Concierge et sÃ©curitÃ© 24h/24',
+        'Salle de sport équipée',
+        'Parking souterrain sécurisé',
+        'Concierge et sécurité 24h/24',
         'Espace vert privatif 500mÂ²',
-        'SystÃ¨me de sÃ©curitÃ© Ã©lectronique',
-        'Ascenseurs Otis derniÃ¨re gÃ©nÃ©ration',
+        'Système de sécurité électronique',
+        'Ascenseurs Otis dernière génération',
         'Fibre optique dans tous les appartements',
         'Panneaux solaires pour parties communes',
-        'SystÃ¨me de rÃ©cupÃ©ration d\'eau de pluie'
+        'Système de récupération d\'eau de pluie'
       ],
       
-      // Timeline de construction dÃ©taillÃ©e
+      // Timeline de construction détaillée
       construction_timeline: {
         phases: [
           { 
@@ -130,57 +130,57 @@ const ProjectDetailPage = () => {
             start_date: '2024-06-01',
             end_date: '2024-08-31',
             progress: 100,
-            description: 'Excavation, fondations en bÃ©ton armÃ©, drainage',
+            description: 'Excavation, fondations en béton armé, drainage',
             daily_reports: [
-              { date: '2024-08-31', report: 'Fondations terminÃ©es, tests de rÃ©sistance validÃ©s' },
+              { date: '2024-08-31', report: 'Fondations terminées, tests de résistance validés' },
               { date: '2024-08-15', report: 'Coulage des fondations principales' },
-              { date: '2024-07-01', report: 'Excavation terminÃ©e, dÃ©but coulage' }
+              { date: '2024-07-01', report: 'Excavation terminée, début coulage' }
             ],
             photos: ['/api/YOUR_API_KEY/400/300', '/api/YOUR_API_KEY/400/300'],
             milestone_payment: 25 // pourcentage du prix total
           },
           { 
-            name: 'Structure bÃ©ton et voiles', 
+            name: 'Structure béton et voiles', 
             duration: '4 mois', 
             status: 'in_progress', 
             start_date: '2024-09-01',
             end_date: '2024-12-31',
             progress: 75,
-            description: 'Ã‰lÃ©vation des murs porteurs, dalles, escaliers',
+            description: 'Élévation des murs porteurs, dalles, escaliers',
             daily_reports: [
-              { date: '2024-11-15', report: 'Coulage dalle du 4Ã¨me Ã©tage rÃ©alisÃ©' },
-              { date: '2024-11-01', report: 'Structure 3Ã¨me Ã©tage terminÃ©e' },
-              { date: '2024-10-15', report: 'Ã‰lÃ©vation des voiles du 2Ã¨me Ã©tage' }
+              { date: '2024-11-15', report: 'Coulage dalle du 4ème étage réalisé' },
+              { date: '2024-11-01', report: 'Structure 3ème étage terminée' },
+              { date: '2024-10-15', report: 'Élévation des voiles du 2ème étage' }
             ],
             photos: ['/api/YOUR_API_KEY/400/300', '/api/YOUR_API_KEY/400/300'],
             milestone_payment: 25
           },
           { 
-            name: 'Toiture et Ã©tanchÃ©itÃ©', 
+            name: 'Toiture et étanchéité', 
             duration: '2 mois', 
             status: 'pending', 
             start_date: '2025-01-01',
             end_date: '2025-02-28',
             progress: 0,
-            description: 'Charpente, couverture, Ã©tanchÃ©itÃ© terrasse',
+            description: 'Charpente, couverture, étanchéité terrasse',
             daily_reports: [],
             photos: [],
             milestone_payment: 15
           },
           { 
-            name: 'Finitions intÃ©rieures', 
+            name: 'Finitions intérieures', 
             duration: '6 mois', 
             status: 'pending', 
             start_date: '2025-03-01',
             end_date: '2025-08-31',
             progress: 0,
-            description: 'Cloisons, plomberie, Ã©lectricitÃ©, carrelage, peinture',
+            description: 'Cloisons, plomberie, électricité, carrelage, peinture',
             daily_reports: [],
             photos: [],
             milestone_payment: 25
           },
           { 
-            name: 'AmÃ©nagements extÃ©rieurs et livraison', 
+            name: 'Aménagements extérieurs et livraison', 
             duration: '4 mois', 
             status: 'pending', 
             start_date: '2025-09-01',
@@ -193,7 +193,7 @@ const ProjectDetailPage = () => {
           }
         ],
         next_milestone: {
-          name: 'Fin structure bÃ©ton',
+          name: 'Fin structure béton',
           date: '2024-12-31',
           payment_due: 25
         }
@@ -205,12 +205,12 @@ const ProjectDetailPage = () => {
           id: 'T2',
           type: 'T2',
           surface: '65mÂ²',
-          rooms: '2 piÃ¨ces',
+          rooms: '2 pièces',
           price: 45000000,
           available: 6,
           sold: 2,
-          description: '2 piÃ¨ces avec balcon vue mer partielle',
-          features: ['Balcon 8mÂ²', 'Cuisine Ã©quipÃ©e', 'Salle de bain', 'Climatisation'],
+          description: '2 pièces avec balcon vue mer partielle',
+          features: ['Balcon 8mÂ²', 'Cuisine équipée', 'Salle de bain', 'Climatisation'],
           floor_plan: '/api/YOUR_API_KEY/600/400',
           virtual_tour: '/virtual/t2',
           monthly_payment_example: 850000 // FCFA
@@ -219,12 +219,12 @@ const ProjectDetailPage = () => {
           id: 'T3',
           type: 'T3',
           surface: '85mÂ²',
-          rooms: '3 piÃ¨ces',
+          rooms: '3 pièces',
           price: 62000000,
           available: 8,
           sold: 3,
-          description: '3 piÃ¨ces avec terrasse et vue dÃ©gagÃ©e',
-          features: ['Terrasse 12mÂ²', 'Cuisine amÃ©ricaine', '2 salles de bain', 'Dressing'],
+          description: '3 pièces avec terrasse et vue dégagée',
+          features: ['Terrasse 12mÂ²', 'Cuisine américaine', '2 salles de bain', 'Dressing'],
           floor_plan: '/api/YOUR_API_KEY/600/400',
           virtual_tour: '/virtual/t3',
           monthly_payment_example: 1150000
@@ -233,12 +233,12 @@ const ProjectDetailPage = () => {
           id: 'T4',
           type: 'T4 Duplex',
           surface: '110mÂ²',
-          rooms: '4 piÃ¨ces',
+          rooms: '4 pièces',
           price: 85000000,
           available: 4,
           sold: 1,
-          description: '4 piÃ¨ces duplex avec vue panoramique ocÃ©an',
-          features: ['Duplex', 'Terrasse 20mÂ²', 'Suite parentale', '3 salles de bain', 'Garage privÃ©'],
+          description: '4 pièces duplex avec vue panoramique océan',
+          features: ['Duplex', 'Terrasse 20mÂ²', 'Suite parentale', '3 salles de bain', 'Garage privé'],
           floor_plan: '/api/YOUR_API_KEY/600/400',
           virtual_tour: '/virtual/t4',
           monthly_payment_example: 1580000
@@ -248,7 +248,7 @@ const ProjectDetailPage = () => {
       // Options de financement
       financing_options: {
         bank_partners: [
-          { name: 'UBA SÃ©nÃ©gal', rate: '8.5%', max_duration: '25 ans' },
+          { name: 'UBA Sénégal', rate: '8.5%', max_duration: '25 ans' },
           { name: 'SGBS', rate: '8.2%', max_duration: '20 ans' },
           { name: 'CBAO', rate: '8.0%', max_duration: '25 ans' }
         ],
@@ -256,36 +256,36 @@ const ProjectDetailPage = () => {
           { 
             name: 'Paiement comptant', 
             discount: 5, 
-            description: 'Remise de 5% pour paiement intÃ©gral' 
+            description: 'Remise de 5% pour paiement intégral' 
           },
           { 
-            name: 'Ã‰chelonnÃ© 24 mois', 
+            name: 'Échelonné 24 mois', 
             down_payment: 30, 
-            description: '30% Ã  la signature, solde sur 24 mois' 
+            description: '30% Ï  la signature, solde sur 24 mois' 
           },
           { 
-            name: 'CrÃ©dit bancaire', 
+            name: 'Crédit bancaire', 
             down_payment: 20, 
-            description: 'Accompagnement pour obtention crÃ©dit' 
+            description: 'Accompagnement pour obtention crédit' 
           }
         ],
         advance_payment_minimum: 30
       },
       
-      description: `RÃ©sidence moderne de standing situÃ©e dans le prestigieux quartier des Almadies avec vue sur l'ocÃ©an Atlantique. 
+      description: `Résidence moderne de standing située dans le prestigieux quartier des Almadies avec vue sur l'océan Atlantique. 
 
-Cette rÃ©sidence de 24 appartements sur 6 Ã©tages offre un cadre de vie exceptionnel avec des finitions haut de gamme et des Ã©quipements modernes.
+Cette résidence de 24 appartements sur 6 étages offre un cadre de vie exceptionnel avec des finitions haut de gamme et des équipements modernes.
 
-Chaque appartement bÃ©nÃ©ficie d'une exposition optimale et de prestations de qualitÃ© : carrelage italien, cuisine Ã©quipÃ©e, climatisation, systÃ¨me domotique.
+Chaque appartement bénéficie d'une exposition optimale et de prestations de qualité : carrelage italien, cuisine équipée, climatisation, système domotique.
 
-Les espaces communs incluent une piscine avec deck, une salle de sport, des jardins paysagers et un parking souterrain sÃ©curisÃ©.
+Les espaces communs incluent une piscine avec deck, une salle de sport, des jardins paysagers et un parking souterrain sécurisé.
 
-IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendement estimÃ© Ã  8-10% par an.`,
+Idéal pour résidence principale ou investissement locatif avec un rendement estimé Ï  8-10% par an.`,
       
       neighborhood: {
         amenities: [
-          { name: 'Ã‰cole franÃ§aise Mermoz', distance: '1.2 km', type: 'Ã‰ducation' },
-          { name: 'Clinique de la Madeleine', distance: '2.1 km', type: 'SantÃ©' },
+          { name: 'École française Mermoz', distance: '1.2 km', type: 'Éducation' },
+          { name: 'Clinique de la Madeleine', distance: '2.1 km', type: 'Santé' },
           { name: 'Sea Plaza Shopping', distance: '800 m', type: 'Commerce' },
           { name: 'Station BRT', distance: '1.5 km', type: 'Transport' },
           { name: 'Plage des Almadies', distance: '3.2 km', type: 'Loisirs' },
@@ -306,7 +306,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
       documents: [
         { name: 'Permis de construire', verified: true, download_url: '/docs/permis.pdf' },
         { name: 'Plans d\'architecte', verified: true, download_url: '/docs/plans.pdf' },
-        { name: 'Ã‰tude de sol', verified: true, download_url: '/docs/sol.pdf' },
+        { name: 'Étude de sol', verified: true, download_url: '/docs/sol.pdf' },
         { name: 'Notice descriptive', verified: true, download_url: '/docs/notice.pdf' },
         { name: 'Cahier des charges', verified: true, download_url: '/docs/cahier.pdf' }
       ]
@@ -368,8 +368,8 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-gray-900 mb-2">Projet non trouvÃ©</h2>
-          <p className="text-gray-600 mb-4">Le projet demandÃ© n'existe pas ou a Ã©tÃ© supprimÃ©.</p>
+          <h2 className="text-2xl font-bold text-gray-900 mb-2">Projet non trouvé</h2>
+          <p className="text-gray-600 mb-4">Le projet demandé n'existe pas ou a été supprimé.</p>
           <Button onClick={() => navigate('/promoters-projects')}>
             <ArrowLeft className="w-4 h-4 mr-2" />
             Retour aux projets
@@ -406,7 +406,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
               </Badge>
               <Badge className="bg-green-500 text-white">
                 <Clock className="w-3 h-3 mr-1" />
-                {project.construction_progress}% terminÃ©
+                {project.construction_progress}% terminé
               </Badge>
             </div>
           </div>
@@ -481,10 +481,10 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                   </div>
                   <div className="text-right">
                     <div className="text-2xl font-bold text-blue-600 mb-1">
-                      Ã€ partir de {formatPrice(project.price_range.min)}
+                      À partir de {formatPrice(project.price_range.min)}
                     </div>
                     <div className="text-sm text-gray-500">
-                      Jusqu'Ã  {formatPrice(project.price_range.max)}
+                      Jusqu'Ï  {formatPrice(project.price_range.max)}
                     </div>
                   </div>
                 </div>
@@ -494,7 +494,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <Home className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                     <div className="text-lg font-bold">{project.total_units}</div>
-                    <div className="text-sm text-gray-600">UnitÃ©s total</div>
+                    <div className="text-sm text-gray-600">Unités total</div>
                   </div>
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <Target className="w-6 h-6 text-green-600 mx-auto mb-2" />
@@ -598,7 +598,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                               setShowPreOrderModal(true);
                             }}
                           >
-                            PrÃ©commander
+                            Précommander
                           </Button>
                         </div>
                       </div>
@@ -610,10 +610,10 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                 <TabsContent value="timeline" className="p-6">
                   <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-bold text-gray-900">Suivi en temps rÃ©el des travaux</h3>
+                      <h3 className="text-lg font-bold text-gray-900">Suivi en temps réel des travaux</h3>
                       <Button size="sm" onClick={() => setShowTimelineModal(true)}>
                         <Calendar className="w-4 h-4 mr-2" />
-                        Planning dÃ©taillÃ©
+                        Planning détaillé
                       </Button>
                     </div>
                     
@@ -625,7 +625,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                       </div>
                       <Progress value={project.construction_progress} className="h-3" />
                       <div className="text-sm text-gray-600 mt-2">
-                        Livraison prÃ©vue: {new Date(project.delivery_date).toLocaleDateString('fr-FR')}
+                        Livraison prévue: {new Date(project.delivery_date).toLocaleDateString('fr-FR')}
                       </div>
                     </div>
 
@@ -648,8 +648,8 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                                 phase.status === 'in_progress' ? 'bg-blue-100 text-blue-800' : 
                                 'bg-gray-100 text-gray-800'
                               }>
-                                {phase.status === 'completed' ? 'TerminÃ©' :
-                                 phase.status === 'in_progress' ? 'En cours' : 'Ã€ venir'}
+                                {phase.status === 'completed' ? 'Terminé' :
+                                 phase.status === 'in_progress' ? 'En cours' : 'À venir'}
                               </Badge>
                             </div>
                             
@@ -661,13 +661,13 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                                 {new Date(phase.end_date).toLocaleDateString('fr-FR')}
                               </span>
                               <span className="text-sm font-medium">
-                                Paiement Ã©tape: {phase.milestone_payment}%
+                                Paiement étape: {phase.milestone_payment}%
                               </span>
                             </div>
                             
                             <Progress value={phase.progress} className="mb-3" />
                             
-                            {/* Rapports rÃ©cents */}
+                            {/* Rapports récents */}
                             {phase.daily_reports && phase.daily_reports.length > 0 && (
                               <div className="mt-3">
                                 <h5 className="text-sm font-medium mb-2">Derniers rapports:</h5>
@@ -741,7 +741,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                               Taux: <span className="font-medium text-blue-600">{bank.rate}</span>
                             </div>
                             <div className="text-sm text-gray-600">
-                              DurÃ©e max: {bank.max_duration}
+                              Durée max: {bank.max_duration}
                             </div>
                           </div>
                         ))}
@@ -784,7 +784,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                             </Select>
                           </div>
                           <div>
-                            <label className="block text-sm font-medium mb-2">DurÃ©e</label>
+                            <label className="block text-sm font-medium mb-2">Durée</label>
                             <Select defaultValue="20">
                               <SelectTrigger>
                                 <SelectValue />
@@ -798,7 +798,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                           </div>
                         </div>
                         <div className="bg-white p-4 rounded-lg">
-                          <div className="text-sm text-gray-600">MensualitÃ© estimÃ©e</div>
+                          <div className="text-sm text-gray-600">Mensualité estimée</div>
                           <div className="text-2xl font-bold text-blue-600">
                             â‰ˆ {formatPrice(calculateMonthlyPayment(62000000))}/mois
                           </div>
@@ -811,7 +811,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                 {/* Onglet Quartier */}
                 <TabsContent value="amenities" className="p-6">
                   <div className="space-y-6">
-                    <h3 className="text-lg font-bold text-gray-900">Environnement et commoditÃ©s</h3>
+                    <h3 className="text-lg font-bold text-gray-900">Environnement et commodités</h3>
                     
                     {/* Scores du quartier */}
                     <div className="grid md:grid-cols-3 gap-4">
@@ -826,21 +826,21 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                         <CardContent className="text-center p-4">
                           <Shield className="w-8 h-8 text-green-600 mx-auto mb-2" />
                           <div className="text-2xl font-bold text-green-600">{project.neighborhood.safety_score}/10</div>
-                          <div className="text-sm text-gray-600">SÃ©curitÃ©</div>
+                          <div className="text-sm text-gray-600">Sécurité</div>
                         </CardContent>
                       </Card>
                       <Card>
                         <CardContent className="text-center p-4">
                           <Navigation className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                           <div className="text-2xl font-bold text-purple-600">{project.neighborhood.access_score}/10</div>
-                          <div className="text-sm text-gray-600">AccessibilitÃ©</div>
+                          <div className="text-sm text-gray-600">Accessibilité</div>
                         </CardContent>
                       </Card>
                     </div>
 
-                    {/* CommoditÃ©s proches */}
+                    {/* Commodités proches */}
                     <div>
-                      <h4 className="font-semibold mb-3">CommoditÃ©s Ã  proximitÃ©</h4>
+                      <h4 className="font-semibold mb-3">Commodités Ï  proximité</h4>
                       <div className="grid md:grid-cols-2 gap-3">
                         {project.neighborhood.amenities.map((amenity, index) => (
                           <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
@@ -872,7 +872,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                               <div className="font-medium">{doc.name}</div>
                               <div className="text-sm text-gray-600">
                                 {doc.verified ? (
-                                  <span className="text-green-600">âœ“ VÃ©rifiÃ©</span>
+                                  <span className="text-green-600">âœ“ Vérifié</span>
                                 ) : (
                                   <span className="text-orange-600">En attente</span>
                                 )}
@@ -881,7 +881,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                           </div>
                           <Button size="sm" variant="outline">
                             <Download className="w-4 h-4 mr-1" />
-                            TÃ©lÃ©charger
+                            Télécharger
                           </Button>
                         </div>
                       ))}
@@ -906,7 +906,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                   onClick={() => setShowPreOrderModal(true)}
                 >
                   <Eye className="w-4 h-4 mr-2" />
-                  PrÃ©commander
+                  Précommander
                 </Button>
                 
                 <Button 
@@ -931,7 +931,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
 
                 <Button variant="ghost" className="w-full" onClick={() => setShowTimelineModal(true)}>
                   <Calendar className="w-4 h-4 mr-2" />
-                  Planning dÃ©taillÃ©
+                  Planning détaillé
                 </Button>
               </CardContent>
             </Card>
@@ -964,11 +964,11 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                 
                 <div className="space-y-2 mb-4 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-gray-600">Projets rÃ©alisÃ©s</span>
+                    <span className="text-gray-600">Projets réalisés</span>
                     <span className="font-medium">{project.promoter.projects_completed}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-gray-600">FondÃ© en</span>
+                    <span className="text-gray-600">Fondé en</span>
                     <span className="font-medium">{project.promoter.founded}</span>
                   </div>
                   <div className="flex justify-between">
@@ -994,11 +994,11 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
               </CardContent>
             </Card>
 
-            {/* Prochaine Ã©chÃ©ance */}
+            {/* Prochaine échéance */}
             {project.construction_timeline.next_milestone && (
               <Card className="bg-gradient-to-r from-yellow-50 to-orange-50">
                 <CardHeader>
-                  <CardTitle className="text-lg">Prochaine Ã‰chÃ©ance</CardTitle>
+                  <CardTitle className="text-lg">Prochaine Échéance</CardTitle>
                 </CardHeader>
                 <CardContent>
                   <div className="text-center">
@@ -1009,7 +1009,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                       {project.construction_timeline.next_milestone.name}
                     </div>
                     <div className="text-xs text-gray-500">
-                      PrÃ©vu le {new Date(project.construction_timeline.next_milestone.date).toLocaleDateString('fr-FR')}
+                      Prévu le {new Date(project.construction_timeline.next_milestone.date).toLocaleDateString('fr-FR')}
                     </div>
                   </div>
                 </CardContent>
@@ -1032,7 +1032,7 @@ IdÃ©al pour rÃ©sidence principale ou investissement locatif avec un rendemen
                 </div>
                 <div className="flex items-center">
                   <Award className="w-5 h-5 text-purple-500 mr-2" />
-                  <span className="text-sm">Garantie dÃ©cennale {project.guarantees.warranty_duration}</span>
+                  <span className="text-sm">Garantie décennale {project.guarantees.warranty_duration}</span>
                 </div>
                 <div className="text-xs text-gray-500 mt-3">
                   Certifications: {project.guarantees.quality_certifications.join(', ')}

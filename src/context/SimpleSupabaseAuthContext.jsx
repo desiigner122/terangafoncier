@@ -1,6 +1,6 @@
 ﻿import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
 import { supabase } from '@/lib/customSupabaseClient';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 const AuthContext = createContext(null);
 
@@ -9,7 +9,7 @@ export const SimpleSupabaseAuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [profile, setProfile] = useState(null);
   const [loading, setLoading] = useState(true);
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   const fetchProfile = useCallback(async (userId) => {
     if (!userId) return null;

@@ -60,7 +60,7 @@ const UploadsPage = () => {
         avatar: null
       },
       category: 'images',
-      tags: ['photos', 'almadies', 'propriÃ©tÃ©'],
+      tags: ['photos', 'almadies', 'propriété'],
       downloads: 5,
       shared: false,
       url: '/uploads/images/photos_propriete_almadies.zip'
@@ -116,10 +116,10 @@ const UploadsPage = () => {
   ]);
 
   const [folders] = useState([
-    { id: 1, name: 'Documents LÃ©gaux', fileCount: 15, size: 45678901 },
+    { id: 1, name: 'Documents Légaux', fileCount: 15, size: 45678901 },
     { id: 2, name: 'Plans et Cartes', fileCount: 28, size: 123456789 },
-    { id: 3, name: 'Photos PropriÃ©tÃ©s', fileCount: 156, size: 567890123 },
-    { id: 4, name: 'VidÃ©os Marketing', fileCount: 8, size: 890123456 },
+    { id: 3, name: 'Photos Propriétés', fileCount: 156, size: 567890123 },
+    { id: 4, name: 'Vidéos Marketing', fileCount: 8, size: 890123456 },
     { id: 5, name: 'Templates', fileCount: 12, size: 3456789 }
   ]);
 
@@ -174,7 +174,7 @@ const UploadsPage = () => {
           if (newProgress >= 100) {
             clearInterval(uploadSimulation);
             
-            // Ajouter le fichier Ã  la liste aprÃ¨s upload
+            // Ajouter le fichier Ï  la liste après upload
             const newFile = {
               id: fileId,
               name: file.name,
@@ -256,9 +256,9 @@ const UploadsPage = () => {
   };
 
   const downloadFile = (file) => {
-    // Logique de tÃ©lÃ©chargement
-    console.log('TÃ©lÃ©chargement:', file.name);
-    alert(`TÃ©lÃ©chargement de ${file.name} en cours...`);
+    // Logique de téléchargement
+    console.log('Téléchargement:', file.name);
+    alert(`Téléchargement de ${file.name} en cours...`);
   };
 
   const shareFile = (file) => {
@@ -282,12 +282,12 @@ const UploadsPage = () => {
           <meta name="description" content="Centre de gestion des fichiers et uploads de Teranga Foncier" />
         </Helmet>
 
-        {/* En-tÃªte */}
+        {/* En-tête */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Gestion des Fichiers</h1>
             <p className="text-gray-600">
-              {storageStats.files} fichiers â€¢ {storageStats.folders} dossiers â€¢ {storageStats.used}GB utilisÃ©s
+              {storageStats.files} fichiers â€¢ {storageStats.folders} dossiers â€¢ {storageStats.used}GB utilisés
             </p>
           </div>
           
@@ -327,7 +327,7 @@ const UploadsPage = () => {
                 <div>
                   <h3 className="font-semibold text-lg">Stockage</h3>
                   <p className="text-gray-600">
-                    {storageStats.used}GB utilisÃ©s sur {storageStats.total}GB
+                    {storageStats.used}GB utilisés sur {storageStats.total}GB
                   </p>
                 </div>
               </div>
@@ -335,7 +335,7 @@ const UploadsPage = () => {
                 <div className="text-2xl font-bold text-blue-600">
                   {Math.round((storageStats.used / storageStats.total) * 100)}%
                 </div>
-                <div className="text-sm text-gray-500">UtilisÃ©</div>
+                <div className="text-sm text-gray-500">Utilisé</div>
               </div>
             </div>
             <Progress 
@@ -369,17 +369,17 @@ const UploadsPage = () => {
                   {isDragActive ? (
                     <div>
                       <h3 className="text-lg font-semibold text-blue-600 mb-2">
-                        DÃ©posez vos fichiers ici
+                        Déposez vos fichiers ici
                       </h3>
-                      <p className="text-gray-600">RelÃ¢chez pour commencer l'upload</p>
+                      <p className="text-gray-600">Relâchez pour commencer l'upload</p>
                     </div>
                   ) : (
                     <div>
                       <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        Glissez-dÃ©posez vos fichiers ici
+                        Glissez-déposez vos fichiers ici
                       </h3>
                       <p className="text-gray-600 mb-4">
-                        ou cliquez pour sÃ©lectionner des fichiers
+                        ou cliquez pour sélectionner des fichiers
                       </p>
                       <Button>
                         <Upload className="w-4 h-4 mr-2" />
@@ -446,7 +446,7 @@ const UploadsPage = () => {
                     <SelectItem value="all">Tous les types</SelectItem>
                     <SelectItem value="documents">Documents</SelectItem>
                     <SelectItem value="images">Images</SelectItem>
-                    <SelectItem value="videos">VidÃ©os</SelectItem>
+                    <SelectItem value="videos">Vidéos</SelectItem>
                     <SelectItem value="exports">Exports</SelectItem>
                   </SelectContent>
                 </Select>
@@ -459,7 +459,7 @@ const UploadsPage = () => {
                     <SelectItem value="date">Date</SelectItem>
                     <SelectItem value="name">Nom</SelectItem>
                     <SelectItem value="size">Taille</SelectItem>
-                    <SelectItem value="downloads">TÃ©lÃ©chargements</SelectItem>
+                    <SelectItem value="downloads">Téléchargements</SelectItem>
                   </SelectContent>
                 </Select>
 
@@ -474,10 +474,10 @@ const UploadsPage = () => {
 
               {selectedFiles.length > 0 && (
                 <div className="flex items-center space-x-2">
-                  <Badge variant="secondary">{selectedFiles.length} sÃ©lectionnÃ©s</Badge>
+                  <Badge variant="secondary">{selectedFiles.length} sélectionnés</Badge>
                   <Button size="sm" variant="outline">
                     <Download className="w-4 h-4 mr-2" />
-                    TÃ©lÃ©charger
+                    Télécharger
                   </Button>
                   <Button size="sm" variant="outline">
                     <Share2 className="w-4 h-4 mr-2" />
@@ -552,7 +552,7 @@ const UploadsPage = () => {
                           
                           <div className="flex items-center justify-between mt-3 pt-3 border-t">
                             <Badge variant="secondary" className="text-xs">
-                              {file.downloads} tÃ©lÃ©chargements
+                              {file.downloads} téléchargements
                             </Badge>
                             
                             <div className="flex space-x-1">
@@ -606,8 +606,8 @@ const UploadsPage = () => {
                           </th>
                           <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Nom</th>
                           <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Taille</th>
-                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">ModifiÃ©</th>
-                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">UploadÃ© par</th>
+                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Modifié</th>
+                          <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Uploadé par</th>
                           <th className="px-6 py-3 text-left text-sm font-medium text-gray-900">Actions</th>
                         </tr>
                       </thead>
@@ -690,10 +690,10 @@ const UploadsPage = () => {
             {filteredFiles.length === 0 && (
               <div className="text-center py-12">
                 <FileText className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun fichier trouvÃ©</h3>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun fichier trouvé</h3>
                 <p className="text-gray-600">
                   {searchTerm || filterType !== 'all' 
-                    ? 'Aucun fichier ne correspond Ã  vos critÃ¨res'
+                    ? 'Aucun fichier ne correspond Ï  vos critères'
                     : 'Commencez par uploader des fichiers'
                   }
                 </p>

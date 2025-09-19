@@ -8,38 +8,38 @@ class TerangaBlockchainService {
       polygon: {
         chainId: 137,
         name: 'Polygon Mainnet',
-        rpcUrl: process.env.REACT_APP_POLYGON_RPC_URL || 'https://polygon-rpc.com',
+        rpcUrl: import.meta.env.VITE_POLYGON_RPC_URL || 'https://polygon-rpc.com',
         nativeCurrency: { name: 'MATIC', symbol: 'MATIC', decimals: 18 },
         blockExplorer: 'https://polygonscan.com',
         contracts: {
-          terangaProperty: process.env.REACT_APP_PROPERTY_CONTRACT_ADDRESS,
-          terangaToken: process.env.REACT_APP_TOKEN_CONTRACT_ADDRESS,
-          terangaNFT: process.env.REACT_APP_NFT_CONTRACT_ADDRESS,
-          terangaStaking: process.env.REACT_APP_STAKING_CONTRACT_ADDRESS,
-          terangaMarketplace: process.env.REACT_APP_MARKETPLACE_CONTRACT_ADDRESS,
-          terangaDAO: process.env.REACT_APP_DAO_CONTRACT_ADDRESS
+          terangaProperty: import.meta.env.VITE_PROPERTY_CONTRACT_ADDRESS,
+          terangaToken: import.meta.env.VITE_TOKEN_CONTRACT_ADDRESS,
+          terangaNFT: import.meta.env.VITE_NFT_CONTRACT_ADDRESS,
+          terangaStaking: import.meta.env.VITE_STAKING_CONTRACT_ADDRESS,
+          terangaMarketplace: import.meta.env.VITE_MARKETPLACE_CONTRACT_ADDRESS,
+          terangaDAO: import.meta.env.VITE_DAO_CONTRACT_ADDRESS
         }
       },
       bsc: {
         chainId: 56,
         name: 'BNB Smart Chain',
-        rpcUrl: process.env.REACT_APP_BSC_RPC_URL || 'https://bsc-dataseed1.binance.org',
+        rpcUrl: import.meta.env.VITE_BSC_RPC_URL || 'https://bsc-dataseed1.binance.org',
         nativeCurrency: { name: 'BNB', symbol: 'BNB', decimals: 18 },
         blockExplorer: 'https://bscscan.com',
         contracts: {
-          terangaProperty: process.env.REACT_APP_BSC_PROPERTY_CONTRACT_ADDRESS,
-          terangaToken: process.env.REACT_APP_BSC_TOKEN_CONTRACT_ADDRESS
+          terangaProperty: import.meta.env.VITE_BSC_PROPERTY_CONTRACT_ADDRESS,
+          terangaToken: import.meta.env.VITE_BSC_TOKEN_CONTRACT_ADDRESS
         }
       },
       ethereum: {
         chainId: 1,
         name: 'Ethereum Mainnet',
-        rpcUrl: process.env.REACT_APP_ETHEREUM_RPC_URL || 'https://mainnet.infura.io/v3/' + process.env.REACT_APP_INFURA_KEY,
+        rpcUrl: import.meta.env.VITE_ETHEREUM_RPC_URL || 'https://mainnet.infura.io/v3/' + import.meta.env.VITE_INFURA_KEY,
         nativeCurrency: { name: 'ETH', symbol: 'ETH', decimals: 18 },
         blockExplorer: 'https://etherscan.io',
         contracts: {
-          terangaProperty: process.env.REACT_APP_ETH_PROPERTY_CONTRACT_ADDRESS,
-          terangaToken: process.env.REACT_APP_ETH_TOKEN_CONTRACT_ADDRESS
+          terangaProperty: import.meta.env.VITE_ETH_PROPERTY_CONTRACT_ADDRESS,
+          terangaToken: import.meta.env.VITE_ETH_TOKEN_CONTRACT_ADDRESS
         }
       }
     };

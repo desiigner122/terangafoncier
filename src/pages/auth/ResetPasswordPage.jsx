@@ -38,18 +38,18 @@ const ResetPasswordPage = () => {
             <CheckCircle className="w-8 h-8 text-green-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-4">
-            Email envoyÃ© !
+            Email envoyé !
           </h1>
           <p className="text-gray-600 mb-8">
-            Nous avons envoyÃ© un lien de rÃ©initialisation Ã  <strong>{email}</strong>. 
-            VÃ©rifiez votre boÃ®te mail et suivez les instructions.
+            Nous avons envoyé un lien de réinitialisation Ï  <strong>{email}</strong>. 
+            Vérifiez votre boîte mail et suivez les instructions.
           </p>
           <div className="space-y-4">
             <Link
               to="/login"
               className="w-full bg-blue-600 text-white py-3 px-4 rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 font-semibold"
             >
-              Retour Ã  la connexion
+              Retour Ï  la connexion
             </Link>
             <button
               onClick={() => setIsSuccess(false)}
@@ -72,10 +72,10 @@ const ResetPasswordPage = () => {
             <Mail className="w-8 h-8 text-blue-600" />
           </div>
           <h1 className="text-2xl font-bold text-gray-900 mb-2">
-            Mot de passe oubliÃ© ?
+            Mot de passe oublié ?
           </h1>
           <p className="text-gray-600">
-            Entrez votre adresse email pour recevoir un lien de rÃ©initialisation
+            Entrez votre adresse email pour recevoir un lien de réinitialisation
           </p>
         </div>
 
@@ -129,7 +129,7 @@ const ResetPasswordPage = () => {
             className="flex items-center justify-center gap-2 text-gray-600 hover:text-gray-800 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" />
-            Retour Ã  la connexion
+            Retour Ï  la connexion
           </Link>
         </div>
 
@@ -137,7 +137,7 @@ const ResetPasswordPage = () => {
         <div className="mt-6 p-4 bg-gray-50 rounded-lg">
           <h3 className="font-semibold text-gray-900 mb-2">Besoin d'aide ?</h3>
           <p className="text-sm text-gray-600 mb-3">
-            Si vous ne recevez pas l'email, vÃ©rifiez votre dossier spam ou contactez notre support.
+            Si vous ne recevez pas l'email, vérifiez votre dossier spam ou contactez notre support.
           </p>
           <Link
             to="/contact"

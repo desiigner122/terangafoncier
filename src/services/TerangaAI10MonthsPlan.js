@@ -1,38 +1,38 @@
 ﻿/**
- * ðŸš€ PLAN D'IMPLÃ‰MENTATION IA TERANGA FONCIER - 10 MOIS
+ * ðŸš€ PLAN D'IMPLÉMENTATION IA TERANGA FONCIER - 10 MOIS
  * =====================================================
  * 
- * Approche Hybride Progressive : Externe â†’ Semi-Autonome â†’ PropriÃ©taire
- * ROI maximal avec dÃ©ploiement graduel et collecte donnÃ©es locales
+ * Approche Hybride Progressive : Externe â†’ Semi-Autonome â†’ Propriétaire
+ * ROI maximal avec déploiement graduel et collecte données locales
  */
 
 class TerangaAI10MonthsPlan {
   constructor() {
     this.timeline = {
-      // PHASE 1 : DÃ‰MARRAGE RAPIDE (Mois 1-2)
+      // PHASE 1 : DÉMARRAGE RAPIDE (Mois 1-2)
       phase1: {
         duration: '2 mois',
-        objective: 'Plateforme opÃ©rationnelle avec IA externe',
+        objective: 'Plateforme opérationnelle avec IA externe',
         deliverables: [
-          'IntÃ©gration Claude + ChatGPT + Gemini',
-          'Base donnÃ©es prix SÃ©nÃ©gal',
-          'Ã‰valuations automatiques terrains',
+          'Intégration Claude + ChatGPT + Gemini',
+          'Base données prix Sénégal',
+          'Évaluations automatiques terrains',
           'Interface utilisateur IA'
         ],
-        roi_expected: 'Premiers revenus dÃ¨s Mois 2'
+        roi_expected: 'Premiers revenus dès Mois 2'
       },
 
       // PHASE 2 : COLLECTE & APPRENTISSAGE (Mois 3-6) 
       phase2: {
         duration: '4 mois',
-        objective: 'Accumulation donnÃ©es + dÃ©but IA propriÃ©taire',
+        objective: 'Accumulation données + début IA propriétaire',
         deliverables: [
-          'Dataset 10,000+ transactions sÃ©nÃ©galaises',
-          'ModÃ¨le prix spÃ©cialisÃ© zones Dakar/ThiÃ¨s',
-          'Fine-tuning sur donnÃ©es locales',
+          'Dataset 10,000+ transactions sénégalaises',
+          'Modèle prix spécialisé zones Dakar/Thiès',
+          'Fine-tuning sur données locales',
           'A/B testing IA externe vs interne'
         ],
-        roi_expected: 'PrÃ©cision +25%, coÃ»ts API -40%'
+        roi_expected: 'Précision +25%, coûts API -40%'
       },
 
       // PHASE 3 : AUTONOMISATION (Mois 7-10)
@@ -40,12 +40,12 @@ class TerangaAI10MonthsPlan {
         duration: '4 mois', 
         objective: 'IA Teranga semi-autonome dominante',
         deliverables: [
-          'TerangaAI v1.0 dÃ©ployÃ©e',
-          'RÃ©duction IA externe Ã  20%',
-          'SpÃ©cialisations : juridique + urbanisme',
-          'Export modÃ¨le autres pays africains'
+          'TerangaAI v1.0 déployée',
+          'Réduction IA externe Ï  20%',
+          'Spécialisations : juridique + urbanisme',
+          'Export modèle autres pays africains'
         ],
-        roi_expected: 'CoÃ»ts -70%, prÃ©cision +40%'
+        roi_expected: 'Coûts -70%, précision +40%'
       }
     };
 
@@ -54,44 +54,44 @@ class TerangaAI10MonthsPlan {
       repartition: {
         'APIs IA externes': 25000,
         'Infrastructure ML': 20000,
-        'DÃ©veloppement': 30000,
-        'DonnÃ©es & Training': 10000
+        'Développement': 30000,
+        'Données & Training': 10000
       }
     };
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ“… MOIS 1-2 : DÃ‰MARRAGE RAPIDE
+  // ðŸ“… MOIS 1-2 : DÉMARRAGE RAPIDE
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async deployPhase1() {
-    console.log('ðŸš€ PHASE 1 : DÃ©ploiement IA Externe (Mois 1-2)');
+    console.log('ðŸš€ PHASE 1 : Déploiement IA Externe (Mois 1-2)');
     
     const phase1Config = {
-      // Configuration IA externes avec spÃ©cialisation SÃ©nÃ©gal
+      // Configuration IA externes avec spécialisation Sénégal
       aiProviders: {
         claude: {
           model: 'claude-3-sonnet-20240229',
-          role: 'Analyse juridique fonciÃ¨re sÃ©nÃ©galaise',
+          role: 'Analyse juridique foncière sénégalaise',
           prompt_template: this.getClaudePromptTemplate(),
           cost_per_request: 0.03
         },
         
         openai: {
           model: 'gpt-4-turbo-preview', 
-          role: 'Ã‰valuation prix immobilier SÃ©nÃ©gal',
+          role: 'Évaluation prix immobilier Sénégal',
           prompt_template: this.getOpenAIPromptTemplate(),
           cost_per_request: 0.02
         },
         
         gemini: {
           model: 'gemini-pro-vision',
-          role: 'Analyse images terrains/bÃ¢timents',
+          role: 'Analyse images terrains/bâtiments',
           cost_per_request: 0.001
         }
       },
 
-      // Base de connaissances locales intÃ©grÃ©e
+      // Base de connaissances locales intégrée
       senegalKnowledgeBase: {
         prix_zones_dakar: this.getPrixZonesDakar(),
         reglementation_urbanisme: this.getReglementationSenegal(),
@@ -99,12 +99,12 @@ class TerangaAI10MonthsPlan {
         documents_requis: this.getDocumentsRequis()
       },
 
-      // MÃ©triques Ã  suivre Phase 1
+      // Métriques Ï  suivre Phase 1
       kpis: {
-        'Temps rÃ©ponse Ã©valuation': '< 5 secondes',
-        'PrÃ©cision estimation prix': '> 85%',
+        'Temps réponse évaluation': '< 5 secondes',
+        'Précision estimation prix': '> 85%',
         'Satisfaction utilisateur': '> 4.2/5',
-        'CoÃ»t par Ã©valuation': '< 0.10 USD'
+        'Coût par évaluation': '< 0.10 USD'
       }
     };
 
@@ -112,23 +112,23 @@ class TerangaAI10MonthsPlan {
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ“Š MOIS 3-6 : COLLECTE DONNÃ‰ES & FINE-TUNING
+  // ðŸ“Š MOIS 3-6 : COLLECTE DONNÉES & FINE-TUNING
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   async deployPhase2() {
-    console.log('ðŸ“Š PHASE 2 : Collecte DonnÃ©es & Training (Mois 3-6)');
+    console.log('ðŸ“Š PHASE 2 : Collecte Données & Training (Mois 3-6)');
     
     const phase2Strategy = {
-      // Pipeline de collecte donnÃ©es
+      // Pipeline de collecte données
       dataCollection: {
         transactions_teranga: {
           target: 10000,
           sources: ['user_transactions', 'property_views', 'price_negotiations'],
-          enrichment: 'coordonnÃ©es GPS + photos + documents'
+          enrichment: 'coordonnées GPS + photos + documents'
         },
         
         market_data_external: {
-          sources: ['DGI SÃ©nÃ©gal', 'chambre_notaires', 'agences_immobilieres'],
+          sources: ['DGI Sénégal', 'chambre_notaires', 'agences_immobilieres'],
           frequency: 'weekly_scraping',
           validation: 'cross_reference_multiple_sources'
         },
@@ -140,7 +140,7 @@ class TerangaAI10MonthsPlan {
         }
       },
 
-      // EntraÃ®nement modÃ¨les spÃ©cialisÃ©s
+      // Entraînement modèles spécialisés
       modelTraining: {
         price_prediction_model: {
           type: 'XGBoost + Neural Network',
@@ -149,9 +149,9 @@ class TerangaAI10MonthsPlan {
         },
         
         legal_document_analyzer: {
-          type: 'BERT fine-tuned franÃ§ais',
+          type: 'BERT fine-tuned français',
           specialization: 'droit_foncier_senegalais',
-          training_data: 'jurisprudence + rÃ©glementation'
+          training_data: 'jurisprudence + réglementation'
         },
         
         image_property_classifier: {
@@ -188,11 +188,11 @@ class TerangaAI10MonthsPlan {
           'TerangaPricePredictor': {
             accuracy: '> 94%',
             latency: '< 200ms',
-            specialization: 'marchÃ©_immobilier_senegalais'
+            specialization: 'marché_immobilier_senegalais'
           },
           
           'TerangaLegalAnalyzer': {
-            languages: ['franÃ§ais', 'wolof_transcrit'],
+            languages: ['français', 'wolof_transcrit'],
             expertise: 'code_urbanisme_senegal',
             document_types: ['titre_foncier', 'permis_construire']
           },
@@ -205,7 +205,7 @@ class TerangaAI10MonthsPlan {
         }
       },
 
-      // RÃ©duction progressive IA externe
+      // Réduction progressive IA externe
       externalAI_reduction: {
         'mois_7': '60% interne, 40% externe',
         'mois_8': '75% interne, 25% externe', 
@@ -213,11 +213,11 @@ class TerangaAI10MonthsPlan {
         'mois_10': '90% interne, 10% externe (backup uniquement)'
       },
 
-      // Expansion gÃ©ographique
+      // Expansion géographique
       geographic_expansion: {
-        'senegal_coverage': '100% - toutes rÃ©gions',
-        'international_ready': ['Mali', 'Burkina Faso', 'CÃ´te d\'Ivoire'],
-        'competitive_moat': 'donnÃ©es propriÃ©taires uniques'
+        'senegal_coverage': '100% - toutes régions',
+        'international_ready': ['Mali', 'Burkina Faso', 'Côte d\'Ivoire'],
+        'competitive_moat': 'données propriétaires uniques'
       }
     };
 
@@ -225,7 +225,7 @@ class TerangaAI10MonthsPlan {
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ“ˆ PRÃ‰DICTIONS ROI 10 MOIS
+  // ðŸ“ˆ PRÉDICTIONS ROI 10 MOIS
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   getROIProjection() {
@@ -264,23 +264,23 @@ class TerangaAI10MonthsPlan {
   }
 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-  // ðŸ› ï¸ MÃ‰THODES D'IMPLÃ‰MENTATION
+  // ðŸ› ï¸ MÉTHODES D'IMPLÉMENTATION
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   getClaudePromptTemplate() {
     return `
-    Tu es un expert juridique spÃ©cialisÃ© dans le droit foncier sÃ©nÃ©galais.
+    Tu es un expert juridique spécialisé dans le droit foncier sénégalais.
     
-    CONTEXTE SÃ‰NÃ‰GALAIS :
-    - Code de l'urbanisme du SÃ©nÃ©gal
+    CONTEXTE SÉNÉGALAIS :
+    - Code de l'urbanisme du Sénégal
     - Loi sur le domaine national
-    - ProcÃ©dures DGI et services fonciers
+    - Procédures DGI et services fonciers
     
-    ANALYSE DEMANDÃ‰E :
+    ANALYSE DEMANDÉE :
     {property_legal_details}
     
     FOURNIS :
-    1. ConformitÃ© rÃ©glementaire
+    1. Conformité réglementaire
     2. Documents manquants
     3. Risques juridiques
     4. Recommandations actions
@@ -289,21 +289,21 @@ class TerangaAI10MonthsPlan {
 
   getOpenAIPromptTemplate() {
     return `
-    Expert immobilier SÃ©nÃ©gal. Prix en Francs CFA (XOF).
+    Expert immobilier Sénégal. Prix en Francs CFA (XOF).
     
-    MARCHÃ‰ LOCAL :
+    MARCHÉ LOCAL :
     - Dakar Plateau: 150,000 FCFA/mÂ²
     - Almadies: 200,000 FCFA/mÂ² 
     - Pikine: 50,000 FCFA/mÂ²
     
-    PROPRIÃ‰TÃ‰ Ã€ Ã‰VALUER :
+    PROPRIÉTÉ À ÉVALUER :
     {property_details}
     
-    ESTIME prix juste marchÃ© avec justification dÃ©taillÃ©e.
+    ESTIME prix juste marché avec justification détaillée.
     `;
   }
 
-  // DonnÃ©es locales intÃ©grÃ©es (exemples)
+  // Données locales intégrées (exemples)
   getPrixZonesDakar() {
     return {
       'Dakar-Plateau': { terrain: 150000, villa: 45000000 },

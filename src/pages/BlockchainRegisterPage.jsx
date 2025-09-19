@@ -60,17 +60,17 @@ const BlockchainRegisterPage = () => {
   const userTypes = [
     { value: 'particulier', label: 'Particulier / Diaspora', icon: User, desc: 'Achat personnel, construction' },
     { value: 'investisseur', label: 'Investisseur', icon: TrendingUp, desc: 'Portefeuille immobilier' },
-    { value: 'promoteur', label: 'Promoteur', icon: Building, desc: 'DÃ©veloppement immobilier' },
-    { value: 'mairie', label: 'Mairie / CollectivitÃ©', icon: MapPin, desc: 'Gestion terrains communaux' },
+    { value: 'promoteur', label: 'Promoteur', icon: Building, desc: 'Développement immobilier' },
+    { value: 'mairie', label: 'Mairie / Collectivité', icon: MapPin, desc: 'Gestion terrains communaux' },
     { value: 'banque', label: 'Banque / Institution', icon: Database, desc: 'Services financiers' },
     { value: 'notaire', label: 'Notaire / Professionnel', icon: Shield, desc: 'Services juridiques' }
   ];
 
   const senegalRegions = [
-    'Dakar', 'ThiÃ¨s', 'Saint-Louis', 'Diourbel', 'Louga', 'Fatick', 
+    'Dakar', 'Thiès', 'Saint-Louis', 'Diourbel', 'Louga', 'Fatick', 
     'Kaolack', 'Kolda', 'Tambacounda', 'Ziguinchor', 'Matam', 
-    'Kaffrine', 'KÃ©dougou', 'SÃ©dhiou', 'Diaspora - Europe', 
-    'Diaspora - AmÃ©rique', 'Diaspora - Afrique', 'Autre'
+    'Kaffrine', 'Kédougou', 'Sédhiou', 'Diaspora - Europe', 
+    'Diaspora - Amérique', 'Diaspora - Afrique', 'Autre'
   ];
 
   const checkPasswordStrength = (password) => {
@@ -133,22 +133,22 @@ const BlockchainRegisterPage = () => {
       });
       navigate('/dashboard');
     } catch (error) {
-      setError(error.message || 'Erreur lors de la crÃ©ation du compte');
+      setError(error.message || 'Erreur lors de la création du compte');
     } finally {
       setIsLoading(false);
     }
   };
 
   const benefits = [
-    { icon: Blocks, title: "Titres Blockchain NFT", desc: "PropriÃ©tÃ© sÃ©curisÃ©e et vÃ©rifiable" },
-    { icon: Shield, title: "Smart Contracts", desc: "Paiements automatisÃ©s et sÃ©curisÃ©s" },
+    { icon: Blocks, title: "Titres Blockchain NFT", desc: "Propriété sécurisée et vérifiable" },
+    { icon: Shield, title: "Smart Contracts", desc: "Paiements automatisés et sécurisés" },
     { icon: Brain, title: "IA de Surveillance", desc: "Suivi construction intelligent" },
-    { icon: Globe, title: "AccÃ¨s International", desc: "Investissement depuis 50+ pays" }
+    { icon: Globe, title: "Accès International", desc: "Investissement depuis 50+ pays" }
   ];
 
   const trustIndicators = [
-    { label: "Comptes CrÃ©Ã©s", value: "8.2K+", icon: Users },
-    { label: "Transactions SÃ©curisÃ©es", value: "2.8K+", icon: Database },
+    { label: "Comptes Créés", value: "8.2K+", icon: Users },
+    { label: "Transactions Sécurisées", value: "2.8K+", icon: Database },
     { label: "Satisfaction", value: "98.5%", icon: Star },
     { label: "Support", value: "24/7", icon: Shield }
   ];
@@ -160,12 +160,12 @@ const BlockchainRegisterPage = () => {
           <div className="space-y-6">
             <div className="text-center mb-6">
               <h3 className="text-xl font-semibold text-white mb-2">Informations Personnelles</h3>
-              <p className="text-white/70">CommenÃ§ons par vos informations de base</p>
+              <p className="text-white/70">Commençons par vos informations de base</p>
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="firstName" className="text-white/90">PrÃ©nom</Label>
+                <Label htmlFor="firstName" className="text-white/90">Prénom</Label>
                 <div className="relative">
                   <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
                   <Input
@@ -174,7 +174,7 @@ const BlockchainRegisterPage = () => {
                     value={formData.firstName}
                     onChange={handleInputChange}
                     className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                    YOUR_API_KEY="Votre prÃ©nom"
+                    YOUR_API_KEY="Votre prénom"
                     required
                   />
                 </div>
@@ -215,7 +215,7 @@ const BlockchainRegisterPage = () => {
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="phone" className="text-white/90">TÃ©lÃ©phone</Label>
+              <Label htmlFor="phone" className="text-white/90">Téléphone</Label>
               <div className="relative">
                 <Phone className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-white/50" />
                 <Input
@@ -237,7 +237,7 @@ const BlockchainRegisterPage = () => {
           <div className="space-y-6">
             <div className="text-center mb-6">
               <h3 className="text-xl font-semibold text-white mb-2">Profil & Localisation</h3>
-              <p className="text-white/70">Personnalisez votre expÃ©rience</p>
+              <p className="text-white/70">Personnalisez votre expérience</p>
             </div>
 
             <div className="space-y-2">
@@ -269,7 +269,7 @@ const BlockchainRegisterPage = () => {
               <Label className="text-white/90">Localisation</Label>
               <Select value={formData.location} onValueChange={(value) => handleSelectChange('location', value)}>
                 <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue YOUR_API_KEY="SÃ©lectionnez votre rÃ©gion" />
+                  <SelectValue YOUR_API_KEY="Sélectionnez votre région" />
                 </SelectTrigger>
                 <SelectContent>
                   {senegalRegions.map((region) => (
@@ -285,8 +285,8 @@ const BlockchainRegisterPage = () => {
         return (
           <div className="space-y-6">
             <div className="text-center mb-6">
-              <h3 className="text-xl font-semibold text-white mb-2">SÃ©curitÃ© du Compte</h3>
-              <p className="text-white/70">CrÃ©ez un mot de passe sÃ©curisÃ©</p>
+              <h3 className="text-xl font-semibold text-white mb-2">Sécurité du Compte</h3>
+              <p className="text-white/70">Créez un mot de passe sécurisé</p>
             </div>
 
             <div className="space-y-2">
@@ -372,7 +372,7 @@ const BlockchainRegisterPage = () => {
                   </Link>{' '}
                   et la{' '}
                   <Link to="/privacy" className="text-blue-400 hover:text-blue-300">
-                    politique de confidentialitÃ©
+                    politique de confidentialité
                   </Link>
                 </Label>
               </div>
@@ -386,7 +386,7 @@ const BlockchainRegisterPage = () => {
                   className="border-white/30 data-[state=checked]:bg-blue-600 mt-1"
                 />
                 <Label htmlFor="agreeNewsletter" className="text-sm text-white/90">
-                  Je souhaite recevoir les actualitÃ©s blockchain et les opportunitÃ©s d'investissement
+                  Je souhaite recevoir les actualités blockchain et les opportunités d'investissement
                 </Label>
               </div>
             </div>
@@ -401,8 +401,8 @@ const BlockchainRegisterPage = () => {
   return (
     <>
       <Helmet>
-        <title>CrÃ©er un Compte - Teranga Foncier Blockchain</title>
-        <meta name="description" content="CrÃ©ez votre compte Teranga Foncier et accÃ©dez Ã  la premiÃ¨re plateforme blockchain immobiliÃ¨re du SÃ©nÃ©gal." />
+        <title>Créer un Compte - Teranga Foncier Blockchain</title>
+        <meta name="description" content="Créez votre compte Teranga Foncier et accédez Ï  la première plateforme blockchain immobilière du Sénégal." />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-purple-900 flex">
@@ -426,11 +426,11 @@ const BlockchainRegisterPage = () => {
                 </motion.div>
                 
                 <CardTitle className="text-2xl font-bold text-white mb-2">
-                  Rejoignez la RÃ©volution
+                  Rejoignez la Révolution
                 </CardTitle>
                 
                 <p className="text-white/70">
-                  CrÃ©ez votre compte blockchain immobilier
+                  Créez votre compte blockchain immobilier
                 </p>
 
                 {/* Progress Indicator */}
@@ -449,7 +449,7 @@ const BlockchainRegisterPage = () => {
                 
                 <Badge className="mt-3 bg-green-500/20 text-green-400 border-green-500/30">
                   <Shield className="w-3 h-3 mr-1" />
-                  Inscription SÃ©curisÃ©e
+                  Inscription Sécurisée
                 </Badge>
               </CardHeader>
 
@@ -471,7 +471,7 @@ const BlockchainRegisterPage = () => {
                         onClick={() => setCurrentStep(currentStep - 1)}
                         className="flex-1 border-white/30 text-white hover:bg-white/10"
                       >
-                        PrÃ©cÃ©dent
+                        Précédent
                       </Button>
                     )}
                     
@@ -483,7 +483,7 @@ const BlockchainRegisterPage = () => {
                       {isLoading ? (
                         <div className="flex items-center justify-center">
                           <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                          CrÃ©ation...
+                          Création...
                         </div>
                       ) : currentStep < 3 ? (
                         <>
@@ -492,7 +492,7 @@ const BlockchainRegisterPage = () => {
                         </>
                       ) : (
                         <>
-                          CrÃ©er mon Compte
+                          Créer mon Compte
                           <CheckCircle className="ml-2 h-4 w-4" />
                         </>
                       )}
@@ -502,7 +502,7 @@ const BlockchainRegisterPage = () => {
 
                 <div className="text-center">
                   <p className="text-white/70">
-                    DÃ©jÃ  un compte?{' '}
+                    DéjÏ  un compte?{' '}
                     <Link 
                       to="/login" 
                       className="text-blue-400 hover:text-blue-300 font-medium transition-colors"
@@ -532,7 +532,7 @@ const BlockchainRegisterPage = () => {
                 </span>
               </h1>
               <p className="text-xl text-white/80 leading-relaxed">
-                La premiÃ¨re plateforme blockchain immobiliÃ¨re du SÃ©nÃ©gal
+                La première plateforme blockchain immobilière du Sénégal
               </p>
             </div>
 
@@ -593,7 +593,7 @@ const BlockchainRegisterPage = () => {
                 ))}
               </div>
               <blockquote className="text-white/90 italic mb-3">
-                "Inscription simple, plateforme sÃ©curisÃ©e. J'ai achetÃ© mon terrain en 3 clics depuis New York!"
+                "Inscription simple, plateforme sécurisée. J'ai acheté mon terrain en 3 clics depuis New York!"
               </blockquote>
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 bg-gradient-to-r from-purple-400 to-pink-500 rounded-full flex items-center justify-center">

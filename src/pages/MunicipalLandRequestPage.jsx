@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { 
   Landmark, 
   Send, 
@@ -46,7 +46,7 @@ const StepIndicator = ({ currentStep, totalSteps }) => (
 );
 
 const MunicipalLandRequestPage = () => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const navigate = useNavigate();
   const { user, isAuthenticated } = useAuth();
   

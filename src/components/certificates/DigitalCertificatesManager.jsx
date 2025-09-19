@@ -1,12 +1,12 @@
 ﻿/**
- * ðŸ“œ DIGITAL CERTIFICATES MANAGER - PRIORITÃ‰ 1 UI  
+ * ðŸ“œ DIGITAL CERTIFICATES MANAGER - PRIORITÉ 1 UI  
  * ================================================
  * 
- * Composant pour Gestion Certificats NumÃ©riques Teranga Foncier
+ * Composant pour Gestion Certificats Numériques Teranga Foncier
  * - Affichage certificats avec enrichissements IA
- * - VÃ©rification authenticity blockchain
- * - Export et partage sÃ©curisÃ©
- * - Monitoring validitÃ© et renouvellement
+ * - Vérification authenticity blockchain
+ * - Export et partage sécurisé
+ * - Monitoring validité et renouvellement
  * 
  * Version: 1.0 Production Ready
  */
@@ -41,7 +41,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(false);
 
-  // Ã‰tats pour actions
+  // États pour actions
   const [verifyingCert, setVerifyingCert] = useState(null);
   const [downloadingCert, setDownloadingCert] = useState(null);
   const [sharingCert, setSharingCert] = useState(null);
@@ -51,7 +51,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
   // â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
 
   useEffect(() => {
-    // Auto-sÃ©lectionner le premier certificat si disponible
+    // Auto-sélectionner le premier certificat si disponible
     if (certificates.length > 0 && !selectedCertificate) {
       setSelectedCertificate(certificates[0]);
     }
@@ -73,9 +73,9 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
     const daysUntilExpiry = Math.ceil((validUntil - now) / (1000 * 60 * 60 * 24));
     
     if (daysUntilExpiry < 0) {
-      return { status: 'expired', color: 'text-red-600', bg: 'bg-red-50', label: 'ExpirÃ©' };
+      return { status: 'expired', color: 'text-red-600', bg: 'bg-red-50', label: 'Expiré' };
     } else if (daysUntilExpiry < 30) {
-      return { status: 'expiring', color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Expire bientÃ´t' };
+      return { status: 'expiring', color: 'text-yellow-600', bg: 'bg-yellow-50', label: 'Expire bientôt' };
     } else {
       return { status: 'valid', color: 'text-green-600', bg: 'bg-green-50', label: 'Valide' };
     }
@@ -97,17 +97,17 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
   const handleVerifyCertificate = async (certificate) => {
     setVerifyingCert(certificate.certificateId);
     try {
-      // VÃ©rifier l'authenticity du certificat
+      // Vérifier l'authenticity du certificat
       const verification = await terangaAI.verifySecureDocument(
         certificate.subject,
         certificate.security?.mainHash
       );
       
-      // Callback pour mettre Ã  jour l'Ã©tat parent
+      // Callback pour mettre Ï  jour l'état parent
       onCertificateAction?.('verify', certificate, verification);
       
     } catch (error) {
-      console.error('âŒ Erreur vÃ©rification certificat:', error);
+      console.error('âŒ Erreur vérification certificat:', error);
     } finally {
       setVerifyingCert(null);
     }
@@ -116,10 +116,10 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
   const handleDownloadCertificate = async (certificate) => {
     setDownloadingCert(certificate.certificateId);
     try {
-      // GÃ©nÃ©rer le certificat au format PDF (simulÃ©)
+      // Générer le certificat au format PDF (simulé)
       const pdfData = await generateCertificatePDF(certificate);
       
-      // TÃ©lÃ©charger le fichier
+      // Télécharger le fichier
       const blob = new Blob([pdfData], { type: 'application/pdf' });
       const url = URL.createObjectURL(blob);
       const a = document.createElement('a');
@@ -133,7 +133,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
       onCertificateAction?.('download', certificate);
       
     } catch (error) {
-      console.error('âŒ Erreur tÃ©lÃ©chargement certificat:', error);
+      console.error('âŒ Erreur téléchargement certificat:', error);
     } finally {
       setDownloadingCert(null);
     }
@@ -142,7 +142,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
   const handleShareCertificate = async (certificate) => {
     setSharingCert(certificate.certificateId);
     try {
-      // GÃ©nÃ©rer lien de partage sÃ©curisÃ©
+      // Générer lien de partage sécurisé
       const shareUrl = `${window.location.origin}/certificates/verify/${certificate.certificateId}`;
       
       // Copier dans le presse-papier
@@ -158,35 +158,35 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
   };
 
   const generateCertificatePDF = async (certificate) => {
-    // Simuler gÃ©nÃ©ration PDF (en production, utiliser jsPDF ou similar)
+    // Simuler génération PDF (en production, utiliser jsPDF ou similar)
     const pdfContent = `
-      CERTIFICAT NUMÃ‰RIQUE TERANGA FONCIER
+      CERTIFICAT NUMÉRIQUE TERANGA FONCIER
       =====================================
       
       ID Certificat: ${certificate.certificateId}
-      Ã‰mis le: ${new Date(certificate.issuedAt).toLocaleDateString('fr-FR')}
+      Émis le: ${new Date(certificate.issuedAt).toLocaleDateString('fr-FR')}
       Valide jusqu'au: ${new Date(certificate.validUntil).toLocaleDateString('fr-FR')}
       
       TITRE FONCIER
       -------------
-      NumÃ©ro: ${certificate.subject.titleNumber}
-      PropriÃ©taire: ${certificate.subject.owner}
+      Numéro: ${certificate.subject.titleNumber}
+      Propriétaire: ${certificate.subject.owner}
       NIN: ${certificate.subject.nin}
       Localisation: ${certificate.subject.location}
       Surface: ${certificate.subject.surface} hectares
       
-      SÃ‰CURITÃ‰ BLOCKCHAIN
+      SÉCURITÉ BLOCKCHAIN
       -------------------
       Hash Principal: ${certificate.security?.mainHash || 'N/A'}
       Signature: ${certificate.security?.certificateSignature || 'N/A'}
       
       VALIDATIONS IA
       --------------
-      Fraude Check: ${certificate.validations?.fraudCheckPassed ? 'âœ… PassÃ©' : 'âŒ Ã‰chec'}
-      Documents: ${certificate.validations?.documentsVerified ? 'âœ… VÃ©rifiÃ©s' : 'âŒ Non vÃ©rifiÃ©s'}
-      AutoritÃ©: ${certificate.validations?.authorityValidated ? 'âœ… ValidÃ©e' : 'âŒ Non validÃ©e'}
+      Fraude Check: ${certificate.validations?.fraudCheckPassed ? '✅ Passé' : 'âŒ Échec'}
+      Documents: ${certificate.validations?.documentsVerified ? '✅ Vérifiés' : 'âŒ Non vérifiés'}
+      Autorité: ${certificate.validations?.authorityValidated ? '✅ Validée' : 'âŒ Non validée'}
       
-      Ce certificat est authentifiÃ© par la blockchain Teranga Foncier.
+      Ce certificat est authentifié par la blockchain Teranga Foncier.
     `;
     
     return new TextEncoder().encode(pdfContent);
@@ -202,18 +202,18 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
 
   return (
     <div className="space-y-6">
-      {/* En-tÃªte et contrÃ´les */}
+      {/* En-tête et contrôles */}
       <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
         <div>
           <h2 className="text-xl font-bold text-gray-900 flex items-center gap-2">
             <Certificate className="text-purple-600" />
-            Certificats NumÃ©riques
+            Certificats Numériques
             <span className="bg-purple-100 text-purple-800 text-xs font-medium px-2 py-1 rounded-full">
               {filteredCertificates.length}
             </span>
           </h2>
           <p className="text-gray-600 mt-1">
-            Gestion et vÃ©rification des certificats blockchain enrichis IA
+            Gestion et vérification des certificats blockchain enrichis IA
           </p>
         </div>
 
@@ -238,8 +238,8 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
           >
             <option value="all">Tous statuts</option>
             <option value="ACTIVE">Actifs</option>
-            <option value="EXPIRING">Expirent bientÃ´t</option>
-            <option value="EXPIRED">ExpirÃ©s</option>
+            <option value="EXPIRING">Expirent bientôt</option>
+            <option value="EXPIRED">Expirés</option>
           </select>
 
           {/* Mode d'affichage */}
@@ -272,11 +272,11 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
       {filteredCertificates.length === 0 ? (
         <div className="bg-white rounded-lg border border-gray-200 p-12 text-center">
           <Certificate className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun certificat trouvÃ©</h3>
+          <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun certificat trouvé</h3>
           <p className="text-gray-500">
             {searchTerm || filterStatus !== 'all' 
-              ? 'Aucun certificat ne correspond aux critÃ¨res de recherche.'
-              : 'CrÃ©ez votre premier certificat numÃ©rique en hachant un titre foncier.'}
+              ? 'Aucun certificat ne correspond aux critères de recherche.'
+              : 'Créez votre premier certificat numérique en hachant un titre foncier.'}
           </p>
         </div>
       ) : (
@@ -293,7 +293,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                 } ${viewMode === 'list' ? 'p-4' : 'p-6'}`}
                 onClick={() => setSelectedCertificate(certificate)}
               >
-                {/* En-tÃªte certificat */}
+                {/* En-tête certificat */}
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-center gap-3">
                     <div className={`p-2 rounded-lg ${statusInfo.bg}`}>
@@ -321,7 +321,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                   <div className="flex items-center gap-2 text-sm">
                     <User className="w-4 h-4 text-gray-400" />
                     <span className="text-gray-900 font-medium">
-                      {certificate.subject?.owner || 'PropriÃ©taire N/A'}
+                      {certificate.subject?.owner || 'Propriétaire N/A'}
                     </span>
                   </div>
 
@@ -335,7 +335,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                   <div className="flex items-center gap-2 text-sm">
                     <Calendar className="w-4 h-4 text-gray-400" />
                     <span className="text-gray-600">
-                      Ã‰mis le {new Date(certificate.issuedAt).toLocaleDateString('fr-FR')}
+                      Émis le {new Date(certificate.issuedAt).toLocaleDateString('fr-FR')}
                     </span>
                   </div>
 
@@ -380,7 +380,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                       <XCircle className="w-3 h-3 text-red-500" />
                     )}
                     <span className={certificate.validations?.authorityValidated ? 'text-green-600' : 'text-red-600'}>
-                      AutoritÃ©
+                      Autorité
                     </span>
                   </div>
 
@@ -408,7 +408,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                       ) : (
                         <Shield className="w-3 h-3" />
                       )}
-                      VÃ©rifier
+                      Vérifier
                     </button>
 
                     <button
@@ -440,7 +440,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                       ) : (
                         <Share className="w-3 h-3" />
                       )}
-                      {sharingCert === certificate.certificateId ? 'CopiÃ©!' : 'Partager'}
+                      {sharingCert === certificate.certificateId ? 'Copié!' : 'Partager'}
                     </button>
                   </div>
 
@@ -453,7 +453,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                     className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
                   >
                     <ExternalLink className="w-3 h-3" />
-                    DÃ©tails
+                    Détails
                   </button>
                 </div>
               </div>
@@ -462,15 +462,15 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
         </div>
       )}
 
-      {/* Panneau de dÃ©tails */}
+      {/* Panneau de détails */}
       {selectedCertificate && viewMode === 'detail' && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
           <div className="bg-white rounded-xl shadow-xl max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            {/* En-tÃªte modal */}
+            {/* En-tête modal */}
             <div className="bg-purple-600 text-white p-6 rounded-t-xl">
               <div className="flex items-center justify-between">
                 <div>
-                  <h2 className="text-xl font-bold">Certificat NumÃ©rique DÃ©taillÃ©</h2>
+                  <h2 className="text-xl font-bold">Certificat Numérique Détaillé</h2>
                   <p className="text-purple-100">
                     {selectedCertificate.subject?.titleNumber} - {selectedCertificate.certificateId.substring(0, 16)}...
                   </p>
@@ -484,7 +484,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
               </div>
             </div>
 
-            {/* Contenu dÃ©taillÃ© */}
+            {/* Contenu détaillé */}
             <div className="p-6 space-y-6">
               {/* Informations principales */}
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -493,11 +493,11 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                   
                   <div className="space-y-2">
                     <div className="flex justify-between">
-                      <span className="text-gray-600">NumÃ©ro Titre:</span>
+                      <span className="text-gray-600">Numéro Titre:</span>
                       <span className="font-medium">{selectedCertificate.subject?.titleNumber}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">PropriÃ©taire:</span>
+                      <span className="text-gray-600">Propriétaire:</span>
                       <span className="font-medium">{selectedCertificate.subject?.owner}</span>
                     </div>
                     <div className="flex justify-between">
@@ -516,7 +516,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                 </div>
 
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 border-b pb-2">SÃ©curitÃ© Blockchain</h3>
+                  <h3 className="font-semibold text-gray-900 border-b pb-2">Sécurité Blockchain</h3>
                   
                   <div className="space-y-2">
                     <div className="flex justify-between items-start">
@@ -532,7 +532,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                       <span className="font-medium">{selectedCertificate.metadata?.algorithm || 'SHA-256'}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">RÃ©seau:</span>
+                      <span className="text-gray-600">Réseau:</span>
                       <span className="font-medium">{selectedCertificate.metadata?.blockchainNetwork || 'SENEGAL_LAND_REGISTRY'}</span>
                     </div>
                   </div>
@@ -550,10 +550,10 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedCertificate.aiEnrichments.marketValuation && (
                       <div className="bg-white p-3 rounded border">
-                        <h4 className="font-medium text-gray-900 mb-2">Ã‰valuation MarchÃ©</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">Évaluation Marché</h4>
                         <div className="text-sm space-y-1">
                           <div className="flex justify-between">
-                            <span>Valeur estimÃ©e:</span>
+                            <span>Valeur estimée:</span>
                             <span className="font-medium text-green-600">
                               {selectedCertificate.aiEnrichments.marketValuation.prix_estime_fcfa?.toLocaleString()} FCFA
                             </span>
@@ -570,7 +570,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
 
                     {selectedCertificate.aiEnrichments.fraudRiskAssessment && (
                       <div className="bg-white p-3 rounded border">
-                        <h4 className="font-medium text-gray-900 mb-2">Ã‰valuation Fraude</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">Évaluation Fraude</h4>
                         <div className="text-sm space-y-1">
                           <div className="flex justify-between">
                             <span>Score fraude:</span>
@@ -595,10 +595,10 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                 </div>
               )}
 
-              {/* ChaÃ®ne de confiance */}
+              {/* Chaîne de confiance */}
               {selectedCertificate.security?.chainOfTrust && (
                 <div className="space-y-4">
-                  <h3 className="font-semibold text-gray-900 border-b pb-2">ChaÃ®ne de Confiance</h3>
+                  <h3 className="font-semibold text-gray-900 border-b pb-2">Chaîne de Confiance</h3>
                   
                   <div className="space-y-3">
                     {selectedCertificate.security.chainOfTrust.map((trust, index) => (
@@ -611,7 +611,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                             Niveau {trust.level}: {trust.authority}
                           </div>
                           <div className="text-sm text-gray-500">
-                            ValidÃ© le {new Date(trust.timestamp).toLocaleString('fr-FR')}
+                            Validé le {new Date(trust.timestamp).toLocaleString('fr-FR')}
                           </div>
                         </div>
                       </div>
@@ -633,7 +633,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                     ) : (
                       <Download className="w-4 h-4" />
                     )}
-                    TÃ©lÃ©charger PDF
+                    Télécharger PDF
                   </button>
 
                   <button
@@ -646,7 +646,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                     ) : (
                       <Share className="w-4 h-4" />
                     )}
-                    {sharingCert === selectedCertificate.certificateId ? 'Lien copiÃ©!' : 'Partager'}
+                    {sharingCert === selectedCertificate.certificateId ? 'Lien copié!' : 'Partager'}
                   </button>
                 </div>
 
@@ -660,7 +660,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
                   ) : (
                     <Shield className="w-4 h-4" />
                   )}
-                  VÃ©rifier AuthenticitÃ©
+                  Vérifier Authenticité
                 </button>
               </div>
             </div>

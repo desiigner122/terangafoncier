@@ -23,7 +23,7 @@ const SimpleParcelCard = ({ parcel }) => {
         />
         {parcel?.verified && (
           <Badge className="absolute top-2 left-2 bg-green-500 text-white">
-            VÃ©rifiÃ©
+            Vérifié
           </Badge>
         )}
       </div>
@@ -45,7 +45,7 @@ const SimpleParcelCard = ({ parcel }) => {
               {parcel?.price ? formatPrice(parcel.price) : "Prix sur demande"}
             </p>
             <p className="text-sm text-gray-500">
-              {parcel?.surface || "Surface Ã  dÃ©finir"}
+              {parcel?.surface || "Surface Ï  définir"}
             </p>
           </div>
           {parcel?.rating && (
@@ -58,7 +58,7 @@ const SimpleParcelCard = ({ parcel }) => {
 
         <div className="flex gap-2">
           <Button className="flex-1 bg-blue-600 hover:bg-blue-700">
-            Voir dÃ©tails
+            Voir détails
           </Button>
         </div>
       </CardContent>

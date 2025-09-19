@@ -1,6 +1,6 @@
 ﻿/**
- * ðŸš€ INTÃ‰GRATION SERVICES PRIORITÃ‰ 3
- * Fichier d'intÃ©gration des nouveaux services
+ * ðŸš€ INTÉGRATION SERVICES PRIORITÉ 3
+ * Fichier d'intégration des nouveaux services
  */
 
 import { blockchainSyncService } from './services/TerangaBlockchainSyncService.js';
@@ -29,30 +29,30 @@ export const PRIORITY_3_CONFIG = {
   }
 };
 
-// Fonction d'initialisation des services PrioritÃ© 3
+// Fonction d'initialisation des services Priorité 3
 export async function initializePriority3Services(userId) {
-  console.log('ðŸš€ Initialisation services PrioritÃ© 3...');
+  console.log('ðŸš€ Initialisation services Priorité 3...');
   
   try {
     // 1. Initialiser la synchronisation blockchain
     if (PRIORITY_3_CONFIG.services.blockchainSync.enabled) {
       await blockchainSyncService.startAutoSync();
-      console.log('âœ… Synchronisation blockchain initialisÃ©e');
+      console.log('✅ Synchronisation blockchain initialisée');
     }
     
     // 2. Initialiser les notifications intelligentes
     if (PRIORITY_3_CONFIG.services.intelligentNotifications.enabled) {
       await intelligentNotifications.initialize(userId);
-      console.log('âœ… Notifications intelligentes initialisÃ©es');
+      console.log('✅ Notifications intelligentes initialisées');
     }
     
     // 3. Enregistrer le service worker
     if ('serviceWorker' in navigator) {
       const registration = await navigator.serviceWorker.register('/sw.js');
-      console.log('âœ… Service worker enregistrÃ©');
+      console.log('✅ Service worker enregistré');
     }
     
-    console.log('ðŸŽ‰ Tous les services PrioritÃ© 3 initialisÃ©s avec succÃ¨s !');
+    console.log('ðŸŽ‰ Tous les services Priorité 3 initialisés avec succès !');
     
     return {
       success: true,
@@ -63,7 +63,7 @@ export async function initializePriority3Services(userId) {
     };
     
   } catch (error) {
-    console.error('âŒ Erreur initialisation PrioritÃ© 3:', error);
+    console.error('âŒ Erreur initialisation Priorité 3:', error);
     return {
       success: false,
       error: error.message

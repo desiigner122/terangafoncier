@@ -54,7 +54,7 @@ const DebugDashboard = () => {
         
         <div className="grid gap-6">
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">Ã‰tat des Hooks</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">État des Hooks</h2>
             <div className="space-y-2">
               <p><strong>User Loading:</strong> {userLoading.toString()}</p>
               <p><strong>Auth Loading:</strong> {authLoading.toString()}</p>
@@ -83,12 +83,12 @@ const DebugDashboard = () => {
           </div>
 
           <div className="bg-white rounded-lg shadow-md p-6">
-            <h2 className="text-xl font-semibold text-gray-900 mb-4">RÃ´le DÃ©terminÃ©</h2>
+            <h2 className="text-xl font-semibold text-gray-900 mb-4">Rôle Déterminé</h2>
             <div className="space-y-2">
               <p><strong>Profile Role:</strong> {profile?.role || 'Aucun'}</p>
               <p><strong>User Metadata Role:</strong> {user?.user_metadata?.role || 'Aucun'}</p>
               <p><strong>User Role:</strong> {user?.role || 'Aucun'}</p>
-              <p><strong>Dashboard RecommandÃ©:</strong> 
+              <p><strong>Dashboard Recommandé:</strong> 
                 {!user ? 'Login requis' : 
                  profile?.role === 'ADMIN' ? 'Admin Dashboard' :
                  profile?.role === 'PARTICULIER_DIASPORA' ? 'Acheteur Dashboard (Diaspora)' :

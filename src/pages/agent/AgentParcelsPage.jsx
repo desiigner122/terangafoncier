@@ -11,14 +11,14 @@ import {
   Edit, 
   CalendarPlus
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { sampleAgentData } from '@/data';
 import { Link } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const AgentParcelsPage = () => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const [parcels, setParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

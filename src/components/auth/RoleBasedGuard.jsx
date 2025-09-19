@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { useAuth } from '@/context/AuthContext';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { useNavigate } from 'react-router-dom';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
@@ -30,7 +30,7 @@ export const withRoleProtection = (Component, allowedRoles) => {
     return (props) => {
         const { user, loading } = useAuth();
         const navigate = useNavigate();
-        // toast remplacÃ© par window.safeGlobalToast
+        // toast remplacé par window.safeGlobalToast
 
         if (loading) {
             return null; // Or a loading spinner

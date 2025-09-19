@@ -57,7 +57,7 @@ import { Progress } from '@/components/ui/progress';
 const PromoterProjectsPage = () => {
   const navigate = useNavigate();
   
-  // Ã‰tats pour les projets
+  // États pour les projets
   const [projects, setProjects] = useState([]);
   const [filteredProjects, setFilteredProjects] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -68,15 +68,15 @@ const PromoterProjectsPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [showFilters, setShowFilters] = useState(false);
 
-  // DonnÃ©es mockÃ©es des projets immobiliers
+  // Données mockées des projets immobiliers
   useEffect(() => {
     const mockProjects = [
       {
         id: 'PROJ-001',
-        title: 'RÃ©sidence Les Palmiers - Almadies',
+        title: 'Résidence Les Palmiers - Almadies',
         type: 'Immeuble d\'appartements',
         promoter: {
-          name: 'SÃ©nÃ©gal Construction SARL',
+          name: 'Sénégal Construction SARL',
           rating: 4.8,
           projects_completed: 15,
           phone: '+221 77 123 45 67',
@@ -103,7 +103,7 @@ const PromoterProjectsPage = () => {
           'Parking souterrain',
           'Concierge 24h/24',
           'Espace vert privatif',
-          'SystÃ¨me de sÃ©curitÃ©'
+          'Système de sécurité'
         ],
         construction_timeline: {
           phases: [
@@ -116,7 +116,7 @@ const PromoterProjectsPage = () => {
               progress: 100 
             },
             { 
-              name: 'Structure bÃ©ton', 
+              name: 'Structure béton', 
               duration: '4 mois', 
               status: 'in_progress', 
               start_date: '2024-09-01',
@@ -124,7 +124,7 @@ const PromoterProjectsPage = () => {
               progress: 75 
             },
             { 
-              name: 'Toiture et Ã©tanchÃ©itÃ©', 
+              name: 'Toiture et étanchéité', 
               duration: '2 mois', 
               status: 'pending', 
               start_date: '2025-01-01',
@@ -132,7 +132,7 @@ const PromoterProjectsPage = () => {
               progress: 0 
             },
             { 
-              name: 'Finitions intÃ©rieures', 
+              name: 'Finitions intérieures', 
               duration: '6 mois', 
               status: 'pending', 
               start_date: '2025-03-01',
@@ -140,7 +140,7 @@ const PromoterProjectsPage = () => {
               progress: 0 
             },
             { 
-              name: 'AmÃ©nagements extÃ©rieurs', 
+              name: 'Aménagements extérieurs', 
               duration: '4 mois', 
               status: 'pending', 
               start_date: '2025-09-01',
@@ -155,36 +155,36 @@ const PromoterProjectsPage = () => {
             surface: '65mÂ²',
             price: 45000000,
             available: 6,
-            description: '2 piÃ¨ces avec balcon vue mer'
+            description: '2 pièces avec balcon vue mer'
           },
           {
             type: 'T3',
             surface: '85mÂ²', 
             price: 62000000,
             available: 8,
-            description: '3 piÃ¨ces avec terrasse'
+            description: '3 pièces avec terrasse'
           },
           {
             type: 'T4',
             surface: '110mÂ²',
             price: 85000000,
             available: 4,
-            description: '4 piÃ¨ces duplex avec vue panoramique'
+            description: '4 pièces duplex avec vue panoramique'
           }
         ],
         financing_options: {
           bank_partners: ['UBA', 'SGBS', 'CBAO'],
-          payment_plans: ['Comptant -5%', 'Ã‰chelonnÃ© 24 mois', 'CrÃ©dit bancaire'],
+          payment_plans: ['Comptant -5%', 'Échelonné 24 mois', 'Crédit bancaire'],
           advance_payment: 30 // pourcentage minimum
         },
         virtual_tour: 'https://projects.terangafoncier.com/virtual/proj-001',
-        description: 'RÃ©sidence moderne de standing avec vue sur l\'ocÃ©an. Construction aux normes internationales avec matÃ©riaux de qualitÃ© premium. IdÃ©al pour investissement locatif ou rÃ©sidence principale.',
+        description: 'Résidence moderne de standing avec vue sur l\'océan. Construction aux normes internationales avec matériaux de qualité premium. Idéal pour investissement locatif ou résidence principale.',
         delivery_guarantee: true,
         insurance_coverage: true
       },
       {
         id: 'PROJ-002',
-        title: 'CitÃ© Jardin Keur Massar',
+        title: 'Cité Jardin Keur Massar',
         type: 'Lotissement villas',
         promoter: {
           name: 'Africa Housing Development',
@@ -202,18 +202,18 @@ const PromoterProjectsPage = () => {
         },
         delivery_date: '2026-06-30',
         construction_progress: 15,
-        status: 'PrÃ©-commercialisation',
+        status: 'Pré-commercialisation',
         images: [
           'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
           'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
           'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
         ],
         features: [
-          'Voiries bitumÃ©es',
-          'Ã‰clairage public solaire',
-          'RÃ©seau d\'assainissement',
-          'ChÃ¢teau d\'eau',
-          'MosquÃ©e communautaire',
+          'Voiries bitumées',
+          'Éclairage public solaire',
+          'Réseau d\'assainissement',
+          'Château d\'eau',
+          'Mosquée communautaire',
           'Terrain de sport'
         ],
         construction_timeline: {
@@ -265,7 +265,7 @@ const PromoterProjectsPage = () => {
             surface: '180mÂ² sur 300mÂ²',
             price: 55000000,
             available: 15,
-            description: '4 chambres, double salon, cuisine Ã©quipÃ©e'
+            description: '4 chambres, double salon, cuisine équipée'
           },
           {
             type: 'Villa Premium',
@@ -275,7 +275,7 @@ const PromoterProjectsPage = () => {
             description: '5 chambres, piscine, garage 2 voitures'
           }
         ],
-        description: 'Projet de lotissement moderne avec infrastructure complÃ¨te. Cadre verdoyant et paisible idÃ©al pour familles. FacilitÃ©s de paiement et accompagnement construction.',
+        description: 'Projet de lotissement moderne avec infrastructure complète. Cadre verdoyant et paisible idéal pour familles. Facilités de paiement et accompagnement construction.',
         delivery_guarantee: true,
         insurance_coverage: true
       },
@@ -284,7 +284,7 @@ const PromoterProjectsPage = () => {
         title: 'Business Center Plateau',
         type: 'Immeuble commercial',
         promoter: {
-          name: 'Immobilier Pro SÃ©nÃ©gal',
+          name: 'Immobilier Pro Sénégal',
           rating: 4.9,
           projects_completed: 12,
           phone: '+221 76 555 44 33',
@@ -305,12 +305,12 @@ const PromoterProjectsPage = () => {
           'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80'
         ],
         features: [
-          'Bureaux Ã©quipÃ©s',
+          'Bureaux équipés',
           'Fibre optique',
-          'Climatisation centralisÃ©e',
+          'Climatisation centralisée',
           'Ascenseurs',
-          'Parking privÃ©',
-          'SÃ©curitÃ© renforcÃ©e'
+          'Parking privé',
+          'Sécurité renforcée'
         ],
         construction_timeline: {
           phases: [
@@ -331,7 +331,7 @@ const PromoterProjectsPage = () => {
               progress: 85 
             },
             { 
-              name: 'Finitions et Ã©quipements', 
+              name: 'Finitions et équipements', 
               duration: '3 mois', 
               status: 'pending', 
               start_date: '2024-12-01',
@@ -339,7 +339,7 @@ const PromoterProjectsPage = () => {
               progress: 0 
             },
             { 
-              name: 'AmÃ©nagements', 
+              name: 'Aménagements', 
               duration: '2 mois', 
               status: 'pending', 
               start_date: '2025-03-01',
@@ -361,10 +361,10 @@ const PromoterProjectsPage = () => {
             surface: '80mÂ²',
             price: 85000000,
             available: 4,
-            description: 'Bureaux cloisonnÃ©s, salle de rÃ©union'
+            description: 'Bureaux cloisonnés, salle de réunion'
           }
         ],
-        description: 'Immeuble de bureaux moderne au cÅ“ur du quartier des affaires. IdÃ©al pour siÃ¨ges sociaux et bureaux de direction. Rendement locatif garanti.',
+        description: 'Immeuble de bureaux moderne au cÅ“ur du quartier des affaires. Idéal pour sièges sociaux et bureaux de direction. Rendement locatif garanti.',
         delivery_guarantee: true,
         insurance_coverage: true
       }
@@ -412,10 +412,10 @@ const PromoterProjectsPage = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'PrÃ©-commercialisation': return 'bg-blue-100 text-blue-800';
+      case 'Pré-commercialisation': return 'bg-blue-100 text-blue-800';
       case 'En construction': return 'bg-yellow-100 text-yellow-800';
-      case 'PrÃªt Ã  livrer': return 'bg-green-100 text-green-800';
-      case 'LivrÃ©': return 'bg-gray-100 text-gray-800';
+      case 'Prêt Ï  livrer': return 'bg-green-100 text-green-800';
+      case 'Livré': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
@@ -484,19 +484,19 @@ const PromoterProjectsPage = () => {
           </div>
           <Progress value={project.construction_progress} className="h-2" />
           <div className="text-xs text-gray-500 mt-1">
-            Livraison prÃ©vue: {new Date(project.delivery_date).toLocaleDateString('fr-FR')}
+            Livraison prévue: {new Date(project.delivery_date).toLocaleDateString('fr-FR')}
           </div>
         </div>
 
         {/* Prix */}
         <div className="mb-4">
-          <div className="text-sm text-gray-600">Ã€ partir de</div>
+          <div className="text-sm text-gray-600">À partir de</div>
           <div className="text-xl font-bold text-green-600">
             {formatPrice(project.price_range.min)}
           </div>
           {project.price_range.max > project.price_range.min && (
             <div className="text-sm text-gray-500">
-              jusqu'Ã  {formatPrice(project.price_range.max)}
+              jusqu'Ï  {formatPrice(project.price_range.max)}
             </div>
           )}
         </div>
@@ -525,7 +525,7 @@ const PromoterProjectsPage = () => {
             onClick={() => navigate(`/project/${project.id}`)}
           >
             <Eye className="w-4 h-4 mr-2" />
-            Voir DÃ©tails
+            Voir Détails
           </Button>
           <Button variant="outline" size="icon">
             <Heart className="w-4 h-4" />
@@ -542,7 +542,7 @@ const PromoterProjectsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Helmet>
         <title>Projets Immobiliers des Promoteurs | Teranga Foncier</title>
-        <meta name="description" content="DÃ©couvrez les projets immobiliers en cours et Ã  venir des promoteurs partenaires. PrÃ©commandez votre appartement ou villa en construction." />
+        <meta name="description" content="Découvrez les projets immobiliers en cours et Ï  venir des promoteurs partenaires. Précommandez votre appartement ou villa en construction." />
       </Helmet>
 
       {/* Header */}
@@ -551,7 +551,7 @@ const PromoterProjectsPage = () => {
           <div className="flex items-center justify-between">
             <div>
               <h1 className="text-3xl font-bold text-gray-900">Projets des Promoteurs</h1>
-              <p className="text-gray-600 mt-2">PrÃ©commandez dans les nouveaux projets immobiliers</p>
+              <p className="text-gray-600 mt-2">Précommandez dans les nouveaux projets immobiliers</p>
             </div>
             <div className="flex items-center space-x-4">
               <Badge className="bg-blue-100 text-blue-800">
@@ -620,25 +620,25 @@ const PromoterProjectsPage = () => {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les statuts</SelectItem>
-                      <SelectItem value="PrÃ©-commercialisation">PrÃ©-commercialisation</SelectItem>
+                      <SelectItem value="Pré-commercialisation">Pré-commercialisation</SelectItem>
                       <SelectItem value="En construction">En construction</SelectItem>
-                      <SelectItem value="PrÃªt Ã  livrer">PrÃªt Ã  livrer</SelectItem>
+                      <SelectItem value="Prêt Ï  livrer">Prêt Ï  livrer</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* RÃ©gion */}
+                {/* Région */}
                 <div>
-                  <label className="block text-sm font-medium mb-2">RÃ©gion</label>
+                  <label className="block text-sm font-medium mb-2">Région</label>
                   <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                     <SelectTrigger>
-                      <SelectValue YOUR_API_KEY="Toutes les rÃ©gions" />
+                      <SelectValue YOUR_API_KEY="Toutes les régions" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">Toutes les rÃ©gions</SelectItem>
+                      <SelectItem value="all">Toutes les régions</SelectItem>
                       <SelectItem value="Dakar">Dakar</SelectItem>
                       <SelectItem value="Pikine">Pikine</SelectItem>
-                      <SelectItem value="ThiÃ¨s">ThiÃ¨s</SelectItem>
+                      <SelectItem value="Thiès">Thiès</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -651,9 +651,9 @@ const PromoterProjectsPage = () => {
                       <SelectValue />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="latest">Plus rÃ©cents</SelectItem>
+                      <SelectItem value="latest">Plus récents</SelectItem>
                       <SelectItem value="price_low">Prix croissant</SelectItem>
-                      <SelectItem value="price_high">Prix dÃ©croissant</SelectItem>
+                      <SelectItem value="price_high">Prix décroissant</SelectItem>
                       <SelectItem value="progress">Avancement</SelectItem>
                     </SelectContent>
                   </Select>
@@ -666,7 +666,7 @@ const PromoterProjectsPage = () => {
                   setSelectedRegion('all');
                   setSortBy('latest');
                 }}>
-                  RÃ©initialiser
+                  Réinitialiser
                 </Button>
               </CardContent>
             </Card>
@@ -677,8 +677,8 @@ const PromoterProjectsPage = () => {
             {filteredProjects.length === 0 ? (
               <div className="text-center py-12">
                 <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun projet trouvÃ©</h3>
-                <p className="text-gray-600">Essayez de modifier vos critÃ¨res de recherche</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun projet trouvé</h3>
+                <p className="text-gray-600">Essayez de modifier vos critères de recherche</p>
               </div>
             ) : (
               <div className={`grid gap-6 ${

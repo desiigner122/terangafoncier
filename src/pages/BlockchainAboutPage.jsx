@@ -36,37 +36,37 @@ const BlockchainAboutPage = () => {
   const [activeTimeline, setActiveTimeline] = useState(0);
 
   const companyStats = [
-    { label: "AnnÃ©es d'ExpÃ©rience", value: "5+", icon: Calendar, color: "text-blue-600" },
+    { label: "Années d'Expérience", value: "5+", icon: Calendar, color: "text-blue-600" },
     { label: "Transactions Blockchain", value: "2.8K+", icon: Database, color: "text-purple-600" },
     { label: "Clients Satisfaits", value: "8.2K+", icon: Users, color: "text-green-600" },
     { label: "Pays Couverts", value: "50+", icon: Globe, color: "text-orange-600" },
     { label: "Smart Contracts", value: "892", icon: Zap, color: "text-cyan-600" },
-    { label: "Projets SurveillÃ©s", value: "456", icon: Eye, color: "text-pink-600" }
+    { label: "Projets Surveillés", value: "456", icon: Eye, color: "text-pink-600" }
   ];
 
   const coreValues = [
     {
       icon: Shield,
-      title: "SÃ©curitÃ© Blockchain",
-      description: "Nous utilisons la technologie blockchain pour garantir la sÃ©curitÃ© et la transparence de toutes les transactions immobiliÃ¨res.",
+      title: "Sécurité Blockchain",
+      description: "Nous utilisons la technologie blockchain pour garantir la sécurité et la transparence de toutes les transactions immobilières.",
       color: "from-blue-500 to-cyan-500"
     },
     {
       icon: Heart,
       title: "Impact Social",
-      description: "Notre mission est de dÃ©mocratiser l'accÃ¨s Ã  la propriÃ©tÃ© fonciÃ¨re pour tous les SÃ©nÃ©galais, notamment la diaspora.",
+      description: "Notre mission est de démocratiser l'accès Ï  la propriété foncière pour tous les Sénégalais, notamment la diaspora.",
       color: "from-red-500 to-pink-500"
     },
     {
       icon: Brain,
       title: "Innovation IA",
-      description: "L'intelligence artificielle guide nos dÃ©cisions et amÃ©liore continuellement l'expÃ©rience utilisateur.",
+      description: "L'intelligence artificielle guide nos décisions et améliore continuellement l'expérience utilisateur.",
       color: "from-purple-500 to-indigo-500"
     },
     {
       icon: Globe,
       title: "Vision Globale",
-      description: "Nous connectons le SÃ©nÃ©gal au monde en facilitant les investissements immobiliers transfrontaliers.",
+      description: "Nous connectons le Sénégal au monde en facilitant les investissements immobiliers transfrontaliers.",
       color: "from-emerald-500 to-teal-500"
     }
   ];
@@ -74,43 +74,43 @@ const BlockchainAboutPage = () => {
   const timeline = [
     {
       year: "2019",
-      title: "CrÃ©ation de Teranga Foncier",
-      description: "Lancement de la premiÃ¨re plateforme immobiliÃ¨re digitale du SÃ©nÃ©gal",
+      title: "Création de Teranga Foncier",
+      description: "Lancement de la première plateforme immobilière digitale du Sénégal",
       icon: Rocket,
       color: "bg-blue-500"
     },
     {
       year: "2020",
       title: "Partenariats Institutionnels",
-      description: "Signature d'accords avec les principales mairies du SÃ©nÃ©gal",
+      description: "Signature d'accords avec les principales mairies du Sénégal",
       icon: Landmark,
       color: "bg-emerald-500"
     },
     {
       year: "2021",
       title: "Expansion Diaspora",
-      description: "Ouverture des services Ã  la diaspora sÃ©nÃ©galaise mondiale",
+      description: "Ouverture des services Ï  la diaspora sénégalaise mondiale",
       icon: Globe,
       color: "bg-purple-500"
     },
     {
       year: "2022",
       title: "Intelligence Artificielle",
-      description: "IntÃ©gration de l'IA pour le suivi de construction par satellite",
+      description: "Intégration de l'IA pour le suivi de construction par satellite",
       icon: Brain,
       color: "bg-orange-500"
     },
     {
       year: "2023",
       title: "Blockchain & NFT",
-      description: "Lancement des titres de propriÃ©tÃ© tokenisÃ©s sur blockchain",
+      description: "Lancement des titres de propriété tokenisés sur blockchain",
       icon: Blocks,
       color: "bg-indigo-500"
     },
     {
       year: "2024",
       title: "Smart Contracts",
-      description: "DÃ©ploiement des contrats intelligents pour l'automatisation",
+      description: "Déploiement des contrats intelligents pour l'automatisation",
       icon: Zap,
       color: "bg-cyan-500"
     }
@@ -118,19 +118,19 @@ const BlockchainAboutPage = () => {
 
   const teamMembers = [
     {
-      name: "Abdoulaye DiÃ©mÃ©",
+      name: "Abdoulaye Diémé",
       role: "Fondateur & CEO",
-      speciality: "Blockchain & DÃ©veloppement Full-Stack",
+      speciality: "Blockchain & Développement Full-Stack",
       experience: "8+ ans",
       education: "Expert en Technologies Web & Blockchain",
       image: "/api/YOUR_API_KEY/120/120",
       color: "from-blue-500 to-purple-500",
-      description: "Entrepreneur passionnÃ© et dÃ©veloppeur full-stack expÃ©rimentÃ©, Abdoulaye rÃ©volutionne l'immobilier sÃ©nÃ©galais en combinant blockchain et intelligence artificielle pour dÃ©mocratiser l'accÃ¨s au foncier."
+      description: "Entrepreneur passionné et développeur full-stack expérimenté, Abdoulaye révolutionne l'immobilier sénégalais en combinant blockchain et intelligence artificielle pour démocratiser l'accès au foncier."
     }
   ];
 
   const partnerships = [
-    { name: "MinistÃ¨re de l'Urbanisme", type: "Institution", logo: "/api/YOUR_API_KEY/80/80" },
+    { name: "Ministère de l'Urbanisme", type: "Institution", logo: "/api/YOUR_API_KEY/80/80" },
     { name: "Banque Atlantique", type: "Financier", logo: "/api/YOUR_API_KEY/80/80" },
     { name: "Ethereum Foundation", type: "Technologique", logo: "/api/YOUR_API_KEY/80/80" },
     { name: "APIX", type: "Promotion Investissement", logo: "/api/YOUR_API_KEY/80/80" },
@@ -140,20 +140,20 @@ const BlockchainAboutPage = () => {
 
   const testimonials = [
     {
-      quote: "Teranga Foncier a rÃ©volutionnÃ© notre faÃ§on de gÃ©rer les terrains communaux. La blockchain apporte une transparence inÃ©galÃ©e.",
-      author: "Maire de GuÃ©diawaye",
-      role: "AutoritÃ© Municipale",
+      quote: "Teranga Foncier a révolutionné notre façon de gérer les terrains communaux. La blockchain apporte une transparence inégalée.",
+      author: "Maire de Guédiawaye",
+      role: "Autorité Municipale",
       rating: 5
     },
     {
-      quote: "GrÃ¢ce Ã  leur plateforme, j'ai pu investir depuis la France en toute sÃ©rÃ©nitÃ©. Le suivi IA de ma construction est exceptionnel.",
+      quote: "Grâce Ï  leur plateforme, j'ai pu investir depuis la France en toute sérénité. Le suivi IA de ma construction est exceptionnel.",
       author: "Aminata Diallo",
       role: "Diaspora - Paris",
       rating: 5
     },
     {
-      quote: "Les smart contracts ont simplifiÃ© nos processus d'Ã©valuation et de financement. Un vrai game-changer pour le secteur bancaire.",
-      author: "Directeur CrÃ©dit Immobilier",
+      quote: "Les smart contracts ont simplifié nos processus d'évaluation et de financement. Un vrai game-changer pour le secteur bancaire.",
+      author: "Directeur Crédit Immobilier",
       role: "Banque Atlantique",
       rating: 5
     }
@@ -162,8 +162,8 @@ const BlockchainAboutPage = () => {
   return (
     <>
       <Helmet>
-        <title>Ã€ Propos - Teranga Foncier | RÃ©volution Blockchain ImmobiliÃ¨re</title>
-        <meta name="description" content="DÃ©couvrez Teranga Foncier, la premiÃ¨re plateforme blockchain immobiliÃ¨re du SÃ©nÃ©gal. Notre mission, notre Ã©quipe et notre vision pour l'avenir." />
+        <title>À Propos - Teranga Foncier | Révolution Blockchain Immobilière</title>
+        <meta name="description" content="Découvrez Teranga Foncier, la première plateforme blockchain immobilière du Sénégal. Notre mission, notre équipe et notre vision pour l'avenir." />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
@@ -205,15 +205,15 @@ const BlockchainAboutPage = () => {
               </Badge>
               
               <h1 className="text-4xl lg:text-6xl font-bold mb-6">
-                RÃ©volutionner l'Immobilier
+                Révolutionner l'Immobilier
                 <span className="block bg-gradient-to-r from-yellow-400 to-orange-400 bg-clip-text text-transparent">
                   par la Blockchain
                 </span>
               </h1>
               
               <p className="text-xl lg:text-2xl text-white/90 mb-8 leading-relaxed">
-                Depuis 2019, nous connectons le SÃ©nÃ©gal au monde grÃ¢ce Ã  la premiÃ¨re plateforme 
-                blockchain immobiliÃ¨re d'Afrique de l'Ouest
+                Depuis 2019, nous connectons le Sénégal au monde grâce Ï  la première plateforme 
+                blockchain immobilière d'Afrique de l'Ouest
               </p>
 
               {/* Company Stats */}
@@ -252,7 +252,7 @@ const BlockchainAboutPage = () => {
                 Notre Mission & Vision
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                DÃ©mocratiser l'accÃ¨s Ã  la propriÃ©tÃ© fonciÃ¨re grÃ¢ce Ã  la technologie blockchain
+                Démocratiser l'accès Ï  la propriété foncière grâce Ï  la technologie blockchain
               </p>
             </motion.div>
 
@@ -271,9 +271,9 @@ const BlockchainAboutPage = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 leading-relaxed text-lg">
-                      Faciliter l'accÃ¨s Ã  la propriÃ©tÃ© fonciÃ¨re pour tous les SÃ©nÃ©galais, 
-                      qu'ils vivent au pays ou Ã  l'Ã©tranger, en utilisant la technologie blockchain 
-                      pour garantir transparence, sÃ©curitÃ© et efficacitÃ© dans toutes les transactions immobiliÃ¨res.
+                      Faciliter l'accès Ï  la propriété foncière pour tous les Sénégalais, 
+                      qu'ils vivent au pays ou Ï  l'étranger, en utilisant la technologie blockchain 
+                      pour garantir transparence, sécurité et efficacité dans toutes les transactions immobilières.
                     </p>
                   </CardContent>
                 </Card>
@@ -293,9 +293,9 @@ const BlockchainAboutPage = () => {
                   </CardHeader>
                   <CardContent>
                     <p className="text-gray-700 leading-relaxed text-lg">
-                      Devenir la rÃ©fÃ©rence africaine en matiÃ¨re de technologie blockchain appliquÃ©e 
-                      Ã  l'immobilier, en crÃ©ant un Ã©cosystÃ¨me oÃ¹ chaque citoyen peut investir, 
-                      construire et prospÃ©rer grÃ¢ce Ã  des outils numÃ©riques innovants.
+                      Devenir la référence africaine en matière de technologie blockchain appliquée 
+                      Ï  l'immobilier, en créant un écosystème où chaque citoyen peut investir, 
+                      construire et prospérer grâce Ï  des outils numériques innovants.
                     </p>
                   </CardContent>
                 </Card>
@@ -357,7 +357,7 @@ const BlockchainAboutPage = () => {
                 Notre Parcours d'Innovation
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                5 annÃ©es d'Ã©volution continue vers l'excellence technologique
+                5 années d'évolution continue vers l'excellence technologique
               </p>
             </motion.div>
 
@@ -414,7 +414,7 @@ const BlockchainAboutPage = () => {
                 Le Fondateur
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Un entrepreneur visionnaire qui rÃ©volutionne l'immobilier sÃ©nÃ©galais
+                Un entrepreneur visionnaire qui révolutionne l'immobilier sénégalais
               </p>
             </motion.div>
 
@@ -431,21 +431,21 @@ const BlockchainAboutPage = () => {
                     <div className="w-24 h-24 mx-auto mb-6 rounded-full overflow-hidden">
                       <img 
                         src="/api/YOUR_API_KEY/120/120" 
-                        alt="Abdoulaye DiÃ©mÃ©"
+                        alt="Abdoulaye Diémé"
                         className="w-full h-full object-cover"
                       />
                     </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-2">Abdoulaye DiÃ©mÃ©</h3>
+                    <h3 className="text-xl font-bold text-gray-900 mb-2">Abdoulaye Diémé</h3>
                     <p className="text-blue-600 font-medium mb-4">Fondateur & CEO</p>
                     
                     <div className="space-y-3 mb-6 text-sm text-gray-600">
                       <div className="flex items-center justify-center gap-2">
                         <Briefcase className="h-4 w-4" />
-                        <span>Blockchain & DÃ©veloppement Full-Stack</span>
+                        <span>Blockchain & Développement Full-Stack</span>
                       </div>
                       <div className="flex items-center justify-center gap-2">
                         <Calendar className="h-4 w-4" />
-                        <span>8+ ans d'expÃ©rience</span>
+                        <span>8+ ans d'expérience</span>
                       </div>
                       <div className="flex items-center justify-center gap-2">
                         <GraduationCap className="h-4 w-4" />
@@ -454,9 +454,9 @@ const BlockchainAboutPage = () => {
                     </div>
                     
                     <p className="text-sm text-gray-600 leading-relaxed">
-                      Entrepreneur passionnÃ© et dÃ©veloppeur full-stack expÃ©rimentÃ©, Abdoulaye rÃ©volutionne 
-                      l'immobilier sÃ©nÃ©galais en combinant blockchain et intelligence artificielle pour 
-                      dÃ©mocratiser l'accÃ¨s au foncier.
+                      Entrepreneur passionné et développeur full-stack expérimenté, Abdoulaye révolutionne 
+                      l'immobilier sénégalais en combinant blockchain et intelligence artificielle pour 
+                      démocratiser l'accès au foncier.
                     </p>
                   </CardContent>
                 </Card>
@@ -478,7 +478,7 @@ const BlockchainAboutPage = () => {
                 Nos Partenaires de Confiance
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                Un Ã©cosystÃ¨me collaboratif pour rÃ©volutionner l'immobilier au SÃ©nÃ©gal
+                Un écosystème collaboratif pour révolutionner l'immobilier au Sénégal
               </p>
             </motion.div>
 
@@ -568,10 +568,10 @@ const BlockchainAboutPage = () => {
               className="text-center max-w-4xl mx-auto"
             >
               <h2 className="text-3xl lg:text-4xl font-bold text-gray-900 mb-6">
-                Rejoignez la RÃ©volution Blockchain
+                Rejoignez la Révolution Blockchain
               </h2>
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                DÃ©couvrez comment notre technologie peut transformer votre projet immobilier au SÃ©nÃ©gal
+                Découvrez comment notre technologie peut transformer votre projet immobilier au Sénégal
               </p>
 
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

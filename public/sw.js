@@ -3,7 +3,7 @@
  * Gestion des push notifications et cache offline
  */
 
-const CACHE_NAME = 'teranga-foncier-v1.0.0';
+const CACH    console.log('🔄 Synchronisation blockchain en arrière-plan');_NAME = 'teranga-foncier-v1.0.0';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',
@@ -39,12 +39,12 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Interception des requÃªtes (stratÃ©gie cache-first)
+// Interception des requêtes (stratégie cache-first)
 self.addEventListener('fetch', event => {
   event.respondWith(
     caches.match(event.request)
       .then(response => {
-        // Retourner la rÃ©ponse en cache ou fetch depuis le rÃ©seau
+        // Retourner la réponse en cache ou fetch depuis le réseau
         return response || fetch(event.request);
       })
   );
@@ -52,7 +52,7 @@ self.addEventListener('fetch', event => {
 
 // Gestion des push notifications
 self.addEventListener('push', event => {
-  console.log('ðŸ“± Push notification reÃ§ue:', event);
+  console.log('ðŸ“± Push notification reçue:', event);
 
   const options = {
     body: 'Nouvelle notification Teranga Foncier',
@@ -102,23 +102,23 @@ self.addEventListener('notificationclick', event => {
     );
   } else if (event.action === 'close') {
     // Fermer la notification
-    console.log('ðŸšª Notification fermÃ©e');
+    console.log('🚪 Notification fermée');
   } else {
-    // Clic par dÃ©faut - ouvrir l'application
+    // Clic par défaut - ouvrir l'application
     event.waitUntil(
       clients.openWindow('/')
     );
   }
 });
 
-// Synchronisation en arriÃ¨re-plan
+// Synchronisation en arrière-plan
 self.addEventListener('sync', event => {
   if (event.tag === 'blockchain-sync') {
-    console.log('ðŸ”„ Synchronisation blockchain en arriÃ¨re-plan');
+    console.log('ðŸ”„ Synchronisation blockchain en arrière-plan');
     event.waitUntil(
       // Logique de synchronisation
       fetch('/api/sync-blockchain', { method: 'POST' })
-        .then(response => console.log('âœ… Sync blockchain terminÃ©e'))
+        .then(response => console.log('✅ Sync blockchain terminée'))
         .catch(error => console.error('âŒ Erreur sync blockchain:', error))
     );
   }

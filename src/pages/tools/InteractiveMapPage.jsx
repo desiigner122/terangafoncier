@@ -8,22 +8,22 @@ const InteractiveMapPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedProperty, setSelectedProperty] = useState(null);
 
-  // PropriÃ©tÃ©s fictives avec donnÃ©es rÃ©alistes pour le SÃ©nÃ©gal
+  // Propriétés fictives avec données réalistes pour le Sénégal
   const properties = [
     {
       id: 1,
-      title: "Terrain rÃ©sidentiel - Almadies",
+      title: "Terrain résidentiel - Almadies",
       location: "Almadies, Dakar",
       price: 75000000,
       surface: 500,
       type: "terrain",
       status: "verified",
       coordinates: { lat: 14.7645, lng: -17.5230 },
-      owner: "Promoteur SÃ©nÃ©gal Plus",
+      owner: "Promoteur Sénégal Plus",
       phone: "+221 77 123 45 67",
       rating: 4.8,
       amenities: ["electricity", "water", "road"],
-      description: "Terrain viabilisÃ© dans le quartier rÃ©sidentiel des Almadies"
+      description: "Terrain viabilisé dans le quartier résidentiel des Almadies"
     },
     {
       id: 2,
@@ -34,7 +34,7 @@ const InteractiveMapPage = () => {
       type: "villa",
       status: "available",
       coordinates: { lat: 14.7392, lng: -17.4816 },
-      owner: "Construction TÃ©ranga",
+      owner: "Construction Téranga",
       phone: "+221 77 987 65 43",
       rating: 4.9,
       amenities: ["electricity", "water", "road", "garden"],
@@ -42,7 +42,7 @@ const InteractiveMapPage = () => {
     },
     {
       id: 3,
-      title: "Appartement 3 piÃ¨ces - Plateau",
+      title: "Appartement 3 pièces - Plateau",
       location: "Plateau, Dakar",
       price: 95000000,
       surface: 120,
@@ -57,23 +57,23 @@ const InteractiveMapPage = () => {
     },
     {
       id: 4,
-      title: "Terrain commercial - ThiÃ¨s",
-      location: "Centre-ville, ThiÃ¨s",
+      title: "Terrain commercial - Thiès",
+      location: "Centre-ville, Thiès",
       price: 45000000,
       surface: 800,
       type: "commercial",
       status: "verified",
       coordinates: { lat: 14.7889, lng: -16.9300 },
-      owner: "Invest ThiÃ¨s",
+      owner: "Invest Thiès",
       phone: "+221 77 234 56 78",
       rating: 4.5,
       amenities: ["electricity", "water", "road", "commercial"],
-      description: "Terrain commercial bien situÃ© Ã  ThiÃ¨s"
+      description: "Terrain commercial bien situé Ï  Thiès"
     },
     {
       id: 5,
       title: "Villa traditionnelle - Saint-Louis",
-      location: "ÃŽle de Saint-Louis",
+      location: "Île de Saint-Louis",
       price: 85000000,
       surface: 250,
       type: "villa",
@@ -83,7 +83,7 @@ const InteractiveMapPage = () => {
       phone: "+221 77 345 67 89",
       rating: 4.7,
       amenities: ["electricity", "water", "heritage"],
-      description: "Villa coloniale rÃ©novÃ©e sur l'Ã®le historique"
+      description: "Villa coloniale rénovée sur l'île historique"
     }
   ];
 
@@ -102,7 +102,7 @@ const InteractiveMapPage = () => {
   };
 
   const statusLabels = {
-    verified: 'VÃ©rifiÃ©',
+    verified: 'Vérifié',
     available: 'Disponible',
     sold: 'Vendu'
   };
@@ -117,27 +117,27 @@ const InteractiveMapPage = () => {
   const features = [
     {
       icon: Shield,
-      title: "PropriÃ©tÃ©s VÃ©rifiÃ©es",
-      description: "Toutes les propriÃ©tÃ©s sont vÃ©rifiÃ©es par nos notaires partenaires"
+      title: "Propriétés Vérifiées",
+      description: "Toutes les propriétés sont vérifiées par nos notaires partenaires"
     },
     {
       icon: Zap,
       title: "Recherche Intelligente",
-      description: "Filtres avancÃ©s et gÃ©olocalisation pour trouver le bien idÃ©al"
+      description: "Filtres avancés et géolocalisation pour trouver le bien idéal"
     },
     {
       icon: Target,
       title: "Contact Direct",
-      description: "Contactez directement les propriÃ©taires vÃ©rifiÃ©s"
+      description: "Contactez directement les propriétaires vérifiés"
     }
   ];
 
   return (
     <>
       <Helmet>
-        <title>Carte Interactive des PropriÃ©tÃ©s - Teranga Foncier</title>
-        <meta name="description" content="Explorez les terrains et propriÃ©tÃ©s disponibles au SÃ©nÃ©gal sur notre carte interactive. PropriÃ©tÃ©s vÃ©rifiÃ©es, prix transparents, contact direct." />
-        <meta name="keywords" content="carte immobilier sÃ©nÃ©gal, terrains dakar, propriÃ©tÃ©s vÃ©rifiÃ©es, gÃ©olocalisation foncier" />
+        <title>Carte Interactive des Propriétés - Teranga Foncier</title>
+        <meta name="description" content="Explorez les terrains et propriétés disponibles au Sénégal sur notre carte interactive. Propriétés vérifiées, prix transparents, contact direct." />
+        <meta name="keywords" content="carte immobilier sénégal, terrains dakar, propriétés vérifiées, géolocalisation foncier" />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-green-50 via-blue-50 to-teal-50">
@@ -158,13 +158,13 @@ const InteractiveMapPage = () => {
               </div>
               
               <h1 className="text-5xl font-bold bg-gradient-to-r from-green-600 to-teal-600 bg-clip-text text-transparent mb-6">
-                Carte Interactive des PropriÃ©tÃ©s
+                Carte Interactive des Propriétés
               </h1>
               
               <p className="text-xl text-gray-600 mb-8 leading-relaxed">
-                Explorez les terrains et propriÃ©tÃ©s disponibles au SÃ©nÃ©gal en temps rÃ©el.
+                Explorez les terrains et propriétés disponibles au Sénégal en temps réel.
                 <br />
-                <span className="text-green-600 font-semibold">PropriÃ©tÃ©s vÃ©rifiÃ©es â€¢ GÃ©olocalisation â€¢ Contact direct</span>
+                <span className="text-green-600 font-semibold">Propriétés vérifiées â€¢ Géolocalisation â€¢ Contact direct</span>
               </p>
             </motion.div>
           </div>
@@ -201,7 +201,7 @@ const InteractiveMapPage = () => {
             <div className="bg-white rounded-3xl shadow-2xl border border-gray-100 overflow-hidden">
               {/* Search and Filters */}
               <div className="bg-gradient-to-r from-green-600 to-teal-600 p-8">
-                <h2 className="text-3xl font-bold text-white mb-6">Rechercher des PropriÃ©tÃ©s</h2>
+                <h2 className="text-3xl font-bold text-white mb-6">Rechercher des Propriétés</h2>
                 
                 <div className="flex flex-col lg:flex-row gap-4 mb-6">
                   <div className="flex-1 relative">
@@ -233,7 +233,7 @@ const InteractiveMapPage = () => {
                 </div>
 
                 <div className="text-white/90">
-                  {filteredProperties.length} propriÃ©tÃ©{filteredProperties.length > 1 ? 's' : ''} trouvÃ©e{filteredProperties.length > 1 ? 's' : ''}
+                  {filteredProperties.length} propriété{filteredProperties.length > 1 ? 's' : ''} trouvée{filteredProperties.length > 1 ? 's' : ''}
                 </div>
               </div>
 
@@ -244,7 +244,7 @@ const InteractiveMapPage = () => {
                     <Map className="h-16 w-16 text-green-500 mx-auto mb-4" />
                     <h3 className="text-xl font-semibold text-gray-700 mb-2">Carte Interactive</h3>
                     <p className="text-gray-600">
-                      Visualisation des {filteredProperties.length} propriÃ©tÃ©s disponibles
+                      Visualisation des {filteredProperties.length} propriétés disponibles
                     </p>
                   </div>
                 </div>
@@ -271,7 +271,7 @@ const InteractiveMapPage = () => {
 
               {/* Properties List */}
               <div className="p-8">
-                <h3 className="text-2xl font-bold text-gray-800 mb-6">PropriÃ©tÃ©s Disponibles</h3>
+                <h3 className="text-2xl font-bold text-gray-800 mb-6">Propriétés Disponibles</h3>
                 <div className="grid lg:grid-cols-2 gap-6">
                   {filteredProperties.map(property => (
                     <motion.div
@@ -315,7 +315,7 @@ const InteractiveMapPage = () => {
                         </div>
                         <button className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-lg text-sm font-medium hover:from-green-600 hover:to-teal-700 transition-all">
                           <Eye className="inline h-4 w-4 mr-1" />
-                          Voir dÃ©tails
+                          Voir détails
                         </button>
                       </div>
                     </motion.div>
@@ -367,13 +367,13 @@ const InteractiveMapPage = () => {
                 <p className="text-gray-600 mb-6">{selectedProperty.description}</p>
 
                 <div className="bg-gray-50 rounded-2xl p-4 mb-6">
-                  <h4 className="font-semibold text-gray-800 mb-2">PropriÃ©taire</h4>
+                  <h4 className="font-semibold text-gray-800 mb-2">Propriétaire</h4>
                   <div className="flex items-center justify-between">
                     <div>
                       <div className="font-medium">{selectedProperty.owner}</div>
                       <div className="flex items-center text-sm text-gray-600">
                         <Star className="h-4 w-4 text-yellow-400 mr-1" />
-                        {selectedProperty.rating} Ã©toiles
+                        {selectedProperty.rating} étoiles
                       </div>
                     </div>
                     <button className="bg-gradient-to-r from-green-500 to-teal-600 text-white px-4 py-2 rounded-lg font-medium hover:from-green-600 hover:to-teal-700 transition-all">
@@ -409,14 +409,14 @@ const InteractiveMapPage = () => {
               className="max-w-3xl mx-auto"
             >
               <h2 className="text-3xl font-bold text-white mb-6">
-                Vous avez une propriÃ©tÃ© Ã  vendre ?
+                Vous avez une propriété Ï  vendre ?
               </h2>
               <p className="text-xl text-green-100 mb-8">
-                Ajoutez votre propriÃ©tÃ© sur notre carte et touchez des milliers d'acheteurs vÃ©rifiÃ©s
+                Ajoutez votre propriété sur notre carte et touchez des milliers d'acheteurs vérifiés
               </p>
               <div className="flex flex-wrap gap-4 justify-center">
                 <button className="bg-white text-green-600 px-8 py-4 rounded-xl font-semibold hover:bg-gray-50 transition-colors">
-                  Ajouter ma propriÃ©tÃ©
+                  Ajouter ma propriété
                 </button>
                 <button className="border-2 border-white text-white px-8 py-4 rounded-xl font-semibold hover:bg-white hover:text-green-600 transition-colors">
                   Devenir partenaire

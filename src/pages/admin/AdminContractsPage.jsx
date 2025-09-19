@@ -11,7 +11,7 @@ import {
 import { motion } from 'framer-motion';
 import { Input } from '@/components/ui/input';
 import { jsPDF } from "jspdf"; 
-// useToast import supprimÃ© - utilisation window.safeGlobalToast 
+// useToast import supprimé - utilisation window.safeGlobalToast 
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const initialSampleContracts = [
@@ -20,7 +20,7 @@ const initialSampleContracts = [
 ];
 
 const AdminContractsPage = () => {
-  // toast remplacÃ© par window.safeGlobalToast 
+  // toast remplacé par window.safeGlobalToast 
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
 

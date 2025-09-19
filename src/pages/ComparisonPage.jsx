@@ -16,7 +16,7 @@ import {
   Zap
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/customSupabaseClient';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
@@ -38,7 +38,7 @@ const ComparisonPage = () => {
   const { comparisonList, removeFromCompare, clearCompare } = useContext(ComparisonContext);
   const [parcelsToCompare, setParcelsToCompare] = useState([]);
   const [loading, setLoading] = useState(true);
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   useEffect(() => {
     const fetchParcels = async () => {

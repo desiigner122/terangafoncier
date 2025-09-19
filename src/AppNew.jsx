@@ -6,7 +6,7 @@ import Header from '@/components/layout/Header';
 import Footer from '@/components/layout/Footer';
 import DashboardLayout from '@/components/layout/DashboardLayout';
 import HomePage from '@/pages/HomePage';
-import LoginPage from '@/pages/LoginPage';
+import BlockchainLoginPage from '@/pages/BlockchainLoginPage';
 import RegisterPage from '@/pages/RegisterPage';
 import DashboardPage from '@/pages/DashboardPage';
 import ParcelsListPage from '@/pages/ParcelsListPage';
@@ -151,7 +151,7 @@ function App() {
           <Routes>
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />
-              <Route path="login" element={<LoginPage />} />
+              <Route path="login" element={<BlockchainLoginPage />} />
               <Route path="register" element={<RegisterPage />} />
               <Route path="test-account-creation" element={<AccountCreationTestPage />} />
               <Route path="banned" element={<BannedPage />} />

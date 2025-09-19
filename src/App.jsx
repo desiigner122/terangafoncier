@@ -250,7 +250,7 @@ function App() {
             <Routes>
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />
-              <Route path="login" element={<ModernLoginPage />} />
+              <Route path="login" element={<BlockchainLoginPage />} />
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
               <Route path="register" element={<MultiStepRegisterPage />} />
               <Route path="reset-password" element={<ResetPasswordPage />} />

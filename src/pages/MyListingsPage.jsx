@@ -30,7 +30,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { useAuth } from '@/contexts/AuthProvider';
 import { supabase } from '@/lib/customSupabaseClient';
 
@@ -57,7 +57,7 @@ const MyListingsPage = () => {
    const { user } = useAuth();
    const [isLoading, setIsLoading] = useState(true);
    const [listings, setListings] = useState([]);
-   // toast remplacÃ© par window.safeGlobalToast
+   // toast remplacé par window.safeGlobalToast
 
    useEffect(() => {
     const fetchListings = async () => {

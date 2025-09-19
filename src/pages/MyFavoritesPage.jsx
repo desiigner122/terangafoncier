@@ -13,7 +13,7 @@ import {
   HeartOff, 
   Trash2
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import {
   AlertDialog,
   AlertDialogAction,
@@ -126,7 +126,7 @@ const MyFavoritesPage = () => {
   const [favoriteParcels, setFavoriteParcels] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   const fetchFavorites = async () => {
     if (!user) {

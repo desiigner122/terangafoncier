@@ -68,7 +68,7 @@ const ParticularDashboard = () => {
       image: "/api/YOUR_API_KEY/300/200",
       type: "Appartement",
       status: "Disponible",
-      features: ["Vue mer", "Ascenseur", "Parking", "SÃ©curitÃ©"]
+      features: ["Vue mer", "Ascenseur", "Parking", "Sécurité"]
     },
     {
       id: 3,
@@ -79,7 +79,7 @@ const ParticularDashboard = () => {
       image: "/api/YOUR_API_KEY/300/200",
       type: "Terrain",
       status: "Disponible",
-      features: ["Titre foncier", "Proche plage", "ViabilisÃ©"]
+      features: ["Titre foncier", "Proche plage", "Viabilisé"]
     }
   ];
 
@@ -97,12 +97,12 @@ const ParticularDashboard = () => {
       type: "Information",
       property: "Appartement Standing - Plateau",
       date: "2024-01-14",
-      status: "RÃ©pondu",
+      status: "Répondu",
       statusColor: "bg-green-500"
     },
     {
       id: 3,
-      type: "NÃ©gociation",
+      type: "Négociation",
       property: "Terrain Constructible - Saly",
       date: "2024-01-13",
       status: "En cours",
@@ -173,7 +173,7 @@ const ParticularDashboard = () => {
         
         <div className="flex space-x-2">
           <button className="flex-1 bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors">
-            Voir dÃ©tails
+            Voir détails
           </button>
           <button className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
             <Phone size={16} />
@@ -241,7 +241,7 @@ const ParticularDashboard = () => {
         </CardContent>
       </Card>
 
-      {/* RÃ©sultats */}
+      {/* Résultats */}
       <div className={`grid gap-6 ${viewMode === 'grid' ? 'grid-cols-1 md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
         {sampleProperties.map(property => (
           <PropertyCard
@@ -332,7 +332,7 @@ const ParticularDashboard = () => {
         <Card>
           <CardContent className="text-center py-12">
             <Calendar size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">Section Rendez-vous en dÃ©veloppement</p>
+            <p className="text-gray-500">Section Rendez-vous en développement</p>
           </CardContent>
         </Card>
       );
@@ -348,7 +348,7 @@ const ParticularDashboard = () => {
         <Card>
           <CardContent className="text-center py-12">
             <Settings size={48} className="mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">Section Profil en dÃ©veloppement</p>
+            <p className="text-gray-500">Section Profil en développement</p>
           </CardContent>
         </Card>
       );
@@ -380,7 +380,7 @@ const ParticularDashboard = () => {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Menu latÃ©ral */}
+          {/* Menu latéral */}
           <div className="lg:w-64">
             <Card>
               <CardContent className="p-4">

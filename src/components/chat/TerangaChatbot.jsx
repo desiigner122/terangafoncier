@@ -83,15 +83,15 @@ const TerangaChatbot = ({ dashboardData = {}, context = {} }) => {
 
   const getWelcomeMessage = () => {
     const roleMessages = {
-      'particulier': `Bonjour ! Je suis l'assistant IA de Teranga Foncier. Je peux vous aider Ã  trouver le bien immobilier parfait, estimer des prix, calculer votre capacitÃ© d'emprunt et bien plus. Comment puis-je vous assister aujourd'hui ?`,
-      'vendeur': `Salut ! Je suis lÃ  pour optimiser vos ventes immobiliÃ¨res. Je peux analyser vos prix, suggÃ©rer des amÃ©liorations, gÃ©rer votre portfolio et attirer plus d'acheteurs. Que souhaitez-vous amÃ©liorer ?`,
-      'investisseur': `Bonjour ! Expert en investissement immobilier Ã  votre service. Je peux analyser vos opportunitÃ©s, optimiser votre portefeuille, Ã©valuer les risques et prÃ©dire les rendements. Parlons stratÃ©gie !`,
-      'promoteur': `Salut ! Je suis spÃ©cialisÃ© dans le dÃ©veloppement immobilier. Planification de projets, analyse de faisabilitÃ©, recherche d'investisseurs, gestion de chantiers - je peux tout gÃ©rer. Quel projet dÃ©veloppons-nous ?`,
-      'municipalite': `Bonjour ! Je vous assiste dans la gestion urbaine et les approbations. Planification territoriale, conformitÃ© rÃ©glementaire, analyse d'impact - je simplifie vos processus. Comment puis-je aider ?`,
-      'notaire': `Bonjour MaÃ®tre ! SpÃ©cialiste en droit immobilier, je vous aide avec les actes, les vÃ©rifications juridiques, la conformitÃ© et la gestion de vos dossiers. Quel acte traitons-nous ?`,
-      'geometre': `Salut ! Expert en topographie et gÃ©omÃ©trie, je peux analyser vos relevÃ©s, optimiser vos missions, gÃ©rer vos Ã©quipements et calculer vos tarifs. Quelle mission planifions-nous ?`,
-      'banque': `Bonjour ! SpÃ©cialiste du crÃ©dit immobilier, j'Ã©value les risques, optimise les portefeuilles, calcule les mensualitÃ©s et analyse la solvabilitÃ©. Quel dossier Ã©tudions-nous ?`,
-      'admin': `Bonjour ! Vue d'ensemble de la plateforme Ã  votre disposition. Monitoring, analytics, gestion utilisateurs, reporting - je vous aide Ã  superviser efficacement.`
+      'particulier': `Bonjour ! Je suis l'assistant IA de Teranga Foncier. Je peux vous aider Ï  trouver le bien immobilier parfait, estimer des prix, calculer votre capacité d'emprunt et bien plus. Comment puis-je vous assister aujourd'hui ?`,
+      'vendeur': `Salut ! Je suis lÏ  pour optimiser vos ventes immobilières. Je peux analyser vos prix, suggérer des améliorations, gérer votre portfolio et attirer plus d'acheteurs. Que souhaitez-vous améliorer ?`,
+      'investisseur': `Bonjour ! Expert en investissement immobilier Ï  votre service. Je peux analyser vos opportunités, optimiser votre portefeuille, évaluer les risques et prédire les rendements. Parlons stratégie !`,
+      'promoteur': `Salut ! Je suis spécialisé dans le développement immobilier. Planification de projets, analyse de faisabilité, recherche d'investisseurs, gestion de chantiers - je peux tout gérer. Quel projet développons-nous ?`,
+      'municipalite': `Bonjour ! Je vous assiste dans la gestion urbaine et les approbations. Planification territoriale, conformité réglementaire, analyse d'impact - je simplifie vos processus. Comment puis-je aider ?`,
+      'notaire': `Bonjour Maître ! Spécialiste en droit immobilier, je vous aide avec les actes, les vérifications juridiques, la conformité et la gestion de vos dossiers. Quel acte traitons-nous ?`,
+      'geometre': `Salut ! Expert en topographie et géométrie, je peux analyser vos relevés, optimiser vos missions, gérer vos équipements et calculer vos tarifs. Quelle mission planifions-nous ?`,
+      'banque': `Bonjour ! Spécialiste du crédit immobilier, j'évalue les risques, optimise les portefeuilles, calcule les mensualités et analyse la solvabilité. Quel dossier étudions-nous ?`,
+      'admin': `Bonjour ! Vue d'ensemble de la plateforme Ï  votre disposition. Monitoring, analytics, gestion utilisateurs, reporting - je vous aide Ï  superviser efficacement.`
     };
 
     return roleMessages[user?.role] || `Bonjour ! Je suis l'assistant IA de Teranga Foncier. Comment puis-je vous aider aujourd'hui ?`;
@@ -101,54 +101,54 @@ const TerangaChatbot = ({ dashboardData = {}, context = {} }) => {
     const roleSuggestions = {
       'particulier': [
         'Rechercher un bien immobilier',
-        'Calculer ma capacitÃ© d\'emprunt',
+        'Calculer ma capacité d\'emprunt',
         'Estimer le prix d\'un bien',
         'Conseils pour premier achat'
       ],
       'vendeur': [
         'Optimiser le prix de vente',
-        'AmÃ©liorer la visibilitÃ©',
+        'Améliorer la visibilité',
         'Analyser la concurrence',
-        'StratÃ©gies marketing'
+        'Stratégies marketing'
       ],
       'investisseur': [
-        'Analyser une opportunitÃ©',
+        'Analyser une opportunité',
         'Optimiser mon portefeuille',
-        'PrÃ©dictions du marchÃ©',
-        'Calcul de rentabilitÃ©'
+        'Prédictions du marché',
+        'Calcul de rentabilité'
       ],
       'promoteur': [
-        'Ã‰valuer la faisabilitÃ©',
+        'Évaluer la faisabilité',
         'Trouver des investisseurs',
         'Planifier le projet',
-        'Analyse des coÃ»ts'
+        'Analyse des coûts'
       ],
       'municipalite': [
         'Approuver un projet',
-        'VÃ©rifier la conformitÃ©',
+        'Vérifier la conformité',
         'Analyser l\'impact urbain',
         'Gestion des permis'
       ],
       'notaire': [
-        'PrÃ©parer un acte',
-        'VÃ©rifier la lÃ©galitÃ©',
+        'Préparer un acte',
+        'Vérifier la légalité',
         'Calculer les frais',
         'Gestion du planning'
       ],
       'geometre': [
         'Planifier une mission',
         'Calculer les tarifs',
-        'GÃ©rer les Ã©quipements',
+        'Gérer les équipements',
         'Analyse topographique'
       ],
       'banque': [
-        'Ã‰valuer un risque crÃ©dit',
-        'Calculer une mensualitÃ©',
-        'Analyser la solvabilitÃ©',
+        'Évaluer un risque crédit',
+        'Calculer une mensualité',
+        'Analyser la solvabilité',
         'Optimiser le taux'
       ],
       'admin': [
-        'Ã‰tat de la plateforme',
+        'État de la plateforme',
         'Analytics utilisateurs',
         'Rapport financier',
         'Gestion des alertes'
@@ -156,9 +156,9 @@ const TerangaChatbot = ({ dashboardData = {}, context = {} }) => {
     };
 
     return roleSuggestions[user?.role] || [
-      'Comment Ã§a marche ?',
-      'Mes fonctionnalitÃ©s',
-      'Aide gÃ©nÃ©rale',
+      'Comment ça marche ?',
+      'Mes fonctionnalités',
+      'Aide générale',
       'Contact support'
     ];
   };
@@ -216,7 +216,7 @@ const TerangaChatbot = ({ dashboardData = {}, context = {} }) => {
       const errorMessage = {
         id: Date.now() + 1,
         type: 'bot',
-        content: 'DÃ©solÃ©, je rencontre des difficultÃ©s techniques. Veuillez rÃ©essayer dans quelques instants.',
+        content: 'Désolé, je rencontre des difficultés techniques. Veuillez réessayer dans quelques instants.',
         timestamp: Date.now(),
         isError: true
       };
@@ -238,10 +238,10 @@ const TerangaChatbot = ({ dashboardData = {}, context = {} }) => {
       });
     }
     
-    if (userMessage.toLowerCase().includes('marchÃ©') || userMessage.toLowerCase().includes('tendance')) {
+    if (userMessage.toLowerCase().includes('marché') || userMessage.toLowerCase().includes('tendance')) {
       actions.push({
         icon: TrendingUp,
-        label: 'Analyse MarchÃ©',
+        label: 'Analyse Marché',
         action: 'market_analysis'
       });
     }
@@ -337,7 +337,7 @@ const TerangaChatbot = ({ dashboardData = {}, context = {} }) => {
           </div>
           <div>
             <h3 className="font-semibold">Assistant IA Teranga</h3>
-            <p className="text-xs opacity-90">En ligne â€¢ RÃ©ponse immÃ©diate</p>
+            <p className="text-xs opacity-90">En ligne â€¢ Réponse immédiate</p>
           </div>
         </div>
         

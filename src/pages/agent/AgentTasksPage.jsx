@@ -9,7 +9,7 @@ import {
   Search, 
   CheckCircle
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { sampleAgentData } from '@/data';
@@ -17,7 +17,7 @@ import { cn } from '@/lib/utils';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const AgentTasksPage = () => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const [tasks, setTasks] = useState([]);
   const [loading, setLoading] = useState(true);
   const [newTaskTitle, setNewTaskTitle] = useState('');

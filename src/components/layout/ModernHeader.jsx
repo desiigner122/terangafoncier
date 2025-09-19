@@ -264,16 +264,6 @@ const ModernHeader = () => {
 
           {/* User Actions */}
           <div className="flex items-center space-x-4">
-            {/* Accès Dashboards (toujours visible) */}
-            <Button 
-              variant="ghost" 
-              size="sm"
-              onClick={() => navigate('/dashboards')}
-              className="hidden md:flex items-center space-x-1 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50"
-            >
-              <Zap className="w-4 h-4" />
-              <span>Dashboards</span>
-            </Button>
 
             {user ? (
               <>
@@ -355,14 +345,14 @@ const ModernHeader = () => {
                             onClick={() => setActiveDropdown(null)}
                           >
                             <Settings className="w-4 h-4" />
-                            <span>ParamÃ¨tres</span>
+                            <span>Paramètres</span>
                           </Link>
                           <button
                             onClick={handleLogout}
                             className="flex items-center space-x-3 w-full px-3 py-2 text-left text-sm text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                           >
                             <LogOut className="w-4 h-4" />
-                            <span>DÃ©connexion</span>
+                            <span>Déconnexion</span>
                           </button>
                         </div>
                       </motion.div>

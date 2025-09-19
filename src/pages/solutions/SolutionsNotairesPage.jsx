@@ -45,34 +45,34 @@ const SolutionsNotairesPage = () => {
   const features = [
     {
       icon: ShieldCheck,
-      title: "VÃ©rification Authentique des Titres",
-      description: "AccÃ©dez Ã  une base de donnÃ©es centralisÃ©e et sÃ©curisÃ©e pour vÃ©rifier l'authenticitÃ© des titres fonciers et Ã©viter les fraudes documentaires.",
+      title: "Vérification Authentique des Titres",
+      description: "Accédez Ï  une base de données centralisée et sécurisée pour vérifier l'authenticité des titres fonciers et éviter les fraudes documentaires.",
     },
     {
       icon: FileText,
-      title: "RÃ©daction d'Actes SÃ©curisÃ©e",
-      description: "BÃ©nÃ©ficiez d'un environnement numÃ©rique sÃ©curisÃ© pour la rÃ©daction et la conservation de vos actes notariÃ©s avec traÃ§abilitÃ© complÃ¨te.",
+      title: "Rédaction d'Actes Sécurisée",
+      description: "Bénéficiez d'un environnement numérique sécurisé pour la rédaction et la conservation de vos actes notariés avec traçabilité complète.",
     },
     {
       icon: Users,
-      title: "RÃ©seau de Confiance",
-      description: "Connectez-vous avec un Ã©cosystÃ¨me vÃ©rifiÃ© d'acheteurs, vendeurs, promoteurs et institutions financiÃ¨res pour faciliter vos transactions.",
+      title: "Réseau de Confiance",
+      description: "Connectez-vous avec un écosystème vérifié d'acheteurs, vendeurs, promoteurs et institutions financières pour faciliter vos transactions.",
     },
     {
       icon: Gavel,
       title: "Gestion Efficace des Successions",
-      description: "Simplifiez le traitement des successions avec des outils d'Ã©valuation automatisÃ©e et de rÃ©partition Ã©quitable des biens.",
+      description: "Simplifiez le traitement des successions avec des outils d'évaluation automatisée et de répartition équitable des biens.",
     },
     {
       icon: Lock,
       title: "ðŸ†• Actes Blockchain Infalsifiables",
-      description: "CrÃ©ez des actes notariÃ©s stockÃ©s sur blockchain, garantissant leur authenticitÃ© et leur intÃ©gritÃ© pour l'Ã©ternitÃ©. Signatures Ã©lectroniques lÃ©gales avec certificats cryptographiques.",
+      description: "Créez des actes notariés stockés sur blockchain, garantissant leur authenticité et leur intégrité pour l'éternité. Signatures électroniques légales avec certificats cryptographiques.",
       isNew: true
     },
     {
       icon: Stamp,
-      title: "ðŸ†• Archivage DÃ©centralisÃ©",
-      description: "Conservez tous vos documents dans un systÃ¨me d'archivage dÃ©centralisÃ© accessible partout dans le monde. Plus de risque de perte ou destruction d'archives.",
+      title: "ðŸ†• Archivage Décentralisé",
+      description: "Conservez tous vos documents dans un système d'archivage décentralisé accessible partout dans le monde. Plus de risque de perte ou destruction d'archives.",
       isNew: true
     }
   ];
@@ -81,7 +81,7 @@ const SolutionsNotairesPage = () => {
     <>
       <Helmet>
         <title>Solutions Notaires - Teranga Foncier</title>
-        <meta name="description" content="Solutions pour notaires : vÃ©rification de titres, rÃ©daction sÃ©curisÃ©e, gestion de successions et actes blockchain infalsifiables." />
+        <meta name="description" content="Solutions pour notaires : vérification de titres, rédaction sécurisée, gestion de successions et actes blockchain infalsifiables." />
       </Helmet>
       <motion.div
         initial={{ opacity: 0 }}
@@ -102,17 +102,17 @@ const SolutionsNotairesPage = () => {
           >
             <Scale className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-6 text-purple-600" />
             <h1 className="text-4xl md:text-5xl font-extrabold text-purple-700 mb-4">
-              La Modernisation du Notariat SÃ©nÃ©galais
+              La Modernisation du Notariat Sénégalais
             </h1>
             <p className="text-lg md:text-xl text-purple-800/80 max-w-3xl mx-auto">
-              Teranga Foncier rÃ©volutionne la pratique notariale avec des outils numÃ©riques sÃ©curisÃ©s et la technologie blockchain.
+              Teranga Foncier révolutionne la pratique notariale avec des outils numériques sécurisés et la technologie blockchain.
             </p>
           </motion.div>
         </section>
 
         <section className="py-16 md:py-20">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-purple-700">Nos Solutions pour Votre Ã‰tude</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 md:mb-16 text-purple-700">Nos Solutions pour Votre Étude</h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               {features.map((feature, index) => (
                 <motion.div
@@ -151,7 +151,7 @@ const SolutionsNotairesPage = () => {
         {/* Section avantages blockchain */}
         <section className="py-16 md:py-20 bg-gradient-to-r from-purple-50 to-blue-50">
           <div className="container mx-auto px-4">
-            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-purple-700">RÃ©volution Blockchain du Notariat</h2>
+            <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 text-purple-700">Révolution Blockchain du Notariat</h2>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-6xl mx-auto">
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
@@ -162,10 +162,10 @@ const SolutionsNotairesPage = () => {
                 <div className="p-4 bg-purple-100 rounded-full w-fit mx-auto mb-4">
                   <ShieldCheck className="h-8 w-8 text-purple-600" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-purple-900">SÃ©curitÃ© Absolue</h3>
+                <h3 className="text-xl font-semibold mb-3 text-purple-900">Sécurité Absolue</h3>
                 <p className="text-purple-700">
-                  Actes infalsifiables stockÃ©s sur blockchain avec signatures cryptographiques. 
-                  Aucun risque de fraude ou d'altÃ©ration documentaire.
+                  Actes infalsifiables stockés sur blockchain avec signatures cryptographiques. 
+                  Aucun risque de fraude ou d'altération documentaire.
                 </p>
               </motion.div>
               
@@ -178,10 +178,10 @@ const SolutionsNotairesPage = () => {
                 <div className="p-4 bg-blue-100 rounded-full w-fit mx-auto mb-4">
                   <FileText className="h-8 w-8 text-blue-600" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-blue-900">AccÃ¨s Universel</h3>
+                <h3 className="text-xl font-semibold mb-3 text-blue-900">Accès Universel</h3>
                 <p className="text-blue-700">
-                  Archives accessibles depuis n'importe oÃ¹ dans le monde. 
-                  VÃ©rification instantanÃ©e d'authenticitÃ© pour tous les acteurs.
+                  Archives accessibles depuis n'importe où dans le monde. 
+                  Vérification instantanée d'authenticité pour tous les acteurs.
                 </p>
               </motion.div>
               
@@ -194,7 +194,7 @@ const SolutionsNotairesPage = () => {
                 <div className="p-4 bg-green-100 rounded-full w-fit mx-auto mb-4">
                   <Users className="h-8 w-8 text-green-600" />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 text-green-900">Confiance RenforcÃ©e</h3>
+                <h3 className="text-xl font-semibold mb-3 text-green-900">Confiance Renforcée</h3>
                 <p className="text-green-700">
                   Transparence totale des processus notariaux. 
                   Renforcement de la confiance du public dans l'institution notariale.
@@ -208,14 +208,14 @@ const SolutionsNotairesPage = () => {
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-2xl md:text-3xl font-bold mb-6 text-purple-700">Modernisez Votre Pratique Notariale</h2>
             <p className="text-lg text-purple-800/80 mb-8 max-w-2xl mx-auto">
-              Rejoignez la rÃ©volution numÃ©rique du notariat sÃ©nÃ©galais et offrez Ã  vos clients des services d'exception.
+              Rejoignez la révolution numérique du notariat sénégalais et offrez Ï  vos clients des services d'exception.
             </p>
             <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
               <Button size="lg" onClick={handleDashboardAccess} className="bg-gradient-to-r from-purple-600 to-blue-600 text-white shadow-lg">
-                AccÃ©der au Dashboard Notaires <LayoutDashboard className="ml-2 h-5 w-5" />
+                Accéder au Dashboard Notaires <LayoutDashboard className="ml-2 h-5 w-5" />
               </Button>
             </motion.div>
-             <p className="text-sm text-muted-foreground mt-4">Ou <Link to="/contact?subject=SolutionsNotaires" className="underline hover:text-primary">contactez-nous pour une dÃ©monstration</Link>.</p>
+             <p className="text-sm text-muted-foreground mt-4">Ou <Link to="/contact?subject=SolutionsNotaires" className="underline hover:text-primary">contactez-nous pour une démonstration</Link>.</p>
           </div>
         </section>
       </motion.div>

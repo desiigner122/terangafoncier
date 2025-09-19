@@ -1,32 +1,32 @@
 ﻿<!DOCTYPE html>
 <html lang="fr-SN">
-<head>
+<head>            console.log('❌ SW registration failed: ', registrationError);           console.log('❌ SW registration failed: ', registrationError);
   <meta charset="utf-8" />
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#e67e22" />
-  <meta name="description" content="Plateforme immobiliÃ¨re intelligente avec blockchain et IA pour le SÃ©nÃ©gal" />
+  <meta name="description" content="Plateforme immobilière intelligente avec blockchain et IA pour le Sénégal" />
   
   <!-- PWA Meta Tags -->
   <link rel="apple-touch-icon" href="%PUBLIC_URL%/icon-192x192.png" />
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
   
-  <!-- PrÃ©chargement des ressources critiques -->
+  <!-- Préchargement des ressources critiques -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   
-  <title>Teranga Foncier - Plateforme ImmobiliÃ¨re IA & Blockchain</title>
+  <title>Teranga Foncier - Plateforme Immobilière IA & Blockchain</title>
   
-  <!-- Meta tags pour SEO et rÃ©seaux sociaux -->
-  <meta property="og:title" content="Teranga Foncier - Plateforme ImmobiliÃ¨re Intelligente" />
-  <meta property="og:description" content="DÃ©couvrez des propriÃ©tÃ©s au SÃ©nÃ©gal avec notre plateforme alimentÃ©e par l'IA et sÃ©curisÃ©e par la blockchain" />
+  <!-- Meta tags pour SEO et réseaux sociaux -->
+  <meta property="og:title" content="Teranga Foncier - Plateforme Immobilière Intelligente" />
+  <meta property="og:description" content="Découvrez des propriétés au Sénégal avec notre plateforme alimentée par l'IA et sécurisée par la blockchain" />
   <meta property="og:image" content="%PUBLIC_URL%/social-preview.png" />
   <meta property="og:url" content="https://teranga-foncier.com" />
   <meta property="og:type" content="website" />
   
   <meta name="twitter:card" content="summary_large_image" />
-  <meta name="twitter:title" content="Teranga Foncier - Plateforme ImmobiliÃ¨re IA" />
-  <meta name="twitter:description" content="Trouvez votre propriÃ©tÃ© idÃ©ale avec l'intelligence artificielle" />
+  <meta name="twitter:title" content="Teranga Foncier - Plateforme Immobilière IA" />
+  <meta name="twitter:description" content="Trouvez votre propriété idéale avec l'intelligence artificielle" />
   <meta name="twitter:image" content="%PUBLIC_URL%/social-preview.png" />
 </head>
 <body>
@@ -39,7 +39,7 @@
       window.addEventListener('load', () => {
         navigator.serviceWorker.register('/sw.js')
           .then((registration) => {
-            console.log('âœ… SW registered: ', registration);
+            console.log('✅ SW registered: ', registration);
           })
           .catch((registrationError) => {
             console.log('âŒ SW registration failed: ', registrationError);

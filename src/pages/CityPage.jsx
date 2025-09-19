@@ -46,48 +46,48 @@ const CityPage = () => {
     additionalInfo: ''
   });
 
-  // DonnÃ©es mockÃ©es pour la ville
+  // Données mockées pour la ville
   const cityData = {
     dakar: {
       name: 'Dakar',
-      region: 'RÃ©gion de Dakar',
+      region: 'Région de Dakar',
       population: '1,378,000',
       image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80',
-      description: 'Capitale Ã©conomique et politique du SÃ©nÃ©gal, Dakar est le centre des affaires et offre les meilleures opportunitÃ©s d\'investissement immobilier.',
+      description: 'Capitale économique et politique du Sénégal, Dakar est le centre des affaires et offre les meilleures opportunités d\'investissement immobilier.',
       advantages: [
-        'Centre Ã©conomique et politique',
-        'Infrastructure dÃ©veloppÃ©e',
+        'Centre économique et politique',
+        'Infrastructure développée',
         'Transports publics efficaces',
-        'Nombreuses opportunitÃ©s d\'emploi',
-        'ProximitÃ© aÃ©roport international',
+        'Nombreuses opportunités d\'emploi',
+        'Proximité aéroport international',
         'Vie culturelle riche',
-        'Ã‰tablissements d\'enseignement supÃ©rieur',
-        'Services de santÃ© de qualitÃ©'
+        'Établissements d\'enseignement supérieur',
+        'Services de santé de qualité'
       ],
       communalRequests: 89,
       averagePrice: 85000,
-      demandLevel: 'TrÃ¨s Ã‰levÃ©e',
+      demandLevel: 'Très Élevée',
       availableZones: [
         'Pikine Extension',
-        'GuÃ©diawaye Nord',
+        'Guédiawaye Nord',
         'Keur Massar',
         'Malika',
         'Yeumbeul Sud'
       ],
       mayor: {
-        name: 'BarthÃ©lÃ©my Dias',
+        name: 'Barthélémy Dias',
         email: 'mairie@ville-dakar.sn',
         phone: '+221 33 849 05 00'
       },
       parcelsForSale: [
         {
           id: 'DK-001',
-          title: 'Terrain RÃ©sidentiel Almadies',
+          title: 'Terrain Résidentiel Almadies',
           size: '400 mÂ²',
           price: 38000000,
           image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
           seller: 'Amadou Diallo',
-          features: ['Vue mer', 'ViabilisÃ©', 'Proche commoditÃ©s']
+          features: ['Vue mer', 'Viabilisé', 'Proche commodités']
         },
         {
           id: 'DK-002',
@@ -96,7 +96,7 @@ const CityPage = () => {
           price: 52000000,
           image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
           seller: 'Fatou Ndiaye',
-          features: ['Zone commerciale', 'AccÃ¨s facile', 'High standing']
+          features: ['Zone commerciale', 'Accès facile', 'High standing']
         },
         {
           id: 'DK-003',
@@ -105,7 +105,7 @@ const CityPage = () => {
           price: 45000000,
           image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
           seller: 'Moussa Sow',
-          features: ['Quartier calme', 'SÃ©curisÃ©', 'Titre foncier']
+          features: ['Quartier calme', 'Sécurisé', 'Titre foncier']
         }
       ]
     }
@@ -126,15 +126,15 @@ const CityPage = () => {
     e.preventDefault();
     // Ici, vous ajouteriez la logique pour soumettre la demande
     console.log('Demande communale soumise:', requestForm);
-    // Simulation de succÃ¨s
-    alert('Votre demande a Ã©tÃ© soumise avec succÃ¨s ! La mairie vous contactera sous 48h.');
+    // Simulation de succès
+    alert('Votre demande a été soumise avec succès ! La mairie vous contactera sous 48h.');
   };
 
   return (
     <>
       <Helmet>
         <title>{city.name} - Terrains Communaux | Teranga Foncier</title>
-        <meta name="description" content={`DÃ©couvrez les opportunitÃ©s fonciÃ¨res Ã  ${city.name}. Soumettez votre demande de terrain communal et explorez les parcelles disponibles.`} />
+        <meta name="description" content={`Découvrez les opportunités foncières Ï  ${city.name}. Soumettez votre demande de terrain communal et explorez les parcelles disponibles.`} />
       </Helmet>
 
       <div className="min-h-screen bg-gray-50 pt-20">
@@ -216,7 +216,7 @@ const CityPage = () => {
                 <TabsContent value="advantages" className="mt-6">
                   <Card>
                     <CardHeader>
-                      <CardTitle>Pourquoi Investir Ã  {city.name} ?</CardTitle>
+                      <CardTitle>Pourquoi Investir Ï  {city.name} ?</CardTitle>
                     </CardHeader>
                     <CardContent>
                       <div className="grid md:grid-cols-2 gap-4">
@@ -309,7 +309,7 @@ const CityPage = () => {
                                   
                                   <Button asChild className="w-full">
                                     <Link to={`/parcelles/${parcel.id}`}>
-                                      Voir les DÃ©tails
+                                      Voir les Détails
                                       <ArrowRight className="h-4 w-4 ml-2" />
                                     </Link>
                                   </Button>
@@ -359,7 +359,7 @@ const CityPage = () => {
                         />
                       </div>
                       <div>
-                        <Label htmlFor="phone">TÃ©lÃ©phone *</Label>
+                        <Label htmlFor="phone">Téléphone *</Label>
                         <Input
                           id="phone"
                           value={requestForm.phone}
@@ -370,13 +370,13 @@ const CityPage = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="preferredLocation">Zone prÃ©fÃ©rÃ©e</Label>
+                      <Label htmlFor="preferredLocation">Zone préférée</Label>
                       <Select
                         value={requestForm.preferredLocation}
                         onValueChange={(value) => setRequestForm({...requestForm, preferredLocation: value})}
                       >
                         <SelectTrigger>
-                          <SelectValue YOUR_API_KEY="SÃ©lectionnez une zone" />
+                          <SelectValue YOUR_API_KEY="Sélectionnez une zone" />
                         </SelectTrigger>
                         <SelectContent>
                           {city.availableZones.map((zone, index) => (
@@ -405,7 +405,7 @@ const CityPage = () => {
                         </Select>
                       </div>
                       <div>
-                        <Label htmlFor="landSize">Superficie souhaitÃ©e</Label>
+                        <Label htmlFor="landSize">Superficie souhaitée</Label>
                         <Select
                           value={requestForm.landSize}
                           onValueChange={(value) => setRequestForm({...requestForm, landSize: value})}
@@ -433,7 +433,7 @@ const CityPage = () => {
                           <SelectValue YOUR_API_KEY="Type de projet" />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="residence">RÃ©sidence principale</SelectItem>
+                          <SelectItem value="residence">Résidence principale</SelectItem>
                           <SelectItem value="investment">Investissement locatif</SelectItem>
                           <SelectItem value="commercial">Projet commercial</SelectItem>
                           <SelectItem value="other">Autre</SelectItem>
@@ -442,20 +442,20 @@ const CityPage = () => {
                     </div>
                     
                     <div>
-                      <Label htmlFor="additionalInfo">Informations complÃ©mentaires</Label>
+                      <Label htmlFor="additionalInfo">Informations complémentaires</Label>
                       <Textarea
                         id="additionalInfo"
                         value={requestForm.additionalInfo}
                         onChange={(e) => setRequestForm({...requestForm, additionalInfo: e.target.value})}
                         rows={3}
-                        YOUR_API_KEY="DÃ©tails spÃ©cifiques, dÃ©lais souhaitÃ©s..."
+                        YOUR_API_KEY="Détails spécifiques, délais souhaités..."
                       />
                     </div>
                     
                     <Alert>
                       <Info className="h-4 w-4" />
                       <AlertDescription>
-                        Votre demande sera transmise directement Ã  la mairie. RÃ©ponse garantie sous 48h.
+                        Votre demande sera transmise directement Ï  la mairie. Réponse garantie sous 48h.
                       </AlertDescription>
                     </Alert>
                     

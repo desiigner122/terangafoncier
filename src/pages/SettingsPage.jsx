@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
     import { Button } from '@/components/ui/button';
     import { Switch } from '@/components/ui/switch';
     import { motion } from 'framer-motion';
-    // useToast import supprimÃ© - utilisation window.safeGlobalToast
+    // useToast import supprimé - utilisation window.safeGlobalToast
     import { 
   Save, 
   Bell, 
@@ -156,7 +156,7 @@ import React, { useState, useEffect } from 'react';
     );
 
     const SettingsPage = () => {
-        // toast remplacÃ© par window.safeGlobalToast
+        // toast remplacé par window.safeGlobalToast
         const { user } = useAuth();
         
         const [settings, setSettings] = useState({

@@ -20,7 +20,7 @@ const CitiesPreview = () => {
       image: "/api/YOUR_API_KEY/150/100"
     },
     {
-      name: "ThiÃ¨s",
+      name: "Thiès",
       properties: 834,
       growth: "+25%",
       image: "/api/YOUR_API_KEY/150/100"
@@ -48,27 +48,27 @@ const CitiesPreview = () => {
           >
             <Badge className="bg-orange-100 text-orange-700 mb-4">
               <TrendingUp className="h-4 w-4 mr-2" />
-              Tendances du MarchÃ©
+              Tendances du Marché
             </Badge>
             
             <h2 className="text-3xl font-bold text-gray-900 mb-4">
-              Villes les Plus DemandÃ©es
+              Villes les Plus Demandées
             </h2>
             
             <p className="text-lg text-gray-600 mb-6">
-              DÃ©couvrez les destinations immobiliÃ¨res en pleine croissance 
-              avec des opportunitÃ©s d'investissement attractives.
+              Découvrez les destinations immobilières en pleine croissance 
+              avec des opportunités d'investissement attractives.
             </p>
 
             <div className="bg-white rounded-lg p-6 mb-6">
               <div className="grid grid-cols-2 gap-4 text-center">
                 <div>
                   <div className="text-2xl font-bold text-orange-600">14+</div>
-                  <div className="text-sm text-gray-600">RÃ©gions</div>
+                  <div className="text-sm text-gray-600">Régions</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-orange-600">3,750</div>
-                  <div className="text-sm text-gray-600">PropriÃ©tÃ©s</div>
+                  <div className="text-sm text-gray-600">Propriétés</div>
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-orange-600">+19%</div>
@@ -76,7 +76,7 @@ const CitiesPreview = () => {
                 </div>
                 <div>
                   <div className="text-2xl font-bold text-orange-600">72h</div>
-                  <div className="text-sm text-gray-600">RÃ©ponse</div>
+                  <div className="text-sm text-gray-600">Réponse</div>
                 </div>
               </div>
             </div>
@@ -122,7 +122,7 @@ const CitiesPreview = () => {
                         </div>
                         <div className="flex items-center text-gray-600 text-sm">
                           <Home className="h-4 w-4 mr-1" />
-                          <span>{city.properties} propriÃ©tÃ©s</span>
+                          <span>{city.properties} propriétés</span>
                         </div>
                       </div>
                     </div>

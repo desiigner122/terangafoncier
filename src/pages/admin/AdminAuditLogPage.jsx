@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 // ...existing code...
 import { supabase } from '@/lib/supabaseClient';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 const getActionBadge = (action) => {
   const lowerAction = action.toLowerCase();
@@ -43,7 +43,7 @@ const AdminAuditLogPage = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filters, setFilters] = useState({ searchTerm: '', user: '', action: '', entity: '' });
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   useEffect(() => {
     const fetchAuditLogs = async () => {

@@ -42,22 +42,22 @@ const PromoterNewQuotePage = () => {
 
   const projectTypes = [
     'Villa individuelle',
-    'Immeuble rÃ©sidentiel',
+    'Immeuble résidentiel',
     'Complexe commercial',
     'Projet mixte',
-    'RÃ©novation',
+    'Rénovation',
     'Extension'
   ];
 
   const availableServices = [
     { id: 'architecture', name: 'Conception architecturale', price: 5000000 },
-    { id: 'construction', name: 'Construction clÃ© en main', price: 25000000 },
+    { id: 'construction', name: 'Construction clé en main', price: 25000000 },
     { id: 'genie-civil', name: 'Gros Å“uvre', price: 15000000 },
     { id: 'finitions', name: 'Finitions haut standing', price: 8000000 },
     { id: 'piscine', name: 'Piscine', price: 6000000 },
-    { id: 'jardinage', name: 'AmÃ©nagement paysager', price: 3000000 },
+    { id: 'jardinage', name: 'Aménagement paysager', price: 3000000 },
     { id: 'suivi', name: 'Suivi de chantier', price: 2000000 },
-    { id: 'demarches', name: 'DÃ©marches administratives', price: 1500000 }
+    { id: 'demarches', name: 'Démarches administratives', price: 1500000 }
   ];
 
   const handleInputChange = (field, value) => {
@@ -99,7 +99,7 @@ const PromoterNewQuotePage = () => {
     // Simulation de soumission
     setTimeout(() => {
       setIsSubmitting(false);
-      window.safeGlobalToast('Devis envoyÃ© avec succÃ¨s !', 'success');
+      window.safeGlobalToast('Devis envoyé avec succès !', 'success');
       // Redirection ou reset du formulaire
     }, 2000);
   };
@@ -108,7 +108,7 @@ const PromoterNewQuotePage = () => {
     <>
       <Helmet>
         <title>Nouveau Devis - Dashboard Promoteur | Teranga Foncier</title>
-        <meta name="description" content="CrÃ©ez et envoyez un devis personnalisÃ© pour vos services de construction." />
+        <meta name="description" content="Créez et envoyez un devis personnalisé pour vos services de construction." />
       </Helmet>
 
       <div className="max-w-4xl mx-auto p-6 space-y-6">
@@ -122,7 +122,7 @@ const PromoterNewQuotePage = () => {
           </Link>
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Nouveau Devis</h1>
-            <p className="text-gray-600">CrÃ©ez un devis personnalisÃ© pour votre client</p>
+            <p className="text-gray-600">Créez un devis personnalisé pour votre client</p>
           </div>
         </div>
 
@@ -160,7 +160,7 @@ const PromoterNewQuotePage = () => {
                 </div>
               </div>
               <div>
-                <Label htmlFor="clientPhone">TÃ©lÃ©phone *</Label>
+                <Label htmlFor="clientPhone">Téléphone *</Label>
                 <Input
                   id="clientPhone"
                   value={formData.clientPhone}
@@ -172,12 +172,12 @@ const PromoterNewQuotePage = () => {
             </CardContent>
           </Card>
 
-          {/* DÃ©tails du projet */}
+          {/* Détails du projet */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <FileText className="w-5 h-5 mr-2" />
-                DÃ©tails du Projet
+                Détails du Projet
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -197,7 +197,7 @@ const PromoterNewQuotePage = () => {
                   <Label htmlFor="projectType">Type de projet *</Label>
                   <Select onValueChange={(value) => handleInputChange('projectType', value)}>
                     <SelectTrigger>
-                      <SelectValue YOUR_API_KEY="SÃ©lectionnez le type" />
+                      <SelectValue YOUR_API_KEY="Sélectionnez le type" />
                     </SelectTrigger>
                     <SelectContent>
                       {projectTypes.map((type) => (
@@ -231,7 +231,7 @@ const PromoterNewQuotePage = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="timeline">DÃ©lai souhaitÃ©</Label>
+                  <Label htmlFor="timeline">Délai souhaité</Label>
                   <Input
                     id="timeline"
                     value={formData.timeline}
@@ -242,24 +242,24 @@ const PromoterNewQuotePage = () => {
               </div>
 
               <div>
-                <Label htmlFor="description">Description dÃ©taillÃ©e</Label>
+                <Label htmlFor="description">Description détaillée</Label>
                 <Textarea
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  YOUR_API_KEY="DÃ©crivez les spÃ©cificitÃ©s du projet, les exigences particuliÃ¨res, etc."
+                  YOUR_API_KEY="Décrivez les spécificités du projet, les exigences particulières, etc."
                   rows={4}
                 />
               </div>
             </CardContent>
           </Card>
 
-          {/* Services proposÃ©s */}
+          {/* Services proposés */}
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <DollarSign className="w-5 h-5 mr-2" />
-                Services ProposÃ©s
+                Services Proposés
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -293,13 +293,13 @@ const PromoterNewQuotePage = () => {
               {formData.services.length > 0 && (
                 <div className="mt-6 p-4 bg-emerald-50 border border-emerald-200 rounded-lg">
                   <div className="flex justify-between items-center">
-                    <span className="text-lg font-semibold">Total estimÃ©:</span>
+                    <span className="text-lg font-semibold">Total estimé:</span>
                     <span className="text-2xl font-bold text-emerald-600">
                       {formatCurrency(calculateTotal())}
                     </span>
                   </div>
                   <p className="text-sm text-emerald-700 mt-2">
-                    Prix indicatif - Devis final aprÃ¨s Ã©tude dÃ©taillÃ©e
+                    Prix indicatif - Devis final après étude détaillée
                   </p>
                 </div>
               )}

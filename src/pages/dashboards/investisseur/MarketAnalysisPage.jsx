@@ -24,7 +24,7 @@ const MarketAnalysisPage = () => {
   const [marketData, setMarketData] = useState({});
 
   useEffect(() => {
-    // Simulation des donnÃ©es de marchÃ©
+    // Simulation des données de marché
     const mockData = {
       Dakar: {
         averagePrice: 850000,
@@ -66,7 +66,7 @@ const MarketAnalysisPage = () => {
   const periods = ['1M', '3M', '6M', '1A', '2A'];
 
   const propertyTypes = [
-    { type: 'RÃ©sidentiel', percentage: 65, color: 'bg-blue-500' },
+    { type: 'Résidentiel', percentage: 65, color: 'bg-blue-500' },
     { type: 'Commercial', percentage: 20, color: 'bg-green-500' },
     { type: 'Bureaux', percentage: 10, color: 'bg-purple-500' },
     { type: 'Terrain', percentage: 5, color: 'bg-yellow-500' }
@@ -74,26 +74,26 @@ const MarketAnalysisPage = () => {
 
   const marketTrends = [
     {
-      title: "Forte demande rÃ©sidentielle",
+      title: "Forte demande résidentielle",
       description: "Augmentation de 25% de la demande pour les logements familiaux",
       impact: "positive",
       confidence: 92
     },
     {
-      title: "DÃ©veloppement des zones pÃ©riurbaines",
+      title: "Développement des zones périurbaines",
       description: "Expansion vers les banlieues avec de nouveaux projets",
       impact: "positive",
       confidence: 88
     },
     {
-      title: "Hausse des coÃ»ts de construction",
-      description: "Augmentation des prix des matÃ©riaux de 15%",
+      title: "Hausse des coûts de construction",
+      description: "Augmentation des prix des matériaux de 15%",
       impact: "negative",
       confidence: 85
     },
     {
       title: "Nouvelles infrastructures",
-      description: "Projets de transport amÃ©liorant l'accessibilitÃ©",
+      description: "Projets de transport améliorant l'accessibilité",
       impact: "positive",
       confidence: 78
     }
@@ -125,10 +125,10 @@ const MarketAnalysisPage = () => {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Analyse du MarchÃ© Immobilier
+            Analyse du Marché Immobilier
           </h1>
           <p className="text-gray-600">
-            Insights et tendances du marchÃ© immobilier sÃ©nÃ©galais
+            Insights et tendances du marché immobilier sénégalais
           </p>
         </motion.div>
 
@@ -141,7 +141,7 @@ const MarketAnalysisPage = () => {
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center space-x-2">
               <MapPin className="h-5 w-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">RÃ©gion:</span>
+              <span className="text-sm font-medium text-gray-700">Région:</span>
               <select
                 value={selectedRegion}
                 onChange={(e) => setSelectedRegion(e.target.value)}
@@ -154,7 +154,7 @@ const MarketAnalysisPage = () => {
             </div>
             <div className="flex items-center space-x-2">
               <Calendar className="h-5 w-5 text-gray-600" />
-              <span className="text-sm font-medium text-gray-700">PÃ©riode:</span>
+              <span className="text-sm font-medium text-gray-700">Période:</span>
               <div className="flex bg-gray-100 rounded-lg p-1">
                 {periods.map((period) => (
                   <button
@@ -265,7 +265,7 @@ const MarketAnalysisPage = () => {
             className="bg-white rounded-xl p-6 shadow-lg"
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-6">
-              RÃ©partition par Type de Bien
+              Répartition par Type de Bien
             </h3>
             <div className="space-y-4">
               {propertyTypes.map((type, index) => (
@@ -302,7 +302,7 @@ const MarketAnalysisPage = () => {
             className="bg-white rounded-xl p-6 shadow-lg"
           >
             <h3 className="text-lg font-semibold text-gray-900 mb-6">
-              Tendances du MarchÃ©
+              Tendances du Marché
             </h3>
             <div className="space-y-4">
               {marketTrends.map((trend, index) => {
@@ -355,7 +355,7 @@ const MarketAnalysisPage = () => {
         >
           <div className="flex items-center justify-between mb-6">
             <h3 className="text-lg font-semibold text-gray-900">
-              Ã‰volution des Prix - {selectedRegion}
+              Évolution des Prix - {selectedRegion}
             </h3>
             <div className="flex items-center space-x-2 text-sm text-gray-600">
               <BarChart3 className="h-4 w-4" />
@@ -365,9 +365,9 @@ const MarketAnalysisPage = () => {
           <div className="h-64 bg-gradient-to-r from-green-100 to-blue-100 rounded-lg flex items-center justify-center">
             <div className="text-center">
               <PieChart className="h-12 w-12 text-green-600 mx-auto mb-4" />
-              <p className="text-gray-600">Graphique d'Ã©volution des prix en cours de dÃ©veloppement</p>
+              <p className="text-gray-600">Graphique d'évolution des prix en cours de développement</p>
               <p className="text-sm text-gray-500 mt-2">
-                IntÃ©gration future avec APIs de donnÃ©es de marchÃ©
+                Intégration future avec APIs de données de marché
               </p>
             </div>
           </div>
@@ -388,21 +388,21 @@ const MarketAnalysisPage = () => {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="bg-white/10 rounded-lg p-4">
-              <h4 className="font-semibold mb-2">Zone RecommandÃ©e</h4>
+              <h4 className="font-semibold mb-2">Zone Recommandée</h4>
               <p className="text-sm opacity-90">
-                Almadies - Fort potentiel de croissance avec nouveaux dÃ©veloppements
+                Almadies - Fort potentiel de croissance avec nouveaux développements
               </p>
             </div>
             <div className="bg-white/10 rounded-lg p-4">
-              <h4 className="font-semibold mb-2">Type PrivilÃ©giÃ©</h4>
+              <h4 className="font-semibold mb-2">Type Privilégié</h4>
               <p className="text-sm opacity-90">
-                RÃ©sidentiel moyen standing - Demande soutenue et rentabilitÃ© stable
+                Résidentiel moyen standing - Demande soutenue et rentabilité stable
               </p>
             </div>
             <div className="bg-white/10 rounded-lg p-4">
               <h4 className="font-semibold mb-2">Timing</h4>
               <p className="text-sm opacity-90">
-                Optimal - MarchÃ© favorable aux acheteurs avec des opportunitÃ©s
+                Optimal - Marché favorable aux acheteurs avec des opportunités
               </p>
             </div>
           </div>

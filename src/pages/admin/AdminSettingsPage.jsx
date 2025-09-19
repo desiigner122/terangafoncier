@@ -15,10 +15,10 @@ import {
   Percent, 
   Save
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 const AdminSettingsPage = () => {
-    // toast remplacÃ© par window.safeGlobalToast
+    // toast remplacé par window.safeGlobalToast
 
     const handleSave = (e) => {
         e.preventDefault();

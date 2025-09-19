@@ -35,21 +35,21 @@ const MunicipalRequestsPage = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [requestsPerPage] = useState(3);
 
-  // DonnÃ©es mockÃ©es des demandes
+  // Données mockées des demandes
   useEffect(() => {
     const mockRequests = [
       {
         id: 'REQ-2024-001',
         type: 'Attribution terrain communal',
-        municipality: 'Commune de GuÃ©diawaye',
-        location: 'Zone rÃ©sidentielle Nord',
+        municipality: 'Commune de Guédiawaye',
+        location: 'Zone résidentielle Nord',
         area: '300mÂ²',
         status: 'En cours d\'examen',
         submittedDate: '2024-01-15',
         lastUpdate: '2024-01-22',
         estimatedDecision: '2024-02-15',
-        documents: ['Demande manuscrite', 'PiÃ¨ce d\'identitÃ©', 'Justificatif de revenus'],
-        requirements: ['RÃ©sidence dans la commune depuis 2 ans', 'Revenus infÃ©rieurs Ã  500,000 FCFA/mois', 'Premier logement']
+        documents: ['Demande manuscrite', 'Pièce d\'identité', 'Justificatif de revenus'],
+        requirements: ['Résidence dans la commune depuis 2 ans', 'Revenus inférieurs Ï  500,000 FCFA/mois', 'Premier logement']
       },
       {
         id: 'REQ-2024-002',
@@ -57,12 +57,12 @@ const MunicipalRequestsPage = () => {
         municipality: 'Commune de Pikine',
         location: 'Extension Pikine Sud',
         area: '250mÂ²',
-        status: 'ApprouvÃ©e',
+        status: 'Approuvée',
         submittedDate: '2023-12-10',
         lastUpdate: '2024-01-20',
         estimatedDecision: '2024-01-20',
         documents: ['Dossier complet', 'Attestation domiciliation', 'Projet de construction'],
-        requirements: ['Domiciliation Pikine', 'Famille de 4+ personnes', 'Projet architectural validÃ©']
+        requirements: ['Domiciliation Pikine', 'Famille de 4+ personnes', 'Projet architectural validé']
       },
       {
         id: 'REQ-2024-003',
@@ -74,21 +74,21 @@ const MunicipalRequestsPage = () => {
         submittedDate: '2024-01-05',
         lastUpdate: '2024-01-18',
         estimatedDecision: '2024-02-28',
-        documents: ['Demande incomplÃ¨te', 'Justificatifs financiers manquants'],
-        requirements: ['ActivitÃ© commerciale justifiÃ©e', 'Caution de 2,000,000 FCFA', 'Autorisation commerciale']
+        documents: ['Demande incomplète', 'Justificatifs financiers manquants'],
+        requirements: ['Activité commerciale justifiée', 'Caution de 2,000,000 FCFA', 'Autorisation commerciale']
       },
       {
         id: 'REQ-2024-004',
-        type: 'Terrain rÃ©sidentiel',
-        municipality: 'Commune de ThiÃ¨s',
-        location: 'Quartier rÃ©sidentiel Est',
+        type: 'Terrain résidentiel',
+        municipality: 'Commune de Thiès',
+        location: 'Quartier résidentiel Est',
         area: '400mÂ²',
         status: 'En cours d\'examen',
         submittedDate: '2024-01-25',
         lastUpdate: '2024-02-01',
         estimatedDecision: '2024-03-05',
-        documents: ['Demande complÃ¨te', 'Justificatifs revenus', 'Plan de construction'],
-        requirements: ['RÃ©sidence ThiÃ¨s', 'Premier achat terrain', 'Projet familial']
+        documents: ['Demande complète', 'Justificatifs revenus', 'Plan de construction'],
+        requirements: ['Résidence Thiès', 'Premier achat terrain', 'Projet familial']
       },
       {
         id: 'REQ-2024-005',
@@ -96,12 +96,12 @@ const MunicipalRequestsPage = () => {
         municipality: 'Commune de Mbour',
         location: 'Zone d\'extension Sud',
         area: '350mÂ²',
-        status: 'ApprouvÃ©e',
+        status: 'Approuvée',
         submittedDate: '2023-11-20',
         lastUpdate: '2024-01-15',
         estimatedDecision: '2024-01-15',
-        documents: ['Dossier validÃ©', 'Contrat signÃ©', 'Permis de construire'],
-        requirements: ['Domiciliation Mbour', 'ActivitÃ© Ã©conomique locale', 'Engagement construction 18 mois']
+        documents: ['Dossier validé', 'Contrat signé', 'Permis de construire'],
+        requirements: ['Domiciliation Mbour', 'Activité économique locale', 'Engagement construction 18 mois']
       }
     ];
 
@@ -132,7 +132,7 @@ const MunicipalRequestsPage = () => {
     }
 
     setFilteredRequests(filtered);
-    setCurrentPage(1); // Reset Ã  la premiÃ¨re page lors du filtrage
+    setCurrentPage(1); // Reset Ï  la première page lors du filtrage
   }, [searchTerm, statusFilter, requests]);
 
   // Pagination
@@ -147,11 +147,11 @@ const MunicipalRequestsPage = () => {
     switch (status) {
       case 'En cours d\'examen':
         return { icon: <Clock className="w-4 h-4" />, color: 'bg-yellow-100 text-yellow-800 border-yellow-200', bgColor: 'bg-yellow-50' };
-      case 'ApprouvÃ©e':
+      case 'Approuvée':
         return { icon: <CheckCircle className="w-4 h-4" />, color: 'bg-green-100 text-green-800 border-green-200', bgColor: 'bg-green-50' };
       case 'Documents manquants':
         return { icon: <AlertTriangle className="w-4 h-4" />, color: 'bg-orange-100 text-orange-800 border-orange-200', bgColor: 'bg-orange-50' };
-      case 'RejetÃ©e':
+      case 'Rejetée':
         return { icon: <X className="w-4 h-4" />, color: 'bg-red-100 text-red-800 border-red-200', bgColor: 'bg-red-50' };
       default:
         return { icon: <Clock className="w-4 h-4" />, color: 'bg-gray-100 text-gray-800 border-gray-200', bgColor: 'bg-gray-50' };
@@ -173,8 +173,8 @@ const MunicipalRequestsPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-indigo-50">
       <Helmet>
-        <title>Mes Demandes Municipales - Suivi en Temps RÃ©el | Teranga Foncier</title>
-        <meta name="description" content="Suivez l'Ã©tat d'avancement de vos demandes de terrains communaux auprÃ¨s des mairies partenaires. Suivi en temps rÃ©el et notifications." />
+        <title>Mes Demandes Municipales - Suivi en Temps Réel | Teranga Foncier</title>
+        <meta name="description" content="Suivez l'état d'avancement de vos demandes de terrains communaux auprès des mairies partenaires. Suivi en temps réel et notifications." />
       </Helmet>
 
       {/* Hero Section */}
@@ -189,16 +189,16 @@ const MunicipalRequestsPage = () => {
               Suivi de vos <span className="text-yellow-400">Demandes</span>
             </h1>
             <p className="text-xl md:text-2xl mb-8 opacity-90">
-              Suivez en temps rÃ©el l'Ã©tat d'avancement de vos demandes de terrains communaux
+              Suivez en temps réel l'état d'avancement de vos demandes de terrains communaux
             </p>
             <div className="flex flex-wrap justify-center gap-4 text-sm">
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                 <RefreshCw className="w-4 h-4" />
-                <span>Suivi en temps rÃ©el</span>
+                <span>Suivi en temps réel</span>
               </div>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                 <FileText className="w-4 h-4" />
-                <span>Documents sÃ©curisÃ©s</span>
+                <span>Documents sécurisés</span>
               </div>
               <div className="flex items-center gap-2 bg-white/20 backdrop-blur-sm px-4 py-2 rounded-full">
                 <CheckCircle className="w-4 h-4" />
@@ -218,12 +218,12 @@ const MunicipalRequestsPage = () => {
                 Guide de Demande ({filteredRequests.length})
               </h2>
               <p className="text-gray-600">
-                Suivez l'Ã©tat d'avancement de toutes vos demandes municipales
+                Suivez l'état d'avancement de toutes vos demandes municipales
               </p>
             </div>
           </div>
 
-          {/* ContrÃ´les de recherche et filtrage */}
+          {/* Contrôles de recherche et filtrage */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -255,19 +255,19 @@ const MunicipalRequestsPage = () => {
                     <SelectContent>
                       <SelectItem value="all">Tous les statuts</SelectItem>
                       <SelectItem value="En cours d'examen">En cours d'examen</SelectItem>
-                      <SelectItem value="ApprouvÃ©e">ApprouvÃ©e</SelectItem>
+                      <SelectItem value="Approuvée">Approuvée</SelectItem>
                       <SelectItem value="Documents manquants">Documents manquants</SelectItem>
-                      <SelectItem value="RejetÃ©e">RejetÃ©e</SelectItem>
+                      <SelectItem value="Rejetée">Rejetée</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
 
-                {/* RÃ©sumÃ© des rÃ©sultats */}
+                {/* Résumé des résultats */}
                 <div className="space-y-2">
-                  <label className="text-sm font-medium text-gray-700">RÃ©sultats</label>
+                  <label className="text-sm font-medium text-gray-700">Résultats</label>
                   <div className="flex items-center space-x-4 h-10">
                     <div className="text-sm text-gray-600">
-                      {filteredRequests.length} demande(s) trouvÃ©e(s)
+                      {filteredRequests.length} demande(s) trouvée(s)
                     </div>
                     {(searchTerm || statusFilter !== 'all') && (
                       <Button
@@ -278,7 +278,7 @@ const MunicipalRequestsPage = () => {
                           setStatusFilter('all');
                         }}
                       >
-                        RÃ©initialiser
+                        Réinitialiser
                       </Button>
                     )}
                   </div>
@@ -297,10 +297,10 @@ const MunicipalRequestsPage = () => {
                 <Search className="w-full h-full" />
               </div>
               <h3 className="text-2xl font-bold text-gray-600 mb-4">
-                Aucun rÃ©sultat trouvÃ©
+                Aucun résultat trouvé
               </h3>
               <p className="text-gray-500 mb-8">
-                Aucune demande ne correspond Ã  vos critÃ¨res de recherche
+                Aucune demande ne correspond Ï  vos critères de recherche
               </p>
               <Button onClick={() => setSearchTerm('')}>
                 Voir toutes les demandes
@@ -374,9 +374,9 @@ const MunicipalRequestsPage = () => {
 
                       <CardContent className="p-6">
                         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-                          {/* Informations gÃ©nÃ©rales */}
+                          {/* Informations générales */}
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-3">Informations gÃ©nÃ©rales</h4>
+                            <h4 className="font-semibold text-gray-900 mb-3">Informations générales</h4>
                             <div className="space-y-2 text-sm">
                               <div className="flex justify-between">
                                 <span className="text-gray-600">Localisation:</span>
@@ -391,11 +391,11 @@ const MunicipalRequestsPage = () => {
                                 <span className="font-medium">{new Date(request.submittedDate).toLocaleDateString('fr-FR')}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">DerniÃ¨re MAJ:</span>
+                                <span className="text-gray-600">Dernière MAJ:</span>
                                 <span className="font-medium">{new Date(request.lastUpdate).toLocaleDateString('fr-FR')}</span>
                               </div>
                               <div className="flex justify-between">
-                                <span className="text-gray-600">DÃ©cision estimÃ©e:</span>
+                                <span className="text-gray-600">Décision estimée:</span>
                                 <span className="font-medium">{new Date(request.estimatedDecision).toLocaleDateString('fr-FR')}</span>
                               </div>
                             </div>
@@ -414,9 +414,9 @@ const MunicipalRequestsPage = () => {
                             </div>
                           </div>
 
-                          {/* CritÃ¨res */}
+                          {/* Critères */}
                           <div>
-                            <h4 className="font-semibold text-gray-900 mb-3">CritÃ¨res d'Ã©ligibilitÃ©</h4>
+                            <h4 className="font-semibold text-gray-900 mb-3">Critères d'éligibilité</h4>
                             <div className="space-y-2">
                               {request.requirements.map((req, reqIndex) => (
                                 <div key={reqIndex} className="flex items-start gap-2 text-sm">
@@ -432,16 +432,16 @@ const MunicipalRequestsPage = () => {
                         <div className="mt-6 pt-6 border-t flex flex-wrap gap-3">
                           <Button variant="outline" size="sm">
                             <Eye className="w-4 h-4 mr-2" />
-                            Voir dÃ©tails
+                            Voir détails
                           </Button>
                           <Button variant="outline" size="sm">
                             <Download className="w-4 h-4 mr-2" />
-                            TÃ©lÃ©charger dossier
+                            Télécharger dossier
                           </Button>
                           {request.status === 'Documents manquants' && (
                             <Button size="sm" className="bg-orange-500 hover:bg-orange-600">
                               <FileText className="w-4 h-4 mr-2" />
-                              ComplÃ©ter dossier
+                              Compléter dossier
                             </Button>
                           )}
                           <Button variant="outline" size="sm">
@@ -471,7 +471,7 @@ const MunicipalRequestsPage = () => {
                       disabled={currentPage === 1}
                     >
                       <ChevronLeft className="w-4 h-4" />
-                      PrÃ©cÃ©dent
+                      Précédent
                     </Button>
                     
                     <div className="flex items-center space-x-2">

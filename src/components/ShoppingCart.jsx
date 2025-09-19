@@ -8,10 +8,10 @@ import {
 import { useCart } from '@/hooks/useCart';
 import { Button } from '@/components/ui/button';
 import { initializeCheckout, formatCurrency } from '@/api/EcommerceApi';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 const ShoppingCart = ({ isCartOpen, setIsCartOpen }) => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const location = useLocation();
   const { cartItems, removeFromCart, updateQuantity, getCartTotal, clearCart } = useCart();
 

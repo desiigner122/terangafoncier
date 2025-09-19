@@ -31,18 +31,18 @@ const OpportunitiesPage = () => {
   const [sortBy, setSortBy] = useState('trending');
 
   useEffect(() => {
-    // Simulation des opportunitÃ©s d'investissement
+    // Simulation des opportunités d'investissement
     const mockOpportunities = [
       {
         id: 1,
-        title: "RÃ©sidence Luxury Almadies",
+        title: "Résidence Luxury Almadies",
         location: "Almadies, Dakar",
         type: "residential",
         price: 1200000,
         expectedReturn: 18.5,
         riskLevel: "medium",
         duration: "24 mois",
-        description: "Projet de rÃ©sidence haut standing avec vue mer",
+        description: "Projet de résidence haut standing avec vue mer",
         images: ["/api/YOUR_API_KEY/300/200"],
         investmentMin: 50000,
         totalNeeded: 800000,
@@ -52,7 +52,7 @@ const OpportunitiesPage = () => {
         trending: true,
         featured: true,
         tags: ["Vue mer", "Haut standing", "Proche centre"],
-        developer: "Teranga DÃ©veloppement",
+        developer: "Teranga Développement",
         completionDate: "Q2 2026"
       },
       {
@@ -74,7 +74,7 @@ const OpportunitiesPage = () => {
         trending: true,
         featured: false,
         tags: ["Commercial", "Zone d'affaires", "Fort trafic"],
-        developer: "SÃ©nÃ©gal Commerce SA",
+        developer: "Sénégal Commerce SA",
         completionDate: "Q4 2026"
       },
       {
@@ -86,7 +86,7 @@ const OpportunitiesPage = () => {
         expectedReturn: 15.2,
         riskLevel: "low",
         duration: "18 mois",
-        description: "Terrain viabilisÃ© en zone rÃ©sidentielle en expansion",
+        description: "Terrain viabilisé en zone résidentielle en expansion",
         images: ["/api/YOUR_API_KEY/300/200"],
         investmentMin: 25000,
         totalNeeded: 300000,
@@ -95,7 +95,7 @@ const OpportunitiesPage = () => {
         timeLeft: "12 jours",
         trending: false,
         featured: true,
-        tags: ["Terrain", "ViabilisÃ©", "Zone rÃ©sidentielle"],
+        tags: ["Terrain", "Viabilisé", "Zone résidentielle"],
         developer: "Foncier Plus",
         completionDate: "Q1 2026"
       },
@@ -123,14 +123,14 @@ const OpportunitiesPage = () => {
       },
       {
         id: 5,
-        title: "Villa Familiale SacrÃ©-Coeur",
-        location: "SacrÃ©-Coeur, Dakar",
+        title: "Villa Familiale Sacré-Coeur",
+        location: "Sacré-Coeur, Dakar",
         type: "residential",
         price: 680000,
         expectedReturn: 16.5,
         riskLevel: "low",
         duration: "20 mois",
-        description: "Villa familiale dans quartier prisÃ©",
+        description: "Villa familiale dans quartier prisé",
         images: ["/api/YOUR_API_KEY/300/200"],
         investmentMin: 30000,
         totalNeeded: 450000,
@@ -139,8 +139,8 @@ const OpportunitiesPage = () => {
         timeLeft: "35 jours",
         trending: true,
         featured: false,
-        tags: ["Villa", "Familiale", "Quartier prisÃ©"],
-        developer: "Habitat SÃ©nÃ©gal",
+        tags: ["Villa", "Familiale", "Quartier prisé"],
+        developer: "Habitat Sénégal",
         completionDate: "Q1 2026"
       },
       {
@@ -183,7 +183,7 @@ const OpportunitiesPage = () => {
 
   const getTypeLabel = (type) => {
     switch (type) {
-      case 'residential': return 'RÃ©sidentiel';
+      case 'residential': return 'Résidentiel';
       case 'commercial': return 'Commercial';
       case 'office': return 'Bureaux';
       case 'land': return 'Terrain';
@@ -205,7 +205,7 @@ const OpportunitiesPage = () => {
     switch (risk) {
       case 'low': return 'Faible';
       case 'medium': return 'Moyen';
-      case 'high': return 'Ã‰levÃ©';
+      case 'high': return 'Élevé';
       default: return risk;
     }
   };
@@ -240,10 +240,10 @@ const OpportunitiesPage = () => {
           className="mb-8"
         >
           <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            OpportunitÃ©s d'Investissement
+            Opportunités d'Investissement
           </h1>
           <p className="text-gray-600">
-            DÃ©couvrez les meilleures opportunitÃ©s immobiliÃ¨res du moment
+            Découvrez les meilleures opportunités immobilières du moment
           </p>
         </motion.div>
 
@@ -259,7 +259,7 @@ const OpportunitiesPage = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                 <input
                   type="text"
-                  YOUR_API_KEY="Rechercher une opportunitÃ©..."
+                  YOUR_API_KEY="Rechercher une opportunité..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
@@ -273,7 +273,7 @@ const OpportunitiesPage = () => {
               className="border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-purple-500 focus:border-purple-500"
             >
               <option value="all">Tous types</option>
-              <option value="residential">RÃ©sidentiel</option>
+              <option value="residential">Résidentiel</option>
               <option value="commercial">Commercial</option>
               <option value="office">Bureaux</option>
               <option value="land">Terrain</option>
@@ -288,7 +288,7 @@ const OpportunitiesPage = () => {
               <option value="all">Tous risques</option>
               <option value="low">Faible risque</option>
               <option value="medium">Risque moyen</option>
-              <option value="high">Risque Ã©levÃ©</option>
+              <option value="high">Risque élevé</option>
             </select>
 
             <select
@@ -299,7 +299,7 @@ const OpportunitiesPage = () => {
               <option value="trending">Tendance</option>
               <option value="return">Rendement</option>
               <option value="price_low">Prix croissant</option>
-              <option value="price_high">Prix dÃ©croissant</option>
+              <option value="price_high">Prix décroissant</option>
               <option value="time">Temps restant</option>
             </select>
 
@@ -397,7 +397,7 @@ const OpportunitiesPage = () => {
                   <div className="mb-4">
                     <div className="flex justify-between text-sm text-gray-600 mb-2">
                       <span>Financement</span>
-                      <span>{fundingPercentage.toFixed(0)}% collectÃ©</span>
+                      <span>{fundingPercentage.toFixed(0)}% collecté</span>
                     </div>
                     <div className="w-full bg-gray-200 rounded-full h-2">
                       <motion.div
@@ -461,7 +461,7 @@ const OpportunitiesPage = () => {
           className="text-center mt-8"
         >
           <button className="bg-white text-purple-600 px-8 py-3 rounded-lg border border-purple-600 hover:bg-purple-50 transition-colors flex items-center mx-auto">
-            Voir plus d'opportunitÃ©s
+            Voir plus d'opportunités
             <ArrowRight className="h-4 w-4 ml-2" />
           </button>
         </motion.div>

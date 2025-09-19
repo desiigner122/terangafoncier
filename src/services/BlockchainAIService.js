@@ -1,4 +1,4 @@
-﻿// Service Blockchain pour Teranga Foncier avec intÃ©gration IA
+﻿// Service Blockchain pour Teranga Foncier avec intégration IA
 import { ethers } from 'ethers';
 
 class BlockchainAIService {
@@ -16,11 +16,11 @@ class BlockchainAIService {
       oracle: import.meta.env.VITE_ORACLE_CONTRACT
     };
 
-    // Cache pour les donnÃ©es blockchain
+    // Cache pour les données blockchain
     this.blockchainCache = new Map();
     this.transactionHistory = [];
     
-    // MÃ©triques en temps rÃ©el
+    // Métriques en temps réel
     this.realtimeMetrics = {
       totalTransactions: 0,
       dailyVolume: 0,
@@ -38,11 +38,11 @@ class BlockchainAIService {
       // Initialiser le provider
       this.provider = new ethers.JsonRpcProvider(this.rpcUrl);
       
-      // VÃ©rifier la connexion
+      // Vérifier la connexion
       const network = await this.provider.getNetwork();
-      console.log('âœ… ConnectÃ© au rÃ©seau:', network.name);
+      console.log('✅ Connecté au réseau:', network.name);
 
-      // DÃ©marrer le monitoring temps rÃ©el
+      // Démarrer le monitoring temps réel
       this.startRealtimeMonitoring();
       
     } catch (error) {
@@ -50,7 +50,7 @@ class BlockchainAIService {
     }
   }
 
-  // === MÃ‰TRIQUES BLOCKCHAIN EN TEMPS RÃ‰EL ===
+  // === MÉTRIQUES BLOCKCHAIN EN TEMPS RÉEL ===
   async getRealtimeMetrics() {
     try {
       const [
@@ -81,12 +81,12 @@ class BlockchainAIService {
       return metrics;
 
     } catch (error) {
-      console.error('Erreur mÃ©triques blockchain:', error);
+      console.error('Erreur métriques blockchain:', error);
       return this.getFallbackMetrics();
     }
   }
 
-  // === ANALYSE DES TRANSACTIONS IMMOBILIÃˆRES ===
+  // === ANALYSE DES TRANSACTIONS IMMOBILIÏˆRES ===
   async analyzePropertyTransactions(timeframe = '7d') {
     const cacheKey = `transactions_${timeframe}`;
     
@@ -108,7 +108,7 @@ class BlockchainAIService {
         anomalies: await this.detectAnomalies(timeframe),
         predictions: await this.predictTransactionTrends(timeframe),
         
-        // MÃ©triques de performance
+        // Métriques de performance
         performanceMetrics: await this.calculatePerformanceMetrics(timeframe),
         
         timestamp: new Date().toISOString()
@@ -123,7 +123,7 @@ class BlockchainAIService {
     }
   }
 
-  // === GESTION DES NFT PROPRIÃ‰TÃ‰S ===
+  // === GESTION DES NFT PROPRIÉTÉS ===
   async createPropertyNFT(propertyData) {
     try {
       const { 
@@ -137,7 +137,7 @@ class BlockchainAIService {
         aiValuation 
       } = propertyData;
 
-      // MÃ©tadonnÃ©es NFT avec donnÃ©es IA
+      // Métadonnées NFT avec données IA
       const metadata = {
         name: title,
         description,
@@ -162,7 +162,7 @@ class BlockchainAIService {
         }
       };
 
-      // Uploader les mÃ©tadonnÃ©es sur IPFS
+      // Uploader les métadonnées sur IPFS
       const metadataURI = await this.uploadToIPFS(metadata);
       
       // Minter le NFT
@@ -172,12 +172,12 @@ class BlockchainAIService {
         success: true,
         tokenId,
         metadataURI,
-        transactionHash: tokenId, // SimulÃ©
-        message: 'NFT propriÃ©tÃ© crÃ©Ã© avec succÃ¨s'
+        transactionHash: tokenId, // Simulé
+        message: 'NFT propriété créé avec succès'
       };
 
     } catch (error) {
-      console.error('Erreur crÃ©ation NFT:', error);
+      console.error('Erreur création NFT:', error);
       return {
         success: false,
         error: error.message
@@ -185,7 +185,7 @@ class BlockchainAIService {
     }
   }
 
-  // === SMART CONTRACTS AUTOMATISÃ‰S ===
+  // === SMART CONTRACTS AUTOMATISÉS ===
   async createAutomatedEscrow(transactionData) {
     try {
       const {
@@ -197,7 +197,7 @@ class BlockchainAIService {
         aiRiskAssessment
       } = transactionData;
 
-      // ParamÃ¨tres du contrat intelligent
+      // Paramètres du contrat intelligent
       const escrowParams = {
         buyer: buyerId,
         seller: sellerId,
@@ -209,7 +209,7 @@ class BlockchainAIService {
         arbitrator: import.meta.env.VITE_ARBITRATOR_ADDRESS
       };
 
-      // DÃ©ployer le contrat d'escrow
+      // Déployer le contrat d'escrow
       const escrowAddress = await this.deployEscrowContract(escrowParams);
       
       // Enregistrer dans l'oracle IA
@@ -220,11 +220,11 @@ class BlockchainAIService {
         escrowAddress,
         estimatedReleaseDate: new Date(Date.now() + conditions.autoReleaseDelay * 24 * 60 * 60 * 1000),
         aiRiskScore: aiRiskAssessment.riskScore,
-        message: 'Contrat d\'escrow automatisÃ© crÃ©Ã©'
+        message: 'Contrat d\'escrow automatisé créé'
       };
 
     } catch (error) {
-      console.error('Erreur crÃ©ation escrow:', error);
+      console.error('Erreur création escrow:', error);
       return {
         success: false,
         error: error.message
@@ -232,7 +232,7 @@ class BlockchainAIService {
     }
   }
 
-  // === ORACLE IA POUR DONNÃ‰ES EXTERNES ===
+  // === ORACLE IA POUR DONNÉES EXTERNES ===
   async updateAIOracle(marketData) {
     try {
       const oracleData = {
@@ -244,7 +244,7 @@ class BlockchainAIService {
         timestamp: Date.now()
       };
 
-      // Signer et soumettre Ã  l'oracle
+      // Signer et soumettre Ï  l'oracle
       const transaction = await this.submitToOracle(oracleData);
       
       return {
@@ -255,12 +255,12 @@ class BlockchainAIService {
       };
 
     } catch (error) {
-      console.error('Erreur mise Ã  jour oracle:', error);
+      console.error('Erreur mise Ï  jour oracle:', error);
       return { success: false, error: error.message };
     }
   }
 
-  // === MONITORING ET SÃ‰CURITÃ‰ ===
+  // === MONITORING ET SÉCURITÉ ===
   startRealtimeMonitoring() {
     // Surveiller les nouveaux blocs
     this.provider.on('block', async (blockNumber) => {
@@ -270,7 +270,7 @@ class BlockchainAIService {
     // Surveiller les transactions de nos contrats
     this.monitorContractTransactions();
     
-    // VÃ©rifications de sÃ©curitÃ© pÃ©riodiques
+    // Vérifications de sécurité périodiques
     setInterval(async () => {
       await this.performSecurityChecks();
     }, 60000); // Toutes les minutes
@@ -285,7 +285,7 @@ class BlockchainAIService {
         networkHealth: await this.checkNetworkHealth()
       };
 
-      // Alerter si des problÃ¨mes sont dÃ©tectÃ©s
+      // Alerter si des problèmes sont détectés
       if (checks.suspiciousActivity.length > 0) {
         await this.alertSecurityTeam(checks.suspiciousActivity);
       }
@@ -293,7 +293,7 @@ class BlockchainAIService {
       return checks;
 
     } catch (error) {
-      console.error('Erreur vÃ©rifications sÃ©curitÃ©:', error);
+      console.error('Erreur vérifications sécurité:', error);
       return null;
     }
   }
@@ -314,29 +314,29 @@ class BlockchainAIService {
     }
   }
 
-  // === INTÃ‰GRATION AVEC L'IA ===
+  // === INTÉGRATION AVEC L'IA ===
   async integrateAIInsights(aiInsights) {
     try {
-      // Mettre Ã  jour les prix dans les smart contracts
+      // Mettre Ï  jour les prix dans les smart contracts
       await this.updateContractPrices(aiInsights.pricePredictions);
       
-      // Ajuster les paramÃ¨tres de risque
+      // Ajuster les paramètres de risque
       await this.updateRiskParameters(aiInsights.riskAssessment);
       
-      // Optimiser les frais de gas selon l'activitÃ© prÃ©dite
+      // Optimiser les frais de gas selon l'activité prédite
       await this.optimizeGasPricing(aiInsights.activityPredictions);
 
       return { success: true };
 
     } catch (error) {
-      console.error('Erreur intÃ©gration IA:', error);
+      console.error('Erreur intégration IA:', error);
       return { success: false, error: error.message };
     }
   }
 
-  // === MÃ‰THODES UTILITAIRES ===
+  // === MÉTHODES UTILITAIRES ===
   async getTotalTransactions() {
-    // Simulation - Ã  remplacer par vraie logique
+    // Simulation - Ï  remplacer par vraie logique
     return Math.floor(Math.random() * 10000) + 15000;
   }
 
@@ -372,19 +372,19 @@ class BlockchainAIService {
     };
   }
 
-  // === MÃ‰THODES YOUR_API_KEY (Ã€ IMPLÃ‰MENTER) ===
+  // === MÉTHODES YOUR_API_KEY (À IMPLÉMENTER) ===
   async uploadToIPFS(data) { return 'ipfs://QmExample...'; }
   async mintPropertyNFT(uri, owner) { return Math.floor(Math.random() * 10000); }
   async deployEscrowContract(params) { return '0x' + Math.random().toString(16).substr(2, 40); }
   async registerWithAIOracle(address, assessment) { return true; }
   async submitToOracle(data) { return { hash: '0x123...', gasUsed: 21000 }; }
-  async analyzeNewBlock(blockNumber) { /* Ã€ implÃ©menter */ }
-  async monitorContractTransactions() { /* Ã€ implÃ©menter */ }
+  async analyzeNewBlock(blockNumber) { /* À implémenter */ }
+  async monitorContractTransactions() { /* À implémenter */ }
   async checkContractIntegrity() { return { status: 'OK' }; }
   async analyzeGasUsage() { return { optimization: 'Good' }; }
   async detectSuspiciousActivity() { return []; }
   async checkNetworkHealth() { return { status: 'Healthy' }; }
-  async alertSecurityTeam(alerts) { /* Ã€ implÃ©menter */ }
+  async alertSecurityTeam(alerts) { /* À implémenter */ }
   hashOracleData(data) { return ethers.keccak256(ethers.toUtf8Bytes(JSON.stringify(data))); }
 }
 

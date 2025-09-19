@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -28,7 +28,7 @@ import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 
 const AddParcelPageComponent = () => {
     const { user } = useAuth();
-    // toast remplacÃ© par window.safeGlobalToast
+    // toast remplacé par window.safeGlobalToast
     const navigate = useNavigate();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);

@@ -27,18 +27,18 @@ const CommunalLandsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedZone, setSelectedZone] = useState('all');
 
-  // DonnÃ©es d'exemple des terrains communaux
+  // Données d'exemple des terrains communaux
   const communalLands = [
     {
       id: 1,
-      title: "Parcelle Communale GuÃ©diawaye",
-      zone: "GuÃ©diawaye",
+      title: "Parcelle Communale Guédiawaye",
+      zone: "Guédiawaye",
       area: "300mÂ²",
       status: "Disponible",
       price: "Attribution selon revenus",
-      requirements: ["RÃ©sidence au SÃ©nÃ©gal", "Revenus < 500K FCFA/mois", "Premier logement"],
+      requirements: ["Résidence au Sénégal", "Revenus < 500K FCFA/mois", "Premier logement"],
       image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=250&fit=crop",
-      description: "Terrain communal destinÃ© Ã  l'habitat social avec toutes les commoditÃ©s."
+      description: "Terrain communal destiné Ï  l'habitat social avec toutes les commodités."
     },
     {
       id: 2,
@@ -46,8 +46,8 @@ const CommunalLandsPage = () => {
       zone: "Pikine",
       area: "250mÂ²",
       status: "En cours",
-      price: "Attribution selon critÃ¨res",
-      requirements: ["Domiciliation Pikine", "Famille nombreuse", "Projet dÃ©fini"],
+      price: "Attribution selon critères",
+      requirements: ["Domiciliation Pikine", "Famille nombreuse", "Projet défini"],
       image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=250&fit=crop",
       description: "Nouveau lotissement communal avec infrastructure moderne."
     },
@@ -56,21 +56,21 @@ const CommunalLandsPage = () => {
       title: "Zone Communale Rufisque",
       zone: "Rufisque",
       area: "400mÂ²",
-      status: "BientÃ´t disponible",
+      status: "Bientôt disponible",
       price: "Programme d'attribution 2025",
-      requirements: ["RÃ©sidence Rufisque 2+ ans", "ActivitÃ© Ã©conomique", "Dossier complet"],
+      requirements: ["Résidence Rufisque 2+ ans", "Activité économique", "Dossier complet"],
       image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=250&fit=crop",
-      description: "Grande parcelle communale avec accÃ¨s facilitÃ©s."
+      description: "Grande parcelle communale avec accès facilités."
     }
   ];
 
-  const zones = ['all', 'GuÃ©diawaye', 'Pikine', 'Rufisque', 'Dakar', 'Thiaroye'];
+  const zones = ['all', 'Guédiawaye', 'Pikine', 'Rufisque', 'Dakar', 'Thiaroye'];
 
   const getStatusColor = (status) => {
     switch (status) {
       case 'Disponible': return 'bg-green-500';
       case 'En cours': return 'bg-yellow-500';
-      case 'BientÃ´t disponible': return 'bg-blue-500';
+      case 'Bientôt disponible': return 'bg-blue-500';
       default: return 'bg-gray-500';
     }
   };
@@ -86,7 +86,7 @@ const CommunalLandsPage = () => {
     <>
       <Helmet>
         <title>Terrains Communaux - Attribution et Lotissements | Teranga Foncier</title>
-        <meta name="description" content="DÃ©couvrez les terrains communaux disponibles pour attribution. Processus transparent, critÃ¨res d'Ã©ligibilitÃ© et lotissements sociaux au SÃ©nÃ©gal." />
+        <meta name="description" content="Découvrez les terrains communaux disponibles pour attribution. Processus transparent, critères d'éligibilité et lotissements sociaux au Sénégal." />
       </Helmet>
 
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 pt-20">
@@ -111,17 +111,17 @@ const CommunalLandsPage = () => {
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                   <Building2 className="h-8 w-8 mx-auto mb-2" />
                   <div className="font-semibold">150+ Parcelles</div>
-                  <div className="text-sm opacity-80">Disponibles Ã  l'attribution</div>
+                  <div className="text-sm opacity-80">Disponibles Ï  l'attribution</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                   <Shield className="h-8 w-8 mx-auto mb-2" />
                   <div className="font-semibold">Processus Transparent</div>
-                  <div className="text-sm opacity-80">CritÃ¨res d'attribution clairs</div>
+                  <div className="text-sm opacity-80">Critères d'attribution clairs</div>
                 </div>
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">
                   <Users className="h-8 w-8 mx-auto mb-2" />
                   <div className="font-semibold">500+ Familles</div>
-                  <div className="text-sm opacity-80">DÃ©jÃ  bÃ©nÃ©ficiaires</div>
+                  <div className="text-sm opacity-80">DéjÏ  bénéficiaires</div>
                 </div>
               </div>
 
@@ -156,8 +156,8 @@ const CommunalLandsPage = () => {
                       <span className="text-green-600 font-bold">1</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">VÃ©rification d'Ã©ligibilitÃ©</h3>
-                      <p className="text-gray-600">VÃ©rifiez si vous rÃ©pondez aux critÃ¨res selon votre zone de rÃ©sidence et vos revenus.</p>
+                      <h3 className="font-semibold text-gray-900 mb-1">Vérification d'éligibilité</h3>
+                      <p className="text-gray-600">Vérifiez si vous répondez aux critères selon votre zone de résidence et vos revenus.</p>
                     </div>
                   </div>
                   
@@ -167,7 +167,7 @@ const CommunalLandsPage = () => {
                     </div>
                     <div>
                       <h3 className="font-semibold text-gray-900 mb-1">Constitution du dossier</h3>
-                      <p className="text-gray-600">Rassemblez les documents requis : justificatifs de revenus, de rÃ©sidence, projet de construction.</p>
+                      <p className="text-gray-600">Rassemblez les documents requis : justificatifs de revenus, de résidence, projet de construction.</p>
                     </div>
                   </div>
                   
@@ -176,8 +176,8 @@ const CommunalLandsPage = () => {
                       <span className="text-green-600 font-bold">3</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">DÃ©pÃ´t et Ã©valuation</h3>
-                      <p className="text-gray-600">DÃ©posez votre dossier qui sera Ã©valuÃ© selon les critÃ¨res d'attribution transparents.</p>
+                      <h3 className="font-semibold text-gray-900 mb-1">Dépôt et évaluation</h3>
+                      <p className="text-gray-600">Déposez votre dossier qui sera évalué selon les critères d'attribution transparents.</p>
                     </div>
                   </div>
                   
@@ -186,8 +186,8 @@ const CommunalLandsPage = () => {
                       <span className="text-green-600 font-bold">4</span>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900 mb-1">Attribution et formalitÃ©s</h3>
-                      <p className="text-gray-600">En cas d'acceptation, finalisation des dÃ©marches administratives et remise du titre.</p>
+                      <h3 className="font-semibold text-gray-900 mb-1">Attribution et formalités</h3>
+                      <p className="text-gray-600">En cas d'acceptation, finalisation des démarches administratives et remise du titre.</p>
                     </div>
                   </div>
                 </div>
@@ -218,8 +218,8 @@ const CommunalLandsPage = () => {
                   <div className="flex items-center gap-3">
                     <Calculator className="h-8 w-8 text-green-600" />
                     <div>
-                      <div className="font-semibold text-gray-900">Calculateur d'Ã©ligibilitÃ©</div>
-                      <div className="text-sm text-gray-600">Gratuit et instantanÃ©</div>
+                      <div className="font-semibold text-gray-900">Calculateur d'éligibilité</div>
+                      <div className="text-sm text-gray-600">Gratuit et instantané</div>
                     </div>
                   </div>
                 </div>
@@ -242,7 +242,7 @@ const CommunalLandsPage = () => {
                 Terrains Communaux Disponibles
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                DÃ©couvrez les derniÃ¨res opportunitÃ©s d'attribution dans votre rÃ©gion
+                Découvrez les dernières opportunités d'attribution dans votre région
               </p>
             </motion.div>
 
@@ -333,7 +333,7 @@ const CommunalLandsPage = () => {
                       <p className="text-gray-600 text-sm mb-4">{land.description}</p>
 
                       <div className="mb-4">
-                        <h4 className="font-medium text-gray-900 mb-2">CritÃ¨res d'Ã©ligibilitÃ© :</h4>
+                        <h4 className="font-medium text-gray-900 mb-2">Critères d'éligibilité :</h4>
                         <ul className="space-y-1">
                           {land.requirements.map((req, index) => (
                             <li key={index} className="flex items-center gap-2 text-sm text-gray-600">
@@ -348,7 +348,7 @@ const CommunalLandsPage = () => {
                         <div className="text-green-600 font-semibold">{land.price}</div>
                         <Button size="sm" className="bg-green-600 hover:bg-green-700 text-white" asChild>
                           <Link to={`/zone-communale/${land.id}`}>
-                            Voir dÃ©tails
+                            Voir détails
                             <ArrowRight className="h-3 w-3 ml-1" />
                           </Link>
                         </Button>
@@ -362,8 +362,8 @@ const CommunalLandsPage = () => {
             {filteredLands.length === 0 && (
               <div className="text-center py-12">
                 <Info className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun terrain trouvÃ©</h3>
-                <p className="text-gray-600">Essayez de modifier vos critÃ¨res de recherche.</p>
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun terrain trouvé</h3>
+                <p className="text-gray-600">Essayez de modifier vos critères de recherche.</p>
               </div>
             )}
           </div>
@@ -379,10 +379,10 @@ const CommunalLandsPage = () => {
               viewport={{ once: true }}
             >
               <h2 className="text-3xl font-bold mb-4">
-                PrÃªt Ã  faire votre demande ?
+                Prêt Ï  faire votre demande ?
               </h2>
               <p className="text-xl mb-8 opacity-90">
-                Notre Ã©quipe vous accompagne dans toutes les dÃ©marches
+                Notre équipe vous accompagne dans toutes les démarches
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center">

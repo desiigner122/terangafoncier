@@ -6,7 +6,7 @@
     import { Input } from '@/components/ui/input';
     import { Label } from '@/components/ui/label';
     import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-    // useToast import supprimÃ© - utilisation window.safeGlobalToast
+    // useToast import supprimé - utilisation window.safeGlobalToast
     import { 
   LogIn, 
   AlertCircle
@@ -21,7 +21,7 @@
       const { signIn, session } = useAuth();
       const navigate = useNavigate();
       const location = useLocation();
-      // toast remplacÃ© par window.safeGlobalToast
+      // toast remplacé par window.safeGlobalToast
 
       const handleLogin = async (e) => {
         e.preventDefault();

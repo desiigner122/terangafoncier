@@ -1,12 +1,12 @@
 ﻿/**
- * ðŸ” BLOCKCHAIN SECURITY DASHBOARD - PRIORITÃ‰ 1 UI
+ * ðŸ” BLOCKCHAIN SECURITY DASHBOARD - PRIORITÉ 1 UI
  * ================================================
  * 
- * Interface Admin pour SÃ©curitÃ© Blockchain Teranga Foncier
- * - Hachage titres fonciers en temps rÃ©el
- * - VÃ©rification documents automatique
+ * Interface Admin pour Sécurité Blockchain Teranga Foncier
+ * - Hachage titres fonciers en temps réel
+ * - Vérification documents automatique
  * - Monitoring trail audit immutable
- * - Gestion certificats numÃ©riques
+ * - Gestion certificats numériques
  * 
  * Version: 1.0 Production Ready
  */
@@ -32,13 +32,13 @@ import { terangaAI } from '../../services/TerangaAIService';
 import { terangaBlockchainSecurity } from '../../services/TerangaBlockchainSecurity';
 
 const BlockchainSecurityDashboard = () => {
-  // Ã‰tat principal
+  // État principal
   const [activeTab, setActiveTab] = useState('dashboard');
   const [securityMetrics, setSecurityMetrics] = useState(null);
   const [auditTrail, setAuditTrail] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  // Ã‰tats spÃ©cifiques
+  // États spécifiques
   const [hashingStatus, setHashingStatus] = useState('idle');
   const [verificationResults, setVerificationResults] = useState([]);
   const [certificates, setCertificates] = useState([]);
@@ -74,7 +74,7 @@ const BlockchainSecurityDashboard = () => {
       await terangaBlockchainSecurity.initialize();
       await terangaAI.initialize();
       
-      // Charger donnÃ©es initiales
+      // Charger données initiales
       await refreshMetrics();
       
     } catch (error) {
@@ -89,12 +89,12 @@ const BlockchainSecurityDashboard = () => {
       const metrics = terangaBlockchainSecurity.getSecurityMetrics();
       setSecurityMetrics(metrics);
       
-      // RÃ©cupÃ©rer audit trail rÃ©cent
+      // Récupérer audit trail récent
       const trail = terangaBlockchainSecurity.auditTrail.slice(-10);
       setAuditTrail(trail);
       
     } catch (error) {
-      console.error('âŒ Erreur refresh mÃ©triques:', error);
+      console.error('âŒ Erreur refresh métriques:', error);
     }
   };
 
@@ -113,7 +113,7 @@ const BlockchainSecurityDashboard = () => {
         throw new Error(validation.error);
       }
 
-      // PrÃ©paration donnÃ©es
+      // Préparation données
       const landTitleData = {
         ...landTitleForm,
         date_immatriculation: new Date().toISOString().split('T')[0],
@@ -124,13 +124,13 @@ const BlockchainSecurityDashboard = () => {
         }
       };
 
-      // Hachage sÃ©curisÃ© avec IA
+      // Hachage sécurisé avec IA
       const result = await terangaAI.hashSecureLandTitle(landTitleData);
       
       if (result.success) {
         setHashingStatus('success');
         
-        // Ajouter au historique des rÃ©sultats
+        // Ajouter au historique des résultats
         setVerificationResults(prev => [{
           id: Date.now(),
           type: 'HASH_CREATED',
@@ -142,7 +142,7 @@ const BlockchainSecurityDashboard = () => {
         // Reset formulaire
         resetLandTitleForm();
         
-        // Refresh mÃ©triques
+        // Refresh métriques
         await refreshMetrics();
         
         setTimeout(() => setHashingStatus('idle'), 3000);
@@ -184,7 +184,7 @@ const BlockchainSecurityDashboard = () => {
       await refreshMetrics();
       
     } catch (error) {
-      console.error('âŒ Erreur vÃ©rification document:', error);
+      console.error('âŒ Erreur vérification document:', error);
     } finally {
       setLoading(false);
     }
@@ -202,7 +202,7 @@ const BlockchainSecurityDashboard = () => {
       }
       
     } catch (error) {
-      console.error('âŒ Erreur gÃ©nÃ©ration certificat:', error);
+      console.error('âŒ Erreur génération certificat:', error);
     } finally {
       setLoading(false);
     }
@@ -223,7 +223,7 @@ const BlockchainSecurityDashboard = () => {
     }
 
     if (!landTitleForm.coordonnees_gps.lat || !landTitleForm.coordonnees_gps.lng) {
-      return { valid: false, error: 'CoordonnÃ©es GPS requises' };
+      return { valid: false, error: 'Coordonnées GPS requises' };
     }
 
     return { valid: true };
@@ -266,7 +266,7 @@ const BlockchainSecurityDashboard = () => {
       <div className="p-6 bg-gray-50 min-h-screen flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Initialisation sÃ©curitÃ© blockchain...</p>
+          <p className="text-gray-600">Initialisation sécurité blockchain...</p>
         </div>
       </div>
     );
@@ -274,16 +274,16 @@ const BlockchainSecurityDashboard = () => {
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      {/* En-tÃªte */}
+      {/* En-tête */}
       <div className="bg-white rounded-xl shadow-sm p-6 mb-6">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-2xl font-bold text-gray-900 flex items-center gap-3">
               <Shield className="text-blue-600" />
-              SÃ©curitÃ© Blockchain Teranga
+              Sécurité Blockchain Teranga
             </h1>
             <p className="text-gray-600 mt-1">
-              Hachage, vÃ©rification et certification sÃ©curisÃ©s pour titres fonciers
+              Hachage, vérification et certification sécurisés pour titres fonciers
             </p>
           </div>
           
@@ -292,19 +292,19 @@ const BlockchainSecurityDashboard = () => {
               <div className="text-2xl font-bold text-blue-600">
                 {securityMetrics?.systemHealth || 0}%
               </div>
-              <div className="text-sm text-gray-500">SantÃ© SystÃ¨me</div>
+              <div className="text-sm text-gray-500">Santé Système</div>
             </div>
           </div>
         </div>
       </div>
 
-      {/* MÃ©triques en temps rÃ©el */}
+      {/* Métriques en temps réel */}
       {securityMetrics && (
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Documents HachÃ©s</p>
+                <p className="text-sm font-medium text-gray-600">Documents Hachés</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {securityMetrics.documentsHashed.toLocaleString()}
                 </p>
@@ -319,7 +319,7 @@ const BlockchainSecurityDashboard = () => {
           <div className="bg-white rounded-lg shadow-sm p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">VÃ©rifications</p>
+                <p className="text-sm font-medium text-gray-600">Vérifications</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {securityMetrics.verificationsPerformed.toLocaleString()}
                 </p>
@@ -327,7 +327,7 @@ const BlockchainSecurityDashboard = () => {
               <FileCheck className="h-8 w-8 text-green-600" />
             </div>
             <div className="mt-4 text-sm text-blue-600">
-              â†— {Math.floor(Math.random() * 20) + 10} derniÃ¨re heure
+              â†— {Math.floor(Math.random() * 20) + 10} dernière heure
             </div>
           </div>
 
@@ -357,7 +357,7 @@ const BlockchainSecurityDashboard = () => {
               <AlertTriangle className="h-8 w-8 text-red-600" />
             </div>
             <div className="mt-4 text-sm text-red-600">
-              {securityMetrics.fraudAttempts === 0 ? 'Aucune dÃ©tection' : 'âš ï¸ Surveillance active'}
+              {securityMetrics.fraudAttempts === 0 ? 'Aucune détection' : 'âš ï¸ Surveillance active'}
             </div>
           </div>
         </div>
@@ -370,7 +370,7 @@ const BlockchainSecurityDashboard = () => {
             {[
               { id: 'dashboard', label: 'Vue d\'ensemble', icon: Activity },
               { id: 'hash', label: 'Hachage Titres', icon: Hash },
-              { id: 'verify', label: 'VÃ©rification', icon: FileCheck },
+              { id: 'verify', label: 'Vérification', icon: FileCheck },
               { id: 'certificates', label: 'Certificats', icon: Certificate },
               { id: 'audit', label: 'Trail Audit', icon: Database }
             ].map((tab) => (
@@ -398,14 +398,14 @@ const BlockchainSecurityDashboard = () => {
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
                 <Hash className="text-blue-600" />
-                <h2 className="text-xl font-bold text-gray-900">Hachage SÃ©curisÃ© Titres Fonciers</h2>
+                <h2 className="text-xl font-bold text-gray-900">Hachage Sécurisé Titres Fonciers</h2>
               </div>
 
               <form onSubmit={handleHashLandTitle} className="bg-gray-50 rounded-lg p-6">
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      NumÃ©ro Titre Foncier *
+                      Numéro Titre Foncier *
                     </label>
                     <input
                       type="text"
@@ -419,7 +419,7 @@ const BlockchainSecurityDashboard = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Nom PropriÃ©taire *
+                      Nom Propriétaire *
                     </label>
                     <input
                       type="text"
@@ -433,7 +433,7 @@ const BlockchainSecurityDashboard = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      NIN PropriÃ©taire *
+                      NIN Propriétaire *
                     </label>
                     <input
                       type="text"
@@ -477,7 +477,7 @@ const BlockchainSecurityDashboard = () => {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      RÃ©gion
+                      Région
                     </label>
                     <select
                       value={landTitleForm.region}
@@ -485,7 +485,7 @@ const BlockchainSecurityDashboard = () => {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
                     >
                       <option value="Dakar">Dakar</option>
-                      <option value="ThiÃ¨s">ThiÃ¨s</option>
+                      <option value="Thiès">Thiès</option>
                       <option value="Saint-Louis">Saint-Louis</option>
                       <option value="Kaolack">Kaolack</option>
                       <option value="Ziguinchor">Ziguinchor</option>
@@ -535,7 +535,7 @@ const BlockchainSecurityDashboard = () => {
                     onClick={resetLandTitleForm}
                     className="px-6 py-2 text-gray-600 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors"
                   >
-                    RÃ©initialiser
+                    Réinitialiser
                   </button>
                   <button
                     type="submit"
@@ -557,7 +557,7 @@ const BlockchainSecurityDashboard = () => {
                     {hashingStatus === 'error' && <XCircle className="w-4 h-4" />}
                     
                     {hashingStatus === 'processing' ? 'Hachage en cours...' :
-                     hashingStatus === 'success' ? 'Hachage rÃ©ussi!' :
+                     hashingStatus === 'success' ? 'Hachage réussi!' :
                      hashingStatus === 'error' ? 'Erreur!' :
                      'Hasher le Titre Foncier'}
                   </button>
@@ -573,11 +573,11 @@ const BlockchainSecurityDashboard = () => {
                 <Database className="text-blue-600" />
                 <h2 className="text-xl font-bold text-gray-900">Trail Audit Immutable</h2>
                 <span className="bg-green-100 text-green-800 text-xs font-medium px-2 py-1 rounded-full">
-                  Temps RÃ©el
+                  Temps Réel
                 </span>
               </div>
 
-              {/* MÃ©triques audit */}
+              {/* Métriques audit */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
                 <div className="bg-blue-50 rounded-lg p-4">
                   <div className="flex items-center gap-3">
@@ -586,7 +586,7 @@ const BlockchainSecurityDashboard = () => {
                       <p className="text-2xl font-bold text-blue-900">
                         {securityMetrics?.auditTrailEntries || 0}
                       </p>
-                      <p className="text-sm text-blue-600">EntrÃ©es Audit</p>
+                      <p className="text-sm text-blue-600">Entrées Audit</p>
                     </div>
                   </div>
                 </div>
@@ -598,7 +598,7 @@ const BlockchainSecurityDashboard = () => {
                       <p className="text-2xl font-bold text-green-900">
                         {securityMetrics?.auditTrailIntegrity ? 'OK' : 'ERR'}
                       </p>
-                      <p className="text-sm text-green-600">IntÃ©gritÃ©</p>
+                      <p className="text-sm text-green-600">Intégrité</p>
                     </div>
                   </div>
                 </div>
@@ -614,10 +614,10 @@ const BlockchainSecurityDashboard = () => {
                 </div>
               </div>
 
-              {/* EntrÃ©es audit rÃ©centes */}
+              {/* Entrées audit récentes */}
               <div className="bg-white border rounded-lg">
                 <div className="px-6 py-4 border-b bg-gray-50">
-                  <h3 className="font-semibold text-gray-900">ActivitÃ© RÃ©cente</h3>
+                  <h3 className="font-semibold text-gray-900">Activité Récente</h3>
                 </div>
                 
                 <div className="divide-y">
@@ -651,7 +651,7 @@ const BlockchainSecurityDashboard = () => {
                   )) : (
                     <div className="px-6 py-8 text-center text-gray-500">
                       <Database className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>Aucune entrÃ©e audit disponible</p>
+                      <p>Aucune entrée audit disponible</p>
                     </div>
                   )}
                 </div>
@@ -659,17 +659,17 @@ const BlockchainSecurityDashboard = () => {
             </div>
           )}
 
-          {/* ONGLET RÃ‰SULTATS */}
+          {/* ONGLET RÉSULTATS */}
           {(activeTab === 'dashboard' || activeTab === 'verify') && (
             <div className="space-y-6">
               <div className="flex items-center gap-3 mb-6">
                 <TrendingUp className="text-blue-600" />
-                <h2 className="text-xl font-bold text-gray-900">RÃ©sultats et VÃ©rifications</h2>
+                <h2 className="text-xl font-bold text-gray-900">Résultats et Vérifications</h2>
               </div>
 
               <div className="bg-white border rounded-lg">
                 <div className="px-6 py-4 border-b bg-gray-50">
-                  <h3 className="font-semibold text-gray-900">Historique des OpÃ©rations</h3>
+                  <h3 className="font-semibold text-gray-900">Historique des Opérations</h3>
                 </div>
                 
                 <div className="divide-y">
@@ -711,7 +711,7 @@ const BlockchainSecurityDashboard = () => {
                   )) : (
                     <div className="px-6 py-8 text-center text-gray-500">
                       <FileText className="w-8 h-8 mx-auto mb-2 opacity-50" />
-                      <p>Aucune opÃ©ration effectuÃ©e</p>
+                      <p>Aucune opération effectuée</p>
                     </div>
                   )}
                 </div>

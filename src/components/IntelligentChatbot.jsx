@@ -26,16 +26,16 @@ const IntelligentChatbot = () => {
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
 
-  // RÃ©ponses intelligentes du chatbot
+  // Réponses intelligentes du chatbot
   const responses = {
     // Salutations
     greetings: [
       "bonjour", "salut", "hello", "bonsoir", "hey", "coucou"
     ],
     greetingResponses: [
-      "Bonjour ! Bienvenue sur Teranga Foncier ðŸ . Je suis lÃ  pour vous accompagner dans vos projets immobiliers blockchain !",
+      "Bonjour ! Bienvenue sur Teranga Foncier ðŸ . Je suis lÏ  pour vous accompagner dans vos projets immobiliers blockchain !",
       "Salut ! Ravi de vous voir sur notre plateforme ! Comment puis-je vous aider avec vos projets immobiliers ?",
-      "Hello ! Je suis Teranga AI, votre guide dans l'univers de l'immobilier blockchain sÃ©nÃ©galais ðŸ‡¸ðŸ‡³"
+      "Hello ! Je suis Teranga AI, votre guide dans l'univers de l'immobilier blockchain sénégalais ðŸ‡¸ðŸ‡³"
     ],
 
     // Questions sur les terrains
@@ -43,59 +43,59 @@ const IntelligentChatbot = () => {
       "terrain", "parcelle", "lot", "foncier", "acheter", "vendre"
     ],
     terrainResponses: [
-      "ðŸžï¸ Excellent ! Nous avons plus de 1,284 terrains vÃ©rifiÃ©s blockchain. Voulez-vous :\nâ€¢ Parcourir par rÃ©gion (Dakar, ThiÃ¨s, Mbour...)\nâ€¢ Filtrer par prix\nâ€¢ Voir les terrains NFT\nâ€¢ Obtenir une Ã©valuation IA ?",
-      "ðŸ—ºï¸ Super ! Notre catalogue comprend des terrains dans toutes les rÃ©gions du SÃ©nÃ©gal, tous vÃ©rifiÃ©s par blockchain. Quel type de terrain vous intÃ©resse ?",
-      "ðŸ“ Parfait ! Tous nos terrains sont certifiÃ©s NFT pour Ã©viter les fraudes. Dans quelle zone cherchez-vous ?"
+      "ðŸžï¸ Excellent ! Nous avons plus de 1,284 terrains vérifiés blockchain. Voulez-vous :\nâ€¢ Parcourir par région (Dakar, Thiès, Mbour...)\nâ€¢ Filtrer par prix\nâ€¢ Voir les terrains NFT\nâ€¢ Obtenir une évaluation IA ?",
+      "ðŸ—ºï¸ Super ! Notre catalogue comprend des terrains dans toutes les régions du Sénégal, tous vérifiés par blockchain. Quel type de terrain vous intéresse ?",
+      "ðŸ“ Parfait ! Tous nos terrains sont certifiés NFT pour éviter les fraudes. Dans quelle zone cherchez-vous ?"
     ],
 
     // Questions sur la blockchain
     blockchain: [
-      "blockchain", "nft", "smart contract", "crypto", "sÃ©curitÃ©", "fraude"
+      "blockchain", "nft", "smart contract", "crypto", "sécurité", "fraude"
     ],
     blockchainResponses: [
-      "ðŸ” La blockchain garantit que chaque propriÃ©tÃ© est unique et vÃ©rifiable ! Chaque terrain devient un NFT avec :\nâ€¢ Titre de propriÃ©tÃ© inviolable\nâ€¢ Historique complet des transactions\nâ€¢ Protection contre les doubles ventes\nâ€¢ Smart contracts pour paiements automatiques",
-      "â›“ï¸ Notre blockchain Ethereum sÃ©curise toutes les transactions ! Plus de fraude possible grÃ¢ce Ã  :\nâ€¢ VÃ©rification par IA\nâ€¢ Registre public immuable\nâ€¢ Signatures cryptographiques\nâ€¢ TraÃ§abilitÃ© complÃ¨te",
-      "ðŸ›¡ï¸ Avec 2,847 NFT crÃ©Ã©s et 0% de fraude dÃ©tectÃ©e, notre blockchain rÃ©volutionne l'immobilier sÃ©nÃ©galais !"
+      "ðŸ” La blockchain garantit que chaque propriété est unique et vérifiable ! Chaque terrain devient un NFT avec :\nâ€¢ Titre de propriété inviolable\nâ€¢ Historique complet des transactions\nâ€¢ Protection contre les doubles ventes\nâ€¢ Smart contracts pour paiements automatiques",
+      "â›“ï¸ Notre blockchain Ethereum sécurise toutes les transactions ! Plus de fraude possible grâce Ï  :\nâ€¢ Vérification par IA\nâ€¢ Registre public immuable\nâ€¢ Signatures cryptographiques\nâ€¢ Traçabilité complète",
+      "ðŸ›¡ï¸ Avec 2,847 NFT créés et 0% de fraude détectée, notre blockchain révolutionne l'immobilier sénégalais !"
     ],
 
     // Questions sur les prix
     prix: [
-      "prix", "coÃ»t", "budget", "financement", "crÃ©dit", "paiement"
+      "prix", "coût", "budget", "financement", "crédit", "paiement"
     ],
     prixResponses: [
-      "ðŸ’° Nos prix varient selon la localisation :\nâ€¢ Dakar centre : 25,000-50,000 FCFA/mÂ²\nâ€¢ Banlieue Dakar : 8,000-20,000 FCFA/mÂ²\nâ€¢ ThiÃ¨s/Mbour : 3,000-12,000 FCFA/mÂ²\n\nVoulez-vous une estimation personnalisÃ©e ?",
-      "ðŸ’³ Nous proposons plusieurs options de financement :\nâ€¢ Paiement Ã©chelonnÃ© blockchain\nâ€¢ Partenariat avec 12 banques\nâ€¢ Taux prÃ©fÃ©rentiels diaspora\nâ€¢ Smart contracts sÃ©curisÃ©s",
-      "ðŸ¦ Taux actuels : CrÃ©dit habitat 6.5% | ROI moyen 18.5% | Financement jusqu'Ã  25 ans"
+      "ðŸ’° Nos prix varient selon la localisation :\nâ€¢ Dakar centre : 25,000-50,000 FCFA/mÂ²\nâ€¢ Banlieue Dakar : 8,000-20,000 FCFA/mÂ²\nâ€¢ Thiès/Mbour : 3,000-12,000 FCFA/mÂ²\n\nVoulez-vous une estimation personnalisée ?",
+      "ðŸ’³ Nous proposons plusieurs options de financement :\nâ€¢ Paiement échelonné blockchain\nâ€¢ Partenariat avec 12 banques\nâ€¢ Taux préférentiels diaspora\nâ€¢ Smart contracts sécurisés",
+      "ðŸ¦ Taux actuels : Crédit habitat 6.5% | ROI moyen 18.5% | Financement jusqu'Ï  25 ans"
     ],
 
     // Questions sur la construction
     construction: [
-      "construction", "bÃ¢tir", "projet", "promoteur", "maison", "villa"
+      "construction", "bâtir", "projet", "promoteur", "maison", "villa"
     ],
     constructionResponses: [
-      "ðŸ—ï¸ Nos 45 promoteurs certifiÃ©s proposent :\nâ€¢ Suivi construction par IA satellite\nâ€¢ Rapports photos quotidiens\nâ€¢ Paiements liÃ©s Ã  l'avancement\nâ€¢ Garanties blockchain\n\nVoulez-vous voir les projets disponibles ?",
-      "ðŸ  Construction moderne avec technologie :\nâ€¢ Surveillance 24/7 par IA\nâ€¢ MatÃ©riaux de qualitÃ© certifiÃ©s\nâ€¢ Respect des dÃ©lais (72h vs 3 mois)\nâ€¢ Garantie dÃ©cennale blockchain",
-      "ðŸ‘· 125 projets actifs avec suivi temps rÃ©el ! Quel type de construction vous intÃ©resse ?"
+      "ðŸ—ï¸ Nos 45 promoteurs certifiés proposent :\nâ€¢ Suivi construction par IA satellite\nâ€¢ Rapports photos quotidiens\nâ€¢ Paiements liés Ï  l'avancement\nâ€¢ Garanties blockchain\n\nVoulez-vous voir les projets disponibles ?",
+      "ðŸ  Construction moderne avec technologie :\nâ€¢ Surveillance 24/7 par IA\nâ€¢ Matériaux de qualité certifiés\nâ€¢ Respect des délais (72h vs 3 mois)\nâ€¢ Garantie décennale blockchain",
+      "ðŸ‘· 125 projets actifs avec suivi temps réel ! Quel type de construction vous intéresse ?"
     ],
 
     // Questions sur la diaspora
     diaspora: [
-      "diaspora", "Ã©tranger", "france", "italie", "usa", "distance"
+      "diaspora", "étranger", "france", "italie", "usa", "distance"
     ],
     diasporaResponses: [
-      "ðŸŒ SpÃ©cialement conÃ§u pour la diaspora ! Services inclus :\nâ€¢ Visite virtuelle 360Â°\nâ€¢ Support multidevise (EUR, USD, CAD)\nâ€¢ Accompagnement juridique\nâ€¢ Suivi construction Ã  distance\nâ€¢ Support 24/7 en franÃ§ais",
-      "âœˆï¸ 3,100+ membres diaspora nous font confiance ! Nous couvrons 50+ pays avec :\nâ€¢ Transferts sÃ©curisÃ©s blockchain\nâ€¢ VÃ©rification Ã  distance\nâ€¢ ReprÃ©sentation lÃ©gale locale\nâ€¢ Garanties internationales",
-      "ðŸ‡¸ðŸ‡³ Investir depuis l'Ã©tranger n'a jamais Ã©tÃ© aussi sÃ»r ! Notre plateforme Ã©limine tous les risques traditionnels."
+      "ðŸŒ Spécialement conçu pour la diaspora ! Services inclus :\nâ€¢ Visite virtuelle 360Â°\nâ€¢ Support multidevise (EUR, USD, CAD)\nâ€¢ Accompagnement juridique\nâ€¢ Suivi construction Ï  distance\nâ€¢ Support 24/7 en français",
+      "âœˆï¸ 3,100+ membres diaspora nous font confiance ! Nous couvrons 50+ pays avec :\nâ€¢ Transferts sécurisés blockchain\nâ€¢ Vérification Ï  distance\nâ€¢ Représentation légale locale\nâ€¢ Garanties internationales",
+      "ðŸ‡¸ðŸ‡³ Investir depuis l'étranger n'a jamais été aussi sûr ! Notre plateforme élimine tous les risques traditionnels."
     ],
 
-    // Questions gÃ©nÃ©rales
+    // Questions générales
     help: [
-      "aide", "comment", "pourquoi", "qui", "quoi", "oÃ¹"
+      "aide", "comment", "pourquoi", "qui", "quoi", "où"
     ],
     helpResponses: [
-      "ðŸ¤ Je peux vous aider avec :\nâ€¢ Recherche de terrains/propriÃ©tÃ©s\nâ€¢ Explication blockchain\nâ€¢ Calculs de prix/financement\nâ€¢ Contact promoteurs\nâ€¢ Processus d'achat\nâ€¢ Support diaspora\n\nQue souhaitez-vous savoir ?",
-      "ðŸ“š Services disponibles :\nâ€¢ Catalogue 1,284 terrains\nâ€¢ 125 projets construction\nâ€¢ Outils d'Ã©valuation IA\nâ€¢ Support multilingue\nâ€¢ Guides dÃ©taillÃ©s\n\nPar quoi commencer ?",
-      "ðŸ’¡ Teranga Foncier c'est :\nâ€¢ 1Ã¨re plateforme blockchain immobiliÃ¨re du SÃ©nÃ©gal\nâ€¢ 8,200+ utilisateurs satisfaits\nâ€¢ 0% de fraude dÃ©tectÃ©e\nâ€¢ Support 24/7\n\nUne question spÃ©cifique ?"
+      "ðŸ¤ Je peux vous aider avec :\nâ€¢ Recherche de terrains/propriétés\nâ€¢ Explication blockchain\nâ€¢ Calculs de prix/financement\nâ€¢ Contact promoteurs\nâ€¢ Processus d'achat\nâ€¢ Support diaspora\n\nQue souhaitez-vous savoir ?",
+      "ðŸ“š Services disponibles :\nâ€¢ Catalogue 1,284 terrains\nâ€¢ 125 projets construction\nâ€¢ Outils d'évaluation IA\nâ€¢ Support multilingue\nâ€¢ Guides détaillés\n\nPar quoi commencer ?",
+      "ðŸ’¡ Teranga Foncier c'est :\nâ€¢ 1ère plateforme blockchain immobilière du Sénégal\nâ€¢ 8,200+ utilisateurs satisfaits\nâ€¢ 0% de fraude détectée\nâ€¢ Support 24/7\n\nUne question spécifique ?"
     ]
   };
 
@@ -103,7 +103,7 @@ const IntelligentChatbot = () => {
   const quickActions = [
     { icon: Home, text: "Chercher un terrain", category: "terrain" },
     { icon: Building2, text: "Voir les projets", category: "construction" },
-    { icon: MapPin, text: "Explorer par rÃ©gion", category: "terrain" },
+    { icon: MapPin, text: "Explorer par région", category: "terrain" },
     { icon: CreditCard, text: "Calculer financement", category: "prix" },
     { icon: Shield, text: "Comprendre blockchain", category: "blockchain" },
     { icon: Phone, text: "Contacter support", category: "help" }
@@ -117,11 +117,11 @@ const IntelligentChatbot = () => {
     scrollToBottom();
   }, [messages]);
 
-  // Analyser le message et gÃ©nÃ©rer une rÃ©ponse intelligente
+  // Analyser le message et générer une réponse intelligente
   const generateResponse = (userMessage) => {
     const msg = userMessage.toLowerCase();
     
-    // VÃ©rifier les catÃ©gories de mots-clÃ©s
+    // Vérifier les catégories de mots-clés
     for (const [category, keywords] of Object.entries(responses)) {
       if (keywords.includes && keywords.some(keyword => msg.includes(keyword))) {
         const responseKey = category + 'Responses';
@@ -135,9 +135,9 @@ const IntelligentChatbot = () => {
       }
     }
 
-    // RÃ©ponse par dÃ©faut intelligente
+    // Réponse par défaut intelligente
     return {
-      text: "ðŸ¤” Je comprends votre question ! Pour vous donner la meilleure rÃ©ponse, pourriez-vous prÃ©ciser si vous cherchez des informations sur :\nâ€¢ Les terrains disponibles\nâ€¢ Les processus blockchain\nâ€¢ Les financements\nâ€¢ Les projets de construction\nâ€¢ Les services diaspora ?",
+      text: "ðŸ¤” Je comprends votre question ! Pour vous donner la meilleure réponse, pourriez-vous préciser si vous cherchez des informations sur :\nâ€¢ Les terrains disponibles\nâ€¢ Les processus blockchain\nâ€¢ Les financements\nâ€¢ Les projets de construction\nâ€¢ Les services diaspora ?",
       suggestions: [
         "Voir les terrains",
         "Expliquer blockchain", 
@@ -150,13 +150,13 @@ const IntelligentChatbot = () => {
   const getSuggestions = (category) => {
     const suggestionMap = {
       terrain: ["Voir le catalogue", "Filtrer par prix", "Localisation Dakar", "Terrains NFT"],
-      blockchain: ["Smart contracts", "SÃ©curitÃ© NFT", "Ã‰viter fraudes", "Guide blockchain"],
-      prix: ["Calculer budget", "Options crÃ©dit", "Taux actuels", "Simulation"],
-      construction: ["Projets actifs", "Suivi IA", "Promoteurs certifiÃ©s", "Faire devis"],
+      blockchain: ["Smart contracts", "Sécurité NFT", "Éviter fraudes", "Guide blockchain"],
+      prix: ["Calculer budget", "Options crédit", "Taux actuels", "Simulation"],
+      construction: ["Projets actifs", "Suivi IA", "Promoteurs certifiés", "Faire devis"],
       diaspora: ["Services diaspora", "Visite virtuelle", "Support multidevise", "Investir distance"],
-      help: ["Guide complet", "CrÃ©er compte", "Contacter expert", "DÃ©mo plateforme"]
+      help: ["Guide complet", "Créer compte", "Contacter expert", "Démo plateforme"]
     };
-    return suggestionMap[category] || ["Aide gÃ©nÃ©rale", "Contacter support", "Guide utilisateur"];
+    return suggestionMap[category] || ["Aide générale", "Contacter support", "Guide utilisateur"];
   };
 
   const handleSendMessage = async () => {
@@ -173,7 +173,7 @@ const IntelligentChatbot = () => {
     setCurrentMessage('');
     setIsTyping(true);
 
-    // Simuler dÃ©lai de rÃ©flexion
+    // Simuler délai de réflexion
     setTimeout(() => {
       const response = generateResponse(currentMessage);
       const botMessage = {
@@ -305,7 +305,7 @@ const IntelligentChatbot = () => {
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.1s' }}></div>
                       <div className="w-2 h-2 bg-gray-400 rounded-full animate-bounce" style={{ animationDelay: '0.2s' }}></div>
                     </div>
-                    <span className="text-xs text-gray-500">Teranga AI rÃ©flÃ©chit...</span>
+                    <span className="text-xs text-gray-500">Teranga AI réfléchit...</span>
                   </div>
                 </motion.div>
               )}

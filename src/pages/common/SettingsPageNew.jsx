@@ -37,7 +37,7 @@ const SettingsPageNew = () => {
   const [activeTab, setActiveTab] = useState('profile');
   const [hasChanges, setHasChanges] = useState(false);
 
-  // Ã‰tats pour les diffÃ©rentes sections
+  // États pour les différentes sections
   const [profileData, setProfileData] = useState({
     fullName: '',
     email: '',
@@ -100,7 +100,7 @@ const SettingsPageNew = () => {
         bio: profileData.bio
       });
       setHasChanges(false);
-      // Toast de succÃ¨s
+      // Toast de succès
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       // Toast d'erreur
@@ -126,7 +126,7 @@ const SettingsPageNew = () => {
     try {
       // Logique de changement de mot de passe avec Supabase
       setPasswordData({ current: '', new: '', confirm: '' });
-      // Toast de succÃ¨s
+      // Toast de succès
     } catch (error) {
       console.error('Erreur lors du changement de mot de passe:', error);
       // Toast d'erreur
@@ -142,9 +142,9 @@ const SettingsPageNew = () => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Settings className="w-8 h-8 text-primary" />
-            ParamÃ¨tres
+            Paramètres
           </h1>
-          <p className="text-gray-600 mt-2">GÃ©rez vos prÃ©fÃ©rences et paramÃ¨tres de compte</p>
+          <p className="text-gray-600 mt-2">Gérez vos préférences et paramètres de compte</p>
         </div>
         {hasChanges && (
           <div className="flex items-center gap-3">
@@ -172,11 +172,11 @@ const SettingsPageNew = () => {
           </TabsTrigger>
           <TabsTrigger value="privacy" className="flex items-center gap-2">
             <Eye className="w-4 h-4" />
-            ConfidentialitÃ©
+            Confidentialité
           </TabsTrigger>
           <TabsTrigger value="security" className="flex items-center gap-2">
             <Shield className="w-4 h-4" />
-            SÃ©curitÃ©
+            Sécurité
           </TabsTrigger>
           <TabsTrigger value="appearance" className="flex items-center gap-2">
             <Globe className="w-4 h-4" />
@@ -190,7 +190,7 @@ const SettingsPageNew = () => {
             <CardHeader>
               <CardTitle>Informations personnelles</CardTitle>
               <CardDescription>
-                Mettez Ã  jour vos informations de profil et vos coordonnÃ©es
+                Mettez Ï  jour vos informations de profil et vos coordonnées
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -211,8 +211,8 @@ const SettingsPageNew = () => {
                   </Button>
                 </div>
                 <div>
-                  <h3 className="font-semibold">{profileData.fullName || 'Nom non dÃ©fini'}</h3>
-                  <p className="text-sm text-gray-600">{profile?.role || 'RÃ´le non dÃ©fini'}</p>
+                  <h3 className="font-semibold">{profileData.fullName || 'Nom non défini'}</h3>
+                  <p className="text-sm text-gray-600">{profile?.role || 'Rôle non défini'}</p>
                   <Badge variant="outline" className="mt-1">
                     {profile?.status || 'Statut inconnu'}
                   </Badge>
@@ -243,11 +243,11 @@ const SettingsPageNew = () => {
                     disabled
                     className="bg-gray-50"
                   />
-                  <p className="text-xs text-gray-500">L'email ne peut pas Ãªtre modifiÃ©</p>
+                  <p className="text-xs text-gray-500">L'email ne peut pas être modifié</p>
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="phone">TÃ©lÃ©phone</Label>
+                  <Label htmlFor="phone">Téléphone</Label>
                   <Input
                     id="phone"
                     value={profileData.phone}
@@ -294,9 +294,9 @@ const SettingsPageNew = () => {
         <TabsContent value="notifications" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>PrÃ©fÃ©rences de notification</CardTitle>
+              <CardTitle>Préférences de notification</CardTitle>
               <CardDescription>
-                Choisissez comment vous souhaitez Ãªtre notifiÃ© des activitÃ©s
+                Choisissez comment vous souhaitez être notifié des activités
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -305,8 +305,8 @@ const SettingsPageNew = () => {
                 smsNotifications: { label: 'Notifications SMS', icon: Smartphone },
                 pushNotifications: { label: 'Notifications push', icon: Bell },
                 marketingEmails: { label: 'Emails marketing', icon: Mail },
-                securityAlerts: { label: 'Alertes de sÃ©curitÃ©', icon: Shield },
-                weeklyDigest: { label: 'RÃ©sumÃ© hebdomadaire', icon: Mail }
+                securityAlerts: { label: 'Alertes de sécurité', icon: Shield },
+                weeklyDigest: { label: 'Résumé hebdomadaire', icon: Mail }
               }).map(([key, config]) => (
                 <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
                   <div className="flex items-center gap-3">
@@ -316,10 +316,10 @@ const SettingsPageNew = () => {
                       <p className="text-sm text-gray-600">
                         {key === 'emailNotifications' && 'Recevez des notifications importantes par email'}
                         {key === 'smsNotifications' && 'Recevez des alertes urgentes par SMS'}
-                        {key === 'pushNotifications' && 'Notifications en temps rÃ©el sur votre appareil'}
-                        {key === 'marketingEmails' && 'NouveautÃ©s, offres et conseils'}
-                        {key === 'securityAlerts' && 'Connexions suspectes et changements de sÃ©curitÃ©'}
-                        {key === 'weeklyDigest' && 'RÃ©sumÃ© de votre activitÃ© chaque semaine'}
+                        {key === 'pushNotifications' && 'Notifications en temps réel sur votre appareil'}
+                        {key === 'marketingEmails' && 'Nouveautés, offres et conseils'}
+                        {key === 'securityAlerts' && 'Connexions suspectes et changements de sécurité'}
+                        {key === 'weeklyDigest' && 'Résumé de votre activité chaque semaine'}
                       </p>
                     </div>
                   </div>
@@ -335,22 +335,22 @@ const SettingsPageNew = () => {
           </Card>
         </TabsContent>
 
-        {/* Onglet ConfidentialitÃ© */}
+        {/* Onglet Confidentialité */}
         <TabsContent value="privacy" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>ParamÃ¨tres de confidentialitÃ©</CardTitle>
+              <CardTitle>Paramètres de confidentialité</CardTitle>
               <CardDescription>
-                ContrÃ´lez qui peut voir vos informations et comment elles sont utilisÃ©es
+                Contrôlez qui peut voir vos informations et comment elles sont utilisées
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               {Object.entries({
                 profileVisible: { label: 'Profil public', desc: 'Votre profil est visible par les autres utilisateurs' },
                 showEmail: { label: 'Afficher l\'email', desc: 'Votre email est visible sur votre profil public' },
-                showPhone: { label: 'Afficher le tÃ©lÃ©phone', desc: 'Votre numÃ©ro est visible sur votre profil public' },
+                showPhone: { label: 'Afficher le téléphone', desc: 'Votre numéro est visible sur votre profil public' },
                 allowMessages: { label: 'Autoriser les messages', desc: 'Les autres utilisateurs peuvent vous envoyer des messages' },
-                dataSharing: { label: 'Partage de donnÃ©es', desc: 'Partager des donnÃ©es anonymisÃ©es pour amÃ©liorer le service' }
+                dataSharing: { label: 'Partage de données', desc: 'Partager des données anonymisées pour améliorer le service' }
               }).map(([key, config]) => (
                 <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
@@ -369,13 +369,13 @@ const SettingsPageNew = () => {
           </Card>
         </TabsContent>
 
-        {/* Onglet SÃ©curitÃ© */}
+        {/* Onglet Sécurité */}
         <TabsContent value="security" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>SÃ©curitÃ© du compte</CardTitle>
+              <CardTitle>Sécurité du compte</CardTitle>
               <CardDescription>
-                ProtÃ©gez votre compte avec des paramÃ¨tres de sÃ©curitÃ© avancÃ©s
+                Protégez votre compte avec des paramètres de sécurité avancés
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -411,10 +411,10 @@ const SettingsPageNew = () => {
                 </Button>
               </div>
 
-              {/* Autres paramÃ¨tres de sÃ©curitÃ© */}
+              {/* Autres paramètres de sécurité */}
               {Object.entries({
-                twoFactorEnabled: { label: 'Authentification Ã  deux facteurs', desc: 'Ajouter une couche de sÃ©curitÃ© supplÃ©mentaire' },
-                loginAlerts: { label: 'Alertes de connexion', desc: 'ÃŠtre notifiÃ© des nouvelles connexions Ã  votre compte' }
+                twoFactorEnabled: { label: 'Authentification Ï  deux facteurs', desc: 'Ajouter une couche de sécurité supplémentaire' },
+                loginAlerts: { label: 'Alertes de connexion', desc: 'Être notifié des nouvelles connexions Ï  votre compte' }
               }).map(([key, config]) => (
                 <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
@@ -439,15 +439,15 @@ const SettingsPageNew = () => {
                 Zone de danger
               </CardTitle>
               <CardDescription>
-                Actions irrÃ©versibles sur votre compte
+                Actions irréversibles sur votre compte
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="p-4 border border-red-200 rounded-lg bg-red-50">
                 <h4 className="font-medium text-red-800 mb-2">Supprimer le compte</h4>
                 <p className="text-sm text-red-600 mb-4">
-                  Cette action supprimera dÃ©finitivement votre compte et toutes vos donnÃ©es. 
-                  Cette action ne peut pas Ãªtre annulÃ©e.
+                  Cette action supprimera définitivement votre compte et toutes vos données. 
+                  Cette action ne peut pas être annulée.
                 </p>
                 <Button variant="destructive" size="sm">
                   <Trash2 className="w-4 h-4 mr-2" />
@@ -462,7 +462,7 @@ const SettingsPageNew = () => {
         <TabsContent value="appearance" className="space-y-6">
           <Card>
             <CardHeader>
-              <CardTitle>PrÃ©fÃ©rences d'affichage</CardTitle>
+              <CardTitle>Préférences d'affichage</CardTitle>
               <CardDescription>
                 Personnalisez l'apparence et la langue de l'interface
               </CardDescription>
@@ -472,7 +472,7 @@ const SettingsPageNew = () => {
                 <div>
                   <h4 className="font-medium mb-3 flex items-center gap-2">
                     <Sun className="w-4 h-4" />
-                    ThÃ¨me
+                    Thème
                   </h4>
                   <div className="grid grid-cols-2 gap-4">
                     <Button
@@ -502,7 +502,7 @@ const SettingsPageNew = () => {
                     onChange={(e) => setAppearanceSettings(prev => ({ ...prev, language: e.target.value }))}
                     className="w-full p-2 border rounded-md mt-2"
                   >
-                    <option value="fr">FranÃ§ais</option>
+                    <option value="fr">Français</option>
                     <option value="en">English</option>
                     <option value="wo">Wolof</option>
                   </select>

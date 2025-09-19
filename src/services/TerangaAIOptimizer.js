@@ -2,7 +2,7 @@
  * âš¡ OPTIMISATEUR IA TERANGA - PRODUCTION READY
  * ==========================================
  * 
- * Optimisations performance et prÃ©paration production
+ * Optimisations performance et préparation production
  */
 
 import { terangaAI } from './src/services/TerangaAIService.js';
@@ -33,7 +33,7 @@ class TerangaAIOptimizer {
     
     this.optimizations.stats.totalRequests++;
 
-    // VÃ©rification cache
+    // Vérification cache
     if (this.optimizations.cache.has(cacheKey)) {
       this.optimizations.stats.cacheHits++;
       const cached = this.optimizations.cache.get(cacheKey);
@@ -58,7 +58,7 @@ class TerangaAIOptimizer {
       timestamp: Date.now()
     });
 
-    // Nettoyage automatique du cache (max 1000 entrÃ©es)
+    // Nettoyage automatique du cache (max 1000 entrées)
     if (this.optimizations.cache.size > 1000) {
       const oldestKey = this.optimizations.cache.keys().next().value;
       this.optimizations.cache.delete(oldestKey);
@@ -81,10 +81,10 @@ class TerangaAIOptimizer {
   }
 
   /**
-   * PrÃ©-chargement des donnÃ©es populaires
+   * Pré-chargement des données populaires
    */
   async preloadPopularData() {
-    console.log('ðŸš€ PrÃ©-chargement donnÃ©es populaires...');
+    console.log('ðŸš€ Pré-chargement données populaires...');
     
     const popularEstimates = [
       { location: 'Almadies', type: 'villa', surface: 300 },
@@ -98,11 +98,11 @@ class TerangaAIOptimizer {
       await this.getOptimizedEstimate(estimate.location, estimate.type, estimate.surface);
     }
 
-    console.log(`âœ… ${popularEstimates.length} estimations prÃ©-chargÃ©es`);
+    console.log(`✅ ${popularEstimates.length} estimations pré-chargées`);
   }
 
   /**
-   * Compression des donnÃ©es marchÃ©
+   * Compression des données marché
    */
   getCompressedMarketData() {
     const marketData = terangaAI.senegalMarketData;
@@ -116,7 +116,7 @@ class TerangaAIOptimizer {
             v: data.villa_fcfa,
             a: data.appartement_fcfa,
             tr: data.tendance === 'hausse' ? 1 : data.tendance === 'baisse' ? -1 : 0,
-            d: data.demande === 'trÃ¨s_forte' ? 3 : data.demande === 'forte' ? 2 : 1
+            d: data.demande === 'très_forte' ? 3 : data.demande === 'forte' ? 2 : 1
           }
         ])
       ),
@@ -131,7 +131,7 @@ class TerangaAIOptimizer {
    * Optimisation batch pour estimations multiples
    */
   async getBatchEstimates(properties) {
-    console.log(`ðŸ“Š Traitement batch de ${properties.length} propriÃ©tÃ©s...`);
+    console.log(`ðŸ“Š Traitement batch de ${properties.length} propriétés...`);
     
     const startTime = Date.now();
     const promises = properties.map(prop => 
@@ -180,8 +180,8 @@ class TerangaAIOptimizer {
   }
 
   estimateCacheMemoryUsage() {
-    // Estimation approximative de l'usage mÃ©moire du cache
-    const entrySize = 500; // bytes par entrÃ©e
+    // Estimation approximative de l'usage mémoire du cache
+    const entrySize = 500; // bytes par entrée
     return Math.round((this.optimizations.cache.size * entrySize) / 1024) + 'KB';
   }
 
@@ -227,10 +227,10 @@ async function testOptimizer() {
     
         
     const estimate1 = await optimizer.getOptimizedEstimate('Almadies', 'villa', 300);
-    console.log(`âœ… PremiÃ¨re estimation: ${estimate1.responseTime}ms (${estimate1.fromCache ? 'cache' : 'calcul'})`);
+    console.log(`✅ Première estimation: ${estimate1.responseTime}ms (${estimate1.fromCache ? 'cache' : 'calcul'})`);
     
     const estimate2 = await optimizer.getOptimizedEstimate('Almadies', 'villa', 300);
-    console.log(`âœ… DeuxiÃ¨me estimation: ${estimate2.responseTime}ms (${estimate2.fromCache ? 'cache' : 'calcul'})`);
+    console.log(`✅ Deuxième estimation: ${estimate2.responseTime}ms (${estimate2.fromCache ? 'cache' : 'calcul'})`);
 
         
     await optimizer.preloadPopularData();
@@ -243,26 +243,26 @@ async function testOptimizer() {
     ];
     
     const batchResults = await optimizer.getBatchEstimates(batchProperties);
-    console.log(`âœ… Batch traitÃ©: ${batchResults.batchStats.totalProperties} propriÃ©tÃ©s en ${batchResults.batchStats.totalTime}ms`);
-    console.log(`âœ… Moyenne: ${Math.round(batchResults.batchStats.averageTimePerProperty)}ms/propriÃ©tÃ©`);
+    console.log(`✅ Batch traité: ${batchResults.batchStats.totalProperties} propriétés en ${batchResults.batchStats.totalTime}ms`);
+    console.log(`✅ Moyenne: ${Math.round(batchResults.batchStats.averageTimePerProperty)}ms/propriété`);
 
     // Diagnostic
     
     const diagnostic = optimizer.getPerformanceDiagnostic();
-    console.log(`âœ… Cache: ${diagnostic.cache.size} entrÃ©es, ${diagnostic.cache.hitRate} hit rate`);
-    console.log(`âœ… Performance: ${diagnostic.performance.averageResponseTime} moyenne`);
-    console.log(`âœ… MÃ©moire: ${diagnostic.memory.cacheMemoryUsage} utilisÃ©s`);
+    console.log(`✅ Cache: ${diagnostic.cache.size} entrées, ${diagnostic.cache.hitRate} hit rate`);
+    console.log(`✅ Performance: ${diagnostic.performance.averageResponseTime} moyenne`);
+    console.log(`✅ Mémoire: ${diagnostic.memory.cacheMemoryUsage} utilisés`);
 
     // Configuration production
     
     const prodConfig = optimizer.getProductionConfig();
-    console.log(`âœ… Cache TTL: ${prodConfig.caching.ttl / 1000}s`);
-    console.log(`âœ… Timeout: ${prodConfig.performance.timeoutMs}ms`);
-    console.log(`âœ… Monitoring: ${prodConfig.monitoring.enableMetrics ? 'ActivÃ©' : 'DÃ©sactivÃ©'}`);
+    console.log(`✅ Cache TTL: ${prodConfig.caching.ttl / 1000}s`);
+    console.log(`✅ Timeout: ${prodConfig.performance.timeoutMs}ms`);
+    console.log(`✅ Monitoring: ${prodConfig.monitoring.enableMetrics ? 'Activé' : 'Désactivé'}`);
 
     
     console.log(`Taux de cache: ${optimizer.getCacheHitRate()}`);
-    console.log('PrÃªt pour la production !');
+    console.log('Prêt pour la production !');
 
     return true;
 
@@ -272,7 +272,7 @@ async function testOptimizer() {
   }
 }
 
-// Auto-exÃ©cution si script lancÃ© directement
+// Auto-exécution si script lancé directement
 if (process.argv[1].includes('optimizer')) {
   testOptimizer().then(success => {
     process.exit(success ? 0 : 1);

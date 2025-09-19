@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { 
   Save, 
   ArrowLeft, 
@@ -21,7 +21,7 @@ const blogCategories = ["Guide d'Achat", "Juridique", "Marché Immobilier", "Agr
 const AdminBlogFormPage = () => {
   const { id } = useParams(); // Changer slug en id
   const navigate = useNavigate();
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const isEditing = Boolean(id);
 
   const [post, setPost] = useState({

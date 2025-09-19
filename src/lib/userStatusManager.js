@@ -1,5 +1,5 @@
-﻿// SystÃ¨me de gestion en temps rÃ©el des changements d'utilisateur - Version Mock
-// Mode test uniquement - Supabase dÃ©sactivÃ©
+﻿// Système de gestion en temps réel des changements d'utilisateur - Version Mock
+// Mode test uniquement - Supabase désactivé
 
 class UserStatusManager {
   constructor() {
@@ -8,7 +8,7 @@ class UserStatusManager {
     
   }
 
-  // DÃ©marrer l'Ã©coute des changements en temps rÃ©el (Mock)
+  // Démarrer l'écoute des changements en temps réel (Mock)
   startListening() {
     if (this.isListening) return;
     
@@ -23,7 +23,7 @@ class UserStatusManager {
     console.log('UserStatusManager: Mock listening started');
   }
 
-  // ArrÃªter l'Ã©coute (Mock)
+  // Arrêter l'écoute (Mock)
   stopListening() {
     if (this.subscription) {
       this.subscription.unsubscribe();
@@ -36,7 +36,7 @@ class UserStatusManager {
   subscribe(callback) {
     this.subscribers.add(callback);
     
-    // Auto-dÃ©marrer l'Ã©coute mock
+    // Auto-démarrer l'écoute mock
     if (!this.isListening) {
       this.startListening();
     }
@@ -48,13 +48,13 @@ class UserStatusManager {
     };
   }
 
-  // Se dÃ©sabonner (Mock)
+  // Se désabonner (Mock)
   unsubscribe(callback) {
     this.subscribers.delete(callback);
     console.log('UserStatusManager: Mock subscription removed');
   }
 
-  // Notifier tous les abonnÃ©s (Mock)
+  // Notifier tous les abonnés (Mock)
   notifySubscribers(event) {
     console.log('UserStatusManager: Mock notification:', event);
     this.subscribers.forEach(callback => {
@@ -66,7 +66,7 @@ class UserStatusManager {
     });
   }
 
-  // VÃ©rifier la session utilisateur (Mock)
+  // Vérifier la session utilisateur (Mock)
   async checkUserSession(userId) {
     console.log('UserStatusManager: Mock checkUserSession for:', userId);
     return {
@@ -101,7 +101,7 @@ class UserStatusManager {
     });
   }
 
-  // Mock dÃ©bannissement
+  // Mock débannissement
   async unbanUser(userId) {
     console.log('UserStatusManager: Mock unbanUser for:', userId);
     
@@ -112,7 +112,7 @@ class UserStatusManager {
     });
   }
 
-  // Mock vÃ©rification d'utilisateur
+  // Mock vérification d'utilisateur
   async verifyUser(userId) {
     console.log('UserStatusManager: Mock verifyUser for:', userId);
     
@@ -134,7 +134,7 @@ class UserStatusManager {
     });
   }
 
-  // Mock changement de rÃ´le
+  // Mock changement de rôle
   async changeUserRole(userId, newRole) {
     console.log('UserStatusManager: Mock changeUserRole for:', userId, 'newRole:', newRole);
     
@@ -170,7 +170,7 @@ const userStatusManager = new UserStatusManager();
 
 // Auto-initialisation mock
 userStatusManager.initializeManager().then(() => {
-  console.log('âœ… UserStatusManager mock initialized');
+  console.log('✅ UserStatusManager mock initialized');
 }).catch(error => {
   console.error('âŒ UserStatusManager mock initialization failed:', error);
 });

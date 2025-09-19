@@ -26,7 +26,7 @@ const InvestmentsPage = () => {
   });
 
   useEffect(() => {
-    // Simulation des donnÃ©es d'investissements
+    // Simulation des données d'investissements
     const mockInvestments = [
       {
         id: 1,
@@ -52,7 +52,7 @@ const InvestmentsPage = () => {
       },
       {
         id: 3,
-        property: "RÃ©sidence Teranga Heights",
+        property: "Résidence Teranga Heights",
         location: "Mermoz, Dakar",
         investmentAmount: 300000,
         currentValue: 285000,
@@ -107,7 +107,7 @@ const InvestmentsPage = () => {
             Mes Investissements
           </h1>
           <p className="text-gray-600">
-            GÃ©rez et suivez vos investissements immobiliers en temps rÃ©el
+            Gérez et suivez vos investissements immobiliers en temps réel
           </p>
         </motion.div>
 
@@ -184,7 +184,7 @@ const InvestmentsPage = () => {
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center space-x-4">
               <h2 className="text-lg font-semibold text-gray-900">
-                Portfolio DÃ©taillÃ©
+                Portfolio Détaillé
               </h2>
               <div className="flex bg-gray-100 rounded-lg p-1">
                 {['1M', '3M', '6M', '1A', 'Tout'].map((period) => (
@@ -220,7 +220,7 @@ const InvestmentsPage = () => {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
-                    PropriÃ©tÃ©
+                    Propriété
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
                     Investissement
@@ -235,7 +235,7 @@ const InvestmentsPage = () => {
                     Statut
                   </th>
                   <th className="px-6 py-4 text-left text-sm font-medium text-gray-900">
-                    DurÃ©e
+                    Durée
                   </th>
                 </tr>
               </thead>
@@ -289,7 +289,7 @@ const InvestmentsPage = () => {
                       <td className="px-6 py-4">
                         <span className={`inline-flex px-3 py-1 rounded-full text-xs font-medium ${getStatusColor(investment.status)}`}>
                           {investment.status === 'active' ? 'Actif' : 
-                           investment.status === 'under_review' ? 'En RÃ©vision' : 'TerminÃ©'}
+                           investment.status === 'under_review' ? 'En Révision' : 'Terminé'}
                         </span>
                       </td>
                       <td className="px-6 py-4 text-sm text-gray-600">
@@ -319,7 +319,7 @@ const InvestmentsPage = () => {
           <div className="h-64 bg-gradient-to-r from-blue-100 to-purple-100 rounded-lg flex items-center justify-center">
             <div className="text-center">
               <BarChart3 className="h-12 w-12 text-blue-600 mx-auto mb-4" />
-              <p className="text-gray-600">Graphique de performance en cours de dÃ©veloppement</p>
+              <p className="text-gray-600">Graphique de performance en cours de développement</p>
             </div>
           </div>
         </motion.div>

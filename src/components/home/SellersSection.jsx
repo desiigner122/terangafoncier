@@ -27,7 +27,7 @@ const SellersSection = () => {
     },
     {
       id: 2,
-      title: "Terrain RÃ©sidentiel Keur Massar",
+      title: "Terrain Résidentiel Keur Massar",
       seller: "Awa Ndiaye",
       location: "Keur Massar",
       surface: "600mÂ²",
@@ -41,9 +41,9 @@ const SellersSection = () => {
   const professionalSellers = [
     {
       id: 1,
-      title: "RÃ©sidence Les Palmiers",
+      title: "Résidence Les Palmiers",
       seller: "Teranga Immobilier",
-      location: "GuÃ©diawaye",
+      location: "Guédiawaye",
       units: "12 appartements",
       priceRange: "35-50M FCFA",
       rating: 4.9,
@@ -53,8 +53,8 @@ const SellersSection = () => {
     {
       id: 2,
       title: "Lotissement Moderne",
-      seller: "SÃ©nÃ©gal Construction",
-      location: "SÃ©bikotane",
+      seller: "Sénégal Construction",
+      location: "Sébikotane",
       units: "50 parcelles",
       priceRange: "15-30M FCFA",
       rating: 4.7,
@@ -81,13 +81,13 @@ const SellersSection = () => {
                 Vendeurs Particuliers
               </Badge>
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                PropriÃ©tÃ©s de Particuliers
+                Propriétés de Particuliers
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                Biens immobiliers vendus directement par leurs propriÃ©taires
+                Biens immobiliers vendus directement par leurs propriétaires
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                Transactions et communications via votre dashboard sÃ©curisÃ©
+                Transactions et communications via votre dashboard sécurisé
               </p>
             </motion.div>
           </div>
@@ -111,7 +111,7 @@ const SellersSection = () => {
                     {property.verified && (
                       <Badge className="absolute top-3 right-3 bg-blue-500 text-white">
                         <Verified className="h-3 w-3 mr-1" />
-                        VÃ©rifiÃ©
+                        Vérifié
                       </Badge>
                     )}
                   </div>
@@ -133,7 +133,7 @@ const SellersSection = () => {
                       <span className="font-bold text-blue-600">{property.price}</span>
                     </div>
                     <Button className="w-full bg-blue-600 hover:bg-blue-700">
-                      Voir dÃ©tails
+                      Voir détails
                       <ArrowRight className="h-4 w-4 ml-2" />
                     </Button>
                   </CardContent>
@@ -144,7 +144,7 @@ const SellersSection = () => {
 
           <div className="text-center">
             <Button size="lg" variant="outline" className="border-blue-600 text-blue-600 hover:bg-blue-600 hover:text-white">
-              AccÃ©der au dashboard vendeurs particuliers
+              Accéder au dashboard vendeurs particuliers
             </Button>
           </div>
         </div>
@@ -166,10 +166,10 @@ const SellersSection = () => {
                 Projets Immobiliers Professionnels
               </h2>
               <p className="text-lg text-gray-600 max-w-2xl mx-auto">
-                DÃ©veloppements immobiliers par des professionnels certifiÃ©s
+                Développements immobiliers par des professionnels certifiés
               </p>
               <p className="text-sm text-gray-500 mt-2">
-                NÃ©gociations et suivi via votre dashboard personnalisÃ©
+                Négociations et suivi via votre dashboard personnalisé
               </p>
             </motion.div>
           </div>
@@ -193,7 +193,7 @@ const SellersSection = () => {
                     {project.verified && (
                       <Badge className="absolute top-3 right-3 bg-purple-500 text-white">
                         <Verified className="h-3 w-3 mr-1" />
-                        CertifiÃ©
+                        Certifié
                       </Badge>
                     )}
                   </div>
@@ -226,7 +226,7 @@ const SellersSection = () => {
 
           <div className="text-center">
             <Button size="lg" variant="outline" className="border-purple-600 text-purple-600 hover:bg-purple-600 hover:text-white">
-              AccÃ©der au dashboard projets professionnels
+              Accéder au dashboard projets professionnels
             </Button>
           </div>
         </div>

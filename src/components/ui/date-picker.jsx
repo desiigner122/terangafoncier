@@ -1,7 +1,7 @@
 ﻿import React from 'react';
 import { Input } from './input';
 
-const DatePicker = ({ value, onChange, YOUR_API_KEY = "SÃ©lectionner une date", className = "" }) => {
+const DatePicker = ({ value, onChange, YOUR_API_KEY = "Sélectionner une date", className = "" }) => {
   const handleDateChange = (e) => {
     const selectedDate = e.target.value ? new Date(e.target.value) : null;
     onChange(selectedDate);
@@ -33,7 +33,7 @@ const DateRangePicker = ({ startDate, endDate, onStartDateChange, onEndDateChang
       <DatePicker
         value={startDate}
         onChange={onStartDateChange}
-        YOUR_API_KEY="Date de dÃ©but"
+        YOUR_API_KEY="Date de début"
       />
       <DatePicker
         value={endDate}

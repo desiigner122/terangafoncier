@@ -1,7 +1,7 @@
 ﻿import { useAuth } from '@/contexts/AuthProvider';
 
 /**
- * Hook pour accÃ©der aux donnÃ©es utilisateur avec protection contre les boucles
+ * Hook pour accéder aux données utilisateur avec protection contre les boucles
  */
 export const useUser = () => {
   const context = useAuth();

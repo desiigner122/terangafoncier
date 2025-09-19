@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { 
   Receipt, 
   Download, 
@@ -28,7 +28,7 @@ const getStatusBadge = (status) => {
 };
 
 const TransactionsPage = () => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const { user } = useAuth();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(true);

@@ -20,7 +20,7 @@ const DocumentsPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
 
-  // DonnÃ©es simulÃ©es des documents
+  // Données simulées des documents
   const [documents] = useState([
     {
       id: 1,
@@ -70,9 +70,9 @@ const DocumentsPage = () => {
 
   const categories = [
     { id: 'all', label: 'Tous les documents', count: documents.length },
-    { id: 'legal', label: 'Documents lÃ©gaux', count: documents.filter(d => d.category === 'legal').length },
+    { id: 'legal', label: 'Documents légaux', count: documents.filter(d => d.category === 'legal').length },
     { id: 'contracts', label: 'Contrats', count: documents.filter(d => d.category === 'contracts').length },
-    { id: 'media', label: 'Photos & VidÃ©os', count: documents.filter(d => d.category === 'media').length },
+    { id: 'media', label: 'Photos & Vidéos', count: documents.filter(d => d.category === 'media').length },
     { id: 'plans', label: 'Plans & Dessins', count: documents.filter(d => d.category === 'plans').length }
   ];
 
@@ -85,7 +85,7 @@ const DocumentsPage = () => {
   const handleFileUpload = (event) => {
     const files = event.target.files;
     if (files) {
-      console.log('Fichiers Ã  uploader:', files);
+      console.log('Fichiers Ï  uploader:', files);
       // Logique d'upload ici
     }
   };
@@ -118,11 +118,11 @@ const DocumentsPage = () => {
           <meta name="description" content="Gestion des documents de Teranga Foncier" />
         </Helmet>
 
-        {/* En-tÃªte */}
+        {/* En-tête */}
         <div className="flex items-center justify-between mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Mes Documents</h1>
-            <p className="text-gray-600">GÃ©rez tous vos documents importants</p>
+            <p className="text-gray-600">Gérez tous vos documents importants</p>
           </div>
           
           <div className="flex items-center space-x-4">
@@ -206,7 +206,7 @@ const DocumentsPage = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">PartagÃ©s</p>
+                  <p className="text-sm text-gray-600">Partagés</p>
                   <p className="text-2xl font-bold">{documents.filter(d => d.shared).length}</p>
                 </div>
                 <Share className="w-8 h-8 text-green-500" />
@@ -230,7 +230,7 @@ const DocumentsPage = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Espace utilisÃ©</p>
+                  <p className="text-sm text-gray-600">Espace utilisé</p>
                   <p className="text-2xl font-bold">28.1 MB</p>
                 </div>
                 <Archive className="w-8 h-8 text-purple-500" />
@@ -346,10 +346,10 @@ const DocumentsPage = () => {
           <div className="text-center py-12">
             <FolderOpen className="w-16 h-16 text-gray-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-gray-900 mb-2">
-              Aucun document trouvÃ©
+              Aucun document trouvé
             </h3>
             <p className="text-gray-500 mb-4">
-              Aucun document ne correspond Ã  vos critÃ¨res de recherche
+              Aucun document ne correspond Ï  vos critères de recherche
             </p>
             <Button>
               <Upload className="w-4 h-4 mr-2" />

@@ -1,5 +1,5 @@
-﻿// ThÃ¨me de couleurs harmonisÃ© Teranga Foncier
-// Palette blockchain-inspired avec couleurs du SÃ©nÃ©gal
+﻿// Thème de couleurs harmonisé Teranga Foncier
+// Palette blockchain-inspired avec couleurs du Sénégal
 
 export const terangaTheme = {
   // Couleurs principales blockchain
@@ -30,7 +30,7 @@ export const terangaTheme = {
     900: '#581c87'
   },
 
-  // Couleurs accent (Teal/Vert Ã©meraude)
+  // Couleurs accent (Teal/Vert émeraude)
   accent: {
     50: '#f0fdfa',
     100: '#ccfbf1',
@@ -44,16 +44,16 @@ export const terangaTheme = {
     900: '#134e4a'
   },
 
-  // Couleurs du drapeau sÃ©nÃ©galais adaptÃ©es
+  // Couleurs du drapeau sénégalais adaptées
   senegal: {
     green: '#00a651',    // Vert du drapeau
     yellow: '#ffd100',   // Jaune du drapeau  
     red: '#e31e24',      // Rouge du drapeau
-    gold: '#fbbf24',     // Or/DorÃ©
+    gold: '#fbbf24',     // Or/Doré
     earth: '#8b5a3c'     // Terre/Brun
   },
 
-  // Couleurs systÃ¨me
+  // Couleurs système
   success: {
     50: '#ecfdf5',
     500: '#10b981',
@@ -86,7 +86,7 @@ export const terangaTheme = {
     900: '#111827'
   },
 
-  // Gradients prÃ©dÃ©finis
+  // Gradients prédéfinis
   gradients: {
     primary: 'linear-gradient(135deg, #3b82f6 0%, #a855f7 50%, #14b8a6 100%)',
     blockchain: 'linear-gradient(135deg, #1e40af 0%, #7c3aed 50%, #0f766e 100%)',
@@ -96,7 +96,7 @@ export const terangaTheme = {
     royal: 'linear-gradient(135deg, #6366f1 0%, #a855f7 50%, #ec4899 100%)'
   },
 
-  // Ombres personnalisÃ©es
+  // Ombres personnalisées
   shadows: {
     sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
     md: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
@@ -209,7 +209,7 @@ export const terangaClasses = {
   animateFloat: 'animate-bounce',
   animateGlow: 'animate-pulse',
 
-  // Ã‰tats interactifs
+  // États interactifs
   hoverScale: 'hover:scale-105 transition-transform duration-300',
   hoverGlow: 'hover:shadow-glow transition-shadow duration-300',
   activeScale: 'active:scale-95',
@@ -223,7 +223,7 @@ export const terangaClasses = {
   inputBlockchain: 'w-full px-4 py-3 bg-white/10 border border-white/20 text-white YOUR_API_KEY-white/50 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-colors'
 };
 
-// Fonction helper pour gÃ©nÃ©rer des classes dynamiques
+// Fonction helper pour générer des classes dynamiques
 export const generateTerangaClass = (type, variant = 'default', size = 'md') => {
   const baseClasses = {
     button: {

@@ -13,12 +13,12 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 const BlogPostPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const post = sampleBlogPosts.find(p => p.slug === slug);
 
   if (!post) {

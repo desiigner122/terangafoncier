@@ -30,7 +30,7 @@ export class AutonomousAIService {
    * L'IA démarre ses processus autonomes de gestion
    */
   async initializeAutonomousOperations() {
-    console.log('🧠 Démarrage de l\'IA Autonome Teranga Foncier...');
+    // console.log('🧠 Démarrage de l\'IA Autonome Teranga Foncier...');
     
     // Surveillance continue des utilisateurs et décisions automatiques
     this.startContinuousMonitoring();
@@ -424,17 +424,17 @@ export class AutonomousAIService {
 
   async updateAllDashboardMetrics(insights) {
     // Mise à jour automatique de tous les dashboards
-    console.log('🔄 Mise à jour automatique des métriques par IA');
+    // console.log('🔄 Mise à jour automatique des métriques par IA');
   }
 
   async notifyRelevantUsers(opportunities) {
     // Notification intelligente des utilisateurs
-    console.log('🔔 Notification automatique IA des utilisateurs');
+    // console.log('🔔 Notification automatique IA des utilisateurs');
   }
 
   // Méthodes manquantes ajoutées
   startContinuousMonitoring() {
-    console.log('🔍 Démarrage surveillance continue IA...');
+    // console.log('🔍 Démarrage surveillance continue IA...');
     // Surveillance en temps réel des utilisateurs et de la plateforme
     setInterval(() => {
       this.performAutonomousAnalysis();
@@ -442,7 +442,7 @@ export class AutonomousAIService {
   }
 
   startDashboardAutomation() {
-    console.log('📊 Démarrage automation des dashboards...');
+    // console.log('📊 Démarrage automation des dashboards...');
     // Automation des mises à jour de dashboards
     setInterval(() => {
       this.updateDashboardsAutomatically();
@@ -450,7 +450,7 @@ export class AutonomousAIService {
   }
 
   startPlatformAdministration() {
-    console.log('⚙️ Démarrage administration autonome...');
+    // console.log('⚙️ Démarrage administration autonome...');
     // Administration automatique de la plateforme
     setInterval(() => {
       this.performPlatformMaintenance();
@@ -458,7 +458,7 @@ export class AutonomousAIService {
   }
 
   activateUniversalAIAssistant() {
-    console.log('🤖 Activation assistant IA universel...');
+    // console.log('🤖 Activation assistant IA universel...');
     // Activation de l'assistant IA disponible partout
   }
 
@@ -467,28 +467,28 @@ export class AutonomousAIService {
       // Analyse autonome silencieuse
       const insights = await this.generateMarketInsights();
       if (insights.alertLevel > 0.8) {
-        console.log('⚠️ IA: Alerte marché détectée', insights);
+        // console.log('⚠️ IA: Alerte marché détectée', insights);
       }
     } catch (error) {
-      console.log('🔄 IA: Analyse en cours...');
+      // console.log('🔄 IA: Analyse en cours...');
     }
   }
 
   async updateDashboardsAutomatically() {
     try {
       // Mise à jour automatique des données
-      console.log('📈 IA: Mise à jour dashboards...');
+      // console.log('📈 IA: Mise à jour dashboards...');
     } catch (error) {
-      console.log('🔄 IA: Synchronisation données...');
+      // console.log('🔄 IA: Synchronisation données...');
     }
   }
 
   async performPlatformMaintenance() {
     try {
       // Maintenance automatique
-      console.log('🛠️ IA: Maintenance plateforme...');
+      // console.log('🛠️ IA: Maintenance plateforme...');
     } catch (error) {
-      console.log('🔄 IA: Optimisation en cours...');
+      // console.log('🔄 IA: Optimisation en cours...');
     }
   }
 }

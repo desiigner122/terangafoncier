@@ -12,13 +12,13 @@ import {
   Phone, 
   Edit
 } from 'lucide-react';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { Badge } from '@/components/ui/badge';
 import { sampleAgentData } from '@/data';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const AgentClientsPage = () => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
   const [clients, setClients] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');

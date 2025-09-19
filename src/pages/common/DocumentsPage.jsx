@@ -41,7 +41,7 @@ const DocumentsPage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [isUploading, setIsUploading] = useState(false);
 
-  // DonnÃ©es simulÃ©es pour les dossiers
+  // Données simulées pour les dossiers
   const mockFolders = [
     { id: 1, name: 'Contrats', icon: FileText, count: 12, color: 'bg-blue-500' },
     { id: 2, name: 'Factures', icon: FileSpreadsheet, count: 8, color: 'bg-green-500' },
@@ -50,7 +50,7 @@ const DocumentsPage = () => {
     { id: 5, name: 'Archives', icon: FolderOpen, count: 15, color: 'bg-gray-500' }
   ];
 
-  // DonnÃ©es simulÃ©es pour les documents
+  // Données simulées pour les documents
   const mockDocuments = [
     {
       id: 1,
@@ -111,7 +111,7 @@ const DocumentsPage = () => {
       size: '5.2 MB',
       createdAt: new Date('2024-01-08'),
       modifiedAt: new Date('2024-01-08'),
-      owner: 'GÃ©omÃ¨tre Sall',
+      owner: 'Géomètre Sall',
       folder: 'Documents Officiels',
       isStarred: false,
       isShared: true,
@@ -141,7 +141,7 @@ const DocumentsPage = () => {
     }, 1000);
   }, []);
 
-  // Obtenir l'icÃ´ne du type de fichier
+  // Obtenir l'icône du type de fichier
   const getFileIcon = (type) => {
     const icons = {
       pdf: FileText,
@@ -176,7 +176,7 @@ const DocumentsPage = () => {
     });
   };
 
-  // GÃ©rer l'upload de fichier
+  // Gérer l'upload de fichier
   const handleFileUpload = async (event) => {
     const files = Array.from(event.target.files);
     if (files.length === 0) return;
@@ -228,7 +228,7 @@ const DocumentsPage = () => {
             <FileText className="w-8 h-8 text-primary" />
             Documents
           </h1>
-          <p className="text-gray-600 mt-2">GÃ©rez tous vos documents et fichiers</p>
+          <p className="text-gray-600 mt-2">Gérez tous vos documents et fichiers</p>
         </div>
         <div className="flex items-center gap-3">
           <Button 
@@ -314,7 +314,7 @@ const DocumentsPage = () => {
                     <TabsTrigger value="all">Tous</TabsTrigger>
                     <TabsTrigger value="mine">Mes docs</TabsTrigger>
                     <TabsTrigger value="starred">Favoris</TabsTrigger>
-                    <TabsTrigger value="shared">PartagÃ©s</TabsTrigger>
+                    <TabsTrigger value="shared">Partagés</TabsTrigger>
                   </TabsList>
                 </Tabs>
               </div>
@@ -389,7 +389,7 @@ const DocumentsPage = () => {
                               {document.isShared && (
                                 <Badge variant="secondary" className="text-xs">
                                   <Share className="w-3 h-3 mr-1" />
-                                  PartagÃ©
+                                  Partagé
                                 </Badge>
                               )}
                             </div>
@@ -453,7 +453,7 @@ const DocumentsPage = () => {
               {filteredDocuments.length === 0 && (
                 <div className="text-center py-8">
                   <FileText className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-500 mb-2">Aucun document trouvÃ©</h3>
+                  <h3 className="text-lg font-semibold text-gray-500 mb-2">Aucun document trouvé</h3>
                   <p className="text-gray-400">
                     {searchTerm ? 'Essayez de modifier votre recherche' : 'Commencez par uploader vos premiers documents'}
                   </p>

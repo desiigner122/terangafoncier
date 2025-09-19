@@ -3,7 +3,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { 
   Check, 
@@ -60,7 +60,7 @@ const AdminUserVerificationsPage = () => {
     const [users, setUsers] = useState([]);
     const [FileTexts, setFileTexts] = useState({});
     const [loading, setLoading] = useState(true);
-    // toast remplacÃ© par window.safeGlobalToast
+    // toast remplacé par window.safeGlobalToast
 
     useEffect(() => {
         const fetchUnverifiedUsers = async () => {

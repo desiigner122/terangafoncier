@@ -1,5 +1,5 @@
 ﻿import { config } from 'dotenv';
-config({ path: '.env.local' });
+config({ path: '.env  console.log('Connexion à Supabase :', conn ? 'OK' : 'ÉCHEC');local' });
 config({ path: '.env' });
 
 import { supabase } from '../lib/supabaseClient.js';
@@ -8,14 +8,14 @@ async function testConnection() {
   try {
     
     console.log('URL:', process.env.VITE_SUPABASE_URL);
-    console.log('Key prÃ©sente:', !!process.env.VITE_SUPABASE_ANON_KEY);
+    console.log('Key présente:', !!process.env.VITE_SUPABASE_ANON_KEY);
 
     const { data, error } = await supabase.from('users').select('count').limit(1);
     if (error) {
       console.log('Erreur de connexion:', error.message);
       return false;
     }
-    console.log('Connexion rÃ©ussie!');
+    console.log('Connexion réussie!');
     return true;
   } catch (e) {
     console.log('Exception:', e.message);
@@ -25,12 +25,12 @@ async function testConnection() {
 
 testConnection();
 
-// CrÃ©e une parcelle de test avec is_featured=true
+// Crée une parcelle de test avec is_featured=true
 export async function createTestParcel() {
   try {
     const { data, error } = await supabase.from('parcels').insert({
       title: 'Parcelle Test',
-      description: 'Parcelle de test gÃ©nÃ©rÃ©e automatiquement',
+      description: 'Parcelle de test générée automatiquement',
       location: 'Test City',
       price: 100000,
       status: 'Disponible',
@@ -38,13 +38,13 @@ export async function createTestParcel() {
       created_at: new Date().toISOString(),
     }).select();
     if (error) {
-      console.error('Erreur crÃ©ation parcelle:', error);
+      console.error('Erreur création parcelle:', error);
       return false;
     }
     
     return true;
   } catch (e) {
-    console.error('Exception crÃ©ation parcelle:', e);
+    console.error('Exception création parcelle:', e);
     return false;
   }
 }
@@ -52,7 +52,7 @@ export async function createTestParcel() {
 async function runAllTests() {
   
   const conn = await testSupabaseConnection();
-  console.log('Connexion Ã  Supabase :', conn ? 'OK' : 'Ã‰CHEC');
+  console.log('Connexion Ï  Supabase :', conn ? 'OK' : 'ÉCHEC');
 
   // Email/mot de passe via variables d'environnement ou arguments
   const email = process.env.TEST_EMAIL || process.argv[2] || '';
@@ -63,7 +63,7 @@ async function runAllTests() {
     
       await createTestUser(email, password);
     const login = await testUserLogin(email, password);
-    console.log('Connexion utilisateur :', login ? 'OK' : 'Ã‰CHEC');
+    console.log('Connexion utilisateur :', login ? 'OK' : 'ÉCHEC');
   }
 
   
@@ -76,13 +76,13 @@ async function runAllTests() {
     .limit(1);
   if (error) {
     console.error('Error fetching featured parcels:', error);
-    console.log('is_featured (parcels) : Ã‰CHEC');
+    console.log('is_featured (parcels) : ÉCHEC');
   } else if (!data || data.length === 0) {
-    console.warn('Aucune parcelle avec is_featured = true trouvÃ©e.');
-    console.log('is_featured (parcels) : Ã‰CHEC');
+    console.warn('Aucune parcelle avec is_featured = true trouvée.');
+    console.log('is_featured (parcels) : ÉCHEC');
   } else if (typeof data[0].is_featured !== 'boolean') {
     console.warn('Le champ is_featured n\'est pas de type boolean.');
-    console.log('is_featured (parcels) : Ã‰CHEC');
+    console.log('is_featured (parcels) : ÉCHEC');
   } else {
     console.log('is_featured (parcels) : OK');
   }

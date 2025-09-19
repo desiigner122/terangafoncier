@@ -1,12 +1,12 @@
 ﻿import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 
 import { supabase } from '@/lib/customSupabaseClient';
-// useToast import supprimÃ© - utilisation window.safeGlobalToast
+// useToast import supprimé - utilisation window.safeGlobalToast
 
 const AuthContext = createContext(undefined);
 
 export const AuthProvider = ({ children }) => {
-  // toast remplacÃ© par window.safeGlobalToast
+  // toast remplacé par window.safeGlobalToast
 
   const [user, setUser] = useState(null);
   const [session, setSession] = useState(null);

@@ -5,12 +5,12 @@ import useUserStatusMonitor from '@/hooks/useUserStatusMonitor';
 
 /**
  * Composant wrapper qui surveille les changements de statut des utilisateurs
- * Doit envelopper toutes les routes protÃ©gÃ©es
+ * Doit envelopper toutes les routes protégées
  */
 const UserStatusWrapper = ({ children }) => {
   const { user, loading } = useAuth();
   
-  // Activer le monitoring seulement si l'utilisateur est connectÃ©
+  // Activer le monitoring seulement si l'utilisateur est connecté
   const monitoringStatus = useUserStatusMonitor();
 
   // Ne pas afficher le contenu pendant le chargement
@@ -22,7 +22,7 @@ const UserStatusWrapper = ({ children }) => {
     );
   }
 
-  // Si utilisÃ© comme Route element, utiliser Outlet, sinon children
+  // Si utilisé comme Route element, utiliser Outlet, sinon children
   return children ? <>{children}</> : <Outlet />;
 };
 

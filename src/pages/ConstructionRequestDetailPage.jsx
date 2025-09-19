@@ -839,13 +839,13 @@ const ConstructionRequestDetailPage = () => {
             <div className="grid md:grid-cols-2 gap-4">
               <div>
                 <Label>Budget proposé (FCFA)</Label>
-                <Input YOUR_API_KEY="75,000,000" />
+                <Input placeholder="75,000,000" />
               </div>
               <div>
                 <Label>Délai de réalisation</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue YOUR_API_KEY="Choisir" />
+                    <SelectValue placeholder="Choisir" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="6">6 mois</SelectItem>
@@ -861,7 +861,7 @@ const ConstructionRequestDetailPage = () => {
             <div>
               <Label>Message de présentation</Label>
               <Textarea 
-                YOUR_API_KEY="Présentez votre entreprise, votre expérience et vos points forts pour ce projet..."
+                placeholder="Présentez votre entreprise, votre expérience et vos points forts pour ce projet..."
                 rows={4}
               />
             </div>
@@ -892,3 +892,4 @@ const ConstructionRequestDetailPage = () => {
 };
 
 export default ConstructionRequestDetailPage;
+

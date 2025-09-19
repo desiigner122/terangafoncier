@@ -1,5 +1,4 @@
 ﻿import { config } from 'dotenv';
-config({ path: '.env  console.log('Connexion à Supabase :', conn ? 'OK' : 'ÉCHEC');local' });
 config({ path: '.env' });
 
 import { supabase } from '../lib/supabaseClient.js';

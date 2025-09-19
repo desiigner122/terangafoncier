@@ -301,7 +301,7 @@ const DocumentsPage = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                     <Input 
-                      YOUR_API_KEY="Rechercher des documents..."
+                      placeholder="Rechercher des documents..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -468,3 +468,4 @@ const DocumentsPage = () => {
 };
 
 export default DocumentsPage;
+

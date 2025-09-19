@@ -304,7 +304,7 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
                     <Input
                       value={inputMessage}
                       onChange={(e) => setInputMessage(e.target.value)}
-                      YOUR_API_KEY="Posez votre question..."
+                      placeholder="Posez votre question..."
                       onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                       className="flex-1"
                       disabled={isTyping}
@@ -349,5 +349,6 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
 };
 
 export default TerrangaFoncierChatbot;
+
 
 

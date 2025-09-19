@@ -537,7 +537,7 @@ const FonctionnalitesAvanceesPage = () => {
                     <CardContent className="text-gray-300">
                       <div className="space-y-4">
                         <Input 
-                          YOUR_API_KEY="Posez votre question Ï  l'IA..."
+                          placeholder="Posez votre question Ï  l'IA..."
                           value={aiQuery}
                           onChange={(e) => setAiQuery(e.target.value)}
                           className="bg-black/30 border-blue-500/30 text-white YOUR_API_KEY:text-gray-400"
@@ -746,7 +746,7 @@ const FonctionnalitesAvanceesPage = () => {
 
               <div className="space-y-4">
                 <Textarea
-                  YOUR_API_KEY="Posez votre question Ï  notre IA spécialisée en immobilier blockchain..."
+                  placeholder="Posez votre question Ï  notre IA spécialisée en immobilier blockchain..."
                   value={aiQuery}
                   onChange={(e) => setAiQuery(e.target.value)}
                   rows={3}
@@ -797,3 +797,4 @@ const FonctionnalitesAvanceesPage = () => {
 };
 
 export default FonctionnalitesAvanceesPage;
+

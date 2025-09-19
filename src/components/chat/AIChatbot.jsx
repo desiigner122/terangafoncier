@@ -446,7 +446,7 @@ const AIChatbot = () => {
                 value={inputValue}
                 onChange={(e) => setInputValue(e.target.value)}
                 onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                YOUR_API_KEY="Posez votre question sur l'immobilier..."
+                placeholder="Posez votre question sur l'immobilier..."
                 className="flex-1 px-4 py-2 border border-gray-300 rounded-full focus:ring-2 focus:ring-cyan-500 focus:border-transparent outline-none text-sm"
               />
               <button
@@ -465,3 +465,4 @@ const AIChatbot = () => {
 };
 
 export default AIChatbot;
+

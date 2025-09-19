@@ -83,7 +83,7 @@ const ForgotPasswordPage = () => {
                   <Input
                     id="email"
                     type="email"
-                    YOUR_API_KEY="votre.email@exemple.com"
+                    placeholder="votre.email@exemple.com"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
@@ -171,3 +171,4 @@ const ForgotPasswordPage = () => {
 };
 
 export default ForgotPasswordPage;
+

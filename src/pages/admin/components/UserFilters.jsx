@@ -16,21 +16,21 @@ const UserFilters = ({ searchTerm, setSearchTerm, roleFilter, setRoleFilter, sta
                     <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
                     <Input 
                         type="search" 
-                        YOUR_API_KEY="Rechercher par nom, email..." 
+                        placeholder="Rechercher par nom, email..." 
                         className="pl-8 w-full" 
                         value={searchTerm} 
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
                 </div>
                 <Select value={roleFilter} onValueChange={setRoleFilter}>
-                    <SelectTrigger><SelectValue YOUR_API_KEY="Filtrer par rôle" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Filtrer par rôle" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Tous les rôles</SelectItem>
                         {[...new Set(users.map(u => u.role))].sort().map(role => role && <SelectItem key={role} value={role}>{role}</SelectItem>)}
                     </SelectContent>
                 </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger><SelectValue YOUR_API_KEY="Filtrer par statut" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder="Filtrer par statut" /></SelectTrigger>
                     <SelectContent>
                         <SelectItem value="all">Tous les statuts</SelectItem>
                         <SelectItem value="verified">Vérifié</SelectItem>
@@ -46,3 +46,4 @@ const UserFilters = ({ searchTerm, setSearchTerm, roleFilter, setRoleFilter, sta
 };
 
 export default UserFilters;
+

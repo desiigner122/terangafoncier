@@ -143,7 +143,7 @@ const FaqPage = () => {
               <div className="relative max-w-2xl mx-auto mb-8">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
-                  YOUR_API_KEY="Rechercher une question..."
+                  placeholder="Rechercher une question..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-12 py-4 text-lg bg-white/90 backdrop-blur-sm border-0 rounded-xl"
@@ -378,3 +378,4 @@ const FaqPage = () => {
 };
 
 export default FaqPage;
+

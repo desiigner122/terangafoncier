@@ -148,7 +148,7 @@ const SecurityDiagnosticTool = () => {
                 <div className="flex items-center space-x-2">
                   <Search className="h-4 w-4" />
                   <Input
-                    YOUR_API_KEY="Rechercher une permission..."
+                    placeholder="Rechercher une permission..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                   />
@@ -319,3 +319,4 @@ const SecurityDiagnosticTool = () => {
 };
 
 export default SecurityDiagnosticTool;
+

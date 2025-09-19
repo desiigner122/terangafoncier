@@ -56,7 +56,7 @@ const ParcelleDetailPage = () => {
       
       // Localisation précise
       address: {
-        full: "Route des Almadies, Parcelle NÂ°147, Dakar, Sénégal",
+  full: "Route des Almadies, Parcelle N°147, Dakar, Sénégal",
         coordinates: {
           latitude: 14.7381,
           longitude: -17.5094
@@ -79,7 +79,7 @@ const ParcelleDetailPage = () => {
       features: {
         main: ["Vue mer panoramique", "Résidence fermée sécurisée", "Parking privé"],
         utilities: ["Eau courante", "Électricité SENELEC", "Internet fibre optique"],
-        access: ["Route pavée", "Transport public", "Écoles Ï  proximité"],
+  access: ["Route pavée", "Transport public", "Écoles à proximité"],
         zoning: "Zone résidentielle R3",
         buildable_ratio: "0.6",
         max_floors: 4
@@ -165,33 +165,33 @@ const ParcelleDetailPage = () => {
         last_updated: "2025-09-05"
       },
 
-      description: `ðŸ–ï¸ **TERRAIN EXCEPTIONNEL AVEC VUE MER - ALMADIES**
+  description: `🏖️ **TERRAIN EXCEPTIONNEL AVEC VUE MER - ALMADIES**
 
-Découvrez ce magnifique terrain de 500mÂ² situé dans le quartier prestigieux des Almadies, offrant une vue mer panoramique imprenable. Cette parcelle exceptionnelle représente une opportunité unique d'investissement dans l'un des secteurs les plus recherchés de Dakar.
+Découvrez ce magnifique terrain de 500m² situé dans le quartier prestigieux des Almadies, offrant une vue mer panoramique imprenable. Cette parcelle exceptionnelle représente une opportunité unique d'investissement dans l'un des secteurs les plus recherchés de Dakar.
 
-ðŸŒŸ **ATOUTS MAJEURS**
-â€¢ Vue mer panoramique Ï  180Â°
-â€¢ Résidence fermée avec sécurité 24h/24
-â€¢ Proximité immédiate de la plage (1,5 km)
-â€¢ Infrastructure complète (eau, électricité, internet)
-â€¢ Zone résidentielle haut de gamme
+🌟 **ATOUTS MAJEURS**
+• Vue mer panoramique à 180°
+• Résidence fermée avec sécurité 24h/24
+• Proximité immédiate de la plage (1,5 km)
+• Infrastructure complète (eau, électricité, internet)
+• Zone résidentielle haut de gamme
 
-ðŸ—ï¸ **POTENTIEL DE CONSTRUCTION**
-â€¢ Coefficient d'emprise au sol: 0.6
-â€¢ Hauteur maximum: 4 étages (R+3)
-â€¢ Possibilité villa de luxe ou immeuble résidentiel
-â€¢ Accès direct véhicule et parking privé
+🏗️ **POTENTIEL DE CONSTRUCTION**
+• Coefficient d'emprise au sol: 0.6
+• Hauteur maximum: 4 étages (R+3)
+• Possibilité villa de luxe ou immeuble résidentiel
+• Accès direct véhicule et parking privé
 
-ðŸ’° **FINANCEMENT FLEXIBLE**
-â€¢ Financement bancaire disponible (30% d'apport)
-â€¢ Paiement échelonné sur 5 ans possible
-â€¢ Acceptation crypto-monnaies avec 5% de réduction
+💰 **FINANCEMENT FLEXIBLE**
+• Financement bancaire disponible (30% d'apport)
+• Paiement échelonné sur 5 ans possible
+• Acceptation crypto-monnaies avec 5% de réduction
 
-ðŸ” **SÉCURITÉ BLOCKCHAIN**
-â€¢ Propriété tokenisée en NFT
-â€¢ Smart contract sur blockchain Polygon
-â€¢ Transparence et sécurité maximales
-â€¢ Transfert de propriété instantané
+🔐 **SÉCURITÉ BLOCKCHAIN**
+• Propriété tokenisée en NFT
+• Smart contract sur blockchain Polygon
+• Transparence et sécurité maximales
+• Transfert de propriété instantané
 
 Cette parcelle représente un investissement d'exception dans l'un des quartiers les plus prisés de Dakar, alliant prestige, rentabilité et innovation technologique.`
     };
@@ -207,7 +207,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
   };
 
   const formatPricePerM2 = (price, surface) => {
-    return Math.round(parseInt(price) / parseInt(surface)).toLocaleString() + ' FCFA/mÂ²';
+    return Math.round(parseInt(price) / parseInt(surface)).toLocaleString() + ' FCFA/m²';
   };
 
   const handleContact = () => {
@@ -341,7 +341,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Helmet>
         <title>{parcelle.title} | Teranga Foncier</title>
-        <meta name="description" content={`${parcelle.title} - ${parcelle.surface}mÂ² Ï  ${formatPrice(parcelle.price)} dans ${parcelle.location}`} />
+  <meta name="description" content={`${parcelle.title} - ${parcelle.surface}m² à ${formatPrice(parcelle.price)} dans ${parcelle.location}`} />
       </Helmet>
 
       {/* Header avec navigation */}
@@ -449,7 +449,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-4 border-t border-b">
                     <div className="text-center">
                       <div className="text-2xl font-bold text-gray-900">{parcelle.surface}</div>
-                      <div className="text-sm text-gray-500">mÂ² de terrain</div>
+                      <div className="text-sm text-gray-500">m² de terrain</div>
                     </div>
                     <div className="text-center">
                       <div className="text-2xl font-bold text-gray-900">{parcelle.ai_score.overall}</div>
@@ -470,7 +470,6 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                       className="text-gray-700 leading-relaxed whitespace-pre-line"
                       dangerouslySetInnerHTML={{ 
                         __html: parcelle.description.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-                                                   .replace(/â€¢/g, 'â€¢')
                       }} 
                     />
                   </div>
@@ -739,7 +738,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                             <FileText className="w-5 h-5 text-gray-500 mr-3" />
                             <div>
                               <div className="font-medium">{doc.name}</div>
-                              <div className="text-sm text-gray-500">{doc.type} â€¢ {doc.size}</div>
+                              <div className="text-sm text-gray-500">{doc.type} • {doc.size}</div>
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
@@ -765,7 +764,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                           <div className="font-medium text-blue-900 mb-1">Documents vérifiés</div>
                           <div className="text-blue-700">
                             Tous les documents marqués comme "Vérifié" ont été contrôlés par nos experts légaux 
-                            et sont conformes Ï  la réglementation sénégalaise.
+                            et sont conformes à la réglementation sénégalaise.
                           </div>
                         </div>
                       </div>
@@ -931,7 +930,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                             </div>
                             <div>
                               <div className="font-semibold">Paiement Échelonné</div>
-                              <div className="text-sm text-gray-600">Jusqu'Ï  24 mois</div>
+                              <div className="text-sm text-gray-600">Jusqu’à 24 mois</div>
                             </div>
                           </div>
                           <div className="text-right">
@@ -982,7 +981,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                             </div>
                             <div>
                               <div className="font-semibold">Financement Bancaire</div>
-                              <div className="text-sm text-gray-600">Jusqu'Ï  80% du montant</div>
+                              <div className="text-sm text-gray-600">Jusqu’à 80% du montant</div>
                             </div>
                           </div>
                           <div className="text-right">
@@ -1071,18 +1070,18 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                     <div className="text-center">
                       <div className="text-sm opacity-90 mb-1">Prix Total</div>
                       <div className="text-3xl font-bold mb-2">
-                        {getPaymentInfo(parcelle.prix, paymentMethod).totalPrice.toLocaleString('fr-FR')} FCFA
+                        {getPaymentInfo()?.totalPrice.toLocaleString('fr-FR')} FCFA
                       </div>
                       <div className="text-sm opacity-90 mb-4">
-                        {parcelle.prixParM2?.toLocaleString('fr-FR')} FCFA/mÂ² â€¢ {parcelle.surface} mÂ²
+                        {formatPricePerM2(parcelle.price, parcelle.surface)} • {parcelle.surface} m²
                       </div>
                       
                       <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 mb-4">
                         <div className="text-sm font-medium mb-2">
-                          {getPaymentInfo(parcelle.prix, paymentMethod).title}
+                          {getPaymentInfo()?.title}
                         </div>
                         <div className="text-xs opacity-90">
-                          {getPaymentInfo(parcelle.prix, paymentMethod).description}
+                          {getPaymentInfo()?.description}
                         </div>
                       </div>
 
@@ -1114,6 +1113,29 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                     <Phone className="w-4 h-4 mr-2" />
                     Initier l'achat
                   </Button>
+                  <div className="grid grid-cols-1 gap-2">
+                    <Button 
+                      variant="secondary"
+                      className="w-full"
+                      onClick={() => navigate('/buy/one-time', { state: { parcelleId: parcelle.id } })}
+                    >
+                      Paiement comptant
+                    </Button>
+                    <Button 
+                      variant="secondary"
+                      className="w-full"
+                      onClick={() => navigate('/buy/installments', { state: { parcelleId: parcelle.id } })}
+                    >
+                      Paiement échelonné
+                    </Button>
+                    <Button 
+                      variant="outline"
+                      className="w-full"
+                      onClick={() => navigate('/buy/bank-financing', { state: { parcelleId: parcelle.id } })}
+                    >
+                      Financement bancaire
+                    </Button>
+                  </div>
                   
                   <Button onClick={handleShowMap} variant="outline" className="w-full">
                     <Map className="w-4 h-4 mr-2" />
@@ -1241,7 +1263,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                           
                           {/* Points de repère simulés */}
                           <div className="absolute top-2 left-2 bg-white px-2 py-1 rounded text-xs font-medium shadow">
-                            Terrain: {parcelle.surface} mÂ²
+                            Terrain: {parcelle.surface} m²
                           </div>
                           
                           {/* Coordonnées GPS */}
@@ -1302,21 +1324,21 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
           <div className="space-y-4">
             <div>
               <Label htmlFor="name">Votre nom</Label>
-              <Input id="name" YOUR_API_KEY="Nom complet" />
+              <Input id="name" placeholder="Nom complet" />
             </div>
             <div>
               <Label htmlFor="phone">Téléphone</Label>
-              <Input id="phone" YOUR_API_KEY="+221 XX XXX XX XX" />
+              <Input id="phone" placeholder="+221 XX XXX XX XX" />
             </div>
             <div>
               <Label htmlFor="email">Email</Label>
-              <Input id="email" type="email" YOUR_API_KEY="email@exemple.com" />
+              <Input id="email" type="email" placeholder="email@exemple.com" />
             </div>
             <div>
               <Label htmlFor="message">Message</Label>
               <Textarea
                 id="message"
-                YOUR_API_KEY="Je suis intéressé(e) par cette parcelle..."
+                placeholder="Je suis intéressé(e) par cette parcelle..."
                 rows={4}
               />
             </div>
@@ -1409,7 +1431,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                               <Home className="w-4 h-4 text-white" />
                             </div>
                             <div className="absolute top-10 left-1/2 transform -translate-x-1/2 bg-white px-2 py-1 rounded shadow-lg border">
-                              <div className="text-xs font-medium">{parcelle.surface}mÂ²</div>
+                              <div className="text-xs font-medium">{parcelle.surface}m²</div>
                               <div className="text-xs text-gray-500">{parcelle.type}</div>
                             </div>
                           </div>
@@ -1459,3 +1481,4 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
 };
 
 export default ParcelleDetailPage;
+

@@ -875,21 +875,21 @@ L'attribution se fait par tirage au sort public, avec vérification préalable d
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div>
                 <Label>Prénom et Nom</Label>
-                <Input YOUR_API_KEY="Prénom NOM" />
+                <Input placeholder="Prénom NOM" />
               </div>
               <div>
                 <Label>Email</Label>
-                <Input type="email" YOUR_API_KEY="email@exemple.com" />
+                <Input type="email" placeholder="email@exemple.com" />
               </div>
               <div>
                 <Label>Téléphone</Label>
-                <Input YOUR_API_KEY="+221 XX XXX XX XX" />
+                <Input placeholder="+221 XX XXX XX XX" />
               </div>
               <div>
                 <Label>Situation familiale</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue YOUR_API_KEY="Choisir" />
+                    <SelectValue placeholder="Choisir" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="celibataire">Célibataire</SelectItem>
@@ -901,13 +901,13 @@ L'attribution se fait par tirage au sort public, avec vérification préalable d
               </div>
               <div>
                 <Label>Revenus mensuels (FCFA)</Label>
-                <Input type="number" YOUR_API_KEY="500000" />
+                <Input type="number" placeholder="500000" />
               </div>
               <div>
                 <Label>Taille de parcelle souhaitée</Label>
                 <Select>
                   <SelectTrigger>
-                    <SelectValue YOUR_API_KEY="Choisir" />
+                    <SelectValue placeholder="Choisir" />
                   </SelectTrigger>
                   <SelectContent>
                     {zone.parcel_sizes.map(size => (
@@ -921,7 +921,7 @@ L'attribution se fait par tirage au sort public, avec vérification préalable d
             <div>
               <Label>Motivation</Label>
               <Textarea 
-                YOUR_API_KEY="Expliquez pourquoi vous candidatez pour cette zone et votre projet de construction..."
+                placeholder="Expliquez pourquoi vous candidatez pour cette zone et votre projet de construction..."
                 rows={4}
               />
             </div>
@@ -960,17 +960,17 @@ L'attribution se fait par tirage au sort public, avec vérification préalable d
             
             <div>
               <Label>Votre nom</Label>
-              <Input YOUR_API_KEY="Prénom NOM" />
+              <Input placeholder="Prénom NOM" />
             </div>
             <div>
               <Label>Email</Label>
-              <Input type="email" YOUR_API_KEY="email@exemple.com" />
+              <Input type="email" placeholder="email@exemple.com" />
             </div>
             <div>
               <Label>Sujet</Label>
               <Select>
                 <SelectTrigger>
-                  <SelectValue YOUR_API_KEY="Choisir le sujet" />
+                  <SelectValue placeholder="Choisir le sujet" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="eligibilite">Question sur l'éligibilité</SelectItem>
@@ -983,7 +983,7 @@ L'attribution se fait par tirage au sort public, avec vérification préalable d
             </div>
             <div>
               <Label>Message</Label>
-              <Textarea YOUR_API_KEY="Votre question..." rows={4} />
+              <Textarea placeholder="Votre question..." rows={4} />
             </div>
             
             <div className="flex space-x-3">
@@ -1154,3 +1154,4 @@ L'attribution se fait par tirage au sort public, avec vérification préalable d
 };
 
 export default ZoneCommunaleDetailPage;
+

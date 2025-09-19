@@ -392,7 +392,7 @@ const AIAssistedTerrainConfigPage = () => {
                         <Label htmlFor="budget" className="text-base font-medium">Budget maximum (FCFA)</Label>
                         <Input
                           id="budget"
-                          YOUR_API_KEY="Ex: 30000000"
+                          placeholder="Ex: 30000000"
                           value={configuration.budget}
                           onChange={(e) => setConfiguration(prev => ({ ...prev, budget: e.target.value }))}
                           className="mt-2"
@@ -404,7 +404,7 @@ const AIAssistedTerrainConfigPage = () => {
                         <Label htmlFor="surface" className="text-base font-medium">Surface souhaitée (mÂ²)</Label>
                         <Input
                           id="surface"
-                          YOUR_API_KEY="Ex: 300"
+                          placeholder="Ex: 300"
                           value={configuration.surface}
                           onChange={(e) => setConfiguration(prev => ({ ...prev, surface: e.target.value }))}
                           className="mt-2"
@@ -582,3 +582,4 @@ const AIAssistedTerrainConfigPage = () => {
 };
 
 export default AIAssistedTerrainConfigPage;
+

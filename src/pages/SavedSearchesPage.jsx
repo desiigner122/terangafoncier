@@ -213,8 +213,16 @@ const SavedSearchesPage = () => {
     }
   };
 
-  const handleEditSearch = (search) => {
-     window.safeGlobalToast({ title: "Fonctionnalité à venir", description: "La modification des recherches sera bientôt disponible. Pour l'instant, supprimez et recréez votre recherche." });
+  const handleEditSearch = async (search) => {
+    const newName = window.prompt('Nouveau nom pour la recherche', search.name || 'Ma recherche');
+    if (newName === null) return; // cancelled
+    const { error } = await supabase.from('saved_searches').update({ name: newName }).eq('id', search.id);
+    if (error) {
+      window.safeGlobalToast({ title: 'Erreur', description: "Impossible de renommer la recherche.", variant: 'destructive' });
+    } else {
+      setSavedSearches(prev => prev.map(s => s.id === search.id ? { ...s, name: newName } : s));
+      window.safeGlobalToast({ title: 'Recherche renommée' });
+    }
   };
 
    const handleAddNewSearch = () => {
@@ -224,7 +232,7 @@ const SavedSearchesPage = () => {
           <div>
             <p className="mb-2">Pour sauvegarder une nouvelle recherche :</p>
             <ol className="list-decimal list-inside text-sm space-y-1">
-              <li>Allez sur la <Link to="/parcelles" className="text-primary underline">page des parcelles</Link>.</li>
+              <li>Allez sur la <Link to="/parcelles-vendeurs" className="text-primary underline">page des parcelles</Link>.</li>
               <li>Appliquez les filtres souhaités (zone, prix, surface, etc.).</li>
               <li>Cliquez sur le bouton "Sauvegarder la Recherche".</li>
             </ol>
@@ -236,7 +244,7 @@ const SavedSearchesPage = () => {
 
   const handleViewResults = (params) => {
     const queryParams = new URLSearchParams(params).toString();
-    navigate(`/parcelles?${queryParams}`);
+    navigate(`/parcelles-vendeurs?${queryParams}`);
     window.safeGlobalToast({ title: "Redirection...", description: "Affichage des résultats correspondants."});
   };
 
@@ -286,7 +294,7 @@ const SavedSearchesPage = () => {
           <h2 className="text-2xl font-semibold mb-2 text-foreground">Aucune recherche sauvegardée pour le moment.</h2>
           <p className="text-muted-foreground mb-6 max-w-md mx-auto">Sauvegardez vos critères de recherche depuis la page des terrains pour être alerté des nouvelles opportunités.</p>
           <Button asChild size="lg">
-            <Link to="/parcelles">Explorer les parcelles et définir des alertes</Link>
+            <Link to="/parcelles-vendeurs">Explorer les parcelles et définir des alertes</Link>
           </Button>
         </div>
       )}

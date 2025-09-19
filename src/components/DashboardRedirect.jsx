@@ -1,9 +1,9 @@
-import React, { useEffect } from 'react';
+import React from 'react';
 import { Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const DashboardRedirect = () => {
-  const { user, session, loading } = useAuth();
+  const { user, session, loading, profile } = useAuth();
 
   if (loading) {
     return (
@@ -20,18 +20,20 @@ const DashboardRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Récupérer le rôle depuis les métadonnées utilisateur et le normaliser
-  const userRole = user.user_metadata?.role?.toLowerCase();
+  // Récupérer le rôle depuis le profile (normalisé) avec fallback aux métadonnées
+  const userRole = (profile?.role || user.user_metadata?.role || '').toLowerCase();
   
-  console.log('🎯 DashboardRedirect - Rôle utilisateur:', user.user_metadata?.role, '→ normalisé:', userRole);
+  console.log('🎯 DashboardRedirect - Rôle utilisateur:', profile?.role || user.user_metadata?.role, '→ normalisé:', userRole);
   
   // Redirection basée sur le rôle
   switch (userRole) {
     case 'admin':
       return <Navigate to="/admin" replace />;
+    case 'acheteur':
+      return <Navigate to="/acheteur" replace />;
     case 'particulier':
     case 'particular':
-      return <Navigate to="/particulier" replace />;
+      return <Navigate to="/acheteur" replace />;
     case 'vendeur':
       return <Navigate to="/vendeur" replace />;
     case 'investisseur':

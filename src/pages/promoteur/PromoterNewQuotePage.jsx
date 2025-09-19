@@ -143,7 +143,7 @@ const PromoterNewQuotePage = () => {
                     id="clientName"
                     value={formData.clientName}
                     onChange={(e) => handleInputChange('clientName', e.target.value)}
-                    YOUR_API_KEY="Ex: Aminata Diallo"
+                    placeholder="Ex: Aminata Diallo"
                     required
                   />
                 </div>
@@ -154,7 +154,7 @@ const PromoterNewQuotePage = () => {
                     type="email"
                     value={formData.clientEmail}
                     onChange={(e) => handleInputChange('clientEmail', e.target.value)}
-                    YOUR_API_KEY="Ex: aminata@email.com"
+                    placeholder="Ex: aminata@email.com"
                     required
                   />
                 </div>
@@ -165,7 +165,7 @@ const PromoterNewQuotePage = () => {
                   id="clientPhone"
                   value={formData.clientPhone}
                   onChange={(e) => handleInputChange('clientPhone', e.target.value)}
-                  YOUR_API_KEY="Ex: +221 77 123 45 67"
+                  placeholder="Ex: +221 77 123 45 67"
                   required
                 />
               </div>
@@ -187,7 +187,7 @@ const PromoterNewQuotePage = () => {
                   id="projectTitle"
                   value={formData.projectTitle}
                   onChange={(e) => handleInputChange('projectTitle', e.target.value)}
-                  YOUR_API_KEY="Ex: Villa moderne 4 chambres avec piscine"
+                  placeholder="Ex: Villa moderne 4 chambres avec piscine"
                   required
                 />
               </div>
@@ -197,7 +197,7 @@ const PromoterNewQuotePage = () => {
                   <Label htmlFor="projectType">Type de projet *</Label>
                   <Select onValueChange={(value) => handleInputChange('projectType', value)}>
                     <SelectTrigger>
-                      <SelectValue YOUR_API_KEY="Sélectionnez le type" />
+                      <SelectValue placeholder="Sélectionnez le type" />
                     </SelectTrigger>
                     <SelectContent>
                       {projectTypes.map((type) => (
@@ -214,7 +214,7 @@ const PromoterNewQuotePage = () => {
                     id="location"
                     value={formData.location}
                     onChange={(e) => handleInputChange('location', e.target.value)}
-                    YOUR_API_KEY="Ex: Almadies, Dakar"
+                    placeholder="Ex: Almadies, Dakar"
                     required
                   />
                 </div>
@@ -227,7 +227,7 @@ const PromoterNewQuotePage = () => {
                     id="budget"
                     value={formData.budget}
                     onChange={(e) => handleInputChange('budget', e.target.value)}
-                    YOUR_API_KEY="Ex: 80-120M FCFA"
+                    placeholder="Ex: 80-120M FCFA"
                   />
                 </div>
                 <div>
@@ -236,7 +236,7 @@ const PromoterNewQuotePage = () => {
                     id="timeline"
                     value={formData.timeline}
                     onChange={(e) => handleInputChange('timeline', e.target.value)}
-                    YOUR_API_KEY="Ex: 12 mois"
+                    placeholder="Ex: 12 mois"
                   />
                 </div>
               </div>
@@ -247,7 +247,7 @@ const PromoterNewQuotePage = () => {
                   id="description"
                   value={formData.description}
                   onChange={(e) => handleInputChange('description', e.target.value)}
-                  YOUR_API_KEY="Décrivez les spécificités du projet, les exigences particulières, etc."
+                  placeholder="Décrivez les spécificités du projet, les exigences particulières, etc."
                   rows={4}
                 />
               </div>
@@ -338,3 +338,4 @@ const PromoterNewQuotePage = () => {
 };
 
 export default PromoterNewQuotePage;
+

@@ -412,7 +412,7 @@ const BlockchainSecurityDashboard = () => {
                       value={landTitleForm.numero_titre}
                       onChange={(e) => setLandTitleForm({...landTitleForm, numero_titre: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      YOUR_API_KEY="Ex: TF-DK-2025-001234"
+                      placeholder="Ex: TF-DK-2025-001234"
                       required
                     />
                   </div>
@@ -426,7 +426,7 @@ const BlockchainSecurityDashboard = () => {
                       value={landTitleForm.proprietaire_nom}
                       onChange={(e) => setLandTitleForm({...landTitleForm, proprietaire_nom: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      YOUR_API_KEY="Ex: DIOP Amadou"
+                      placeholder="Ex: DIOP Amadou"
                       required
                     />
                   </div>
@@ -440,7 +440,7 @@ const BlockchainSecurityDashboard = () => {
                       value={landTitleForm.proprietaire_nin}
                       onChange={(e) => setLandTitleForm({...landTitleForm, proprietaire_nin: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      YOUR_API_KEY="Ex: 1234567890123"
+                      placeholder="Ex: 1234567890123"
                       pattern="[0-9]{13}"
                       required
                     />
@@ -456,7 +456,7 @@ const BlockchainSecurityDashboard = () => {
                       value={landTitleForm.superficie_hectares}
                       onChange={(e) => setLandTitleForm({...landTitleForm, superficie_hectares: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      YOUR_API_KEY="Ex: 0.5000"
+                      placeholder="Ex: 0.5000"
                       required
                     />
                   </div>
@@ -470,7 +470,7 @@ const BlockchainSecurityDashboard = () => {
                       value={landTitleForm.commune}
                       onChange={(e) => setLandTitleForm({...landTitleForm, commune: e.target.value})}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      YOUR_API_KEY="Ex: Dakar-Plateau"
+                      placeholder="Ex: Dakar-Plateau"
                       required
                     />
                   </div>
@@ -505,7 +505,7 @@ const BlockchainSecurityDashboard = () => {
                         coordonnees_gps: {...landTitleForm.coordonnees_gps, lat: e.target.value}
                       })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      YOUR_API_KEY="Ex: 14.716667"
+                      placeholder="Ex: 14.716667"
                       required
                     />
                   </div>
@@ -523,7 +523,7 @@ const BlockchainSecurityDashboard = () => {
                         coordonnees_gps: {...landTitleForm.coordonnees_gps, lng: e.target.value}
                       })}
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-                      YOUR_API_KEY="Ex: -17.467686"
+                      placeholder="Ex: -17.467686"
                       required
                     />
                   </div>
@@ -725,3 +725,4 @@ const BlockchainSecurityDashboard = () => {
 };
 
 export default BlockchainSecurityDashboard;
+

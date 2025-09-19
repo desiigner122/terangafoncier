@@ -192,7 +192,7 @@ const ModernLoginPage = () => {
                   <Input
                     id="email"
                     type="email"
-                    YOUR_API_KEY="nom@exemple.com"
+                    placeholder="nom@exemple.com"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -222,7 +222,7 @@ const ModernLoginPage = () => {
                     <Input
                       id="password"
                       type={showPassword ? "text" : "password"}
-                      YOUR_API_KEY="Votre mot de passe"
+                      placeholder="Votre mot de passe"
                       required
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
@@ -326,5 +326,6 @@ const ModernLoginPage = () => {
 };
 
 export default ModernLoginPage;
+
 
 

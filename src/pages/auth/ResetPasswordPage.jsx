@@ -90,7 +90,7 @@ const ResetPasswordPage = () => {
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              YOUR_API_KEY="votre.email@exemple.com"
+              placeholder="votre.email@exemple.com"
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all"
               required
             />
@@ -152,3 +152,4 @@ const ResetPasswordPage = () => {
 };
 
 export default ResetPasswordPage;
+

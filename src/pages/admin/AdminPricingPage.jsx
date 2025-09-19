@@ -231,7 +231,7 @@ const AdminPricingPage = () => {
                 <Label htmlFor="category">Catégorie</Label>
                 <Select value={formData.category} onValueChange={(value) => setFormData({...formData, category: value})}>
                   <SelectTrigger>
-                    <SelectValue YOUR_API_KEY="Sélectionner une catégorie" />
+                    <SelectValue placeholder="Sélectionner une catégorie" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="construction_diaspora">Construction Diaspora</SelectItem>
@@ -247,7 +247,7 @@ const AdminPricingPage = () => {
                 <Label htmlFor="type">Type de Frais</Label>
                 <Select value={formData.type} onValueChange={(value) => setFormData({...formData, type: value})}>
                   <SelectTrigger>
-                    <SelectValue YOUR_API_KEY="Sélectionner le type" />
+                    <SelectValue placeholder="Sélectionner le type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="percentage">Pourcentage</SelectItem>
@@ -266,7 +266,7 @@ const AdminPricingPage = () => {
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({...formData, name: e.target.value})}
-                YOUR_API_KEY="Ex: Frais de Gestion Construction"
+                placeholder="Ex: Frais de Gestion Construction"
                 required
               />
             </div>
@@ -279,7 +279,7 @@ const AdminPricingPage = () => {
                   type="number"
                   value={formData.value}
                   onChange={(e) => setFormData({...formData, value: Number(e.target.value)})}
-                  YOUR_API_KEY="0"
+                  placeholder="0"
                   required
                 />
               </div>
@@ -305,7 +305,7 @@ const AdminPricingPage = () => {
                 id="description"
                 value={formData.description}
                 onChange={(e) => setFormData({...formData, description: e.target.value})}
-                YOUR_API_KEY="Description du frais..."
+                placeholder="Description du frais..."
               />
             </div>
 
@@ -653,3 +653,4 @@ const AdminPricingPage = () => {
 };
 
 export default AdminPricingPage;
+

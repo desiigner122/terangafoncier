@@ -230,7 +230,7 @@ const SettingsPageNew = () => {
                       setProfileData(prev => ({ ...prev, fullName: e.target.value }));
                       setHasChanges(true);
                     }}
-                    YOUR_API_KEY="Votre nom complet"
+                    placeholder="Votre nom complet"
                   />
                 </div>
 
@@ -255,7 +255,7 @@ const SettingsPageNew = () => {
                       setProfileData(prev => ({ ...prev, phone: e.target.value }));
                       setHasChanges(true);
                     }}
-                    YOUR_API_KEY="+221 XX XXX XX XX"
+                    placeholder="+221 XX XXX XX XX"
                   />
                 </div>
 
@@ -268,7 +268,7 @@ const SettingsPageNew = () => {
                       setProfileData(prev => ({ ...prev, address: e.target.value }));
                       setHasChanges(true);
                     }}
-                    YOUR_API_KEY="Votre adresse"
+                    placeholder="Votre adresse"
                   />
                 </div>
               </div>
@@ -282,7 +282,7 @@ const SettingsPageNew = () => {
                     setProfileData(prev => ({ ...prev, bio: e.target.value }));
                     setHasChanges(true);
                   }}
-                  YOUR_API_KEY="Parlez-nous de vous..."
+                  placeholder="Parlez-nous de vous..."
                   className="w-full p-3 border rounded-md resize-none h-24"
                 />
               </div>
@@ -388,19 +388,19 @@ const SettingsPageNew = () => {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                   <Input
                     type="password"
-                    YOUR_API_KEY="Mot de passe actuel"
+                    placeholder="Mot de passe actuel"
                     value={passwordData.current}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, current: e.target.value }))}
                   />
                   <Input
                     type="password"
-                    YOUR_API_KEY="Nouveau mot de passe"
+                    placeholder="Nouveau mot de passe"
                     value={passwordData.new}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, new: e.target.value }))}
                   />
                   <Input
                     type="password"
-                    YOUR_API_KEY="Confirmer le mot de passe"
+                    placeholder="Confirmer le mot de passe"
                     value={passwordData.confirm}
                     onChange={(e) => setPasswordData(prev => ({ ...prev, confirm: e.target.value }))}
                   />
@@ -531,3 +531,4 @@ const SettingsPageNew = () => {
 };
 
 export default SettingsPageNew;
+

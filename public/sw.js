@@ -3,7 +3,7 @@
  * Gestion des push notifications et cache offline
  */
 
-const CACH    console.log('🔄 Synchronisation blockchain en arrière-plan');_NAME = 'teranga-foncier-v1.0.0';
+const CACHE_NAME = 'teranga-foncier-v1.0.0';
 const urlsToCache = [
   '/',
   '/static/js/bundle.js',

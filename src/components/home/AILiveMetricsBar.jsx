@@ -20,7 +20,7 @@ import {
   Activity,
   DollarSign
 } from 'lucide-react';
-import { advancedAIService } from '@/services/AdvancedAIService';
+import { advancedAIService } from '../../services/AdvancedAIService';
 
 const AILiveMetricsBar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());

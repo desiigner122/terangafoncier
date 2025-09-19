@@ -251,7 +251,7 @@ const MultiStepRegisterPage = () => {
                 </Label>
                 <Input
                   id="firstName"
-                  YOUR_API_KEY="Votre prénom"
+                  placeholder="Votre prénom"
                   value={formData.firstName}
                   onChange={(e) => handleInputChange('firstName', e.target.value)}
                   className="h-12"
@@ -264,7 +264,7 @@ const MultiStepRegisterPage = () => {
                 </Label>
                 <Input
                   id="lastName"
-                  YOUR_API_KEY="Votre nom de famille"
+                  placeholder="Votre nom de famille"
                   value={formData.lastName}
                   onChange={(e) => handleInputChange('lastName', e.target.value)}
                   className="h-12"
@@ -280,7 +280,7 @@ const MultiStepRegisterPage = () => {
               <Input
                 id="email"
                 type="email"
-                YOUR_API_KEY="votre.email@exemple.com"
+                placeholder="votre.email@exemple.com"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
                 className="h-12"
@@ -294,7 +294,7 @@ const MultiStepRegisterPage = () => {
               </Label>
               <Input
                 id="phone"
-                YOUR_API_KEY="+221 77 123 45 67"
+                placeholder="+221 77 123 45 67"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
                 className="h-12"
@@ -343,7 +343,7 @@ const MultiStepRegisterPage = () => {
                 </Label>
                 <Input
                   id="company"
-                  YOUR_API_KEY="Nom de votre entreprise"
+                  placeholder="Nom de votre entreprise"
                   value={formData.company}
                   onChange={(e) => handleInputChange('company', e.target.value)}
                   className="h-12"
@@ -432,7 +432,7 @@ const MultiStepRegisterPage = () => {
                   <Input
                     id="password"
                     type={showPassword ? "text" : "password"}
-                    YOUR_API_KEY="Créez un mot de passe sécurisé"
+                    placeholder="Créez un mot de passe sécurisé"
                     value={formData.password}
                     onChange={(e) => handleInputChange('password', e.target.value)}
                     className="h-12 pr-12"
@@ -458,7 +458,7 @@ const MultiStepRegisterPage = () => {
                 <Input
                   id="confirmPassword"
                   type="password"
-                  YOUR_API_KEY="Confirmez votre mot de passe"
+                  placeholder="Confirmez votre mot de passe"
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
                   className="h-12"
@@ -680,3 +680,4 @@ const MultiStepRegisterPage = () => {
 };
 
 export default MultiStepRegisterPage;
+

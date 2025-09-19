@@ -139,7 +139,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.firstName}
                   onChange={(e) => handleInputChange('personalInfo', 'firstName', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  YOUR_API_KEY="Entrez votre prénom"
+                  placeholder="Entrez votre prénom"
                   required
                 />
               </div>
@@ -150,7 +150,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.lastName}
                   onChange={(e) => handleInputChange('personalInfo', 'lastName', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  YOUR_API_KEY="Entrez votre nom"
+                  placeholder="Entrez votre nom"
                   required
                 />
               </div>
@@ -161,7 +161,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.email}
                   onChange={(e) => handleInputChange('personalInfo', 'email', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  YOUR_API_KEY="votre.email@exemple.com"
+                  placeholder="votre.email@exemple.com"
                   required
                 />
               </div>
@@ -172,7 +172,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.phone}
                   onChange={(e) => handleInputChange('personalInfo', 'phone', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  YOUR_API_KEY="+221 77 123 45 67"
+                  placeholder="+221 77 123 45 67"
                   required
                 />
               </div>
@@ -183,7 +183,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.address}
                   onChange={(e) => handleInputChange('personalInfo', 'address', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  YOUR_API_KEY="Votre adresse complète"
+                  placeholder="Votre adresse complète"
                   required
                 />
               </div>
@@ -194,7 +194,7 @@ const PurchaseProcessPage = () => {
                   value={purchaseData.personalInfo.city}
                   onChange={(e) => handleInputChange('personalInfo', 'city', e.target.value)}
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  YOUR_API_KEY="Dakar"
+                  placeholder="Dakar"
                   required
                 />
               </div>
@@ -634,3 +634,4 @@ const PurchaseProcessPage = () => {
 };
 
 export default PurchaseProcessPage;
+

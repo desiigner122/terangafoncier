@@ -296,7 +296,7 @@ const SecureMessagingPage = () => {
                 <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                   <Input
                     type="text"
-                    YOUR_API_KEY="Écrivez votre message..."
+                    placeholder="Écrivez votre message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     className="flex-grow"
@@ -322,6 +322,7 @@ const SecureMessagingPage = () => {
 };
 
 export default SecureMessagingPage;
+
 
 
 

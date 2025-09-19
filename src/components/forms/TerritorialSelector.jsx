@@ -165,7 +165,7 @@ const TerritorialSelector = ({
           onChange={handleRegionChange}
           options={regions}
           loading={loading.regions}
-          YOUR_API_KEY="Sélectionnez une région"
+          placeholder="Sélectionnez une région"
           error={errors.region_id}
         />
       )}
@@ -178,7 +178,7 @@ const TerritorialSelector = ({
           onChange={handleDepartmentChange}
           options={departments}
           loading={loading.departments}
-          YOUR_API_KEY={formData.region_id ? "Sélectionnez un département" : "Sélectionnez d'abord une région"}
+          placeholder={formData.region_id ? "Sélectionnez un département" : "Sélectionnez d'abord une région"}
           error={errors.department_id}
           disabled={!formData.region_id}
         />
@@ -192,7 +192,7 @@ const TerritorialSelector = ({
           onChange={handleCommuneChange}
           options={communes}
           loading={loading.communes}
-          YOUR_API_KEY={formData.department_id ? "Sélectionnez une commune" : "Sélectionnez d'abord un département"}
+          placeholder={formData.department_id ? "Sélectionnez une commune" : "Sélectionnez d'abord un département"}
           error={errors.commune_id}
           disabled={!formData.department_id}
         />
@@ -240,3 +240,4 @@ const TerritorialSelector = ({
 };
 
 export default TerritorialSelector;
+

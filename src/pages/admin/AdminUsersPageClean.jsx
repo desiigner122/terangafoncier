@@ -244,7 +244,7 @@ const AdminUsersPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
             <div>
               <Input
-                YOUR_API_KEY="Rechercher par nom, email, téléphone..."
+                placeholder="Rechercher par nom, email, téléphone..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="w-full"
@@ -253,7 +253,7 @@ const AdminUsersPage = () => {
             
             <Select value={selectedRole} onValueChange={setSelectedRole}>
               <SelectTrigger>
-                <SelectValue YOUR_API_KEY="Filtrer par rôle" />
+                <SelectValue placeholder="Filtrer par rôle" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les rôles</SelectItem>
@@ -265,7 +265,7 @@ const AdminUsersPage = () => {
             
             <Select value={selectedStatus} onValueChange={setSelectedStatus}>
               <SelectTrigger>
-                <SelectValue YOUR_API_KEY="Filtrer par statut" />
+                <SelectValue placeholder="Filtrer par statut" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_status">Tous les statuts</SelectItem>
@@ -277,7 +277,7 @@ const AdminUsersPage = () => {
             
             <Select value={selectedVerification} onValueChange={setSelectedVerification}>
               <SelectTrigger>
-                <SelectValue YOUR_API_KEY="Filtrer par vérification" />
+                <SelectValue placeholder="Filtrer par vérification" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all_verifications">Toutes les vérifications</SelectItem>
@@ -387,3 +387,4 @@ const AdminUsersPage = () => {
 };
 
 export default AdminUsersPage;
+

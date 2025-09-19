@@ -29,7 +29,7 @@ import React, { useState, useEffect } from 'react';
                 <div className="grid gap-2">
                     <Label htmlFor="theme-select">Thème Visuel</Label>
                     <Select value={preferences.theme} onValueChange={(value) => handlePreferenceChange('theme', value)}>
-                        <SelectTrigger id="theme-select" className="w-full sm:w-[200px]"><SelectValue YOUR_API_KEY="Choisir un thème" /></SelectTrigger>
+                        <SelectTrigger id="theme-select" className="w-full sm:w-[200px]"><SelectValue placeholder="Choisir un thème" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="light">Clair</SelectItem>
                             <SelectItem value="dark">Sombre</SelectItem>
@@ -40,7 +40,7 @@ import React, { useState, useEffect } from 'react';
                 <div className="grid gap-2">
                     <Label htmlFor="language-select">Langue</Label>
                     <Select value={preferences.language} onValueChange={(value) => handlePreferenceChange('language', value)}>
-                        <SelectTrigger id="language-select" className="w-full sm:w-[200px]"><SelectValue YOUR_API_KEY="Choisir une langue" /></SelectTrigger>
+                        <SelectTrigger id="language-select" className="w-full sm:w-[200px]"><SelectValue placeholder="Choisir une langue" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="fr">Français</SelectItem>
                             <SelectItem value="en">English (Simulation)</SelectItem>
@@ -50,7 +50,7 @@ import React, { useState, useEffect } from 'react';
                 <div className="grid gap-2">
                     <Label htmlFor="currency-select">Devise par Défaut</Label>
                     <Select value={preferences.defaultCurrency} onValueChange={(value) => handlePreferenceChange('defaultCurrency', value)}>
-                        <SelectTrigger id="currency-select" className="w-full sm:w-[200px]"><SelectValue YOUR_API_KEY="Choisir une devise" /></SelectTrigger>
+                        <SelectTrigger id="currency-select" className="w-full sm:w-[200px]"><SelectValue placeholder="Choisir une devise" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="XOF">FCFA (XOF)</SelectItem>
                             <SelectItem value="EUR">Euro (EUR) - Indicatif</SelectItem>
@@ -246,6 +246,7 @@ import React, { useState, useEffect } from 'react';
     };
 
     export default SettingsPage;
+
 
 
 

@@ -163,7 +163,7 @@ const MapPage = () => {
           <Input
             type="search"
             name="locationSearch"
-            YOUR_API_KEY="Rechercher une adresse, ville, ou référence de parcelle..."
+            placeholder="Rechercher une adresse, ville, ou référence de parcelle..."
             className="w-full h-12 pl-12 pr-4 rounded-full bg-background/95 shadow-xl border-border focus:ring-2 focus:ring-primary text-sm"
           />
           <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-muted-foreground" />

@@ -356,7 +356,7 @@ const CRMPage = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     type="text"
-                    YOUR_API_KEY="Rechercher contacts..."
+                    placeholder="Rechercher contacts..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 w-80"
@@ -365,7 +365,7 @@ const CRMPage = () => {
                 
                 <Select value={filterStatus} onValueChange={setFilterStatus}>
                   <SelectTrigger className="w-48">
-                    <SelectValue YOUR_API_KEY="Filtrer par statut" />
+                    <SelectValue placeholder="Filtrer par statut" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les statuts</SelectItem>
@@ -591,3 +591,4 @@ const CRMPage = () => {
 };
 
 export default CRMPage;
+

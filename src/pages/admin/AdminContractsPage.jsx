@@ -80,7 +80,7 @@ const AdminContractsPage = () => {
            <div className="flex space-x-2 pt-4">
               <div className="relative flex-1">
                  <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                 <Input YOUR_API_KEY="Rechercher par ID, Parcelle, Client..." className="pl-8" />
+                 <Input placeholder="Rechercher par ID, Parcelle, Client..." className="pl-8" />
               </div>
               <Button variant="outline" onClick={() => handleSimulatedAction("Ouverture des filtres de contrats.")}><Filter className="mr-2 h-4 w-4"/> Filtrer</Button>
            </div>
@@ -127,4 +127,5 @@ const AdminContractsPage = () => {
 };
 
 export default AdminContractsPage;
+
 

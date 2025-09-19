@@ -77,7 +77,7 @@ const NotaryOfficeStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               notaryErrors.office_name ? 'border-red-500' : 'border-gray-300'
             }`}
-            YOUR_API_KEY="Nom de votre étude notariale"
+            placeholder="Nom de votre étude notariale"
             required
           />
           {notaryErrors.office_name && (
@@ -97,7 +97,7 @@ const NotaryOfficeStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               notaryErrors.notary_number ? 'border-red-500' : 'border-gray-300'
             }`}
-            YOUR_API_KEY="Votre numéro d'inscription"
+            placeholder="Votre numéro d'inscription"
             required
           />
           {notaryErrors.notary_number && (
@@ -116,7 +116,7 @@ const NotaryOfficeStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               notaryErrors.bar_association ? 'border-red-500' : 'border-gray-300'
             }`}
-            YOUR_API_KEY="Chambre des notaires de rattachement"
+            placeholder="Chambre des notaires de rattachement"
             required
           />
           {notaryErrors.bar_association && (
@@ -147,7 +147,7 @@ const NotaryOfficeStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               notaryErrors.office_address ? 'border-red-500' : 'border-gray-300'
             }`}
-            YOUR_API_KEY="Adresse complète de votre étude"
+            placeholder="Adresse complète de votre étude"
             required
           />
           {notaryErrors.office_address && (
@@ -199,3 +199,4 @@ const NotaryOfficeStep = ({ data, errors, onNext, isLoading, role }) => {
 };
 
 export default NotaryOfficeStep;
+

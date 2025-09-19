@@ -206,7 +206,7 @@ const ModernFooter = () => {
             <div className="flex gap-3 w-full md:w-auto">
               <input
                 type="email"
-                YOUR_API_KEY="Votre email"
+                placeholder="Votre email"
                 className="flex-1 md:w-64 px-4 py-2 bg-gray-800 border border-gray-700 rounded-lg text-white YOUR_API_KEY-gray-400 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent"
               />
               <Button className="px-6 bg-primary hover:bg-primary/90">
@@ -250,3 +250,4 @@ const ModernFooter = () => {
 };
 
 export default ModernFooter;
+

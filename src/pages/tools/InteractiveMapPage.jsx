@@ -208,7 +208,7 @@ const InteractiveMapPage = () => {
                     <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
                     <input
                       type="text"
-                      YOUR_API_KEY="Rechercher par localisation..."
+                      placeholder="Rechercher par localisation..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="w-full pl-12 pr-4 py-3 rounded-xl border-0 focus:ring-2 focus:ring-white/20"
@@ -431,3 +431,4 @@ const InteractiveMapPage = () => {
 };
 
 export default InteractiveMapPage;
+

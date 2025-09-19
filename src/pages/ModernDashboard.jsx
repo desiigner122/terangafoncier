@@ -76,7 +76,7 @@ const ModernDashboard = () => {
       description: 'Trouvez le terrain ou la propriété idéale',
       icon: Search,
       color: 'bg-blue-500',
-      link: '/parcelles'
+  link: '/parcelles-vendeurs'
     },
     {
       title: 'Vendre un bien',

@@ -499,7 +499,7 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
           <Input
             value={currentMessage}
             onChange={(e) => setCurrentMessage(e.target.value)}
-            YOUR_API_KEY="Posez votre question Ï  l'IA expert..."
+            placeholder="Posez votre question Ï  l'IA expert..."
             onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
             className="flex-1"
           />
@@ -605,3 +605,4 @@ Pouvez-vous préciser votre besoin pour que je vous aide au mieux ?`,
 };
 
 export default UniversalAIChatbot;
+

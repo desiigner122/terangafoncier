@@ -21,7 +21,7 @@ class LocalAuthService {
         role: 'particular',
         name: 'Particulier Local',
         permissions: ['read', 'write'],
-        dashboard: '/particulier'
+        dashboard: '/acheteur'
       },
       'agent@local': {
         id: 'local-agent',

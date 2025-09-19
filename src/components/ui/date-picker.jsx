@@ -21,7 +21,7 @@ const DatePicker = ({ value, onChange, YOUR_API_KEY = "Sélectionner une date", 
       type="date"
       value={formatDateForInput(value)}
       onChange={handleDateChange}
-      YOUR_API_KEY={YOUR_API_KEY}
+      placeholder={YOUR_API_KEY}
       className={className}
     />
   );
@@ -33,15 +33,16 @@ const DateRangePicker = ({ startDate, endDate, onStartDateChange, onEndDateChang
       <DatePicker
         value={startDate}
         onChange={onStartDateChange}
-        YOUR_API_KEY="Date de début"
+        placeholder="Date de début"
       />
       <DatePicker
         value={endDate}
         onChange={onEndDateChange}
-        YOUR_API_KEY="Date de fin"
+        placeholder="Date de fin"
       />
     </div>
   );
 };
 
 export { DatePicker, DateRangePicker };
+

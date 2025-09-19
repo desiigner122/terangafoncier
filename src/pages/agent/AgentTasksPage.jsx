@@ -92,7 +92,7 @@ const AgentTasksPage = () => {
         <CardContent>
           <div className="flex space-x-2">
             <Input 
-              YOUR_API_KEY="Ex: Appeler le client pour le dossier..."
+              placeholder="Ex: Appeler le client pour le dossier..."
               value={newTaskTitle}
               onChange={(e) => setNewTaskTitle(e.target.value)}
               onKeyPress={(e) => e.key === 'Enter' && handleAddTask()}
@@ -151,4 +151,5 @@ const AgentTasksPage = () => {
 };
 
 export default AgentTasksPage;
+
 

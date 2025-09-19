@@ -9,6 +9,39 @@ export const AuthProvider = ({ children }) => {
   const [session, setSession] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  // Normalize role values to a consistent label expected by the app
+  const normalizeRole = useCallback((role) => {
+    if (!role) return 'Particulier';
+    const r = String(role).toLowerCase();
+    if (['particulier', 'particular', 'acheteur', 'buyer'].includes(r)) return 'Particulier';
+    if (['vendeur', 'seller', 'vendeur particulier', 'vendeur pro'].includes(r)) return 'Vendeur';
+    if (['investisseur', 'investor'].includes(r)) return 'Investisseur';
+    if (['promoteur', 'promoter', 'lotisseur'].includes(r)) return 'Promoteur';
+    if (['banque', 'bank'].includes(r)) return 'Banque';
+    if (['mairie', 'municipalite', 'municipalite', 'municipalité'].includes(r)) return 'Mairie';
+    if (['notaire', 'notary'].includes(r)) return 'Notaire';
+    if (['geometre', 'géomètre', 'geometer', 'geomètre'].includes(r)) return 'Géomètre';
+    if (['agent_foncier', 'agent foncier', 'agent-foncier'].includes(r)) return 'Agent Foncier';
+    if (['admin', 'administrator'].includes(r)) return 'Admin';
+    return role;
+  }, []);
+
+  // Derive a simple profile from user metadata when DB profile is not provided
+  const derivedProfile = useMemo(() => {
+    if (!user) return null;
+    const md = user.user_metadata || {};
+    const normalizedRole = normalizeRole(md.role || md.user_type || md.userType || md.user_role);
+    return {
+      id: user.id,
+      email: user.email,
+      role: normalizedRole || 'Particulier',
+      user_type: normalizedRole || 'Particulier',
+      verification_status: md.verification_status || 'active',
+      banned: !!md.banned,
+      ...md,
+    };
+  }, [user, normalizeRole]);
+
   const handleSession = useCallback(async (session) => {
     setSession(session);
     setUser(session?.user ?? null);
@@ -141,10 +174,11 @@ export const AuthProvider = ({ children }) => {
     user,
     session,
     loading,
+    profile: derivedProfile,
     signUp,
     signIn,
     signOut,
-  }), [user, session, loading, signUp, signIn, signOut]);
+  }), [user, session, loading, derivedProfile, signUp, signIn, signOut]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

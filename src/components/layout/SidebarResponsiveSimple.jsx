@@ -18,12 +18,11 @@ import MobileDrawer from '@/components/ui/mobile-drawer';
 
 const logoUrl = "/teranga-foncier-logo.svg";
 
-// Configuration sidebar simplifiée
+// Configuration sidebar simplifiÃ©e
 const getSimpleSidebarConfig = (role) => {
   const baseConfig = [
-    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-    { href: '/profile', label: 'Profil', icon: User },
-    { href: '/settings', label: 'Paramètres', icon: Settings }
+    { href: (role && role.toLowerCase && (role.toLowerCase() === 'particulier' || role.toLowerCase() === 'acheteur')) ? '/acheteur' : '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+  { href: '/settings', label: 'ParamÃ¨tres', icon: Settings }
   ];
 
   if (role === 'admin') {
@@ -123,7 +122,7 @@ const SidebarContent = ({ onNavigate }) => {
             onClick={handleSignOut}
           >
             <LogOut className="mr-3 h-4 w-4 flex-shrink-0" />
-            Déconnexion
+            DÃ©connexion
           </Button>
         </div>
       )}

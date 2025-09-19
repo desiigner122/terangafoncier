@@ -208,7 +208,7 @@ const PriceCalculatorPage = () => {
                         </label>
                         <input
                           type="number"
-                          YOUR_API_KEY="Ex: 500"
+                          placeholder="Ex: 500"
                           value={formData.surface}
                           onChange={(e) => setFormData({...formData, surface: e.target.value})}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
@@ -366,3 +366,4 @@ const PriceCalculatorPage = () => {
 };
 
 export default PriceCalculatorPage;
+

@@ -98,11 +98,11 @@ const ProjectDetailPage = () => {
       construction_progress: 35,
       status: 'En construction',
       images: [
-        '/api/YOUR_API_KEY/800/600',
-        '/api/YOUR_API_KEY/800/600',
-        '/api/YOUR_API_KEY/800/600',
-        '/api/YOUR_API_KEY/800/600',
-        '/api/YOUR_API_KEY/800/600'
+        'https://images.unsplash.com/photo-1505693416388-ac5ce068fe85?q=80&w=1200',
+        'https://images.unsplash.com/photo-1494526585095-c41746248156?q=80&w=1200',
+        'https://images.unsplash.com/photo-1501183638710-841dd1904471?q=80&w=1200',
+        'https://images.unsplash.com/photo-1502005229762-cf1b2da7c55a?q=80&w=1200',
+        'https://images.unsplash.com/photo-1501045661006-fcebe0257c3f?q=80&w=1200'
       ],
       virtual_tour: 'https://projects.terangafoncier.com/virtual/proj-001',
       drone_footage: 'https://projects.terangafoncier.com/drone/proj-001',
@@ -112,7 +112,7 @@ const ProjectDetailPage = () => {
         'Salle de sport équipée',
         'Parking souterrain sécurisé',
         'Concierge et sécurité 24h/24',
-        'Espace vert privatif 500mÂ²',
+  'Espace vert privatif 500m²',
         'Système de sécurité électronique',
         'Ascenseurs Otis dernière génération',
         'Fibre optique dans tous les appartements',
@@ -204,7 +204,7 @@ const ProjectDetailPage = () => {
         {
           id: 'T2',
           type: 'T2',
-          surface: '65mÂ²',
+          surface: '65m²',
           rooms: '2 pièces',
           price: 45000000,
           available: 6,
@@ -218,7 +218,7 @@ const ProjectDetailPage = () => {
         {
           id: 'T3',
           type: 'T3',
-          surface: '85mÂ²',
+          surface: '85m²',
           rooms: '3 pièces',
           price: 62000000,
           available: 8,
@@ -232,7 +232,7 @@ const ProjectDetailPage = () => {
         {
           id: 'T4',
           type: 'T4 Duplex',
-          surface: '110mÂ²',
+          surface: '110m²',
           rooms: '4 pièces',
           price: 85000000,
           available: 4,
@@ -261,7 +261,7 @@ const ProjectDetailPage = () => {
           { 
             name: 'Échelonné 24 mois', 
             down_payment: 30, 
-            description: '30% Ï  la signature, solde sur 24 mois' 
+            description: '30% à la signature, solde sur 24 mois' 
           },
           { 
             name: 'Crédit bancaire', 
@@ -280,7 +280,7 @@ Chaque appartement bénéficie d'une exposition optimale et de prestations de qu
 
 Les espaces communs incluent une piscine avec deck, une salle de sport, des jardins paysagers et un parking souterrain sécurisé.
 
-Idéal pour résidence principale ou investissement locatif avec un rendement estimé Ï  8-10% par an.`,
+Idéal pour résidence principale ou investissement locatif avec un rendement estimé à 8-10% par an.`,
       
       neighborhood: {
         amenities: [
@@ -433,9 +433,9 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                   </Badge>
                 </div>
                 <div className="absolute top-4 right-4 flex space-x-2">
-                  <Button size="sm" variant="secondary">
+                      <Button size="sm" variant="secondary">
                     <Video className="w-4 h-4 mr-1" />
-                    Visite 360Â°
+                        Visite 360°
                   </Button>
                   <Button size="sm" variant="secondary">
                     <Camera className="w-4 h-4 mr-1" />
@@ -484,7 +484,7 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                       À partir de {formatPrice(project.price_range.min)}
                     </div>
                     <div className="text-sm text-gray-500">
-                      Jusqu'Ï  {formatPrice(project.price_range.max)}
+                      Jusqu’à {formatPrice(project.price_range.max)}
                     </div>
                   </div>
                 </div>
@@ -555,7 +555,7 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                               {formatPrice(unit.price)}
                             </div>
                             <div className="text-sm text-gray-500">
-                              â‰ˆ {formatPrice(unit.monthly_payment_example)}/mois
+                              ≈ {formatPrice(unit.monthly_payment_example)}/mois
                             </div>
                           </div>
                         </div>
@@ -568,7 +568,7 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                           <div className="text-sm">
                             <span className="text-green-600 font-medium">{unit.available} disponibles</span>
                             {unit.sold > 0 && (
-                              <span className="text-gray-500 ml-2">â€¢ {unit.sold} vendus</span>
+                              <span className="text-gray-500 ml-2">• {unit.sold} vendus</span>
                             )}
                           </div>
                         </div>
@@ -581,7 +581,7 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                           ))}
                         </div>
 
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 flex-wrap">
                           <Button size="sm" variant="outline">
                             <Eye className="w-4 h-4 mr-1" />
                             Plan
@@ -599,6 +599,26 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                             }}
                           >
                             Précommander
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate('/promoters/purchase-units', { state: { projectId: project.id, unitType: unit.type } });
+                            }}
+                          >
+                            Acheter logement
+                          </Button>
+                          <Button 
+                            size="sm"
+                            variant="secondary"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              navigate('/promoters/payment-plans', { state: { projectId: project.id, unitType: unit.type } });
+                            }}
+                          >
+                            Plan de paiement
                           </Button>
                         </div>
                       </div>
@@ -840,7 +860,7 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
 
                     {/* Commodités proches */}
                     <div>
-                      <h4 className="font-semibold mb-3">Commodités Ï  proximité</h4>
+                      <h4 className="font-semibold mb-3">Commodités à proximité</h4>
                       <div className="grid md:grid-cols-2 gap-3">
                         {project.neighborhood.amenities.map((amenity, index) => (
                           <div key={index} className="flex items-center p-3 bg-gray-50 rounded-lg">
@@ -849,7 +869,7 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                             </div>
                             <div>
                               <div className="font-medium text-sm">{amenity.name}</div>
-                              <div className="text-xs text-gray-600">{amenity.type} â€¢ {amenity.distance}</div>
+                              <div className="text-xs text-gray-600">{amenity.type} • {amenity.distance}</div>
                             </div>
                           </div>
                         ))}
@@ -872,7 +892,7 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                               <div className="font-medium">{doc.name}</div>
                               <div className="text-sm text-gray-600">
                                 {doc.verified ? (
-                                  <span className="text-green-600">âœ“ Vérifié</span>
+                                  <span className="text-green-600">✓ Vérifié</span>
                                 ) : (
                                   <span className="text-orange-600">En attente</span>
                                 )}
@@ -907,6 +927,27 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                 >
                   <Eye className="w-4 h-4 mr-2" />
                   Précommander
+                </Button>
+                <Button 
+                  className="w-full"
+                  variant="secondary"
+                  onClick={() => navigate('/promoters/purchase-units', { state: { projectId: project.id } })}
+                >
+                  Acheter logement
+                </Button>
+                <Button 
+                  className="w-full"
+                  variant="secondary"
+                  onClick={() => navigate('/promoters/payment-plans', { state: { projectId: project.id } })}
+                >
+                  Plan de paiement
+                </Button>
+                <Button 
+                  className="w-full"
+                  variant="outline"
+                  onClick={() => navigate('/buy/bank-financing', { state: { projectId: project.id } })}
+                >
+                  Financement bancaire
                 </Button>
                 
                 <Button 

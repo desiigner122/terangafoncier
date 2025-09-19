@@ -463,7 +463,7 @@ const RemoteConstructionFeesManager = () => {
                 <Label htmlFor="fee_type">Type de frais</Label>
                 <Select value={newFee.fee_type} onValueChange={(value) => setNewFee({...newFee, fee_type: value})}>
                   <SelectTrigger>
-                    <SelectValue YOUR_API_KEY="Sélectionnez un type" />
+                    <SelectValue placeholder="Sélectionnez un type" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="management_fee">Frais de Gestion</SelectItem>
@@ -501,7 +501,7 @@ const RemoteConstructionFeesManager = () => {
                   <Input
                     id="percentage"
                     type="number"
-                    YOUR_API_KEY="ex: 8"
+                    placeholder="ex: 8"
                     value={newFee.fee_structure.percentage || ''}
                     onChange={(e) => setNewFee({
                       ...newFee, 
@@ -514,7 +514,7 @@ const RemoteConstructionFeesManager = () => {
                   <Input
                     id="base_fee"
                     type="number"
-                    YOUR_API_KEY="ex: 500000"
+                    placeholder="ex: 500000"
                     value={newFee.fee_structure.base_fee || ''}
                     onChange={(e) => setNewFee({
                       ...newFee, 
@@ -532,7 +532,7 @@ const RemoteConstructionFeesManager = () => {
                 <Input
                   id="min_budget"
                   type="number"
-                  YOUR_API_KEY="ex: 10000000"
+                  placeholder="ex: 10000000"
                   value={newFee.min_budget}
                   onChange={(e) => setNewFee({...newFee, min_budget: e.target.value})}
                 />
@@ -542,7 +542,7 @@ const RemoteConstructionFeesManager = () => {
                 <Input
                   id="max_budget"
                   type="number"
-                  YOUR_API_KEY="ex: 100000000"
+                  placeholder="ex: 100000000"
                   value={newFee.max_budget}
                   onChange={(e) => setNewFee({...newFee, max_budget: e.target.value})}
                 />
@@ -554,7 +554,7 @@ const RemoteConstructionFeesManager = () => {
               <Label htmlFor="description">Description</Label>
               <Input
                 id="description"
-                YOUR_API_KEY="Description des frais..."
+                placeholder="Description des frais..."
                 value={newFee.description}
                 onChange={(e) => setNewFee({...newFee, description: e.target.value})}
               />
@@ -584,3 +584,4 @@ const RemoteConstructionFeesManager = () => {
 };
 
 export default RemoteConstructionFeesManager;
+

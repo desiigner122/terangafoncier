@@ -231,7 +231,7 @@ const GuidesTutorielsPage = () => {
                 <div className="flex-1 relative">
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
-                    YOUR_API_KEY="Rechercher un guide ou tutorial..."
+                    placeholder="Rechercher un guide ou tutorial..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10"
@@ -521,3 +521,4 @@ const GuidesTutorielsPage = () => {
 };
 
 export default GuidesTutorielsPage;
+

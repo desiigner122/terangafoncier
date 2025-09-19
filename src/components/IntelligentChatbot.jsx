@@ -335,7 +335,7 @@ const IntelligentChatbot = () => {
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  YOUR_API_KEY="Tapez votre message..."
+                  placeholder="Tapez votre message..."
                   className="flex-1"
                 />
                 <Button 
@@ -355,3 +355,4 @@ const IntelligentChatbot = () => {
 };
 
 export default IntelligentChatbot;
+

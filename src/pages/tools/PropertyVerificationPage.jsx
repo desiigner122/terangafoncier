@@ -185,7 +185,7 @@ const PropertyVerificationPage = () => {
                         </label>
                         <input
                           type="text"
-                          YOUR_API_KEY="Ex: TF 12345/DK"
+                          placeholder="Ex: TF 12345/DK"
                           value={verificationData.titleNumber}
                           onChange={(e) => setVerificationData({...verificationData, titleNumber: e.target.value})}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -199,7 +199,7 @@ const PropertyVerificationPage = () => {
                         </label>
                         <input
                           type="text"
-                          YOUR_API_KEY="Ex: Almadies, Dakar"
+                          placeholder="Ex: Almadies, Dakar"
                           value={verificationData.location}
                           onChange={(e) => setVerificationData({...verificationData, location: e.target.value})}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -213,7 +213,7 @@ const PropertyVerificationPage = () => {
                         </label>
                         <input
                           type="text"
-                          YOUR_API_KEY="Ex: Amadou DIOP"
+                          placeholder="Ex: Amadou DIOP"
                           value={verificationData.ownerName}
                           onChange={(e) => setVerificationData({...verificationData, ownerName: e.target.value})}
                           className="w-full px-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
@@ -444,3 +444,4 @@ const PropertyVerificationPage = () => {
 };
 
 export default PropertyVerificationPage;
+

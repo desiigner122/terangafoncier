@@ -1,5 +1,5 @@
 import React from 'react';
-import { Route, Routes, Outlet, Link } from 'react-router-dom';
+import { Route, Routes, Outlet, Link, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AIProvider } from '@/hooks/useAI.jsx';
@@ -131,7 +131,7 @@ import AdminContractsPage from '@/pages/admin/AdminContractsPage';
 import AuthDebugPage from '@/pages/AuthDebugPage';
 
 // Import des dashboards
-import ParticularDashboard from '@/pages/dashboards/ParticularDashboard';
+import ParticularDashboard from '@/pages/ParticularDashboard';
 import NotaireDashboard from '@/pages/dashboards/NotaireDashboard';
 import GeometreDashboard from '@/pages/dashboards/GeometreDashboard';
 import BanqueDashboard from '@/pages/dashboards/BanqueDashboard';
@@ -228,6 +228,11 @@ import RejoignezNousPage from '@/pages/RejoignezNousPage';
 import SolutionsPage from '@/pages/SolutionsPage';
 import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
 import ModernGeometreDashboard from '@/pages/dashboards/ModernGeometreDashboard';
+import OneTimePaymentPage from '@/pages/buy/OneTimePaymentPage';
+import InstallmentsPaymentPage from '@/pages/buy/InstallmentsPaymentPage';
+import BankFinancingPage from '@/pages/buy/BankFinancingPage';
+import PurchaseUnitsPage from '@/pages/promoters/PurchaseUnitsPage';
+import PaymentPlansPage from '@/pages/promoters/PaymentPlansPage';
 
 const PublicLayout = () => (
   <div className="flex flex-col min-h-screen">
@@ -309,7 +314,7 @@ function App() {
               <Route path="documents-fonciers" element={<DocumentsFonciersPage />} />
               <Route path="lois-foncieres" element={<LoisFoncieresPage />} />
               <Route path="guides-tutoriels" element={<GuidesTutorielsPage />} />
-              <Route path="saved-searches" element={<SavedSearchesPage />} />
+              
               <Route path="compare" element={<ComparisonPage />} />
               <Route path="success-stories" element={<SuccessStoriesPage />} />
               <Route path="solutions" element={<SolutionsPage />} />
@@ -381,8 +386,8 @@ function App() {
                 <Route path="dashboard-simple" element={<ProtectedRoute><SimpleDashboard /></ProtectedRoute>} />
                 
                 <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
-                  <Route path="dashboard" element={<DashboardRedirect />} />
-                  <Route path="profile" element={<ProfilePage />} />
+                  {/* Dashboard redirection is handled by top-level routes to avoid auth/profile conflicts */}
+                  <Route path="profile" element={<Navigate to="/settings" replace />} />
                   <Route path="my-requests" element={<RoleProtectedRoute permission="MY_REQUESTS"><MyRequestsPage /></RoleProtectedRoute>} />
                   <Route path="transactions" element={<TransactionsPage />} />
                   <Route path="payment/:transactionId" element={<PaymentPage />} />
@@ -392,6 +397,7 @@ function App() {
                   <Route path="documents" element={<DocumentsPageNew />} />
                   <Route path="rendez-vous" element={<CalendarPageNew />} />
                   <Route path="calendar" element={<CalendarPageNew />} />
+                  <Route path="saved-searches" element={<SavedSearchesPage />} />
                   <Route path="settings" element={<SettingsPageNew />} />
                   <Route path="mes-terrains" element={<MesTerrainsPageNew />} />
                   <Route path="my-properties" element={<MesTerrainsPageNew />} />
@@ -407,13 +413,20 @@ function App() {
                   <Route path="sell-property" element={<RoleProtectedRoute permission="SELL_PROPERTY"><SellPropertyPage /></RoleProtectedRoute>} />
                   <Route path="add-parcel" element={<RoleProtectedRoute permission="ADD_PARCEL"><AddParcelPage /></RoleProtectedRoute>} />
                   <Route path="my-listings" element={<RoleProtectedRoute permission="MY_LISTINGS"><MyListingsPage /></RoleProtectedRoute>} />
+
+                  {/* Parcours d'achat pour Acheteurs/Particuliers */}
+                  <Route path="buy/one-time" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><OneTimePaymentPage /></RoleProtectedRoute>} />
+                  <Route path="buy/installments" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><InstallmentsPaymentPage /></RoleProtectedRoute>} />
+                  <Route path="buy/bank-financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BankFinancingPage /></RoleProtectedRoute>} />
+                  <Route path="promoters/purchase-units" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PurchaseUnitsPage /></RoleProtectedRoute>} />
+                  <Route path="promoters/payment-plans" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PaymentPlansPage /></RoleProtectedRoute>} />
                   
                   {/* Routes Promoteur */}
                   <Route path="promoteur/nouveaux-acheteurs" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewBuyersPage /></RoleProtectedRoute>} />
                   <Route path="promoteur/nouveau-devis" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewQuotePage /></RoleProtectedRoute>} />
                   
                   {/* Dashboards modernes par rôle */}
-                  <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
+                  <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
                   <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
                   <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
                   <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><ModernBanqueDashboard /></RoleProtectedRoute>} />
@@ -462,8 +475,12 @@ function App() {
               <Route path="*" element={<NotFoundPage />} />
             </Route>
 
+            {/* Redirection directe pour /dashboard */}
+            <Route path="/dashboard" element={<DashboardRedirect />} />
+            <Route path="/dashboard/" element={<DashboardRedirect />} />
+
             {/* Routes pour tous les dashboards */}
-            <Route path="/particulier" element={<ProtectedRoute><ParticularDashboard /></ProtectedRoute>} />
+            <Route path="/particulier" element={<Navigate to="/acheteur" replace />} />
             <Route path="/agent-foncier" element={<ProtectedRoute><ModernAgentFoncierDashboard /></ProtectedRoute>} />
             <Route path="/notaire" element={<ProtectedRoute><NotaireDashboard /></ProtectedRoute>} />
             <Route path="/geometre" element={<ProtectedRoute><GeometreDashboard /></ProtectedRoute>} />

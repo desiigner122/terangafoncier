@@ -325,7 +325,7 @@ const BlockchainContactPage = () => {
                             name="name"
                             value={formData.name}
                             onChange={handleInputChange}
-                            YOUR_API_KEY="Votre nom complet"
+                            placeholder="Votre nom complet"
                             required
                           />
                         </div>
@@ -337,7 +337,7 @@ const BlockchainContactPage = () => {
                             type="email"
                             value={formData.email}
                             onChange={handleInputChange}
-                            YOUR_API_KEY="votre@email.com"
+                            placeholder="votre@email.com"
                             required
                           />
                         </div>
@@ -351,14 +351,14 @@ const BlockchainContactPage = () => {
                             name="phone"
                             value={formData.phone}
                             onChange={handleInputChange}
-                            YOUR_API_KEY="+221 XX XXX XX XX"
+                            placeholder="+221 XX XXX XX XX"
                           />
                         </div>
                         <div className="space-y-2">
                           <Label>Catégorie</Label>
                           <Select value={formData.category} onValueChange={(value) => handleSelectChange('category', value)}>
                             <SelectTrigger>
-                              <SelectValue YOUR_API_KEY="Choisir une catégorie" />
+                              <SelectValue placeholder="Choisir une catégorie" />
                             </SelectTrigger>
                             <SelectContent>
                               {contactCategories.map((category) => (
@@ -378,7 +378,7 @@ const BlockchainContactPage = () => {
                           name="subject"
                           value={formData.subject}
                           onChange={handleInputChange}
-                          YOUR_API_KEY="Résumé de votre demande"
+                          placeholder="Résumé de votre demande"
                           required
                         />
                       </div>
@@ -407,7 +407,7 @@ const BlockchainContactPage = () => {
                           rows={6}
                           value={formData.message}
                           onChange={handleInputChange}
-                          YOUR_API_KEY="Décrivez votre projet, votre question ou votre besoin en détail..."
+                          placeholder="Décrivez votre projet, votre question ou votre besoin en détail..."
                           required
                         />
                       </div>
@@ -501,3 +501,4 @@ const BlockchainContactPage = () => {
 };
 
 export default BlockchainContactPage;
+

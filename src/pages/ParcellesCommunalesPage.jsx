@@ -156,7 +156,7 @@ const ParcellesCommunalesPage = () => {
               <Label htmlFor="familySize">Taille de la famille</Label>
               <Select value={formData.familySize} onValueChange={(value) => setFormData({...formData, familySize: value})}>
                 <SelectTrigger>
-                  <SelectValue YOUR_API_KEY="Sélectionner" />
+                  <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="1-2">1-2 personnes</SelectItem>
@@ -170,7 +170,7 @@ const ParcellesCommunalesPage = () => {
               <Label htmlFor="income">Revenus mensuels (FCFA)</Label>
               <Select value={formData.income} onValueChange={(value) => setFormData({...formData, income: value})}>
                 <SelectTrigger>
-                  <SelectValue YOUR_API_KEY="Sélectionner" />
+                  <SelectValue placeholder="Sélectionner" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="0-100000">0 - 100,000 FCFA</SelectItem>
@@ -187,7 +187,7 @@ const ParcellesCommunalesPage = () => {
                 id="motivation"
                 value={formData.motivation}
                 onChange={(e) => setFormData({...formData, motivation: e.target.value})}
-                YOUR_API_KEY="Expliquez pourquoi vous souhaitez acquérir cette parcelle..."
+                placeholder="Expliquez pourquoi vous souhaitez acquérir cette parcelle..."
                 required
               />
             </div>
@@ -393,7 +393,7 @@ const ParcellesCommunalesPage = () => {
             <div className="flex-1 relative">
               <Search className="absolute left-3 top-3 w-5 h-5 text-gray-400" />
               <Input
-                YOUR_API_KEY="Rechercher par commune, région..."
+                placeholder="Rechercher par commune, région..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12"
@@ -403,7 +403,7 @@ const ParcellesCommunalesPage = () => {
             <div className="flex gap-3">
               <Select value={filterRegion} onValueChange={setFilterRegion}>
                 <SelectTrigger className="w-40">
-                  <SelectValue YOUR_API_KEY="Région" />
+                  <SelectValue placeholder="Région" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Toutes les régions</SelectItem>
@@ -415,7 +415,7 @@ const ParcellesCommunalesPage = () => {
 
               <Select value={filterStatus} onValueChange={setFilterStatus}>
                 <SelectTrigger className="w-48">
-                  <SelectValue YOUR_API_KEY="Statut" />
+                  <SelectValue placeholder="Statut" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">Tous les statuts</SelectItem>
@@ -505,3 +505,4 @@ const ParcellesCommunalesPage = () => {
 };
 
 export default ParcellesCommunalesPage;
+

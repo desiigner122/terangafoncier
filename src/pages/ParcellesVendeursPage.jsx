@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo } from 'react';
+﻿import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -28,6 +28,8 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate, Link } from 'react-router-dom';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const regions = [
   "Toutes les régions", "Dakar", "Thiès", "Saint-Louis", "Diourbel", "Louga", 
@@ -54,6 +56,7 @@ const cities = {
 
 const ParcellesVendeursPage = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedRegion, setSelectedRegion] = useState('Toutes les régions');
   const [selectedCity, setSelectedCity] = useState('Toutes');
@@ -76,6 +79,16 @@ const ParcellesVendeursPage = () => {
     gated: false,
     parking: false
   });
+  const [favoriteIds, setFavoriteIds] = useState([]);
+
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!user) { setFavoriteIds([]); return; }
+      const { data: profile } = await supabase.from('users').select('favorites').eq('id', user.id).single();
+      setFavoriteIds(Array.isArray(profile?.favorites) ? profile.favorites : []);
+    };
+    loadFavorites();
+  }, [user]);
 
   // Données de parcelles avec images réelles et vendeurs variés
   const parcelles = [
@@ -123,7 +136,7 @@ const ParcellesVendeursPage = () => {
       access: ["Route pavée", "Transport"],
       rating: 4.5,
       views: 156,
-      isFavorite: true,
+  isFavorite: false,
       isVerified: true,
       description: "Terrain agricole fertile, idéal pour l'agriculture moderne"
     },
@@ -195,7 +208,7 @@ const ParcellesVendeursPage = () => {
       access: ["Route pavée", "Transport"],
       rating: 4.7,
       views: 267,
-      isFavorite: true,
+  isFavorite: false,
       isVerified: true,
       description: "Zone industrielle moderne avec toutes commodités"
     },
@@ -394,6 +407,50 @@ const ParcellesVendeursPage = () => {
     setFeatures({ seaView: false, gated: false, parking: false });
   };
 
+  const toggleFavorite = async (parcelId) => {
+    if (!user) {
+      window.safeGlobalToast({ title: 'Connexion requise', description: 'Connectez-vous pour ajouter des favoris.' });
+      return;
+    }
+    const isFav = favoriteIds.includes(parcelId);
+    // Optimistic update
+    const next = isFav ? favoriteIds.filter(id => id !== parcelId) : [...favoriteIds, parcelId];
+    setFavoriteIds(next);
+    const { error } = await supabase.from('users').update({ favorites: next }).eq('id', user.id);
+    if (error) {
+      // revert on error
+      setFavoriteIds(favoriteIds);
+      window.safeGlobalToast({ title: 'Erreur', description: "Impossible de mettre à jour vos favoris.", variant: 'destructive' });
+    } else {
+      window.safeGlobalToast({ title: isFav ? 'Retiré des favoris' : 'Ajouté aux favoris' });
+    }
+  };
+
+  const handleSaveSearch = async () => {
+    if (!user) {
+      window.safeGlobalToast({ title: 'Connexion requise', description: 'Connectez-vous pour sauvegarder une recherche.' });
+      return;
+    }
+    const filters = {
+      search: searchTerm,
+      region: selectedRegion,
+      city: selectedCity,
+      type: selectedType,
+      seller: selectedSeller,
+      financing: selectedFinancing,
+      utilities,
+      access,
+      features,
+    };
+    const name = `Recherche ${selectedRegion !== 'Toutes les régions' ? selectedRegion : 'Toutes régions'} · ${new Date().toLocaleDateString('fr-FR')}`;
+    const { error } = await supabase.from('saved_searches').insert({ user_id: user.id, name, filters, notify: true });
+    if (error) {
+      window.safeGlobalToast({ title: 'Erreur', description: 'Échec de la sauvegarde de votre recherche.', variant: 'destructive' });
+    } else {
+      window.safeGlobalToast({ title: 'Recherche sauvegardée', description: 'Vous recevrez des alertes pour les nouvelles offres.' });
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       {/* Hero Section */}
@@ -452,7 +509,7 @@ const ParcellesVendeursPage = () => {
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
-                YOUR_API_KEY="Rechercher par titre ou localisation..."
+                placeholder="Rechercher par titre ou localisation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-12"
@@ -464,7 +521,7 @@ const ParcellesVendeursPage = () => {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4 mb-6">
             <Select value={selectedRegion} onValueChange={setSelectedRegion}>
               <SelectTrigger>
-                <SelectValue YOUR_API_KEY="Région" />
+                <SelectValue placeholder="Région" />
               </SelectTrigger>
               <SelectContent>
                 {regions.map(region => (
@@ -475,7 +532,7 @@ const ParcellesVendeursPage = () => {
 
             <Select value={selectedCity} onValueChange={setSelectedCity}>
               <SelectTrigger>
-                <SelectValue YOUR_API_KEY="Ville" />
+                <SelectValue placeholder="Ville" />
               </SelectTrigger>
               <SelectContent>
                 {availableCities.map(city => (
@@ -486,7 +543,7 @@ const ParcellesVendeursPage = () => {
 
             <Select value={selectedType} onValueChange={setSelectedType}>
               <SelectTrigger>
-                <SelectValue YOUR_API_KEY="Type de terrain" />
+                <SelectValue placeholder="Type de terrain" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Tous">Tous les types</SelectItem>
@@ -500,7 +557,7 @@ const ParcellesVendeursPage = () => {
 
             <Select value={selectedSeller} onValueChange={setSelectedSeller}>
               <SelectTrigger>
-                <SelectValue YOUR_API_KEY="Type de vendeur" />
+                <SelectValue placeholder="Type de vendeur" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Tous">Tous vendeurs</SelectItem>
@@ -515,7 +572,7 @@ const ParcellesVendeursPage = () => {
 
             <Select value={selectedFinancing} onValueChange={setSelectedFinancing}>
               <SelectTrigger>
-                <SelectValue YOUR_API_KEY="Financement" />
+                <SelectValue placeholder="Financement" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="Tous">Tous</SelectItem>
@@ -608,7 +665,7 @@ const ParcellesVendeursPage = () => {
                   />
                   <label htmlFor="schools" className="text-sm flex items-center">
                     <GraduationCap className="w-4 h-4 mr-1 text-purple-600" />
-                    Écoles Ï  proximité
+                    Écoles à proximité
                   </label>
                 </div>
               </div>
@@ -667,6 +724,14 @@ const ParcellesVendeursPage = () => {
             <h3 className="text-xl font-semibold text-gray-900">
               {filteredParcelles.length} terrain(s) trouvé(s)
             </h3>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" onClick={handleSaveSearch}>
+                Sauvegarder cette recherche
+              </Button>
+              <Button asChild>
+                <Link to="/saved-searches">Mes recherches</Link>
+              </Button>
+            </div>
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -701,9 +766,10 @@ const ParcellesVendeursPage = () => {
                       <Button 
                         size="sm" 
                         variant="ghost" 
-                        className={`rounded-full p-2 ${parcelle.isFavorite ? 'text-red-500' : 'text-white'}`}
+                        onClick={(e) => { e.stopPropagation(); toggleFavorite(parcelle.id); }}
+                        className={`rounded-full p-2 ${favoriteIds.includes(parcelle.id) ? 'text-red-500' : 'text-white'}`}
                       >
-                        <Heart className={`w-4 h-4 ${parcelle.isFavorite ? 'fill-current' : ''}`} />
+                        <Heart className={`w-4 h-4 ${favoriteIds.includes(parcelle.id) ? 'fill-current' : ''}`} />
                       </Button>
                     </div>
                   </div>
@@ -727,7 +793,7 @@ const ParcellesVendeursPage = () => {
                     <div className="space-y-2 mb-4">
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Surface:</span>
-                        <span className="font-medium">{parcelle.surface} mÂ²</span>
+                        <span className="font-medium">{parcelle.surface} m²</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span className="text-gray-600">Vendeur:</span>
@@ -754,7 +820,7 @@ const ParcellesVendeursPage = () => {
                           {parseInt(parcelle.price).toLocaleString()} FCFA
                         </div>
                         <div className="text-xs text-gray-500">
-                          {Math.round(parseInt(parcelle.price) / parseInt(parcelle.surface)).toLocaleString()} FCFA/mÂ²
+                          {Math.round(parseInt(parcelle.price) / parseInt(parcelle.surface)).toLocaleString()} FCFA/m²
                         </div>
                       </div>
                       <div className="flex items-center gap-2 text-gray-500">
@@ -793,6 +859,19 @@ const ParcellesVendeursPage = () => {
                       >
                         Voir les détails
                       </Button>
+
+                      {/* Parcours d'achat rapides */}
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/buy/one-time'); }}>
+                          Comptant
+                        </Button>
+                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/buy/installments'); }}>
+                          Échelonné
+                        </Button>
+                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/buy/bank-financing'); }}>
+                          Bancaire
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -816,3 +895,4 @@ const ParcellesVendeursPage = () => {
 };
 
 export default ParcellesVendeursPage;
+

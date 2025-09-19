@@ -293,7 +293,7 @@ const Footer = () => {
                 <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
                 <input
                   type="email"
-                  YOUR_API_KEY="votre.email@blockchain.com"
+                  placeholder="votre.email@blockchain.com"
                   className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white YOUR_API_KEY-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
                 />
               </div>

@@ -80,7 +80,7 @@
                   <Input
                     id="email"
                     type="email"
-                    YOUR_API_KEY="nom@exemple.com"
+                    placeholder="nom@exemple.com"
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
@@ -95,7 +95,7 @@
                   <Input
                     id="password"
                     type="password"
-                    YOUR_API_KEY="********"
+                    placeholder="********"
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
@@ -160,5 +160,6 @@
 
     export default LoginPage;
   
+
 
 

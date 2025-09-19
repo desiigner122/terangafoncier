@@ -49,10 +49,10 @@ const ParticularDashboard = () => {
       title: "Villa Moderne - Almadies",
       location: "Almadies, Dakar",
       price: "450,000,000 FCFA",
-      surface: "250 mÂ²",
+  surface: "250 m²",
       bedrooms: 4,
       bathrooms: 3,
-      image: "/api/YOUR_API_KEY/300/200",
+  image: "https://placehold.co/300x200",
       type: "Villa",
       status: "Disponible",
       features: ["Piscine", "Jardin", "Garage", "Climatisation"]
@@ -62,10 +62,10 @@ const ParticularDashboard = () => {
       title: "Appartement Standing - Plateau",
       location: "Plateau, Dakar",
       price: "180,000,000 FCFA",
-      surface: "120 mÂ²",
+  surface: "120 m²",
       bedrooms: 3,
       bathrooms: 2,
-      image: "/api/YOUR_API_KEY/300/200",
+  image: "https://placehold.co/300x200",
       type: "Appartement",
       status: "Disponible",
       features: ["Vue mer", "Ascenseur", "Parking", "Sécurité"]
@@ -75,8 +75,8 @@ const ParticularDashboard = () => {
       title: "Terrain Constructible - Saly",
       location: "Saly, Mbour",
       price: "75,000,000 FCFA",
-      surface: "800 mÂ²",
-      image: "/api/YOUR_API_KEY/300/200",
+  surface: "800 m²",
+  image: "https://placehold.co/300x200",
       type: "Terrain",
       status: "Disponible",
       features: ["Titre foncier", "Proche plage", "Viabilisé"]
@@ -209,7 +209,7 @@ const ParticularDashboard = () => {
             
             <input
               type="text"
-              YOUR_API_KEY="Localisation"
+              placeholder="Localisation"
               className="p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
               value={searchFilters.location}
               onChange={(e) => setSearchFilters({...searchFilters, location: e.target.value})}
@@ -424,3 +424,4 @@ const ParticularDashboard = () => {
 };
 
 export default ParticularDashboard;
+

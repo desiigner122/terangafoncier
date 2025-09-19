@@ -310,7 +310,7 @@ const AdminLoginPage = () => {
                           value={formData.email}
                           onChange={handleInputChange}
                           className="pl-12 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                          YOUR_API_KEY="admin@terangafoncier.com"
+                          placeholder="admin@terangafoncier.com"
                           disabled={isLoading || isBlocked}
                         />
                       </div>
@@ -332,7 +332,7 @@ const AdminLoginPage = () => {
                           value={formData.password}
                           onChange={handleInputChange}
                           className="pl-12 pr-12 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                          YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                          placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                           disabled={isLoading || isBlocked}
                         />
                         <button
@@ -407,6 +407,7 @@ const AdminLoginPage = () => {
 };
 
 export default AdminLoginPage;
+
 
 
 

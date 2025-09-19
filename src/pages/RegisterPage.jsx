@@ -101,7 +101,7 @@ const RegisterPage = () => {
                                     value={fullName}
                                     onChange={(e) => setFullName(e.target.value)}
                                     required
-                                    YOUR_API_KEY="Ex: Moussa Diop"
+                                    placeholder="Ex: Moussa Diop"
                                 />
                             </div>
                             <div>
@@ -112,7 +112,7 @@ const RegisterPage = () => {
                                     value={email}
                                     onChange={(e) => setEmail(e.target.value)}
                                     required
-                                    YOUR_API_KEY="nom@exemple.com"
+                                    placeholder="nom@exemple.com"
                                 />
                             </div>
                             <div>
@@ -123,7 +123,7 @@ const RegisterPage = () => {
                                     value={password}
                                     onChange={(e) => setPassword(e.target.value)}
                                     required
-                                    YOUR_API_KEY="Minimum 6 caractères"
+                                    placeholder="Minimum 6 caractères"
                                     minLength="6"
                                 />
                             </div>
@@ -131,7 +131,7 @@ const RegisterPage = () => {
                                 <Label htmlFor="userType">Type de compte</Label>
                                 <Select onValueChange={setUserType} value={userType}>
                                     <SelectTrigger id="userType">
-                                        <SelectValue YOUR_API_KEY="Sélectionnez un type de compte" />
+                                        <SelectValue placeholder="Sélectionnez un type de compte" />
                                     </SelectTrigger>
                                     <SelectContent>
                                         {allowedRoles.map(role => (
@@ -163,3 +163,4 @@ const RegisterPage = () => {
 };
 
 export default RegisterPage;
+

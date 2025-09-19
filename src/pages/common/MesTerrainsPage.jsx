@@ -274,7 +274,7 @@ const MesTerrainsPage = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
                 <Input 
-                  YOUR_API_KEY="Rechercher des propriétés..."
+                  placeholder="Rechercher des propriétés..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -536,3 +536,4 @@ const MesTerrainsPage = () => {
 };
 
 export default MesTerrainsPage;
+

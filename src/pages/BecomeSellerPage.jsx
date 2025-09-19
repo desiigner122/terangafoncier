@@ -284,7 +284,7 @@ const BecomeSellerPage = () => {
                     <Textarea
                       id="motivation"
                       name="motivation"
-                      YOUR_API_KEY="Pourquoi souhaitez-vous devenir vendeur sur notre plateforme ?"
+                      placeholder="Pourquoi souhaitez-vous devenir vendeur sur notre plateforme ?"
                       value={formData.motivation}
                       onChange={handleInputChange}
                       required
@@ -296,7 +296,7 @@ const BecomeSellerPage = () => {
                     <Textarea
                       id="experience"
                       name="experience"
-                      YOUR_API_KEY="Décrivez votre expérience dans l'immobilier (optionnel)"
+                      placeholder="Décrivez votre expérience dans l'immobilier (optionnel)"
                       value={formData.experience}
                       onChange={handleInputChange}
                       className="min-h-[100px]"
@@ -315,7 +315,7 @@ const BecomeSellerPage = () => {
                       <Input
                         id="businessName"
                         name="businessName"
-                        YOUR_API_KEY="Ex: Immobilier Dakar SARL"
+                        placeholder="Ex: Immobilier Dakar SARL"
                         value={formData.businessName}
                         onChange={handleInputChange}
                         required={sellerType === 'professionnel'}
@@ -326,7 +326,7 @@ const BecomeSellerPage = () => {
                       <Textarea
                         id="businessDescription"
                         name="businessDescription"
-                        YOUR_API_KEY="Décrivez votre activité immobilière"
+                        placeholder="Décrivez votre activité immobilière"
                         value={formData.businessDescription}
                         onChange={handleInputChange}
                         className="min-h-[80px]"
@@ -428,4 +428,5 @@ const BecomeSellerPage = () => {
 };
 
 export default BecomeSellerPage;
+
 

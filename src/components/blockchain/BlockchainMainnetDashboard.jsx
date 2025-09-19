@@ -444,7 +444,7 @@ const BlockchainMainnetDashboard = () => {
                           value={propertyForm.title}
                           onChange={(e) => setPropertyForm(prev => ({ ...prev, title: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          YOUR_API_KEY="Villa moderne Ï  Dakar"
+                          placeholder="Villa moderne Ï  Dakar"
                         />
                       </div>
                       <div>
@@ -453,7 +453,7 @@ const BlockchainMainnetDashboard = () => {
                           value={propertyForm.description}
                           onChange={(e) => setPropertyForm(prev => ({ ...prev, description: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          YOUR_API_KEY="Description détaillée..."
+                          placeholder="Description détaillée..."
                         />
                       </div>
                       <div className="grid grid-cols-2 gap-4">
@@ -464,7 +464,7 @@ const BlockchainMainnetDashboard = () => {
                             value={propertyForm.price}
                             onChange={(e) => setPropertyForm(prev => ({ ...prev, price: e.target.value }))}
                             className="bg-white/10 border-white/20 text-white"
-                            YOUR_API_KEY="100"
+                            placeholder="100"
                           />
                         </div>
                         <div>
@@ -473,7 +473,7 @@ const BlockchainMainnetDashboard = () => {
                             value={propertyForm.location}
                             onChange={(e) => setPropertyForm(prev => ({ ...prev, location: e.target.value }))}
                             className="bg-white/10 border-white/20 text-white"
-                            YOUR_API_KEY="Dakar, Sénégal"
+                            placeholder="Dakar, Sénégal"
                           />
                         </div>
                       </div>
@@ -483,7 +483,7 @@ const BlockchainMainnetDashboard = () => {
                           value={propertyForm.imageHash}
                           onChange={(e) => setPropertyForm(prev => ({ ...prev, imageHash: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          YOUR_API_KEY="QmXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
+                          placeholder="QmXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX"
                         />
                       </div>
                       <Button 
@@ -596,7 +596,7 @@ const BlockchainMainnetDashboard = () => {
                           value={stakeForm.amount}
                           onChange={(e) => setStakeForm({ amount: e.target.value })}
                           className="bg-white/10 border-white/20 text-white"
-                          YOUR_API_KEY="100"
+                          placeholder="100"
                         />
                       </div>
                       <Button 
@@ -667,7 +667,7 @@ const BlockchainMainnetDashboard = () => {
                           value={proposalForm.description}
                           onChange={(e) => setProposalForm(prev => ({ ...prev, description: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          YOUR_API_KEY="Proposer une nouvelle fonctionnalité..."
+                          placeholder="Proposer une nouvelle fonctionnalité..."
                         />
                       </div>
                       <div>
@@ -753,7 +753,7 @@ const BlockchainMainnetDashboard = () => {
                           value={transferForm.to}
                           onChange={(e) => setTransferForm(prev => ({ ...prev, to: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          YOUR_API_KEY="0x..."
+                          placeholder="0x..."
                         />
                       </div>
                       <div>
@@ -763,7 +763,7 @@ const BlockchainMainnetDashboard = () => {
                           value={transferForm.amount}
                           onChange={(e) => setTransferForm(prev => ({ ...prev, amount: e.target.value }))}
                           className="bg-white/10 border-white/20 text-white"
-                          YOUR_API_KEY="10"
+                          placeholder="10"
                         />
                       </div>
                       <Button 
@@ -851,3 +851,4 @@ const BlockchainMainnetDashboard = () => {
 };
 
 export default BlockchainMainnetDashboard;
+

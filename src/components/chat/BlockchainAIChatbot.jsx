@@ -488,7 +488,7 @@ Ou choisissez une action rapide ci-dessous ðŸ‘‡`;
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
-                  YOUR_API_KEY="Posez votre question..."
+                  placeholder="Posez votre question..."
                   className="flex-1 border-gray-300 focus:border-blue-500 rounded-xl"
                   disabled={isTyping}
                 />
@@ -515,3 +515,4 @@ Ou choisissez une action rapide ci-dessous ðŸ‘‡`;
 };
 
 export default BlockchainAIChatbot;
+

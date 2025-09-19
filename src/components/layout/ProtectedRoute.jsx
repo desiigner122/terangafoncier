@@ -9,15 +9,10 @@ import { hasPermission, getAccessDeniedMessage, getDefaultDashboard } from '@/li
 const ProtectedRoute = ({ children }) => {
   try {
     const authContext = useAuth();
-    const { user, session, loading } = authContext;
+    const { user, session, loading, profile } = authContext;
     const location = useLocation();
 
-    // Créer un profil basique depuis les données utilisateur
-    const profile = user ? {
-      verification_status: user.user_metadata?.verification_status || 'active',
-      role: user.user_metadata?.role,
-      email: user.email
-    } : null;
+    // profile now comes from AuthContext (derived if needed)
 
     console.log('🛡️ ProtectedRoute state:', { 
       hasUser: !!user, 
@@ -143,7 +138,7 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [], permission = n
   }
 
   if (!profile) {
-    return <Navigate to="/profile" replace />;
+    return <Navigate to="/settings" replace />;
   }
 
   // Vérifier si l'utilisateur est banni

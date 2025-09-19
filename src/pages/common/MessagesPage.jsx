@@ -263,7 +263,7 @@ const MessagesPage = () => {
             <div className="relative">
               <Search className="absolute left-3 top-3 w-4 h-4 text-gray-400" />
               <Input 
-                YOUR_API_KEY="Rechercher une conversation..."
+                placeholder="Rechercher une conversation..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10"
@@ -401,7 +401,7 @@ const MessagesPage = () => {
                     </Button>
                     <div className="flex-1">
                       <Textarea
-                        YOUR_API_KEY="Tapez votre message..."
+                        placeholder="Tapez votre message..."
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         onKeyPress={(e) => {
@@ -439,3 +439,4 @@ const MessagesPage = () => {
 };
 
 export default MessagesPage;
+

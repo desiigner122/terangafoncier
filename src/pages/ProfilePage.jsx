@@ -36,7 +36,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { supabase } from '@/lib/supabaseClient';
 
 const ProfilePage = () => {
-  const { user, updateUserProfile, logout } = useAuth();
+  const { user, profile, signOut } = useAuth();
   // toast remplacé par window.safeGlobalToast
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -60,14 +60,6 @@ const ProfilePage = () => {
     if (user) {
       setEmail(user.email || '');
     }
-    
-        testAvatarsBucket().then(isReady => {
-      if (isReady) {
-        console.log('✅ Bucket avatars prêt pour upload');
-      } else {
-        console.warn('⚠️ Bucket avatars pas disponible');
-      }
-    });
   }, [user, profile]);
 
   const handleProfileImageChange = (e) => {
@@ -90,49 +82,39 @@ const ProfilePage = () => {
     }
     setIsUpdatingProfile(true);
     try {
-      let avatarUrl = profile.avatar_url;
+      let avatarUrl = profile?.avatar_url || null;
+
       if (avatarFile) {
         console.log('🔄 Upload avatar en cours...');
-        
-        // Supprimer l'ancien avatar si il existe
-        if (profile.avatar_url) {
-          await deleteOldAvatar(profile.avatar_url);
-        }
-        
-        // Upload le nouvel avatar avec système robuste
-        const uploadResult = await uploadAvatarRobust(avatarFile, user.id);
-        
+        const uploadResult = await avatarManager.uploadAvatar(avatarFile, user.id);
         if (uploadResult.success) {
-          avatarUrl = uploadResult.publicUrl;
+          avatarUrl = uploadResult.avatarUrl;
           console.log('✅ Avatar uploadé avec succès:', avatarUrl);
-          window.safeGlobalToast({ 
-            title: "Avatar mis à jour", 
-            description: "Votre photo de profil a été changée avec succès." 
+          window.safeGlobalToast({
+            title: 'Avatar mis à jour',
+            description: 'Votre photo de profil a été changée avec succès.'
           });
         } else {
           console.error('❌ Erreur upload avatar:', uploadResult.error);
-          window.safeGlobalToast({ 
-            variant: "destructive", 
-            title: "Erreur upload avatar", 
-            description: uploadResult.error || "Impossible d'uploader l'avatar." 
+          window.safeGlobalToast({
+            variant: 'destructive',
+            title: 'Erreur upload avatar',
+            description: uploadResult.error || "Impossible d'uploader l'avatar."
           });
-          // Garder l'ancien avatar
-          avatarUrl = profile.avatar_url;
         }
       }
 
-        const { error } = await supabase
-          .from('users')
+      const { error } = await supabase
+        .from('users')
         .update({ full_name: fullName, phone: phone, avatar_url: avatarUrl })
         .eq('id', user.id);
 
       if (error) throw error;
-      
-      await revalidate();
-      window.safeGlobalToast({ title: "Profil mis à jour", description: "Vos informations ont été sauvegardées." });
+
+      window.safeGlobalToast({ title: 'Profil mis à jour', description: 'Vos informations ont été sauvegardées.' });
     } catch (error) {
       console.error("Error updating profile:", error);
-      window.safeGlobalToast({ variant: "destructive", title: "Erreur de mise à jour", description: error.message });
+      window.safeGlobalToast({ variant: 'destructive', title: 'Erreur de mise à jour', description: error.message });
     } finally {
       setIsUpdatingProfile(false);
     }
@@ -221,16 +203,16 @@ const ProfilePage = () => {
                 <div className="md:col-span-2 space-y-4">
                   <div className="grid gap-2">
                     <Label htmlFor="profile-name">Nom Complet / Raison Sociale</Label>
-                    <Input id="profile-name" value={fullName} onChange={(e) => setFullName(e.target.value)} disabled={isUpdatingProfile} YOUR_API_KEY="Votre nom complet" className="h-10"/>
+                    <Input id="profile-name" value={fullName} onChange={(e) => setFullName(e.target.value)} disabled={isUpdatingProfile} placeholder="Votre nom complet" className="h-10"/>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="profile-email">Adresse Email</Label>
-                    <Input id="profile-email" type="email" value={email} disabled YOUR_API_KEY="Votre adresse email"/>
+                    <Input id="profile-email" type="email" value={email} disabled placeholder="Votre adresse email"/>
                     <p className="text-xs text-muted-foreground">Pour changer d'email, veuillez contacter le support.</p>
                   </div>
                   <div className="grid gap-2">
                     <Label htmlFor="profile-phone">Numéro de Téléphone</Label>
-                    <Input id="profile-phone" type="tel" value={phone || ''} onChange={(e) => setPhone(e.target.value)} disabled={isUpdatingProfile} YOUR_API_KEY="+221 XX XXX XX XX" className="h-10"/>
+                    <Input id="profile-phone" type="tel" value={phone || ''} onChange={(e) => setPhone(e.target.value)} disabled={isUpdatingProfile} placeholder="+221 XX XXX XX XX" className="h-10"/>
                   </div>
               </div>
             </CardContent>
@@ -253,11 +235,11 @@ const ProfilePage = () => {
             <form onSubmit={handlePasswordUpdate} className="space-y-4">
               <div className="grid gap-2">
                 <Label htmlFor="new-password">Nouveau Mot de Passe</Label>
-                <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={isUpdatingPassword} required className="h-10" YOUR_API_KEY="Minimum 6 caractères"/>
+                <Input id="new-password" type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} disabled={isUpdatingPassword} required className="h-10" placeholder="Minimum 6 caractères"/>
               </div>
               <div className="grid gap-2">
                 <Label htmlFor="confirm-new-password">Confirmer le Nouveau Mot de Passe</Label>
-                <Input id="confirm-new-password" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} disabled={isUpdatingPassword} required className="h-10" YOUR_API_KEY="Retapez votre nouveau mot de passe"/>
+                <Input id="confirm-new-password" type="password" value={confirmNewPassword} onChange={(e) => setConfirmNewPassword(e.target.value)} disabled={isUpdatingPassword} required className="h-10" placeholder="Retapez votre nouveau mot de passe"/>
               </div>
               <Button type="submit" disabled={isUpdatingPassword} className="w-full sm:w-auto">
                 <ShieldCheck className="mr-2 h-4 w-4" /> {isUpdatingPassword ? 'Mise à jour...' : 'Changer'}
@@ -300,4 +282,5 @@ const ProfilePage = () => {
 };
 
 export default ProfilePage;
+
 

@@ -271,7 +271,7 @@ const SolutionsInvestisseursPage = () => {
                 Accéder au Dashboard Investisseur <LayoutDashboard className="ml-2 h-5 w-5" />
               </Button>
             </motion.div>
-             <p className="text-sm text-muted-foreground mt-4">Ou <Link to="/parcelles?type=investissement" className="underline hover:text-primary">consultez les terrains à potentiel d'investissement</Link>.</p>
+             <p className="text-sm text-muted-foreground mt-4">Ou <Link to="/parcelles-vendeurs?type=investissement" className="underline hover:text-primary">consultez les terrains à potentiel d'investissement</Link>.</p>
           </div>
         </section>
       </motion.div>

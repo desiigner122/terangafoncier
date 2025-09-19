@@ -53,7 +53,7 @@ const AIHelpModal = ({ isOpen, onClose }) => {
         "Où trouver mes FileTexts sauvegardés ?",
         "Comment planifier une visite ?",
       ];
-    } else if (pathname === '/profile' || pathname === '/settings') {
+  } else if (pathname === '/settings') {
        specificQuestions = [
         "Comment modifier mon mot de passe ?",
         "Où gérer mes notifications ?",
@@ -179,7 +179,7 @@ const AIHelpModal = ({ isOpen, onClose }) => {
           <div className="relative">
             <Input
               id="ai-question"
-              YOUR_API_KEY="Ex: Comment vérifier un titre foncier ?"
+              placeholder="Ex: Comment vérifier un titre foncier ?"
               value={inputValue}
               onChange={(e) => setInputValue(e.target.value)}
               className="pr-10 h-12 text-base"
@@ -229,3 +229,4 @@ const AIHelpModal = ({ isOpen, onClose }) => {
 };
 
 export default AIHelpModal;
+

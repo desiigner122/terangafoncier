@@ -562,7 +562,7 @@ const PromoterConstructionRequestsPage = () => {
               <div className="relative flex-1 max-w-md">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
                 <Input
-                  YOUR_API_KEY="Rechercher par titre, lieu, client..."
+                  placeholder="Rechercher par titre, lieu, client..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -573,7 +573,7 @@ const PromoterConstructionRequestsPage = () => {
               <div className="flex items-center gap-3 flex-wrap">
                 <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                   <SelectTrigger className="w-48">
-                    <SelectValue YOUR_API_KEY="Tous les statuts" />
+                    <SelectValue placeholder="Tous les statuts" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les statuts</SelectItem>
@@ -588,7 +588,7 @@ const PromoterConstructionRequestsPage = () => {
 
                 <Select value={selectedType} onValueChange={setSelectedType}>
                   <SelectTrigger className="w-48">
-                    <SelectValue YOUR_API_KEY="Type de projet" />
+                    <SelectValue placeholder="Type de projet" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les types</SelectItem>
@@ -643,7 +643,7 @@ const PromoterConstructionRequestsPage = () => {
                       <Label>Gamme de prix</Label>
                       <Select value={selectedPriceRange} onValueChange={setSelectedPriceRange}>
                         <SelectTrigger>
-                          <SelectValue YOUR_API_KEY="Toutes les gammes" />
+                          <SelectValue placeholder="Toutes les gammes" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Toutes les gammes</SelectItem>
@@ -659,7 +659,7 @@ const PromoterConstructionRequestsPage = () => {
                       <Label>Localisation</Label>
                       <Select value={selectedLocation} onValueChange={setSelectedLocation}>
                         <SelectTrigger>
-                          <SelectValue YOUR_API_KEY="Toutes les zones" />
+                          <SelectValue placeholder="Toutes les zones" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="all">Toutes les zones</SelectItem>
@@ -677,7 +677,7 @@ const PromoterConstructionRequestsPage = () => {
                       <Label>Trier par</Label>
                       <Select value={sortBy} onValueChange={setSortBy}>
                         <SelectTrigger>
-                          <SelectValue YOUR_API_KEY="Trier par" />
+                          <SelectValue placeholder="Trier par" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="latest">Plus récents</SelectItem>
@@ -983,4 +983,5 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
 };
 
 export default PromoterConstructionRequestsPage;
+
 

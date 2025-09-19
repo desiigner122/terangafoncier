@@ -248,7 +248,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                 id="full_name"
                 value={formData.full_name}
                 onChange={(e) => handleInputChange('full_name', e.target.value)}
-                YOUR_API_KEY="Ex: Jean Dupont"
+                placeholder="Ex: Jean Dupont"
                 className={errors.full_name ? 'border-red-500' : ''}
               />
               {errors.full_name && <p className="text-red-500 text-sm mt-1">{errors.full_name}</p>}
@@ -261,7 +261,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                 type="email"
                 value={formData.email}
                 onChange={(e) => handleInputChange('email', e.target.value)}
-                YOUR_API_KEY="jean.dupont@example.com"
+                placeholder="jean.dupont@example.com"
                 className={errors.email ? 'border-red-500' : ''}
               />
               {errors.email && <p className="text-red-500 text-sm mt-1">{errors.email}</p>}
@@ -273,7 +273,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => handleInputChange('phone', e.target.value)}
-                YOUR_API_KEY="+221 XX XXX XX XX"
+                placeholder="+221 XX XXX XX XX"
                 className={errors.phone ? 'border-red-500' : ''}
               />
               {errors.phone && <p className="text-red-500 text-sm mt-1">{errors.phone}</p>}
@@ -305,7 +305,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                 }}
               >
                 <SelectTrigger className={errors.region ? 'border-red-500' : ''}>
-                  <SelectValue YOUR_API_KEY="Choisir une région" />
+                  <SelectValue placeholder="Choisir une région" />
                 </SelectTrigger>
                 <SelectContent>
                   {Object.keys(SENEGAL_REGIONS).map(region => (
@@ -327,7 +327,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                   }}
                 >
                   <SelectTrigger className={errors.departement ? 'border-red-500' : ''}>
-                    <SelectValue YOUR_API_KEY="Choisir un département" />
+                    <SelectValue placeholder="Choisir un département" />
                   </SelectTrigger>
                   <SelectContent>
                     {Object.keys(SENEGAL_REGIONS[formData.region]).map(dept => (
@@ -347,7 +347,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                   onValueChange={(value) => handleInputChange('commune', value)}
                 >
                   <SelectTrigger className={errors.commune ? 'border-red-500' : ''}>
-                    <SelectValue YOUR_API_KEY="Choisir une commune" />
+                    <SelectValue placeholder="Choisir une commune" />
                   </SelectTrigger>
                   <SelectContent>
                     {SENEGAL_REGIONS[formData.region][formData.departement].map(commune => (
@@ -365,7 +365,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                 id="address"
                 value={formData.address}
                 onChange={(e) => handleInputChange('address', e.target.value)}
-                YOUR_API_KEY="Adresse détaillée..."
+                placeholder="Adresse détaillée..."
                 className={errors.address ? 'border-red-500' : ''}
               />
               {errors.address && <p className="text-red-500 text-sm mt-1">{errors.address}</p>}
@@ -383,7 +383,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                 onValueChange={(value) => handleInputChange('role', value)}
               >
                 <SelectTrigger className={errors.role ? 'border-red-500' : ''}>
-                  <SelectValue YOUR_API_KEY="Choisir un rôle" />
+                  <SelectValue placeholder="Choisir un rôle" />
                 </SelectTrigger>
                 <SelectContent>
                   {ROLES.map(role => (
@@ -401,7 +401,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                   id="company_name"
                   value={formData.company_name}
                   onChange={(e) => handleInputChange('company_name', e.target.value)}
-                  YOUR_API_KEY="Ex: Banque de Dakar"
+                  placeholder="Ex: Banque de Dakar"
                   className={errors.company_name ? 'border-red-500' : ''}
                 />
                 {errors.company_name && <p className="text-red-500 text-sm mt-1">{errors.company_name}</p>}
@@ -415,7 +415,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                   id="professional_id"
                   value={formData.professional_id}
                   onChange={(e) => handleInputChange('professional_id', e.target.value)}
-                  YOUR_API_KEY="Ex: NOT2024001"
+                  placeholder="Ex: NOT2024001"
                 />
               </div>
             )}
@@ -432,7 +432,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                 type="password"
                 value={formData.password}
                 onChange={(e) => handleInputChange('password', e.target.value)}
-                YOUR_API_KEY="Minimum 6 caractères"
+                placeholder="Minimum 6 caractères"
                 className={errors.password ? 'border-red-500' : ''}
               />
               {errors.password && <p className="text-red-500 text-sm mt-1">{errors.password}</p>}
@@ -445,7 +445,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
                 type="password"
                 value={formData.confirm_password}
                 onChange={(e) => handleInputChange('confirm_password', e.target.value)}
-                YOUR_API_KEY="Retaper le mot de passe"
+                placeholder="Retaper le mot de passe"
                 className={errors.confirm_password ? 'border-red-500' : ''}
               />
               {errors.confirm_password && <p className="text-red-500 text-sm mt-1">{errors.confirm_password}</p>}
@@ -590,3 +590,4 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
 };
 
 export default AddUserWizard;
+

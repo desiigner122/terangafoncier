@@ -84,7 +84,7 @@ export const AIEstimationWidget = ({ className = '' }) => {
             value={formData.surface}
             onChange={(e) => setFormData({...formData, surface: parseInt(e.target.value)})}
             className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500"
-            YOUR_API_KEY="300"
+            placeholder="300"
             min="1"
           />
         </div>
@@ -256,3 +256,4 @@ export const AIMarketInsights = ({ region = 'Dakar', className = '' }) => {
 };
 
 export default { AIEstimationWidget, AIMarketInsights };
+

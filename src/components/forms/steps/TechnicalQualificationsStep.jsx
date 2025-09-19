@@ -142,7 +142,7 @@ const TechnicalQualificationsStep = ({
                       value={item}
                       onChange={(e) => handleArrayUpdate(field.key, index, e.target.value)}
                       className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                      YOUR_API_KEY={`${field.label} ${index + 1}`}
+                      placeholder={`${field.label} ${index + 1}`}
                     />
                     {index > 0 && (
                       <button
@@ -169,7 +169,7 @@ const TechnicalQualificationsStep = ({
                 onChange={(e) => handleInputChange(field.key, e.target.value)}
                 rows={4}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                YOUR_API_KEY={`Décrivez votre ${field.label.toLowerCase()}`}
+                placeholder={`Décrivez votre ${field.label.toLowerCase()}`}
               />
             ) : field.type === 'number' ? (
               <input
@@ -177,7 +177,7 @@ const TechnicalQualificationsStep = ({
                 value={formData[field.key] || ''}
                 onChange={(e) => handleInputChange(field.key, e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                YOUR_API_KEY={field.label}
+                placeholder={field.label}
               />
             ) : (
               <input
@@ -185,7 +185,7 @@ const TechnicalQualificationsStep = ({
                 value={formData[field.key] || ''}
                 onChange={(e) => handleInputChange(field.key, e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-                YOUR_API_KEY={field.label}
+                placeholder={field.label}
               />
             )}
 
@@ -236,3 +236,4 @@ const TechnicalQualificationsStep = ({
 };
 
 export default TechnicalQualificationsStep;
+

@@ -316,7 +316,7 @@ const AIChatbot = () => {
                   value={newMessage}
                   onChange={(e) => setNewMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  YOUR_API_KEY="Tapez votre question..."
+                  placeholder="Tapez votre question..."
                   className="flex-1 min-h-[44px] max-h-32 resize-none"
                   rows={1}
                 />
@@ -341,3 +341,4 @@ const AIChatbot = () => {
 };
 
 export default AIChatbot;
+

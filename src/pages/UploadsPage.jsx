@@ -431,7 +431,7 @@ const UploadsPage = () => {
                   <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                   <Input
                     type="text"
-                    YOUR_API_KEY="Rechercher fichiers..."
+                    placeholder="Rechercher fichiers..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="pl-10 w-80"
@@ -440,7 +440,7 @@ const UploadsPage = () => {
                 
                 <Select value={filterType} onValueChange={setFilterType}>
                   <SelectTrigger className="w-48">
-                    <SelectValue YOUR_API_KEY="Type de fichier" />
+                    <SelectValue placeholder="Type de fichier" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">Tous les types</SelectItem>
@@ -453,7 +453,7 @@ const UploadsPage = () => {
 
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-32">
-                    <SelectValue YOUR_API_KEY="Trier par" />
+                    <SelectValue placeholder="Trier par" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="date">Date</SelectItem>
@@ -740,3 +740,4 @@ const UploadsPage = () => {
 };
 
 export default UploadsPage;
+

@@ -99,14 +99,14 @@ const AdminAgentsPage = () => {
             <div className="relative">
                <Search className="absolute left-2.5 top-3 h-4 w-4 text-muted-foreground" />
                <Input 
-                  YOUR_API_KEY="Rechercher par nom, email, ID..." 
+                  placeholder="Rechercher par nom, email, ID..." 
                   className="pl-8 h-10" 
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                />
             </div>
             <Select value={zoneFilter} onValueChange={setZoneFilter}>
-               <SelectTrigger className="h-10"><SelectValue YOUR_API_KEY="Filtrer par zone" /></SelectTrigger>
+               <SelectTrigger className="h-10"><SelectValue placeholder="Filtrer par zone" /></SelectTrigger>
                <SelectContent>
                   <SelectItem value="all">Toutes les zones</SelectItem>
                   <SelectItem value="Dakar - Plateau">Dakar - Plateau</SelectItem>
@@ -116,7 +116,7 @@ const AdminAgentsPage = () => {
                </SelectContent>
             </Select>
             <Select value={statusFilter} onValueChange={setStatusFilter}>
-               <SelectTrigger className="h-10"><SelectValue YOUR_API_KEY="Filtrer par statut" /></SelectTrigger>
+               <SelectTrigger className="h-10"><SelectValue placeholder="Filtrer par statut" /></SelectTrigger>
                <SelectContent>
                   <SelectItem value="all">Tous les statuts</SelectItem>
                   <SelectItem value="actif">Actif</SelectItem>
@@ -205,3 +205,4 @@ const AdminAgentsPage = () => {
 };
 
 export default AdminAgentsPage;
+

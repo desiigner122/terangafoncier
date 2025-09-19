@@ -222,7 +222,7 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
           <div className="relative">
             <input
               type="text"
-              YOUR_API_KEY="Rechercher certificat..."
+              placeholder="Rechercher certificat..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 w-64"
@@ -672,3 +672,4 @@ const DigitalCertificatesManager = ({ certificates = [], onCertificateAction }) 
 };
 
 export default DigitalCertificatesManager;
+

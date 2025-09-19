@@ -376,7 +376,7 @@ const CityPage = () => {
                         onValueChange={(value) => setRequestForm({...requestForm, preferredLocation: value})}
                       >
                         <SelectTrigger>
-                          <SelectValue YOUR_API_KEY="Sélectionnez une zone" />
+                          <SelectValue placeholder="Sélectionnez une zone" />
                         </SelectTrigger>
                         <SelectContent>
                           {city.availableZones.map((zone, index) => (
@@ -394,7 +394,7 @@ const CityPage = () => {
                           onValueChange={(value) => setRequestForm({...requestForm, budgetRange: value})}
                         >
                           <SelectTrigger>
-                            <SelectValue YOUR_API_KEY="Budget" />
+                            <SelectValue placeholder="Budget" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="0-20M">0 - 20M</SelectItem>
@@ -411,7 +411,7 @@ const CityPage = () => {
                           onValueChange={(value) => setRequestForm({...requestForm, landSize: value})}
                         >
                           <SelectTrigger>
-                            <SelectValue YOUR_API_KEY="Superficie" />
+                            <SelectValue placeholder="Superficie" />
                           </SelectTrigger>
                           <SelectContent>
                             <SelectItem value="200-400">200-400 mÂ²</SelectItem>
@@ -430,7 +430,7 @@ const CityPage = () => {
                         onValueChange={(value) => setRequestForm({...requestForm, purpose: value})}
                       >
                         <SelectTrigger>
-                          <SelectValue YOUR_API_KEY="Type de projet" />
+                          <SelectValue placeholder="Type de projet" />
                         </SelectTrigger>
                         <SelectContent>
                           <SelectItem value="residence">Résidence principale</SelectItem>
@@ -448,7 +448,7 @@ const CityPage = () => {
                         value={requestForm.additionalInfo}
                         onChange={(e) => setRequestForm({...requestForm, additionalInfo: e.target.value})}
                         rows={3}
-                        YOUR_API_KEY="Détails spécifiques, délais souhaités..."
+                        placeholder="Détails spécifiques, délais souhaités..."
                       />
                     </div>
                     
@@ -527,3 +527,4 @@ const CityPage = () => {
 };
 
 export default CityPage;
+

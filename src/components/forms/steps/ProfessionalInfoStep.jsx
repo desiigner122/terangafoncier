@@ -60,7 +60,7 @@ const ProfessionalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               professionalErrors.company_name ? 'border-red-500' : 'border-gray-300'
             }`}
-            YOUR_API_KEY="Nom de votre entreprise"
+            placeholder="Nom de votre entreprise"
             required
           />
           {professionalErrors.company_name && (
@@ -81,7 +81,7 @@ const ProfessionalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
               professionalErrors.job_title ? 'border-red-500' : 'border-gray-300'
             }`}
-            YOUR_API_KEY="Votre titre ou fonction"
+            placeholder="Votre titre ou fonction"
             required
           />
           {professionalErrors.job_title && (
@@ -132,7 +132,7 @@ const ProfessionalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
               className={`w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 ${
                 professionalErrors.business_registration ? 'border-red-500' : 'border-gray-300'
               }`}
-              YOUR_API_KEY="Numéro RCCM ou équivalent"
+              placeholder="Numéro RCCM ou équivalent"
               required
             />
             {professionalErrors.business_registration && (
@@ -151,7 +151,7 @@ const ProfessionalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
             onChange={(e) => handleInputChange('professional_description', e.target.value)}
             rows={4}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            YOUR_API_KEY="Décrivez votre activité professionnelle, vos compétences, votre domaine d'expertise..."
+            placeholder="Décrivez votre activité professionnelle, vos compétences, votre domaine d'expertise..."
           />
           <p className="text-gray-500 text-xs mt-1">
             Cette description apparaîtra sur votre profil public
@@ -214,3 +214,4 @@ const ProfessionalInfoStep = ({ data, errors, onNext, isLoading, role }) => {
 };
 
 export default ProfessionalInfoStep;
+

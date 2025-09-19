@@ -63,19 +63,30 @@ import {
         ],
         'Particulier': [
           { isHeader: true, label: 'Mon Espace' },
-          { href: '/dashboard', label: 'Tableau de Bord', icon: LayoutDashboard, end: true },
+          { href: '/acheteur', label: 'Tableau de Bord', icon: LayoutDashboard, end: true },
           { href: '/my-requests', label: 'Mes Demandes', icon: FileText },
           { href: '/request-municipal-land', label: 'Demande Terrain Communal', icon: Building },
+          { isSeparator: true },
+          { isHeader: true, label: 'Acheter un Terrain' },
+          { href: '/parcelles-vendeurs', label: 'Marché des Vendeurs', icon: MapPin },
+          { href: '/buy/one-time', label: 'Paiement Comptant', icon: Banknote },
+          { href: '/buy/installments', label: 'Paiement échelonné', icon: TrendingUp },
+          { href: '/buy/bank-financing', label: 'Financement bancaire', icon: Banknote },
+          { isSeparator: true },
+          { isHeader: true, label: 'Acheter chez Promoteurs' },
+          { href: '/promoters-projects', label: 'Projets Promoteurs', icon: Building },
+          { href: '/promoters/purchase-units', label: 'Acheter Appart/Villa', icon: Home },
+          { href: '/promoters/payment-plans', label: 'Plan de paiement', icon: TrendingUp },
           { href: '/transactions', label: 'Mes Transactions', icon: Banknote },
           { href: '/digital-vault', label: 'Coffre-fort Numérique', icon: Gavel },
           { isSeparator: true },
           { isHeader: true, label: 'Interactions' },
           { href: '/messaging', label: 'Messagerie', icon: MessageSquare },
           { href: '/favorites', label: 'Mes Favoris', icon: Heart },
+          { href: '/saved-searches', label: 'Recherches sauvegardées', icon: FileText },
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Vendeur Particulier': [
@@ -92,7 +103,6 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         // Alias pour le rôle vendeur simple
@@ -110,7 +120,6 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Vendeur Pro': [
@@ -127,7 +136,6 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Mairie': [
@@ -145,7 +153,7 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Profil de la Mairie', icon: Users },
+          { href: '/settings', label: 'Paramètres', icon: Settings },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Agent Foncier': [
@@ -156,7 +164,6 @@ import {
           { href: '/agent/clients', label: 'Mes Clients', icon: Users },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Investisseur': [
@@ -173,7 +180,6 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Promoteur': [
@@ -188,7 +194,6 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Agriculteur': [
@@ -205,7 +210,6 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Banque': [
@@ -221,7 +225,6 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
         'Notaire': [
@@ -237,14 +240,12 @@ import {
           { href: '/notifications', label: 'Notifications', icon: Bell },
           { isSeparator: true },
           { isHeader: true, label: 'Mon Compte' },
-          { href: '/profile', label: 'Mon Profil', icon: Users },
           { href: '/settings', label: 'Paramètres', icon: Settings },
         ],
       };
 
       const baseConfig = [
         { href: '/dashboard', label: 'Vue d\'ensemble', icon: LayoutDashboard, end: true },
-        { href: '/profile', label: 'Mon Profil', icon: Users },
         { href: '/settings', label: 'Paramètres', icon: Settings },
       ];
 

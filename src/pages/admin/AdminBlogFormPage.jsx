@@ -138,12 +138,12 @@ const AdminBlogFormPage = () => {
                 <CardContent className="space-y-4">
                     <div className="space-y-2">
                         <Label htmlFor="slug">Slug (URL)</Label>
-                        <Input id="slug" name="slug" value={post.slug} onChange={handleChange} required YOUR_API_KEY="ex: mon-nouvel-article" />
+                        <Input id="slug" name="slug" value={post.slug} onChange={handleChange} required placeholder="ex: mon-nouvel-article" />
                     </div>
                     <div className="space-y-2">
                         <Label htmlFor="category">Catégorie</Label>
                         <Select onValueChange={handleCategoryChange} value={post.category}>
-                            <SelectTrigger id="category"><SelectValue YOUR_API_KEY="Choisir une catégorie" /></SelectTrigger>
+                            <SelectTrigger id="category"><SelectValue placeholder="Choisir une catégorie" /></SelectTrigger>
                             <SelectContent>
                                 {blogCategories.map(cat => <SelectItem key={cat} value={cat}>{cat}</SelectItem>)}
                             </SelectContent>
@@ -189,3 +189,4 @@ const AdminBlogFormPage = () => {
 };
 
 export default AdminBlogFormPage;
+

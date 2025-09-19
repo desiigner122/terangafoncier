@@ -148,7 +148,7 @@ export const getDefaultDashboard = (userRole) => {
     case ROLES.AGENT_FONCIER:
       return '/agent';
     case ROLES.PARTICULIER:
-      return '/dashboard';
+      return '/acheteur';
     case ROLES.VENDEUR_PARTICULIER:
     case ROLES.VENDEUR_PRO:
       return '/solutions/vendeur/dashboard';

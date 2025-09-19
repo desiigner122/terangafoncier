@@ -171,19 +171,19 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
                                  <>
                                     <div className="space-y-1"><Label>Région</Label>
                                         <Select onValueChange={(value) => handleSelectChange('region', value)} value={currentUser.region}>
-                                            <SelectTrigger><SelectValue YOUR_API_KEY="Choisir une région"/></SelectTrigger>
+                                            <SelectTrigger><SelectValue placeholder="Choisir une région"/></SelectTrigger>
                                             <SelectContent>{regionsOptions.map(r => <SelectItem key={r.value} value={r.value}>{r.label}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </div>
                                     {currentUser.region && <div className="space-y-1"><Label>Département</Label>
                                          <Select onValueChange={(value) => handleSelectChange('departement', value)} value={currentUser.departement} disabled={!departmentsOptions.length}>
-                                            <SelectTrigger><SelectValue YOUR_API_KEY="Choisir un département"/></SelectTrigger>
+                                            <SelectTrigger><SelectValue placeholder="Choisir un département"/></SelectTrigger>
                                             <SelectContent>{departmentsOptions.map(d => <SelectItem key={d.value} value={d.value}>{d.label}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </div>}
                                     {currentUser.departement && <div className="space-y-1"><Label>Commune</Label>
                                          <Select onValueChange={(value) => handleSelectChange('commune', value)} value={currentUser.commune} disabled={!communesOptions.length}>
-                                            <SelectTrigger><SelectValue YOUR_API_KEY="Choisir une commune"/></SelectTrigger>
+                                            <SelectTrigger><SelectValue placeholder="Choisir une commune"/></SelectTrigger>
                                             <SelectContent>{communesOptions.map(c => <SelectItem key={c.value} value={c.value}>{c.label}</SelectItem>)}</SelectContent>
                                         </Select>
                                     </div>}
@@ -191,7 +191,7 @@ const AddUserWizard = ({ isOpen, setIsOpen, onUserAdded }) => {
                             ) : roleSpecificFields[currentUser.role] && (
                                 <div className="space-y-1">
                                    <Label htmlFor="specificInfo">{roleSpecificFields[currentUser.role].label}</Label>
-                                   <Input id="specificInfo" name="specificInfo" value={currentUser.specificInfo} onChange={(e) => setCurrentUser(p => ({...p, specificInfo: e.target.value}))} YOUR_API_KEY={roleSpecificFields[currentUser.role].YOUR_API_KEY}/>
+                                   <Input id="specificInfo" name="specificInfo" value={currentUser.specificInfo} onChange={(e) => setCurrentUser(p => ({...p, specificInfo: e.target.value}))} placeholder={roleSpecificFields[currentUser.role].YOUR_API_KEY}/>
                                 </div>
                             )}
                         </div>
@@ -349,16 +349,16 @@ const AdminUsersPageFixed = () => {
             <Card className="mb-6">
                 <CardHeader><CardTitle>Filtres de recherche</CardTitle></CardHeader>
                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <div className="relative"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input type="search" YOUR_API_KEY="Rechercher par nom, email..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/></div>
+                    <div className="relative"><Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" /><Input type="search" placeholder="Rechercher par nom, email..." className="pl-8 w-full" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)}/></div>
                     <Select value={roleFilter} onValueChange={setRoleFilter}>
-                        <SelectTrigger><SelectValue YOUR_API_KEY="Filtrer par rôle" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Filtrer par rôle" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Tous les rôles</SelectItem>
                             {[...new Set(users.map(u => u.role))].sort().map(role => <SelectItem key={role} value={role}>{role}</SelectItem>)}
                         </SelectContent>
                     </Select>
                     <Select value={statusFilter} onValueChange={setStatusFilter}>
-                        <SelectTrigger><SelectValue YOUR_API_KEY="Filtrer par statut" /></SelectTrigger>
+                        <SelectTrigger><SelectValue placeholder="Filtrer par statut" /></SelectTrigger>
                         <SelectContent>
                             <SelectItem value="all">Tous les statuts</SelectItem>
                             <SelectItem value="verified">Vérifié</SelectItem>
@@ -448,3 +448,4 @@ const AdminUsersPageFixed = () => {
 };
 
 export default AdminUsersPageFixed;
+

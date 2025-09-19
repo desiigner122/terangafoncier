@@ -220,7 +220,7 @@ export const terangaClasses = {
   
   // Formulaires
   inputDefault: 'w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors',
-  inputBlockchain: 'w-full px-4 py-3 bg-white/10 border border-white/20 text-white YOUR_API_KEY-white/50 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-colors'
+  inputBlockchain: 'w-full px-4 py-3 bg-white/10 border border-white/20 text-white placeholder-white/50 rounded-lg focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-colors'
 };
 
 // Fonction helper pour générer des classes dynamiques

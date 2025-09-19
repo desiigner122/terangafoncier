@@ -182,7 +182,7 @@ const ModernLoginPage = () => {
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    YOUR_API_KEY="votre@email.com"
+                    placeholder="votre@email.com"
                     className="h-11 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                     required
                     disabled={loading}
@@ -199,7 +199,7 @@ const ModernLoginPage = () => {
                       type={showPassword ? "text" : "password"}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
-                      YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                      placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                       className="h-11 pr-10 border-gray-300 focus:border-blue-500 focus:ring-blue-500"
                       required
                       disabled={loading}
@@ -296,6 +296,7 @@ const ModernLoginPage = () => {
 };
 
 export default ModernLoginPage;
+
 
 
 

@@ -134,7 +134,7 @@ const MessagesPage = () => {
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                 <Input
                   type="text"
-                  YOUR_API_KEY="Rechercher une conversation..."
+                  placeholder="Rechercher une conversation..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
@@ -271,7 +271,7 @@ const MessagesPage = () => {
                     <div className="flex-1 relative">
                       <Input
                         type="text"
-                        YOUR_API_KEY="Tapez votre message..."
+                        placeholder="Tapez votre message..."
                         value={messageText}
                         onChange={(e) => setMessageText(e.target.value)}
                         onKeyPress={(e) => {
@@ -317,3 +317,4 @@ const MessagesPage = () => {
 };
 
 export default MessagesPage;
+

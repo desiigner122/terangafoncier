@@ -152,21 +152,21 @@ const PromoterProjectsPage = () => {
         apartment_types: [
           {
             type: 'T2',
-            surface: '65mÂ²',
+            surface: '65m²',
             price: 45000000,
             available: 6,
             description: '2 pièces avec balcon vue mer'
           },
           {
             type: 'T3',
-            surface: '85mÂ²', 
+            surface: '85m²', 
             price: 62000000,
             available: 8,
             description: '3 pièces avec terrasse'
           },
           {
             type: 'T4',
-            surface: '110mÂ²',
+            surface: '110m²',
             price: 85000000,
             available: 4,
             description: '4 pièces duplex avec vue panoramique'
@@ -255,21 +255,21 @@ const PromoterProjectsPage = () => {
         villa_types: [
           {
             type: 'Villa R+0',
-            surface: '120mÂ² sur 200mÂ²',
+            surface: '120m² sur 200m²',
             price: 35000000,
             available: 20,
             description: '3 chambres, salon, cuisine, terrasse'
           },
           {
             type: 'Villa R+1',
-            surface: '180mÂ² sur 300mÂ²',
+            surface: '180m² sur 300m²',
             price: 55000000,
             available: 15,
             description: '4 chambres, double salon, cuisine équipée'
           },
           {
             type: 'Villa Premium',
-            surface: '250mÂ² sur 400mÂ²',
+            surface: '250m² sur 400m²',
             price: 75000000,
             available: 10,
             description: '5 chambres, piscine, garage 2 voitures'
@@ -315,7 +315,7 @@ const PromoterProjectsPage = () => {
         construction_timeline: {
           phases: [
             { 
-              name: 'Gros Å“uvre', 
+              name: 'Gros œuvre', 
               duration: '5 mois', 
               status: 'completed', 
               start_date: '2024-03-01',
@@ -323,7 +323,7 @@ const PromoterProjectsPage = () => {
               progress: 100 
             },
             { 
-              name: 'Second Å“uvre', 
+              name: 'Second œuvre', 
               duration: '4 mois', 
               status: 'in_progress', 
               start_date: '2024-08-01',
@@ -351,7 +351,7 @@ const PromoterProjectsPage = () => {
         office_types: [
           {
             type: 'Bureau standard',
-            surface: '45mÂ²',
+            surface: '45m²',
             price: 55000000,
             available: 8,
             description: 'Open space avec kitchenette'
@@ -364,7 +364,7 @@ const PromoterProjectsPage = () => {
             description: 'Bureaux cloisonnés, salle de réunion'
           }
         ],
-        description: 'Immeuble de bureaux moderne au cÅ“ur du quartier des affaires. Idéal pour sièges sociaux et bureaux de direction. Rendement locatif garanti.',
+  description: 'Immeuble de bureaux moderne au cœur du quartier des affaires. Idéal pour sièges sociaux et bureaux de direction. Rendement locatif garanti.',
         delivery_guarantee: true,
         insurance_coverage: true
       }
@@ -414,7 +414,7 @@ const PromoterProjectsPage = () => {
     switch (status) {
       case 'Pré-commercialisation': return 'bg-blue-100 text-blue-800';
       case 'En construction': return 'bg-yellow-100 text-yellow-800';
-      case 'Prêt Ï  livrer': return 'bg-green-100 text-green-800';
+  case 'Prêt à livrer': return 'bg-green-100 text-green-800';
       case 'Livré': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
@@ -496,7 +496,7 @@ const PromoterProjectsPage = () => {
           </div>
           {project.price_range.max > project.price_range.min && (
             <div className="text-sm text-gray-500">
-              jusqu'Ï  {formatPrice(project.price_range.max)}
+              jusqu'à {formatPrice(project.price_range.max)}
             </div>
           )}
         </div>
@@ -534,6 +534,23 @@ const PromoterProjectsPage = () => {
             <Share2 className="w-4 h-4" />
           </Button>
         </div>
+        {/* Buyer flow CTAs */}
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <Button
+            variant="outline"
+            onClick={() => navigate('/promoters/purchase-units')}
+          >
+            <ShoppingCart className="w-4 h-4 mr-2" />
+            Acheter logement
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => navigate('/promoters/payment-plans')}
+          >
+            <CreditCard className="w-4 h-4 mr-2" />
+            Plan de paiement
+          </Button>
+        </div>
       </div>
     </motion.div>
   );
@@ -542,7 +559,7 @@ const PromoterProjectsPage = () => {
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
       <Helmet>
         <title>Projets Immobiliers des Promoteurs | Teranga Foncier</title>
-        <meta name="description" content="Découvrez les projets immobiliers en cours et Ï  venir des promoteurs partenaires. Précommandez votre appartement ou villa en construction." />
+  <meta name="description" content="Découvrez les projets immobiliers en cours et à venir des promoteurs partenaires. Précommandez votre appartement ou villa en construction." />
       </Helmet>
 
       {/* Header */}
@@ -587,7 +604,7 @@ const PromoterProjectsPage = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input 
-                      YOUR_API_KEY="Projet, promoteur, ville..."
+                      placeholder="Projet, promoteur, ville..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -600,7 +617,7 @@ const PromoterProjectsPage = () => {
                   <label className="block text-sm font-medium mb-2">Type de projet</label>
                   <Select value={selectedType} onValueChange={setSelectedType}>
                     <SelectTrigger>
-                      <SelectValue YOUR_API_KEY="Tous les types" />
+                      <SelectValue placeholder="Tous les types" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les types</SelectItem>
@@ -616,13 +633,13 @@ const PromoterProjectsPage = () => {
                   <label className="block text-sm font-medium mb-2">Statut</label>
                   <Select value={selectedStatus} onValueChange={setSelectedStatus}>
                     <SelectTrigger>
-                      <SelectValue YOUR_API_KEY="Tous les statuts" />
+                      <SelectValue placeholder="Tous les statuts" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les statuts</SelectItem>
                       <SelectItem value="Pré-commercialisation">Pré-commercialisation</SelectItem>
                       <SelectItem value="En construction">En construction</SelectItem>
-                      <SelectItem value="Prêt Ï  livrer">Prêt Ï  livrer</SelectItem>
+                      <SelectItem value="Prêt à livrer">Prêt à livrer</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -632,7 +649,7 @@ const PromoterProjectsPage = () => {
                   <label className="block text-sm font-medium mb-2">Région</label>
                   <Select value={selectedRegion} onValueChange={setSelectedRegion}>
                     <SelectTrigger>
-                      <SelectValue YOUR_API_KEY="Toutes les régions" />
+                      <SelectValue placeholder="Toutes les régions" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Toutes les régions</SelectItem>
@@ -695,4 +712,5 @@ const PromoterProjectsPage = () => {
 };
 
 export default PromoterProjectsPage;
+
 

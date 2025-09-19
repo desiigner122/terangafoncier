@@ -237,7 +237,7 @@ const MunicipalRequestsPage = () => {
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
                     <Input
-                      YOUR_API_KEY="ID, type, commune..."
+                      placeholder="ID, type, commune..."
                       value={searchTerm}
                       onChange={(e) => setSearchTerm(e.target.value)}
                       className="pl-10"
@@ -250,7 +250,7 @@ const MunicipalRequestsPage = () => {
                   <label className="text-sm font-medium text-gray-700">Statut</label>
                   <Select value={statusFilter} onValueChange={setStatusFilter}>
                     <SelectTrigger>
-                      <SelectValue YOUR_API_KEY="Tous les statuts" />
+                      <SelectValue placeholder="Tous les statuts" />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">Tous les statuts</SelectItem>
@@ -528,3 +528,4 @@ const MunicipalRequestsPage = () => {
 };
 
 export default MunicipalRequestsPage;
+

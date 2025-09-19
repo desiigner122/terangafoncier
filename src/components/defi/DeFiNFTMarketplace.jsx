@@ -414,7 +414,7 @@ const DeFiNFTMarketplace = () => {
                           value={swapForm.fromAmount}
                           onChange={(e) => handleSwapAmountChange(e.target.value, 'fromAmount')}
                           className="bg-transparent border-0 text-xl font-bold p-0 focus:ring-0"
-                          YOUR_API_KEY="0.0"
+                          placeholder="0.0"
                         />
                         <Button 
                           variant="outline" 
@@ -456,7 +456,7 @@ const DeFiNFTMarketplace = () => {
                           value={swapForm.toAmount}
                           onChange={(e) => handleSwapAmountChange(e.target.value, 'toAmount')}
                           className="bg-transparent border-0 text-xl font-bold p-0 focus:ring-0"
-                          YOUR_API_KEY="0.0"
+                          placeholder="0.0"
                         />
                         <Button 
                           variant="outline" 
@@ -581,7 +581,7 @@ const DeFiNFTMarketplace = () => {
                         value={liquidityForm.amountA}
                         onChange={(e) => setLiquidityForm(prev => ({ ...prev, amountA: e.target.value }))}
                         className="bg-white/10 border-white/20 text-white"
-                        YOUR_API_KEY="0.0"
+                        placeholder="0.0"
                       />
                       <div className="text-xs text-gray-400 mt-1">Balance: 8,456.78 TERANGA</div>
                     </div>
@@ -594,7 +594,7 @@ const DeFiNFTMarketplace = () => {
                         value={liquidityForm.amountB}
                         onChange={(e) => setLiquidityForm(prev => ({ ...prev, amountB: e.target.value }))}
                         className="bg-white/10 border-white/20 text-white"
-                        YOUR_API_KEY="0.0"
+                        placeholder="0.0"
                       />
                       <div className="text-xs text-gray-400 mt-1">Balance: 1,250.50 MATIC</div>
                     </div>
@@ -743,7 +743,7 @@ const DeFiNFTMarketplace = () => {
                       <div className="space-y-2">
                         <Input
                           type="number"
-                          YOUR_API_KEY="Montant Ï  staker"
+                          placeholder="Montant Ï  staker"
                           className="bg-white/10 border-white/20 text-white"
                           id={`stake-${pool.id}`}
                         />
@@ -896,3 +896,4 @@ const DeFiNFTMarketplace = () => {
 };
 
 export default DeFiNFTMarketplace;
+

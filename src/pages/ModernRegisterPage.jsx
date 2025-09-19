@@ -248,7 +248,7 @@ const ModernRegisterPage = () => {
                                         <Input
                                             id="fullName"
                                             type="text"
-                                            YOUR_API_KEY="Votre nom complet"
+                                            placeholder="Votre nom complet"
                                             required
                                             value={fullName}
                                             onChange={(e) => setFullName(e.target.value)}
@@ -262,7 +262,7 @@ const ModernRegisterPage = () => {
                                         <Input
                                             id="email"
                                             type="email"
-                                            YOUR_API_KEY="nom@exemple.com"
+                                            placeholder="nom@exemple.com"
                                             required
                                             value={email}
                                             onChange={(e) => setEmail(e.target.value)}
@@ -275,7 +275,7 @@ const ModernRegisterPage = () => {
                                         <Label htmlFor="userType" className="text-gray-700">Type de compte</Label>
                                         <Select value={userType} onValueChange={setUserType} required>
                                             <SelectTrigger className="h-12 border-gray-200 focus:border-emerald-500">
-                                                <SelectValue YOUR_API_KEY="Sélectionnez votre profil" />
+                                                <SelectValue placeholder="Sélectionnez votre profil" />
                                             </SelectTrigger>
                                             <SelectContent>
                                                 {roleOptions.map((role) => (
@@ -299,7 +299,7 @@ const ModernRegisterPage = () => {
                                             <Input
                                                 id="password"
                                                 type={showPassword ? "text" : "password"}
-                                                YOUR_API_KEY="Minimum 6 caractères"
+                                                placeholder="Minimum 6 caractères"
                                                 required
                                                 value={password}
                                                 onChange={(e) => setPassword(e.target.value)}
@@ -322,7 +322,7 @@ const ModernRegisterPage = () => {
                                             <Input
                                                 id="confirmPassword"
                                                 type={showConfirmPassword ? "text" : "password"}
-                                                YOUR_API_KEY="Confirmez votre mot de passe"
+                                                placeholder="Confirmez votre mot de passe"
                                                 required
                                                 value={confirmPassword}
                                                 onChange={(e) => setConfirmPassword(e.target.value)}
@@ -442,3 +442,4 @@ const ModernRegisterPage = () => {
 };
 
 export default ModernRegisterPage;
+

@@ -672,13 +672,13 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
                 <div className="space-y-4">
                   <div>
                     <Label className="text-sm">Apport initial (30% min.)</Label>
-                    <Input type="number" YOUR_API_KEY="37 500 000" className="mt-1" />
+                    <Input type="number" placeholder="37 500 000" className="mt-1" />
                   </div>
                   <div>
                     <Label className="text-sm">Durée (années)</Label>
                     <Select>
                       <SelectTrigger>
-                        <SelectValue YOUR_API_KEY="Choisir" />
+                        <SelectValue placeholder="Choisir" />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="10">10 ans</SelectItem>
@@ -710,9 +710,9 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
           <div className="bg-white p-6 rounded-lg max-w-md w-full mx-4">
             <h3 className="text-lg font-bold mb-4">Contacter le Vendeur</h3>
             <div className="space-y-4">
-              <Input YOUR_API_KEY="Votre nom" />
-              <Input YOUR_API_KEY="Email" type="email" />
-              <Textarea YOUR_API_KEY="Votre message..." rows={4} />
+              <Input placeholder="Votre nom" />
+              <Input placeholder="Email" type="email" />
+              <Textarea placeholder="Votre message..." rows={4} />
               <div className="flex space-x-3">
                 <Button className="flex-1">Envoyer</Button>
                 <Button variant="outline" onClick={() => setShowContactModal(false)}>Annuler</Button>
@@ -726,3 +726,4 @@ Notre intelligence artificielle recommande fortement cet investissement avec un 
 };
 
 export default ParcelleDetailPageBlockchain;
+

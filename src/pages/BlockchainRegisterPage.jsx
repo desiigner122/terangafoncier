@@ -174,7 +174,7 @@ const BlockchainRegisterPage = () => {
                     value={formData.firstName}
                     onChange={handleInputChange}
                     className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                    YOUR_API_KEY="Votre prénom"
+                    placeholder="Votre prénom"
                     required
                   />
                 </div>
@@ -190,7 +190,7 @@ const BlockchainRegisterPage = () => {
                     value={formData.lastName}
                     onChange={handleInputChange}
                     className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                    YOUR_API_KEY="Votre nom"
+                    placeholder="Votre nom"
                     required
                   />
                 </div>
@@ -208,7 +208,7 @@ const BlockchainRegisterPage = () => {
                   value={formData.email}
                   onChange={handleInputChange}
                   className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                  YOUR_API_KEY="votre@email.com"
+                  placeholder="votre@email.com"
                   required
                 />
               </div>
@@ -224,7 +224,7 @@ const BlockchainRegisterPage = () => {
                   value={formData.phone}
                   onChange={handleInputChange}
                   className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                  YOUR_API_KEY="+221 XX XXX XX XX"
+                  placeholder="+221 XX XXX XX XX"
                   required
                 />
               </div>
@@ -269,7 +269,7 @@ const BlockchainRegisterPage = () => {
               <Label className="text-white/90">Localisation</Label>
               <Select value={formData.location} onValueChange={(value) => handleSelectChange('location', value)}>
                 <SelectTrigger className="bg-white/10 border-white/20 text-white">
-                  <SelectValue YOUR_API_KEY="Sélectionnez votre région" />
+                  <SelectValue placeholder="Sélectionnez votre région" />
                 </SelectTrigger>
                 <SelectContent>
                   {senegalRegions.map((region) => (
@@ -300,7 +300,7 @@ const BlockchainRegisterPage = () => {
                   value={formData.password}
                   onChange={handleInputChange}
                   className="pl-10 pr-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                  YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   required
                 />
                 <button
@@ -343,7 +343,7 @@ const BlockchainRegisterPage = () => {
                   value={formData.confirmPassword}
                   onChange={handleInputChange}
                   className="pl-10 pr-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                  YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                  placeholder="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
                   required
                 />
                 <button
@@ -636,5 +636,6 @@ const BlockchainRegisterPage = () => {
 };
 
 export default BlockchainRegisterPage;
+
 
 

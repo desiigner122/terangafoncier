@@ -330,7 +330,7 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
                 <Input
                   value={currentMessage}
                   onChange={(e) => setCurrentMessage(e.target.value)}
-                  YOUR_API_KEY="Posez votre question..."
+                  placeholder="Posez votre question..."
                   onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                   className="flex-1"
                 />
@@ -501,3 +501,4 @@ const GlobalAIAssistant = ({ currentPage, currentData, userProfile }) => {
 };
 
 export default GlobalAIAssistant;
+

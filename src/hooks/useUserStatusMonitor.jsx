@@ -1,5 +1,5 @@
 ﻿import { useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import userStatusManager from '@/lib/userStatusManager';
 // useToast import supprimé - utilisation window.safeGlobalToast
@@ -84,7 +84,7 @@ export const useUserStatusMonitor = () => {
     };
 
     checkCurrentStatus();
-  }, [user?.id, toast, signOut, navigate]);
+  }, [user?.id, signOut, navigate]);
 
   return {
     isMonitoring: userStatusManager.isListening

@@ -479,7 +479,7 @@ const TerangaChatbot = ({ dashboardData = {}, context = {} }) => {
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   onKeyPress={handleKeyPress}
-                  YOUR_API_KEY="Tapez votre message..."
+                  placeholder="Tapez votre message..."
                   className="pr-20"
                   disabled={isLoading}
                 />

@@ -39,7 +39,7 @@ import {
   PieChart as RechartsPieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { supabase } from '@/lib/supabase';
 
 const NotaireDashboard = () => {
@@ -680,3 +680,4 @@ const NotaireDashboard = () => {
 };
 
 export default NotaireDashboard;
+

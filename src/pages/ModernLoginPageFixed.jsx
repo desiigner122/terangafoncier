@@ -21,7 +21,7 @@ import {
   Globe,
   Zap
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const logoUrl = "/images/logo.png";
 
@@ -296,5 +296,6 @@ const ModernLoginPage = () => {
 };
 
 export default ModernLoginPage;
+
 
 

@@ -21,10 +21,11 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
     return <Navigate to="/login" replace />;
   }
 
-  // Pour Supabase, on récupère le rôle depuis les métadonnées
-  const userRole = user.user_metadata?.role;
+  // Pour Supabase, on récupère le rôle depuis les métadonnées et on normalise
+  const userRole = user.user_metadata?.role?.toLowerCase();
   
   if (allowedRoles && !allowedRoles.includes(userRole)) {
+    console.log('❌ Accès refusé - Rôle:', userRole, 'Rôles autorisés:', allowedRoles);
     return <Navigate to="/unauthorized" replace />;
   }
 
@@ -34,6 +35,9 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
 // Role-based Dashboard Selector
 const DashboardSelector = () => {
   const { user } = useAuth();
+
+  // Normaliser le rôle en minuscules pour la correspondance
+  const userRole = user?.user_metadata?.role?.toLowerCase();
 
   const dashboardMap = {
     'particulier': <ParticulierDashboard />,
@@ -47,7 +51,10 @@ const DashboardSelector = () => {
     'banque': <BanqueDashboard />
   };
 
-  return dashboardMap[user?.role] || <Navigate to="/select-role" replace />;
+  console.log('🎯 Sélecteur Dashboard - Rôle utilisateur:', userRole);
+  console.log('🎯 Dashboard trouvé:', !!dashboardMap[userRole]);
+
+  return dashboardMap[userRole] || <Navigate to="/select-role" replace />;
 };
 
 const DashboardRoutes = () => {

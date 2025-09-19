@@ -13,7 +13,7 @@ import {
   ShieldCheck, 
   LogOut
 } from 'lucide-react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { avatarManager } from '@/lib/avatarManager';
@@ -394,3 +394,4 @@ const ProfilePageFixed = () => {
 };
 
 export default ProfilePageFixed;
+

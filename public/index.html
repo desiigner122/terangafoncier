@@ -1,15 +1,15 @@
-﻿<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="fr-SN">
-<head>            console.log('❌ SW registration failed: ', registrationError);           console.log('❌ SW registration failed: ', registrationError);
+<head>
   <meta charset="utf-8" />
-  <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+  <link rel="icon" href="/favicon.ico" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="theme-color" content="#e67e22" />
   <meta name="description" content="Plateforme immobilière intelligente avec blockchain et IA pour le Sénégal" />
   
   <!-- PWA Meta Tags -->
-  <link rel="apple-touch-icon" href="%PUBLIC_URL%/icon-192x192.png" />
-  <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
+  <link rel="apple-touch-icon" href="/icon-192x192.png" />
+  <link rel="manifest" href="/manifest.json" />
   
   <!-- Préchargement des ressources critiques -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -20,14 +20,14 @@
   <!-- Meta tags pour SEO et réseaux sociaux -->
   <meta property="og:title" content="Teranga Foncier - Plateforme Immobilière Intelligente" />
   <meta property="og:description" content="Découvrez des propriétés au Sénégal avec notre plateforme alimentée par l'IA et sécurisée par la blockchain" />
-  <meta property="og:image" content="%PUBLIC_URL%/social-preview.png" />
+  <meta property="og:image" content="/social-preview.png" />
   <meta property="og:url" content="https://teranga-foncier.com" />
   <meta property="og:type" content="website" />
   
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Teranga Foncier - Plateforme Immobilière IA" />
   <meta name="twitter:description" content="Trouvez votre propriété idéale avec l'intelligence artificielle" />
-  <meta name="twitter:image" content="%PUBLIC_URL%/social-preview.png" />
+  <meta name="twitter:image" content="/social-preview.png" />
 </head>
 <body>
   <noscript>Vous devez activer JavaScript pour utiliser cette application.</noscript>
@@ -42,7 +42,7 @@
             console.log('✅ SW registered: ', registration);
           })
           .catch((registrationError) => {
-            console.log('âŒ SW registration failed: ', registrationError);
+            console.log('❌ SW registration failed: ', registrationError);
           });
       });
     }

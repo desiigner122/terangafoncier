@@ -11,7 +11,7 @@ import {
   UserCheck, 
   Ban
 } from 'lucide-react';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Can } from '@/components/auth/RoleBasedGuard';
 
 const SellPropertyPage = () => {
@@ -126,6 +126,7 @@ const SellPropertyPage = () => {
 };
 
 export default SellPropertyPage;
+
 
 
 

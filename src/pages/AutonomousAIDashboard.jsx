@@ -1,4 +1,4 @@
-/**
+﻿/**
  * 🧠 DASHBOARD IA AUTONOME UNIVERSEL
  * Interface unique adaptée à tous les rôles (Particuliers, Banques, Vendeurs, etc.)
  * L'IA gère tout automatiquement et fournit des insights personnalisés
@@ -34,7 +34,7 @@ import {
   Rocket
 } from 'lucide-react';
 import { autonomousAI } from '@/services/AutonomousAIService';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { 
   LineChart as RechartsLine, 
   Line, 
@@ -767,3 +767,4 @@ const AutonomousAIDashboard = () => {
 };
 
 export default AutonomousAIDashboard;
+

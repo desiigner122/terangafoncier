@@ -22,7 +22,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Helmet } from 'react-helmet-async';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const AdminLoginPage = () => {
   const navigate = useNavigate();
@@ -407,5 +407,6 @@ const AdminLoginPage = () => {
 };
 
 export default AdminLoginPage;
+
 
 

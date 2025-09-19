@@ -9,7 +9,7 @@ import {
   FileSignature
 } from 'lucide-react';
 // useToast import supprimé - utilisation window.safeGlobalToast
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const ParcelActionsCard = ({ parcel, onInstallmentClick }) => {
   // toast remplacé par window.safeGlobalToast
@@ -63,3 +63,4 @@ const ParcelActionsCard = ({ parcel, onInstallmentClick }) => {
 };
 
 export default ParcelActionsCard;
+

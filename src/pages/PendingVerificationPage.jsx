@@ -3,7 +3,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { 
   Clock, 
   Mail
@@ -54,6 +54,7 @@ const PendingVerificationPage = () => {
 };
 
 export default PendingVerificationPage;
+
 
 
 

@@ -12,7 +12,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -138,6 +138,7 @@ const TransactionsPage = () => {
 };
 
 export default TransactionsPage;
+
 
 
 

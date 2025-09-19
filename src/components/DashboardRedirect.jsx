@@ -20,13 +20,16 @@ const DashboardRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Récupérer le rôle depuis les métadonnées utilisateur
-  const userRole = user.user_metadata?.role;
+  // Récupérer le rôle depuis les métadonnées utilisateur et le normaliser
+  const userRole = user.user_metadata?.role?.toLowerCase();
+  
+  console.log('🎯 DashboardRedirect - Rôle utilisateur:', user.user_metadata?.role, '→ normalisé:', userRole);
   
   // Redirection basée sur le rôle
   switch (userRole) {
     case 'admin':
       return <Navigate to="/admin" replace />;
+    case 'particulier':
     case 'particular':
       return <Navigate to="/particulier" replace />;
     case 'vendeur':
@@ -44,14 +47,16 @@ const DashboardRedirect = () => {
     case 'banque':
       return <Navigate to="/banque" replace />;
     case 'agent_foncier':
+    case 'agent foncier':
       return <Navigate to="/agent-foncier" replace />;
     case 'lotisseur':
       return <Navigate to="/lotisseur" replace />;
     case 'mairie':
       return <Navigate to="/mairie" replace />;
     default:
-      // Si aucun rôle valide, rediriger vers admin par défaut
-      return <Navigate to="/admin" replace />;
+      console.warn('⚠️ Rôle non reconnu:', userRole, '- Redirection vers sélection de rôle');
+      // Si aucun rôle valide, rediriger vers sélection de rôle
+      return <Navigate to="/select-role" replace />;
   }
 };
 

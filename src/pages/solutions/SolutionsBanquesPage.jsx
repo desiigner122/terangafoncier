@@ -14,7 +14,7 @@ import {
   Coins
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Helmet } from 'react-helmet-async';
 
 const SolutionsBanquesPage = () => {
@@ -168,5 +168,6 @@ const SolutionsBanquesPage = () => {
 };
 
 export default SolutionsBanquesPage;
+
 
 

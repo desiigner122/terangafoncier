@@ -2,7 +2,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { 
   Plus,
   Building2, 
@@ -983,3 +983,4 @@ const RequestCard = ({ request, index, viewMode, isFavorite, onToggleFavorite, o
 };
 
 export default PromoterConstructionRequestsPage;
+

@@ -1,7 +1,7 @@
 ﻿
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -193,6 +193,7 @@ const VerificationPage = () => {
 };
 
 export default VerificationPage;
+
 
 
 

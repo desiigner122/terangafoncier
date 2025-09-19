@@ -13,7 +13,7 @@ import React, { useState, useEffect } from 'react';
   Trash2, 
   Globe
 } from 'lucide-react';
-    import { useAuth } from '@/contexts/AuthProvider';
+    import { useAuth } from '@/contexts/TempSupabaseAuthContext';
     import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
     import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
     import { Link } from 'react-router-dom';
@@ -246,6 +246,7 @@ import React, { useState, useEffect } from 'react';
     };
 
     export default SettingsPage;
+
 
 
 

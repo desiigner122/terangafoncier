@@ -1,4 +1,4 @@
-﻿import { useAuth } from '@/contexts/AuthProvider';
+﻿import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 /**
  * Hook to get current user information
@@ -16,5 +16,6 @@ export const useUser = () => {
     isAuthenticated: !!user
   };
 };
+
 
 

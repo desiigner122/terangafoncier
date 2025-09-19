@@ -1,4 +1,4 @@
-﻿import { useAuth } from '@/contexts/AuthProvider';
+﻿import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 /**
  * Hook pour accéder aux données utilisateur avec protection contre les boucles
@@ -20,5 +20,6 @@ export const useUser = () => {
     isRevalidating: context.isRevalidating
   };
 };
+
 
 

@@ -141,8 +141,8 @@ const BlockchainLoginPage = () => {
                         type="email"
                         value={formData.email}
                         onChange={handleInputChange}
-                        className="pl-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                        YOUR_API_KEY="votre@email.com"
+                        className="pl-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
+                        placeholder="votre@email.com"
                         required
                       />
                     </div>
@@ -158,8 +158,8 @@ const BlockchainLoginPage = () => {
                         type={showPassword ? 'text' : 'password'}
                         value={formData.password}
                         onChange={handleInputChange}
-                        className="pl-10 pr-10 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                        YOUR_API_KEY="â€¢â€¢â€¢â€¢â€¢â€¢â€¢â€¢"
+                        className="pl-10 pr-10 bg-white/10 border-white/20 text-white placeholder:text-white/50 focus:border-blue-400"
+                        placeholder="••••••••"
                         required
                       />
                       <button

@@ -31,7 +31,7 @@ import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { useAuth } from '@/contexts/AuthProvider';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Helmet } from 'react-helmet-async';
 
 const BlockchainRegisterPage = () => {
@@ -636,4 +636,5 @@ const BlockchainRegisterPage = () => {
 };
 
 export default BlockchainRegisterPage;
+
 

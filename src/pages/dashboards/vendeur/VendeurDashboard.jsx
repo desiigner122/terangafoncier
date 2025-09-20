@@ -32,7 +32,6 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 
@@ -158,21 +157,36 @@ const VendeurDashboard = () => {
   }
 
   return (
-    <DashboardLayout
-      title="Espace Vendeur"
-      subtitle="Gestion de vos biens immobiliers"
-      userRole="Vendeur"
-      stats={stats}
-    >
-      <div className="space-y-6">
-        {/* Widgets IA & Blockchain */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <AIAssistantWidget userRole="Vendeur" dashboardData={dashboardData} />
-          <BlockchainWidget userRole="Vendeur" />
+    <div className="space-y-6">
+      {/* En-tête du Dashboard */}
+      <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg p-6">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Espace Vendeur</h1>
+            <p className="text-white/90 text-lg">Gestion de vos biens immobiliers</p>
+            <Badge variant="secondary" className="mt-3 bg-white/20 text-white border-white/30">
+              Vendeur Particulier
+            </Badge>
+          </div>
+          <div className="hidden md:flex items-center space-x-8">
+            {stats.map((stat, index) => (
+              <div key={index} className="text-center">
+                <div className="text-2xl font-bold">{stat.value}</div>
+                <div className="text-white/80 text-sm">{stat.label}</div>
+              </div>
+            ))}
+          </div>
         </div>
+      </div>
 
-        {/* Status & Alerts */}
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      {/* Widgets IA & Blockchain */}
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
+        <AIAssistantWidget userRole="Vendeur" dashboardData={dashboardData} />
+        <BlockchainWidget userRole="Vendeur" />
+      </div>
+
+      {/* Status & Alerts */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           {/* Verification Status */}
           <Card>
             <CardContent className="p-4">
@@ -238,8 +252,8 @@ const VendeurDashboard = () => {
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+      {/* Main Content Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
           <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
             <TabsTrigger value="properties">Mes Biens</TabsTrigger>
@@ -667,9 +681,9 @@ const VendeurDashboard = () => {
               </Card>
             </div>
           </TabsContent>
-        </Tabs>
+      </Tabs>
       </div>
-    </DashboardLayout>
+    </div>
   );
 };
 

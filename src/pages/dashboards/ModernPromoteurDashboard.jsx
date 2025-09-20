@@ -2,7 +2,6 @@
 import { motion } from 'framer-motion';
 import { Building, Building2, Users, PlusCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import DashboardHeaderWrapper from "@/components/common/DashboardHeaderWrapper";
 
 const ModernPromoteurDashboard = () => {
   const navigate = useNavigate();
@@ -25,15 +24,6 @@ const ModernPromoteurDashboard = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-emerald-50 to-emerald-100">
-      {/* Header unifié moderne */}
-      <DashboardHeaderWrapper 
-        userRole="Promoteur"
-        customActions={customActions}
-        showQuickActions={true}
-        showSearch={true}
-        enableNotifications={true}
-      />
-      
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

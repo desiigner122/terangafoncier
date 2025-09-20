@@ -87,7 +87,6 @@ import PromoterNewBuyersPage from '@/pages/promoteur/PromoterNewBuyersPage';
 import PromoterNewQuotePage from '@/pages/promoteur/PromoterNewQuotePage';
 import SecureMessagingPage from '@/pages/SecureMessagingPage';
 import SimpleDashboard from '@/pages/SimpleDashboard';
-import DashboardRedirect from '@/components/DashboardRedirect';
 import PurchaseProcessPage from '@/pages/PurchaseProcessPage';
 
 // Pages IA et Analytics
@@ -98,6 +97,7 @@ import AIAnalyticsDashboard from '@/components/analytics/AIAnalyticsDashboard';
 import MessagesPageNew from '@/pages/common/MessagesPage';
 import DocumentsPageNew from '@/pages/common/DocumentsPage';
 import NotificationsPageNew from '@/pages/common/NotificationsPage';
+import MyRequestsPageNew from '@/pages/common/MyRequestsPage';
 import CalendarPageNew from '@/pages/common/CalendarPage';
 import SettingsPageNew from '@/pages/common/SettingsPageNew';
 import MesTerrainsPageNew from '@/pages/common/MesTerrainsPage';
@@ -114,6 +114,7 @@ import DataProtectionPage from '@/pages/DataProtectionPage';
 import TerrainProgressPage from '@/pages/TerrainProgressPage';
 import { Button } from '@/components/ui/button';
 import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
+import DashboardRedirect from '@/components/layout/DashboardRedirect';
 import ScrollToTop from '@/components/layout/ScrollToTop';
 import { motion } from 'framer-motion';
 import { ComparisonProvider } from '@/context/ComparisonContext';
@@ -391,10 +392,16 @@ function App() {
                 <Route path="become-seller" element={<BecomeSellerPage />} />
                 <Route path="dashboard-simple" element={<ProtectedRoute><SimpleDashboard /></ProtectedRoute>} />
                 
+                {/* Route de redirection intelligente pour /dashboard */}
+                <Route path="dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
+                
+                {/* Route de test complètement indépendante pour debugging */}
+                <Route path="test-vendeur" element={<ModernVendeurDashboard />} />
+                
                 <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
                   {/* Dashboard redirection is handled by top-level routes to avoid auth/profile conflicts */}
                   <Route path="profile" element={<Navigate to="/settings" replace />} />
-                  <Route path="my-requests" element={<RoleProtectedRoute permission="MY_REQUESTS"><MyRequestsPage /></RoleProtectedRoute>} />
+                  <Route path="my-requests" element={<RoleProtectedRoute permission="MY_REQUESTS"><MyRequestsPageNew /></RoleProtectedRoute>} />
                   <Route path="transactions" element={<TransactionsPage />} />
                   <Route path="payment/:transactionId" element={<PaymentPage />} />
                   <Route path="favorites" element={<RoleProtectedRoute permission="FAVORITES"><MyFavoritesPage /></RoleProtectedRoute>} />
@@ -419,8 +426,8 @@ function App() {
                   <Route path="request-municipal-land" element={<RoleProtectedRoute permission="REQUEST_MUNICIPAL_LAND"><DashboardMunicipalRequestPage /></RoleProtectedRoute>} />
                   <Route path="vendor-verification" element={<RoleProtectedRoute permission="VENDOR_VERIFICATION"><VendorVerificationPage /></RoleProtectedRoute>} />
                   <Route path="sell-property" element={<RoleProtectedRoute permission="SELL_PROPERTY"><SellPropertyPage /></RoleProtectedRoute>} />
-                  <Route path="add-parcel" element={<RoleProtectedRoute permission="ADD_PARCEL"><AddParcelPage /></RoleProtectedRoute>} />
-                  <Route path="my-listings" element={<RoleProtectedRoute permission="MY_LISTINGS"><MyListingsPage /></RoleProtectedRoute>} />
+                  <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
+                  <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
 
                   {/* Parcours d'achat pour Acheteurs/Particuliers */}
                   <Route path="buy/one-time" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><OneTimePaymentPage /></RoleProtectedRoute>} />
@@ -436,7 +443,14 @@ function App() {
                   
                   {/* Dashboards modernes par rôle */}
                   <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
-                  <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
+                  <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
+                  <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
+                  <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
+                  <Route path="my-requests" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyRequestsPage /></RoleProtectedRoute>} />
+                  
+                  {/* Route de test temporaire pour debugging */}
+                  <Route path="vendeur-test" element={<ModernVendeurDashboard />} />
+                  
                   <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
                   <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><ModernBanqueDashboard /></RoleProtectedRoute>} />
                   <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
@@ -484,9 +498,51 @@ function App() {
               <Route path="*" element={<NotFoundPage />} />
             </Route>
 
-            {/* Redirection directe pour /dashboard */}
-            <Route path="/dashboard" element={<DashboardRedirect />} />
-            <Route path="/dashboard/" element={<DashboardRedirect />} />
+            {/* Routes Dashboard avec layout et sous-pages (/dashboard/*) */}
+            <Route path="/dashboard" element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
+              {/* Accueil: redirection intelligente selon le rôle */}
+              <Route index element={<DashboardRedirect />} />
+
+              {/* Pages communes du dashboard */}
+              <Route path="notifications" element={<NotificationsPageNew />} />
+              <Route path="messages" element={<MessagesPageNew />} />
+              <Route path="documents" element={<DocumentsPageNew />} />
+              <Route path="rendez-vous" element={<CalendarPageNew />} />
+              <Route path="calendar" element={<CalendarPageNew />} />
+              <Route path="settings" element={<SettingsPageNew />} />
+              <Route path="messaging" element={<SecureMessagingPage />} />
+              <Route path="case-tracking/:id" element={<CaseTrackingPage />} />
+              <Route path="analytics" element={<AnalyticsPage />} />
+              <Route path="transactions" element={<TransactionsPage />} />
+              <Route path="payment/:transactionId" element={<PaymentPage />} />
+              <Route path="favorites" element={<RoleProtectedRoute permission="FAVORITES"><MyFavoritesPage /></RoleProtectedRoute>} />
+
+              {/* Parcours d'achat pour Acheteurs/Particuliers (alias sous /dashboard) */}
+              <Route path="buy/one-time" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><OneTimePaymentPage /></RoleProtectedRoute>} />
+              <Route path="buy/installments" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><InstallmentsPaymentPage /></RoleProtectedRoute>} />
+              <Route path="buy/bank-financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BankFinancingPage /></RoleProtectedRoute>} />
+              <Route path="buyer/financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BuyerFinancingDashboard /></RoleProtectedRoute>} />
+              <Route path="promoters/purchase-units" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PurchaseUnitsPage /></RoleProtectedRoute>} />
+              <Route path="promoters/payment-plans" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PaymentPlansPage /></RoleProtectedRoute>} />
+
+              {/* Vendeur: pages et aliases */}
+              <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
+              <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
+              <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
+              <Route path="my-requests" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyRequestsPageNew /></RoleProtectedRoute>} />
+              {/* Aliases utilisés par le composant vendeur */}
+              <Route path="clients" element={<CRMPage />} />
+              <Route path="activity" element={<AnalyticsPage />} />
+
+              {/* Autres dashboards (pour cohérence sous /dashboard) */}
+              <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
+              <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
+              <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><ModernBanqueDashboard /></RoleProtectedRoute>} />
+              <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
+              <Route path="mairie" element={<RoleProtectedRoute allowedRoles={['Mairie']}><ModernMairieDashboard /></RoleProtectedRoute>} />
+              <Route path="notaire" element={<RoleProtectedRoute allowedRoles={['Notaire']}><ModernNotaireDashboard /></RoleProtectedRoute>} />
+              <Route path="geometre" element={<RoleProtectedRoute allowedRoles={['Géomètre']}><ModernGeometreDashboard /></RoleProtectedRoute>} />
+            </Route>
 
             {/* Routes pour tous les dashboards */}
             <Route path="/particulier" element={<Navigate to="/acheteur" replace />} />

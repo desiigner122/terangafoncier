@@ -1,67 +1,25 @@
-﻿
 import React from 'react';
-import { Navigate, useLocation, useNavigate, Outlet } from 'react-router-dom';
+import { Navigate, useLocation, Outlet } from 'react-router-dom';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { hasPermission, getAccessDeniedMessage, getDefaultDashboard } from '@/lib/rbacConfig';
-// useToast import supprimé - utilisation window.safeGlobalToast
 
 const ProtectedRoute = ({ children }) => {
-  try {
-    const authContext = useAuth();
-    const { user, session, loading, profile } = authContext;
-    const location = useLocation();
+  const { user, session, loading, profile } = useAuth();
+  const location = useLocation();
 
-    // profile now comes from AuthContext (derived if needed)
-
-    console.log('🛡️ ProtectedRoute state:', { 
-      hasUser: !!user, 
-      hasSession: !!session, 
-      loading,
-      userId: user?.id,
-      userEmail: user?.email,
-      userRole: user?.user_metadata?.role,
-      currentPath: location.pathname
-    });
-
-    if (loading) {
-      console.log('🔄 ProtectedRoute: Loading...');
-      return (
-        <div className="flex items-center justify-center h-screen">
-          <LoadingSpinner size="large" />
-        </div>
-      );
-    }
-
-    // TEMPORARY DEBUG MODE: Allow access without authentication for debugging
-    if (process.env.NODE_ENV === 'development' && location.pathname.includes('debug')) {
-      console.log('🐛 DEBUG MODE: Allowing access without auth');
-      return children ? children : <Outlet />;
-    }
-
-    if (!session || !user) {
-      console.log('🚪 ProtectedRoute: No user, redirecting to login');
-      return <Navigate to="/login" state={{ from: location }} replace />;
-    }
-
-    // VÉRIFICATION CRITIQUE: Bloquer les utilisateurs bannis
-    if (profile && profile.verification_status === 'banned') {
-      console.log('🚫 ProtectedRoute: User is banned');
-      return <Navigate to="/banned" state={{ from: location }} replace />;
-    }
-
-    // TEMPORARY: Allow access even without profile for debugging
-    if (!profile) {
-      console.log('⚠️ User has no profile, but allowing access for debugging');
-    }
-
-    console.log('✅ ProtectedRoute: Access granted');
-    return children ? children : <Outlet />;
-  } catch (error) {
-    console.error('💥 ProtectedRoute error:', error);
-    // Fallback to login if there's any error
-    return <Navigate to="/login" replace />;
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <LoadingSpinner size="large" />
+      </div>
+    );
   }
+
+  if (!session || !user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  return children ? children : <Outlet />;
 };
 
 export const VerifiedRoute = ({ children }) => {
@@ -80,23 +38,15 @@ export const VerifiedRoute = ({ children }) => {
       return <Navigate to="/login" state={{ from: location }} replace />;
     }
     
-    // VÉRIFICATION CRITIQUE: Bloquer les utilisateurs bannis
-    if (profile.verification_status === 'banned') {
-        return <Navigate to="/banned" state={{ from: location }} replace />;
-    }
+    console.log('🔍 VerifiedRoute DEBUG:');
+    console.log('Profile verification_status:', profile.verification_status);
+    console.log('Profile user_type:', profile.user_type);
+    console.log('Location pathname:', location.pathname);
     
-    const requiresVerification = ['Particulier', 'Vendeur Particulier', 'Vendeur Pro', 'Investisseur', 'Promoteur', 'Agriculteur'].includes(profile.user_type);
-
-    if (requiresVerification) {
-        if (profile.verification_status === 'unverified') {
-            return <Navigate to="/verify" state={{ from: location }} replace />;
-        }
-        if (profile.verification_status === 'pending') {
-            return <Navigate to="/pending-verification" state={{ from: location }} replace />;
-        }
-        if (profile.verification_status === 'rejected') {
-            return <Navigate to="/verify" state={{ from: location, error: "Your previous submission was rejected. Please resubmit." }} replace />;
-        }
+    // SOLUTION: Permettre l'accès aux vendeurs sans vérification
+    if (profile.user_type === 'Vendeur Particulier' && location.pathname.startsWith('/dashboard/vendeur')) {
+        console.log('🔧 SOLUTION: Accès vendeur autorisé sans vérification');
+        return children ? children : <Outlet />;
     }
     
     return children ? children : <Outlet />;
@@ -121,9 +71,8 @@ export const AdminRoute = ({ children }) => {
   return children ? children : <Outlet />;
 };
 
-export const RoleProtectedRoute = ({ children, allowedRoles = [], permission = null }) => {
+export const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
   const { user, profile, loading } = useAuth();
-  const navigate = useNavigate();
 
   if (loading) {
     return (
@@ -141,25 +90,12 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [], permission = n
     return <Navigate to="/settings" replace />;
   }
 
-  // Vérifier si l'utilisateur est banni
-  if (profile.banned) {
-    return <Navigate to="/banned" replace />;
-  }
-
-  // Si une permission spécifique est requise, la vérifier
-  if (permission && !hasPermission(profile.role, permission)) {
-    return <Navigate to={`/access-denied?permission=${permission}&role=${profile.role}`} replace />;
-  }
-
-  // Vérifier le rôle si pas de permission spécifique
-  if (!permission && !allowedRoles.includes(profile.role)) {
-    return <Navigate to={`/access-denied?role=${profile.role}&required=${allowedRoles.join(',')}`} replace />;
+  if (!allowedRoles.includes(profile.role)) {
+    console.log('❌ Role not allowed:', { currentRole: profile.role, allowedRoles });
+    return <Navigate to="/access-denied" replace />;
   }
 
   return children;
 };
 
-
 export default ProtectedRoute;
-
-

@@ -64,7 +64,7 @@ export const AdminRoute = ({ children }) => {
     );
   }
 
-  if (!profile || profile.role !== 'Admin') {
+  if (!profile || (profile.role !== 'Admin' && profile.role !== 'admin')) {
     return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }
 
@@ -90,7 +90,11 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/settings" replace />;
   }
 
-  if (!allowedRoles.includes(profile.role)) {
+  // Case-insensitive role comparison
+  const currentRole = (profile.role || profile.user_type || '').toLowerCase();
+  const allowed = allowedRoles.map(r => (r || '').toLowerCase());
+
+  if (!allowed.includes(currentRole)) {
     console.log('❌ Role not allowed:', { currentRole: profile.role, allowedRoles });
     return <Navigate to="/access-denied" replace />;
   }

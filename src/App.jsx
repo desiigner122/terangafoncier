@@ -122,7 +122,8 @@ import './lib/errorManager';
 import './lib/securityConfig';
 import DashboardMunicipalRequestPage from '@/pages/DashboardMunicipalRequestPage';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
-import ModernAdminDashboard from '@/pages/admin/ModernAdminDashboard';
+import UltraModernAdminDashboard from '@/pages/admin/UltraModernAdminDashboard';
+import CompleteSidebarAdminDashboard from '@/pages/dashboards/admin/CompleteSidebarAdminDashboard';
 import AdminProjectsPage from '@/pages/admin/AdminProjectsPage';
 import AdminPricingPage from '@/pages/admin/AdminPricingPage';
 import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage';
@@ -442,7 +443,7 @@ function App() {
                   <Route path="promoteur/nouveau-devis" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewQuotePage /></RoleProtectedRoute>} />
                   
                   {/* Dashboards modernes par rôle */}
-                  <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
+                  <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
                   <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
                   <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
                   <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
@@ -468,8 +469,8 @@ function App() {
               </Route>
             </Route>
 
-            <Route path="/admin" element={<AdminRoute><DashboardLayout /></AdminRoute>}>
-              <Route index element={<ModernAdminDashboard />} />
+            <Route path="/admin" element={<AdminRoute />}>
+              <Route index element={<CompleteSidebarAdminDashboard />} />
               <Route path="projects" element={<AdminProjectsPage />} />
               <Route path="pricing" element={<AdminPricingPage />} />
               <Route path="analytics" element={<AdminAnalyticsPage />} />
@@ -535,7 +536,7 @@ function App() {
               <Route path="activity" element={<AnalyticsPage />} />
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}
-              <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
+              <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
               <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
               <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><ModernBanqueDashboard /></RoleProtectedRoute>} />
               <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />

@@ -13,7 +13,8 @@ import {
   ZoomOut, 
   Home, 
   DollarSign, 
-  MapPin
+  MapPin,
+  Heart
 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent } from '@/components/ui/card'; // Import Card and CardContent
@@ -73,7 +74,8 @@ const MapLegend = () => (
   </Card>
 );
 
-import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const MapPage = () => {
   const [parcels, setParcels] = useState([]);
@@ -82,6 +84,8 @@ const MapPage = () => {
   const defaultPosition = [14.7167, -17.4677]; // Dakar center
   const defaultZoom = 11;
   const mapRef = useRef();
+  const { user } = useAuth();
+  const [favoriteIds, setFavoriteIds] = useState([]);
   const { position: userPosition, error: geoError, loading: geoLoading, getCurrentPosition } = useSecureGeolocation();
   const browserCapabilities = getBrowserCapabilities();
 
@@ -103,6 +107,16 @@ const MapPage = () => {
     };
     fetchParcels();
   }, []);
+
+  // Charger les favoris utilisateur
+  useEffect(() => {
+    const loadFavorites = async () => {
+      if (!user) { setFavoriteIds([]); return; }
+      const { data: profile } = await supabase.from('users').select('favorites').eq('id', user.id).single();
+      setFavoriteIds(Array.isArray(profile?.favorites) ? profile.favorites : []);
+    };
+    loadFavorites();
+  }, [user]);
 
   // Fonction sécurisée pour obtenir la position utilisateur
   const handleGetUserLocation = () => {
@@ -132,6 +146,23 @@ const MapPage = () => {
     if (price === null || price === undefined) return 'Prix non spécifié';
     return new Intl.NumberFormat('fr-SN', { style: 'currency', currency: 'XOF', maximumFractionDigits: 0 }).format(price);
   }
+
+  const toggleFavorite = async (parcelId) => {
+    if (!user) {
+      window.safeGlobalToast?.({ title: 'Connexion requise', description: 'Connectez-vous pour ajouter des favoris.' });
+      return;
+    }
+    const isFav = favoriteIds.includes(parcelId);
+    const next = isFav ? favoriteIds.filter(id => id !== parcelId) : [...favoriteIds, parcelId];
+    setFavoriteIds(next);
+    const { error } = await supabase.from('users').update({ favorites: next }).eq('id', user.id);
+    if (error) {
+      setFavoriteIds(favoriteIds);
+      window.safeGlobalToast?.({ title: 'Erreur', description: "Impossible de mettre à jour vos favoris.", variant: 'destructive' });
+    } else {
+      window.safeGlobalToast?.({ title: isFav ? 'Retiré des favoris' : 'Ajouté aux favoris' });
+    }
+  };
 
       const handleSearch = (event) => {
           event.preventDefault();
@@ -210,11 +241,16 @@ const MapPage = () => {
                     }`}>
                       Statut : {parcel.status}
                     </p>
-                    <Button asChild size="sm" className="w-full mt-2.5">
-                      <Link to={`/parcelles/${parcel.id}`}>
-                        Voir les détails <ExternalLink className="ml-2 h-3.5 w-3.5"/>
-                      </Link>
-                    </Button>
+                    <div className="flex items-center gap-2 mt-2.5">
+                      <Button size="icon" variant="ghost" onClick={() => toggleFavorite(parcel.id)} title={favoriteIds.includes(parcel.id) ? 'Retirer des favoris' : 'Ajouter aux favoris'}>
+                        <Heart className={`h-4 w-4 ${favoriteIds.includes(parcel.id) ? 'text-red-500 fill-current' : ''}`} />
+                      </Button>
+                      <Button asChild size="sm" className="flex-1">
+                        <Link to={`/parcelle/${parcel.id}`}>
+                          Voir les détails <ExternalLink className="ml-2 h-3.5 w-3.5"/>
+                        </Link>
+                      </Button>
+                    </div>
                   </div>
                 </Popup>
               </Marker>

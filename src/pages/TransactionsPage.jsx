@@ -8,13 +8,15 @@ import {
   Receipt, 
   Download, 
   Filter, 
-  Banknote
+  Banknote,
+  ExternalLink
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/customSupabaseClient';
+import { terangaBlockchain as blockchain } from '@/services/TerangaBlockchainService';
 
 const formatPrice = (price) => new Intl.NumberFormat('fr-SN', { style: 'currency', currency: 'XOF' }).format(price);
 
@@ -53,7 +55,7 @@ const TransactionsPage = () => {
         setLoading(false);
     };
     fetchTransactions();
-  }, [user, toast]);
+  }, [user]);
 
   const handlePayment = (transactionId) => {
     navigate(`/payment/${transactionId}`);
@@ -110,7 +112,20 @@ const TransactionsPage = () => {
                     <td className="py-4 px-4 text-sm">{new Date(tx.created_at).toLocaleDateString('fr-FR')}</td>
                     <td className="py-4 px-4">
                       <p className="font-medium">{tx.description}</p>
-                      {tx.requests?.parcels?.id && <Link to={`/parcelles/${tx.requests.parcels.id}`} className="text-xs text-primary hover:underline">Voir la parcelle</Link>}
+                      <div className="flex flex-col gap-1">
+                        {tx.requests?.parcels?.id && (
+                          <Link to={`/parcelle/${tx.requests.parcels.id}`} className="text-xs text-primary hover:underline">Voir la parcelle</Link>
+                        )}
+                        {tx.blockchain_hash && (
+                          <a
+                            href={`${blockchain?.networks?.[blockchain?.currentNetwork]?.blockExplorer || 'https://polygonscan.com'}/tx/${tx.blockchain_hash}`}
+                            target="_blank" rel="noreferrer"
+                            className="inline-flex items-center gap-1 text-xs text-blue-600 hover:underline"
+                          >
+                            <ExternalLink className="w-3 h-3" /> Voir sur l'explorateur
+                          </a>
+                        )}
+                      </div>
                     </td>
                     <td className="py-4 px-4 font-mono text-sm">{formatPrice(tx.amount)}</td>
                     <td className="py-4 px-4">{getStatusBadge(tx.status)}</td>

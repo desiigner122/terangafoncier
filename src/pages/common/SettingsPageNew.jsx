@@ -30,6 +30,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUserFixed';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const SettingsPageNew = () => {
   const { user, profile, updateProfile } = useUser();
@@ -93,17 +94,21 @@ const SettingsPageNew = () => {
   const saveProfileChanges = async () => {
     setIsLoading(true);
     try {
-      await updateProfile({
+      const payload = {
         full_name: profileData.fullName,
         phone: profileData.phone,
         address: profileData.address,
-        bio: profileData.bio
-      });
+        bio: profileData.bio,
+        avatar_url: profileData.avatar || null,
+      };
+      await updateProfile(payload);
       setHasChanges(false);
       // Toast de succès
+      window.safeGlobalToast?.({ title: 'Profil mis à jour' });
     } catch (error) {
       console.error('Erreur lors de la sauvegarde:', error);
       // Toast d'erreur
+      window.safeGlobalToast?.({ variant: 'destructive', title: 'Échec mise à jour', description: error.message });
     } finally {
       setIsLoading(false);
     }
@@ -203,12 +208,29 @@ const SettingsPageNew = () => {
                       {profileData.fullName.split(' ').map(n => n[0]).join('')}
                     </AvatarFallback>
                   </Avatar>
-                  <Button 
-                    size="sm" 
-                    className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0"
-                  >
+                  <label className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 cursor-pointer flex items-center justify-center bg-primary text-white">
+                    <input type="file" accept="image/*" className="hidden" onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file || !user) return;
+                      setIsLoading(true);
+                      try {
+                        const ext = file.name.split('.').pop();
+                        const path = `${user.id}/${Date.now()}.${ext}`;
+                        const { error: upErr } = await supabase.storage.from('avatars').upload(path, file, { upsert: true });
+                        if (upErr) throw upErr;
+                        const { data: { publicUrl } } = supabase.storage.from('avatars').getPublicUrl(path);
+                        setProfileData(prev => ({ ...prev, avatar: publicUrl }));
+                        setHasChanges(true);
+                        window.safeGlobalToast?.({ title: 'Photo téléchargée' });
+                      } catch (err) {
+                        console.error('Upload avatar error', err);
+                        window.safeGlobalToast?.({ variant: 'destructive', title: 'Échec upload avatar', description: err.message });
+                      } finally {
+                        setIsLoading(false);
+                      }
+                    }} />
                     <Camera className="w-4 h-4" />
-                  </Button>
+                  </label>
                 </div>
                 <div>
                   <h3 className="font-semibold">{profileData.fullName || 'Nom non défini'}</h3>

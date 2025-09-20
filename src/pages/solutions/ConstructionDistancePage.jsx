@@ -88,9 +88,11 @@ const ConstructionDistancePage = () => {
             avec un suivi professionnel en temps réel.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Button size="lg" className="text-lg px-8">
-              Démarrer Mon Projet
-              <ArrowRight className="ml-2 h-5 w-5" />
+            <Button size="lg" className="text-lg px-8" asChild>
+              <Link to="/solutions/construction-request">
+                Démarrer Mon Projet
+                <ArrowRight className="ml-2 h-5 w-5" />
+              </Link>
             </Button>
             <Button size="lg" variant="outline" className="text-lg px-8">
               <Phone className="mr-2 h-5 w-5" />

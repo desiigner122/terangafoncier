@@ -95,13 +95,15 @@ class TerangaBlockchainService {
       marketplace: [
         'function listProperty(uint256 _tokenId, uint256 _price) public',
         'function buyProperty(uint256 _listingId) public payable',
+        'function depositEscrow(bytes32 reference) public payable',
         'function cancelListing(uint256 _listingId) public',
         'function getListing(uint256 _listingId) public view returns (tuple(uint256 tokenId, address seller, uint256 price, bool isActive, uint256 createdAt))',
         'function getActiveListings() public view returns (uint256[])',
         'function updateListingPrice(uint256 _listingId, uint256 _newPrice) public',
         'event PropertyListed(uint256 indexed listingId, uint256 indexed tokenId, address indexed seller, uint256 price)',
         'event PropertySold(uint256 indexed listingId, uint256 indexed tokenId, address indexed buyer, uint256 price)',
-        'event ListingCancelled(uint256 indexed listingId)'
+        'event ListingCancelled(uint256 indexed listingId)',
+        'event EscrowDeposited(address indexed payer, uint256 amount, bytes32 reference)'
       ],
       staking: [
         'function stake(uint256 amount) public',
@@ -292,6 +294,16 @@ class TerangaBlockchainService {
       console.log('🎉 Property sold:', { listingId: listingId.toString(), tokenId: tokenId.toString(), buyer, price: ethers.utils.formatEther(price) });
       toast.success('Propriété vendue avec succès!');
     });
+
+    // Escrow deposit event if available
+    try {
+      this.contracts.marketplace.on('EscrowDeposited', (payer, amount, reference) => {
+        console.log('💼 Escrow deposit:', { payer, amount: ethers.utils.formatEther(amount), reference });
+        toast.success('Dépôt d\'escrow confirmé');
+      });
+    } catch (e) {
+      console.warn('Escrow event not available on marketplace contract');
+    }
   }
 
   // Property Management
@@ -564,6 +576,52 @@ class TerangaBlockchainService {
     }
   }
 
+  // On-chain escrow payment helper (native coin) with optional reference
+  async payEscrowNative(amount, reference) {
+    try {
+      if (!this.isInitialized) {
+        await this.initialize();
+      }
+      const valueWei = ethers.utils.parseEther(amount.toString());
+      const marketplaceAddr = this.networks[this.currentNetwork].contracts.terangaMarketplace;
+      let tx;
+      if (this.contracts.marketplace?.depositEscrow) {
+        const refBytes32 = ethers.utils.id(String(reference ?? ''));
+        tx = await this.contracts.marketplace.depositEscrow(refBytes32, { value: valueWei });
+      } else {
+        tx = await this.signer.sendTransaction({ to: marketplaceAddr, value: valueWei });
+      }
+      toast.loading('Paiement on-chain en cours...', { id: 'escrow-pay' });
+      const receipt = await tx.wait();
+      toast.success('Paiement on-chain confirmé', { id: 'escrow-pay' });
+      return { success: true, transactionHash: receipt.transactionHash };
+    } catch (error) {
+      console.error('❌ Escrow payment failed:', error);
+      toast.error('Échec du paiement on-chain', { id: 'escrow-pay' });
+      throw error;
+    }
+  }
+
+  // Simple proof NFT mint
+  async mintProofNFT(toAddress, tokenURI) {
+    try {
+      if (!this.isInitialized) {
+        await this.initialize();
+      }
+      const tx = await this.contracts.nft.mint(toAddress, tokenURI);
+      toast.loading('Émission du NFT de preuve...', { id: 'mint-proof' });
+      const receipt = await tx.wait();
+      const transferEvent = receipt.events?.find(e => e.event === 'Transfer');
+      const tokenId = transferEvent?.args?.tokenId?.toString?.() ?? null;
+      toast.success('NFT de preuve émis', { id: 'mint-proof' });
+      return { success: true, tokenId, transactionHash: receipt.transactionHash };
+    } catch (error) {
+      console.error('❌ Mint proof NFT failed:', error);
+      toast.error('Échec du mint', { id: 'mint-proof' });
+      throw error;
+    }
+  }
+
   async getActiveProposals() {
     try {
       const proposalIds = await this.contracts.dao.getActiveProposals();
@@ -592,6 +650,10 @@ class TerangaBlockchainService {
   // Utility functions
   async getWalletAddress() {
     try {
+      if (!this.signer) {
+        console.log('Wallet non connecté');
+        return null;
+      }
       return await this.signer.getAddress();
     } catch (error) {
       console.error('❌ Get wallet address failed:', error);

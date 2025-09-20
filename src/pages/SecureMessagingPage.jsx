@@ -17,7 +17,7 @@ import {
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const getInitials = (name) => {
   if (!name) return '??';

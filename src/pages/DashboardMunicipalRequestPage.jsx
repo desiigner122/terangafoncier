@@ -1,5 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+// Use the unified custom Supabase client everywhere for consistency
+import { supabase } from '@/lib/customSupabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useForm } from 'react-hook-form';
 import { Button } from '@/components/ui/button';
@@ -24,6 +25,7 @@ import {
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Link } from 'react-router-dom';
 import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const StepIndicator = ({ currentStep, totalSteps }) => (
   <div className="flex justify-center items-center space-x-2 mb-8">
@@ -64,9 +66,9 @@ const safeToast = (message, type = 'default') => {
     if (type === 'destructive' || type === 'error') {
       alert(`❌ Erreur: ${message}`);
     } else if (type === 'success') {
-      // Notification discrète pour succès
-      if (typeof FileText !== 'undefined') {
-        const notification = FileText.createElement('div');
+      // Notification discrète pour succès (DOM fallback minimal)
+      if (typeof document !== 'undefined') {
+        const notification = document.createElement('div');
         notification.style.cssText = `
           position: fixed;
           top: 20px;
@@ -82,8 +84,8 @@ const safeToast = (message, type = 'default') => {
           transition: all 0.3s ease;
         `;
         notification.textContent = `✅ ${message}`;
-        FileText.body.appendChild(notification);
-        
+        document.body.appendChild(notification);
+
         setTimeout(() => {
           if (notification.parentNode) {
             notification.style.opacity = '0';
@@ -100,6 +102,7 @@ const safeToast = (message, type = 'default') => {
 
     // toast remplacé par safeToast
     const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm();
+    const { user } = useAuth();
     const [step, setStep] = useState(1);
     const [isSubmitting, setIsSubmitting] = useState(false);
     
@@ -112,62 +115,85 @@ const safeToast = (message, type = 'default') => {
     const [loadingRegions, setLoadingRegions] = useState(true);
     const [fetchError, setFetchError] = useState(null);
 
+    // Use local Senegal locations dataset for cascade selections
     useEffect(() => {
-        const fetchRegions = async () => {
+        try {
             setLoadingRegions(true);
             setFetchError(null);
-            try {
-                const { data, error } = await supabase.from('regions').select('*');
-                if (error) throw error;
-                setRegions(data);
-            } catch (err) {
-                setFetchError(err.message);
-                setRegions([]);
-            } finally {
-                setLoadingRegions(false);
-            }
-        };
-        fetchRegions();
+            const regionNames = senegalRegionsAndDepartments.map(r => r.region);
+            setRegions(regionNames);
+        } catch (err) {
+            setFetchError(err.message);
+            setRegions([]);
+        } finally {
+            setLoadingRegions(false);
+        }
     }, []);
 
     useEffect(() => {
-        const fetchDepartments = async () => {
-            if (!watchedRegion) { setDepartments([]); return; }
-            try {
-                const { data, error } = await supabase.from('departments').select('*').eq('region', watchedRegion);
-                if (error) throw error;
-                setDepartments(data);
-            } catch (err) {
-                setDepartments([]);
-            }
-        };
-        fetchDepartments();
-    }, [watchedRegion]);
+        if (!watchedRegion) { setDepartments([]); setCommunes([]); return; }
+        const regionObj = senegalRegionsAndDepartments.find(r => r.region === watchedRegion);
+        const deps = regionObj ? regionObj.departements.map(d => d.nom) : [];
+        setDepartments(deps);
+        // Reset commune when region changes
+        setValue('department', undefined);
+        setValue('commune', undefined);
+        setCommunes([]);
+    }, [watchedRegion, setValue]);
 
     useEffect(() => {
-        const fetchCommunes = async () => {
-            if (!watchedDepartment) { setCommunes([]); return; }
-            try {
-                const { data, error } = await supabase.from('communes').select('*').eq('departement', watchedDepartment);
-                if (error) throw error;
-                setCommunes(data);
-            } catch (err) {
-                setCommunes([]);
-            }
-        };
-        fetchCommunes();
-    }, [watchedDepartment]);
+        if (!watchedDepartment || !watchedRegion) { setCommunes([]); return; }
+        const regionObj = senegalRegionsAndDepartments.find(r => r.region === watchedRegion);
+        const depObj = regionObj?.departements.find(d => d.nom === watchedDepartment);
+        const cms = depObj ? depObj.communes : [];
+        setCommunes(cms);
+        setValue('commune', undefined);
+    }, [watchedDepartment, watchedRegion, setValue]);
 
-    const onSubmit = async (data) => {
-        setIsSubmitting(true);
-        console.log("Demande soumise:", data);
-        await new Promise(resolve => setTimeout(resolve, 1500));
-        setIsSubmitting(false);
-        setStep(4); // Go to success step
-        window.safeGlobalToast({
-            title: "Demande Envoyée !",
-            description: `Votre demande d'attribution pour la commune de ${data.commune} a bien été enregistrée.`,
-        });
+    const onSubmit = async (formData) => {
+        try {
+            setIsSubmitting(true);
+            if (!user) {
+                safeToast("Vous devez être connecté pour soumettre une demande.", 'error');
+                return;
+            }
+
+            // Persist as a generic request in public.requests for now.
+            // If communal_requests exists later, we can migrate insert target.
+            const payload = {
+                user_id: user.id,
+                request_type: 'communal',
+                status: 'pending',
+                details: {
+                    region: formData.region,
+                    department: formData.department,
+                    commune: formData.commune,
+                    project_type: formData.project_type,
+                    motivation: formData.motivation,
+                    // Placeholder for future uploads handling
+                    attachments: Array.isArray(formData.FileTexts) ? [...formData.FileTexts].map(f => f?.name) : [],
+                    source: 'DashboardMunicipalRequestPage'
+                }
+            };
+
+            const { error } = await supabase.from('requests').insert(payload);
+            if (error) throw error;
+
+            setStep(4); // Go to success step
+            if (typeof window !== 'undefined' && window.safeGlobalToast) {
+                window.safeGlobalToast({
+                    title: 'Demande Envoyée !',
+                    description: `Votre demande d'attribution pour la commune de ${formData.commune} a bien été enregistrée.`,
+                });
+            } else {
+                safeToast("Demande envoyée avec succès !", 'success');
+            }
+        } catch (e) {
+            console.error('Erreur en soumettant la demande communale:', e);
+            safeToast("Impossible d'envoyer la demande. Veuillez réessayer.", 'error');
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const handleNext = () => setStep(prev => prev + 1);
@@ -189,9 +215,39 @@ const safeToast = (message, type = 'default') => {
                             <CardDescription>Sélectionnez la commune où vous souhaitez obtenir un terrain.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div><Label>Région</Label><Select onValueChange={(v) => setValue('region', v)}><SelectTrigger><SelectValue placeholder="Sélectionnez une région..." /></SelectTrigger><SelectContent>{senegalRegionsAndDepartments.map(r => <SelectItem key={r.region} value={r.region}>{r.region}</SelectItem>)}</SelectContent></Select></div>
-                            <div><Label>Département</Label><Select onValueChange={(v) => setValue('department', v)} disabled={!watchedRegion}><SelectTrigger><SelectValue placeholder="Sélectionnez un département..." /></SelectTrigger><SelectContent>{departments.map(d => <SelectItem key={d.nom} value={d.nom}>{d.nom}</SelectItem>)}</SelectContent></Select></div>
-                            <div><Label>Commune</Label><Select onValueChange={(v) => setValue('commune', v)} disabled={!watchedDepartment}><SelectTrigger><SelectValue placeholder="Sélectionnez une commune..." /></SelectTrigger><SelectContent>{communes.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}</SelectContent></Select></div>
+                                                        <div>
+                                                            <Label>Région</Label>
+                                                            <Select onValueChange={(v) => setValue('region', v)}>
+                                                                <SelectTrigger><SelectValue placeholder="Sélectionnez une région..." /></SelectTrigger>
+                                                                <SelectContent>
+                                                                    {regions.map(r => (
+                                                                        <SelectItem key={r} value={r}>{r}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div>
+                                                            <Label>Département</Label>
+                                                            <Select onValueChange={(v) => setValue('department', v)} disabled={!watchedRegion}>
+                                                                <SelectTrigger><SelectValue placeholder="Sélectionnez un département..." /></SelectTrigger>
+                                                                <SelectContent>
+                                                                    {departments.map(d => (
+                                                                        <SelectItem key={d} value={d}>{d}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
+                                                        <div>
+                                                            <Label>Commune</Label>
+                                                            <Select onValueChange={(v) => setValue('commune', v)} disabled={!watchedDepartment}>
+                                                                <SelectTrigger><SelectValue placeholder="Sélectionnez une commune..." /></SelectTrigger>
+                                                                <SelectContent>
+                                                                    {communes.map(c => (
+                                                                        <SelectItem key={c} value={c}>{c}</SelectItem>
+                                                                    ))}
+                                                                </SelectContent>
+                                                            </Select>
+                                                        </div>
                         </CardContent>
                     </motion.div>
                 );
@@ -199,13 +255,13 @@ const safeToast = (message, type = 'default') => {
                 return (
                     <motion.div key="step2" variants={stepVariants} initial="hidden" animate="visible" exit="exit">
                         <CardHeader>
-                            <CardTitle className="flex items-center gap-2 text-2xl"><FileCheck/>Étape 2: Motivation & FileTexts</CardTitle>
+                                                        <CardTitle className="flex items-center gap-2 text-2xl"><FileCheck/>Étape 2: Motivation & Pièces</CardTitle>
                             <CardDescription>Expliquez votre projet et joignez les pièces requises.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
                             <div><Label htmlFor="project_type">Type de projet</Label><Select onValueChange={(v) => setValue('project_type', v)}><SelectTrigger><SelectValue placeholder="Sélectionnez le type de projet..." /></SelectTrigger><SelectContent>{['Habitation', 'Commercial', 'Agricole', 'Industriel'].map(t => <SelectItem key={t} value={t}>{t}</SelectItem>)}</SelectContent></Select></div>
                             <div><Label htmlFor="motivation">Motivation de votre demande</Label><Textarea id="motivation" placeholder="Décrivez votre projet, son impact, et pourquoi vous sollicitez un terrain dans cette commune..." {...register('motivation', { required: true })} /></div>
-                            <div><Label htmlFor="FileTexts">FileTexts Justificatifs</Label><Input id="FileTexts" type="file" multiple {...register('FileTexts')} /><p className="text-xs text-muted-foreground mt-1">Joindre CNI, plan de financement, etc.</p></div>
+                                                        <div><Label htmlFor="FileTexts">Fichiers justificatifs</Label><Input id="FileTexts" type="file" multiple {...register('FileTexts')} /><p className="text-xs text-muted-foreground mt-1">Joindre CNI, plan de financement, etc.</p></div>
                         </CardContent>
                     </motion.div>
                 );
@@ -285,7 +341,7 @@ const safeToast = (message, type = 'default') => {
 };
 
 const DashboardMunicipalRequestPage = () => (
-    <RoleProtectedRoute allowedRoles={['Particulier']}>
+    <RoleProtectedRoute allowedRoles={['Particulier', 'Acheteur']}>
         <DashboardMunicipalRequestPageComponent />
     </RoleProtectedRoute>
 );

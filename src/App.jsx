@@ -62,6 +62,8 @@ import GuidesTutorielsPage from '@/pages/GuidesTutorielsPage';
 import ProjectsGuidePage from '@/pages/ProjectsGuidePage';
 import RequestsGuidePage from '@/pages/RequestsGuidePage';
 import ConstructionDistancePage from '@/pages/solutions/ConstructionDistancePage';
+import ConstructionRequestFormPage from '@/pages/ConstructionRequestFormPage';
+import CommunalZonesPage from '@/pages/CommunalZonesPage';
 import DiasporaInvestmentPage from '@/pages/solutions/DiasporaInvestmentPage';
 import ProjectMonitoringPage from '@/pages/solutions/ProjectMonitoringPage';
 import BlockchainSolutionsPage from '@/pages/BlockchainSolutionsPage';
@@ -231,6 +233,8 @@ import ModernGeometreDashboard from '@/pages/dashboards/ModernGeometreDashboard'
 import OneTimePaymentPage from '@/pages/buy/OneTimePaymentPage';
 import InstallmentsPaymentPage from '@/pages/buy/InstallmentsPaymentPage';
 import BankFinancingPage from '@/pages/buy/BankFinancingPage';
+import BuyerBlockchainDashboard from '@/pages/dashboards/blockchain/BuyerBlockchainDashboard';
+import BuyerFinancingDashboard from '@/pages/buyer/BuyerFinancingDashboard';
 import PurchaseUnitsPage from '@/pages/promoters/PurchaseUnitsPage';
 import PaymentPlansPage from '@/pages/promoters/PaymentPlansPage';
 
@@ -293,6 +297,7 @@ function App() {
               <Route path="success" element={<SuccessPage />} />
               <Route path="terrains" element={<TerrainsVendeursPage />} />
               <Route path="parcelles-vendeurs" element={<ParcellesVendeursPage />} />
+              <Route path="communal-zones" element={<CommunalZonesPage />} />
               <Route path="parcelles-communales" element={<ParcellesCommunalesPage />} />
               <Route path="zone-communale/:id" element={<ZoneCommunaleDetailPage />} />
               <Route path="parcelle/:id" element={<ParcelleDetailPage />} />
@@ -326,6 +331,7 @@ function App() {
               <Route path="solutions/vendeurs" element={<SolutionsVendeursPage />} />
               <Route path="solutions/agriculteurs" element={<SolutionsAgriculteursPage />} />
               <Route path="solutions/construction-distance" element={<ConstructionDistancePage />} />
+              <Route path="solutions/construction-request" element={<ConstructionRequestFormPage />} />
               <Route path="solutions/diaspora-investment" element={<DiasporaInvestmentPage />} />
               <Route path="solutions/project-monitoring" element={<ProjectMonitoringPage />} />
               <Route path="solutions/blockchain" element={<BlockchainSolutionsPage />} />
@@ -408,6 +414,8 @@ function App() {
                   <Route path="case-tracking/:id" element={<CaseTrackingPage />} />
                   <Route path="analytics" element={<AnalyticsPage />} />
                   <Route path="digital-vault" element={<RoleProtectedRoute permission="DIGITAL_VAULT"><DigitalVaultPage /></RoleProtectedRoute>} />
+                  {/* Blockchain Dashboard (Acheteur/Particulier) */}
+                  <Route path="blockchain/dashboard" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BuyerBlockchainDashboard /></RoleProtectedRoute>} />
                   <Route path="request-municipal-land" element={<RoleProtectedRoute permission="REQUEST_MUNICIPAL_LAND"><DashboardMunicipalRequestPage /></RoleProtectedRoute>} />
                   <Route path="vendor-verification" element={<RoleProtectedRoute permission="VENDOR_VERIFICATION"><VendorVerificationPage /></RoleProtectedRoute>} />
                   <Route path="sell-property" element={<RoleProtectedRoute permission="SELL_PROPERTY"><SellPropertyPage /></RoleProtectedRoute>} />
@@ -418,6 +426,7 @@ function App() {
                   <Route path="buy/one-time" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><OneTimePaymentPage /></RoleProtectedRoute>} />
                   <Route path="buy/installments" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><InstallmentsPaymentPage /></RoleProtectedRoute>} />
                   <Route path="buy/bank-financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BankFinancingPage /></RoleProtectedRoute>} />
+                  <Route path="buyer/financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BuyerFinancingDashboard /></RoleProtectedRoute>} />
                   <Route path="promoters/purchase-units" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PurchaseUnitsPage /></RoleProtectedRoute>} />
                   <Route path="promoters/payment-plans" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PaymentPlansPage /></RoleProtectedRoute>} />
                   

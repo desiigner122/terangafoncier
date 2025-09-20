@@ -8,36 +8,60 @@ import {
   Users, 
   Menu, 
   X, 
-  Home
+  Home,
+  Heart,
+  Bell,
+  MessageSquare,
+  FileText,
+  Calendar as CalendarIcon,
+  Banknote,
+  Search
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MobileDrawer from '@/components/ui/mobile-drawer';
+import { supabase } from '@/lib/customSupabaseClient';
 
 const logoUrl = "/teranga-foncier-logo.svg";
 
 // Configuration sidebar simplifiée
 const getSimpleSidebarConfig = (role) => {
-  const baseConfig = [
-    { href: (role && role.toLowerCase && (role.toLowerCase() === 'particulier' || role.toLowerCase() === 'acheteur')) ? '/acheteur' : '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
-  { href: '/settings', label: 'Paramètres', icon: Settings }
-  ];
+  const isAcheteur = role && role.toLowerCase && (role.toLowerCase() === 'particulier' || role.toLowerCase() === 'acheteur');
 
   if (role === 'admin') {
     return [
       { href: '/admin', label: 'Admin Dashboard', icon: LayoutDashboard, end: true },
       { href: '/admin/users', label: 'Utilisateurs', icon: Users },
       { href: '/admin/settings', label: 'Configuration', icon: Settings },
-      ...baseConfig
+      { href: isAcheteur ? '/acheteur' : '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { href: '/settings', label: 'Paramètres', icon: Settings }
     ];
   }
 
-  return baseConfig;
+  if (isAcheteur) {
+    return [
+      { href: '/acheteur', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { href: '/favorites', label: 'Mes Favoris', icon: Heart },
+      { href: '/saved-searches', label: 'Recherches', icon: Search },
+      { href: '/my-requests', label: 'Mes Demandes', icon: FileText },
+      { href: '/transactions', label: 'Transactions', icon: Banknote },
+      { href: '/messaging', label: 'Messagerie', icon: MessageSquare },
+      { href: '/notifications', label: 'Notifications', icon: Bell },
+      { href: '/documents', label: 'Documents', icon: FileText },
+      { href: '/rendez-vous', label: 'Rendez-vous', icon: CalendarIcon },
+      { href: '/settings', label: 'Paramètres', icon: Settings }
+    ];
+  }
+
+  return [
+    { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, end: true },
+    { href: '/settings', label: 'Paramètres', icon: Settings }
+  ];
 };
 
-const NavItem = ({ item, active, onClick }) => (
+const NavItem = ({ item, active, onClick, hasNotification }) => (
   <div 
     className={cn(
       "flex items-center px-3 py-2.5 text-sm font-medium rounded-md transition-all duration-150 group relative cursor-pointer",
@@ -49,13 +73,19 @@ const NavItem = ({ item, active, onClick }) => (
   >
     <item.icon className="mr-3 h-5 w-5 flex-shrink-0" />
     <span className="truncate">{item.label}</span>
+    {hasNotification && (
+      <span className="absolute top-1.5 right-1.5 flex h-2.5 w-2.5">
+        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-75"></span>
+        <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
+      </span>
+    )}
   </div>
 );
 
-const SimpleNavItem = ({ item, onNavigate }) => {
+const SimpleNavItem = ({ item, onNavigate, hasNotification }) => {
   return (
     <NavLink to={item.href} end={item.end} onClick={onNavigate}>
-      {({ isActive }) => <NavItem item={item} active={isActive} />}
+      {({ isActive }) => <NavItem item={item} active={isActive} hasNotification={hasNotification} />}
     </NavLink>
   );
 };
@@ -64,6 +94,7 @@ const SimpleNavItem = ({ item, onNavigate }) => {
 const SidebarContent = ({ onNavigate }) => {
   const { user, profile, signOut } = useAuth();
   const [sidebarConfig, setSidebarConfig] = useState([]);
+  const [badges, setBadges] = useState({ notifications: 0, requests: 0 });
 
   useEffect(() => {
     if (profile?.role) {
@@ -72,6 +103,30 @@ const SidebarContent = ({ onNavigate }) => {
       setSidebarConfig(getSimpleSidebarConfig('particulier'));
     }
   }, [profile]);
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      if (!user) return;
+      try {
+        const { count: notifCount } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('read', false);
+
+        const { count: reqCount } = await supabase
+          .from('requests')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .in('status', ['pending', 'nouvelle', 'Nouvelle', 'en cours', 'En cours']);
+
+        setBadges({ notifications: notifCount || 0, requests: reqCount || 0 });
+      } catch (e) {
+        console.warn('SidebarSimple: count load failed', e);
+      }
+    };
+    loadCounts();
+  }, [user]);
 
   const handleSignOut = () => {
     signOut();
@@ -107,9 +162,14 @@ const SidebarContent = ({ onNavigate }) => {
 
       {/* Navigation */}
       <nav className="flex-1 p-2 md:p-3 space-y-1 overflow-y-auto">
-        {sidebarConfig.map((item, index) => (
-          <SimpleNavItem key={item.href || index} item={item} onNavigate={onNavigate} />
-        ))}
+        {sidebarConfig.map((item, index) => {
+          let hasNotification = false;
+          if (item.href === '/notifications') hasNotification = badges.notifications > 0;
+          if (item.href === '/my-requests') hasNotification = badges.requests > 0;
+          return (
+            <SimpleNavItem key={item.href || index} item={item} onNavigate={onNavigate} hasNotification={hasNotification} />
+          );
+        })}
       </nav>
 
       {/* Footer Actions */}

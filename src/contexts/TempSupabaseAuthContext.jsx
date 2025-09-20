@@ -170,6 +170,22 @@ export const AuthProvider = ({ children }) => {
     return { error };
   }, []);
 
+  // Mettre à jour le profil utilisateur dans la table "users"
+  const updateProfile = useCallback(async (fields) => {
+    if (!user) return { error: new Error('No user in session') };
+    try {
+      // upsert pour créer si inexistant, sinon mettre à jour
+      const payload = { id: user.id, ...fields };
+      const { data, error } = await supabase.from('users').upsert(payload, { onConflict: 'id' }).select().single();
+      if (error) throw error;
+      // Optionnel: mettre à jour les métadonnées locales si pertinentes
+      return { data, error: null };
+    } catch (error) {
+      window.safeGlobalToast?.({ variant: 'destructive', title: 'Erreur profil', description: error.message || 'Mise à jour impossible' });
+      return { data: null, error };
+    }
+  }, [user]);
+
   const value = useMemo(() => ({
     user,
     session,
@@ -178,7 +194,8 @@ export const AuthProvider = ({ children }) => {
     signUp,
     signIn,
     signOut,
-  }), [user, session, loading, derivedProfile, signUp, signIn, signOut]);
+    updateProfile,
+  }), [user, session, loading, derivedProfile, signUp, signIn, signOut, updateProfile]);
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 };

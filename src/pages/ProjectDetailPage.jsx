@@ -2,6 +2,8 @@
 import { useParams, useNavigate } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { DeveloperProjectWorkflowService } from '../services/DeveloperProjectWorkflowService';
 import { 
   ArrowLeft,
   Building2, 
@@ -42,7 +44,8 @@ import {
   Award,
   Navigation,
   DollarSign,
-  Percent
+  Percent,
+  FileSignature
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -56,6 +59,7 @@ import { Progress } from '@/components/ui/progress';
 const ProjectDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   
   const [project, setProject] = useState(null);
   const [selectedUnit, setSelectedUnit] = useState(null);
@@ -64,6 +68,28 @@ const ProjectDetailPage = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showPreOrderModal, setShowPreOrderModal] = useState(false);
   const [showTimelineModal, setShowTimelineModal] = useState(false);
+  const [initiatingPurchase, setInitiatingPurchase] = useState(false);
+
+  const workflowService = new DeveloperProjectWorkflowService();
+
+  // Debug pour vérifier l'utilisateur
+  useEffect(() => {
+    console.log('Debug ProjectDetailPage - User:', user);
+    console.log('Debug ProjectDetailPage - User role:', user?.role);
+    console.log('Debug ProjectDetailPage - User role type:', typeof user?.role);
+  }, [user]);
+
+  // Fonction helper pour vérifier le rôle
+  const isParticulier = () => {
+    if (!user) return false;
+    const role = user.role;
+    return role === 'Particulier' || role === 'particulier' || role === 'PARTICULIER';
+  };
+
+  // Fonction helper pour vérifier l'authentification
+  const isAuthenticated = () => {
+    return user && user.id;
+  };
 
   // Données mockées du projet
   useEffect(() => {
@@ -348,6 +374,161 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
     return monthlyPayment;
   };
 
+  // Fonction pour initier l'achat d'une unité
+  const handlePurchaseUnit = async (unitType = null) => {
+    if (!isAuthenticated()) {
+      window.safeGlobalToast({
+        title: "Connexion requise",
+        description: "Veuillez vous connecter pour initier un achat",
+        variant: "destructive"
+      });
+      navigate('/auth/signin');
+      return;
+    }
+
+    if (!isParticulier()) {
+      window.safeGlobalToast({
+        title: "Accès restreint",
+        description: "L'achat de projets est réservé aux particuliers",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setInitiatingPurchase(true);
+
+      // Données pour créer le cas VEFA
+      const projectData = {
+        projectId: project.id,
+        projectName: project.title,
+        developerId: project.promoter.id,
+        clientId: user.id,
+        propertyType: unitType || 'APARTMENT',
+        unitNumber: selectedUnit?.id || 'TBD',
+        surfaceArea: selectedUnit?.surface || 75,
+        salePrice: selectedUnit?.price || project.price_range.min,
+        reservationAmount: (selectedUnit?.price || project.price_range.min) * 0.1, // 10%
+        expectedDelivery: project.delivery_date,
+        constructionStartDate: project.construction_start,
+        constructionPhase: project.status === 'En construction' ? 'CONSTRUCTION_STARTED' : 'PRE_COMMERCIALISATION',
+        vefaType: 'STANDARD',
+        energyLabel: 'A',
+        parkingIncluded: true
+      };
+
+      // Créer le cas VEFA
+      const vefaCase = await workflowService.createProjectCase(projectData);
+
+      window.safeGlobalToast({
+        title: "🏗️ Demande d'achat initiée !",
+        description: `Votre dossier VEFA #${vefaCase.id} a été créé avec succès`,
+        variant: "default"
+      });
+
+      // Rediriger vers le suivi du projet
+      navigate(`/dashboard/particulier/projects/${vefaCase.id}/tracking`);
+
+    } catch (error) {
+      console.error('Erreur initiation achat projet:', error);
+      window.safeGlobalToast({
+        title: "Erreur",
+        description: "Impossible d'initier l'achat. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    } finally {
+      setInitiatingPurchase(false);
+    }
+  };
+
+  // Fonction pour faire une réservation
+  const handleReservation = async (unitType = null) => {
+    if (!isAuthenticated()) {
+      window.safeGlobalToast({
+        title: "Connexion requise",
+        description: "Veuillez vous connecter pour faire une réservation",
+        variant: "destructive"
+      });
+      navigate('/auth/signin');
+      return;
+    }
+
+    if (!isParticulier()) {
+      window.safeGlobalToast({
+        title: "Accès restreint",
+        description: "Les réservations sont réservées aux particuliers",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    try {
+      setInitiatingPurchase(true);
+
+      const projectData = {
+        projectId: project.id,
+        projectName: project.title,
+        developerId: project.promoter.id,
+        clientId: user.id,
+        propertyType: unitType || 'APARTMENT',
+        unitNumber: selectedUnit?.id || 'TBD',
+        surfaceArea: selectedUnit?.surface || 75,
+        salePrice: selectedUnit?.price || project.price_range.min,
+        reservationAmount: (selectedUnit?.price || project.price_range.min) * 0.05, // 5%
+        expectedDelivery: project.delivery_date,
+        constructionStartDate: project.construction_start,
+        vefaType: 'RESERVATION_ONLY'
+      };
+
+      const vefaCase = await workflowService.createProjectCase(projectData);
+
+      // Mettre à jour le statut à RESERVATION
+      await workflowService.updateProjectStatus(
+        vefaCase.id, 
+        'RESERVATION', 
+        user.id,
+        { 
+          reservationDate: new Date().toISOString(),
+          previousStatus: 'PROSPECT'
+        }
+      );
+
+      window.safeGlobalToast({
+        title: "📋 Réservation initiée !",
+        description: `Votre réservation #${vefaCase.id} a été créée. Un commercial vous contactera sous 24h.`,
+        variant: "default"
+      });
+
+      navigate(`/dashboard/particulier/projects/${vefaCase.id}/tracking`);
+
+    } catch (error) {
+      console.error('Erreur réservation projet:', error);
+      window.safeGlobalToast({
+        title: "Erreur",
+        description: "Impossible de faire la réservation. Veuillez réessayer.",
+        variant: "destructive"
+      });
+    } finally {
+      setInitiatingPurchase(false);
+    }
+  };
+
+  // Fonction pour simuler un financement
+  const handleSimulateFinancing = (unitType = null) => {
+    const unit = unitType ? project.apartment_types.find(u => u.type === unitType) : selectedUnit;
+    const price = unit?.price || project.price_range.min;
+    
+    navigate('/buy/bank-financing', { 
+      state: { 
+        projectId: project.id,
+        projectName: project.title,
+        unitType: unit?.type,
+        salePrice: price,
+        projectType: 'DEVELOPER_PROJECT'
+      } 
+    });
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-purple-50">
@@ -595,30 +776,35 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                             className="bg-gradient-to-r from-blue-600 to-purple-600"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setShowPreOrderModal(true);
+                              setSelectedUnit(unit);
+                              handleReservation(unit.type);
                             }}
+                            disabled={initiatingPurchase}
                           >
-                            Précommander
+                            {initiatingPurchase ? "..." : "Réserver"}
                           </Button>
                           <Button 
                             size="sm"
                             variant="secondary"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate('/promoters/purchase-units', { state: { projectId: project.id, unitType: unit.type } });
+                              setSelectedUnit(unit);
+                              handlePurchaseUnit(unit.type);
                             }}
+                            disabled={initiatingPurchase}
                           >
-                            Acheter logement
+                            {initiatingPurchase ? "..." : "Acheter"}
                           </Button>
                           <Button 
                             size="sm"
-                            variant="secondary"
+                            variant="outline"
                             onClick={(e) => {
                               e.stopPropagation();
-                              navigate('/promoters/payment-plans', { state: { projectId: project.id, unitType: unit.type } });
+                              setSelectedUnit(unit);
+                              handleSimulateFinancing(unit.type);
                             }}
                           >
-                            Plan de paiement
+                            Financement
                           </Button>
                         </div>
                       </div>
@@ -921,34 +1107,59 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
                 <CardTitle>Actions</CardTitle>
               </CardHeader>
               <CardContent className="space-y-3">
-                <Button 
-                  className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                  onClick={() => setShowPreOrderModal(true)}
-                >
-                  <Eye className="w-4 h-4 mr-2" />
-                  Précommander
-                </Button>
-                <Button 
-                  className="w-full"
-                  variant="secondary"
-                  onClick={() => navigate('/promoters/purchase-units', { state: { projectId: project.id } })}
-                >
-                  Acheter logement
-                </Button>
-                <Button 
-                  className="w-full"
-                  variant="secondary"
-                  onClick={() => navigate('/promoters/payment-plans', { state: { projectId: project.id } })}
-                >
-                  Plan de paiement
-                </Button>
-                <Button 
-                  className="w-full"
-                  variant="outline"
-                  onClick={() => navigate('/buy/bank-financing', { state: { projectId: project.id } })}
-                >
-                  Financement bancaire
-                </Button>
+                {isParticulier() ? (
+                  <>
+                    <Button 
+                      className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
+                      onClick={() => handleReservation()}
+                      disabled={initiatingPurchase}
+                    >
+                      <Eye className="w-4 h-4 mr-2" />
+                      {initiatingPurchase ? "Traitement..." : "Réserver une unité"}
+                    </Button>
+                    <Button 
+                      className="w-full"
+                      variant="secondary"
+                      onClick={() => handlePurchaseUnit()}
+                      disabled={initiatingPurchase}
+                    >
+                      <FileSignature className="w-4 h-4 mr-2" />
+                      {initiatingPurchase ? "Traitement..." : "Acheter une unité"}
+                    </Button>
+                    <Button 
+                      className="w-full"
+                      variant="outline"
+                      onClick={() => handleSimulateFinancing()}
+                    >
+                      <Calculator className="w-4 h-4 mr-2" />
+                      Simuler financement
+                    </Button>
+                  </>
+                ) : (
+                  <div className="text-sm text-center text-gray-600 p-4 bg-gray-50 rounded-md">
+                    {!isAuthenticated() ? (
+                      <>
+                        Connectez-vous en tant que particulier pour réserver ou acheter.
+                        <br />
+                        <Button 
+                          variant="link" 
+                          className="p-0 h-auto text-blue-600 underline mt-2"
+                          onClick={() => navigate('/auth/signin')}
+                        >
+                          Se connecter
+                        </Button>
+                      </>
+                    ) : (
+                      <>
+                        L'achat et la réservation de projets sont réservés aux particuliers.
+                        <br />
+                        <span className="text-xs text-gray-500 mt-1 block">
+                          Rôle actuel: {user?.role || 'non défini'}
+                        </span>
+                      </>
+                    )}
+                  </div>
+                )}
                 
                 <Button 
                   variant="outline" 

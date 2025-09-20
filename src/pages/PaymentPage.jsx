@@ -1,6 +1,6 @@
 ﻿
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase } from '@/lib/customSupabaseClient';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -18,6 +18,8 @@ import {
   Loader2
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
+import { FEATURES } from '@/config/features';
+import terangaBlockchain from '@/services/TerangaBlockchainService';
 
 const sampleTransactions = [
   { id: 'TRN-003-2025', date: '2025-08-15', description: 'Achat de la parcelle SLY-NGP-010 (2/4)', amount: 10312500, type: 'Achat de terrain' },
@@ -86,10 +88,28 @@ const PaymentPage = () => {
     }
   }, [transactionId]);
 
-  const handlePaymentSubmit = (e) => {
+  const handlePaymentSubmit = async (e) => {
     e.preventDefault();
     setIsProcessing(true);
-    setTimeout(() => {
+    try {
+      let blockchainHash = null;
+      if (FEATURES.ENABLE_ONCHAIN_ESCROW && selectedMethod === 'onchain') {
+        const amountEth = (transaction.amount / 1e18) || null; // Expect amount in wei equivalent? fallback to FCFA not suitable
+        // Convert XOF to MATIC/ETH is out of scope; here we assume amount is provided in native units when using on-chain
+        if (!amountEth) throw new Error('Montant on-chain invalide. Configurez le montant en unité crypto.');
+        const res = await terangaBlockchain.payEscrowNative(amountEth, transaction.id);
+        blockchainHash = res?.transactionHash || null;
+      } else {
+        // Simuler un délai de traitement off-chain
+        await new Promise(res => setTimeout(res, 1500));
+      }
+      // Marquer la transaction comme payée et enregistrer le hash si présent
+      const { error } = await supabase
+        .from('transactions')
+        .update({ status: 'paid', paid_at: new Date().toISOString(), blockchain_hash: blockchainHash })
+        .eq('id', transactionId);
+      if (error) throw error;
+
       setIsProcessing(false);
       setIsPaid(true);
       window.safeGlobalToast({
@@ -97,8 +117,11 @@ const PaymentPage = () => {
         description: `Le paiement de ${formatPrice(transaction.amount)} pour ${transaction.description} a été effectué avec succès.`,
         variant: "success",
       });
-      setTimeout(() => navigate('/transactions'), 3000);
-    }, 2000);
+      setTimeout(() => navigate('/transactions'), 2000);
+    } catch (err) {
+      setIsProcessing(false);
+      window.safeGlobalToast({ title: 'Paiement échoué', description: err.message, variant: 'destructive' });
+    }
   };
 
   const renderPaymentDetails = () => {
@@ -119,6 +142,13 @@ const PaymentPage = () => {
           </div>
         );
       }
+      case 'onchain':
+        return (
+          <div className="space-y-2 text-sm text-muted-foreground">
+            <p>Vous allez payer en crypto via votre portefeuille (MetaMask). Assurez-vous d'être sur le réseau recommandé.</p>
+            <p className="text-xs">Après confirmation on-chain, le hash de transaction sera associé à votre paiement.</p>
+          </div>
+        );
       case 'transfer':
         return (
           <div className="space-y-4">
@@ -211,7 +241,7 @@ const PaymentPage = () => {
               <div>
                 <Label>Méthode de paiement</Label>
                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 mt-2">
-                  {paymentMethods.map(method => (
+                  {[...paymentMethods, ...(FEATURES.ENABLE_ONCHAIN_ESCROW ? [{ id: 'onchain', name: 'Paiement on-chain', icon: Landmark }] : [])].map(method => (
                     <Button
                       key={method.id}
                       type="button"

@@ -1,4 +1,4 @@
-import React from 'react';
+﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Building } from 'lucide-react';
 
@@ -14,7 +14,7 @@ const ModernMairieDashboard = () => {
         <div className="bg-white rounded-xl p-6 shadow-lg">
           <div className="text-center py-12">
             <Building className="h-16 w-16 text-teal-600 mx-auto mb-4" />
-            <p className="text-gray-600">Cette page est en cours de développement.</p>
+            <p className="text-gray-600">Cette page est en cours de dÃ©veloppement.</p>
           </div>
         </div>
       </div>

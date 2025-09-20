@@ -214,6 +214,81 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
     setShowContactModal(true);
   };
 
+  const handleInitiatePurchase = () => {
+    // Navigation directe vers le processus d'achat avec contexte de la parcelle
+    const selectedPaymentInfo = getPaymentInfo();
+    
+    switch (paymentMethod) {
+      case 'direct':
+        navigate('/buy/one-time', { 
+          state: { 
+            parcelleId: parcelle.id,
+            parcelle: {
+              id: parcelle.id,
+              title: parcelle.title,
+              price: selectedPaymentInfo.totalPrice,
+              surface: parcelle.surface,
+              location: parcelle.location
+            },
+            paymentInfo: selectedPaymentInfo
+          } 
+        });
+        break;
+      case 'installment':
+        navigate('/buy/installments', { 
+          state: { 
+            parcelleId: parcelle.id,
+            parcelle: {
+              id: parcelle.id,
+              title: parcelle.title,
+              price: selectedPaymentInfo.totalPrice,
+              monthlyPayment: selectedPaymentInfo.monthlyPayment,
+              surface: parcelle.surface,
+              location: parcelle.location
+            },
+            paymentInfo: selectedPaymentInfo
+          } 
+        });
+        break;
+      case 'bank':
+        navigate('/buy/bank-financing', { 
+          state: { 
+            parcelleId: parcelle.id,
+            parcelle: {
+              id: parcelle.id,
+              title: parcelle.title,
+              price: selectedPaymentInfo.totalPrice,
+              monthlyPayment: selectedPaymentInfo.monthlyPayment,
+              downPayment: selectedPaymentInfo.downPayment,
+              surface: parcelle.surface,
+              location: parcelle.location
+            },
+            paymentInfo: selectedPaymentInfo
+          } 
+        });
+        break;
+      case 'crypto':
+        // Pour le crypto, utiliser le flow direct avec info spécifique
+        navigate('/buy/one-time', { 
+          state: { 
+            parcelleId: parcelle.id,
+            paymentMethod: 'crypto',
+            parcelle: {
+              id: parcelle.id,
+              title: parcelle.title,
+              price: selectedPaymentInfo.totalPrice,
+              surface: parcelle.surface,
+              location: parcelle.location
+            },
+            paymentInfo: selectedPaymentInfo
+          } 
+        });
+        break;
+      default:
+        setShowContactModal(true); // Fallback vers contact
+    }
+  };
+
   const handleShowMap = () => {
     setShowMapModal(true);
   };
@@ -626,6 +701,27 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                           </div>
                         </CardContent>
                       </Card>
+                    </div>
+
+                    {/* Bouton pour accéder au centre de financement */}
+                    <div className="mt-6 pt-4 border-t">
+                      <Button 
+                        onClick={() => navigate('/buyer/financing', { 
+                          state: { 
+                            parcelId: parcelle?.id,
+                            parcelDetails: parcelle,
+                            returnPath: location.pathname 
+                          } 
+                        })}
+                        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white py-3"
+                        size="lg"
+                      >
+                        <CreditCard className="w-5 h-5 mr-2" />
+                        Découvrir Toutes les Options de Financement
+                      </Button>
+                      <p className="text-center text-sm text-gray-600 mt-2">
+                        Accédez à notre centre de financement pour des options personnalisées et des outils de simulation
+                      </p>
                     </div>
                   </div>
                 </TabsContent>
@@ -1109,31 +1205,24 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
             <Card>
               <CardContent className="p-6">
                 <div className="space-y-4">
-                  <Button onClick={handleContact} className="w-full bg-blue-600 hover:bg-blue-700">
-                    <Phone className="w-4 h-4 mr-2" />
-                    Initier l'achat
+                  <Button onClick={handleInitiatePurchase} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg shadow-lg">
+                    <Zap className="w-4 h-4 mr-2" />
+                    Acheter maintenant - {getPaymentInfo()?.method}
                   </Button>
+                  
+                  <div className="text-center text-sm text-gray-600 bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg">
+                    <div className="font-medium">{getPaymentInfo()?.title}</div>
+                    <div className="text-xs mt-1">{getPaymentInfo()?.description}</div>
+                  </div>
+                  
                   <div className="grid grid-cols-1 gap-2">
-                    <Button 
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() => navigate('/buy/one-time', { state: { parcelleId: parcelle.id } })}
-                    >
-                      Paiement comptant
-                    </Button>
-                    <Button 
-                      variant="secondary"
-                      className="w-full"
-                      onClick={() => navigate('/buy/installments', { state: { parcelleId: parcelle.id } })}
-                    >
-                      Paiement échelonné
-                    </Button>
                     <Button 
                       variant="outline"
                       className="w-full"
-                      onClick={() => navigate('/buy/bank-financing', { state: { parcelleId: parcelle.id } })}
+                      onClick={handleContact}
                     >
-                      Financement bancaire
+                      <Phone className="w-4 h-4 mr-2" />
+                      Contacter le vendeur
                     </Button>
                   </div>
                   

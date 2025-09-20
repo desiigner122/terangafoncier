@@ -1,5 +1,5 @@
 ﻿
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
@@ -7,18 +7,21 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { 
-  FileText, 
-  ArrowRight, 
-  Bell, 
-  User, 
-  MessageSquare, 
-  Check, 
-  X, 
-  ShoppingCart
+    FileText, 
+    ArrowRight, 
+    Bell, 
+    User, 
+    MessageSquare, 
+    Check, 
+    X, 
+    ShoppingCart,
+    Shield,
+    ExternalLink
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { supabase } from '@/lib/customSupabaseClient';
+import terangaBlockchain, { terangaBlockchain as blockchain } from '@/services/TerangaBlockchainService';
 
 const MyRequestsPage = () => {
     const { user } = useAuth();
@@ -26,6 +29,7 @@ const MyRequestsPage = () => {
     const [loading, setLoading] = useState(true);
     const [mySentRequests, setMySentRequests] = useState([]);
     const [myReceivedRequests, setMyReceivedRequests] = useState([]);
+    const [filterType, setFilterType] = useState('all'); // all | terrains | promoteurs | communales | construction
     
     const isSeller = user && (user.role === 'Vendeur Particulier' || user.role === 'Vendeur Pro');
     const [activeTab, setActiveTab] = useState(isSeller ? 'received' : 'sent');
@@ -87,14 +91,45 @@ const MyRequestsPage = () => {
         }
     };
     
+    const filteredSent = useMemo(() => {
+        if (filterType === 'all') return mySentRequests;
+        return mySentRequests.filter(req => {
+            switch (filterType) {
+                case 'terrains': return !!req.parcels || req.type === 'offer' || req.type === 'installments' || req.type === 'bank_financing';
+                case 'promoteurs': return req.project_id != null;
+                case 'communales': return req.type === 'municipal_land';
+                case 'construction': return req.type === 'construction_request';
+                default: return true;
+            }
+        });
+    }, [mySentRequests, filterType]);
+
     const sentRequestsList = (
         <ul className="space-y-4">
-            {mySentRequests.length > 0 ? mySentRequests.map(req => (
+            {filteredSent.length > 0 ? filteredSent.map(req => (
                 <li key={req.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <p className="font-semibold">{req.parcels?.name || `Demande à ${req.users?.full_name}`}</p>
                         <p className="text-sm text-muted-foreground">ID: {req.id} | Destinataire: {req.users?.full_name || 'Mairie'}</p>
                         <div className="mt-1">{getStatusBadge(req.status)}</div>
+                                                {(req.nft_token_id || req.nft_tx_hash) && (
+                                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                                        {req.nft_token_id && (
+                                                            <Badge variant="outline" className="flex items-center gap-1">
+                                                                <Shield className="w-3 h-3" /> NFT #{req.nft_token_id}
+                                                            </Badge>
+                                                        )}
+                                                        {req.nft_tx_hash && (
+                                                            <a
+                                                                className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                                                                href={`${blockchain?.networks?.[blockchain?.currentNetwork]?.blockExplorer || 'https://polygonscan.com'}/tx/${req.nft_tx_hash}`}
+                                                                target="_blank" rel="noreferrer"
+                                                            >
+                                                                <ExternalLink className="w-3 h-3" /> Voir la transaction
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )}
                     </div>
                     <Button asChild size="sm">
                         <Link to={`/case-tracking/${req.id}`}>
@@ -102,18 +137,49 @@ const MyRequestsPage = () => {
                         </Link>
                     </Button>
                 </li>
-            )) : <p className="text-center text-muted-foreground p-4">Vous n'avez envoyé aucune demande.</p>}
+            )) : <p className="text-center text-muted-foreground p-4">Aucune demande pour ce filtre.</p>}
         </ul>
     );
 
+    const filteredReceived = useMemo(() => {
+        if (filterType === 'all') return myReceivedRequests;
+        return myReceivedRequests.filter(req => {
+            switch (filterType) {
+                case 'terrains': return !!req.parcels || req.type === 'offer' || req.type === 'installments' || req.type === 'bank_financing';
+                case 'promoteurs': return req.project_id != null;
+                case 'communales': return req.type === 'municipal_land';
+                case 'construction': return req.type === 'construction_request';
+                default: return true;
+            }
+        });
+    }, [myReceivedRequests, filterType]);
+
     const receivedRequestsList = (
         <ul className="space-y-4">
-            {myReceivedRequests.length > 0 ? myReceivedRequests.map(req => (
+            {filteredReceived.length > 0 ? filteredReceived.map(req => (
                 <li key={req.id} className="border rounded-lg p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
                         <p className="font-semibold">{req.users?.full_name} pour {req.parcels?.name}</p>
                         <p className="text-sm text-muted-foreground">ID: {req.id}</p>
                         <div className="mt-1">{getStatusBadge(req.status)}</div>
+                                                {(req.nft_token_id || req.nft_tx_hash) && (
+                                                    <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+                                                        {req.nft_token_id && (
+                                                            <Badge variant="outline" className="flex items-center gap-1">
+                                                                <Shield className="w-3 h-3" /> NFT #{req.nft_token_id}
+                                                            </Badge>
+                                                        )}
+                                                        {req.nft_tx_hash && (
+                                                            <a
+                                                                className="inline-flex items-center gap-1 text-blue-600 hover:underline"
+                                                                href={`${blockchain?.networks?.[blockchain?.currentNetwork]?.blockExplorer || 'https://polygonscan.com'}/tx/${req.nft_tx_hash}`}
+                                                                target="_blank" rel="noreferrer"
+                                                            >
+                                                                <ExternalLink className="w-3 h-3" /> Voir la transaction
+                                                            </a>
+                                                        )}
+                                                    </div>
+                                                )}
                     </div>
                      <div className="flex items-center gap-2">
                         {req.status === 'new' && (
@@ -133,7 +199,7 @@ const MyRequestsPage = () => {
                         </Button>
                     </div>
                 </li>
-            )) : <p className="text-center text-muted-foreground p-4">Vous n'avez reçu aucune demande.</p>}
+            )) : <p className="text-center text-muted-foreground p-4">Aucune demande pour ce filtre.</p>}
         </ul>
     );
 
@@ -164,7 +230,21 @@ const MyRequestsPage = () => {
                         {isSeller ? (activeTab === 'sent' ? 'Suivez les demandes que vous avez faites pour acheter d\'autres biens.' : 'Gérez les demandes d\'achat pour vos biens.') : 'Suivez l\'état d\'avancement de vos demandes d\'acquisition ou d\'information.'}
                     </CardDescription>
                 </CardHeader>
-                <CardContent>
+                                <CardContent>
+                                        {/* Type filters */}
+                                        <div className="mb-4 flex flex-wrap gap-2">
+                                                {[
+                                                    { key: 'all', label: 'Toutes' },
+                                                    { key: 'terrains', label: 'Terrains' },
+                                                    { key: 'promoteurs', label: 'Promoteurs' },
+                                                    { key: 'communales', label: 'Communales' },
+                                                    { key: 'construction', label: 'Construction' },
+                                                ].map(f => (
+                                                    <Button key={f.key} variant={filterType === f.key ? 'default' : 'outline'} size="sm" onClick={() => setFilterType(f.key)}>
+                                                        {f.label}
+                                                    </Button>
+                                                ))}
+                                        </div>
                     {isSeller && (
                         <div className="mb-6 flex space-x-1 rounded-lg bg-muted p-1">
                             <Button

@@ -84,7 +84,7 @@ const ModernAdminDashboard = () => {
     setLoading(true);
     try {
       // Statistiques globales
-      const { data: users } = await supabase.from('users').select('role, created_at');
+      const { data: profiles } = await supabase.from('profiles').select('role, created_at');
       const { data: projects } = await supabase.from('remote_construction_projects').select('*');
       const { data: parcels } = await supabase.from('parcels').select('*');
       

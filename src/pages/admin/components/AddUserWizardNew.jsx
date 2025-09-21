@@ -193,7 +193,7 @@ const AddUserWizard = ({ isOpen, onClose, onUserAdded }) => {
       };
 
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .insert([userData])
         .select();
 

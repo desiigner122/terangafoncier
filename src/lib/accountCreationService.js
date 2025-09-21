@@ -432,7 +432,7 @@ class AccountCreationService {
       } else {
         // Pour les autres rôles, créer directement l'utilisateur
         const { data: newUser, error: userError } = await supabase
-          .from('users')
+          .from('profiles')
           .insert(userProfile)
           .select()
           .single();
@@ -596,7 +596,7 @@ class AccountCreationService {
       } else {
         // Création standard pour autres rôles
         const { data: newUser, error: userError } = await supabase
-          .from('users')
+          .from('profiles')
           .insert({
             id: authData.user.id,
             email,
@@ -715,7 +715,7 @@ class AccountCreationService {
   async checkEmailExists(email) {
     try {
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('id')
         .eq('email', email)
         .single();

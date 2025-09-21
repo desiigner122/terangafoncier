@@ -38,7 +38,7 @@ const AdminReportsPage = () => {
     try {
       // Récupérer les vraies données des tables
       const [usersRes, parcelsRes, requestsRes, blogRes] = await Promise.all([
-        supabase.from('users').select('*', { count: 'exact' }),
+        supabase.from('profiles').select('*', { count: 'exact' }),
         supabase.from('parcels').select('*', { count: 'exact' }),
         supabase.from('requests').select('*', { count: 'exact' }),
         supabase.from('blog').select('*', { count: 'exact' })

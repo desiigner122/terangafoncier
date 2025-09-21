@@ -47,8 +47,8 @@ const AdminDashboardPage = () => {
       setLoading(true);
       try {
         // Statistiques générales du système
-        const { data: usersData } = await supabase
-          .from('users')
+        const { data: profilesData } = await supabase
+          .from('profiles')
           .select('role', { count: 'exact' });
 
         const { data: projectsData } = await supabase

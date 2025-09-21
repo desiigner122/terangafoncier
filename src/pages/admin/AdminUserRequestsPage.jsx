@@ -69,7 +69,7 @@ const AdminUserRequestsPage = () => {
 
         if (newStatus === 'approved') {
             const { error: profileError } = await supabase
-                .from('users')
+                .from('profiles')
                 .update({ role: request.details.requestedRole, user_type: request.details.requestedRole, verification_status: 'verified' })
                 .eq('id', request.user.id);
 

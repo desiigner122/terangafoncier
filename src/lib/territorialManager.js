@@ -23,7 +23,7 @@ class TerritorialManager {
 
       // 4. Créer l'utilisateur mairie
       const { data: newUser, error: userError } = await supabase
-        .from('users')
+        .from('profiles')
         .insert({
           ...userProfile,
           role: 'Mairie',

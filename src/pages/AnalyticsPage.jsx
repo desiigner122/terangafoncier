@@ -32,7 +32,7 @@ const AnalyticsPageComponent = () => {
       try {
         // Récupérer les données réelles depuis Supabase
         const [usersResult, parcelsResult, requestsResult, blogResult] = await Promise.all([
-          supabase.from('users').select('*'),
+          supabase.from('profiles').select('*'),
           supabase.from('parcels').select('*'),
           supabase.from('requests').select('*'),
           supabase.from('blog').select('*')

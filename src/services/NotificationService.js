@@ -306,7 +306,7 @@ export class NotificationService {
 
     // Récupérer les infos utilisateur
     const { data: user, error } = await supabase
-      .from('profiles')
+      .from('users')
       .select('email, full_name')
       .eq('user_id', notification.user_id)
       .single();
@@ -337,7 +337,7 @@ export class NotificationService {
 
     // Récupérer le numéro de téléphone
     const { data: user, error } = await supabase
-      .from('profiles')
+      .from('users')
       .select('phone')
       .eq('user_id', notification.user_id)
       .single();

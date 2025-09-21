@@ -18,8 +18,8 @@ class GlobalAnalyticsService {
   async collectUserGeographics() {
     try {
       // Données depuis Supabase
-      const { data: users, error } = await supabase
-        .from('users')
+      const { data: profiles, error } = await supabase
+        .from('profiles')
         .select('id, country, region, city, created_at, last_active_at, role');
 
       if (error) throw error;
@@ -178,8 +178,8 @@ class GlobalAnalyticsService {
    */
   async analyzeUserTypePerformance() {
     try {
-      const { data: users, error } = await supabase
-        .from('users')
+      const { data: profiles, error } = await supabase
+        .from('profiles')
         .select(`
           id, role, country, created_at,
           user_activities(activity_type, date),

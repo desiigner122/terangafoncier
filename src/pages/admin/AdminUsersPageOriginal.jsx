@@ -57,7 +57,7 @@ const AdminUsersPage = () => {
       setError(null);
       
       const { data, error } = await supabase
-        .from('users')
+        .from('profiles')
         .select('*')
         .order('created_at', { ascending: false });
 

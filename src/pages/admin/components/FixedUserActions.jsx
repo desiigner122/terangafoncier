@@ -85,14 +85,14 @@ const FixedUserActions = ({ user, onUserUpdated, onUserDeleted }) => {
       switch (action) {
         case 'delete':
           result = await supabase
-            .from('users')
+            .from('profiles')
             .delete()
             .eq('id', user.id);
           break;
           
         case 'ban':
           result = await supabase
-            .from('users')
+            .from('profiles')
             .update({ 
               status: 'banned',
               ban_reason: data.reason,
@@ -104,7 +104,7 @@ const FixedUserActions = ({ user, onUserUpdated, onUserDeleted }) => {
           
         case 'unban':
           result = await supabase
-            .from('users')
+            .from('profiles')
             .update({ 
               status: 'active',
               ban_reason: null,
@@ -116,7 +116,7 @@ const FixedUserActions = ({ user, onUserUpdated, onUserDeleted }) => {
           
         case 'approve':
           result = await supabase
-            .from('users')
+            .from('profiles')
             .update({ 
               verification_status: 'verified',
               verified_at: new Date().toISOString()
@@ -127,7 +127,7 @@ const FixedUserActions = ({ user, onUserUpdated, onUserDeleted }) => {
           
         case 'reject':
           result = await supabase
-            .from('users')
+            .from('profiles')
             .update({ 
               verification_status: 'rejected',
               rejection_reason: data.reason,
@@ -139,7 +139,7 @@ const FixedUserActions = ({ user, onUserUpdated, onUserDeleted }) => {
           
         case 'changeRole':
           result = await supabase
-            .from('users')
+            .from('profiles')
             .update({ 
               role: data.newRole,
               role_changed_at: new Date().toISOString()

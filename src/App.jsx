@@ -114,7 +114,7 @@ import DataProtectionPage from '@/pages/DataProtectionPage';
 import TerrainProgressPage from '@/pages/TerrainProgressPage';
 import { Button } from '@/components/ui/button';
 import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
-import DashboardRedirect from '@/components/layout/DashboardRedirect';
+import RoleBasedRedirect from '@/components/layout/RoleBasedRedirect';
 import ScrollToTop from '@/components/layout/ScrollToTop';
 import { motion } from 'framer-motion';
 import { ComparisonProvider } from '@/context/ComparisonContext';
@@ -394,7 +394,7 @@ function App() {
                 <Route path="dashboard-simple" element={<ProtectedRoute><SimpleDashboard /></ProtectedRoute>} />
                 
                 {/* Route de redirection intelligente pour /dashboard */}
-                <Route path="dashboard" element={<ProtectedRoute><DashboardRedirect /></ProtectedRoute>} />
+                <Route path="dashboard" element={<ProtectedRoute><RoleBasedRedirect /></ProtectedRoute>} />
                 
                 {/* Route de test complètement indépendante pour debugging */}
                 <Route path="test-vendeur" element={<ModernVendeurDashboard />} />
@@ -502,7 +502,7 @@ function App() {
             {/* Routes Dashboard avec layout et sous-pages (/dashboard/*) */}
             <Route path="/dashboard" element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
               {/* Accueil: redirection intelligente selon le rôle */}
-              <Route index element={<DashboardRedirect />} />
+              <Route index element={<RoleBasedRedirect />} />
 
               {/* Pages communes du dashboard */}
               <Route path="notifications" element={<NotificationsPageNew />} />

@@ -1,0 +1,155 @@
+{
+  "timestamp": "2025-09-21T12:20:45.290Z",
+  "total_testes": 20,
+  "succes": 6,
+  "echecs": 14,
+  "pourcentage_reussite": 30,
+  "resultats": [
+    {
+      "email": "admin@terangafoncier.sn",
+      "nom": "Administrateur Système",
+      "role": "admin",
+      "status": "ÉCHEC",
+      "erreur": "Invalid login credentials"
+    },
+    {
+      "email": "test.admin@terangafoncier.sn",
+      "nom": "Test Admin",
+      "role": "Admin",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "family.diallo@teranga-foncier.sn",
+      "nom": "Famille Diallo",
+      "role": "particulier",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "ahmadou.ba@teranga-foncier.sn",
+      "nom": "Ahmadou Ba",
+      "role": "particulier",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "heritage.fall@teranga-foncier.sn",
+      "nom": "Héritage Fall",
+      "role": "vendeur",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "domaine.seck@teranga-foncier.sn",
+      "nom": "Domaine Seck",
+      "role": "vendeur",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "urban.developers@teranga-foncier.sn",
+      "nom": "Urban Developers Sénégal",
+      "role": "promoteur",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "sahel.construction@teranga-foncier.sn",
+      "nom": "Sahel Construction",
+      "role": "promoteur",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "financement.boa@teranga-foncier.sn",
+      "nom": "BOA Sénégal - Financement",
+      "role": "banque",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "credit.agricole@teranga-foncier.sn",
+      "nom": "Crédit Agricole Sénégal",
+      "role": "banque",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "etude.diouf@teranga-foncier.sn",
+      "nom": "Étude Notariale Diouf",
+      "role": "notaire",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "chambre.notaires@teranga-foncier.sn",
+      "nom": "Chambre des Notaires",
+      "role": "notaire",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "foncier.expert@teranga-foncier.sn",
+      "nom": "Foncier Expert Conseil",
+      "role": "agent_foncier",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "teranga.immobilier@teranga-foncier.sn",
+      "nom": "Teranga Immobilier",
+      "role": "agent_foncier",
+      "status": "ÉCHEC",
+      "erreur": "Database error querying schema"
+    },
+    {
+      "email": "geowest.africa@teranga-foncier.sn",
+      "nom": "GeoWest Africa SARL",
+      "role": "geometre",
+      "status": "SUCCÈS",
+      "user_id": "e4bbd1ac-3cdf-4220-ade3-554ec3a82a60",
+      "email_confirme": "OUI"
+    },
+    {
+      "email": "cabinet.ndiaye@teranga-foncier.sn",
+      "nom": "Cabinet Géomètre Ndiaye & Associés",
+      "role": "geometre",
+      "status": "SUCCÈS",
+      "user_id": "cd3b4db2-0cbe-4112-95fe-fbf4def14c53",
+      "email_confirme": "OUI"
+    },
+    {
+      "email": "atlantique.capital@teranga-foncier.sn",
+      "nom": "Atlantique Capital Partners",
+      "role": "investisseur",
+      "status": "SUCCÈS",
+      "user_id": "eb08b503-d58a-4e7b-b928-2c5e574e4b9c",
+      "email_confirme": "OUI"
+    },
+    {
+      "email": "fonds.souverain@teranga-foncier.sn",
+      "nom": "Fonds Souverain d'Investissement du Sénégal",
+      "role": "investisseur",
+      "status": "SUCCÈS",
+      "user_id": "75dfc4d9-ddce-4632-bee2-131e3842b07e",
+      "email_confirme": "OUI"
+    },
+    {
+      "email": "mairie.thies@teranga-foncier.sn",
+      "nom": "Mairie de Thiès",
+      "role": "mairie",
+      "status": "SUCCÈS",
+      "user_id": "2203ac49-4071-4d0d-b8a5-5bb8e0e3dd84",
+      "email_confirme": "OUI"
+    },
+    {
+      "email": "mairie.dakar@teranga-foncier.sn",
+      "nom": "Mairie de Dakar",
+      "role": "mairie",
+      "status": "SUCCÈS",
+      "user_id": "8afd99ba-e934-4b47-b900-41294e18ae17",
+      "email_confirme": "OUI"
+    }
+  ]
+}

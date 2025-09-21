@@ -1,0 +1,311 @@
+-- ======================================================================
+-- CRÉATION DES COMPTES POUR LES RÔLES RESTANTS (VERSION CORRIGÉE)
+-- Script SQL simplifié compatible avec le schéma Supabase actuel
+-- ======================================================================
+
+-- 1. PARTICULIERS (2 comptes)
+INSERT INTO auth.users (
+    instance_id, id, aud, role, email, encrypted_password, 
+    email_confirmed_at, confirmation_sent_at, confirmation_token,
+    recovery_sent_at, recovery_token, 
+    phone, confirmed_at,
+    is_super_admin, created_at, updated_at, raw_app_meta_data, raw_user_meta_data
+) VALUES 
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'family.diallo@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 77 123 45 01',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Famille Diallo","role":"particulier","phone":"+221 77 123 45 01","organization":"Famille Diallo"}'::jsonb
+),
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'ahmadou.ba@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 77 123 45 02',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Ahmadou Ba","role":"particulier","phone":"+221 77 123 45 02","organization":"Particulier"}'::jsonb
+),
+
+-- 2. VENDEURS (2 comptes)
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'heritage.fall@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 77 123 45 03',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Héritage Fall","role":"vendeur","phone":"+221 77 123 45 03","organization":"Succession Fall"}'::jsonb
+),
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'domaine.seck@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 77 123 45 04',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Domaine Seck","role":"vendeur","phone":"+221 77 123 45 04","organization":"Propriété Familiale Seck"}'::jsonb
+),
+
+-- 3. PROMOTEURS (2 comptes)
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'urban.developers@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 33 123 45 05',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Urban Developers Sénégal","role":"promoteur","phone":"+221 33 123 45 05","organization":"Urban Developers"}'::jsonb
+),
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'sahel.construction@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 33 123 45 06',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Sahel Construction","role":"promoteur","phone":"+221 33 123 45 06","organization":"Sahel Construction SARL"}'::jsonb
+),
+
+-- 4. BANQUES (2 comptes)
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'financement.boa@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 33 123 45 07',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"BOA Sénégal - Financement","role":"banque","phone":"+221 33 123 45 07","organization":"Bank of Africa Sénégal"}'::jsonb
+),
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'credit.agricole@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 33 123 45 08',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Crédit Agricole Sénégal","role":"banque","phone":"+221 33 123 45 08","organization":"Crédit Agricole du Sénégal"}'::jsonb
+),
+
+-- 5. NOTAIRES (2 comptes)
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'etude.diouf@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 33 123 45 09',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Étude Notariale Diouf","role":"notaire","phone":"+221 33 123 45 09","organization":"Étude Me Diouf"}'::jsonb
+),
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'chambre.notaires@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 33 123 45 10',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Chambre des Notaires","role":"notaire","phone":"+221 33 123 45 10","organization":"Chambre Régionale des Notaires"}'::jsonb
+),
+
+-- 6. AGENTS FONCIERS (2 comptes)
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'foncier.expert@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 77 123 45 11',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Foncier Expert Conseil","role":"agent_foncier","phone":"+221 77 123 45 11","organization":"Cabinet Foncier Expert"}'::jsonb
+),
+(
+    '00000000-0000-0000-0000-000000000000',
+    gen_random_uuid(),
+    'authenticated',
+    'authenticated',
+    'teranga.immobilier@teranga-foncier.sn',
+    crypt('password123', gen_salt('bf')),
+    NOW(),
+    NOW(),
+    '',
+    NULL,
+    '',
+    '+221 77 123 45 12',
+    NOW(),
+    FALSE,
+    NOW(),
+    NOW(),
+    '{"provider":"email","providers":["email"]}',
+    '{"full_name":"Teranga Immobilier","role":"agent_foncier","phone":"+221 77 123 45 12","organization":"Agence Teranga Immobilier"}'::jsonb
+);
+
+-- Vérification des comptes créés
+SELECT 
+    '✅ VÉRIFICATION DES NOUVEAUX COMPTES' as titre,
+    email,
+    raw_user_meta_data->>'full_name' as nom,
+    raw_user_meta_data->>'role' as role,
+    'CRÉÉ' as statut
+FROM auth.users 
+WHERE email IN (
+    'family.diallo@teranga-foncier.sn',
+    'ahmadou.ba@teranga-foncier.sn',
+    'heritage.fall@teranga-foncier.sn',
+    'domaine.seck@teranga-foncier.sn',
+    'urban.developers@teranga-foncier.sn',
+    'sahel.construction@teranga-foncier.sn',
+    'financement.boa@teranga-foncier.sn',
+    'credit.agricole@teranga-foncier.sn',
+    'etude.diouf@teranga-foncier.sn',
+    'chambre.notaires@teranga-foncier.sn',
+    'foncier.expert@teranga-foncier.sn',
+    'teranga.immobilier@teranga-foncier.sn'
+)
+ORDER BY raw_user_meta_data->>'role', email;
+
+-- Résumé final
+SELECT 
+    '📊 RÉSUMÉ FINAL' as section,
+    COUNT(*) || ' comptes créés' as resultat,
+    CASE 
+        WHEN COUNT(*) = 12 THEN '✅ TOUS LES COMPTES CRÉÉS'
+        ELSE '❌ COMPTES MANQUANTS: ' || (12 - COUNT(*))
+    END as status
+FROM auth.users 
+WHERE email IN (
+    'family.diallo@teranga-foncier.sn',
+    'ahmadou.ba@teranga-foncier.sn',
+    'heritage.fall@teranga-foncier.sn',
+    'domaine.seck@teranga-foncier.sn',
+    'urban.developers@teranga-foncier.sn',
+    'sahel.construction@teranga-foncier.sn',
+    'financement.boa@teranga-foncier.sn',
+    'credit.agricole@teranga-foncier.sn',
+    'etude.diouf@teranga-foncier.sn',
+    'chambre.notaires@teranga-foncier.sn',
+    'foncier.expert@teranga-foncier.sn',
+    'teranga.immobilier@teranga-foncier.sn'
+);

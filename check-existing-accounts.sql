@@ -1,71 +1,75 @@
--- Script simple pour vérifier les comptes existants
--- À exécuter en premier pour voir ce qui existe déjà
+-- ======================================================================
+-- VÉRIFICATION DES COMPTES EXISTANTS
+-- Identifier quels comptes existent déjà pour éviter les doublons
+-- ======================================================================
 
+-- Vérifier quels comptes des 12 nouveaux existent déjà
 SELECT 
-  'Comptes existants dans auth.users' as status;
-
-SELECT 
-  u.email,
-  u.raw_user_meta_data->>'role' as role,
-  u.raw_user_meta_data->>'name' as name,
-  u.email_confirmed_at IS NOT NULL as email_confirmed,
-  u.created_at
-FROM auth.users u
-WHERE u.email LIKE '%@terangafoncier.com'
-ORDER BY u.email;
-
-SELECT 
-  'Profils existants dans profiles' as status;
-
-SELECT 
-  p.email,
-  p.role,
-  p.company_name,
-  p.created_at
-FROM profiles p
-WHERE p.email LIKE '%@terangafoncier.com'
-ORDER BY p.email;
-
--- Résumé
-WITH expected_accounts AS (
-  SELECT unnest(ARRAY[
-    'admin@terangafoncier.com',
-    'particulier@terangafoncier.com',
-    'vendeur@terangafoncier.com',
-    'investisseur@terangafoncier.com',
-    'municipalite@terangafoncier.com',
-    'notaire@terangafoncier.com',
-    'geometre@terangafoncier.com',
-    'banque@terangafoncier.com',
-    'promoteur@terangafoncier.com'
-  ]) as expected_email
+    '⚠️  COMPTES DÉJÀ EXISTANTS' as section,
+    email,
+    raw_user_meta_data->>'full_name' as nom,
+    raw_user_meta_data->>'role' as role,
+    '❌ DÉJÀ EXISTE' as status
+FROM auth.users 
+WHERE email IN (
+    'family.diallo@teranga-foncier.sn',
+    'ahmadou.ba@teranga-foncier.sn',
+    'heritage.fall@teranga-foncier.sn',
+    'domaine.seck@teranga-foncier.sn',
+    'urban.developers@teranga-foncier.sn',
+    'sahel.construction@teranga-foncier.sn',
+    'financement.boa@teranga-foncier.sn',
+    'credit.agricole@teranga-foncier.sn',
+    'etude.diouf@teranga-foncier.sn',
+    'chambre.notaires@teranga-foncier.sn',
+    'foncier.expert@teranga-foncier.sn',
+    'teranga.immobilier@teranga-foncier.sn'
 )
-SELECT 
-  'Résumé des comptes' as status,
-  COUNT(CASE WHEN u.email IS NOT NULL THEN 1 END) as comptes_existants,
-  COUNT(*) as comptes_requis,
-  COUNT(CASE WHEN u.email IS NULL THEN 1 END) as comptes_manquants
-FROM expected_accounts ea
-LEFT JOIN auth.users u ON ea.expected_email = u.email;
+ORDER BY email;
 
--- Liste des comptes manquants
-WITH expected_accounts AS (
-  SELECT unnest(ARRAY[
-    'admin@terangafoncier.com',
-    'particulier@terangafoncier.com',
-    'vendeur@terangafoncier.com',
-    'investisseur@terangafoncier.com',
-    'municipalite@terangafoncier.com',
-    'notaire@terangafoncier.com',
-    'geometre@terangafoncier.com',
-    'banque@terangafoncier.com',
-    'promoteur@terangafoncier.com'
-  ]) as expected_email
-)
+-- Identifier les comptes manquants
 SELECT 
-  'Comptes manquants:' as status,
-  ea.expected_email
-FROM expected_accounts ea
-LEFT JOIN auth.users u ON ea.expected_email = u.email
-WHERE u.email IS NULL
-ORDER BY ea.expected_email;
+    '✅ COMPTES À CRÉER' as section,
+    missing_emails.email,
+    missing_emails.full_name,
+    missing_emails.role,
+    '🆕 À CRÉER' as status
+FROM (
+    VALUES 
+    ('family.diallo@teranga-foncier.sn', 'Famille Diallo', 'particulier'),
+    ('ahmadou.ba@teranga-foncier.sn', 'Ahmadou Ba', 'particulier'),
+    ('heritage.fall@teranga-foncier.sn', 'Héritage Fall', 'vendeur'),
+    ('domaine.seck@teranga-foncier.sn', 'Domaine Seck', 'vendeur'),
+    ('urban.developers@teranga-foncier.sn', 'Urban Developers Sénégal', 'promoteur'),
+    ('sahel.construction@teranga-foncier.sn', 'Sahel Construction', 'promoteur'),
+    ('financement.boa@teranga-foncier.sn', 'BOA Sénégal - Financement', 'banque'),
+    ('credit.agricole@teranga-foncier.sn', 'Crédit Agricole Sénégal', 'banque'),
+    ('etude.diouf@teranga-foncier.sn', 'Étude Notariale Diouf', 'notaire'),
+    ('chambre.notaires@teranga-foncier.sn', 'Chambre des Notaires', 'notaire'),
+    ('foncier.expert@teranga-foncier.sn', 'Foncier Expert Conseil', 'agent_foncier'),
+    ('teranga.immobilier@teranga-foncier.sn', 'Teranga Immobilier', 'agent_foncier')
+) AS missing_emails(email, full_name, role)
+WHERE NOT EXISTS (
+    SELECT 1 FROM auth.users u WHERE u.email = missing_emails.email
+)
+ORDER BY missing_emails.role, missing_emails.email;
+
+-- Résumé de la situation
+SELECT 
+    '📊 RÉSUMÉ DE LA SITUATION' as section,
+    (SELECT COUNT(*) FROM auth.users WHERE email IN (
+        'family.diallo@teranga-foncier.sn', 'ahmadou.ba@teranga-foncier.sn',
+        'heritage.fall@teranga-foncier.sn', 'domaine.seck@teranga-foncier.sn',
+        'urban.developers@teranga-foncier.sn', 'sahel.construction@teranga-foncier.sn',
+        'financement.boa@teranga-foncier.sn', 'credit.agricole@teranga-foncier.sn',
+        'etude.diouf@teranga-foncier.sn', 'chambre.notaires@teranga-foncier.sn',
+        'foncier.expert@teranga-foncier.sn', 'teranga.immobilier@teranga-foncier.sn'
+    )) || '/12 comptes existent déjà' as existants,
+    (12 - (SELECT COUNT(*) FROM auth.users WHERE email IN (
+        'family.diallo@teranga-foncier.sn', 'ahmadou.ba@teranga-foncier.sn',
+        'heritage.fall@teranga-foncier.sn', 'domaine.seck@teranga-foncier.sn',
+        'urban.developers@teranga-foncier.sn', 'sahel.construction@teranga-foncier.sn',
+        'financement.boa@teranga-foncier.sn', 'credit.agricole@teranga-foncier.sn',
+        'etude.diouf@teranga-foncier.sn', 'chambre.notaires@teranga-foncier.sn',
+        'foncier.expert@teranga-foncier.sn', 'teranga.immobilier@teranga-foncier.sn'
+    ))) || ' comptes à créer' as a_creer;

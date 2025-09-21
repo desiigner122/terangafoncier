@@ -682,7 +682,6 @@ const VendeurDashboard = () => {
             </div>
           </TabsContent>
       </Tabs>
-      </div>
     </div>
   );
 };

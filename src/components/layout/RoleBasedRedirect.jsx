@@ -30,31 +30,31 @@ const RoleBasedRedirect = () => {
     return <Navigate to="/login" replace />;
   }
 
-  // Mapping des rôles vers leurs dashboards modernes
+  // Mapping des rôles vers leurs dashboards modernes blockchain
   const roleRedirectMap = {
     'Admin': '/admin',
     'admin': '/admin',
-    'Géomètre': '/dashboard/geometre',  // Utilise le dashboard général en attendant
+    'Géomètre': '/dashboard/geometre',
     'geometre': '/dashboard/geometre',
-    'Investisseur': '/solutions/investisseurs/apercu',
-    'investisseur': '/solutions/investisseurs/apercu',
-    'Mairie': '/solutions/mairies/apercu',
-    'mairie': '/solutions/mairies/apercu',
-    'Promoteur': '/solutions/promoteurs/apercu',
-    'promoteur': '/solutions/promoteurs/apercu',
-    'Banque': '/solutions/banques/apercu',
-    'banque': '/solutions/banques/apercu',
-    'Notaire': '/solutions/notaires/apercu',
-    'notaire': '/solutions/notaires/apercu',
-    'Vendeur': '/solutions/vendeurs/apercu',
-    'vendeur': '/solutions/vendeurs/apercu',
-    'Vendeur Particulier': '/solutions/vendeurs/apercu',
-    'Vendeur Pro': '/solutions/vendeurs/apercu',
-    'Acheteur': '/dashboard/acheteur',  // Utilise le dashboard général en attendant
+    'Investisseur': '/dashboard/investisseur',
+    'investisseur': '/dashboard/investisseur',
+    'Mairie': '/dashboard/mairie',
+    'mairie': '/dashboard/mairie',
+    'Promoteur': '/dashboard/promoteur',
+    'promoteur': '/dashboard/promoteur',
+    'Banque': '/dashboard/banque',
+    'banque': '/dashboard/banque',
+    'Notaire': '/dashboard/notaire',
+    'notaire': '/dashboard/notaire',
+    'Vendeur': '/dashboard/vendeur',
+    'vendeur': '/dashboard/vendeur',
+    'Vendeur Particulier': '/dashboard/vendeur',
+    'Vendeur Pro': '/dashboard/vendeur',
+    'Acheteur': '/dashboard/acheteur',
     'acheteur': '/dashboard/acheteur',
     'Particulier': '/dashboard/acheteur',
     'particulier': '/dashboard/acheteur',
-    'Agent Foncier': '/agent'
+    'Agent Foncier': '/dashboard/agent-foncier'
   };
 
   // Obtenir le rôle de l'utilisateur (priorité à role, puis user_type)

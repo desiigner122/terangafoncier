@@ -13,7 +13,6 @@ import {
   Target,
   Ruler,
   Building,
-  Badge,
   Star,
   Calendar,
   Download,
@@ -21,9 +20,10 @@ import {
   Globe,
   Layers
 } from 'lucide-react';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/Tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/Card';
-import { Progress } from '../components/ui/Progress';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Progress } from '../../components/ui/progress';
+import { Badge } from '../../components/ui/badge';
 
 const ModernGeometreDashboard = () => {
   const [selectedTab, setSelectedTab] = useState('surveys');

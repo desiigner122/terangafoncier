@@ -1,114 +1,128 @@
 {
-  "timestamp": "2025-09-21T23:45:55.481Z",
+  "timestamp": "2025-09-22T10:43:09.803Z",
   "total_testes": 20,
-  "succes": 6,
-  "echecs": 14,
-  "pourcentage_reussite": 30,
+  "succes": 20,
+  "echecs": 0,
+  "pourcentage_reussite": 100,
   "resultats": [
     {
       "email": "admin@terangafoncier.sn",
       "nom": "Administrateur Système",
       "role": "admin",
-      "status": "ÉCHEC",
-      "erreur": "Invalid login credentials"
+      "status": "SUCCÈS",
+      "user_id": "4089e51f-85e4-4348-ae0c-f00e4f8ff497",
+      "email_confirme": "OUI"
     },
     {
       "email": "test.admin@terangafoncier.sn",
       "nom": "Test Admin",
       "role": "Admin",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "fa730233-f8cd-43e9-ab8b-8f552631e1b2",
+      "email_confirme": "OUI"
     },
     {
       "email": "family.diallo@teranga-foncier.sn",
       "nom": "Famille Diallo",
       "role": "particulier",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "3f3083ba-4f40-4045-b6e6-7f009a6c2cb2",
+      "email_confirme": "OUI"
     },
     {
       "email": "ahmadou.ba@teranga-foncier.sn",
       "nom": "Ahmadou Ba",
       "role": "particulier",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "1c8f1bd5-3c68-4f65-aceb-fc68e2730989",
+      "email_confirme": "OUI"
     },
     {
       "email": "heritage.fall@teranga-foncier.sn",
       "nom": "Héritage Fall",
       "role": "vendeur",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "06125976-5ea1-403a-b09e-aebbe1311111",
+      "email_confirme": "OUI"
     },
     {
       "email": "domaine.seck@teranga-foncier.sn",
       "nom": "Domaine Seck",
       "role": "vendeur",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "69640546-cc34-4b0c-91ca-0e751d04fa57",
+      "email_confirme": "OUI"
     },
     {
       "email": "urban.developers@teranga-foncier.sn",
       "nom": "Urban Developers Sénégal",
       "role": "promoteur",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "e96d0fc5-fb09-4510-b6b0-98b952f2a82e",
+      "email_confirme": "OUI"
     },
     {
       "email": "sahel.construction@teranga-foncier.sn",
       "nom": "Sahel Construction",
       "role": "promoteur",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "d0ce7ffd-9137-455a-9ade-51eafe7a9f02",
+      "email_confirme": "OUI"
     },
     {
       "email": "financement.boa@teranga-foncier.sn",
       "nom": "BOA Sénégal - Financement",
       "role": "banque",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "af9a8480-a48e-4f4b-96b0-ab281b014cd7",
+      "email_confirme": "OUI"
     },
     {
       "email": "credit.agricole@teranga-foncier.sn",
       "nom": "Crédit Agricole Sénégal",
       "role": "banque",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "09962f2f-2df1-4a40-b8dc-fddd8d67fb3d",
+      "email_confirme": "OUI"
     },
     {
       "email": "etude.diouf@teranga-foncier.sn",
       "nom": "Étude Notariale Diouf",
       "role": "notaire",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "6b222cf1-0bc0-42b3-a360-5fc1ca1c7eee",
+      "email_confirme": "OUI"
     },
     {
       "email": "chambre.notaires@teranga-foncier.sn",
       "nom": "Chambre des Notaires",
       "role": "notaire",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "f7970f92-a90d-48ff-8c3b-1b15c3e610b0",
+      "email_confirme": "OUI"
     },
     {
       "email": "foncier.expert@teranga-foncier.sn",
       "nom": "Foncier Expert Conseil",
       "role": "agent_foncier",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "9822666e-d1f0-4395-8730-c984eb6813c4",
+      "email_confirme": "OUI"
     },
     {
       "email": "teranga.immobilier@teranga-foncier.sn",
       "nom": "Teranga Immobilier",
       "role": "agent_foncier",
-      "status": "ÉCHEC",
-      "erreur": "Database error querying schema"
+      "status": "SUCCÈS",
+      "user_id": "c1e7c0ef-1762-4d3e-b9b1-81e244582236",
+      "email_confirme": "OUI"
     },
     {
       "email": "geowest.africa@teranga-foncier.sn",
       "nom": "GeoWest Africa SARL",
       "role": "geometre",
       "status": "SUCCÈS",
-      "user_id": "e4bbd1ac-3cdf-4220-ade3-554ec3a82a60",
+      "user_id": "a2a34b46-b5e9-41bc-a9c5-f1c99afd1230",
       "email_confirme": "OUI"
     },
     {
@@ -116,7 +130,7 @@
       "nom": "Cabinet Géomètre Ndiaye & Associés",
       "role": "geometre",
       "status": "SUCCÈS",
-      "user_id": "cd3b4db2-0cbe-4112-95fe-fbf4def14c53",
+      "user_id": "6ec7cbf0-ab33-4d7a-b00e-bb2f948a7a8b",
       "email_confirme": "OUI"
     },
     {
@@ -124,7 +138,7 @@
       "nom": "Atlantique Capital Partners",
       "role": "investisseur",
       "status": "SUCCÈS",
-      "user_id": "eb08b503-d58a-4e7b-b928-2c5e574e4b9c",
+      "user_id": "d969c61f-6de9-4970-a358-e1f0ef20856f",
       "email_confirme": "OUI"
     },
     {
@@ -132,7 +146,7 @@
       "nom": "Fonds Souverain d'Investissement du Sénégal",
       "role": "investisseur",
       "status": "SUCCÈS",
-      "user_id": "75dfc4d9-ddce-4632-bee2-131e3842b07e",
+      "user_id": "62353cd4-d32b-4204-a396-bb7e6ded79ea",
       "email_confirme": "OUI"
     },
     {
@@ -140,7 +154,7 @@
       "nom": "Mairie de Thiès",
       "role": "mairie",
       "status": "SUCCÈS",
-      "user_id": "2203ac49-4071-4d0d-b8a5-5bb8e0e3dd84",
+      "user_id": "ae076b2b-5380-410f-a640-1f1c89555c13",
       "email_confirme": "OUI"
     },
     {
@@ -148,7 +162,7 @@
       "nom": "Mairie de Dakar",
       "role": "mairie",
       "status": "SUCCÈS",
-      "user_id": "8afd99ba-e934-4b47-b900-41294e18ae17",
+      "user_id": "e5585b78-d04a-4750-a387-9a273cdf9367",
       "email_confirme": "OUI"
     }
   ]

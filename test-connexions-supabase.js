@@ -16,44 +16,44 @@ const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 // Liste de tous les comptes à tester
 const COMPTES_A_TESTER = [
     // ADMIN
-    { email: 'admin@terangafoncier.sn', password: 'password123', role: 'admin', nom: 'Administrateur Système' },
-    { email: 'test.admin@terangafoncier.sn', password: 'password123', role: 'Admin', nom: 'Test Admin' },
+    { email: 'admin@terangafoncier.sn', password: 'Admin2024!', role: 'admin', nom: 'Administrateur Système' },
+    { email: 'test.admin@terangafoncier.sn', password: 'TestAdmin2024!', role: 'Admin', nom: 'Test Admin' },
     
     // PARTICULIERS
-    { email: 'family.diallo@teranga-foncier.sn', password: 'password123', role: 'particulier', nom: 'Famille Diallo' },
-    { email: 'ahmadou.ba@teranga-foncier.sn', password: 'password123', role: 'particulier', nom: 'Ahmadou Ba' },
+    { email: 'family.diallo@teranga-foncier.sn', password: 'Particulier2024!', role: 'particulier', nom: 'Famille Diallo' },
+    { email: 'ahmadou.ba@teranga-foncier.sn', password: 'Particulier2024!', role: 'particulier', nom: 'Ahmadou Ba' },
     
     // VENDEURS
-    { email: 'heritage.fall@teranga-foncier.sn', password: 'password123', role: 'vendeur', nom: 'Héritage Fall' },
-    { email: 'domaine.seck@teranga-foncier.sn', password: 'password123', role: 'vendeur', nom: 'Domaine Seck' },
+    { email: 'heritage.fall@teranga-foncier.sn', password: 'Vendeur2024!', role: 'vendeur', nom: 'Héritage Fall' },
+    { email: 'domaine.seck@teranga-foncier.sn', password: 'Vendeur2024!', role: 'vendeur', nom: 'Domaine Seck' },
     
     // PROMOTEURS
-    { email: 'urban.developers@teranga-foncier.sn', password: 'password123', role: 'promoteur', nom: 'Urban Developers Sénégal' },
-    { email: 'sahel.construction@teranga-foncier.sn', password: 'password123', role: 'promoteur', nom: 'Sahel Construction' },
+    { email: 'urban.developers@teranga-foncier.sn', password: 'Promoteur2024!', role: 'promoteur', nom: 'Urban Developers Sénégal' },
+    { email: 'sahel.construction@teranga-foncier.sn', password: 'Promoteur2024!', role: 'promoteur', nom: 'Sahel Construction' },
     
     // BANQUES
-    { email: 'financement.boa@teranga-foncier.sn', password: 'password123', role: 'banque', nom: 'BOA Sénégal - Financement' },
-    { email: 'credit.agricole@teranga-foncier.sn', password: 'password123', role: 'banque', nom: 'Crédit Agricole Sénégal' },
+    { email: 'financement.boa@teranga-foncier.sn', password: 'Banque2024!', role: 'banque', nom: 'BOA Sénégal - Financement' },
+    { email: 'credit.agricole@teranga-foncier.sn', password: 'Banque2024!', role: 'banque', nom: 'Crédit Agricole Sénégal' },
     
     // NOTAIRES
-    { email: 'etude.diouf@teranga-foncier.sn', password: 'password123', role: 'notaire', nom: 'Étude Notariale Diouf' },
-    { email: 'chambre.notaires@teranga-foncier.sn', password: 'password123', role: 'notaire', nom: 'Chambre des Notaires' },
+    { email: 'etude.diouf@teranga-foncier.sn', password: 'Notaire2024!', role: 'notaire', nom: 'Étude Notariale Diouf' },
+    { email: 'chambre.notaires@teranga-foncier.sn', password: 'Notaire2024!', role: 'notaire', nom: 'Chambre des Notaires' },
     
     // AGENTS FONCIERS
-    { email: 'foncier.expert@teranga-foncier.sn', password: 'password123', role: 'agent_foncier', nom: 'Foncier Expert Conseil' },
-    { email: 'teranga.immobilier@teranga-foncier.sn', password: 'password123', role: 'agent_foncier', nom: 'Teranga Immobilier' },
+    { email: 'foncier.expert@teranga-foncier.sn', password: 'AgentFoncier2024!', role: 'agent_foncier', nom: 'Foncier Expert Conseil' },
+    { email: 'teranga.immobilier@teranga-foncier.sn', password: 'AgentFoncier2024!', role: 'agent_foncier', nom: 'Teranga Immobilier' },
     
     // GÉOMÈTRES
-    { email: 'geowest.africa@teranga-foncier.sn', password: 'password123', role: 'geometre', nom: 'GeoWest Africa SARL' },
-    { email: 'cabinet.ndiaye@teranga-foncier.sn', password: 'password123', role: 'geometre', nom: 'Cabinet Géomètre Ndiaye & Associés' },
+    { email: 'geowest.africa@teranga-foncier.sn', password: 'Geometre2024!', role: 'geometre', nom: 'GeoWest Africa SARL' },
+    { email: 'cabinet.ndiaye@teranga-foncier.sn', password: 'Geometre2024!', role: 'geometre', nom: 'Cabinet Géomètre Ndiaye & Associés' },
     
     // INVESTISSEURS
-    { email: 'atlantique.capital@teranga-foncier.sn', password: 'password123', role: 'investisseur', nom: 'Atlantique Capital Partners' },
-    { email: 'fonds.souverain@teranga-foncier.sn', password: 'password123', role: 'investisseur', nom: 'Fonds Souverain d\'Investissement du Sénégal' },
+    { email: 'atlantique.capital@teranga-foncier.sn', password: 'Investisseur2024!', role: 'investisseur', nom: 'Atlantique Capital Partners' },
+    { email: 'fonds.souverain@teranga-foncier.sn', password: 'Investisseur2024!', role: 'investisseur', nom: 'Fonds Souverain d\'Investissement du Sénégal' },
     
     // MAIRIES
-    { email: 'mairie.thies@teranga-foncier.sn', password: 'password123', role: 'mairie', nom: 'Mairie de Thiès' },
-    { email: 'mairie.dakar@teranga-foncier.sn', password: 'password123', role: 'mairie', nom: 'Mairie de Dakar' }
+    { email: 'mairie.thies@teranga-foncier.sn', password: 'Mairie2024!', role: 'mairie', nom: 'Mairie de Thiès' },
+    { email: 'mairie.dakar@teranga-foncier.sn', password: 'Mairie2024!', role: 'mairie', nom: 'Mairie de Dakar' }
 ];
 
 // Fonction pour tester une connexion

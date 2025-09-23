@@ -50,7 +50,23 @@ const getSimpleSidebarConfig = (role) => {
       { href: '/messaging', label: 'Messagerie', icon: MessageSquare },
       { href: '/notifications', label: 'Notifications', icon: Bell },
       { href: '/documents', label: 'Documents', icon: FileText },
-      { href: '/rendez-vous', label: 'Rendez-vous', icon: CalendarIcon },
+      { href: '/calendar', label: 'Calendrier', icon: CalendarIcon },
+      { href: '/settings', label: 'Paramètres', icon: Settings }
+    ];
+  }
+
+  // Configuration pour les vendeurs
+  if (role && (role.toLowerCase().includes('vendeur'))) {
+    return [
+      { href: '/vendeur', label: 'Dashboard', icon: LayoutDashboard, end: true },
+      { href: '/my-listings', label: 'Mes Annonces', icon: Home },
+      { href: '/add-parcel', label: 'Ajouter Terrain', icon: Search },
+      { href: '/my-requests', label: 'Demandes Reçues', icon: FileText },
+      { href: '/transactions', label: 'Mes Ventes', icon: Banknote },
+      { href: '/messaging', label: 'Messagerie', icon: MessageSquare },
+      { href: '/notifications', label: 'Notifications', icon: Bell },
+      { href: '/documents', label: 'Documents', icon: FileText },
+      { href: '/calendar', label: 'Calendrier', icon: CalendarIcon },
       { href: '/settings', label: 'Paramètres', icon: Settings }
     ];
   }

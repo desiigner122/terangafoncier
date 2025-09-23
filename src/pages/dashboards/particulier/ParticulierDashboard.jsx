@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Home, 
@@ -8,91 +9,102 @@ import {
   FileText, 
   CreditCard,
   Building2,
-  Globe,
+  Calendar,
   Plus,
   Clock,
   CheckCircle,
   AlertCircle,
   TrendingUp,
-  Filter,
   Bell,
   User,
   Bookmark,
   Eye,
   MessageSquare,
-  Calculator
+  Building,
+  Award,
+  Shield,
+  Lock,
+  Banknote,
+  History
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
-import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
+import ModernDashboardLayout from '@/components/dashboard/ModernDashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 import { AIEstimationWidget, AIMarketInsights } from '@/components/AIComponents';
 
+// Import des nouveaux widgets interactifs
+import { 
+  UpcomingDeadlinesWidget,
+  UrgentActionsWidget, 
+  GlobalProgressWidget,
+  MiniCalendarWidget
+} from '@/components/dashboard/InteractiveWidgets';
+import ContextualAIAssistant from '@/components/dashboard/ContextualAIAssistant';
+
 const ParticulierDashboard = () => {
-  const [activeTab, setActiveTab] = useState('overview');
-  const [subscriptionStatus, setSubscriptionStatus] = useState('inactive');
-  const [verificationStatus, setVerificationStatus] = useState('pending');
   const [loading, setLoading] = useState(true);
 
+  // Données simulées du dashboard
   const [dashboardData, setDashboardData] = useState({
-    stats: {
-      savedProperties: 24,
-      demandesCommunales: 3,
-      demandesConstruction: 2,
-      projetsPromoteurs: 5,
-      budget: 25000000,
-      completedPurchases: 0
+    // Résumé d'activité
+    summary: {
+      activeDossiers: 8,
+      pendingActions: 3,
+      upcomingAppointments: 2,
+      paymentsDue: 1
     },
-    favoriteProperties: [
+    
+    // Projets en cours
+    activeProjects: [
       {
         id: 1,
-        title: 'Terrain résidentiel Almadies',
-        location: 'Almadies, Dakar',
-        price: 15000000,
-        size: '500m²',
-        image: '/images/terrain1.jpg',
-        status: 'Disponible',
-        views: 45,
-        saved: true
+        type: 'private',
+        title: 'Terrain Almadies 500m²',
+        status: 'Négociation en cours',
+        progress: 60,
+        nextAction: 'Réponse à l\'offre',
+        deadline: '2025-10-05',
+        amount: 15000000
+      },
+      {
+        id: 2,
+        type: 'municipal',
+        title: 'Demande Zone Communale Thiès',
+        status: 'Dossier en instruction',
+        progress: 40,
+        nextAction: 'Documents manquants',
+        deadline: '2025-09-30',
+        amount: 8500000
+      },
+      {
+        id: 3,
+        type: 'promoter',
+        title: 'Villa VEFA Cité Jardin',
+        status: 'Construction en cours',
+        progress: 75,
+        nextAction: 'Visite de chantier',
+        deadline: '2025-11-15',
+        amount: 45000000
       }
     ],
-    demandesCommunales: [
-      {
-        id: 1,
-        zone: 'Zone A - Thiès Centre',
-        surface: '300m²',
-        status: 'En attente',
-        submissionDate: '2024-03-10',
-        estimatedPrice: 8500000,
-        priority: 'Medium'
-      }
+
+    // Notifications importantes
+    notifications: [
+      { id: 1, type: 'payment', message: 'Échéance paiement Villa VEFA dans 3 jours', urgent: true },
+      { id: 2, type: 'document', message: '2 documents manquants pour demande communale', urgent: false },
+      { id: 3, type: 'appointment', message: 'RDV notaire confirmé pour demain 14h', urgent: false }
     ],
-    demandesConstruction: [
-      {
-        id: 1,
-        type: 'Villa R+1',
-        promoteur: 'Teranga Construction',
-        budget: 35000000,
-        status: 'Devis reçu',
-        submissionDate: '2024-03-08',
-        estimatedDuration: '8 mois'
-      }
-    ],
-    projetsPromoteurs: [
-      {
-        id: 1,
-        title: 'Résidence Les Palmiers',
-        promoteur: 'ABC Promotion',
-        location: 'Liberté 6, Dakar',
-        priceRange: '12M - 25M FCFA',
-        completion: 65,
-        status: 'En construction',
-        myParticipation: 15000000
-      }
+
+    // Actions rapides
+    quickStats: [
+      { label: 'Terrains privés', value: 3, href: '/dashboard/acheteur/private-interests', icon: MapPin },
+      { label: 'Demandes communales', value: 2, href: '/dashboard/acheteur/municipal-applications', icon: Building },
+      { label: 'Projets VEFA', value: 1, href: '/dashboard/acheteur/promoter-reservations', icon: Home },
+      { label: 'Propriétés NFT', value: 2, href: '/dashboard/acheteur/owned-properties', icon: Award }
     ]
   });
 
@@ -103,31 +115,24 @@ const ParticulierDashboard = () => {
     }, 1500);
   }, []);
 
-  const stats = [
-    { value: dashboardData.stats.savedProperties, label: 'Favoris' },
-    { value: dashboardData.stats.demandesCommunales, label: 'Demandes Communales' },
-    { value: dashboardData.stats.demandesConstruction, label: 'Constructions' },
-    { value: dashboardData.stats.projetsPromoteurs, label: 'Projets Suivis' }
-  ];
-
+  // Fonction helper pour le statut
   const getStatusColor = (status) => {
     const colors = {
-      'Disponible': 'bg-green-500',
-      'En attente': 'bg-yellow-500',
-      'Approuvé': 'bg-green-500',
-      'Rejeté': 'bg-red-500',
-      'En construction': 'bg-blue-500',
-      'Devis reçu': 'bg-orange-500'
+      'Négociation en cours': 'bg-blue-100 text-blue-800',
+      'Dossier en instruction': 'bg-yellow-100 text-yellow-800',
+      'Construction en cours': 'bg-green-100 text-green-800',
+      'En attente': 'bg-gray-100 text-gray-800'
     };
-    return colors[status] || 'bg-gray-500';
+    return colors[status] || 'bg-gray-100 text-gray-800';
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0
-    }).format(amount);
+  const getTypeIcon = (type) => {
+    const icons = {
+      'private': MapPin,
+      'municipal': Building,
+      'promoter': Home
+    };
+    return icons[type] || FileText;
   };
 
   if (loading) {
@@ -142,402 +147,172 @@ const ParticulierDashboard = () => {
   }
 
   return (
-    <DashboardLayout
-      title="Mon Espace Particulier"
-      subtitle="Acheteur & Investisseur Personnel"
+    <ModernDashboardLayout
+      title="Tableau de Bord"
+      subtitle="Suivi de vos projets immobiliers"
       userRole="Particulier"
-      stats={stats}
     >
       <div className="space-y-6">
-        {/* Widgets IA & Blockchain */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <AIAssistantWidget userRole="Particulier" dashboardData={dashboardData} />
-          <BlockchainWidget userRole="Particulier" />
+        
+        {/* Résumé d'activité - Remplacé par widgets interactifs */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <UpcomingDeadlinesWidget className="md:col-span-1 lg:col-span-2" />
+          <UrgentActionsWidget />
+          <MiniCalendarWidget />
         </div>
 
-        {/* 🚀 NOUVEAUX WIDGETS IA TERANGA */}
-        <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          <AIEstimationWidget className="w-full" />
-          <AIMarketInsights region="Dakar" className="w-full" />
-        </div>
-
-        {/* Status & Alerts */}
+        {/* Progression et statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {/* Verification Status */}
+          <GlobalProgressWidget className="md:col-span-2" />
+          
+          {/* Résumé numérique conservé */}
           <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full ${
-                  verificationStatus === 'verified' ? 'bg-green-500' :
-                  verificationStatus === 'pending' ? 'bg-yellow-500' : 'bg-red-500'
-                }`}></div>
-                <div>
-                  <p className="font-medium">Vérification Identité</p>
-                  <p className="text-sm text-gray-600">
-                    {verificationStatus === 'verified' ? 'Vérifiée' :
-                     verificationStatus === 'pending' ? 'En cours' : 'Requise'}
-                  </p>
+            <CardHeader>
+              <CardTitle className="text-lg">Résumé</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <FileText className="h-5 w-5 text-blue-600 mr-2" />
+                    <span className="text-sm">Dossiers actifs</span>
+                  </div>
+                  <span className="font-bold">{dashboardData.summary.activeDossiers}</span>
                 </div>
-                {verificationStatus !== 'verified' && (
-                  <Button size="sm" variant="outline">
-                    <User className="h-4 w-4 mr-1" />
-                    Compléter
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Subscription Status */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center space-x-3">
-                <div className={`w-3 h-3 rounded-full ${
-                  subscriptionStatus === 'active' ? 'bg-green-500' : 'bg-red-500'
-                }`}></div>
-                <div>
-                  <p className="font-medium">Abonnement Communal</p>
-                  <p className="text-sm text-gray-600">
-                    {subscriptionStatus === 'active' ? 'Actif' : 'Inactif'}
-                  </p>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <AlertCircle className="h-5 w-5 text-orange-600 mr-2" />
+                    <span className="text-sm">Actions requises</span>
+                  </div>
+                  <span className="font-bold">{dashboardData.summary.pendingActions}</span>
                 </div>
-                {subscriptionStatus !== 'active' && (
-                  <Button size="sm" variant="outline">
-                    <CreditCard className="h-4 w-4 mr-1" />
-                    S'abonner
-                  </Button>
-                )}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Budget Tracker */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="font-medium">Budget Total</p>
-                  <p className="text-lg font-bold text-emerald-600">
-                    {formatCurrency(dashboardData.stats.budget)}
-                  </p>
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <Calendar className="h-5 w-5 text-green-600 mr-2" />
+                    <span className="text-sm">RDV à venir</span>
+                  </div>
+                  <span className="font-bold">{dashboardData.summary.upcomingAppointments}</span>
                 </div>
-                <Calculator className="h-8 w-8 text-emerald-600" />
+                
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center">
+                    <CreditCard className="h-5 w-5 text-red-600 mr-2" />
+                    <span className="text-sm">Paiements dus</span>
+                  </div>
+                  <span className="font-bold">{dashboardData.summary.paymentsDue}</span>
+                </div>
               </div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Main Content Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
-            <TabsTrigger value="communal">Demandes Communales</TabsTrigger>
-            <TabsTrigger value="construction">Construction</TabsTrigger>
-            <TabsTrigger value="projets">Projets Promoteurs</TabsTrigger>
-            <TabsTrigger value="favoris">Mes Favoris</TabsTrigger>
-          </TabsList>
-
-          {/* Overview Tab */}
-          <TabsContent value="overview" className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {/* Quick Actions */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Plus className="h-5 w-5 mr-2 text-emerald-600" />
-                    Actions Rapides
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
-                    <Search className="h-4 w-4 mr-2" />
-                    Recherche Avancée
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <MapPin className="h-4 w-4 mr-2" />
-                    Parcourir Carte
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <FileText className="h-4 w-4 mr-2" />
-                    Nouvelle Demande
-                  </Button>
-                  <Button className="w-full justify-start" variant="outline">
-                    <Calculator className="h-4 w-4 mr-2" />
-                    Calculateur Crédit
-                  </Button>
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <Clock className="h-5 w-5 mr-2 text-blue-600" />
-                    Activité Récente
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-3">
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                      <div>
-                        <p className="text-sm font-medium">Terrain ajouté aux favoris</p>
-                        <p className="text-xs text-gray-500">Il y a 2 heures</p>
+        {/* Projets en cours */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <TrendingUp className="h-5 w-5 mr-2" />
+              Mes Projets en Cours
+            </CardTitle>
+            <CardDescription>
+              Suivi de vos acquisitions et dossiers actifs
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-4">
+              {dashboardData.activeProjects.map((project) => {
+                const IconComponent = getTypeIcon(project.type);
+                return (
+                  <div key={project.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start space-x-3">
+                        <div className="p-2 rounded-lg bg-blue-100">
+                          <IconComponent className="h-5 w-5 text-blue-600" />
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-semibold text-gray-900">{project.title}</h4>
+                          <Badge className={`mt-1 ${getStatusColor(project.status)}`}>
+                            {project.status}
+                          </Badge>
+                          <div className="mt-2 flex items-center text-sm text-gray-600">
+                            <Clock className="h-4 w-4 mr-1" />
+                            <span>{project.nextAction} - Échéance: {new Date(project.deadline).toLocaleDateString('fr-FR')}</span>
+                          </div>
+                          <div className="mt-2">
+                            <div className="flex justify-between text-sm mb-1">
+                              <span>Progression</span>
+                              <span>{project.progress}%</span>
+                            </div>
+                            <Progress value={project.progress} className="h-2" />
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                      <div>
-                        <p className="text-sm font-medium">Demande communale soumise</p>
-                        <p className="text-xs text-gray-500">Hier</p>
-                      </div>
-                    </div>
-                    <div className="flex items-start space-x-3">
-                      <div className="w-2 h-2 bg-orange-500 rounded-full mt-2"></div>
-                      <div>
-                        <p className="text-sm font-medium">Devis construction reçu</p>
-                        <p className="text-xs text-gray-500">Il y a 3 jours</p>
+                      <div className="text-right">
+                        <p className="font-semibold text-lg">
+                          {project.amount.toLocaleString()} FCFA
+                        </p>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          Voir détails
+                        </Button>
                       </div>
                     </div>
                   </div>
-                </CardContent>
-              </Card>
-
-              {/* Market Insights */}
-              <Card>
-                <CardHeader>
-                  <CardTitle className="flex items-center">
-                    <TrendingUp className="h-5 w-5 mr-2 text-purple-600" />
-                    Insights Marché
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm">Prix moyen Dakar</span>
-                        <span className="text-sm font-medium">+12%</span>
-                      </div>
-                      <Progress value={75} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm">Demande vs Offre</span>
-                        <span className="text-sm font-medium">Fort</span>
-                      </div>
-                      <Progress value={85} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm">Taux crédit</span>
-                        <span className="text-sm font-medium">7.5%</span>
-                      </div>
-                      <Progress value={60} className="h-2" />
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+                );
+              })}
             </div>
-          </TabsContent>
+          </CardContent>
+        </Card>
 
-          {/* Demandes Communales Tab */}
-          <TabsContent value="communal" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Demandes Terrains Communaux</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle Demande
-              </Button>
-            </div>
-
-            {subscriptionStatus !== 'active' && (
-              <Card className="border-yellow-200 bg-yellow-50">
-                <CardContent className="p-4">
-                  <div className="flex items-center space-x-3">
-                    <AlertCircle className="h-5 w-5 text-yellow-600" />
-                    <div>
-                      <p className="font-medium text-yellow-800">Abonnement requis</p>
-                      <p className="text-sm text-yellow-700">
-                        Souscrivez à un abonnement pour soumettre des demandes de terrains communaux.
-                      </p>
-                    </div>
-                    <Button size="sm" className="bg-yellow-600 hover:bg-yellow-700">
-                      S'abonner maintenant
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            )}
-
-            <div className="grid gap-4">
-              {dashboardData.demandesCommunales.map((demande) => (
-                <Card key={demande.id}>
+        {/* Actions rapides */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {dashboardData.quickStats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <Link key={index} to={stat.href}>
+                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between">
                       <div>
-                        <h3 className="font-semibold text-lg">{demande.zone}</h3>
-                        <p className="text-gray-600">Surface: {demande.surface}</p>
-                        <p className="text-gray-600">Prix estimé: {formatCurrency(demande.estimatedPrice)}</p>
+                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                        <p className="text-sm text-gray-600">{stat.label}</p>
                       </div>
-                      <div className="text-right">
-                        <Badge className={`${getStatusColor(demande.status)} text-white`}>
-                          {demande.status}
-                        </Badge>
-                        <p className="text-sm text-gray-500 mt-2">
-                          Soumise le {new Date(demande.submissionDate).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
+                      <IconComponent className="h-8 w-8 text-blue-600" />
                     </div>
                   </CardContent>
                 </Card>
-              ))}
-            </div>
-          </TabsContent>
+              </Link>
+            );
+          })}
+        </div>
 
-          {/* Construction Tab */}
-          <TabsContent value="construction" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Demandes de Construction</h2>
-              <Button>
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle Demande
-              </Button>
-            </div>
-
-            <div className="grid gap-4">
-              {dashboardData.demandesConstruction.map((demande) => (
-                <Card key={demande.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="font-semibold text-lg">{demande.type}</h3>
-                        <p className="text-gray-600">Promoteur: {demande.promoteur}</p>
-                        <p className="text-gray-600">Budget: {formatCurrency(demande.budget)}</p>
-                        <p className="text-gray-600">Durée estimée: {demande.estimatedDuration}</p>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={`${getStatusColor(demande.status)} text-white`}>
-                          {demande.status}
-                        </Badge>
-                        <p className="text-sm text-gray-500 mt-2">
-                          Soumise le {new Date(demande.submissionDate).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Projets Promoteurs Tab */}
-          <TabsContent value="projets" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Projets Promoteurs</h2>
-              <Button variant="outline">
-                <Eye className="h-4 w-4 mr-2" />
-                Parcourir Projets
-              </Button>
-            </div>
-
-            <div className="grid gap-4">
-              {dashboardData.projetsPromoteurs.map((projet) => (
-                <Card key={projet.id}>
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-4">
-                      <div>
-                        <h3 className="font-semibold text-lg">{projet.title}</h3>
-                        <p className="text-gray-600">Promoteur: {projet.promoteur}</p>
-                        <p className="text-gray-600">Localisation: {projet.location}</p>
-                        <p className="text-gray-600">Prix: {projet.priceRange}</p>
-                      </div>
-                      <div className="text-right">
-                        <Badge className={`${getStatusColor(projet.status)} text-white`}>
-                          {projet.status}
-                        </Badge>
-                        <p className="text-sm text-gray-500 mt-2">
-                          Ma participation: {formatCurrency(projet.myParticipation)}
-                        </p>
-                      </div>
-                    </div>
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span>Avancement</span>
-                        <span>{projet.completion}%</span>
-                      </div>
-                      <Progress value={projet.completion} className="h-2" />
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-
-          {/* Favoris Tab */}
-          <TabsContent value="favoris" className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Mes Terrains Favoris</h2>
-              <div className="flex space-x-2">
-                <Button variant="outline" size="sm">
-                  <Filter className="h-4 w-4 mr-2" />
-                  Filtrer
-                </Button>
-                <Button variant="outline" size="sm">
-                  <Search className="h-4 w-4 mr-2" />
-                  Rechercher
-                </Button>
+        {/* Notifications importantes - Remplacées par le système de notifications intégré */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center">
+              <Bell className="h-5 w-5 mr-2" />
+              Système de Notifications Activé
+            </CardTitle>
+            <CardDescription>
+              Les notifications importantes apparaissent maintenant en temps réel dans l'interface
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="flex items-center justify-center py-8 text-gray-500">
+              <CheckCircle className="h-12 w-12 mr-4" />
+              <div>
+                <p className="font-medium">Notifications temps réel activées</p>
+                <p className="text-sm">Consultez la cloche en haut à droite pour voir vos notifications</p>
               </div>
             </div>
+          </CardContent>
+        </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {dashboardData.favoriteProperties.map((property) => (
-                <Card key={property.id} className="overflow-hidden">
-                  <div className="aspect-video bg-gray-200 relative">
-                    <div className="absolute top-2 right-2">
-                      <Button size="sm" variant="ghost" className="bg-white/80 hover:bg-white">
-                        <Heart className="h-4 w-4 text-red-500 fill-current" />
-                      </Button>
-                    </div>
-                    <div className="absolute bottom-2 left-2">
-                      <Badge className={`${getStatusColor(property.status)} text-white`}>
-                        {property.status}
-                      </Badge>
-                    </div>
-                  </div>
-                  <CardContent className="p-4">
-                    <h3 className="font-semibold mb-2">{property.title}</h3>
-                    <div className="flex items-center text-gray-600 mb-2">
-                      <MapPin className="h-4 w-4 mr-1" />
-                      <span className="text-sm">{property.location}</span>
-                    </div>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <p className="font-bold text-lg text-emerald-600">
-                          {formatCurrency(property.price)}
-                        </p>
-                        <p className="text-sm text-gray-500">{property.size}</p>
-                      </div>
-                      <div className="flex items-center space-x-1 text-gray-500">
-                        <Eye className="h-4 w-4" />
-                        <span className="text-sm">{property.views}</span>
-                      </div>
-                    </div>
-                    <div className="mt-4 flex space-x-2">
-                      <Button size="sm" className="flex-1">
-                        Voir Détails
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <MessageSquare className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </TabsContent>
-        </Tabs>
+        {/* Assistant IA contextuel - Always available */}
+        <ContextualAIAssistant />
+
       </div>
-    </DashboardLayout>
+    </ModernDashboardLayout>
   );
 };
 

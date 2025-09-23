@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Outlet } from 'react-router-dom';
-import SidebarResponsive from './SidebarResponsive';
+import SidebarResponsive from './SidebarResponsiveSimple';
 import Header from './Header';
 import AIChatbot from '@/components/AIChatbot';
 
@@ -12,7 +12,7 @@ const DashboardLayout = ({ children }) => {
       <Header isSidebarOpen={isSidebarOpen} setIsSidebarOpen={setIsSidebarOpen} />
       
       <div className="flex pt-16 md:pt-20">
-        {/* Sidebar responsive */}
+        {/* Sidebar responsive simple */}
         <SidebarResponsive />
 
         {/* Main content */}

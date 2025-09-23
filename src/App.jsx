@@ -3,6 +3,7 @@ import { Route, Routes, Outlet, Link, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { AIProvider } from '@/hooks/useAI.jsx';
+import { NotificationProvider } from '@/contexts/NotificationContext';
 import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
 import UniversalAIChatbot from '@/components/ai/UniversalAIChatbot';
 import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
@@ -29,6 +30,14 @@ import ProfilePage from '@/pages/ProfilePage';
 import ContactPage from '@/pages/ContactPage';
 import BlockchainContactPage from '@/pages/BlockchainContactPage';
 import AboutPage from '@/pages/AboutPage';
+
+// Imports des sous-pages de suivi Particulier
+import { 
+  PrivateInterests, 
+  MunicipalApplications, 
+  PromoterReservations, 
+  OwnedProperties 
+} from '@/pages/dashboards/particulier/tracking';
 import AIFeaturesPage from '@/pages/AIFeaturesPage';
 import UserProfilePage from '@/pages/profiles/UserProfilePage';
 import ModernAboutPage from '@/pages/ModernAboutPage';
@@ -189,6 +198,7 @@ import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
 import ModernNotaireDashboard from '@/pages/dashboards/ModernNotaireDashboard';
 import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
 import ModernAcheteurDashboard from '@/pages/dashboards/ModernAcheteurDashboard';
+import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
 import ModernVendeurDashboard from '@/pages/dashboards/ModernVendeurDashboard';
 import ModernInvestisseurDashboard from '@/pages/dashboards/ModernInvestisseurDashboard';
 import { HelmetProvider } from 'react-helmet-async';
@@ -256,7 +266,8 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <ComparisonProvider>
-          <AIProvider>
+          <NotificationProvider>
+            <AIProvider>
             <ScrollToTop />
             <Routes>
             <Route path="/" element={<PublicLayout />}>
@@ -399,6 +410,15 @@ function App() {
                 {/* Route de test complètement indépendante pour debugging */}
                 <Route path="test-vendeur" element={<ModernVendeurDashboard />} />
                 
+                {/* Dashboards modernes par rôle - routes indépendantes (ont leur propre layout) */}
+                <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierDashboard /></RoleProtectedRoute>} />
+                
+                {/* Sous-pages de suivi Particulier/Acheteur */}
+                <Route path="acheteur/private-interests" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PrivateInterests /></RoleProtectedRoute>} />
+                <Route path="acheteur/municipal-applications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><MunicipalApplications /></RoleProtectedRoute>} />
+                <Route path="acheteur/promoter-reservations" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PromoterReservations /></RoleProtectedRoute>} />
+                <Route path="acheteur/owned-properties" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><OwnedProperties /></RoleProtectedRoute>} />
+
                 <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
                   {/* Dashboard redirection is handled by top-level routes to avoid auth/profile conflicts */}
                   <Route path="profile" element={<Navigate to="/settings" replace />} />
@@ -442,8 +462,6 @@ function App() {
                   <Route path="promoteur/nouveaux-acheteurs" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewBuyersPage /></RoleProtectedRoute>} />
                   <Route path="promoteur/nouveau-devis" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewQuotePage /></RoleProtectedRoute>} />
                   
-                  {/* Dashboards modernes par rôle */}
-                  <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
                   <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
                   <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
                   <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
@@ -536,7 +554,7 @@ function App() {
               <Route path="activity" element={<AnalyticsPage />} />
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}
-              <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ModernAcheteurDashboard /></RoleProtectedRoute>} />
+              <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDashboard /></RoleProtectedRoute>} />
               <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
               <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><ModernBanqueDashboard /></RoleProtectedRoute>} />
               <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
@@ -564,7 +582,8 @@ function App() {
           {/* IA CONVERSATIONNELLE UNIVERSELLE */}
           <UniversalAIChatbot isFloating={true} />
           
-          </AIProvider>
+            </AIProvider>
+          </NotificationProvider>
         </ComparisonProvider>
       </HelmetProvider>
     </ErrorBoundary>

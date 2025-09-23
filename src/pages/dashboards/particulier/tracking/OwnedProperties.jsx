@@ -29,7 +29,6 @@ import {
   Shield,
   Wrench
 } from 'lucide-react';
-import ModernDashboardLayout from '@/components/dashboard/ModernDashboardLayout';
 import ContextualAIAssistant from '@/components/dashboard/ContextualAIAssistant';
 import { useNotifications } from '@/contexts/NotificationContext';
 
@@ -360,10 +359,13 @@ const OwnedProperties = () => {
   );
 
   return (
-    <ModernDashboardLayout
-      title="Biens Possédés"
-      subtitle="Gestion de votre patrimoine immobilier"
-    >
+    <div className="space-y-6">
+      {/* Header de la page */}
+      <div className="bg-white rounded-lg border p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Biens Possédés</h1>
+        <p className="text-gray-600 mt-1">Gestion de votre patrimoine immobilier</p>
+      </div>
+
       <div className="space-y-6">
         {/* Statistiques rapides */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -469,7 +471,7 @@ const OwnedProperties = () => {
 
       {/* Assistant IA contextuel */}
       <ContextualAIAssistant />
-    </ModernDashboardLayout>
+    </div>
   );
 };
 

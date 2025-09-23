@@ -94,26 +94,26 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
     },
     {
       title: 'Messages',
-      href: '/messages',
+      href: '/acheteur/messages',
       icon: MessageSquare,
       description: 'Communications',
       badge: '3'
     },
     {
       title: 'Calendrier',
-      href: '/calendar',
+      href: '/acheteur/calendar',
       icon: Calendar,
       description: 'Rendez-vous'
     },
     {
       title: 'Documents',
-      href: '/documents',
+      href: '/acheteur/documents',
       icon: FileText,
       description: 'Mes documents'
     },
     {
       title: 'Paramètres',
-      href: '/settings',
+      href: '/acheteur/settings',
       icon: Settings,
       description: 'Configuration'
     }
@@ -255,33 +255,39 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
               {/* Actions header */}
               <div className="flex items-center space-x-4">
                 {/* Notifications */}
-                <Button variant="ghost" size="sm" className="relative">
-                  <Bell className="h-5 w-5 text-gray-600" />
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                    3
-                  </span>
-                </Button>
+                <Link to="/acheteur/notifications">
+                  <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
+                    <Bell className="h-5 w-5 text-gray-600" />
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                      3
+                    </span>
+                  </Button>
+                </Link>
                 
                 {/* Messages */}
-                <Button variant="ghost" size="sm" className="relative">
-                  <MessageSquare className="h-5 w-5 text-gray-600" />
-                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
-                    5
-                  </span>
-                </Button>
+                <Link to="/acheteur/messages">
+                  <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
+                    <MessageSquare className="h-5 w-5 text-gray-600" />
+                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+                      5
+                    </span>
+                  </Button>
+                </Link>
                 
                 {/* Profil utilisateur */}
-                <div className="flex items-center space-x-3">
-                  <div className="text-right">
-                    <p className="text-sm font-medium text-gray-900">
-                      {profile?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
-                    </p>
-                    <p className="text-xs text-gray-500">{userRole}</p>
+                <Link to="/acheteur/settings">
+                  <div className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors cursor-pointer">
+                    <div className="text-right">
+                      <p className="text-sm font-medium text-gray-900">
+                        {profile?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
+                      </p>
+                      <p className="text-xs text-gray-500">{userRole}</p>
+                    </div>
+                    <div className="h-8 w-8 bg-emerald-500 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-white" />
+                    </div>
                   </div>
-                  <div className="h-8 w-8 bg-emerald-500 rounded-full flex items-center justify-center">
-                    <User className="h-4 w-4 text-white" />
-                  </div>
-                </div>
+                </Link>
               </div>
             </div>
           </div>

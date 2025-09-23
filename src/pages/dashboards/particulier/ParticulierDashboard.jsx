@@ -94,10 +94,10 @@ const ParticulierDashboard = () => {
 
     // Actions rapides
     quickStats: [
-      { label: 'Terrains privés', value: 3, href: '/dashboard/acheteur/private-interests', icon: MapPin },
-      { label: 'Demandes communales', value: 2, href: '/dashboard/acheteur/municipal-applications', icon: Building },
-      { label: 'Projets VEFA', value: 1, href: '/dashboard/acheteur/promoter-reservations', icon: Home },
-      { label: 'Propriétés NFT', value: 2, href: '/dashboard/acheteur/owned-properties', icon: Award }
+      { label: 'Terrains privés', value: 3, href: '/acheteur/private-interests', icon: MapPin },
+      { label: 'Demandes communales', value: 2, href: '/acheteur/municipal-applications', icon: Building },
+      { label: 'Projets VEFA', value: 1, href: '/acheteur/promoter-reservations', icon: Home },
+      { label: 'Propriétés NFT', value: 2, href: '/acheteur/owned-properties', icon: Award }
     ]
   });
 

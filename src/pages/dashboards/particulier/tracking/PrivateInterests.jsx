@@ -35,7 +35,6 @@ import {
   AlertCircle,
   XCircle
 } from 'lucide-react';
-import ModernDashboardLayout from '@/components/dashboard/ModernDashboardLayout';
 import ContextualAIAssistant from '@/components/dashboard/ContextualAIAssistant';
 import { useNotifications } from '@/contexts/NotificationContext';
 
@@ -397,10 +396,13 @@ const PrivateInterests = () => {
   );
 
   return (
-    <ModernDashboardLayout
-      title="Intérêts Privés"
-      subtitle="Suivi de vos négociations et intérêts privés"
-    >
+    <div className="space-y-6">
+      {/* Header de la page */}
+      <div className="bg-white rounded-lg border p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Intérêts Privés</h1>
+        <p className="text-gray-600 mt-1">Suivi de vos négociations et intérêts privés</p>
+      </div>
+
       <div className="space-y-6">
         {/* Statistiques rapides */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -531,7 +533,7 @@ const PrivateInterests = () => {
 
       {/* Assistant IA contextuel */}
       <ContextualAIAssistant />
-    </ModernDashboardLayout>
+    </div>
   );
 };
 

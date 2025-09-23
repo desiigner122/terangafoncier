@@ -39,7 +39,6 @@ import {
   Building,
   ListOrdered
 } from 'lucide-react';
-import ModernDashboardLayout from '@/components/dashboard/ModernDashboardLayout';
 import ContextualAIAssistant from '@/components/dashboard/ContextualAIAssistant';
 import { useNotifications } from '@/contexts/NotificationContext';
 
@@ -515,10 +514,13 @@ const MunicipalApplications = () => {
   );
 
   return (
-    <ModernDashboardLayout
-      title="Demandes Communales"
-      subtitle="Suivi de vos démarches administratives"
-    >
+    <div className="space-y-6">
+      {/* Header de la page */}
+      <div className="bg-white rounded-lg border p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Demandes Communales</h1>
+        <p className="text-gray-600 mt-1">Suivi de vos démarches administratives</p>
+      </div>
+
       <div className="space-y-6">
         {/* Statistiques rapides */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -806,7 +808,7 @@ const MunicipalApplications = () => {
 
       {/* Assistant IA contextuel */}
       <ContextualAIAssistant />
-    </ModernDashboardLayout>
+    </div>
   );
 };
 

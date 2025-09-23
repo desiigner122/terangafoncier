@@ -34,7 +34,6 @@ import {
   TrendingUp,
   Plus
 } from 'lucide-react';
-import ModernDashboardLayout from '@/components/dashboard/ModernDashboardLayout';
 import ContextualAIAssistant from '@/components/dashboard/ContextualAIAssistant';
 
 const ConstructionRequest = () => {
@@ -266,11 +265,13 @@ const ConstructionRequest = () => {
   );
 
   return (
-    <ModernDashboardLayout
-      title="Demandes de Construction"
-      subtitle="Gestion de vos permis de construire et déclarations"
-      userRole="Particulier"
-    >
+    <div className="space-y-6">
+      {/* Header de la page */}
+      <div className="bg-white rounded-lg border p-6">
+        <h1 className="text-2xl font-bold text-gray-900">Demandes de Construction</h1>
+        <p className="text-gray-600 mt-1">Gestion de vos permis de construire et déclarations</p>
+      </div>
+
       <div className="space-y-6">
         {/* Statistiques */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
@@ -385,7 +386,7 @@ const ConstructionRequest = () => {
         {/* Assistant IA */}
         <ContextualAIAssistant />
       </div>
-    </ModernDashboardLayout>
+    </div>
   );
 };
 

@@ -39,6 +39,11 @@ import {
   OwnedProperties 
 } from '@/pages/dashboards/particulier/tracking';
 import ConstructionRequest from '@/pages/dashboards/particulier/tracking/ConstructionRequest';
+import AcheteurMessagesPage from '@/pages/dashboards/particulier/AcheteurMessagesPage';
+import AcheteurCalendarPage from '@/pages/dashboards/particulier/AcheteurCalendarPage';
+import AcheteurDocumentsPage from '@/pages/dashboards/particulier/AcheteurDocumentsPage';
+import AcheteurSettingsPage from '@/pages/dashboards/particulier/AcheteurSettingsPage';
+import AcheteurNotificationsPage from '@/pages/dashboards/particulier/AcheteurNotificationsPage';
 import AIFeaturesPage from '@/pages/AIFeaturesPage';
 import UserProfilePage from '@/pages/profiles/UserProfilePage';
 import ModernAboutPage from '@/pages/ModernAboutPage';
@@ -420,6 +425,13 @@ function App() {
                 <Route path="acheteur/promoter-reservations" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PromoterReservations /></RoleProtectedRoute>} />
                 <Route path="acheteur/owned-properties" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><OwnedProperties /></RoleProtectedRoute>} />
                 <Route path="acheteur/construction-request" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ConstructionRequest /></RoleProtectedRoute>} />
+
+                {/* Pages communes pour acheteur (avec layout simple) */}
+                <Route path="acheteur/messages" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurMessagesPage /></RoleProtectedRoute>} />
+                <Route path="acheteur/calendar" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurCalendarPage /></RoleProtectedRoute>} />
+                <Route path="acheteur/documents" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurDocumentsPage /></RoleProtectedRoute>} />
+                <Route path="acheteur/settings" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurSettingsPage /></RoleProtectedRoute>} />
+                <Route path="acheteur/notifications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurNotificationsPage /></RoleProtectedRoute>} />
 
                 <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
                   {/* Dashboard redirection is handled by top-level routes to avoid auth/profile conflicts */}

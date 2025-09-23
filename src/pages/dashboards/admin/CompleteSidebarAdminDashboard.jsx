@@ -11,6 +11,7 @@ import {
   Settings,
   Bell,
   LogOut,
+  User,
   
   // Content Icons
   Shield, 
@@ -57,14 +58,28 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { Link } from 'react-router-dom';
 
 const CompleteSidebarAdminDashboard = () => {
+  const { user, profile, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
 
   // Navigation Items Configuration
   const navigationItems = [
@@ -433,6 +448,76 @@ const CompleteSidebarAdminDashboard = () => {
     ]
   });
 
+  // Données pour les aperçus rapides
+  const [headerMessages] = useState([
+    {
+      id: 1,
+      sender: 'M. Diallo',
+      subject: 'Demande terrain Almadies',
+      preview: 'Bonjour, je souhaiterais avoir plus d\'informations...',
+      time: '2 min',
+      unread: true,
+      avatar: 'MD'
+    },
+    {
+      id: 2,
+      sender: 'Mme Ndiaye',
+      subject: 'Question sur transaction',
+      preview: 'Le paiement n\'est toujours pas validé...',
+      time: '15 min',
+      unread: true,
+      avatar: 'MN'
+    },
+    {
+      id: 3,
+      sender: 'Agent Foncier',
+      subject: 'Rapport mensuel',
+      preview: 'Voici le rapport d\'activité du mois...',
+      time: '1h',
+      unread: false,
+      avatar: 'AF'
+    }
+  ]);
+
+  const [headerNotifications] = useState([
+    {
+      id: 1,
+      type: 'security',
+      title: 'Alerte sécurité',
+      message: 'Tentatives de connexion suspectes détectées',
+      time: '5 min',
+      priority: 'high',
+      unread: true
+    },
+    {
+      id: 2,
+      type: 'system',
+      title: 'Maintenance programmée',
+      message: 'Redémarrage des serveurs dans 2 heures',
+      time: '30 min',
+      priority: 'medium',
+      unread: true
+    },
+    {
+      id: 3,
+      type: 'business',
+      title: 'Objectif atteint',
+      message: 'Revenus mensuels dépassés de 120%',
+      time: '2h',
+      priority: 'low',
+      unread: false
+    },
+    {
+      id: 4,
+      type: 'user',
+      title: 'Nouveau compte',
+      message: '15 nouveaux utilisateurs aujourd\'hui',
+      time: '4h',
+      priority: 'low',
+      unread: false
+    }
+  ]);
+
   useEffect(() => {
     // Simulation chargement des données
     setTimeout(() => {
@@ -630,6 +715,7 @@ const CompleteSidebarAdminDashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Statistiques rapides */}
               <div className="hidden md:flex items-center space-x-6">
                 <div className="text-center">
                   <p className="text-lg font-bold text-gray-900">{dashboardData.stats.totalUsers}</p>
@@ -643,6 +729,156 @@ const CompleteSidebarAdminDashboard = () => {
                   <p className="text-lg font-bold text-blue-600">{dashboardData.stats.pendingReports}</p>
                   <p className="text-xs text-gray-500">Reports</p>
                 </div>
+              </div>
+
+              {/* Séparateur */}
+              <div className="hidden md:block w-px h-6 bg-gray-300"></div>
+
+              {/* Actions Header */}
+              <div className="flex items-center space-x-3">
+                {/* Messages avec aperçu */}
+                <div className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="relative hover:bg-gray-100"
+                    onClick={() => setShowMessages(!showMessages)}
+                  >
+                    <MessageSquare className="h-5 w-5 text-gray-600" />
+                    {headerMessages.filter(m => m.unread).length > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {headerMessages.filter(m => m.unread).length}
+                      </span>
+                    )}
+                  </Button>
+
+                  {/* Dropdown Messages */}
+                  {showMessages && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                      <div className="p-4 border-b">
+                        <h3 className="font-semibold text-gray-900">Messages récents</h3>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {headerMessages.map((message) => (
+                          <div key={message.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${message.unread ? 'bg-blue-50' : ''}`}>
+                            <div className="flex items-start space-x-3">
+                              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                {message.avatar}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm ${message.unread ? 'font-semibold' : 'font-medium'} text-gray-900 truncate`}>
+                                  {message.sender}
+                                </p>
+                                <p className="text-xs text-gray-600 truncate mb-1">{message.subject}</p>
+                                <p className="text-xs text-gray-500 truncate">{message.preview}</p>
+                              </div>
+                              <span className="text-xs text-gray-400">{message.time}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-3 border-t">
+                        <Link to="/admin/messages" className="text-sm text-blue-600 hover:text-blue-800">
+                          Voir tous les messages →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Notifications avec aperçu */}
+                <div className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="relative hover:bg-gray-100"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                  >
+                    <Bell className="h-5 w-5 text-gray-600" />
+                    {headerNotifications.filter(n => n.unread).length > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {headerNotifications.filter(n => n.unread).length}
+                      </span>
+                    )}
+                  </Button>
+
+                  {/* Dropdown Notifications */}
+                  {showNotifications && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                      <div className="p-4 border-b">
+                        <h3 className="font-semibold text-gray-900">Notifications</h3>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {headerNotifications.map((notification) => (
+                          <div key={notification.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${notification.unread ? 'bg-red-50' : ''}`}>
+                            <div className="flex items-start space-x-3">
+                              <div className={`w-2 h-2 mt-2 rounded-full ${
+                                notification.priority === 'high' ? 'bg-red-500' :
+                                notification.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
+                              }`}></div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm ${notification.unread ? 'font-semibold' : 'font-medium'} text-gray-900`}>
+                                  {notification.title}
+                                </p>
+                                <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
+                                <span className="text-xs text-gray-400">{notification.time}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-3 border-t">
+                        <Link to="/admin/notifications" className="text-sm text-blue-600 hover:text-blue-800">
+                          Voir toutes les notifications →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
+
+                {/* Menu Profil */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center space-x-2 hover:bg-gray-100">
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="/placeholder-avatar.jpg" />
+                        <AvatarFallback className="bg-red-600 text-white text-xs">
+                          {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'A'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="hidden sm:block text-left">
+                        <p className="text-xs font-medium text-gray-900">
+                          {profile?.full_name || user?.email?.split('@')[0] || 'Administrateur'}
+                        </p>
+                        <p className="text-xs text-gray-500">Admin</p>
+                      </div>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/profile" className="flex items-center">
+                        <UserCheck className="h-4 w-4 mr-2" />
+                        Profil
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/admin/settings" className="flex items-center">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Paramètres
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => signOut()}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Déconnexion
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

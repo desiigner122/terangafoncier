@@ -19,15 +19,27 @@ import {
   TrendingUp,
   Shield,
   HardHat,
-  Plus
+  Plus,
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showMessages, setShowMessages] = useState(false);
   const location = useLocation();
   const { user, profile } = useAuth();
 
@@ -47,6 +59,67 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
     };
     return colors[role] || 'from-gray-500 to-slate-500';
   };
+
+  // Données pour les aperçus rapides
+  const headerMessages = [
+    {
+      id: 1,
+      sender: 'Agent Foncier',
+      subject: 'Validation terrain Almadies',
+      preview: 'Votre dossier a été validé et est prêt...',
+      time: '5 min',
+      unread: true,
+      avatar: 'AF'
+    },
+    {
+      id: 2,
+      sender: 'Notaire',
+      subject: 'Rendez-vous signature',
+      preview: 'Merci de confirmer votre présence pour...',
+      time: '1h',
+      unread: true,
+      avatar: 'NT'
+    },
+    {
+      id: 3,
+      sender: 'Support',
+      subject: 'Mise à jour plateforme',
+      preview: 'Nouvelles fonctionnalités disponibles...',
+      time: '2h',
+      unread: false,
+      avatar: 'SP'
+    }
+  ];
+
+  const headerNotifications = [
+    {
+      id: 1,
+      type: 'success',
+      title: 'Paiement validé',
+      message: 'Votre paiement de 15M FCFA a été confirmé',
+      time: '10 min',
+      priority: 'high',
+      unread: true
+    },
+    {
+      id: 2,
+      type: 'info',
+      title: 'Nouveau bien disponible',
+      message: 'Un terrain correspondant à vos critères',
+      time: '1h',
+      priority: 'medium',
+      unread: true
+    },
+    {
+      id: 3,
+      type: 'reminder',
+      title: 'Rendez-vous demain',
+      message: 'Visite terrain Almadies à 14h',
+      time: '3h',
+      priority: 'medium',
+      unread: false
+    }
+  ];
 
   const sidebarItems = [
     {
@@ -254,40 +327,155 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
               
               {/* Actions header */}
               <div className="flex items-center space-x-4">
-                {/* Notifications */}
-                <Link to="/acheteur/notifications">
-                  <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
+                {/* Notifications avec aperçu */}
+                <div className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="relative hover:bg-gray-100"
+                    onClick={() => setShowNotifications(!showNotifications)}
+                  >
                     <Bell className="h-5 w-5 text-gray-600" />
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                      3
-                    </span>
+                    {headerNotifications.filter(n => n.unread).length > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {headerNotifications.filter(n => n.unread).length}
+                      </span>
+                    )}
                   </Button>
-                </Link>
+
+                  {/* Dropdown Notifications */}
+                  {showNotifications && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                      <div className="p-4 border-b">
+                        <h3 className="font-semibold text-gray-900">Notifications</h3>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {headerNotifications.map((notification) => (
+                          <div key={notification.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${notification.unread ? 'bg-blue-50' : ''}`}>
+                            <div className="flex items-start space-x-3">
+                              <div className={`w-2 h-2 mt-2 rounded-full ${
+                                notification.priority === 'high' ? 'bg-red-500' :
+                                notification.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
+                              }`}></div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm ${notification.unread ? 'font-semibold' : 'font-medium'} text-gray-900`}>
+                                  {notification.title}
+                                </p>
+                                <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
+                                <span className="text-xs text-gray-400">{notification.time}</span>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-3 border-t">
+                        <Link to="/acheteur/notifications" className="text-sm text-blue-600 hover:text-blue-800">
+                          Voir toutes les notifications →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Messages */}
-                <Link to="/acheteur/messages">
-                  <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
+                {/* Messages avec aperçu */}
+                <div className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="relative hover:bg-gray-100"
+                    onClick={() => setShowMessages(!showMessages)}
+                  >
                     <MessageSquare className="h-5 w-5 text-gray-600" />
-                    <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
-                      5
-                    </span>
+                    {headerMessages.filter(m => m.unread).length > 0 && (
+                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+                        {headerMessages.filter(m => m.unread).length}
+                      </span>
+                    )}
                   </Button>
-                </Link>
+
+                  {/* Dropdown Messages */}
+                  {showMessages && (
+                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
+                      <div className="p-4 border-b">
+                        <h3 className="font-semibold text-gray-900">Messages récents</h3>
+                      </div>
+                      <div className="max-h-64 overflow-y-auto">
+                        {headerMessages.map((message) => (
+                          <div key={message.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${message.unread ? 'bg-blue-50' : ''}`}>
+                            <div className="flex items-start space-x-3">
+                              <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                {message.avatar}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm ${message.unread ? 'font-semibold' : 'font-medium'} text-gray-900 truncate`}>
+                                  {message.sender}
+                                </p>
+                                <p className="text-xs text-gray-600 truncate mb-1">{message.subject}</p>
+                                <p className="text-xs text-gray-500 truncate">{message.preview}</p>
+                              </div>
+                              <span className="text-xs text-gray-400">{message.time}</span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                      <div className="p-3 border-t">
+                        <Link to="/acheteur/messages" className="text-sm text-blue-600 hover:text-blue-800">
+                          Voir tous les messages →
+                        </Link>
+                      </div>
+                    </div>
+                  )}
+                </div>
                 
-                {/* Profil utilisateur */}
-                <Link to="/acheteur/settings">
-                  <div className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors cursor-pointer">
-                    <div className="text-right">
-                      <p className="text-sm font-medium text-gray-900">
-                        {profile?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
-                      </p>
-                      <p className="text-xs text-gray-500">{userRole}</p>
-                    </div>
-                    <div className="h-8 w-8 bg-emerald-500 rounded-full flex items-center justify-center">
-                      <User className="h-4 w-4 text-white" />
-                    </div>
-                  </div>
-                </Link>
+                {/* Menu Profil utilisateur */}
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="flex items-center space-x-3 hover:bg-gray-50 rounded-lg p-2 transition-colors">
+                      <div className="text-right">
+                        <p className="text-sm font-medium text-gray-900">
+                          {profile?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
+                        </p>
+                        <p className="text-xs text-gray-500">{userRole}</p>
+                      </div>
+                      <Avatar className="h-8 w-8">
+                        <AvatarImage src="/placeholder-avatar.jpg" />
+                        <AvatarFallback className="bg-emerald-500 text-white text-xs">
+                          {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-48">
+                    <DropdownMenuLabel>Mon Compte</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link to="/acheteur/profile" className="flex items-center">
+                        <User className="h-4 w-4 mr-2" />
+                        Profil
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/acheteur/settings" className="flex items-center">
+                        <Settings className="h-4 w-4 mr-2" />
+                        Paramètres
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem asChild>
+                      <Link to="/acheteur/documents" className="flex items-center">
+                        <FileText className="h-4 w-4 mr-2" />
+                        Mes Documents
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem 
+                      onClick={() => window.location.href = '/logout'}
+                      className="text-red-600 focus:text-red-600"
+                    >
+                      <LogOut className="h-4 w-4 mr-2" />
+                      Déconnexion
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>

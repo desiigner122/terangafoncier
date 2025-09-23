@@ -38,6 +38,7 @@ import {
   PromoterReservations, 
   OwnedProperties 
 } from '@/pages/dashboards/particulier/tracking';
+import ConstructionRequest from '@/pages/dashboards/particulier/tracking/ConstructionRequest';
 import AIFeaturesPage from '@/pages/AIFeaturesPage';
 import UserProfilePage from '@/pages/profiles/UserProfilePage';
 import ModernAboutPage from '@/pages/ModernAboutPage';
@@ -418,6 +419,7 @@ function App() {
                 <Route path="acheteur/municipal-applications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><MunicipalApplications /></RoleProtectedRoute>} />
                 <Route path="acheteur/promoter-reservations" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PromoterReservations /></RoleProtectedRoute>} />
                 <Route path="acheteur/owned-properties" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><OwnedProperties /></RoleProtectedRoute>} />
+                <Route path="acheteur/construction-request" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ConstructionRequest /></RoleProtectedRoute>} />
 
                 <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
                   {/* Dashboard redirection is handled by top-level routes to avoid auth/profile conflicts */}

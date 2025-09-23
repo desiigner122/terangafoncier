@@ -36,13 +36,6 @@ import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 import { AIEstimationWidget, AIMarketInsights } from '@/components/AIComponents';
 
-// Import des nouveaux widgets interactifs
-import { 
-  UpcomingDeadlinesWidget,
-  UrgentActionsWidget, 
-  GlobalProgressWidget,
-  MiniCalendarWidget
-} from '@/components/dashboard/InteractiveWidgets';
 import ContextualAIAssistant from '@/components/dashboard/ContextualAIAssistant';
 
 const ParticulierDashboard = () => {
@@ -152,107 +145,143 @@ const ParticulierDashboard = () => {
       subtitle="Suivi de vos projets immobiliers"
       userRole="Particulier"
     >
-      <div className="space-y-6">
+      <div className="max-w-full mx-auto space-y-8">
         
-        {/* Résumé d'activité - Remplacé par widgets interactifs */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <UpcomingDeadlinesWidget className="md:col-span-1 lg:col-span-2" />
-          <UrgentActionsWidget />
-          <MiniCalendarWidget />
-        </div>
+        {/* Statistiques principales */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+          <Card className="bg-gradient-to-r from-blue-500 to-blue-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-blue-100 text-sm font-medium">Dossiers actifs</p>
+                  <p className="text-2xl font-bold">{dashboardData.summary.activeDossiers}</p>
+                </div>
+                <FileText className="h-8 w-8 text-blue-200" />
+              </div>
+            </CardContent>
+          </Card>
 
-        {/* Progression et statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <GlobalProgressWidget className="md:col-span-2" />
-          
-          {/* Résumé numérique conservé */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-lg">Résumé</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <FileText className="h-5 w-5 text-blue-600 mr-2" />
-                    <span className="text-sm">Dossiers actifs</span>
-                  </div>
-                  <span className="font-bold">{dashboardData.summary.activeDossiers}</span>
+          <Card className="bg-gradient-to-r from-orange-500 to-orange-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-orange-100 text-sm font-medium">Actions requises</p>
+                  <p className="text-2xl font-bold">{dashboardData.summary.pendingActions}</p>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <AlertCircle className="h-5 w-5 text-orange-600 mr-2" />
-                    <span className="text-sm">Actions requises</span>
-                  </div>
-                  <span className="font-bold">{dashboardData.summary.pendingActions}</span>
+                <AlertCircle className="h-8 w-8 text-orange-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-green-500 to-green-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-green-100 text-sm font-medium">RDV à venir</p>
+                  <p className="text-2xl font-bold">{dashboardData.summary.upcomingAppointments}</p>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Calendar className="h-5 w-5 text-green-600 mr-2" />
-                    <span className="text-sm">RDV à venir</span>
-                  </div>
-                  <span className="font-bold">{dashboardData.summary.upcomingAppointments}</span>
+                <Calendar className="h-8 w-8 text-green-200" />
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-gradient-to-r from-purple-500 to-purple-600 text-white">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-purple-100 text-sm font-medium">Paiements dus</p>
+                  <p className="text-2xl font-bold">{dashboardData.summary.paymentsDue}</p>
                 </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <CreditCard className="h-5 w-5 text-red-600 mr-2" />
-                    <span className="text-sm">Paiements dus</span>
-                  </div>
-                  <span className="font-bold">{dashboardData.summary.paymentsDue}</span>
-                </div>
+                <CreditCard className="h-8 w-8 text-purple-200" />
               </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Actions rapides */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+          {dashboardData.quickStats.map((stat, index) => {
+            const IconComponent = stat.icon;
+            return (
+              <Link key={index} to={stat.href} className="block">
+                <Card className="hover:shadow-lg transition-all duration-300 border-2 border-transparent hover:border-blue-200 group">
+                  <CardContent className="p-6 text-center">
+                    <div className="flex flex-col items-center space-y-3">
+                      <div className="p-3 rounded-full bg-blue-50 group-hover:bg-blue-100 transition-colors">
+                        <IconComponent className="h-6 w-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                        <p className="text-sm text-gray-600 font-medium">{stat.label}</p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
+            );
+          })}
+        </div>
+
         {/* Projets en cours */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <TrendingUp className="h-5 w-5 mr-2" />
-              Mes Projets en Cours
-            </CardTitle>
-            <CardDescription>
-              Suivi de vos acquisitions et dossiers actifs
-            </CardDescription>
+          <CardHeader className="pb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-xl flex items-center">
+                  <TrendingUp className="h-6 w-6 mr-3 text-blue-600" />
+                  Mes Projets en Cours
+                </CardTitle>
+                <CardDescription className="mt-2">
+                  Suivi détaillé de vos acquisitions et dossiers actifs
+                </CardDescription>
+              </div>
+              <Button variant="outline" size="sm">
+                Voir tout
+              </Button>
+            </div>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
+            <div className="space-y-6">
               {dashboardData.activeProjects.map((project) => {
                 const IconComponent = getTypeIcon(project.type);
                 return (
-                  <div key={project.id} className="border rounded-lg p-4 hover:bg-gray-50 transition-colors">
-                    <div className="flex items-start justify-between">
-                      <div className="flex items-start space-x-3">
-                        <div className="p-2 rounded-lg bg-blue-100">
-                          <IconComponent className="h-5 w-5 text-blue-600" />
+                  <div key={project.id} className="bg-gray-50 rounded-xl p-6 hover:bg-gray-100 transition-colors">
+                    <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+                      
+                      {/* Info projet */}
+                      <div className="flex items-start space-x-4 flex-1">
+                        <div className="p-3 rounded-lg bg-white shadow-sm">
+                          <IconComponent className="h-6 w-6 text-blue-600" />
                         </div>
-                        <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900">{project.title}</h4>
-                          <Badge className={`mt-1 ${getStatusColor(project.status)}`}>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-semibold text-gray-900 text-lg mb-1">{project.title}</h4>
+                          <Badge className={`${getStatusColor(project.status)} mb-3`}>
                             {project.status}
                           </Badge>
-                          <div className="mt-2 flex items-center text-sm text-gray-600">
-                            <Clock className="h-4 w-4 mr-1" />
-                            <span>{project.nextAction} - Échéance: {new Date(project.deadline).toLocaleDateString('fr-FR')}</span>
+                          <div className="flex items-center text-sm text-gray-600 mb-3">
+                            <Clock className="h-4 w-4 mr-2" />
+                            <span>{project.nextAction}</span>
+                            <span className="mx-2">•</span>
+                            <span>Échéance: {new Date(project.deadline).toLocaleDateString('fr-FR')}</span>
                           </div>
-                          <div className="mt-2">
-                            <div className="flex justify-between text-sm mb-1">
-                              <span>Progression</span>
-                              <span>{project.progress}%</span>
+                          
+                          {/* Barre de progression */}
+                          <div className="w-full">
+                            <div className="flex justify-between text-sm mb-2">
+                              <span className="font-medium">Progression</span>
+                              <span className="text-gray-600">{project.progress}%</span>
                             </div>
-                            <Progress value={project.progress} className="h-2" />
+                            <Progress value={project.progress} className="h-3" />
                           </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-lg">
+                      
+                      {/* Prix et action */}
+                      <div className="text-right flex-shrink-0">
+                        <p className="text-xl font-bold text-gray-900 mb-2">
                           {project.amount.toLocaleString()} FCFA
                         </p>
-                        <Button variant="outline" size="sm" className="mt-2">
+                        <Button variant="outline" size="sm">
                           Voir détails
                         </Button>
                       </div>
@@ -264,51 +293,64 @@ const ParticulierDashboard = () => {
           </CardContent>
         </Card>
 
-        {/* Actions rapides */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {dashboardData.quickStats.map((stat, index) => {
-            const IconComponent = stat.icon;
-            return (
-              <Link key={index} to={stat.href}>
-                <Card className="hover:shadow-lg transition-shadow cursor-pointer">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                        <p className="text-sm text-gray-600">{stat.label}</p>
-                      </div>
-                      <IconComponent className="h-8 w-8 text-blue-600" />
+        {/* Notifications et alertes */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bell className="h-5 w-5 mr-2 text-blue-600" />
+                Notifications Récentes
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-3">
+                {dashboardData.notifications.slice(0, 3).map((notif) => (
+                  <div key={notif.id} className="flex items-start space-x-3 p-3 rounded-lg bg-gray-50">
+                    <div className={`p-1 rounded-full ${notif.urgent ? 'bg-red-100' : 'bg-blue-100'}`}>
+                      <Bell className={`h-4 w-4 ${notif.urgent ? 'text-red-600' : 'text-blue-600'}`} />
                     </div>
-                  </CardContent>
-                </Card>
-              </Link>
-            );
-          })}
+                    <div className="flex-1">
+                      <p className="text-sm font-medium text-gray-900">{notif.message}</p>
+                      <p className="text-xs text-gray-500">Il y a 2h</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <CheckCircle className="h-5 w-5 mr-2 text-green-600" />
+                Système Opérationnel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Notifications temps réel</span>
+                  <Badge className="bg-green-100 text-green-800">Activé</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Assistant IA</span>
+                  <Badge className="bg-green-100 text-green-800">Disponible</Badge>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-sm">Synchronisation</span>
+                  <Badge className="bg-green-100 text-green-800">En ligne</Badge>
+                </div>
+                <div className="text-center pt-4">
+                  <p className="text-xs text-gray-500">
+                    Tous les systèmes fonctionnent normalement
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
 
-        {/* Notifications importantes - Remplacées par le système de notifications intégré */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center">
-              <Bell className="h-5 w-5 mr-2" />
-              Système de Notifications Activé
-            </CardTitle>
-            <CardDescription>
-              Les notifications importantes apparaissent maintenant en temps réel dans l'interface
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="flex items-center justify-center py-8 text-gray-500">
-              <CheckCircle className="h-12 w-12 mr-4" />
-              <div>
-                <p className="font-medium">Notifications temps réel activées</p>
-                <p className="text-sm">Consultez la cloche en haut à droite pour voir vos notifications</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* Assistant IA contextuel - Always available */}
+        {/* Assistant IA contextuel */}
         <ContextualAIAssistant />
 
       </div>

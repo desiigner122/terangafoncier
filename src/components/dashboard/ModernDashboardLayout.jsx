@@ -17,15 +17,19 @@ import {
   MessageSquare,
   Clock,
   TrendingUp,
-  Shield
+  Shield,
+  HardHat,
+  Plus
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
+import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+  const { user, profile } = useAuth();
 
   const getRoleColor = (role) => {
     const colors = {
@@ -81,6 +85,12 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
           description: 'Portfolio blockchain'
         }
       ]
+    },
+    {
+      title: 'Demande Construction',
+      href: '/acheteur/construction-request',
+      icon: HardHat,
+      description: 'Permis de construire'
     },
     {
       title: 'Messages',
@@ -233,35 +243,64 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Header */}
-        <div className={`bg-gradient-to-r ${getRoleColor(userRole)} text-white relative overflow-hidden`}>
-          <div className="absolute inset-0 bg-black/10"></div>
-          <div className="relative z-10 px-6 py-6">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6 }}
-            >
-              <div className="flex items-center justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold mb-1">{title}</h1>
-                  <p className="text-white/90">{subtitle}</p>
-                </div>
+        {/* Header avec notifications et profil utilisateur */}
+        <div className="bg-white border-b shadow-sm">
+          <div className="px-6 py-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">{title}</h1>
+                <p className="text-gray-600">{subtitle}</p>
+              </div>
+              
+              {/* Actions header */}
+              <div className="flex items-center space-x-4">
+                {/* Notifications */}
+                <Button variant="ghost" size="sm" className="relative">
+                  <Bell className="h-5 w-5 text-gray-600" />
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
+                    3
+                  </span>
+                </Button>
+                
+                {/* Messages */}
+                <Button variant="ghost" size="sm" className="relative">
+                  <MessageSquare className="h-5 w-5 text-gray-600" />
+                  <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
+                    5
+                  </span>
+                </Button>
+                
+                {/* Profil utilisateur */}
                 <div className="flex items-center space-x-3">
-                  <Badge 
-                    variant="secondary" 
-                    className="bg-white/20 text-white border-white/30 hover:bg-white/30"
-                  >
-                    {userRole}
-                  </Badge>
+                  <div className="text-right">
+                    <p className="text-sm font-medium text-gray-900">
+                      {profile?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
+                    </p>
+                    <p className="text-xs text-gray-500">{userRole}</p>
+                  </div>
+                  <div className="h-8 w-8 bg-emerald-500 rounded-full flex items-center justify-center">
+                    <User className="h-4 w-4 text-white" />
+                  </div>
                 </div>
               </div>
-            </motion.div>
+            </div>
+          </div>
+        </div>
+
+        {/* Banner de rôle avec gradient */}
+        <div className={`bg-gradient-to-r ${getRoleColor(userRole)} text-white py-3 px-6`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Badge variant="secondary" className="bg-white/20 text-white border-white/30">
+                {userRole}
+              </Badge>
+              <span className="text-sm opacity-90">Espace personnel</span>
+            </div>
           </div>
         </div>
 
         {/* Content */}
-        <div className="flex-1 overflow-y-auto">
+        <div className="flex-1 overflow-y-auto bg-gray-50">
           <div className="p-6">
             {children}
           </div>

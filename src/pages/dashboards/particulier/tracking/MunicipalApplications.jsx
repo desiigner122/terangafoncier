@@ -35,7 +35,9 @@ import {
   XCircle,
   TrendingUp,
   Landmark,
-  UserCheck
+  UserCheck,
+  Building,
+  ListOrdered
 } from 'lucide-react';
 import ModernDashboardLayout from '@/components/dashboard/ModernDashboardLayout';
 import ContextualAIAssistant from '@/components/dashboard/ContextualAIAssistant';
@@ -44,6 +46,7 @@ import { useNotifications } from '@/contexts/NotificationContext';
 const MunicipalApplications = () => {
   const { addNotification } = useNotifications();
   const [applications, setApplications] = useState([]);
+  const [communalZoneApplications, setCommunalZoneApplications] = useState([]);
   const [permits, setPermits] = useState([]);
   const [certificates, setCertificates] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -108,6 +111,70 @@ const MunicipalApplications = () => {
         fees: '75,000 FCFA',
         feesPaid: true,
         assignedOfficer: 'M. Sarr - Service Technique'
+      }
+    ]);
+
+    // Demandes de zones communales
+    setCommunalZoneApplications([
+      {
+        id: 1,
+        applicationId: 'ZC001',
+        title: 'Terrain résidentiel - Zone Keur Massar',
+        location: 'Extension Keur Massar',
+        municipality: 'Commune de Keur Massar',
+        zoneType: 'Résidentielle R+2',
+        surface: '300 m²',
+        status: 'En cours d\'attribution',
+        submissionDate: '2024-01-10',
+        expectedResponse: '2024-03-15',
+        progress: 45,
+        price: '12,000,000 FCFA',
+        paymentStatus: 'Acompte versé (30%)',
+        description: 'Demande d\'attribution de terrain dans la zone d\'extension communale',
+        applicant: 'M. Kane Ousmane',
+        documents: ['Dossier administratif', 'Justificatifs revenus', 'Pièces identité'],
+        missingDocuments: ['Certificat résidence'],
+        ranking: 'Position 15 sur liste d\'attente'
+      },
+      {
+        id: 2,
+        applicationId: 'ZC002',
+        title: 'Parcelle commerciale - Zone Guédiawaye',
+        location: 'Zone industrielle Guédiawaye',
+        municipality: 'Commune de Guédiawaye',
+        zoneType: 'Commerciale',
+        surface: '500 m²',
+        status: 'Dossier complet',
+        submissionDate: '2023-11-20',
+        expectedResponse: '2024-02-28',
+        progress: 75,
+        price: '25,000,000 FCFA',
+        paymentStatus: 'En attente attribution',
+        description: 'Demande pour activité commerciale - magasin de matériaux',
+        applicant: 'Mme Ndiaye Fatou',
+        documents: ['Business plan', 'Dossier technique', 'Garanties bancaires'],
+        missingDocuments: [],
+        ranking: 'Position 3 sur liste d\'attente'
+      },
+      {
+        id: 3,
+        applicationId: 'ZC003',
+        title: 'Terrain social - Zone Pikine',
+        location: 'Cité Millionnaire, Pikine',
+        municipality: 'Commune de Pikine',
+        zoneType: 'Logement social',
+        surface: '200 m²',
+        status: 'Attribué',
+        submissionDate: '2023-09-15',
+        approvalDate: '2024-01-10',
+        progress: 100,
+        price: '8,500,000 FCFA',
+        paymentStatus: 'Soldé',
+        description: 'Attribution dans le cadre du programme de logement social',
+        applicant: 'M. Sow Ibrahima',
+        documents: ['Tous documents fournis'],
+        titleNumber: 'TF 4521/DK',
+        notaryOffice: 'Me Diop - Notaire à Dakar'
       }
     ]);
 
@@ -520,10 +587,14 @@ const MunicipalApplications = () => {
 
         {/* Onglets */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="applications" className="flex items-center gap-2">
               <FileText className="w-4 h-4" />
               Demandes ({applications.length})
+            </TabsTrigger>
+            <TabsTrigger value="communal-zones" className="flex items-center gap-2">
+              <Building className="w-4 h-4" />
+              Zones Communales ({communalZoneApplications?.length || 0})
             </TabsTrigger>
             <TabsTrigger value="permits" className="flex items-center gap-2">
               <CheckCircle className="w-4 h-4" />
@@ -555,6 +626,100 @@ const MunicipalApplications = () => {
               ) : (
                 applications.map(application => (
                   <ApplicationCard key={application.id} application={application} />
+                ))
+              )}
+            </div>
+          </TabsContent>
+
+          <TabsContent value="communal-zones" className="mt-6">
+            <div className="space-y-4">
+              {communalZoneApplications.length === 0 ? (
+                <Card>
+                  <CardContent className="p-8 text-center">
+                    <Building className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-medium text-gray-600 mb-2">
+                      Aucune demande de zone communale
+                    </h3>
+                    <p className="text-gray-500 mb-4">
+                      Demandez un terrain dans les zones d'extension communales.
+                    </p>
+                    <Button>
+                      Nouvelle demande zone communale
+                    </Button>
+                  </CardContent>
+                </Card>
+              ) : (
+                communalZoneApplications.map(application => (
+                  <Card key={application.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <CardTitle className="text-lg">{application.title}</CardTitle>
+                          <div className="flex items-center gap-2 text-sm text-gray-600 mt-1">
+                            <MapPin className="w-4 h-4" />
+                            <span>{application.location}</span>
+                            <span className="text-gray-400">•</span>
+                            <span>{application.surface}</span>
+                          </div>
+                        </div>
+                        <Badge className={`${getStatusColor(application.status)} text-white`}>
+                          {application.status}
+                        </Badge>
+                      </div>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        <div className="flex items-center gap-2">
+                          <Building className="w-4 h-4 text-blue-600" />
+                          <div>
+                            <p className="text-sm text-gray-600">Type de zone</p>
+                            <p className="font-medium">{application.zoneType}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <DollarSign className="w-4 h-4 text-green-600" />
+                          <div>
+                            <p className="text-sm text-gray-600">Prix</p>
+                            <p className="font-medium">{application.price}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <TrendingUp className="w-4 h-4 text-purple-600" />
+                          <div>
+                            <p className="text-sm text-gray-600">Statut paiement</p>
+                            <p className="font-medium">{application.paymentStatus}</p>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="mb-4">
+                        <div className="flex justify-between items-center mb-2">
+                          <span className="text-sm font-medium">Progression</span>
+                          <span className="text-sm text-gray-600">{application.progress}%</span>
+                        </div>
+                        <Progress value={application.progress} className="h-2" />
+                      </div>
+
+                      {application.ranking && (
+                        <div className="flex items-center gap-2 mb-4 p-3 bg-blue-50 rounded-lg">
+                          <ListOrdered className="w-4 h-4 text-blue-600" />
+                          <span className="text-sm font-medium text-blue-800">{application.ranking}</span>
+                        </div>
+                      )}
+
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm text-gray-600">
+                          <span>Demande déposée le </span>
+                          <span className="font-medium">
+                            {new Date(application.submissionDate).toLocaleDateString('fr-FR')}
+                          </span>
+                        </div>
+                        <Button variant="outline" size="sm">
+                          Voir détails
+                        </Button>
+                      </div>
+                    </CardContent>
+                  </Card>
                 ))
               )}
             </div>

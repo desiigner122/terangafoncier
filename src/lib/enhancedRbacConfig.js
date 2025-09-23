@@ -324,8 +324,8 @@ export const hasPermission = (userRole, permission) => {
 export const getDefaultDashboard = (userRole) => {
   const dashboardMap = {
     [ROLES.ADMIN]: '/admin',
-    [ROLES.PARTICULIER_SENEGAL]: '/dashboard/acheteur',
-    [ROLES.PARTICULIER_DIASPORA]: '/dashboard/acheteur',
+    [ROLES.PARTICULIER_SENEGAL]: '/acheteur',
+    [ROLES.PARTICULIER_DIASPORA]: '/acheteur',
     [ROLES.VENDEUR_PARTICULIER]: '/dashboard/vendeur',
     [ROLES.VENDEUR_PROFESSIONNEL]: '/dashboard/vendeur',
     [ROLES.PROMOTEUR]: '/dashboard/promoteur',

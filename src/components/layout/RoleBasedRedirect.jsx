@@ -50,10 +50,10 @@ const RoleBasedRedirect = () => {
     'vendeur': '/dashboard/vendeur',
     'Vendeur Particulier': '/dashboard/vendeur',
     'Vendeur Pro': '/dashboard/vendeur',
-    'Acheteur': '/dashboard/acheteur',
-    'acheteur': '/dashboard/acheteur',
-    'Particulier': '/dashboard/acheteur',
-    'particulier': '/dashboard/acheteur',
+    'Acheteur': '/acheteur',
+    'acheteur': '/acheteur',
+    'Particulier': '/acheteur',
+    'particulier': '/acheteur',
     'Agent Foncier': '/dashboard/agent-foncier'
   };
 

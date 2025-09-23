@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import ModernDashboardLayout from '@/components/dashboard/ModernDashboardLayout';
 import {
   Tabs,
   TabsContent,
@@ -316,12 +317,13 @@ const PromoterReservations = () => {
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header de la page */}
-      <div className="bg-white rounded-lg border p-6">
-        <h1 className="text-2xl font-bold text-gray-900">Projets VEFA</h1>
-        <p className="text-gray-600 mt-1">Suivi de vos réservations et constructions neuves</p>
-      </div>
+    <ModernDashboardLayout>
+      <div className="space-y-6">
+        {/* Header de la page */}
+        <div className="bg-white rounded-lg border p-6">
+          <h1 className="text-2xl font-bold text-gray-900">Projets VEFA</h1>
+          <p className="text-gray-600 mt-1">Suivi de vos réservations et constructions neuves</p>
+        </div>
 
       <div className="space-y-6">
         {/* Statistiques rapides */}
@@ -442,6 +444,7 @@ const PromoterReservations = () => {
       {/* Assistant IA contextuel */}
       <ContextualAIAssistant />
     </div>
+    </ModernDashboardLayout>
   );
 };
 

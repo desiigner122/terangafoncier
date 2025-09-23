@@ -23,7 +23,7 @@ export const NotificationProvider = ({ children }) => {
       timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2h ago
       read: false,
       category: 'payment',
-      actionUrl: '/dashboard/acheteur/promoter-reservations',
+      actionUrl: '/acheteur/promoter-reservations',
       actionText: 'Voir détails'
     },
     {
@@ -34,7 +34,7 @@ export const NotificationProvider = ({ children }) => {
       timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6h ago
       read: false,
       category: 'documents',
-      actionUrl: '/dashboard/acheteur/municipal-applications',
+      actionUrl: '/acheteur/municipal-applications',
       actionText: 'Compléter dossier'
     },
     {
@@ -45,7 +45,7 @@ export const NotificationProvider = ({ children }) => {
       timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12h ago
       read: false,
       category: 'message',
-      actionUrl: '/dashboard/acheteur/private-interests',
+      actionUrl: '/acheteur/private-interests',
       actionText: 'Voir message'
     },
     {
@@ -56,7 +56,7 @@ export const NotificationProvider = ({ children }) => {
       timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
       read: true,
       category: 'blockchain',
-      actionUrl: '/dashboard/acheteur/owned-properties',
+      actionUrl: '/acheteur/owned-properties',
       actionText: 'Voir propriété'
     },
     {
@@ -67,7 +67,7 @@ export const NotificationProvider = ({ children }) => {
       timestamp: new Date(Date.now() - 36 * 60 * 60 * 1000), // 1.5 days ago
       read: true,
       category: 'appointment',
-      actionUrl: '/dashboard/acheteur/promoter-reservations',
+      actionUrl: '/acheteur/promoter-reservations',
       actionText: 'Voir détails'
     }
   ]);

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Bell, 
+  MessageSquare, 
   X, 
   Brain, 
   TrendingUp, 
@@ -185,7 +185,7 @@ const AISmartNotifications = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
       >
-        <Bell className="h-6 w-6" />
+        <MessageSquare className="h-5 w-5" />
         {unreadCount > 0 && (
           <motion.div
             initial={{ scale: 0 }}
@@ -210,12 +210,12 @@ const AISmartNotifications = () => {
             <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-cyan-50 to-blue-50">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <div className="p-2 bg-cyan-100 rounded-lg">
-                    <Brain className="h-5 w-5 text-cyan-600" />
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <MessageSquare className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Notifications IA</h3>
-                    <p className="text-sm text-gray-600">Alertes intelligentes</p>
+                    <h3 className="font-semibold text-gray-900">Messages IA</h3>
+                    <p className="text-sm text-gray-600">Conversations intelligentes</p>
                   </div>
                 </div>
                 <button
@@ -236,8 +236,8 @@ const AISmartNotifications = () => {
                 </div>
               ) : displayNotifications.length === 0 ? (
                 <div className="p-8 text-center">
-                  <Bell className="h-8 w-8 text-gray-400 mx-auto mb-2" />
-                  <p className="text-gray-600">Aucune notification pour le moment</p>
+                  <MessageSquare className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600">Aucun message pour le moment</p>
                 </div>
               ) : (
                 <div className="divide-y divide-gray-100">

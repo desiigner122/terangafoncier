@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   // Navigation Icons
@@ -902,19 +902,19 @@ const CompleteSidebarAdminDashboard = () => {
     );
   };
 
-  // Content Renderer
+  // Content Renderer - Import des pages spécialisées
   const renderContent = () => {
     switch (activeTab) {
       case 'overview':
         return renderOverview();
       case 'users':
-        return renderUsers();
+        return renderUsersSpecialized();
       case 'user-management':
         return renderUserManagement();
       case 'properties':
-        return renderProperties();
+        return renderPropertiesSpecialized();
       case 'transactions':
-        return renderTransactions();
+        return renderTransactionsSpecialized();
       case 'financial':
         return renderFinancial();
       case 'blog':
@@ -924,11 +924,11 @@ const CompleteSidebarAdminDashboard = () => {
       case 'audit':
         return renderAudit();
       case 'analytics':
-        return renderAnalytics();
+        return renderAnalyticsSpecialized();
       case 'notifications':
         return renderNotifications();
       case 'system':
-        return renderSystem();
+        return renderSettingsSpecialized();
       case 'backup':
         return renderBackup();
       default:
@@ -2550,6 +2550,72 @@ const CompleteSidebarAdminDashboard = () => {
       </Card>
     </div>
   );
+
+  // Fonctions de rendu spécialisées utilisant nos pages complètes
+  const renderUsersSpecialized = () => {
+    const UsersPage = React.lazy(() => import('./UsersPage'));
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        </div>
+      }>
+        <UsersPage />
+      </Suspense>
+    );
+  };
+
+  const renderPropertiesSpecialized = () => {
+    const PropertiesManagementPage = React.lazy(() => import('./PropertiesManagementPage'));
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        </div>
+      }>
+        <PropertiesManagementPage />
+      </Suspense>
+    );
+  };
+
+  const renderTransactionsSpecialized = () => {
+    const TransactionsPage = React.lazy(() => import('./TransactionsPage'));
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        </div>
+      }>
+        <TransactionsPage />
+      </Suspense>
+    );
+  };
+
+  const renderAnalyticsSpecialized = () => {
+    const AnalyticsPage = React.lazy(() => import('./AnalyticsPage'));
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        </div>
+      }>
+        <AnalyticsPage />
+      </Suspense>
+    );
+  };
+
+  const renderSettingsSpecialized = () => {
+    const SettingsPage = React.lazy(() => import('./SettingsPage'));
+    return (
+      <Suspense fallback={
+        <div className="flex items-center justify-center p-8">
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-red-600"></div>
+        </div>
+      }>
+        <SettingsPage />
+      </Suspense>
+    );
+  };
 
   if (loading) {
     return (

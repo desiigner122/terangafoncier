@@ -47,7 +47,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
-import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
+// import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 
 const AdminDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -280,7 +280,7 @@ const AdminDashboard = () => {
         {/* Widgets IA & Blockchain */}
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
           <AIAssistantWidget userRole="Admin" dashboardData={dashboardData} />
-          <BlockchainWidget userRole="Admin" />
+          {/* <BlockchainWidget userRole="Admin" /> */}
         </div>
 
         {/* System Health Dashboard */}

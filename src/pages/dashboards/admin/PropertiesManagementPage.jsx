@@ -1,71 +1,548 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
-import { 
-  Building, 
-  Plus, 
-  Eye, 
-  Edit, 
+import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Building,
+  Home,
+  MapPin,
+  DollarSign,
+  Calendar,
+  Eye,
+  Edit3,
   Trash2,
   Search,
   Filter,
-  Calendar,
-  MapPin,
-  DollarSign,
-  Users,
-  TrendingUp,
-  BarChart3,
-  PieChart
+  Plus,
+  Download,
+  Upload,
+  CheckCircle,
+  XCircle,
+  Clock,
+  AlertTriangle,
+  RefreshCw,
+  Brain,
+  Star,
+  Image,
+  FileText,
+  Users
 } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { OpenAIService } from '../../../services/ai/OpenAIService';
 
 const PropertiesManagementPage = () => {
-  const [data, setData] = useState([]);
+  const [properties, setProperties] = useState([]);
+  const [filteredProperties, setFilteredProperties] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedFilter, setSelectedFilter] = useState('all');
   const [loading, setLoading] = useState(true);
+  const [aiInsights, setAiInsights] = useState([]);
+  const [stats, setStats] = useState({
+    totalProperties: 0,
+    approvedProperties: 0,
+    pendingProperties: 0,
+    rejectedProperties: 0,
+    averagePrice: 0
+  });
 
   useEffect(() => {
-    // Simulation de chargement de données
-    setTimeout(() => {
-      setData([]);
-      setLoading(false);
-    }, 1000);
+    loadProperties();
+    generateAIInsights();
   }, []);
 
-  return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 p-6">
-      <div className="max-w-7xl mx-auto">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-8"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Gestion Propriétés
-          </h1>
-          <p className="text-gray-600">
-            Administration des propriétés sur la plateforme
-          </p>
-        </motion.div>
+  useEffect(() => {
+    filterProperties();
+  }, [properties, searchTerm, selectedFilter]);
 
-        {/* Content */}
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="bg-white rounded-xl p-6 shadow-lg"
-        >
-          <div className="text-center py-12">
-            <Building className="h-16 w-16 text-slate-600 mx-auto mb-4" />
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              Gestion Propriétés
-            </h3>
-            <p className="text-gray-600 mb-6">
-              Cette fonctionnalité est en cours de développement.
-            </p>
-            <button className="bg-slate-600 text-white px-6 py-3 rounded-lg hover:bg-slate-700 transition-colors">
-              Commencer
-            </button>
-          </div>
-        </motion.div>
+  const loadProperties = async () => {
+    setLoading(true);
+    try {
+      // Données mockup propriétés réalistes
+      const mockProperties = [
+        {
+          id: 1,
+          title: 'Villa moderne Almadies',
+          description: 'Magnifique villa avec vue sur mer, 4 chambres, piscine',
+          type: 'Villa',
+          status: 'approved',
+          price: 450000000,
+          surface: 350,
+          location: 'Almadies, Dakar',
+          owner: 'Amadou Diallo',
+          ownerEmail: 'amadou.diallo@email.com',
+          images: 8,
+          createdAt: '2024-02-15',
+          approvedAt: '2024-02-18',
+          views: 1250,
+          favorites: 45,
+          coordinates: { lat: 14.7645, lng: -17.4692 }
+        },
+        {
+          id: 2,
+          title: 'Appartement Plateau',
+          description: 'Appartement de standing, 3 chambres, centre-ville',
+          type: 'Appartement',
+          status: 'pending',
+          price: 125000000,
+          surface: 120,
+          location: 'Plateau, Dakar',
+          owner: 'Fatou Seck',
+          ownerEmail: 'fatou.seck@email.com',
+          images: 12,
+          createdAt: '2024-03-10',
+          approvedAt: null,
+          views: 320,
+          favorites: 18,
+          coordinates: { lat: 14.6928, lng: -17.4467 }
+        },
+        {
+          id: 3,
+          title: 'Terrain Thiès',
+          description: 'Terrain constructible 500m², zone résidentielle',
+          type: 'Terrain',
+          status: 'approved',
+          price: 35000000,
+          surface: 500,
+          location: 'Thiès',
+          owner: 'Mamadou Ba',
+          ownerEmail: 'mamadou.ba@email.com',
+          images: 4,
+          createdAt: '2024-01-20',
+          approvedAt: '2024-01-22',
+          views: 890,
+          favorites: 32,
+          coordinates: { lat: 14.7886, lng: -16.9246 }
+        },
+        {
+          id: 4,
+          title: 'Maison Liberté 6',
+          description: 'Maison familiale R+1, jardin, 5 chambres',
+          type: 'Maison',
+          status: 'rejected',
+          price: 85000000,
+          surface: 200,
+          location: 'Liberté 6, Dakar',
+          owner: 'Aissatou Ndiaye',
+          ownerEmail: 'aissatou.ndiaye@email.com',
+          images: 6,
+          createdAt: '2024-03-05',
+          approvedAt: null,
+          rejectedAt: '2024-03-12',
+          rejectionReason: 'Documents incomplets',
+          views: 156,
+          favorites: 8,
+          coordinates: { lat: 14.6937, lng: -17.4441 }
+        },
+        {
+          id: 5,
+          title: 'Local commercial Sandaga',
+          description: 'Local commercial 80m², très bien situé',
+          type: 'Commercial',
+          status: 'approved',
+          price: 180000000,
+          surface: 80,
+          location: 'Sandaga, Dakar',
+          owner: 'Ousmane Diop',
+          ownerEmail: 'ousmane.diop@email.com',
+          images: 10,
+          createdAt: '2024-02-28',
+          approvedAt: '2024-03-02',
+          views: 675,
+          favorites: 28,
+          coordinates: { lat: 14.6759, lng: -17.4455 }
+        }
+      ];
+
+      setProperties(mockProperties);
+      
+      // Calcul des statistiques
+      const totalProperties = mockProperties.length;
+      const approvedProperties = mockProperties.filter(p => p.status === 'approved').length;
+      const pendingProperties = mockProperties.filter(p => p.status === 'pending').length;
+      const rejectedProperties = mockProperties.filter(p => p.status === 'rejected').length;
+      const averagePrice = mockProperties.reduce((sum, p) => sum + p.price, 0) / totalProperties;
+
+      setStats({ totalProperties, approvedProperties, pendingProperties, rejectedProperties, averagePrice });
+    } catch (error) {
+      console.error('Erreur chargement propriétés:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const generateAIInsights = async () => {
+    try {
+      // Simulation insights IA - En production, appel API OpenAI
+      setAiInsights([
+        'Prix moyen Dakar en hausse de 12% ce trimestre',
+        'Zone Almadies: demande très forte (+45% recherches)',
+        '3 propriétés nécessitent validation urgente',
+        'Terrains Thiès: opportunité investissement détectée'
+      ]);
+    } catch (error) {
+      console.error('Erreur génération insights IA:', error);
+    }
+  };
+
+  const filterProperties = () => {
+    let filtered = properties;
+
+    if (searchTerm) {
+      filtered = filtered.filter(property =>
+        property.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        property.owner.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    switch (selectedFilter) {
+      case 'approved':
+        filtered = filtered.filter(p => p.status === 'approved');
+        break;
+      case 'pending':
+        filtered = filtered.filter(p => p.status === 'pending');
+        break;
+      case 'rejected':
+        filtered = filtered.filter(p => p.status === 'rejected');
+        break;
+      case 'villa':
+        filtered = filtered.filter(p => p.type === 'Villa');
+        break;
+      case 'appartement':
+        filtered = filtered.filter(p => p.type === 'Appartement');
+        break;
+      default:
+        break;
+    }
+
+    setFilteredProperties(filtered);
+  };
+
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF',
+      minimumFractionDigits: 0
+    }).format(amount);
+  };
+
+  const getStatusColor = (status) => {
+    const colors = {
+      'approved': 'bg-green-100 text-green-800',
+      'pending': 'bg-yellow-100 text-yellow-800',
+      'rejected': 'bg-red-100 text-red-800'
+    };
+    return colors[status] || 'bg-gray-100 text-gray-800';
+  };
+
+  const getTypeColor = (type) => {
+    const colors = {
+      'Villa': 'bg-purple-100 text-purple-800',
+      'Appartement': 'bg-blue-100 text-blue-800',
+      'Maison': 'bg-green-100 text-green-800',
+      'Terrain': 'bg-orange-100 text-orange-800',
+      'Commercial': 'bg-gray-100 text-gray-800'
+    };
+    return colors[type] || 'bg-gray-100 text-gray-800';
+  };
+
+  const handlePropertyAction = (action, propertyId) => {
+    switch (action) {
+      case 'approve':
+        setProperties(properties.map(p => 
+          p.id === propertyId ? { ...p, status: 'approved', approvedAt: new Date().toISOString() } : p
+        ));
+        break;
+      case 'reject':
+        setProperties(properties.map(p => 
+          p.id === propertyId ? { ...p, status: 'rejected', rejectedAt: new Date().toISOString() } : p
+        ));
+        break;
+      case 'delete':
+        if (window.confirm('Êtes-vous sûr de vouloir supprimer cette propriété ?')) {
+          setProperties(properties.filter(p => p.id !== propertyId));
+        }
+        break;
+      default:
+        break;
+    }
+  };
+
+  return (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-gray-900">Gestion des Propriétés</h1>
+          <p className="text-gray-600 mt-1">Gérez toutes les propriétés de la plateforme</p>
+        </div>
+        <div className="flex space-x-3">
+          <Button variant="outline">
+            <Download className="h-4 w-4 mr-2" />
+            Exporter
+          </Button>
+          <Button>
+            <Plus className="h-4 w-4 mr-2" />
+            Nouvelle Propriété
+          </Button>
+        </div>
       </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-5 gap-6">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Total Propriétés</p>
+                <p className="text-3xl font-bold text-gray-900">{stats.totalProperties}</p>
+              </div>
+              <Building className="h-8 w-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Approuvées</p>
+                <p className="text-3xl font-bold text-green-600">{stats.approvedProperties}</p>
+              </div>
+              <CheckCircle className="h-8 w-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">En attente</p>
+                <p className="text-3xl font-bold text-yellow-600">{stats.pendingProperties}</p>
+              </div>
+              <Clock className="h-8 w-8 text-yellow-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Rejetées</p>
+                <p className="text-3xl font-bold text-red-600">{stats.rejectedProperties}</p>
+              </div>
+              <XCircle className="h-8 w-8 text-red-600" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Prix Moyen</p>
+                <p className="text-lg font-bold text-purple-600">{formatCurrency(stats.averagePrice)}</p>
+              </div>
+              <DollarSign className="h-8 w-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* AI Insights */}
+      {aiInsights.length > 0 && (
+        <Card className="border-blue-200 bg-blue-50">
+          <CardHeader className="pb-3">
+            <div className="flex items-center space-x-2">
+              <Brain className="h-5 w-5 text-blue-600" />
+              <CardTitle className="text-lg text-blue-900">Insights IA Immobilier</CardTitle>
+            </div>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {aiInsights.map((insight, index) => (
+                <div key={index} className="flex items-center space-x-2 text-sm text-blue-800">
+                  <CheckCircle className="h-4 w-4" />
+                  <span>{insight}</span>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Filters and Search */}
+      <Card>
+        <CardContent className="p-6">
+          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
+            <div className="flex-1 max-w-md">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <Input
+                  placeholder="Rechercher par titre, lieu ou propriétaire..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="pl-10"
+                />
+              </div>
+            </div>
+            
+            <div className="flex space-x-3">
+              <Select value={selectedFilter} onValueChange={setSelectedFilter}>
+                <SelectTrigger className="w-48">
+                  <Filter className="h-4 w-4 mr-2" />
+                  <SelectValue placeholder="Filtrer par..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">Toutes les propriétés</SelectItem>
+                  <SelectItem value="approved">Approuvées</SelectItem>
+                  <SelectItem value="pending">En attente</SelectItem>
+                  <SelectItem value="rejected">Rejetées</SelectItem>
+                  <SelectItem value="villa">Villas</SelectItem>
+                  <SelectItem value="appartement">Appartements</SelectItem>
+                </SelectContent>
+              </Select>
+              
+              <Button variant="outline" onClick={loadProperties}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Properties List */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Liste des Propriétés ({filteredProperties.length})</CardTitle>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex items-center justify-center py-12">
+              <RefreshCw className="h-8 w-8 animate-spin text-gray-400" />
+              <span className="ml-2 text-gray-600">Chargement...</span>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {filteredProperties.map((property) => (
+                <motion.div
+                  key={property.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  className="border rounded-lg p-4 hover:shadow-md transition-shadow"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex items-start space-x-4 flex-1">
+                      <div className="w-20 h-20 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <Home className="h-8 w-8 text-gray-400" />
+                        <span className="absolute bottom-1 right-1 text-xs bg-blue-600 text-white px-1 rounded">
+                          {property.images}
+                        </span>
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h3 className="font-semibold text-gray-900 text-lg">
+                            {property.title}
+                          </h3>
+                          <Badge className={getTypeColor(property.type)}>
+                            {property.type}
+                          </Badge>
+                          <Badge className={getStatusColor(property.status)}>
+                            {property.status === 'approved' ? 'Approuvée' : 
+                             property.status === 'pending' ? 'En attente' : 'Rejetée'}
+                          </Badge>
+                        </div>
+                        
+                        <p className="text-gray-600 mb-2">{property.description}</p>
+                        
+                        <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                          <div className="flex items-center space-x-1">
+                            <MapPin className="h-3 w-3" />
+                            <span>{property.location}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Building className="h-3 w-3" />
+                            <span>{property.surface}m²</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Users className="h-3 w-3" />
+                            <span>{property.owner}</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Eye className="h-3 w-3" />
+                            <span>{property.views} vues</span>
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Star className="h-3 w-3" />
+                            <span>{property.favorites} favoris</span>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2">
+                          <p className="text-2xl font-bold text-blue-600">
+                            {formatCurrency(property.price)}
+                          </p>
+                          <span className="text-gray-500">
+                            ({formatCurrency(property.price / property.surface)}/m²)
+                          </span>
+                        </div>
+                        
+                        {property.status === 'rejected' && property.rejectionReason && (
+                          <div className="mt-2 p-2 bg-red-50 rounded text-red-700 text-sm">
+                            <AlertTriangle className="h-3 w-3 inline mr-1" />
+                            Raison du rejet: {property.rejectionReason}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2 ml-4">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-3 w-3" />
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Edit3 className="h-3 w-3" />
+                      </Button>
+                      {property.status === 'pending' && (
+                        <>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handlePropertyAction('approve', property.id)}
+                            className="text-green-600 hover:bg-green-50"
+                          >
+                            <CheckCircle className="h-3 w-3" />
+                          </Button>
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handlePropertyAction('reject', property.id)}
+                            className="text-red-600 hover:bg-red-50"
+                          >
+                            <XCircle className="h-3 w-3" />
+                          </Button>
+                        </>
+                      )}
+                      <Button 
+                        size="sm" 
+                        variant="outline"
+                        onClick={() => handlePropertyAction('delete', property.id)}
+                      >
+                        <Trash2 className="h-3 w-3" />
+                      </Button>
+                    </div>
+                  </div>
+                </motion.div>
+              ))}
+            </div>
+          )}
+        </CardContent>
+      </Card>
     </div>
   );
 };

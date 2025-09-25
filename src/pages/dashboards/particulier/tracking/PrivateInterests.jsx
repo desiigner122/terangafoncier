@@ -34,7 +34,23 @@ import {
   Clock,
   CheckCircle,
   AlertCircle,
-  XCircle
+  XCircle,
+  Edit,
+  Trash2,
+  FileText,
+  Upload,
+  Download,
+  PhoneCall,
+  Mail,
+  Star,
+  Heart,
+  Search,
+  Filter,
+  MoreVertical,
+  Save,
+  X,
+  Send,
+  History
 } from 'lucide-react';
 import ContextualAIAssistant from '@/components/dashboard/ContextualAIAssistant';
 import { useNotifications } from '@/contexts/NotificationContext';
@@ -45,6 +61,15 @@ const PrivateInterests = () => {
   const [negotiations, setNegotiations] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
   const [selectedTab, setSelectedTab] = useState('interests');
+  const [editingInterest, setEditingInterest] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showNegotiationModal, setShowNegotiationModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showContactModal, setShowContactModal] = useState(false);
+  const [selectedInterest, setSelectedInterest] = useState(null);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filterStatus, setFilterStatus] = useState('all');
+  const [filterPriority, setFilterPriority] = useState('all');
 
   // Simuler des données
   useEffect(() => {
@@ -65,7 +90,13 @@ const PrivateInterests = () => {
         description: 'Belle villa moderne avec piscine et jardin',
         priority: 'haute',
         lastContact: '2024-01-15',
-        responseReceived: false
+        responseReceived: false,
+        isFavorite: true,
+        lastActions: [
+          { date: '2024-01-15', description: 'Contact téléphonique' },
+          { date: '2024-01-12', description: 'Envoi message WhatsApp' },
+          { date: '2024-01-10', description: 'Intérêt exprimé' }
+        ]
       },
       {
         id: 2,
@@ -82,7 +113,36 @@ const PrivateInterests = () => {
         description: 'Terrain bien situé pour construction résidentielle',
         priority: 'moyenne',
         lastContact: '2024-01-12',
-        responseReceived: true
+        responseReceived: true,
+        isFavorite: false,
+        lastActions: [
+          { date: '2024-01-12', description: 'Réponse positive reçue' },
+          { date: '2024-01-08', description: 'Intérêt exprimé' }
+        ]
+      },
+      {
+        id: 3,
+        propertyId: 'PRIV003',
+        title: 'Appartement - Mermoz',
+        location: 'Mermoz, Dakar',
+        price: '120,000,000 FCFA',
+        status: 'En négociation',
+        dateExpressed: '2024-01-05',
+        owner: 'M. Ba',
+        ownerPhone: '+221 75 555 66 77',
+        surface: '90 m²',
+        type: 'Appartement',
+        description: 'Appartement 3 pièces bien situé',
+        priority: 'haute',
+        lastContact: '2024-01-14',
+        responseReceived: true,
+        isFavorite: true,
+        negotiationProgress: 65,
+        lastActions: [
+          { date: '2024-01-14', description: 'Contre-proposition envoyée' },
+          { date: '2024-01-10', description: 'Négociation démarrée' },
+          { date: '2024-01-05', description: 'Intérêt exprimé' }
+        ]
       }
     ]);
 
@@ -124,6 +184,135 @@ const PrivateInterests = () => {
       message: `Votre intérêt pour ${interestData.title} a été enregistré.`
     });
   };
+
+  // 🔥 NOUVELLES ACTIONS AJOUTÉES
+  const handleEditInterest = (interest) => {
+    setEditingInterest(interest);
+  };
+
+  const handleUpdateInterest = (updatedData) => {
+    setInterests(interests.map(interest => 
+      interest.id === editingInterest.id 
+        ? { ...interest, ...updatedData }
+        : interest
+    ));
+    setEditingInterest(null);
+    addNotification({
+      type: 'success',
+      title: 'Intérêt modifié',
+      message: `Les modifications ont été sauvegardées.`
+    });
+  };
+
+  const handleDeleteInterest = (interest) => {
+    setSelectedInterest(interest);
+    setShowDeleteModal(true);
+  };
+
+  const handleStartNegotiation = (interest) => {
+    setSelectedInterest(interest);
+    setShowNegotiationModal(true);
+  };
+
+  const actualDeleteInterest = (interest) => {
+    setInterests(interests.filter(i => i.id !== interest.id));
+    addNotification({
+      type: 'success',
+      title: 'Intérêt supprimé',
+      message: `L'intérêt "${interest.title}" a été retiré de votre liste.`
+    });
+  };
+
+  const handleSendOfferConfirm = (interestId, offerData) => {
+    // Convertir l'intérêt en négociation
+    const interest = interests.find(i => i.id === interestId);
+    const newNegotiation = {
+      id: negotiations.length + 1,
+      propertyId: interest.propertyId,
+      title: interest.title,
+      location: interest.location,
+      initialPrice: interest.price,
+      currentOffer: offerData.amount,
+      status: 'En négociation',
+      startDate: new Date().toISOString().split('T')[0],
+      owner: interest.owner,
+      ownerPhone: interest.ownerPhone,
+      surface: interest.surface,
+      type: interest.type,
+      negotiationPhase: 'Offre envoyée',
+      lastUpdate: new Date().toISOString().split('T')[0],
+      progress: 25,
+      message: offerData.message
+    };
+    
+    setNegotiations([...negotiations, newNegotiation]);
+    setInterests(interests.map(i => 
+      i.id === interestId 
+        ? { ...i, status: 'En négociation' }
+        : i
+    ));
+    setShowNegotiationModal(null);
+    addNotification({
+      type: 'success',
+      title: 'Offre envoyée',
+      message: `Votre offre de ${offerData.amount} a été transmise au propriétaire.`
+    });
+  };
+
+  const handleUploadDocumentConfirm = (interestId, files) => {
+    addNotification({
+      type: 'success',
+      title: 'Documents uploadés',
+      message: `${files.length} document(s) ajouté(s) au dossier.`
+    });
+    setShowUploadModal(false);
+  };
+
+  const handleContactOwnerConfirm = (interest, method) => {
+    if (method === 'phone') {
+      window.open(`tel:${interest.ownerPhone}`);
+    } else if (method === 'email') {
+      window.open(`mailto:contact@terangafoncier.com?subject=Intérêt pour ${interest.title}`);
+    }
+    addNotification({
+      type: 'info',
+      title: 'Contact initié',
+      message: `Contact avec ${interest.owner} via ${method === 'phone' ? 'téléphone' : 'email'}.`
+    });
+  };
+
+  const handleToggleFavorite = (interestId) => {
+    setInterests(interests.map(interest => 
+      interest.id === interestId 
+        ? { ...interest, isFavorite: !interest.isFavorite }
+        : interest
+    ));
+  };
+
+  // Fonctions pour ouvrir les modales
+  const handleContactOwner = (interest) => {
+    setSelectedInterest(interest);
+    setShowContactModal(true);
+  };
+
+  const handleUploadDocument = (interest) => {
+    setSelectedInterest(interest);
+    setShowUploadModal(true);
+  };
+
+  const handleSendOffer = (interest) => {
+    setSelectedInterest(interest);
+    setShowNegotiationModal(true);
+  };
+
+  // Filtres et recherche
+  const filteredInterests = interests.filter(interest => {
+    const matchesSearch = interest.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                          interest.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesStatus = filterStatus === 'all' || interest.status === filterStatus;
+    const matchesPriority = filterPriority === 'all' || interest.priority === filterPriority;
+    return matchesSearch && matchesStatus && matchesPriority;
+  });
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -290,20 +479,110 @@ const PrivateInterests = () => {
 
         <p className="text-gray-700 mb-4">{interest.description}</p>
 
-        <div className="flex gap-2">
-          <Button size="sm" className="flex items-center gap-2">
-            <Phone className="w-4 h-4" />
-            Appeler
+        <div className="flex flex-wrap gap-2 mb-4">
+          {/* Actions principales */}
+          <Button 
+            size="sm" 
+            onClick={() => handleContactOwner(interest)}
+            className="flex items-center gap-2"
+          >
+            <PhoneCall className="w-4 h-4" />
+            Contacter
           </Button>
-          <Button size="sm" variant="outline" className="flex items-center gap-2">
-            <MessageSquare className="w-4 h-4" />
-            Message
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => handleStartNegotiation(interest)}
+            className="flex items-center gap-2"
+          >
+            <TrendingUp className="w-4 h-4" />
+            Négocier
           </Button>
-          <Button size="sm" variant="outline" className="flex items-center gap-2">
-            <Eye className="w-4 h-4" />
-            Voir détails
+          <Button 
+            size="sm" 
+            variant="outline" 
+            onClick={() => handleSendOffer(interest)}
+            className="flex items-center gap-2"
+          >
+            <Mail className="w-4 h-4" />
+            Faire une offre
+          </Button>
+          
+          {/* Actions secondaires */}
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => handleEditInterest(interest)}
+            className="flex items-center gap-2"
+          >
+            <Edit className="w-4 h-4" />
+            Modifier
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => handleToggleFavorite(interest)}
+            className="flex items-center gap-2"
+          >
+            {interest.isFavorite ? (
+              <Heart className="w-4 h-4 fill-current text-red-500" />
+            ) : (
+              <Heart className="w-4 h-4" />
+            )}
+            {interest.isFavorite ? 'Retirer favoris' : 'Ajouter favoris'}
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => handleUploadDocument(interest)}
+            className="flex items-center gap-2"
+          >
+            <Upload className="w-4 h-4" />
+            Documents
+          </Button>
+          <Button 
+            size="sm" 
+            variant="ghost" 
+            onClick={() => handleDeleteInterest(interest)}
+            className="flex items-center gap-2 text-red-600 hover:text-red-700"
+          >
+            <Trash2 className="w-4 h-4" />
+            Supprimer
           </Button>
         </div>
+
+        {/* Barre de progression si négociation en cours */}
+        {interest.status === 'En négociation' && (
+          <div className="mb-4">
+            <div className="flex justify-between text-sm text-gray-600 mb-1">
+              <span>Progression de la négociation</span>
+              <span>{interest.negotiationProgress || 25}%</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-2">
+              <div 
+                className="bg-blue-600 h-2 rounded-full transition-all duration-300" 
+                style={{ width: `${interest.negotiationProgress || 25}%` }}
+              ></div>
+            </div>
+          </div>
+        )}
+
+        {/* Dernières actions */}
+        {interest.lastActions && interest.lastActions.length > 0 && (
+          <div className="border-t pt-4">
+            <h4 className="text-sm font-medium text-gray-700 mb-2">Dernières actions:</h4>
+            <div className="space-y-1">
+              {interest.lastActions.slice(0, 3).map((action, index) => (
+                <div key={index} className="flex items-center gap-2 text-sm text-gray-600">
+                  <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
+                  <span>{action.date}</span>
+                  <span>-</span>
+                  <span>{action.description}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </CardContent>
     </Card>
   );
@@ -471,6 +750,66 @@ const PrivateInterests = () => {
         {/* Formulaire d'ajout */}
         {showAddForm && <AddInterestForm />}
 
+        {/* Barre d'outils et filtres */}
+        <Card>
+          <CardContent className="p-4">
+            <div className="flex flex-col md:flex-row gap-4 items-center justify-between">
+              {/* Filtres et recherche */}
+              <div className="flex flex-wrap gap-3 items-center">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    placeholder="Rechercher un bien..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 w-64"
+                  />
+                </div>
+                
+                <Select value={filterStatus} onValueChange={setFilterStatus}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Statut" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Tous les statuts</SelectItem>
+                    <SelectItem value="En attente">En attente</SelectItem>
+                    <SelectItem value="Intérêt confirmé">Confirmé</SelectItem>
+                    <SelectItem value="En négociation">En négociation</SelectItem>
+                    <SelectItem value="Refusé">Refusé</SelectItem>
+                  </SelectContent>
+                </Select>
+
+                <Select value={filterPriority} onValueChange={setFilterPriority}>
+                  <SelectTrigger className="w-40">
+                    <SelectValue placeholder="Priorité" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Toutes priorités</SelectItem>
+                    <SelectItem value="haute">Haute</SelectItem>
+                    <SelectItem value="moyenne">Moyenne</SelectItem>
+                    <SelectItem value="basse">Basse</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {/* Actions rapides */}
+              <div className="flex gap-2">
+                <Button 
+                  onClick={() => setShowAddForm(true)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Plus className="w-4 h-4 mr-2" />
+                  Nouvel Intérêt
+                </Button>
+                <Button variant="outline">
+                  <Download className="w-4 h-4 mr-2" />
+                  Exporter
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
         {/* Onglets */}
         <Tabs value={selectedTab} onValueChange={setSelectedTab}>
           <TabsList className="grid w-full grid-cols-2">
@@ -535,6 +874,309 @@ const PrivateInterests = () => {
 
       {/* Assistant IA contextuel */}
       <ContextualAIAssistant />
+
+      {/* Modales pour les actions CRUD */}
+      
+      {/* Modal d'édition d'intérêt */}
+      {editingInterest && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+            <h3 className="text-lg font-semibold mb-4">Modifier l'intérêt</h3>
+            <form onSubmit={(e) => { e.preventDefault(); handleUpdateInterest(); }}>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Titre</label>
+                  <input
+                    type="text"
+                    value={editingInterest.title}
+                    onChange={(e) => setEditingInterest({...editingInterest, title: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Localisation</label>
+                  <input
+                    type="text"
+                    value={editingInterest.location}
+                    onChange={(e) => setEditingInterest({...editingInterest, location: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Budget maximum</label>
+                  <input
+                    type="text"
+                    value={editingInterest.price}
+                    onChange={(e) => setEditingInterest({...editingInterest, price: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Type de bien</label>
+                  <select
+                    value={editingInterest.type}
+                    onChange={(e) => setEditingInterest({...editingInterest, type: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  >
+                    <option value="Terrain résidentiel">Terrain résidentiel</option>
+                    <option value="Terrain commercial">Terrain commercial</option>
+                    <option value="Terrain agricole">Terrain agricole</option>
+                    <option value="Terrain industriel">Terrain industriel</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Surface souhaitée</label>
+                  <input
+                    type="text"
+                    value={editingInterest.surface}
+                    onChange={(e) => setEditingInterest({...editingInterest, surface: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                    required
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Priorité</label>
+                  <select
+                    value={editingInterest.priority}
+                    onChange={(e) => setEditingInterest({...editingInterest, priority: e.target.value})}
+                    className="w-full border border-gray-300 rounded-md px-3 py-2"
+                  >
+                    <option value="haute">Haute</option>
+                    <option value="moyenne">Moyenne</option>
+                    <option value="basse">Basse</option>
+                  </select>
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm font-medium mb-2">Description détaillée</label>
+                <textarea
+                  value={editingInterest.description}
+                  onChange={(e) => setEditingInterest({...editingInterest, description: e.target.value})}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+                  rows="3"
+                />
+              </div>
+              <div className="flex justify-end gap-3">
+                <Button 
+                  type="button" 
+                  variant="outline" 
+                  onClick={() => setEditingInterest(null)}
+                >
+                  Annuler
+                </Button>
+                <Button type="submit">
+                  Mettre à jour
+                </Button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmation de suppression */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-md">
+            <h3 className="text-lg font-semibold mb-4">Confirmer la suppression</h3>
+            <p className="text-gray-600 mb-6">
+              Êtes-vous sûr de vouloir supprimer cet intérêt ? Cette action est irréversible.
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDeleteModal(false)}
+              >
+                Annuler
+              </Button>
+              <Button 
+                variant="destructive"
+                onClick={() => {
+                  actualDeleteInterest(selectedInterest);
+                  setShowDeleteModal(false);
+                  setSelectedInterest(null);
+                }}
+              >
+                Supprimer
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de négociation */}
+      {showNegotiationModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h3 className="text-lg font-semibold mb-4">Démarrer une négociation</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Montant proposé</label>
+                <input
+                  type="text"
+                  placeholder="Ex: 15,000,000 FCFA"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Conditions spéciales</label>
+                <textarea
+                  placeholder="Décrivez vos conditions (délai de paiement, modalités, etc.)"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+                  rows="3"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Échéance souhaitée</label>
+                <input
+                  type="date"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowNegotiationModal(false)}
+              >
+                Annuler
+              </Button>
+              <Button onClick={() => {
+                // Ici, vous ajouteriez la logique pour soumettre la négociation
+                showNotification('Demande de négociation envoyée avec succès', 'success');
+                setShowNegotiationModal(false);
+              }}>
+                Envoyer la proposition
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal d'upload de documents */}
+      {showUploadModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h3 className="text-lg font-semibold mb-4">Télécharger des documents</h3>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium mb-2">Type de document</label>
+                <select className="w-full border border-gray-300 rounded-md px-3 py-2">
+                  <option value="">Sélectionner le type</option>
+                  <option value="identite">Pièce d'identité</option>
+                  <option value="revenus">Justificatif de revenus</option>
+                  <option value="banque">Relevé bancaire</option>
+                  <option value="autre">Autre</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Fichier</label>
+                <div className="border-2 border-dashed border-gray-300 rounded-lg p-4 text-center">
+                  <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-gray-600">Glissez un fichier ici ou cliquez pour sélectionner</p>
+                  <input type="file" className="hidden" accept=".pdf,.jpg,.jpeg,.png" />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Description (optionnel)</label>
+                <textarea
+                  placeholder="Décrivez le document"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 h-20"
+                  rows="2"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowUploadModal(false)}
+              >
+                Annuler
+              </Button>
+              <Button onClick={() => {
+                showNotification('Document téléchargé avec succès', 'success');
+                setShowUploadModal(false);
+              }}>
+                Télécharger
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de contact propriétaire */}
+      {showContactModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white rounded-lg p-6 w-full max-w-lg">
+            <h3 className="text-lg font-semibold mb-4">Contacter le propriétaire</h3>
+            <div className="space-y-4">
+              <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-lg">
+                <User className="w-8 h-8 text-gray-600" />
+                <div>
+                  <p className="font-medium">{selectedInterest?.owner}</p>
+                  <p className="text-sm text-gray-600">{selectedInterest?.ownerPhone}</p>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Mode de contact</label>
+                <div className="grid grid-cols-2 gap-3">
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2 justify-center"
+                    onClick={() => {
+                      window.location.href = `tel:${selectedInterest?.ownerPhone}`;
+                      setShowContactModal(false);
+                    }}
+                  >
+                    <PhoneCall className="w-4 h-4" />
+                    Appel direct
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    className="flex items-center gap-2 justify-center"
+                    onClick={() => {
+                      window.location.href = `sms:${selectedInterest?.ownerPhone}`;
+                      setShowContactModal(false);
+                    }}
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                    SMS
+                  </Button>
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm font-medium mb-2">Message personnalisé</label>
+                <textarea
+                  placeholder="Bonjour, je suis intéressé par votre terrain..."
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
+                  rows="3"
+                />
+              </div>
+            </div>
+            <div className="flex justify-end gap-3 mt-6">
+              <Button 
+                variant="outline" 
+                onClick={() => setShowContactModal(false)}
+              >
+                Fermer
+              </Button>
+              <Button onClick={() => {
+                addNotification({
+                  type: 'success',
+                  title: 'Message envoyé',
+                  message: 'Votre message a été envoyé au propriétaire'
+                });
+                setShowContactModal(false);
+              }}>
+                Envoyer le message
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </ModernDashboardLayout>
   );

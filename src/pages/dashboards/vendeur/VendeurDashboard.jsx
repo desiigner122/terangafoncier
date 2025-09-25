@@ -25,7 +25,15 @@ import {
   Settings,
   Download,
   Star,
-  Globe
+  Globe,
+  // IA & Blockchain Icons
+  Brain,
+  Zap,
+  Shield,
+  Network,
+  Rocket,
+  Target,
+  Lightbulb
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -34,25 +42,64 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
+import { OpenAIService } from '../../../services/ai/OpenAIService';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import ModernVendeurDashboard from './ModernVendeurDashboard';
 
 const VendeurDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [verificationStatus, setVerificationStatus] = useState('verified');
   const [loading, setLoading] = useState(true);
+  const [useModernVersion, setUseModernVersion] = useState(false);
+  const [aiInsights, setAiInsights] = useState([]);
+  const [blockchainTransactions, setBlockchainTransactions] = useState([]);
+
+  // Fonctions avancées IA/Blockchain
+  const handleAIPropertyAnalysis = async (property) => {
+    console.log('Analyse IA de la propriété:', property?.title);
+    try {
+      const analysis = await OpenAIService.analyzeProperty({
+        title: property?.title || 'Nouvelle propriété',
+        location: property?.location || 'Dakar, Sénégal',
+        price: property?.price || 0,
+        marketData: {}
+      });
+      setAiInsights(prev => [...prev, analysis]);
+    } catch (error) {
+      console.error('Erreur analyse IA:', error);
+    }
+  };
+
+  const handleBlockchainVerification = (property) => {
+    console.log('Vérification blockchain propriété:', property?.title);
+    const transaction = {
+      id: `TX${Date.now()}`,
+      propertyId: property?.id,
+      type: 'verification',
+      status: 'confirmed',
+      hash: `0x${Math.random().toString(16).slice(2, 18)}`,
+      timestamp: new Date().toISOString()
+    };
+    setBlockchainTransactions(prev => [transaction, ...prev]);
+  };
+
+  const switchToModernDashboard = () => {
+    setUseModernVersion(true);
+  };
 
   // Fonctions de gestion des actions vendeur
   const handleAddProperty = () => {
-    console.log('Ajouter un bien');
-    // TODO: Ouvrir modal ou naviguer vers page d'ajout
+    console.log('Ajouter un bien avec IA');
+    handleAIPropertyAnalysis();
   };
 
   const handleAddPhotos = () => {
-    console.log('Ajouter des photos');
-    // TODO: Ouvrir sélecteur de fichiers
+    console.log('Ajouter des photos avec analyse IA');
+    // TODO: Intégrer analyse d'images IA
   };
 
   const handleEditListing = () => {
-    console.log('Modifier listing');
+    console.log('Modifier listing avec recommandations IA');
     // TODO: Ouvrir modal d'édition
   };
 
@@ -202,8 +249,33 @@ const VendeurDashboard = () => {
     );
   }
 
+  // Basculer vers le dashboard moderne si demandé
+  if (useModernVersion) {
+    return <ModernVendeurDashboard />;
+  }
+
   return (
     <div className="space-y-6">
+      {/* Bouton Dashboard Moderne */}
+      <Alert className="border-purple-200 bg-purple-50">
+        <Rocket className="h-4 w-4" />
+        <AlertTitle className="flex items-center gap-2">
+          <Brain className="h-4 w-4" />
+          Dashboard Moderne IA/Blockchain Disponible
+        </AlertTitle>
+        <AlertDescription className="mt-2">
+          Découvrez notre nouveau dashboard avec intégration IA avancée et blockchain.
+          <Button 
+            onClick={switchToModernDashboard}
+            className="ml-3 bg-purple-600 hover:bg-purple-700 text-white"
+            size="sm"
+          >
+            <Zap className="h-4 w-4 mr-1" />
+            Activer Dashboard IA
+          </Button>
+        </AlertDescription>
+      </Alert>
+
       {/* En-tête du Dashboard */}
       <div className="bg-gradient-to-r from-purple-500 to-indigo-500 text-white rounded-lg p-6">
         <div className="flex items-center justify-between">
@@ -323,18 +395,32 @@ const VendeurDashboard = () => {
                   <Button className="w-full justify-start" variant="outline" onClick={handleAddProperty}>
                     <Upload className="h-4 w-4 mr-2" />
                     Ajouter un Bien
+                    <Badge className="ml-auto bg-purple-100 text-purple-800 text-xs">
+                      <Brain className="h-3 w-3 mr-1" />
+                      IA
+                    </Badge>
                   </Button>
                   <Button className="w-full justify-start" variant="outline" onClick={handleAddPhotos}>
                     <Camera className="h-4 w-4 mr-2" />
                     Ajouter Photos
+                    <Badge className="ml-auto bg-purple-100 text-purple-800 text-xs">
+                      IA
+                    </Badge>
                   </Button>
                   <Button className="w-full justify-start" variant="outline" onClick={handleEditListing}>
                     <Edit className="h-4 w-4 mr-2" />
                     Modifier Listing
+                    <Badge className="ml-auto bg-purple-100 text-purple-800 text-xs">
+                      IA
+                    </Badge>
                   </Button>
                   <Button className="w-full justify-start" variant="outline" onClick={handleViewAnalytics}>
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Voir Analytics
+                    <Badge className="ml-auto bg-blue-100 text-blue-800 text-xs">
+                      <Shield className="h-3 w-3 mr-1" />
+                      Blockchain
+                    </Badge>
                   </Button>
                 </CardContent>
               </Card>

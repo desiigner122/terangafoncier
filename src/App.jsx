@@ -205,7 +205,9 @@ import ModernNotaireDashboard from '@/pages/dashboards/ModernNotaireDashboard';
 import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
 import ModernAcheteurDashboard from '@/pages/dashboards/ModernAcheteurDashboard';
 import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
-import ModernVendeurDashboard from '@/pages/dashboards/ModernVendeurDashboard';
+import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
+import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard';
+import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
 import ModernInvestisseurDashboard from '@/pages/dashboards/ModernInvestisseurDashboard';
 import { HelmetProvider } from 'react-helmet-async';
 import BanquesDashboardPage from '@/pages/solutions/dashboards/BanquesDashboardPage';
@@ -418,6 +420,7 @@ function App() {
                 
                 {/* Dashboards modernes par rôle - routes indépendantes (ont leur propre layout) */}
                 <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierDashboard /></RoleProtectedRoute>} />
+                <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><CompleteSidebarVendeurDashboard /></RoleProtectedRoute>} />
                 
                 {/* Sous-pages de suivi Particulier/Acheteur */}
                 <Route path="acheteur/private-interests" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PrivateInterests /></RoleProtectedRoute>} />
@@ -476,13 +479,15 @@ function App() {
                   <Route path="promoteur/nouveaux-acheteurs" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewBuyersPage /></RoleProtectedRoute>} />
                   <Route path="promoteur/nouveau-devis" element={<RoleProtectedRoute permission="PROMOTEUR_DASHBOARD"><PromoterNewQuotePage /></RoleProtectedRoute>} />
                   
-                  <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
+                  {/* Vendeur dashboard déplacé en route indépendante */}
                   <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
                   <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
                   <Route path="my-requests" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyRequestsPage /></RoleProtectedRoute>} />
                   
+                  {/* Route de test pour dashboard moderne direct */}
+                  <Route path="vendeur-moderne" element={<ModernVendeurDashboard />} />
                   {/* Route de test temporaire pour debugging */}
-                  <Route path="vendeur-test" element={<ModernVendeurDashboard />} />
+                  <Route path="vendeur-test" element={<VendeurDashboard />} />
                   
                   <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
                   <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><ModernBanqueDashboard /></RoleProtectedRoute>} />
@@ -558,8 +563,7 @@ function App() {
               <Route path="promoters/purchase-units" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PurchaseUnitsPage /></RoleProtectedRoute>} />
               <Route path="promoters/payment-plans" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PaymentPlansPage /></RoleProtectedRoute>} />
 
-              {/* Vendeur: pages et aliases */}
-              <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><ModernVendeurDashboard /></RoleProtectedRoute>} />
+              {/* Vendeur: pages et aliases - Dashboard principal déplacé en route indépendante */}
               <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
               <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
               <Route path="my-requests" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyRequestsPageNew /></RoleProtectedRoute>} />

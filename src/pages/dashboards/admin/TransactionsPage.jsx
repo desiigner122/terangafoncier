@@ -21,7 +21,8 @@ import {
   TrendingUp,
   MapPin,
   FileText,
-  Banknote
+  Banknote,
+  Trash2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,6 +46,57 @@ const TransactionsPage = () => {
     totalVolume: 0,
     averageAmount: 0
   });
+
+  // Fonctions CRUD pour la gestion des transactions
+  const handleViewTransaction = (transaction) => {
+    console.log('Affichage détails transaction:', transaction.id);
+    // TODO: Ouvrir modal de détails
+  };
+
+  const handleEditTransaction = (transaction) => {
+    console.log('Édition transaction:', transaction.id);
+    // TODO: Ouvrir modal d'édition
+  };
+
+  const handleDeleteTransaction = (transaction) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer la transaction ${transaction.id} ?`)) {
+      setTransactions(prevTransactions => 
+        prevTransactions.filter(t => t.id !== transaction.id)
+      );
+      console.log('Transaction supprimée:', transaction.id);
+    }
+  };
+
+  const handleRefundTransaction = (transaction) => {
+    const updatedTransactions = transactions.map(t => 
+      t.id === transaction.id 
+        ? { ...t, status: 'refunded', refundDate: new Date().toISOString() }
+        : t
+    );
+    setTransactions(updatedTransactions);
+    console.log('Transaction remboursée:', transaction.id);
+  };
+
+  const handleValidateTransaction = (transaction) => {
+    const updatedTransactions = transactions.map(t => 
+      t.id === transaction.id 
+        ? { ...t, status: 'completed', validatedDate: new Date().toISOString() }
+        : t
+    );
+    setTransactions(updatedTransactions);
+    console.log('Transaction validée:', transaction.id);
+  };
+
+  const handleExportTransactions = () => {
+    const dataStr = JSON.stringify(filteredTransactions, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'transactions_teranga.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    console.log('Export transactions effectué');
+  };
 
   useEffect(() => {
     loadTransactions();
@@ -319,11 +371,19 @@ const TransactionsPage = () => {
           <p className="text-gray-600 mt-1">Suivi des transactions immobilières</p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline">
+          <Button 
+            variant="outline"
+            onClick={handleExportTransactions}
+            title="Exporter les transactions"
+          >
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button variant="outline">
+          <Button 
+            variant="outline"
+            onClick={() => console.log('Générer rapport transactions')}
+            title="Générer un rapport"
+          >
             <FileText className="h-4 w-4 mr-2" />
             Rapport
           </Button>
@@ -580,11 +640,43 @@ const TransactionsPage = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewTransaction(transaction)}
+                          title="Voir détails"
+                        >
                           <Eye className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="outline">
-                          <Download className="h-3 w-3" />
+                        {transaction.status === 'pending' && (
+                          <Button 
+                            size="sm" 
+                            className="bg-green-600 hover:bg-green-700 text-white"
+                            onClick={() => handleValidateTransaction(transaction)}
+                            title="Valider transaction"
+                          >
+                            <CheckCircle className="h-3 w-3" />
+                          </Button>
+                        )}
+                        {transaction.status === 'completed' && (
+                          <Button 
+                            size="sm" 
+                            variant="outline"
+                            onClick={() => handleRefundTransaction(transaction)}
+                            className="text-orange-600 hover:bg-orange-50"
+                            title="Rembourser"
+                          >
+                            <RefreshCw className="h-3 w-3" />
+                          </Button>
+                        )}
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeleteTransaction(transaction)}
+                          className="text-red-600 hover:bg-red-50"
+                          title="Supprimer"
+                        >
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     </div>

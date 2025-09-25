@@ -1,16 +1,28 @@
 // Service principal pour l'intégration OpenAI GPT-4
 import axios from 'axios';
+import { ENV_VARS, logEnvStatus } from '../../utils/env';
 
 class OpenAIService {
   constructor() {
-    this.apiKey = process.env.REACT_APP_OPENAI_API_KEY;
+    // Utilisation de l'utilitaire sécurisé pour les variables d'environnement
+    this.apiKey = ENV_VARS.OPENAI_API_KEY;
     this.baseURL = 'https://api.openai.com/v1';
     this.model = 'gpt-4-turbo-preview';
+    
+    // Mode simulation activé par défaut pour le développement
+    this.simulationMode = true;
     
     if (!this.apiKey) {
       console.warn('⚠️ OpenAI API Key non configurée. Utilisation du mode simulation.');
       console.info('📝 Pour activer l\'IA: Ajoutez votre clé OpenAI dans les paramètres système ou dans .env');
-      this.simulationMode = true;
+    } else {
+      console.info('✅ Clé API OpenAI détectée');
+      this.simulationMode = false;
+    }
+    
+    // Logger le statut des variables d'environnement en développement
+    if (ENV_VARS.NODE_ENV === 'development') {
+      logEnvStatus();
     }
   }
 

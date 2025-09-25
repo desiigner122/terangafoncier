@@ -30,8 +30,27 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
 import { OpenAIService } from '../../../services/ai/OpenAIService';
 
 const UsersPage = () => {
@@ -47,6 +66,117 @@ const UsersPage = () => {
     newThisMonth: 0,
     suspendedUsers: 0
   });
+  const [selectedUser, setSelectedUser] = useState(null);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [editFormData, setEditFormData] = useState({});
+
+  // Fonctions CRUD pour la gestion des utilisateurs
+  const handleViewUser = (user) => {
+    setSelectedUser(user);
+    setShowViewModal(true);
+    console.log('Affichage détails utilisateur:', user.name);
+  };
+
+  const handleEditUser = (user) => {
+    setSelectedUser(user);
+    setEditFormData({
+      firstName: user.firstName || user.name?.split(' ')[0] || '',
+      lastName: user.lastName || user.name?.split(' ')[1] || '',
+      email: user.email || '',
+      phone: user.phone || '',
+      role: user.role || 'Particulier',
+      status: user.status || 'active'
+    });
+    setShowEditModal(true);
+    console.log('Édition utilisateur:', user.name);
+  };
+
+  const handleSaveEdit = () => {
+    if (selectedUser) {
+      const updatedUsers = users.map(u => 
+        u.id === selectedUser.id 
+          ? { 
+              ...u, 
+              firstName: editFormData.firstName,
+              lastName: editFormData.lastName,
+              name: `${editFormData.firstName} ${editFormData.lastName}`,
+              email: editFormData.email,
+              phone: editFormData.phone,
+              role: editFormData.role,
+              status: editFormData.status
+            }
+          : u
+      );
+      setUsers(updatedUsers);
+      setShowEditModal(false);
+      setSelectedUser(null);
+      setEditFormData({});
+      console.log('Utilisateur modifié avec succès');
+    }
+  };
+
+  const handleDeleteUser = (user) => {
+    setSelectedUser(user);
+    setShowDeleteModal(true);
+    console.log('Suppression utilisateur:', user.name);
+  };
+
+  const confirmDeleteUser = () => {
+    if (selectedUser) {
+      setUsers(prevUsers => prevUsers.filter(u => u.id !== selectedUser.id));
+      setFilteredUsers(prevUsers => prevUsers.filter(u => u.id !== selectedUser.id));
+      console.log('Utilisateur supprimé:', selectedUser.name);
+      setShowDeleteModal(false);
+      setSelectedUser(null);
+    }
+  };
+
+  const handleSuspendUser = (user) => {
+    const updatedUsers = users.map(u => 
+      u.id === user.id 
+        ? { ...u, status: u.status === 'suspended' ? 'active' : 'suspended' }
+        : u
+    );
+    setUsers(updatedUsers);
+    // Le filtrage se fera automatiquement via useEffect
+    console.log('Utilisateur suspendu/réactivé:', user.name);
+  };
+
+  const handleVerifyUser = (user) => {
+    const updatedUsers = users.map(u => 
+      u.id === user.id 
+        ? { ...u, verified: !u.verified }
+        : u
+    );
+    setUsers(updatedUsers);
+    // Le filtrage se fera automatiquement via useEffect
+    console.log('Utilisateur vérifié/non-vérifié:', user.name);
+  };
+
+  const handleExportUsers = () => {
+    const dataStr = JSON.stringify(filteredUsers, null, 2);
+    const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+    const exportFileDefaultName = 'utilisateurs_teranga.json';
+    const linkElement = document.createElement('a');
+    linkElement.setAttribute('href', dataUri);
+    linkElement.setAttribute('download', exportFileDefaultName);
+    linkElement.click();
+    console.log('Export utilisateurs effectué');
+  };
+
+  const handleBulkAction = (action) => {
+    console.log('Action en masse:', action);
+    // TODO: Implémenter actions en masse
+  };
+
+  const handleSendEmail = (user) => {
+    console.log('Envoi email à:', user.email);
+    // TODO: Implémenter envoi d'email
+  };
+
+
 
   useEffect(() => {
     loadUsers();
@@ -54,7 +184,7 @@ const UsersPage = () => {
   }, []);
 
   useEffect(() => {
-    filterUsers();
+    applyFilters();
   }, [users, searchTerm, selectedFilter]);
 
   const loadUsers = async () => {
@@ -166,14 +296,14 @@ const UsersPage = () => {
     }
   };
 
-  const filterUsers = () => {
+  const applyFilters = () => {
     let filtered = users;
 
     if (searchTerm) {
       filtered = filtered.filter(user =>
-        `${user.firstName} ${user.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         user.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        user.phone.includes(searchTerm)
+        (user.phone && user.phone.includes(searchTerm))
       );
     }
 
@@ -233,11 +363,19 @@ const UsersPage = () => {
           <p className="text-gray-600 mt-1">Gérez tous les utilisateurs de la plateforme</p>
         </div>
         <div className="flex space-x-3">
-          <Button variant="outline">
+          <Button 
+            variant="outline"
+            onClick={handleExportUsers}
+            title="Exporter la liste des utilisateurs"
+          >
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Button>
+          <Button
+            onClick={() => console.log('Créer nouvel utilisateur')}
+            className="bg-red-600 hover:bg-red-700"
+            title="Créer un nouvel utilisateur"
+          >
             <UserPlus className="h-4 w-4 mr-2" />
             Nouvel Utilisateur
           </Button>
@@ -439,13 +577,38 @@ const UsersPage = () => {
                       </div>
                       
                       <div className="flex items-center space-x-2">
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleViewUser(user)}
+                          title="Voir détails"
+                        >
                           <Eye className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleEditUser(user)}
+                          title="Éditer utilisateur"
+                        >
                           <Edit3 className="h-3 w-3" />
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleSuspendUser(user)}
+                          className={user.status === 'suspended' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}
+                          title={user.status === 'suspended' ? 'Réactiver' : 'Suspendre'}
+                        >
+                          {user.status === 'suspended' ? <UserCheck className="h-3 w-3" /> : <Ban className="h-3 w-3" />}
+                        </Button>
+                        <Button 
+                          size="sm" 
+                          variant="outline"
+                          onClick={() => handleDeleteUser(user)}
+                          className="text-red-600 hover:bg-red-50"
+                          title="Supprimer utilisateur"
+                        >
                           <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
@@ -457,6 +620,177 @@ const UsersPage = () => {
           )}
         </CardContent>
       </Card>
+
+      {/* Modal de visualisation */}
+      <Dialog open={showViewModal} onOpenChange={setShowViewModal}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Détails de l'utilisateur</DialogTitle>
+            <DialogDescription>
+              Informations complètes sur l'utilisateur sélectionné
+            </DialogDescription>
+          </DialogHeader>
+          {selectedUser && (
+            <div className="grid grid-cols-2 gap-4 py-4">
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Nom complet</Label>
+                  <p className="text-sm text-gray-900">{selectedUser.name}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Email</Label>
+                  <p className="text-sm text-gray-900">{selectedUser.email}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Téléphone</Label>
+                  <p className="text-sm text-gray-900">{selectedUser.phone}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Rôle</Label>
+                  <Badge className={getRoleColor(selectedUser.role)}>
+                    {selectedUser.role}
+                  </Badge>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Statut</Label>
+                  <Badge className={getStatusColor(selectedUser.status)}>
+                    {selectedUser.status}
+                  </Badge>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Localisation</Label>
+                  <p className="text-sm text-gray-900">{selectedUser.location}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Date d'inscription</Label>
+                  <p className="text-sm text-gray-900">{new Date(selectedUser.joinDate).toLocaleDateString('fr-FR')}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Propriétés</Label>
+                  <p className="text-sm text-gray-900">{selectedUser.propertiesCount} propriétés</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Transactions</Label>
+                  <p className="text-sm text-gray-900">{selectedUser.transactionsCount} transactions</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium text-gray-700">Total dépensé</Label>
+                  <p className="text-sm text-gray-900">{formatCurrency(selectedUser.totalSpent)}</p>
+                </div>
+              </div>
+            </div>
+          )}
+          <DialogFooter>
+            <Button onClick={() => setShowViewModal(false)}>Fermer</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal d'édition */}
+      <Dialog open={showEditModal} onOpenChange={setShowEditModal}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Modifier l'utilisateur</DialogTitle>
+            <DialogDescription>
+              Modifiez les informations de l'utilisateur
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="firstName">Prénom</Label>
+                <Input
+                  id="firstName"
+                  value={editFormData.firstName || ''}
+                  onChange={(e) => setEditFormData(prev => ({...prev, firstName: e.target.value}))}
+                />
+              </div>
+              <div>
+                <Label htmlFor="lastName">Nom</Label>
+                <Input
+                  id="lastName"
+                  value={editFormData.lastName || ''}
+                  onChange={(e) => setEditFormData(prev => ({...prev, lastName: e.target.value}))}
+                />
+              </div>
+            </div>
+            <div>
+              <Label htmlFor="email">Email</Label>
+              <Input
+                id="email"
+                type="email"
+                value={editFormData.email || ''}
+                onChange={(e) => setEditFormData(prev => ({...prev, email: e.target.value}))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="phone">Téléphone</Label>
+              <Input
+                id="phone"
+                value={editFormData.phone || ''}
+                onChange={(e) => setEditFormData(prev => ({...prev, phone: e.target.value}))}
+              />
+            </div>
+            <div>
+              <Label htmlFor="role">Rôle</Label>
+              <Select value={editFormData.role || 'Particulier'} onValueChange={(value) => setEditFormData(prev => ({...prev, role: value}))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Particulier">Particulier</SelectItem>
+                  <SelectItem value="Promoteur">Promoteur</SelectItem>
+                  <SelectItem value="Investisseur">Investisseur</SelectItem>
+                  <SelectItem value="Vendeur Particulier">Vendeur Particulier</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="status">Statut</Label>
+              <Select value={editFormData.status || 'active'} onValueChange={(value) => setEditFormData(prev => ({...prev, status: value}))}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="active">Actif</SelectItem>
+                  <SelectItem value="suspended">Suspendu</SelectItem>
+                  <SelectItem value="pending">En attente</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowEditModal(false)}>
+              Annuler
+            </Button>
+            <Button onClick={handleSaveEdit}>Sauvegarder</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Modal de confirmation de suppression */}
+      <AlertDialog open={showDeleteModal} onOpenChange={setShowDeleteModal}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Êtes-vous sûr ?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Cette action ne peut pas être annulée. Cela supprimera définitivement l'utilisateur
+              <strong> {selectedUser?.name}</strong> et toutes ses données associées.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuler</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={confirmDeleteUser}
+              className="bg-red-600 hover:bg-red-700"
+            >
+              Supprimer
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 };

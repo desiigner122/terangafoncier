@@ -211,6 +211,10 @@ export default defineConfig({
 			'@': path.resolve(__dirname, './src'),
 		},
 	},
+	define: {
+		// Définir les variables d'environnement pour éviter l'erreur "process is not defined"
+		'process.env': process.env
+	},
 	build: {
 		rollupOptions: {
 			external: [

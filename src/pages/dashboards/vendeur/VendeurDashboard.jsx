@@ -40,6 +40,52 @@ const VendeurDashboard = () => {
   const [verificationStatus, setVerificationStatus] = useState('verified');
   const [loading, setLoading] = useState(true);
 
+  // Fonctions de gestion des actions vendeur
+  const handleAddProperty = () => {
+    console.log('Ajouter un bien');
+    // TODO: Ouvrir modal ou naviguer vers page d'ajout
+  };
+
+  const handleAddPhotos = () => {
+    console.log('Ajouter des photos');
+    // TODO: Ouvrir sélecteur de fichiers
+  };
+
+  const handleEditListing = () => {
+    console.log('Modifier listing');
+    // TODO: Ouvrir modal d'édition
+  };
+
+  const handleViewAnalytics = () => {
+    console.log('Voir analytics');
+    setActiveTab('analytics');
+  };
+
+  const handleViewProperty = (property) => {
+    console.log('Voir propriété:', property.title);
+    // TODO: Ouvrir modal de détails
+  };
+
+  const handleEditProperty = (property) => {
+    console.log('Éditer propriété:', property.title);
+    // TODO: Ouvrir modal d'édition
+  };
+
+  const handleDeleteProperty = (property) => {
+    if (confirm(`Êtes-vous sûr de vouloir supprimer "${property.title}" ?`)) {
+      setDashboardData(prev => ({
+        ...prev,
+        properties: prev.properties.filter(p => p.id !== property.id)
+      }));
+      console.log('Propriété supprimée:', property.title);
+    }
+  };
+
+  const handleShareProperty = (property) => {
+    console.log('Partager propriété:', property.title);
+    // TODO: Ouvrir modal de partage
+  };
+
   const [dashboardData, setDashboardData] = useState({
     stats: {
       totalProperties: 12,
@@ -274,19 +320,19 @@ const VendeurDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleAddProperty}>
                     <Upload className="h-4 w-4 mr-2" />
                     Ajouter un Bien
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleAddPhotos}>
                     <Camera className="h-4 w-4 mr-2" />
                     Ajouter Photos
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleEditListing}>
                     <Edit className="h-4 w-4 mr-2" />
                     Modifier Listing
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleViewAnalytics}>
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Voir Analytics
                   </Button>
@@ -402,11 +448,11 @@ const VendeurDashboard = () => {
             <div className="flex justify-between items-center">
               <h2 className="text-2xl font-bold">Mes Biens Immobiliers</h2>
               <div className="flex space-x-2">
-                <Button variant="outline" size="sm">
+                <Button variant="outline" size="sm" onClick={() => console.log('Filtrer propriétés')}>
                   <Filter className="h-4 w-4 mr-2" />
                   Filtrer
                 </Button>
-                <Button>
+                <Button onClick={handleAddProperty}>
                   <Plus className="h-4 w-4 mr-2" />
                   Ajouter Bien
                 </Button>
@@ -466,19 +512,19 @@ const VendeurDashboard = () => {
                       </div>
 
                       <div className="flex flex-col space-y-2 ml-4">
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleEditProperty(property)}>
                           <Edit className="h-4 w-4 mr-1" />
                           Modifier
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleViewProperty(property)}>
                           <Eye className="h-4 w-4 mr-1" />
                           Voir
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleShareProperty(property)}>
                           <Share2 className="h-4 w-4 mr-1" />
                           Partager
                         </Button>
-                        <Button size="sm" variant="outline">
+                        <Button size="sm" variant="outline" onClick={() => handleViewAnalytics()}>
                           <BarChart3 className="h-4 w-4 mr-1" />
                           Stats
                         </Button>

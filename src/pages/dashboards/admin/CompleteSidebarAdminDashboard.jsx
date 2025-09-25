@@ -78,6 +78,16 @@ const CompleteSidebarAdminDashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+
+  // Fonction de déconnexion
+  const handleLogout = async () => {
+    try {
+      await signOut();
+      console.log('Déconnexion réussie');
+    } catch (error) {
+      console.error('Erreur lors de la déconnexion:', error);
+    }
+  };
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
 
@@ -674,7 +684,7 @@ const CompleteSidebarAdminDashboard = () => {
               <Bell className="h-4 w-4" />
               {!sidebarCollapsed && <span className="ml-2">Notifications</span>}
             </Button>
-            <Button variant="ghost" size="sm">
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -871,7 +881,7 @@ const CompleteSidebarAdminDashboard = () => {
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
-                      onClick={() => signOut()}
+                      onClick={handleLogout}
                       className="text-red-600 focus:text-red-600"
                     >
                       <LogOut className="h-4 w-4 mr-2" />

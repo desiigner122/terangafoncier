@@ -42,6 +42,47 @@ const InvestisseurDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
 
+  // Fonctions de gestion des actions investisseur
+  const handleNewInvestment = () => {
+    console.log('Nouveau investissement');
+    // TODO: Ouvrir modal de nouvel investissement
+  };
+
+  const handleCalculateROI = () => {
+    console.log('Calculer ROI');
+    setActiveTab('calculator');
+  };
+
+  const handleViewOpportunities = () => {
+    console.log('Voir opportunités');
+    setActiveTab('opportunities');
+  };
+
+  const handleAnalyzeMarket = () => {
+    console.log('Analyser marché');
+    setActiveTab('market-analysis');
+  };
+
+  const handleViewInvestment = (investment) => {
+    console.log('Voir investissement:', investment.project);
+    // TODO: Ouvrir modal de détails
+  };
+
+  const handleManageInvestment = (investment) => {
+    console.log('Gérer investissement:', investment.project);
+    // TODO: Ouvrir modal de gestion
+  };
+
+  const handleWithdrawInvestment = (investment) => {
+    if (confirm(`Êtes-vous sûr de vouloir retirer votre investissement de "${investment.project}" ?`)) {
+      setDashboardData(prev => ({
+        ...prev,
+        investments: prev.investments.filter(i => i.id !== investment.id)
+      }));
+      console.log('Investissement retiré:', investment.project);
+    }
+  };
+
   const [dashboardData, setDashboardData] = useState({
     stats: {
       totalInvestments: 15,
@@ -320,19 +361,19 @@ const InvestisseurDashboard = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-3">
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleViewOpportunities}>
                     <Eye className="h-4 w-4 mr-2" />
                     Explorer Opportunités
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleCalculateROI}>
                     <Calculator className="h-4 w-4 mr-2" />
                     Calculateur ROI
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={handleAnalyzeMarket}>
                     <BarChart3 className="h-4 w-4 mr-2" />
                     Analyse Risques
                   </Button>
-                  <Button className="w-full justify-start" variant="outline">
+                  <Button className="w-full justify-start" variant="outline" onClick={() => console.log('Télécharger rapport mensuel')}>
                     <Download className="h-4 w-4 mr-2" />
                     Rapport Mensuel
                   </Button>

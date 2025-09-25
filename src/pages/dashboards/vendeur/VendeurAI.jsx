@@ -1,0 +1,30 @@
+import React from 'react';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Brain, Zap, TrendingUp } from 'lucide-react';
+
+const VendeurAI = () => {
+  return (
+    <div className="space-y-6">
+      <div>
+        <h1 className="text-3xl font-bold text-gray-900">Assistant IA</h1>
+        <p className="text-gray-600 mt-1">Optimisation intelligente de vos annonces</p>
+      </div>
+
+      <Card>
+        <CardContent className="p-6">
+          <div className="text-center py-12">
+            <Brain className="w-16 h-16 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              Module IA
+            </h3>
+            <p className="text-gray-600">
+              Fonctionnalités d'intelligence artificielle en développement
+            </p>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+};
+
+export default VendeurAI;

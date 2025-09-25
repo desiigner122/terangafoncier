@@ -32,6 +32,7 @@ import {
   MessageSquare,
   Activity,
   Target,
+  Users,
   
   // AI & Blockchain Icons
   Brain,
@@ -67,17 +68,16 @@ import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import { Link } from 'react-router-dom';
 
-// Import des pages spécialisées (à créer)
-const VendeurOverview = React.lazy(() => import('./pages/VendeurOverview'));
-const VendeurProperties = React.lazy(() => import('./pages/VendeurProperties'));
-const VendeurAddProperty = React.lazy(() => import('./pages/VendeurAddProperty'));
-const VendeurPhotos = React.lazy(() => import('./pages/VendeurPhotos'));
-const VendeurListings = React.lazy(() => import('./pages/VendeurListings'));
-const VendeurAnalytics = React.lazy(() => import('./pages/VendeurAnalytics'));
-const VendeurAI = React.lazy(() => import('./pages/VendeurAI'));
-const VendeurBlockchain = React.lazy(() => import('./pages/VendeurBlockchain'));
-const VendeurMessages = React.lazy(() => import('./pages/VendeurMessages'));
-const VendeurSettings = React.lazy(() => import('./pages/VendeurSettings'));
+// Import des pages spécialisées
+const VendeurOverview = React.lazy(() => import('./VendeurOverview'));
+const VendeurPropertiesComplete = React.lazy(() => import('./VendeurPropertiesComplete'));
+const VendeurAddTerrain = React.lazy(() => import('./VendeurAddTerrain'));
+const VendeurPhotos = React.lazy(() => import('./VendeurPhotos'));
+const VendeurAnalytics = React.lazy(() => import('./VendeurAnalytics'));
+const VendeurAI = React.lazy(() => import('./VendeurAI'));
+const VendeurBlockchain = React.lazy(() => import('./VendeurBlockchain'));
+const VendeurMessages = React.lazy(() => import('./VendeurMessages'));
+const VendeurSettings = React.lazy(() => import('./VendeurSettings'));
 
 const CompleteSidebarVendeurDashboard = () => {
   const { user, profile, signOut } = useAuth();
@@ -109,30 +109,24 @@ const CompleteSidebarVendeurDashboard = () => {
     },
     {
       id: 'properties',
-      label: 'Mes Biens',
+      label: 'Mes Biens & Annonces',
       icon: Building2,
-      description: 'Gestion de vos propriétés',
+      description: 'Gestion complète de vos propriétés',
       badge: '12'
     },
     {
       id: 'add-property',
-      label: 'Ajouter Bien',
+      label: 'Ajouter Terrain',
       icon: Plus,
-      description: 'Nouveau bien immobilier',
+      description: 'Nouveau terrain à vendre',
       highlight: true
     },
     {
       id: 'photos',
-      label: 'Photos',
+      label: 'Photos IA',
       icon: Camera,
-      description: 'Gestion des photos',
+      description: 'Optimisation photos avec IA',
       badge: 'IA'
-    },
-    {
-      id: 'listings',
-      label: 'Annonces',
-      icon: FileText,
-      description: 'Gestion des annonces actives'
     },
     {
       id: 'analytics',
@@ -203,10 +197,9 @@ const CompleteSidebarVendeurDashboard = () => {
   const renderActiveComponent = () => {
     const components = {
       'overview': VendeurOverview,
-      'properties': VendeurProperties,
-      'add-property': VendeurAddProperty,
+      'properties': VendeurPropertiesComplete,
+      'add-property': VendeurAddTerrain,
       'photos': VendeurPhotos,
-      'listings': VendeurListings,
       'analytics': VendeurAnalytics,
       'ai-assistant': VendeurAI,
       'blockchain': VendeurBlockchain,
@@ -361,24 +354,37 @@ const CompleteSidebarVendeurDashboard = () => {
               </motion.button>
             );
           })}
+          
+          {/* Bouton de déconnexion dans le sidebar */}
+          <motion.button
+            onClick={handleLogout}
+            className="w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-left transition-all duration-200 text-red-600 hover:bg-red-50 mt-4"
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.98 }}
+          >
+            <LogOut className="h-5 w-5 text-red-500" />
+            {!sidebarCollapsed && (
+              <div className="flex-1">
+                <div className="font-medium">Déconnexion</div>
+                <div className="text-xs text-red-500">
+                  Quitter le dashboard
+                </div>
+              </div>
+            )}
+          </motion.button>
         </nav>
 
-        {/* Widgets en bas */}
+        {/* Widget assistant en bas - compact */}
         {!sidebarCollapsed && (
-          <div className="p-4 border-t border-gray-200 space-y-4">
-            <div className="text-center">
-              <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-3 rounded-lg">
-                <Brain className="h-6 w-6 text-white mx-auto mb-2" />
-                <div className="text-white text-sm font-medium">IA Assistant</div>
-                <div className="text-white/80 text-xs">Optimisez vos ventes</div>
+          <div className="p-4 border-t border-gray-200">
+            <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-3 rounded-lg text-center">
+              <div className="flex items-center justify-center space-x-2 mb-2">
+                <Brain className="h-5 w-5 text-white" />
+                <Zap className="h-4 w-4 text-white" />
               </div>
-            </div>
-            
-            <div className="text-center">
-              <div className="bg-gradient-to-r from-blue-500 to-cyan-600 p-3 rounded-lg">
-                <Shield className="h-6 w-6 text-white mx-auto mb-2" />
-                <div className="text-white text-sm font-medium">Blockchain</div>
-                <div className="text-white/80 text-xs">{dashboardStats.blockchainVerified} biens certifiés</div>
+              <div className="text-white text-sm font-medium">IA + Blockchain</div>
+              <div className="text-white/80 text-xs">
+                {dashboardStats.aiOptimized} IA • {dashboardStats.blockchainVerified} certifiés
               </div>
             </div>
           </div>
@@ -411,6 +417,49 @@ const CompleteSidebarVendeurDashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4">
+              {/* Messages */}
+              <DropdownMenu open={showMessages} onOpenChange={setShowMessages}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative" onClick={() => setActiveTab('messages')}>
+                    <MessageSquare className="h-5 w-5" />
+                    <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                      3
+                    </Badge>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80">
+                  <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setActiveTab('messages')}>
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-green-100 p-2 rounded-full">
+                        <Users className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Marie Diallo</p>
+                        <p className="text-sm text-gray-600">Intéressée par la villa Almadies</p>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab('messages')}>
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-blue-100 p-2 rounded-full">
+                        <Users className="h-4 w-4 text-blue-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Amadou Ba</p>
+                        <p className="text-sm text-gray-600">Question sur le financement</p>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setActiveTab('messages')}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>Voir tous les messages</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
               {/* Notifications */}
               <DropdownMenu open={showNotifications} onOpenChange={setShowNotifications}>
                 <DropdownMenuTrigger asChild>
@@ -437,12 +486,12 @@ const CompleteSidebarVendeurDashboard = () => {
                   </DropdownMenuItem>
                   <DropdownMenuItem>
                     <div className="flex items-center space-x-3">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <MessageSquare className="h-4 w-4 text-green-600" />
+                      <div className="bg-orange-100 p-2 rounded-full">
+                        <TrendingUp className="h-4 w-4 text-orange-600" />
                       </div>
                       <div>
-                        <p className="font-medium">Nouveau message</p>
-                        <p className="text-sm text-gray-600">Demande d'information pour terrain Sacré-Cœur</p>
+                        <p className="font-medium">Performance IA</p>
+                        <p className="text-sm text-gray-600">6 propriétés optimisées cette semaine</p>
                       </div>
                     </div>
                   </DropdownMenuItem>

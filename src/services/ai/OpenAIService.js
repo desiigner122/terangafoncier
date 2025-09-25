@@ -314,4 +314,6 @@ class OpenAIService {
   }
 }
 
+// Export de la classe et de l'instance
+export { OpenAIService };
 export default new OpenAIService();

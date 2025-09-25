@@ -26,11 +26,23 @@ import {
   Globe,
   Shield,
   Zap,
-  TrendingUp
+  TrendingUp,
+  Home,
+  Car,
+  Wifi,
+  Droplets,
+  Bath,
+  Bed,
+  Star,
+  Network,
+  Brain,
+  Phone,
+  Mail,
+  Navigation
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -50,47 +62,104 @@ const VendeurAddTerrain = () => {
     surface: '',
     type: '',
     
-    // Localisation
+    // Localisation détaillée
     region: '',
     city: '',
     address: '',
     coordinates: { lat: '', lng: '' },
     nearby_landmarks: [''],
     
-    // Caractéristiques
-    zoning: '',
-    buildable_ratio: '',
-    max_floors: '',
-    main_features: [''],
-    utilities: [],
-    access_features: [],
+    // Vendeur (automatiquement rempli depuis le profil)
+    seller: {
+      name: '',
+      type: 'Particulier', // ou 'Professionnel'
+      phone: '',
+      email: '',
+      verified: false
+    },
+    
+    // Caractéristiques du terrain
+    zoning: '', // Zone résidentielle, commerciale, etc.
+    buildable_ratio: '', // Coefficient d'emprise au sol
+    max_floors: '', // Hauteur maximum autorisée
+    main_features: [''], // Atouts principaux
+    utilities: [], // Services disponibles
+    access_features: [], // Points d'accès et commodités
+    
+    // Caractéristiques avancées
+    features: {
+      main: [''], // Vue mer, sécurité, etc.
+      utilities: [], // Eau, électricité, internet
+      access: [], // Route pavée, transport public
+      construction: {
+        buildable_ratio: '',
+        max_floors: '',
+        permitted_use: [] // Résidentiel, commercial, etc.
+      }
+    },
     
     // Options de financement
-    financing_methods: [],
-    bank_financing: {
-      available: false,
-      min_down_payment: '',
-      max_duration: '',
-      partner_banks: []
-    },
-    installment: {
-      available: false,
-      min_down_payment: '',
-      duration: ''
-    },
-    crypto: {
-      available: false,
-      accepted_currencies: [],
-      discount: ''
+    financing: {
+      methods: [], // direct, bank, installment, crypto
+      bank_financing: {
+        available: false,
+        min_down_payment: '30',
+        max_duration: '25',
+        partner_banks: []
+      },
+      installment: {
+        available: false,
+        min_down_payment: '20',
+        monthly_payment: '',
+        duration: '5'
+      },
+      crypto: {
+        available: false,
+        accepted_currencies: [],
+        discount: '5'
+      }
     },
     
     // NFT et Blockchain
-    nft_enabled: false,
-    blockchain: 'Polygon',
+    nft: {
+      available: false,
+      blockchain: 'Polygon',
+      token_id: '',
+      metadata_uri: '',
+      smart_contract: ''
+    },
     
-    // Documents et images
+    // Score IA (calculé automatiquement)
+    ai_score: {
+      overall: 0,
+      location: 0,
+      investment_potential: 0,
+      infrastructure: 0,
+      price_vs_market: 0,
+      growth_prediction: ''
+    },
+    
+    // Documents légaux
+    documents: [
+      { name: 'Titre Foncier', type: 'PDF', required: true, uploaded: false },
+      { name: 'Plan de bornage', type: 'PDF', required: true, uploaded: false },
+      { name: 'Certificat d\'urbanisme', type: 'PDF', required: false, uploaded: false },
+      { name: 'Photos aériennes', type: 'PDF', required: false, uploaded: false }
+    ],
+    
+    // Images et médias
     images: [],
-    documents: []
+    
+    // Historique des prix (pour modification)
+    price_history: [],
+    
+    // Statistiques (initialisées à 0)
+    stats: {
+      views: 0,
+      favorites: 0,
+      inquiries: 0,
+      days_on_market: 0
+    }
   });
 
   const [currentStep, setCurrentStep] = useState(1);
@@ -98,7 +167,7 @@ const VendeurAddTerrain = () => {
   const [errors, setErrors] = useState({});
   const [uploadProgress, setUploadProgress] = useState(0);
 
-  const totalSteps = 6;
+  const totalSteps = 8;
   const completionPercentage = Math.round((currentStep / totalSteps) * 100);
 
   // Options prédéfinies
@@ -123,6 +192,25 @@ const VendeurAddTerrain = () => {
     'Route pavée', 'Route en terre', 'Transport public',
     'Écoles à proximité', 'Centres de santé', 'Commerces',
     'Banques', 'Mosquées/Églises', 'Marché', 'Pharmacie'
+  ];
+
+  const mainFeaturesOptions = [
+    'Vue mer panoramique', 'Vue sur montagne', 'Résidence fermée sécurisée',
+    'Parking privé', 'Jardin', 'Piscine possible', 'Proche plage',
+    'Zone calme', 'Quartier résidentiel', 'Investissement rentable',
+    'Potentiel commercial', 'Accès facile', 'Transport en commun'
+  ];
+
+  const zoningOptions = [
+    'Zone résidentielle R1', 'Zone résidentielle R2', 'Zone résidentielle R3',
+    'Zone commerciale C1', 'Zone commerciale C2', 'Zone mixte M1',
+    'Zone industrielle I1', 'Zone agricole A1', 'Zone touristique T1'
+  ];
+
+  const permittedUseOptions = [
+    'Villa individuelle', 'Immeuble résidentiel', 'Commerce de proximité',
+    'Bureau', 'Clinique/Cabinet médical', 'École privée', 'Restaurant',
+    'Hôtel/Auberge', 'Entrepôt', 'Atelier'
   ];
 
   const financingOptions = [
@@ -246,7 +334,7 @@ const VendeurAddTerrain = () => {
     if (validateStep(currentStep)) {
       console.log('Publication du terrain:', formData);
       // Logique de publication
-      navigate('/vendeur-dashboard?tab=properties');
+      navigate('/dashboard/vendeur');
     }
   };
 
@@ -262,12 +350,14 @@ const VendeurAddTerrain = () => {
       </div>
       <Progress value={completionPercentage} className="mb-4" />
       <div className="flex justify-between text-xs text-gray-500">
-        <span className={currentStep >= 1 ? 'text-blue-600 font-medium' : ''}>Informations générales</span>
+        <span className={currentStep >= 1 ? 'text-blue-600 font-medium' : ''}>Informations</span>
         <span className={currentStep >= 2 ? 'text-blue-600 font-medium' : ''}>Localisation</span>
         <span className={currentStep >= 3 ? 'text-blue-600 font-medium' : ''}>Caractéristiques</span>
-        <span className={currentStep >= 4 ? 'text-blue-600 font-medium' : ''}>Financement</span>
-        <span className={currentStep >= 5 ? 'text-blue-600 font-medium' : ''}>Médias & Documents</span>
-        <span className={currentStep >= 6 ? 'text-blue-600 font-medium' : ''}>Aperçu & Publication</span>
+        <span className={currentStep >= 4 ? 'text-blue-600 font-medium' : ''}>Construction</span>
+        <span className={currentStep >= 5 ? 'text-blue-600 font-medium' : ''}>Financement</span>
+        <span className={currentStep >= 6 ? 'text-blue-600 font-medium' : ''}>Blockchain/NFT</span>
+        <span className={currentStep >= 7 ? 'text-blue-600 font-medium' : ''}>Médias</span>
+        <span className={currentStep >= 8 ? 'text-blue-600 font-medium' : ''}>Publication</span>
       </div>
     </div>
   );
@@ -538,6 +628,707 @@ const VendeurAddTerrain = () => {
                           </Button>
                         </div>
                       </div>
+                    </div>
+                  )}
+
+                  {/* Étape 3: Caractéristiques principales */}
+                  {currentStep === 3 && (
+                    <div className="space-y-6">
+                      <div className="flex items-center mb-6">
+                        <Building2 className="w-6 h-6 text-blue-600 mr-3" />
+                        <h3 className="text-xl font-semibold">Caractéristiques du terrain</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div>
+                          <Label htmlFor="zoning">Zonage *</Label>
+                          <Select
+                            value={formData.zoning}
+                            onValueChange={(value) => handleInputChange('zoning', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Sélectionnez le zonage" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {zoningOptions.map((zone) => (
+                                <SelectItem key={zone} value={zone}>
+                                  {zone}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="buildable_ratio">Coefficient d'emprise au sol</Label>
+                          <Select
+                            value={formData.buildable_ratio}
+                            onValueChange={(value) => handleInputChange('buildable_ratio', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Ex: 0.6" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="0.3">0.3 (30%)</SelectItem>
+                              <SelectItem value="0.4">0.4 (40%)</SelectItem>
+                              <SelectItem value="0.5">0.5 (50%)</SelectItem>
+                              <SelectItem value="0.6">0.6 (60%)</SelectItem>
+                              <SelectItem value="0.7">0.7 (70%)</SelectItem>
+                              <SelectItem value="0.8">0.8 (80%)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div>
+                          <Label htmlFor="max_floors">Hauteur maximum (étages)</Label>
+                          <Select
+                            value={formData.max_floors}
+                            onValueChange={(value) => handleInputChange('max_floors', value)}
+                          >
+                            <SelectTrigger>
+                              <SelectValue placeholder="Nombre d'étages max" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="1">R+0 (1 étage)</SelectItem>
+                              <SelectItem value="2">R+1 (2 étages)</SelectItem>
+                              <SelectItem value="3">R+2 (3 étages)</SelectItem>
+                              <SelectItem value="4">R+3 (4 étages)</SelectItem>
+                              <SelectItem value="5">R+4 (5 étages)</SelectItem>
+                              <SelectItem value="10">R+9 (10 étages)</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <Label>Atouts principaux du terrain</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                            {mainFeaturesOptions.map((feature) => (
+                              <div key={feature} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={feature}
+                                  checked={formData.main_features.includes(feature)}
+                                  onCheckedChange={(checked) => {
+                                    if (checked) {
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        main_features: [...prev.main_features, feature]
+                                      }));
+                                    } else {
+                                      setFormData(prev => ({
+                                        ...prev,
+                                        main_features: prev.main_features.filter(f => f !== feature)
+                                      }));
+                                    }
+                                  }}
+                                />
+                                <Label htmlFor={feature} className="text-sm">
+                                  {feature}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <Label>Services et commodités disponibles</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-2">
+                            {utilitiesOptions.map((utility) => (
+                              <div key={utility} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={utility}
+                                  checked={formData.utilities.includes(utility)}
+                                  onCheckedChange={(checked) => toggleArrayValue('utilities', utility)}
+                                />
+                                <Label htmlFor={utility} className="text-sm">
+                                  {utility}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="md:col-span-2">
+                          <Label>Accès et points d'intérêt</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                            {accessOptions.map((access) => (
+                              <div key={access} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={access}
+                                  checked={formData.access_features.includes(access)}
+                                  onCheckedChange={(checked) => toggleArrayValue('access_features', access)}
+                                />
+                                <Label htmlFor={access} className="text-sm">
+                                  {access}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Étape 4: Possibilités de construction */}
+                  {currentStep === 4 && (
+                    <div className="space-y-6">
+                      <div className="flex items-center mb-6">
+                        <Home className="w-6 h-6 text-blue-600 mr-3" />
+                        <h3 className="text-xl font-semibold">Possibilités de construction</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <div className="md:col-span-2">
+                          <Label>Utilisations autorisées</Label>
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mt-2">
+                            {permittedUseOptions.map((use) => (
+                              <div key={use} className="flex items-center space-x-2">
+                                <Checkbox
+                                  id={use}
+                                  checked={formData.features?.construction?.permitted_use?.includes(use) || false}
+                                  onCheckedChange={(checked) => {
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      features: {
+                                        ...prev.features,
+                                        construction: {
+                                          ...prev.features?.construction,
+                                          permitted_use: checked 
+                                            ? [...(prev.features?.construction?.permitted_use || []), use]
+                                            : (prev.features?.construction?.permitted_use || []).filter(u => u !== use)
+                                        }
+                                      }
+                                    }));
+                                  }}
+                                />
+                                <Label htmlFor={use} className="text-sm">
+                                  {use}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div className="md:col-span-2 bg-blue-50 p-4 rounded-lg">
+                          <h4 className="font-medium text-blue-900 mb-3">Estimation du potentiel de construction</h4>
+                          <div className="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <span className="text-blue-700">Surface constructible :</span>
+                              <div className="font-semibold">
+                                {formData.surface && formData.buildable_ratio 
+                                  ? `${Math.round(formData.surface * parseFloat(formData.buildable_ratio || 0))} m²`
+                                  : 'À définir'
+                                }
+                              </div>
+                            </div>
+                            <div>
+                              <span className="text-blue-700">Surface totale possible :</span>
+                              <div className="font-semibold">
+                                {formData.surface && formData.buildable_ratio && formData.max_floors
+                                  ? `${Math.round(formData.surface * parseFloat(formData.buildable_ratio || 0) * parseInt(formData.max_floors || 1))} m²`
+                                  : 'À définir'
+                                }
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Étape 5: Options de financement */}
+                  {currentStep === 5 && (
+                    <div className="space-y-6">
+                      <div className="flex items-center mb-6">
+                        <CreditCard className="w-6 h-6 text-blue-600 mr-3" />
+                        <h3 className="text-xl font-semibold">Options de financement</h3>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div>
+                          <Label className="text-base font-medium">Méthodes de paiement acceptées</Label>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-3">
+                            {financingOptions.map((option) => (
+                              <div key={option.id} className="flex items-center space-x-3 p-3 border rounded-lg">
+                                <Checkbox
+                                  id={option.id}
+                                  checked={formData.financing?.methods?.includes(option.id) || false}
+                                  onCheckedChange={(checked) => {
+                                    const methods = formData.financing?.methods || [];
+                                    setFormData(prev => ({
+                                      ...prev,
+                                      financing: {
+                                        ...prev.financing,
+                                        methods: checked 
+                                          ? [...methods, option.id]
+                                          : methods.filter(m => m !== option.id)
+                                      }
+                                    }));
+                                  }}
+                                />
+                                <option.icon className="w-5 h-5 text-blue-600" />
+                                <Label htmlFor={option.id} className="font-medium">
+                                  {option.label}
+                                </Label>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+
+                        {/* Configuration financement bancaire */}
+                        {formData.financing?.methods?.includes('bank') && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg flex items-center">
+                                <Banknote className="w-5 h-5 mr-2" />
+                                Financement bancaire
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Apport minimum (%)</Label>
+                                  <Select
+                                    value={formData.financing?.bank_financing?.min_down_payment || '30'}
+                                    onValueChange={(value) => handleNestedInputChange('financing', 'bank_financing', {
+                                      ...formData.financing?.bank_financing,
+                                      min_down_payment: value
+                                    })}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="20">20%</SelectItem>
+                                      <SelectItem value="25">25%</SelectItem>
+                                      <SelectItem value="30">30%</SelectItem>
+                                      <SelectItem value="35">35%</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label>Durée maximum (ans)</Label>
+                                  <Select
+                                    value={formData.financing?.bank_financing?.max_duration || '25'}
+                                    onValueChange={(value) => handleNestedInputChange('financing', 'bank_financing', {
+                                      ...formData.financing?.bank_financing,
+                                      max_duration: value
+                                    })}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="15">15 ans</SelectItem>
+                                      <SelectItem value="20">20 ans</SelectItem>
+                                      <SelectItem value="25">25 ans</SelectItem>
+                                      <SelectItem value="30">30 ans</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+
+                              <div>
+                                <Label>Banques partenaires</Label>
+                                <div className="grid grid-cols-3 gap-2 mt-2">
+                                  {senegalBanks.map((bank) => (
+                                    <div key={bank} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={bank}
+                                        checked={formData.financing?.bank_financing?.partner_banks?.includes(bank) || false}
+                                        onCheckedChange={(checked) => {
+                                          const banks = formData.financing?.bank_financing?.partner_banks || [];
+                                          handleNestedInputChange('financing', 'bank_financing', {
+                                            ...formData.financing?.bank_financing,
+                                            partner_banks: checked
+                                              ? [...banks, bank]
+                                              : banks.filter(b => b !== bank)
+                                          });
+                                        }}
+                                      />
+                                      <Label htmlFor={bank} className="text-sm">
+                                        {bank}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Configuration paiement échelonné */}
+                        {formData.financing?.methods?.includes('installment') && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg flex items-center">
+                                <Calendar className="w-5 h-5 mr-2" />
+                                Paiement échelonné
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div className="grid grid-cols-2 gap-4">
+                                <div>
+                                  <Label>Apport minimum (%)</Label>
+                                  <Select
+                                    value={formData.financing?.installment?.min_down_payment || '20'}
+                                    onValueChange={(value) => handleNestedInputChange('financing', 'installment', {
+                                      ...formData.financing?.installment,
+                                      min_down_payment: value
+                                    })}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="10">10%</SelectItem>
+                                      <SelectItem value="15">15%</SelectItem>
+                                      <SelectItem value="20">20%</SelectItem>
+                                      <SelectItem value="25">25%</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Label>Durée de paiement (ans)</Label>
+                                  <Select
+                                    value={formData.financing?.installment?.duration || '5'}
+                                    onValueChange={(value) => handleNestedInputChange('financing', 'installment', {
+                                      ...formData.financing?.installment,
+                                      duration: value
+                                    })}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="2">2 ans</SelectItem>
+                                      <SelectItem value="3">3 ans</SelectItem>
+                                      <SelectItem value="4">4 ans</SelectItem>
+                                      <SelectItem value="5">5 ans</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        {/* Configuration crypto */}
+                        {formData.financing?.methods?.includes('crypto') && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg flex items-center">
+                                <Bitcoin className="w-5 h-5 mr-2" />
+                                Paiement Crypto-monnaie
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div>
+                                <Label>Crypto-monnaies acceptées</Label>
+                                <div className="grid grid-cols-3 gap-2 mt-2">
+                                  {cryptoCurrencies.map((currency) => (
+                                    <div key={currency} className="flex items-center space-x-2">
+                                      <Checkbox
+                                        id={currency}
+                                        checked={formData.financing?.crypto?.accepted_currencies?.includes(currency) || false}
+                                        onCheckedChange={(checked) => {
+                                          const currencies = formData.financing?.crypto?.accepted_currencies || [];
+                                          handleNestedInputChange('financing', 'crypto', {
+                                            ...formData.financing?.crypto,
+                                            accepted_currencies: checked
+                                              ? [...currencies, currency]
+                                              : currencies.filter(c => c !== currency)
+                                          });
+                                        }}
+                                      />
+                                      <Label htmlFor={currency} className="text-sm">
+                                        {currency}
+                                      </Label>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+
+                              <div>
+                                <Label>Réduction crypto (%)</Label>
+                                <Select
+                                  value={formData.financing?.crypto?.discount || '5'}
+                                  onValueChange={(value) => handleNestedInputChange('financing', 'crypto', {
+                                    ...formData.financing?.crypto,
+                                    discount: value
+                                  })}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="3">3%</SelectItem>
+                                    <SelectItem value="5">5%</SelectItem>
+                                    <SelectItem value="7">7%</SelectItem>
+                                    <SelectItem value="10">10%</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Étape 6: Blockchain et NFT */}
+                  {currentStep === 6 && (
+                    <div className="space-y-6">
+                      <div className="flex items-center mb-6">
+                        <Network className="w-6 h-6 text-blue-600 mr-3" />
+                        <h3 className="text-xl font-semibold">Blockchain et NFT</h3>
+                      </div>
+
+                      <div className="space-y-6">
+                        <div className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <Shield className="w-6 h-6 text-purple-600" />
+                            <div>
+                              <h4 className="font-medium">Tokenisation NFT</h4>
+                              <p className="text-sm text-gray-600">
+                                Transformez votre propriété en NFT pour plus de sécurité et transparence
+                              </p>
+                            </div>
+                          </div>
+                          <Switch
+                            checked={formData.nft?.available || false}
+                            onCheckedChange={(checked) => handleNestedInputChange('nft', 'available', checked)}
+                          />
+                        </div>
+
+                        {formData.nft?.available && (
+                          <Card>
+                            <CardHeader>
+                              <CardTitle className="text-lg flex items-center">
+                                <Bitcoin className="w-5 h-5 mr-2 text-purple-600" />
+                                Configuration NFT
+                              </CardTitle>
+                            </CardHeader>
+                            <CardContent className="space-y-4">
+                              <div>
+                                <Label>Blockchain</Label>
+                                <Select
+                                  value={formData.nft?.blockchain || 'Polygon'}
+                                  onValueChange={(value) => handleNestedInputChange('nft', 'blockchain', value)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    <SelectItem value="Ethereum">Ethereum</SelectItem>
+                                    <SelectItem value="Polygon">Polygon (recommandé)</SelectItem>
+                                    <SelectItem value="BSC">Binance Smart Chain</SelectItem>
+                                    <SelectItem value="Avalanche">Avalanche</SelectItem>
+                                  </SelectContent>
+                                </Select>
+                              </div>
+
+                              <div className="bg-purple-50 p-4 rounded-lg">
+                                <h5 className="font-medium text-purple-900 mb-2">Avantages de la tokenisation</h5>
+                                <ul className="text-sm text-purple-800 space-y-1">
+                                  <li>• Propriété vérifiable sur blockchain</li>
+                                  <li>• Transfert instantané et sécurisé</li>
+                                  <li>• Historique de propriété immuable</li>
+                                  <li>• Possibilité de fractionnement futur</li>
+                                  <li>• Attractivité internationale</li>
+                                </ul>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        )}
+
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg flex items-center">
+                              <Brain className="w-5 h-5 mr-2 text-green-600" />
+                              Score IA (calculé automatiquement)
+                            </CardTitle>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-green-600">8.5</div>
+                                <div className="text-gray-600">Score global</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-blue-600">9.2</div>
+                                <div className="text-gray-600">Localisation</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-purple-600">8.0</div>
+                                <div className="text-gray-600">Potentiel investissement</div>
+                              </div>
+                              <div className="text-center">
+                                <div className="text-2xl font-bold text-orange-600">8.8</div>
+                                <div className="text-gray-600">Prix/marché</div>
+                              </div>
+                            </div>
+                            <div className="mt-4 p-3 bg-green-50 rounded-lg">
+                              <p className="text-sm text-green-800">
+                                <strong>Prédiction de croissance :</strong> 15-20% dans les 3 prochaines années
+                              </p>
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Étape 7: Médias et documents */}
+                  {currentStep === 7 && (
+                    <div className="space-y-6">
+                      <div className="flex items-center mb-6">
+                        <Camera className="w-6 h-6 text-blue-600 mr-3" />
+                        <h3 className="text-xl font-semibold">Photos et documents</h3>
+                      </div>
+
+                      <div className="space-y-6">
+                        {/* Upload d'images */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">Photos du terrain</CardTitle>
+                            <CardDescription>
+                              Ajoutez au moins 5 photos de qualité pour attirer les acheteurs
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+                              <Camera className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                              <p className="text-lg font-medium text-gray-900 mb-2">
+                                Glissez vos photos ici
+                              </p>
+                              <p className="text-gray-600 mb-4">
+                                ou cliquez pour sélectionner des fichiers
+                              </p>
+                              <Button variant="outline">
+                                <Upload className="w-4 h-4 mr-2" />
+                                Choisir des photos
+                              </Button>
+                            </div>
+                            
+                            <div className="mt-4 text-sm text-gray-600">
+                              <p><strong>Conseils pour de bonnes photos :</strong></p>
+                              <ul className="list-disc list-inside mt-2 space-y-1">
+                                <li>Prenez des photos par temps clair</li>
+                                <li>Montrez les limites du terrain</li>
+                                <li>Incluez la vue depuis le terrain</li>
+                                <li>Photographiez les accès routiers</li>
+                                <li>Ajoutez des photos aériennes si possible</li>
+                              </ul>
+                            </div>
+                          </CardContent>
+                        </Card>
+
+                        {/* Documents légaux */}
+                        <Card>
+                          <CardHeader>
+                            <CardTitle className="text-lg">Documents légaux</CardTitle>
+                            <CardDescription>
+                              Les documents suivants renforcent la confiance des acheteurs
+                            </CardDescription>
+                          </CardHeader>
+                          <CardContent>
+                            <div className="space-y-4">
+                              {formData.documents.map((doc, index) => (
+                                <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
+                                  <div className="flex items-center space-x-3">
+                                    <FileText className="w-5 h-5 text-blue-600" />
+                                    <div>
+                                      <div className="font-medium">{doc.name}</div>
+                                      <div className="text-sm text-gray-600">
+                                        {doc.required ? 'Requis' : 'Optionnel'} • Format PDF
+                                      </div>
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center space-x-2">
+                                    {doc.uploaded ? (
+                                      <Badge className="bg-green-100 text-green-800">
+                                        <CheckCircle className="w-3 h-3 mr-1" />
+                                        Uploadé
+                                      </Badge>
+                                    ) : (
+                                      <Button variant="outline" size="sm">
+                                        <Upload className="w-4 h-4 mr-2" />
+                                        Upload
+                                      </Button>
+                                    )}
+                                  </div>
+                                </div>
+                              ))}
+                            </div>
+                          </CardContent>
+                        </Card>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Étape 8: Aperçu et publication */}
+                  {currentStep === 8 && (
+                    <div className="space-y-6">
+                      <div className="flex items-center mb-6">
+                        <Eye className="w-6 h-6 text-blue-600 mr-3" />
+                        <h3 className="text-xl font-semibold">Aperçu et publication</h3>
+                      </div>
+
+                      <Card>
+                        <CardHeader>
+                          <CardTitle>Votre annonce est prête !</CardTitle>
+                          <CardDescription>
+                            Vérifiez les informations avant de publier
+                          </CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                          <div className="space-y-4">
+                            <div className="grid grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <span className="text-gray-600">Titre :</span>
+                                <div className="font-medium">{formData.title || 'Non défini'}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Prix :</span>
+                                <div className="font-medium">
+                                  {formData.price ? formatPrice(formData.price) : 'Non défini'}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Surface :</span>
+                                <div className="font-medium">{formData.surface || 'Non défini'} m²</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Localisation :</span>
+                                <div className="font-medium">
+                                  {formData.city && formData.region 
+                                    ? `${formData.city}, ${formData.region}` 
+                                    : 'Non défini'
+                                  }
+                                </div>
+                              </div>
+                            </div>
+
+                            <div className="bg-green-50 p-4 rounded-lg">
+                              <h4 className="font-medium text-green-900 mb-2">Estimation de performance</h4>
+                              <div className="grid grid-cols-3 gap-4 text-sm">
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-green-600">500-800</div>
+                                  <div className="text-green-700">Vues/mois</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-blue-600">2-4 mois</div>
+                                  <div className="text-blue-700">Temps de vente</div>
+                                </div>
+                                <div className="text-center">
+                                  <div className="text-lg font-bold text-purple-600">8.5/10</div>
+                                  <div className="text-purple-700">Score IA</div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
                     </div>
                   )}
 

@@ -6,21 +6,34 @@
     import { Input } from '@/components/ui/input';
     import { Label } from '@/components/ui/label';
     import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
+    import { Badge } from '@/components/ui/badge';
+    import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
     // useToast import supprimé - utilisation window.safeGlobalToast
     import { 
   LogIn, 
-  AlertCircle
+  AlertCircle,
+  User,
+  Shield,
+  Key,
+  Users,
+  Building
 } from 'lucide-react';
     import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+    import { localAuth } from '@/services/LocalAuthService';
 
     const LoginPage = () => {
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
       const [loading, setLoading] = useState(false);
       const [error, setError] = useState('');
+      const [loginType, setLoginType] = useState('supabase');
       const { signIn, session } = useAuth();
       const navigate = useNavigate();
       const location = useLocation();
+      
+      // Comptes locaux disponibles
+      const localAccounts = localAuth.getAvailableAccounts();
+      
       // toast remplacé par window.safeGlobalToast
 
       const handleLogin = async (e) => {
@@ -29,8 +42,23 @@
         setError('');
 
         try {
-          const { error: signInError } = await signIn(email, password);
-          if (signInError) throw signInError;
+          if (loginType === 'local') {
+            // Utiliser l'authentification locale
+            const { user, error: localError } = localAuth.signIn(email, password);
+            if (localError) throw localError;
+            
+            // Mettre à jour le contexte d'authentification
+            const session = { access_token: 'local_token', user };
+            localStorage.setItem('temp_auth', JSON.stringify({ user, session }));
+            
+            // Forcer le rechargement du contexte
+            window.location.reload();
+            return;
+          } else {
+            // Utiliser l'authentification Supabase
+            const { error: signInError } = await signIn(email, password);
+            if (signInError) throw signInError;
+          }
           
           window.safeGlobalToast({
               title: `Bienvenue !`,
@@ -39,13 +67,47 @@
           });
         } catch (err) {
           console.error("Login error:", err);
-          const errorMessage = err.message.includes('Invalid login credentials') 
+          const errorMessage = err.message?.includes('Invalid login credentials') || err.message?.includes('incorrect')
             ? "Email ou mot de passe incorrect."
-            : "Une erreur est survenue lors de la connexion.";
+            : err.message || "Une erreur est survenue lors de la connexion.";
           setError(errorMessage);
           window.safeGlobalToast({
             title: "Échec de la Connexion",
             description: errorMessage,
+            variant: "destructive",
+          });
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      // Connexion rapide avec un compte local
+      const handleQuickLogin = async (account) => {
+        setLoading(true);
+        setError('');
+
+        try {
+          const { user, error: localError } = localAuth.quickSignIn(account.role);
+          if (localError) throw localError;
+          
+          // Mettre à jour le contexte d'authentification
+          const session = { access_token: 'local_token', user };
+          localStorage.setItem('temp_auth', JSON.stringify({ user, session }));
+          
+          window.safeGlobalToast({
+            title: `Bienvenue ${account.name} !`,
+            description: "Connexion réussie. Redirection en cours...",
+            className: "bg-green-500 text-white",
+          });
+          
+          // Forcer le rechargement du contexte
+          window.location.reload();
+        } catch (err) {
+          console.error("Login error:", err);
+          setError(err.message || "Une erreur est survenue lors de la connexion.");
+          window.safeGlobalToast({
+            title: "Échec de la Connexion",
+            description: err.message || "Une erreur est survenue lors de la connexion.",
             variant: "destructive",
           });
         } finally {
@@ -68,62 +130,158 @@
           transition={{ duration: 0.5 }}
           className="flex items-center justify-center min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 dark:from-gray-900 dark:to-emerald-900/50 px-4 py-12"
         >
-          <Card className="w-full max-w-md shadow-xl border-border/50 bg-card/80 backdrop-blur-sm">
+          <Card className="w-full max-w-2xl shadow-xl border-border/50 bg-card/80 backdrop-blur-sm">
             <CardHeader className="text-center">
               <CardTitle className="text-2xl font-bold text-primary">Connexion</CardTitle>
               <CardDescription>Accédez à votre espace Teranga Foncier</CardDescription>
             </CardHeader>
             <CardContent>
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    placeholder="nom@exemple.com"
-                    required
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                     <Label htmlFor="password">Mot de passe</Label>
-                     <Link to="#" className="text-sm text-primary hover:underline" onClick={(e) => {e.preventDefault(); window.safeGlobalToast({title:"Fonctionnalité à venir", description: "La récupération de mot de passe n'est pas encore implémentée."})}}>Mot de passe oublié ?</Link>
+              <Tabs value={loginType} onValueChange={setLoginType} className="w-full">
+                <TabsList className="grid w-full grid-cols-2 mb-6">
+                  <TabsTrigger value="supabase" className="flex items-center space-x-2">
+                    <User className="h-4 w-4" />
+                    <span>Compte Personnel</span>
+                  </TabsTrigger>
+                  <TabsTrigger value="local" className="flex items-center space-x-2">
+                    <Shield className="h-4 w-4" />
+                    <span>Accès Professionnel</span>
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="supabase" className="space-y-4">
+                  <form onSubmit={handleLogin} className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="email">Email</Label>
+                      <Input
+                        id="email"
+                        type="email"
+                        placeholder="nom@exemple.com"
+                        required
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between">
+                         <Label htmlFor="password">Mot de passe</Label>
+                         <Link to="#" className="text-sm text-primary hover:underline" onClick={(e) => {e.preventDefault(); window.safeGlobalToast({title:"Fonctionnalité à venir", description: "La récupération de mot de passe n'est pas encore implémentée."})}}>Mot de passe oublié ?</Link>
+                      </div>
+                      <Input
+                        id="password"
+                        type="password"
+                        placeholder="********"
+                        required
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+                    {error && (
+                      <div className="flex items-center p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/30">
+                         <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0"/>
+                         <span>{error}</span>
+                      </div>
+                    )}
+                    <Button type="submit" className="w-full bg-gradient-to-r from-primary to-green-600 hover:opacity-90 text-white" disabled={loading}>
+                      {loading ? (
+                         <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Connexion en cours...
+                         </>
+                      ) : (
+                         <>
+                            <LogIn className="mr-2 h-4 w-4" /> Se Connecter
+                         </>
+                      )}
+                    </Button>
+                  </form>
+                </TabsContent>
+
+                <TabsContent value="local" className="space-y-4">
+                  <div className="text-center mb-4">
+                    <p className="text-sm text-gray-600 mb-2">Connexion directe aux dashboards professionnels</p>
+                    <Badge variant="outline" className="text-xs">Comptes de démonstration</Badge>
                   </div>
-                  <Input
-                    id="password"
-                    type="password"
-                    placeholder="********"
-                    required
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    disabled={loading}
-                  />
-                </div>
-                {error && (
-                  <div className="flex items-center p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/30">
-                     <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0"/>
-                     <span>{error}</span>
+
+                  {/* Connexion manuelle avec identifiants locaux */}
+                  <form onSubmit={handleLogin} className="space-y-4 mb-6">
+                    <div className="space-y-2">
+                      <Label htmlFor="local-email">Email</Label>
+                      <Input
+                        id="local-email"
+                        type="email"
+                        placeholder="admin@local, mairie@local, banque@local..."
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+                    <div className="space-y-2">
+                      <Label htmlFor="local-password">Mot de passe</Label>
+                      <Input
+                        id="local-password"
+                        type="password"
+                        placeholder="admin123, mairie123, bank123..."
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        disabled={loading}
+                      />
+                    </div>
+                    {error && (
+                      <div className="flex items-center p-3 bg-destructive/10 text-destructive text-sm rounded-md border border-destructive/30">
+                         <AlertCircle className="h-4 w-4 mr-2 flex-shrink-0"/>
+                         <span>{error}</span>
+                      </div>
+                    )}
+                    <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-90 text-white" disabled={loading}>
+                      {loading ? (
+                         <>
+                            <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                               <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                               <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Connexion en cours...
+                         </>
+                      ) : (
+                         <>
+                            <Key className="mr-2 h-4 w-4" /> Se Connecter
+                         </>
+                      )}
+                    </Button>
+                  </form>
+
+                  {/* Boutons de connexion rapide */}
+                  <div className="border-t pt-4">
+                    <p className="text-xs text-center text-gray-500 mb-3">Ou connexion rapide :</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      {localAccounts.map((account) => (
+                        <Button
+                          key={account.email}
+                          variant="outline"
+                          size="sm"
+                          onClick={() => handleQuickLogin(account)}
+                          disabled={loading}
+                          className="text-xs p-2 h-auto flex flex-col items-center space-y-1"
+                        >
+                          <div className="flex items-center space-x-1">
+                            {account.role === 'admin' && <Shield className="h-3 w-3" />}
+                            {account.role === 'mairie' && <Building className="h-3 w-3" />}
+                            {account.role === 'banque' && <Building className="h-3 w-3" />}
+                            {account.role === 'notaire' && <Users className="h-3 w-3" />}
+                            {!['admin', 'mairie', 'banque', 'notaire'].includes(account.role) && <User className="h-3 w-3" />}
+                            <span>{account.name}</span>
+                          </div>
+                          <span className="text-xs text-gray-500 capitalize">{account.role}</span>
+                        </Button>
+                      ))}
+                    </div>
                   </div>
-                )}
-                <Button type="submit" className="w-full bg-gradient-to-r from-primary to-green-600 hover:opacity-90 text-white" disabled={loading}>
-                  {loading ? (
-                     <>
-                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                           <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                           <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                        </svg>
-                        Connexion en cours...
-                     </>
-                  ) : (
-                     <>
-                        <LogIn className="mr-2 h-4 w-4" /> Se Connecter
-                     </>
-                  )}
-                </Button>
-              </form>
+                </TabsContent>
+              </Tabs>
             </CardContent>
             <CardFooter className="flex flex-col gap-4 text-center text-sm">
                <p>Vous n'avez pas de compte ? <Link to="/register" className="underline text-primary font-medium">Inscrivez-vous</Link></p>

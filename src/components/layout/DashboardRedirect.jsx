@@ -41,7 +41,7 @@ const DashboardRedirect = () => {
         case 'Promoteur':
         case 'promoteur':
           console.log('✅ Redirecting to Promoteur dashboard');
-          navigate('/dashboard/promoteur', { replace: true });
+          navigate('/promoteur', { replace: true });
           break;
         case 'Banque':
         case 'banque':

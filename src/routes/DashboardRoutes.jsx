@@ -43,7 +43,7 @@ const DashboardSelector = () => {
     'particulier': <ParticulierDashboard />,
     'vendeur': <VendeurDashboard />,
     'investisseur': <InvestisseurDashboard />,
-    'promoteur': <PromoteurDashboard />,
+    'promoteur': <Navigate to="/promoteur" replace />,
     'municipalite': <MunicipaliteDashboard />,
     'admin': <AdminDashboard />,
     'notaire': <NotaireDashboard />,
@@ -99,7 +99,7 @@ const DashboardRoutes = () => {
       />
 
       <Route
-        path="/dashboard/promoteur"
+        path="/promoteur/*"
         element={
           <ProtectedRoute allowedRoles={['promoteur', 'admin']}>
             <PromoteurDashboard />

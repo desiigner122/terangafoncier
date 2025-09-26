@@ -152,7 +152,7 @@ import AuthDebugPage from '@/pages/AuthDebugPage';
 // Import des dashboards
 import ParticularDashboard from '@/pages/ParticularDashboard';
 import GeometreDashboard from '@/pages/dashboards/GeometreDashboard';
-import PromoteurDashboard from '@/pages/dashboards/PromoteurDashboard';
+import PromoteurDashboard from '@/pages/dashboards/promoteur/PromoteurDashboard';
 import MunicipaliteDashboard from '@/pages/dashboards/MunicipaliteDashboard';
 import ModernAgentFoncierDashboard from '@/pages/dashboards/ModernAgentFoncierDashboard';
 import ModernMairieDashboard from '@/pages/dashboards/ModernMairieDashboard';
@@ -196,7 +196,7 @@ import AuthenticationPage from '@/pages/dashboards/notaire/AuthenticationPage';
 import ArchivesPage from '@/pages/dashboards/notaire/ArchivesPage';
 import ComplianceCheckPage from '@/pages/dashboards/notaire/ComplianceCheckPage';
 // import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
-import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
+// import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
 import ModernAcheteurDashboard from '@/pages/dashboards/ModernAcheteurDashboard';
 import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
 import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
@@ -483,7 +483,7 @@ function App() {
                   {/* Route de test temporaire pour debugging */}
                   <Route path="vendeur-test" element={<VendeurDashboard />} />
                   
-                  <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
+                  <Route path="promoteur/*" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><PromoteurDashboard /></RoleProtectedRoute>} />
                   <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
                   <Route path="geometre" element={<RoleProtectedRoute allowedRoles={['Géomètre']}><ModernGeometreDashboard /></RoleProtectedRoute>} />
                   <Route path="solutions/promoteurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
@@ -569,7 +569,7 @@ function App() {
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}
               <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDashboard /></RoleProtectedRoute>} />
-              <Route path="promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
+              <Route path="promoteur/*" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><PromoteurDashboard /></RoleProtectedRoute>} />
               <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
               <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
               <Route path="geometre" element={<RoleProtectedRoute allowedRoles={['Géomètre']}><ModernGeometreDashboard /></RoleProtectedRoute>} />
@@ -579,7 +579,7 @@ function App() {
             <Route path="/particulier" element={<Navigate to="/acheteur" replace />} />
             <Route path="/agent-foncier" element={<ProtectedRoute><ModernAgentFoncierDashboard /></ProtectedRoute>} />
             <Route path="/geometre" element={<ProtectedRoute><GeometreDashboard /></ProtectedRoute>} />
-            <Route path="/promoteur" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
+            <Route path="/promoteur/*" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
             <Route path="/lotisseur" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
             <Route path="/municipalite" element={<ProtectedRoute><MunicipaliteDashboard /></ProtectedRoute>} />
 

@@ -35,7 +35,7 @@ import {
   Home,
   Shield,
   Eye,
-  MarkAsUnreadIcon
+  MailOpen
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUserFixed';
 

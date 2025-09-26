@@ -193,12 +193,14 @@ const PromoteurChantiers = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full h-full bg-white">
+      <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestion des Chantiers</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Gestion des Chantiers</h1>
             <p className="text-gray-600">Suivi en temps réel de vos chantiers de construction</p>
+          </div>
           <div className="flex items-center space-x-2">
             <Badge className="bg-blue-100 text-blue-800">
               <Hammer className="w-3 h-3 mr-1" />

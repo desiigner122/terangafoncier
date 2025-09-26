@@ -248,12 +248,14 @@ const PromoteurBlockchain = () => {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="w-full h-full bg-white">
+      <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Blockchain Immobilier</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Blockchain Immobilier</h1>
             <p className="text-gray-600">Certification et traçabilité blockchain pour vos projets</p>
+          </div>
           <div className="flex items-center space-x-2">
             <Badge className="bg-green-100 text-green-800">
               <Shield className="w-3 h-3 mr-1" />

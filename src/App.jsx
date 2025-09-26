@@ -483,10 +483,8 @@ function App() {
                   {/* Route de test temporaire pour debugging */}
                   <Route path="vendeur-test" element={<VendeurDashboard />} />
                   
-                  <Route path="promoteur/*" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><PromoteurDashboard /></RoleProtectedRoute>} />
                   <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
                   <Route path="geometre" element={<RoleProtectedRoute allowedRoles={['Géomètre']}><ModernGeometreDashboard /></RoleProtectedRoute>} />
-                  <Route path="solutions/promoteurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><ModernPromoteurDashboard /></RoleProtectedRoute>} />
                   <Route path="agent-foncier" element={<RoleProtectedRoute allowedRoles={['Agent Foncier']}><ModernAgentFoncierDashboard /></RoleProtectedRoute>} />
                 </Route>
               </Route>
@@ -526,11 +524,13 @@ function App() {
             <Route path="/mairie" element={<RoleProtectedRoute allowedRoles={['Mairie', 'admin']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
             <Route path="/banque" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
             <Route path="/notaire" element={<RoleProtectedRoute allowedRoles={['Notaire', 'admin']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>} />
+            <Route path="/promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur', 'admin']}><PromoteurDashboard /></RoleProtectedRoute>} />
             
             {/* Alias pour solutions */}
             <Route path="/solutions/mairies/dashboard" element={<RoleProtectedRoute allowedRoles={['Mairie', 'admin']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
             <Route path="/solutions/banques/dashboard" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
             <Route path="/solutions/notaires/dashboard" element={<RoleProtectedRoute allowedRoles={['Notaire', 'admin']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>} />
+            <Route path="/solutions/promoteurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Promoteur', 'admin']}><PromoteurDashboard /></RoleProtectedRoute>} />
 
             {/* Routes Dashboard avec layout et sous-pages (/dashboard/*) */}
             <Route path="/dashboard" element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
@@ -569,7 +569,6 @@ function App() {
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}
               <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDashboard /></RoleProtectedRoute>} />
-              <Route path="promoteur/*" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><PromoteurDashboard /></RoleProtectedRoute>} />
               <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
               <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
               <Route path="geometre" element={<RoleProtectedRoute allowedRoles={['Géomètre']}><ModernGeometreDashboard /></RoleProtectedRoute>} />
@@ -579,7 +578,6 @@ function App() {
             <Route path="/particulier" element={<Navigate to="/acheteur" replace />} />
             <Route path="/agent-foncier" element={<ProtectedRoute><ModernAgentFoncierDashboard /></ProtectedRoute>} />
             <Route path="/geometre" element={<ProtectedRoute><GeometreDashboard /></ProtectedRoute>} />
-            <Route path="/promoteur/*" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
             <Route path="/lotisseur" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
             <Route path="/municipalite" element={<ProtectedRoute><MunicipaliteDashboard /></ProtectedRoute>} />
 

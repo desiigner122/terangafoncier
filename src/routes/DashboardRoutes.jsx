@@ -6,7 +6,7 @@ import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
 import InvestisseurDashboard from '@/pages/dashboards/investisseur/InvestisseurDashboard';
-import PromoteurDashboard from '@/pages/dashboards/promoteur/PromoteurDashboard';
+
 import MunicipaliteDashboard from '@/pages/dashboards/municipalite/MunicipaliteDashboard';
 import AdminDashboard from '@/pages/dashboards/admin/AdminDashboard';
 import NotaireDashboard from '@/pages/dashboards/notaires/NotaireDashboard';
@@ -98,14 +98,7 @@ const DashboardRoutes = () => {
         }
       />
 
-      <Route
-        path="/promoteur/*"
-        element={
-          <ProtectedRoute allowedRoles={['promoteur', 'admin']}>
-            <PromoteurDashboard />
-          </ProtectedRoute>
-        }
-      />
+
 
       <Route
         path="/dashboard/municipalite"

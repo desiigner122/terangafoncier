@@ -6,7 +6,7 @@ import AdminDashboard from '../pages/dashboards/AdminDashboard';
 import ParticularDashboard from '../pages/dashboards/ParticularDashboard';
 import VendeurDashboard from '../pages/dashboards/VendeurDashboard';
 import InvestisseurDashboard from '../pages/dashboards/InvestisseurDashboard';
-import PromoteurDashboard from '../pages/dashboards/PromoteurDashboard';
+
 import MunicipaliteDashboard from '../pages/dashboards/MunicipaliteDashboard';
 import NotaireDashboard from '../pages/dashboards/NotaireDashboard';
 import GeometreDashboard from '../pages/dashboards/GeometreDashboard';
@@ -19,7 +19,7 @@ const DashboardRoutes = () => {
       <Route path="/particulier/*" element={<ParticularDashboard />} />
       <Route path="/vendeur/*" element={<VendeurDashboard />} />
       <Route path="/investisseur/*" element={<InvestisseurDashboard />} />
-      <Route path="/promoteur/*" element={<PromoteurDashboard />} />
+
       <Route path="/municipalite/*" element={<MunicipaliteDashboard />} />
       <Route path="/notaire/*" element={<NotaireDashboard />} />
       <Route path="/geometre/*" element={<GeometreDashboard />} />

@@ -38,7 +38,23 @@ import {
   FileText,
   Archive,
   Trash2,
-  RotateCcw
+  RotateCcw,
+  CreditCard as CreditCardIcon,
+  Crown,
+  Gem,
+  Star as StarIcon,
+  Check,
+  X,
+  Calendar as CalendarIcon,
+  Users as UsersIcon,
+  Zap as ZapIcon,
+  Infinity,
+  ArrowUpCircle,
+  ShoppingCart,
+  Receipt as ReceiptIcon,
+  HelpCircle,
+  MapPin,
+  Building2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -223,8 +239,9 @@ const NotaireSettings = () => {
       </div>
 
       <Tabs defaultValue="profile" className="w-full">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="abonnement">Abonnement</TabsTrigger>
           <TabsTrigger value="preferences">Préférences</TabsTrigger>
           <TabsTrigger value="security">Sécurité</TabsTrigger>
           <TabsTrigger value="integrations">Intégrations</TabsTrigger>
@@ -341,6 +358,261 @@ const NotaireSettings = () => {
                     + Ajouter
                   </Button>
                 </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="abonnement" className="space-y-6">
+          {/* Statut d'abonnement actuel */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-yellow-500" />
+                Mon abonnement actuel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg">Plan Professional</h3>
+                    <p className="text-gray-600">Accès à toutes les fonctionnalités professionnelles</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Renouvelé le 15 décembre 2024
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-blue-600">1.8M XOF</p>
+                    <p className="text-sm text-gray-500">/mois</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Plans d'abonnement */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Plans d'abonnement disponibles</CardTitle>
+              <CardDescription>
+                Choisissez le plan qui correspond à vos besoins professionnels
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Plan Starter */}
+                <div className="border rounded-lg p-6 relative">
+                  <div className="text-center mb-4">
+                    <Gem className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                    <h3 className="text-xl font-semibold">Starter</h3>
+                    <p className="text-gray-600">Pour les jeunes notaires</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">900K XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Jusqu'à 50 actes/mois</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Gestion des clients</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Modèles d'actes de base</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support email</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <X className="h-4 w-4 text-red-500" />
+                      <span className="text-sm text-gray-400">Signatures électroniques</span>
+                    </li>
+                  </ul>
+                  <Button variant="outline" className="w-full">
+                    Changer de plan
+                  </Button>
+                </div>
+
+                {/* Plan Professional */}
+                <div className="border-2 border-blue-500 rounded-lg p-6 relative">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm">
+                      Actuel
+                    </span>
+                  </div>
+                  <div className="text-center mb-4">
+                    <Crown className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                    <h3 className="text-xl font-semibold">Professional</h3>
+                    <p className="text-gray-600">Le plus populaire</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">1.8M XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Actes illimités</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Gestion avancée des clients</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Tous les modèles d'actes</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Signatures électroniques</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Archivage sécurisé</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support prioritaire</span>
+                    </li>
+                  </ul>
+                  <Button className="w-full bg-blue-500 hover:bg-blue-600">
+                    Plan actuel
+                  </Button>
+                </div>
+
+                {/* Plan Enterprise */}
+                <div className="border rounded-lg p-6 relative">
+                  <div className="text-center mb-4">
+                    <StarIcon className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                    <h3 className="text-xl font-semibold">Enterprise</h3>
+                    <p className="text-gray-600">Pour les grands offices</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">3.2M XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Tout du Professional</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Multi-utilisateurs (10)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">API intégration</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Rapports avancés</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Formation personnalisée</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support dédié 24/7</span>
+                    </li>
+                  </ul>
+                  <Button variant="outline" className="w-full">
+                    Passer à Enterprise
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Historique de facturation */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCardIcon className="h-5 w-5" />
+                Historique de facturation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Décembre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Professional</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">1.8M XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Novembre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Professional</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">1.8M XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Octobre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Starter</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">900K XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Prochaine facturation :</span>
+                  <span className="font-medium">15 janvier 2025</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Méthodes de paiement */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Méthodes de paiement</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CreditCardIcon className="h-8 w-8 text-blue-500" />
+                    <div>
+                      <p className="font-medium">•••• •••• •••• 4242</p>
+                      <p className="text-sm text-gray-500">Visa • Expire 12/26</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">Modifier</Button>
+                    <Button variant="outline" size="sm">Supprimer</Button>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full">
+                  Ajouter une méthode de paiement
+                </Button>
               </div>
             </CardContent>
           </Card>

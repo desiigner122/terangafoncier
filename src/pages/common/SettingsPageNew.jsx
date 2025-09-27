@@ -27,7 +27,14 @@ import {
   Check,
   AlertTriangle,
   Key,
-  Trash2
+  Trash2,
+  Crown,
+  Gem,
+  StarIcon,
+  CreditCardIcon,
+  CalendarIcon,
+  UsersIcon,
+  ZapIcon
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUserFixed';
 import { supabase } from '@/lib/customSupabaseClient';
@@ -166,10 +173,14 @@ const SettingsPageNew = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-5">
+        <TabsList className="grid w-full grid-cols-6">
           <TabsTrigger value="profile" className="flex items-center gap-2">
             <User className="w-4 h-4" />
             Profil
+          </TabsTrigger>
+          <TabsTrigger value="abonnement" className="flex items-center gap-2">
+            <Crown className="w-4 h-4" />
+            Abonnement
           </TabsTrigger>
           <TabsTrigger value="notifications" className="flex items-center gap-2">
             <Bell className="w-4 h-4" />
@@ -307,6 +318,242 @@ const SettingsPageNew = () => {
                   placeholder="Parlez-nous de vous..."
                   className="w-full p-3 border rounded-md resize-none h-24"
                 />
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Onglet Abonnement */}
+        <TabsContent value="abonnement" className="space-y-6">
+          {/* Statut d'abonnement actuel */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-yellow-500" />
+                Mon abonnement actuel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg">Plan Standard</h3>
+                    <p className="text-gray-600">Accès aux fonctionnalités essentielles</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Renouvelé le 15 décembre 2024
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-blue-600">500K XOF</p>
+                    <p className="text-sm text-gray-500">/mois</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Plans d'abonnement */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Plans d'abonnement disponibles</CardTitle>
+              <CardDescription>
+                Choisissez le plan qui correspond à vos besoins
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Plan Basic */}
+                <div className="border rounded-lg p-6 relative">
+                  <div className="text-center mb-4">
+                    <Gem className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                    <h3 className="text-xl font-semibold">Basic</h3>
+                    <p className="text-gray-600">Pour commencer</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">200K XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Fonctionnalités de base</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support email</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Jusqu'à 5 projets</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <X className="h-4 w-4 text-red-500" />
+                      <span className="text-sm text-gray-400">Rapports avancés</span>
+                    </li>
+                  </ul>
+                  <Button variant="outline" className="w-full">
+                    Changer de plan
+                  </Button>
+                </div>
+
+                {/* Plan Standard */}
+                <div className="border-2 border-blue-500 rounded-lg p-6 relative">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm">
+                      Actuel
+                    </span>
+                  </div>
+                  <div className="text-center mb-4">
+                    <Crown className="h-8 w-8 mx-auto mb-2 text-blue-500" />
+                    <h3 className="text-xl font-semibold">Standard</h3>
+                    <p className="text-gray-600">Le plus populaire</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">500K XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Toutes les fonctionnalités</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support prioritaire</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Projets illimités</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Rapports détaillés</span>
+                    </li>
+                  </ul>
+                  <Button className="w-full bg-blue-500 hover:bg-blue-600">
+                    Plan actuel
+                  </Button>
+                </div>
+
+                {/* Plan Premium */}
+                <div className="border rounded-lg p-6 relative">
+                  <div className="text-center mb-4">
+                    <StarIcon className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                    <h3 className="text-xl font-semibold">Premium</h3>
+                    <p className="text-gray-600">Pour les professionnels</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">1M XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Tout du Standard</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">API complète</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support dédié</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Intégrations avancées</span>
+                    </li>
+                  </ul>
+                  <Button variant="outline" className="w-full">
+                    Passer à Premium
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Historique de facturation */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCardIcon className="h-5 w-5" />
+                Historique de facturation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Décembre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Standard</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">500K XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Novembre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Standard</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">500K XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Octobre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Basic</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">200K XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Prochaine facturation :</span>
+                  <span className="font-medium">15 janvier 2025</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Méthodes de paiement */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Méthodes de paiement</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CreditCardIcon className="h-8 w-8 text-blue-500" />
+                    <div>
+                      <p className="font-medium">•••• •••• •••• 4242</p>
+                      <p className="text-sm text-gray-500">Visa • Expire 12/26</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">Modifier</Button>
+                    <Button variant="outline" size="sm">Supprimer</Button>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full">
+                  Ajouter une méthode de paiement
+                </Button>
               </div>
             </CardContent>
           </Card>

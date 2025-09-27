@@ -6,6 +6,7 @@ import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
 import InvestisseurDashboard from '@/pages/dashboards/investisseur/InvestisseurDashboard';
+import AgentFoncierDashboard from '@/pages/dashboards/agent-foncier/CompleteSidebarAgentFoncierDashboard';
 
 import MunicipaliteDashboard from '@/pages/dashboards/municipalite/MunicipaliteDashboard';
 import AdminDashboard from '@/pages/dashboards/admin/AdminDashboard';
@@ -43,6 +44,7 @@ const DashboardSelector = () => {
     'particulier': <ParticulierDashboard />,
     'vendeur': <VendeurDashboard />,
     'investisseur': <InvestisseurDashboard />,
+    'agent_foncier': <AgentFoncierDashboard />,
     'promoteur': <Navigate to="/promoteur" replace />,
     'municipalite': <MunicipaliteDashboard />,
     'admin': <AdminDashboard />,
@@ -98,7 +100,14 @@ const DashboardRoutes = () => {
         }
       />
 
-
+      <Route
+        path="/dashboard/agent-foncier/*"
+        element={
+          <ProtectedRoute allowedRoles={['agent_foncier', 'admin']}>
+            <AgentFoncierDashboard />
+          </ProtectedRoute>
+        }
+      />
 
       <Route
         path="/dashboard/municipalite"

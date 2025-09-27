@@ -311,7 +311,7 @@ const PromoteurClients = () => {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900">Gestion des Clients</h1>
+            <h1 className="text-3xl font-bold text-gray-900">Gestion des Clients</h1>
             <p className="text-gray-600">Suivi et relation client personnalisée</p>
           </div>
           <div className="flex items-center space-x-2">

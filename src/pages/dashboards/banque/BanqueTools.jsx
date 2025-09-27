@@ -750,8 +750,8 @@ const BanqueTools = ({ dashboardStats = {} }) => {
         <TabsContent value="ai-tools" className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {bankingTools.filter(tool => tool.category === 'IA').map((tool) => (
-              <Card key={tool.id} className="relative">
-                <CardHeader>
+              <Card key={tool.id} className="relative h-64 flex flex-col">
+                <CardHeader className="flex-shrink-0">
                   <div className="flex items-center justify-between">
                     <div className={`p-2 rounded-lg ${tool.color} text-white`}>
                       <tool.icon className="h-5 w-5" />
@@ -760,10 +760,10 @@ const BanqueTools = ({ dashboardStats = {} }) => {
                       {tool.status}
                     </Badge>
                   </div>
-                  <CardTitle className="text-lg">{tool.name}</CardTitle>
-                  <CardDescription>{tool.description}</CardDescription>
+                  <CardTitle className="text-lg line-clamp-2">{tool.name}</CardTitle>
+                  <CardDescription className="line-clamp-3">{tool.description}</CardDescription>
                 </CardHeader>
-                <CardContent>
+                <CardContent className="flex-grow flex flex-col justify-end">
                   <Button className="w-full">
                     Utiliser l'outil
                   </Button>
@@ -839,22 +839,22 @@ const BanqueTools = ({ dashboardStats = {} }) => {
             {categories.map((category) => (
               <div key={category}>
                 <h3 className="text-lg font-semibold text-gray-900 mb-4">{category}</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                   {getToolsByCategory(category).map((tool) => (
                     <Card key={tool.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-start justify-between mb-3">
-                          <div className={`p-2 rounded-lg ${tool.color} text-white`}>
-                            <tool.icon className="h-5 w-5" />
+                      <CardContent className="p-6 flex flex-col h-60">
+                        <div className="flex items-start justify-between mb-4">
+                          <div className={`p-3 rounded-lg ${tool.color} text-white flex-shrink-0`}>
+                            <tool.icon className="h-6 w-6" />
                           </div>
                           <Badge variant={tool.status === 'active' ? 'default' : 'secondary'} className="text-xs">
                             {tool.status}
                           </Badge>
                         </div>
-                        <h4 className="font-medium text-gray-900 mb-1">{tool.name}</h4>
-                        <p className="text-sm text-gray-600 mb-3">{tool.description}</p>
-                        <Button size="sm" className="w-full">
-                          Utiliser
+                        <h4 className="font-semibold text-gray-900 mb-3 line-clamp-2 min-h-[3rem] text-lg">{tool.name}</h4>
+                        <p className="text-sm text-gray-600 mb-4 flex-grow line-clamp-3">{tool.description}</p>
+                        <Button size="sm" className="w-full mt-auto">
+                          Utiliser l'outil
                         </Button>
                       </CardContent>
                     </Card>

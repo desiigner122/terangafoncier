@@ -49,7 +49,16 @@ import {
   Calendar,
   MapPin,
   Phone,
-  Building
+  Building,
+  Crown,
+  Gem,
+  StarIcon,
+  Check,
+  X,
+  CalendarIcon,
+  CreditCardIcon,
+  UsersIcon,
+  ZapIcon
 } from 'lucide-react';
 
 const VendeurSettings = () => {
@@ -120,8 +129,9 @@ const VendeurSettings = () => {
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-6">
+        <TabsList className="grid w-full grid-cols-7">
           <TabsTrigger value="profile">Profil</TabsTrigger>
+          <TabsTrigger value="abonnement">Abonnement</TabsTrigger>
           <TabsTrigger value="account">Compte</TabsTrigger>
           <TabsTrigger value="notifications">Notifications</TabsTrigger>
           <TabsTrigger value="preferences">Préférences</TabsTrigger>
@@ -276,6 +286,262 @@ const VendeurSettings = () => {
               </Card>
             </div>
           </div>
+        </TabsContent>
+
+        {/* Abonnement */}
+        <TabsContent value="abonnement" className="space-y-6">
+          {/* Statut d'abonnement actuel */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Crown className="h-5 w-5 text-yellow-500" />
+                Mon abonnement actuel
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h3 className="font-semibold text-lg">Plan Professional</h3>
+                    <p className="text-gray-600">Outils avancés pour la vente immobilière</p>
+                    <p className="text-sm text-gray-500 mt-1">
+                      Renouvelé le 15 décembre 2024
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-2xl font-bold text-green-600">1.2M XOF</p>
+                    <p className="text-sm text-gray-500">/mois</p>
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Plans d'abonnement */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Plans d'abonnement disponibles</CardTitle>
+              <CardDescription>
+                Choisissez le plan adapté à votre activité de vente
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                {/* Plan Starter */}
+                <div className="border rounded-lg p-6 relative">
+                  <div className="text-center mb-4">
+                    <Gem className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                    <h3 className="text-xl font-semibold">Starter</h3>
+                    <p className="text-gray-600">Pour débuter dans la vente</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">600K XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Jusqu'à 20 annonces</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Gestion des contacts</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Outils de base</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support email</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <X className="h-4 w-4 text-red-500" />
+                      <span className="text-sm text-gray-400">Rapports avancés</span>
+                    </li>
+                  </ul>
+                  <Button variant="outline" className="w-full">
+                    Changer de plan
+                  </Button>
+                </div>
+
+                {/* Plan Professional */}
+                <div className="border-2 border-green-500 rounded-lg p-6 relative">
+                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+                    <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm">
+                      Actuel
+                    </span>
+                  </div>
+                  <div className="text-center mb-4">
+                    <Crown className="h-8 w-8 mx-auto mb-2 text-green-500" />
+                    <h3 className="text-xl font-semibold">Professional</h3>
+                    <p className="text-gray-600">Le plus populaire</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">1.2M XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Annonces illimitées</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">CRM complet</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Outils marketing</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Rapports détaillés</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Visite virtuelle</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support prioritaire</span>
+                    </li>
+                  </ul>
+                  <Button className="w-full bg-green-500 hover:bg-green-600">
+                    Plan actuel
+                  </Button>
+                </div>
+
+                {/* Plan Enterprise */}
+                <div className="border rounded-lg p-6 relative">
+                  <div className="text-center mb-4">
+                    <StarIcon className="h-8 w-8 mx-auto mb-2 text-purple-500" />
+                    <h3 className="text-xl font-semibold">Enterprise</h3>
+                    <p className="text-gray-600">Pour les agences</p>
+                  </div>
+                  <div className="text-center mb-6">
+                    <div className="text-3xl font-bold">2.5M XOF</div>
+                    <div className="text-gray-500">/mois</div>
+                  </div>
+                  <ul className="space-y-3 mb-6">
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Tout du Professional</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Multi-utilisateurs (15)</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">API personnalisée</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">White-label</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Formation équipe</span>
+                    </li>
+                    <li className="flex items-center gap-2">
+                      <Check className="h-4 w-4 text-green-500" />
+                      <span className="text-sm">Support dédié 24/7</span>
+                    </li>
+                  </ul>
+                  <Button variant="outline" className="w-full">
+                    Passer à Enterprise
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Historique de facturation */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCardIcon className="h-5 w-5" />
+                Historique de facturation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Décembre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Professional</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">1.2M XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Novembre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Professional</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">1.2M XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CalendarIcon className="h-4 w-4 text-gray-500" />
+                    <div>
+                      <p className="font-medium">Octobre 2024</p>
+                      <p className="text-sm text-gray-500">Plan Starter</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">600K XOF</p>
+                    <p className="text-sm text-green-600">Payé</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-gray-600">Prochaine facturation :</span>
+                  <span className="font-medium">15 janvier 2025</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Méthodes de paiement */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Méthodes de paiement</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between p-4 border rounded-lg">
+                  <div className="flex items-center gap-3">
+                    <CreditCardIcon className="h-8 w-8 text-green-500" />
+                    <div>
+                      <p className="font-medium">•••• •••• •••• 4242</p>
+                      <p className="text-sm text-gray-500">Visa • Expire 12/26</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-2">
+                    <Button variant="outline" size="sm">Modifier</Button>
+                    <Button variant="outline" size="sm">Supprimer</Button>
+                  </div>
+                </div>
+                <Button variant="outline" className="w-full">
+                  Ajouter une méthode de paiement
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         {/* Compte */}

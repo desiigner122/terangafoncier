@@ -34,14 +34,14 @@ const RoleBasedRedirect = () => {
   const roleRedirectMap = {
     'Admin': '/admin',
     'admin': '/admin',
-    'Géomètre': '/dashboard/geometre',
-    'geometre': '/dashboard/geometre',
-    'Investisseur': '/dashboard/investisseur',
-    'investisseur': '/dashboard/investisseur',
+    'Géomètre': '/geometre',
+    'geometre': '/geometre',
+    'Investisseur': '/investisseur',
+    'investisseur': '/investisseur',
     'Mairie': '/mairie',
     'mairie': '/mairie',
-    'Promoteur': '/dashboard/promoteur',
-    'promoteur': '/dashboard/promoteur',
+    'Promoteur': '/promoteur',
+    'promoteur': '/promoteur',
     'Banque': '/banque',
     'banque': '/banque',
     'Notaire': '/notaire',
@@ -51,13 +51,12 @@ const RoleBasedRedirect = () => {
     'Vendeur Particulier': '/vendeur',
     'Vendeur Pro': '/vendeur',
     'Acheteur': '/acheteur',
-    'acheteur': '/acheteur',
+    'acheteur': '/acheteur',  
     'Particulier': '/acheteur',
     'particulier': '/acheteur',
-    'Agent Foncier': '/dashboard/agent-foncier'
-  };
-
-  // Obtenir le rôle de l'utilisateur (priorité à role, puis user_type)
+    'Agent Foncier': '/agent-foncier',
+    'agent_foncier': '/agent-foncier'
+  };  // Obtenir le rôle de l'utilisateur (priorité à role, puis user_type)
   const userRole = profile.role || profile.user_type || '';
   
   // Chercher la redirection appropriée

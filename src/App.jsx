@@ -151,10 +151,10 @@ import AuthDebugPage from '@/pages/AuthDebugPage';
 
 // Import des dashboards
 import ParticularDashboard from '@/pages/ParticularDashboard';
-import GeometreDashboard from '@/pages/dashboards/GeometreDashboard';
+import CompleteSidebarGeometreDashboard from '@/pages/dashboards/geometre/CompleteSidebarGeometreDashboard';
 import PromoteurDashboard from '@/pages/dashboards/promoteur/PromoteurDashboard';
 import MunicipaliteDashboard from '@/pages/dashboards/MunicipaliteDashboard';
-import ModernAgentFoncierDashboard from '@/pages/dashboards/ModernAgentFoncierDashboard';
+import CompleteSidebarAgentFoncierDashboard from '@/pages/dashboards/agent-foncier/CompleteSidebarAgentFoncierDashboard';
 import ModernMairieDashboard from '@/pages/dashboards/ModernMairieDashboard';
 import AdminReportsPage from '@/pages/admin/AdminReportsPage';
 import AdminLoginPage from '@/pages/AdminLoginPage';
@@ -202,7 +202,7 @@ import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDash
 import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
 import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard';
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
-import ModernInvestisseurDashboard from '@/pages/dashboards/ModernInvestisseurDashboard';
+import CompleteSidebarInvestisseurDashboard from '@/pages/dashboards/investisseur/CompleteSidebarInvestisseurDashboard';
 import { HelmetProvider } from 'react-helmet-async';
 import BanquesDashboardPage from '@/pages/solutions/dashboards/BanquesDashboardPage';
 import InvestisseursDashboardPage from '@/pages/solutions/dashboards/InvestisseursDashboardPage';
@@ -216,6 +216,7 @@ import PricingPage from '@/pages/PricingPage';
 import GlossaryPage from '@/pages/GlossaryPage';
 import TaxGuidePage from '@/pages/TaxGuidePage';
 import BannedPage from '@/pages/BannedPage';
+import DebugRole from '@/pages/DebugRole';
 import UserStatusWrapper from '@/components/layout/UserStatusWrapper';
 import CaseTrackingPage from '@/pages/CaseTrackingPage';
 import DigitalVaultPage from '@/pages/DigitalVaultPage';
@@ -243,7 +244,7 @@ import PromoteursPage from '@/pages/PromoteursPage';
 import RejoignezNousPage from '@/pages/RejoignezNousPage';
 import SolutionsPage from '@/pages/SolutionsPage';
 import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
-import ModernGeometreDashboard from '@/pages/dashboards/ModernGeometreDashboard';
+
 import OneTimePaymentPage from '@/pages/buy/OneTimePaymentPage';
 import InstallmentsPaymentPage from '@/pages/buy/InstallmentsPaymentPage';
 import BankFinancingPage from '@/pages/buy/BankFinancingPage';
@@ -280,6 +281,7 @@ function App() {
               <Route path="reset-password" element={<ResetPasswordPage />} />
               <Route path="debug-dashboard" element={<DebugDashboard />} />
               <Route path="auth-debug" element={<AuthDebugPage />} />
+              <Route path="debug-role" element={<DebugRole />} />
               <Route path="banned" element={<BannedPage />} />
               <Route path="terrains-communaux" element={<CommunalLandsPage />} />
               <Route path="promoters-projects" element={<PromoterProjectsPage />} />
@@ -483,9 +485,8 @@ function App() {
                   {/* Route de test temporaire pour debugging */}
                   <Route path="vendeur-test" element={<VendeurDashboard />} />
                   
-                  <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
-                  <Route path="geometre" element={<RoleProtectedRoute allowedRoles={['Géomètre']}><ModernGeometreDashboard /></RoleProtectedRoute>} />
-                  <Route path="agent-foncier" element={<RoleProtectedRoute allowedRoles={['Agent Foncier']}><ModernAgentFoncierDashboard /></RoleProtectedRoute>} />
+                  {/* Redirection géomètre supprimée pour éviter les conflits avec /geometre direct */}
+                  {/* Agent Foncier route supprimée pour éviter le conflit avec la route directe */}
                 </Route>
               </Route>
             </Route>
@@ -525,12 +526,16 @@ function App() {
             <Route path="/banque" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
             <Route path="/notaire" element={<RoleProtectedRoute allowedRoles={['Notaire', 'admin']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>} />
             <Route path="/promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur', 'admin']}><PromoteurDashboard /></RoleProtectedRoute>} />
+            <Route path="/investisseur/*" element={<RoleProtectedRoute allowedRoles={['Investisseur', 'admin']}><CompleteSidebarInvestisseurDashboard /></RoleProtectedRoute>} />
+            <Route path="/geometre/*" element={<RoleProtectedRoute allowedRoles={['Géomètre', 'geometre', 'Geometre', 'admin']}><CompleteSidebarGeometreDashboard /></RoleProtectedRoute>} />
             
             {/* Alias pour solutions */}
             <Route path="/solutions/mairies/dashboard" element={<RoleProtectedRoute allowedRoles={['Mairie', 'admin']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
             <Route path="/solutions/banques/dashboard" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
             <Route path="/solutions/notaires/dashboard" element={<RoleProtectedRoute allowedRoles={['Notaire', 'admin']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>} />
             <Route path="/solutions/promoteurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Promoteur', 'admin']}><PromoteurDashboard /></RoleProtectedRoute>} />
+            <Route path="/solutions/investisseurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Investisseur', 'admin']}><CompleteSidebarInvestisseurDashboard /></RoleProtectedRoute>} />
+            <Route path="/solutions/geometres/dashboard" element={<RoleProtectedRoute allowedRoles={['Géomètre', 'geometre', 'Geometre', 'admin']}><CompleteSidebarGeometreDashboard /></RoleProtectedRoute>} />
 
             {/* Routes Dashboard avec layout et sous-pages (/dashboard/*) */}
             <Route path="/dashboard" element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
@@ -570,14 +575,13 @@ function App() {
               {/* Autres dashboards (pour cohérence sous /dashboard) */}
               <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDashboard /></RoleProtectedRoute>} />
               <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
-              <Route path="investisseur" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><ModernInvestisseurDashboard /></RoleProtectedRoute>} />
-              <Route path="geometre" element={<RoleProtectedRoute allowedRoles={['Géomètre']}><ModernGeometreDashboard /></RoleProtectedRoute>} />
+              <Route path="investisseur" element={<Navigate to="/investisseur" replace />} />
+              {/* Redirection géomètre supprimée pour éviter les conflits */}
             </Route>
 
             {/* Routes pour tous les dashboards */}
+            <Route path="/agent-foncier/*" element={<RoleProtectedRoute allowedRoles={['Agent Foncier', 'agent_foncier', 'admin']}><CompleteSidebarAgentFoncierDashboard /></RoleProtectedRoute>} />
             <Route path="/particulier" element={<Navigate to="/acheteur" replace />} />
-            <Route path="/agent-foncier" element={<ProtectedRoute><ModernAgentFoncierDashboard /></ProtectedRoute>} />
-            <Route path="/geometre" element={<ProtectedRoute><GeometreDashboard /></ProtectedRoute>} />
             <Route path="/lotisseur" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
             <Route path="/municipalite" element={<ProtectedRoute><MunicipaliteDashboard /></ProtectedRoute>} />
 

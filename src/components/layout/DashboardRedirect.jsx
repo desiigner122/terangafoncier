@@ -51,7 +51,7 @@ const DashboardRedirect = () => {
         case 'Investisseur':
         case 'investisseur':
           console.log('✅ Redirecting to Investisseur dashboard');
-          navigate('/dashboard/investisseur', { replace: true });
+          navigate('/investisseur', { replace: true });
           break;
         case 'Mairie':
         case 'mairie':

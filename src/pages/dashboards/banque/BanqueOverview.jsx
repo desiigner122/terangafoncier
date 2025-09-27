@@ -28,6 +28,8 @@ import {
   Zap,
   Globe,
   Smartphone,
+  BarChart3,
+  PieChart,
   RefreshCw,
   Download,
   Filter,
@@ -57,6 +59,8 @@ import {
   Phone
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -65,6 +69,8 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const BanqueOverview = ({ dashboardStats = {} }) => {
+  const [timeRange, setTimeRange] = useState('30d');
+  const [selectedMetric, setSelectedMetric] = useState('credits');
   const [refreshing, setRefreshing] = useState(false);
   const [realTimeData, setRealTimeData] = useState({});
 

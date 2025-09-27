@@ -90,12 +90,25 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/settings" replace />;
   }
 
-  // Case-insensitive role comparison
-  const currentRole = (profile.role || profile.user_type || '').toLowerCase();
-  const allowed = allowedRoles.map(r => (r || '').toLowerCase());
+  // Normalize roles for comparison (handle accents and case)
+  const normalizeRole = (role) => {
+    return (role || '')
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '') // Remove accents
+      .trim();
+  };
 
-  if (!allowed.includes(currentRole)) {
-    console.log('❌ Role not allowed:', { currentRole: profile.role, allowedRoles });
+  const currentRole = normalizeRole(profile.role || profile.user_type || '');
+  const normalizedAllowed = allowedRoles.map(r => normalizeRole(r));
+
+  if (!normalizedAllowed.includes(currentRole)) {
+    console.log('❌ Role not allowed:', { 
+      originalRole: profile.role || profile.user_type, 
+      normalizedCurrent: currentRole, 
+      allowedRoles,
+      normalizedAllowed 
+    });
     return <Navigate to="/access-denied" replace />;
   }
 

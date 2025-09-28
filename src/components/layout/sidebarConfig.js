@@ -82,36 +82,32 @@ import {
         ],
         'Particulier': [
           { isHeader: true, label: '📊 Tableau de Bord' },
-          { href: '/dashboard/acheteur', label: 'Vue d\'ensemble', icon: LayoutDashboard, end: true },
+          { href: '/acheteur', label: 'Vue d\'ensemble', icon: LayoutDashboard, end: true },
           
           { isSeparator: true },
           { isHeader: true, label: '📋 Suivi de mes Dossiers' },
-          { href: '/dashboard/acheteur/private-interests', label: 'Intérêts Terrains Privés', icon: MapPin },
-          { href: '/dashboard/acheteur/municipal-applications', label: 'Demandes Communales', icon: Building },
-          { href: '/dashboard/acheteur/promoter-reservations', label: 'Réservations VEFA', icon: Home },
+          { href: '/acheteur/demandes-communales', label: 'Demandes Terrains Communaux', icon: MapPin },
+          { href: '/acheteur/candidatures-promoteurs', label: 'Candidatures Promoteurs', icon: Building },
+          { href: '/acheteur/permis-construire', label: 'Permis de Construire', icon: FileCheckIcon },
+          
+          { isSeparator: true },
+          { isHeader: true, label: '📂 Documents & Communication' },
+          { href: '/acheteur/documents-dossiers', label: 'Mes Documents', icon: FileText },
+          { href: '/acheteur/messages-administratifs', label: 'Messages Administratifs', icon: MessageSquare },
+          { href: '/acheteur/favoris-dossiers', label: 'Dossiers Favoris', icon: Heart },
+          { href: '/acheteur/notifications-administratives', label: 'Notifications', icon: Bell },
           
           { isSeparator: true },
           { isHeader: true, label: '💰 Suivi Financier' },
-          { href: '/dashboard/acheteur/payment-schedules', label: 'Échéanciers Paiements', icon: Calendar },
-          { href: '/dashboard/acheteur/bank-applications', label: 'Dossiers Bancaires', icon: Banknote },
-          { href: '/dashboard/acheteur/transaction-history', label: 'Historique Transactions', icon: History },
+          { href: '/acheteur/payment-schedules', label: 'Échéanciers Paiements', icon: Calendar },
+          { href: '/acheteur/bank-applications', label: 'Dossiers Bancaires', icon: Banknote },
+          { href: '/acheteur/transaction-history', label: 'Historique Transactions', icon: History },
           
           { isSeparator: true },
           { isHeader: true, label: '🔗 Mes Propriétés Blockchain' },
-          { href: '/dashboard/acheteur/owned-properties', label: 'Propriétés Acquises', icon: Award },
-          { href: '/dashboard/acheteur/active-contracts', label: 'Contrats en Cours', icon: Shield },
-          { href: '/dashboard/acheteur/escrow-status', label: 'Dépôts Sécurisés', icon: Lock },
-          
-          { isSeparator: true },
-          { isHeader: true, label: '📂 Documents & RDV' },
-          { href: '/dashboard/acheteur/my-documents', label: 'Centre Documents', icon: FileText },
-          { href: '/dashboard/acheteur/scheduled-visits', label: 'Visites Programmées', icon: Eye },
-          { href: '/dashboard/acheteur/appointments', label: 'Rendez-vous', icon: Clock },
-          
-          { isSeparator: true },
-          { isHeader: true, label: '💬 Communication' },
-          { href: '/messaging', label: 'Messagerie', icon: MessageSquare },
-          { href: '/notifications', label: 'Notifications', icon: Bell },
+          { href: '/acheteur/owned-properties', label: 'Propriétés Acquises', icon: Award },
+          { href: '/acheteur/active-contracts', label: 'Contrats en Cours', icon: Shield },
+          { href: '/acheteur/escrow-status', label: 'Dépôts Sécurisés', icon: Lock },
           
           { isSeparator: true },
           { isHeader: true, label: '⚙️ Paramètres' },
@@ -235,5 +231,9 @@ import {
       };
 
       const role = user.role || user.user_type || '';
+      // Mappage des rôles équivalents
+      if (role === 'Acheteur') {
+        return roleConfigs['Particulier'];
+      }
       return roleConfigs[role] || roleConfigs['Particulier'];
     };

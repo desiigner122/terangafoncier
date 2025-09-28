@@ -197,8 +197,18 @@ import ArchivesPage from '@/pages/dashboards/notaire/ArchivesPage';
 import ComplianceCheckPage from '@/pages/dashboards/notaire/ComplianceCheckPage';
 // import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
 // import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
-import ModernAcheteurDashboard from '@/pages/dashboards/ModernAcheteurDashboard';
 import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
+import CompleteSidebarParticulierDashboard from '@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard';
+
+// Sous-pages particulier refondues pour suivi administratif
+import ParticulierCommunal from '@/pages/dashboards/particulier/ParticulierCommunal';
+import ParticulierPromoteurs from '@/pages/dashboards/particulier/ParticulierPromoteurs';
+import ParticulierFavoris from '@/pages/dashboards/particulier/ParticulierFavoris';
+import ParticulierMessages from '@/pages/dashboards/particulier/ParticulierMessages';
+import ParticulierDocuments from '@/pages/dashboards/particulier/ParticulierDocuments';
+import ParticulierNotifications from '@/pages/dashboards/particulier/ParticulierNotifications';
+import ParticulierConstructions from '@/pages/dashboards/particulier/ParticulierConstructions';
+
 import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
 import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard';
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
@@ -415,7 +425,7 @@ function App() {
                 <Route path="test-vendeur" element={<ModernVendeurDashboard />} />
                 
                 {/* Dashboards modernes par rôle - routes indépendantes (ont leur propre layout) */}
-                <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierDashboard /></RoleProtectedRoute>} />
+                <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><CompleteSidebarParticulierDashboard /></RoleProtectedRoute>} />
                 <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><CompleteSidebarVendeurDashboard /></RoleProtectedRoute>} />
                 
                 {/* Sous-pages de suivi Particulier/Acheteur */}
@@ -424,13 +434,26 @@ function App() {
                 <Route path="acheteur/promoter-reservations" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PromoterReservations /></RoleProtectedRoute>} />
                 <Route path="acheteur/owned-properties" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><OwnedProperties /></RoleProtectedRoute>} />
                 <Route path="acheteur/construction-request" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ConstructionRequest /></RoleProtectedRoute>} />
+                
+                {/* Pages particulier refondues - SUIVI ADMINISTRATIF */}
+                <Route path="acheteur/demandes-terrains" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierCommunal /></RoleProtectedRoute>} />
+                <Route path="acheteur/demandes-communales" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierCommunal /></RoleProtectedRoute>} />
+                <Route path="acheteur/candidatures-promoteurs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierPromoteurs /></RoleProtectedRoute>} />
+                <Route path="acheteur/projets-promoteurs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierPromoteurs /></RoleProtectedRoute>} />
+                <Route path="acheteur/favoris-dossiers" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierFavoris /></RoleProtectedRoute>} />
+                <Route path="acheteur/messages-administratifs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierMessages /></RoleProtectedRoute>} />
+                <Route path="acheteur/documents-dossiers" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierDocuments /></RoleProtectedRoute>} />
+                <Route path="acheteur/notifications-administratives" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierNotifications /></RoleProtectedRoute>} />
+                <Route path="acheteur/permis-construire" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierConstructions /></RoleProtectedRoute>} />
 
                 {/* Pages communes pour acheteur (avec layout simple) */}
-                <Route path="acheteur/messages" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurMessagesPage /></RoleProtectedRoute>} />
+                <Route path="acheteur/messages" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierMessages /></RoleProtectedRoute>} />
                 <Route path="acheteur/calendar" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurCalendarPage /></RoleProtectedRoute>} />
-                <Route path="acheteur/documents" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurDocumentsPage /></RoleProtectedRoute>} />
+                <Route path="acheteur/documents" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierDocuments /></RoleProtectedRoute>} />
                 <Route path="acheteur/settings" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurSettingsPage /></RoleProtectedRoute>} />
-                <Route path="acheteur/notifications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurNotificationsPage /></RoleProtectedRoute>} />
+                <Route path="acheteur/notifications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierNotifications /></RoleProtectedRoute>} />
+                <Route path="acheteur/favoris" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierFavoris /></RoleProtectedRoute>} />
+                <Route path="acheteur/constructions" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierConstructions /></RoleProtectedRoute>} />
 
                 <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
                   {/* Dashboard redirection is handled by top-level routes to avoid auth/profile conflicts */}
@@ -573,7 +596,7 @@ function App() {
               <Route path="activity" element={<AnalyticsPage />} />
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}
-              <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDashboard /></RoleProtectedRoute>} />
+              <Route path="acheteur/*" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><CompleteSidebarParticulierDashboard /></RoleProtectedRoute>} />
               <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
               <Route path="investisseur" element={<Navigate to="/investisseur" replace />} />
               {/* Redirection géomètre supprimée pour éviter les conflits */}
@@ -581,6 +604,7 @@ function App() {
 
             {/* Routes pour tous les dashboards */}
             <Route path="/agent-foncier/*" element={<RoleProtectedRoute allowedRoles={['Agent Foncier', 'agent_foncier', 'admin']}><CompleteSidebarAgentFoncierDashboard /></RoleProtectedRoute>} />
+            <Route path="/acheteur/*" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier', 'admin']}><CompleteSidebarParticulierDashboard /></RoleProtectedRoute>} />
             <Route path="/particulier" element={<Navigate to="/acheteur" replace />} />
             <Route path="/lotisseur" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
             <Route path="/municipalite" element={<ProtectedRoute><MunicipaliteDashboard /></ProtectedRoute>} />

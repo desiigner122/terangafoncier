@@ -365,7 +365,7 @@ const MarketBlockchainSection = () => {
                 </Button>
               </Link>
               <Link to="/tools/market-analysis">
-                <Button variant="outline" className="border-white text-white hover:bg-white/10 font-semibold px-8 py-3">
+                <Button variant="outline" className="border-white text-white hover:bg-white hover:text-blue-600 font-semibold px-8 py-3 bg-black/20 backdrop-blur-sm">
                   <Brain className="h-4 w-4 mr-2" />
                   Analyses IA Gratuites
                 </Button>

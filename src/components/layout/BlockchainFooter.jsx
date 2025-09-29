@@ -43,7 +43,7 @@ const BlockchainFooter = () => {
       title: "Solutions",
       links: [
         { label: "Particuliers", path: "/solutions/particuliers", icon: Users },
-        { label: "Construction Ï  Distance", path: "/solutions/construction-distance", icon: Globe },
+        { label: "Construction à Distance", path: "/solutions/construction-distance", icon: Globe },
         { label: "Surveillance de Projets", path: "/solutions/project-monitoring", icon: Eye },
         { label: "Investissement Diaspora", path: "/solutions/diaspora-investment", icon: Smartphone },
         { label: "Comment ça marche", path: "/how-it-works", icon: ArrowRight },
@@ -116,7 +116,7 @@ const BlockchainFooter = () => {
         <div className="container mx-auto px-4 py-12">
           <div className="text-center mb-8">
             <h3 className="text-2xl font-bold bg-gradient-to-r from-blue-400 via-purple-400 to-teal-400 bg-clip-text text-transparent mb-2">
-              ðŸš€ Écosystème Blockchain en Temps Réel
+              🚀 Écosystème Blockchain en Temps Réel
             </h3>
             <p className="text-gray-300">Données vérifiées et transparentes</p>
           </div>
@@ -158,13 +158,13 @@ const BlockchainFooter = () => {
                   Teranga Foncier
                 </span>
                 <div className="text-xs bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent font-semibold">
-                  ðŸ”— Blockchain Immobilier Sénégal
+                  📍 Blockchain Immobilier Sénégal
                 </div>
               </div>
             </Link>
             
             <p className="text-gray-300 mb-6 leading-relaxed">
-              ðŸš€ La première plateforme blockchain immobilière du Sénégal. Transactions sécurisées, 
+              🚀 La première plateforme blockchain immobilière du Sénégal. Transactions sécurisées, 
               vérification automatisée et smart contracts pour un immobilier transparent et fiable.
             </p>
 
@@ -184,61 +184,7 @@ const BlockchainFooter = () => {
               </Badge>
             </div>
 
-            {/* Contact CEO avec thème blockchain */}
-            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 backdrop-blur-sm rounded-xl p-6 border border-white/10 hover:border-purple-400/30 transition-all duration-300 mb-6">
-              <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <Rocket className="w-4 h-4 text-purple-400" />
-                Contact CEO Blockchain
-              </h4>
-              <div className="space-y-3 text-sm">
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-500 rounded-full flex items-center justify-center">
-                    <Users className="h-4 w-4 text-white" />
-                  </div>
-                  <div>
-                    <div className="text-white font-medium">Abdoulaye Diémé</div>
-                    <div className="text-purple-300 text-xs">CEO & Blockchain Architect</div>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-teal-500 to-blue-500 rounded-full flex items-center justify-center">
-                    <Phone className="h-4 w-4 text-white" />
-                  </div>
-                  <a href="tel:+221775934241" className="text-gray-300 hover:text-blue-400 transition-colors">
-                    +221 77 593 42 41
-                  </a>
-                </div>
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-teal-500 rounded-full flex items-center justify-center">
-                    <Mail className="h-4 w-4 text-white" />
-                  </div>
-                  <a href="mailto:contact@terangafoncier.com" className="text-gray-300 hover:text-purple-400 transition-colors">
-                    contact@terangafoncier.com
-                  </a>
-                </div>
-              </div>
-            </div>
-
-            {/* Réseaux sociaux blockchain */}
-            <div>
-              <h4 className="font-semibold text-white mb-4 flex items-center gap-2">
-                <Globe className="w-4 h-4 text-teal-400" />
-                Communauté Blockchain
-              </h4>
-              <div className="flex gap-3">
-                {socialLinks.map((social, index) => (
-                  <a
-                    key={index}
-                    href={social.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="w-12 h-12 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/10 hover:border-purple-400/50 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 group"
-                  >
-                    <social.icon className="h-5 w-5 text-gray-300 group-hover:text-purple-400 transition-colors" />
-                  </a>
-                ))}
-              </div>
-            </div>
+            {/* (supprimé ici pour déplacer les blocs en pleine largeur sous la grille) */}
           </div>
 
           {/* Liens rapides blockchain */}
@@ -270,6 +216,57 @@ const BlockchainFooter = () => {
             </div>
           ))}
         </div>
+
+        {/* Blocs responsive: 1 colonne sur mobile, 2 colonnes sur md+, pas de scroll horizontal; une seule ligne interne par bloc */}
+        <div className="mt-2 w-full">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+            {/* Bloc 1: Communauté Blockchain + Réseaux sociaux */}
+            <div className="w-full min-w-0 bg-white/5 backdrop-blur-sm rounded-xl p-3 md:p-4 border border-white/10">
+              <div className="flex items-center justify-between gap-3 flex-nowrap">
+                <div className="flex items-center gap-2 md:gap-3 whitespace-nowrap">
+                  <Globe className="w-5 h-5 text-teal-400 flex-shrink-0" />
+                  <span className="font-semibold text-white text-base md:text-lg">Communauté Blockchain</span>
+                </div>
+                <div className="flex gap-2 md:gap-3 flex-nowrap flex-shrink-0">
+                  {socialLinks.map((social, index) => (
+                    <a
+                      key={index}
+                      href={social.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-600/20 to-purple-600/20 backdrop-blur-sm border border-white/10 hover:border-purple-400/50 rounded-xl flex items-center justify-center transition-all duration-300 hover:scale-110 group"
+                    >
+                      <social.icon className="h-4 w-4 md:h-5 md:w-5 text-gray-300 group-hover:text-purple-400 transition-colors" />
+                    </a>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Bloc 2: Contact CEO + Nom + Icônes */}
+            <div className="w-full min-w-0 bg-white/5 backdrop-blur-sm rounded-xl p-3 md:p-4 border border-white/10">
+              <div className="flex items-center justify-between gap-3 flex-nowrap">
+                <div className="flex items-center gap-2 md:gap-3 whitespace-nowrap min-w-0">
+                  <Rocket className="w-5 h-5 text-purple-400 flex-shrink-0" />
+                  <span className="font-semibold text-white text-base md:text-lg">Contact CEO</span>
+                  <span className="text-gray-400">•</span>
+                  <span className="text-white truncate">Abdoulaye Diémé</span>
+                </div>
+                <div className="flex gap-2 md:gap-3 flex-nowrap flex-shrink-0">
+                  <a href="tel:+221775934241" className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-teal-500 to-blue-500 rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-300 group" title="Téléphone">
+                    <Phone className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                  </a>
+                  <a href="mailto:contact@terangafoncier.com" className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-purple-500 to-teal-500 rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-300 group" title="Email">
+                    <Mail className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                  </a>
+                  <a href="https://linkedin.com/in/abdoulaye-dieme" className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-300 group" title="LinkedIn" target="_blank" rel="noopener noreferrer">
+                    <Linkedin className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                  </a>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Newsletter Blockchain */}
@@ -281,7 +278,7 @@ const BlockchainFooter = () => {
               Newsletter Blockchain IA
             </h3>
             <p className="text-gray-300 text-sm">
-              ðŸš€ Recevez les dernières innovations blockchain, analyses IA du marché et opportunités exclusives
+              🚀 Recevez les dernières innovations blockchain, analyses IA du marché et opportunités exclusives
             </p>
           </div>
           
@@ -292,7 +289,7 @@ const BlockchainFooter = () => {
                 <input
                   type="email"
                   placeholder="votre.email@blockchain.com"
-                  className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white YOUR_API_KEY-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
+                  className="w-full pl-10 pr-4 py-3 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all"
                 />
               </div>
               <Button className="px-6 py-3 bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-semibold rounded-xl transition-all duration-300 hover:scale-105 flex items-center gap-2">
@@ -301,7 +298,7 @@ const BlockchainFooter = () => {
               </Button>
             </div>
             <p className="text-xs text-gray-400 mt-3 text-center">
-              ðŸ”’ Vos données sont protégées par blockchain â€¢ Désabonnement en un clic
+              🔒 Vos données sont protégées par blockchain • Désabonnement en un clic
             </p>
           </div>
         </div>
@@ -313,10 +310,10 @@ const BlockchainFooter = () => {
           <div className="flex flex-col md:flex-row items-center justify-between gap-4">
             <div className="text-gray-400 text-sm flex items-center gap-2">
               <Blocks className="w-4 h-4 text-blue-400" />
-              Â© {currentYear} Teranga Foncier Blockchain. Tous droits réservés. 
-              <span className="mx-2">â€¢</span>
+              © {currentYear} Teranga Foncier Blockchain. Tous droits réservés. 
+              <span className="mx-2">•</span>
               <span className="flex items-center gap-1">
-                Fait avec ðŸ’œ au Sénégal 
+                Fait avec 💜 au Sénégal 
                 <Database className="w-3 h-3 text-purple-400 ml-1" />
               </span>
             </div>

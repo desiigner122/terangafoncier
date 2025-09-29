@@ -30,7 +30,9 @@ import {
   Search,
   Plus,
   Menu,
-  X
+  X,
+  ChevronDown,
+  LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,23 +41,29 @@ import { Input } from '@/components/ui/input';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 // Lazy loading des composants de pages
-const GeometreOverview = React.lazy(() => import('./GeometreOverview'));
-const GeometreMissions = React.lazy(() => import('./GeometreMissions'));
-const GeometreClients = React.lazy(() => import('./GeometreClients'));
-const GeometreMesures = React.lazy(() => import('./GeometreMesures'));
-const GeometrePlans = React.lazy(() => import('./GeometrePlans'));
-const GeometreCadastral = React.lazy(() => import('./GeometreCadastral'));
-const GeometreTopographie = React.lazy(() => import('./GeometreTopographie'));
-const GeometreInstruments = React.lazy(() => import('./GeometreInstruments'));
-const GeometreAnalytics = React.lazy(() => import('./GeometreAnalytics'));
-const GeometreDocuments = React.lazy(() => import('./GeometreDocuments'));
-const GeometreMessages = React.lazy(() => import('./GeometreMessages'));
-const GeometreSettings = React.lazy(() => import('./GeometreSettings'));
-const GeometreNotifications = React.lazy(() => import('./GeometreNotifications'));
+const GeometreOverview = React.lazy(() => import('./GeometreOverview.jsx'));
+const GeometreMissions = React.lazy(() => import('./GeometreMissions.jsx'));
+const GeometreClients = React.lazy(() => import('./GeometreClients.jsx'));
+const GeometreMesures = React.lazy(() => import('./GeometreMesures.jsx'));
+const GeometrePlans = React.lazy(() => import('./GeometrePlans.jsx'));
+const GeometreCadastral = React.lazy(() => import('./GeometreCadastral.jsx'));
+const GeometreTopographie = React.lazy(() => import('./GeometreTopographie.jsx'));
+const GeometreInstruments = React.lazy(() => import('./GeometreInstruments.jsx'));
+const GeometreAnalytics = React.lazy(() => import('./GeometreAnalytics.jsx'));
+const GeometreDocuments = React.lazy(() => import('./GeometreDocuments.jsx'));
+const GeometreMessages = React.lazy(() => import('./GeometreMessages.jsx'));
+const GeometreSettings = React.lazy(() => import('./GeometreSettings.jsx'));
+const GeometreNotifications = React.lazy(() => import('./GeometreNotifications.jsx'));
+const GeometreCRM = React.lazy(() => import('./GeometreCRM.jsx'));
+const GeometreBlockchain = React.lazy(() => import('./GeometreBlockchain.jsx'));
+const GeometreAI = React.lazy(() => import('./GeometreAI.jsx'));
+const GeometrePartenaires = React.lazy(() => import('./GeometrePartenaires.jsx'));
+const GeometreCommunication = React.lazy(() => import('./GeometreCommunication.jsx'));
 
 const CompleteSidebarGeometreDashboard = () => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const location = useLocation();
   const navigate = useNavigate();
   const { user, profile } = useAuth();
@@ -120,6 +128,47 @@ const CompleteSidebarGeometreDashboard = () => {
       description: 'Matériel et calibrage'
     },
     {
+      id: 'crm',
+      title: 'CRM Professionnel',
+      icon: Database,
+      path: '/geometre/crm',
+      description: 'Gestion relation client avancée',
+      subtitle: 'Architectes, Urbanistes, Promoteurs et Particuliers'
+    },
+    {
+      id: 'partenaires',
+      title: 'Réseau Partenaires',
+      icon: Users,
+      path: '/geometre/partenaires',
+      description: 'Collaboration professionnelle',
+      subtitle: 'Notaires, Bureaux d\'études, Entreprises BTP'
+    },
+    {
+      id: 'communication',
+      title: 'Communication Pro',
+      icon: MessageSquare,
+      path: '/geometre/communication',
+      description: 'Hub communication multicanal',
+      subtitle: 'Messagerie, visioconférence, rapports clients',
+      badge: 5
+    },
+    {
+      id: 'blockchain',
+      title: 'Blockchain Cadastral',
+      icon: Database,
+      path: '/geometre/blockchain',
+      description: 'Certification blockchain sécurisée',
+      subtitle: 'Traçabilité et authenticité des relevés'
+    },
+    {
+      id: 'ai',
+      title: 'IA Géométrique',
+      icon: Zap,
+      path: '/geometre/ai',
+      description: 'Intelligence artificielle métier',
+      subtitle: 'Analyse prédictive et optimisation des levés'
+    },
+    {
       id: 'analytics',
       title: 'Analytics',
       icon: Activity,
@@ -132,14 +181,6 @@ const CompleteSidebarGeometreDashboard = () => {
       icon: FileText,
       path: '/geometre/documents',
       description: 'Rapports et certificats'
-    },
-    {
-      id: 'messages',
-      title: 'Messages',
-      icon: MessageSquare,
-      path: '/geometre/messages',
-      description: 'Communications clients',
-      badge: 3
     },
     {
       id: 'notifications',
@@ -188,6 +229,16 @@ const CompleteSidebarGeometreDashboard = () => {
       return <GeometreTopographie />;
     } else if (path.startsWith('/geometre/instruments')) {
       return <GeometreInstruments />;
+    } else if (path.startsWith('/geometre/crm')) {
+      return <GeometreCRM />;
+    } else if (path.startsWith('/geometre/partenaires')) {
+      return <GeometrePartenaires />;
+    } else if (path.startsWith('/geometre/communication')) {
+      return <GeometreCommunication />;
+    } else if (path.startsWith('/geometre/blockchain')) {
+      return <GeometreBlockchain />;
+    } else if (path.startsWith('/geometre/ai')) {
+      return <GeometreAI />;
     } else if (path.startsWith('/geometre/analytics')) {
       return <GeometreAnalytics />;
     } else if (path.startsWith('/geometre/documents')) {
@@ -319,6 +370,11 @@ const CompleteSidebarGeometreDashboard = () => {
                         <p className={`text-xs truncate mt-0.5 ${isActive ? 'text-white/80' : 'text-gray-500 group-hover:text-gray-600'}`}>
                           {item.description}
                         </p>
+                        {item.subtitle && (
+                          <p className={`text-xs truncate mt-1 font-medium ${isActive ? 'text-white/60' : 'text-gray-400 group-hover:text-gray-500'}`}>
+                            {item.subtitle}
+                          </p>
+                        )}
                       </div>
                     </>
                   )}
@@ -501,6 +557,11 @@ const CompleteSidebarGeometreDashboard = () => {
                       <p className="text-sm text-gray-700 mt-1 font-medium leading-relaxed">
                         {menuItems.find(item => isActivePage(item.path))?.description || 'Plateforme professionnelle de géométrie avancée'}
                       </p>
+                      {menuItems.find(item => isActivePage(item.path))?.subtitle && (
+                        <p className="text-xs text-gray-500 mt-1 italic">
+                          {menuItems.find(item => isActivePage(item.path))?.subtitle}
+                        </p>
+                      )}
                     </div>
                   </div>
                   <div className="flex items-center gap-4 mt-3 p-3 bg-gradient-to-r from-blue-50 via-purple-50 to-emerald-50 rounded-xl border border-blue-100">
@@ -527,103 +588,91 @@ const CompleteSidebarGeometreDashboard = () => {
               </div>
             </div>
 
-            <div className="flex items-center gap-3">
-              {/* Recherche rapide */}
-              <div className="hidden lg:block relative group">
-                <Search className="h-4 w-4 absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 group-focus-within:text-blue-600 transition-colors duration-200" />
-                <Input
-                  placeholder="Rechercher missions, clients, projets..."
-                  className="pl-12 pr-4 w-80 bg-gradient-to-r from-gray-50 to-slate-50 border border-gray-200 rounded-xl focus:bg-white focus:ring-2 focus:ring-blue-500 focus:border-blue-300 transition-all duration-300 shadow-sm hover:shadow-md text-sm"
-                />
-                <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                  <kbd className="px-2 py-1 text-xs font-semibold text-gray-500 bg-gray-100 border border-gray-200 rounded group-focus-within:bg-blue-50 group-focus-within:text-blue-600 group-focus-within:border-blue-300 transition-colors duration-200">
-                    ⌘K
-                  </kbd>
-                </div>
-              </div>
-
+            <div className="flex items-center gap-4">
               {/* Actions rapides */}
-              <div className="flex items-center gap-3">
-                <div className="hidden md:flex items-center gap-2 bg-white rounded-xl p-1 shadow-sm border border-gray-200">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleNavigation('/geometre/messages')}
-                    className="relative hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200"
-                  >
-                    <MessageSquare className="h-4 w-4" />
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-red-500 to-red-600 rounded-full flex items-center justify-center shadow-sm">
-                      <span className="text-white text-xs font-bold">3</span>
-                    </span>
-                  </Button>
-                  
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleNavigation('/geometre/notifications')}
-                    className="relative hover:bg-amber-50 hover:text-amber-600 rounded-lg transition-all duration-200"
-                  >
-                    <Bell className="h-4 w-4" />
-                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-gradient-to-r from-amber-500 to-yellow-600 rounded-full flex items-center justify-center shadow-sm">
-                      <span className="text-white text-xs font-bold">7</span>
-                    </span>
-                  </Button>
-
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleNavigation('/geometre/analytics')}
-                    className="hover:bg-emerald-50 hover:text-emerald-600 rounded-lg transition-all duration-200"
-                  >
-                    <BarChart3 className="h-4 w-4" />
-                  </Button>
-                </div>
-
+              <div className="hidden md:flex items-center gap-2">
                 <Button 
+                  variant="ghost" 
                   size="sm"
-                  onClick={() => handleNavigation('/geometre/missions')}
-                  className="bg-gradient-to-r from-blue-600 via-purple-600 to-emerald-600 hover:from-blue-700 hover:via-purple-700 hover:to-emerald-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105"
+                  onClick={() => handleNavigation('/geometre/messages')}
+                  className="relative hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200"
                 >
-                  <Plus className="h-4 w-4 mr-2" />
-                  <span className="hidden md:inline">Nouvelle Mission</span>
-                  <span className="md:hidden">Nouveau</span>
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">3</span>
+                  </span>
+                </Button>
+                
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  onClick={() => handleNavigation('/geometre/notifications')}
+                  className="relative hover:bg-amber-50 hover:text-amber-600 rounded-lg transition-all duration-200"
+                >
+                  <Bell className="h-4 w-4" />
+                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
+                    <span className="text-white text-xs font-bold">7</span>
+                  </span>
                 </Button>
               </div>
 
+              <Button 
+                size="sm"
+                onClick={() => handleNavigation('/geometre/missions')}
+                className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white shadow-lg"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                <span className="hidden md:inline">Nouvelle Mission</span>
+                <span className="md:hidden">Nouveau</span>
+              </Button>
+
               {/* Profile dropdown */}
-              <div className="hidden md:flex items-center gap-3 bg-gradient-to-r from-slate-50 via-blue-50 to-purple-50 rounded-2xl px-4 py-3 border border-slate-200 shadow-sm hover:shadow-md transition-all duration-300">
-                <div className="relative group">
-                  <div className="w-10 h-10 bg-gradient-to-br from-emerald-400 via-blue-500 to-purple-600 rounded-full flex items-center justify-center ring-3 ring-white shadow-lg group-hover:scale-105 transition-transform duration-200">
+              <div className="relative">
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                  className="flex items-center gap-2 hover:bg-blue-50 rounded-lg"
+                >
+                  <div className="w-8 h-8 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center">
                     <span className="text-white font-bold text-sm">
                       {profile?.full_name?.charAt(0) || 'G'}
                     </span>
                   </div>
-                  <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-gradient-to-r from-emerald-400 to-green-500 rounded-full border-2 border-white shadow-sm animate-pulse"></div>
-                </div>
-                <div className="flex flex-col min-w-0">
-                  <span className="text-sm font-bold text-gray-900 truncate">
-                    {profile?.full_name || 'Géomètre Expert'}
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <Badge className="text-xs bg-gradient-to-r from-blue-600 to-purple-600 text-white px-2 py-0.5">
-                      EXPERT PRO
-                    </Badge>
-                    <div className="flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></div>
-                      <span className="text-xs text-emerald-600 font-medium">Actif</span>
+                  <ChevronDown className="h-4 w-4" />
+                </Button>
+
+                {profileDropdownOpen && (
+                  <div className="absolute right-0 mt-2 w-56 bg-white rounded-xl shadow-xl border border-gray-200 py-2 z-50">
+                    <div className="px-4 py-3 border-b">
+                      <p className="text-sm font-semibold text-gray-900">
+                        {profile?.full_name || 'Géomètre Expert'}
+                      </p>
+                      <p className="text-xs text-gray-500">{profile?.email || user?.email}</p>
                     </div>
+                    <button
+                      onClick={() => {
+                        setProfileDropdownOpen(false);
+                        handleNavigation('/geometre/settings');
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition-colors"
+                    >
+                      <Settings className="h-4 w-4 mr-3" />
+                      Paramètres
+                    </button>
+                    <hr className="my-2" />
+                    <button
+                      onClick={() => {
+                        console.log('Déconnexion...');
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4 mr-3" />
+                      Déconnexion
+                    </button>
                   </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => handleNavigation('/geometre/settings')}
-                    className="hover:bg-white/70 p-2 rounded-xl transition-all duration-200"
-                  >
-                    <Settings className="h-4 w-4 text-gray-600" />
-                  </Button>
-                </div>
+                )}
               </div>
             </div>
           </div>

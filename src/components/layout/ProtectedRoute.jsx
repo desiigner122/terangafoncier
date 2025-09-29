@@ -90,13 +90,31 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
     return <Navigate to="/settings" replace />;
   }
 
-  // Normalize roles for comparison (handle accents and case)
+  // Normalize roles for comparison (handle accents, case, and spaces to underscores)
   const normalizeRole = (role) => {
-    return (role || '')
-      .toLowerCase()
+    if (!role) return '';
+    
+    // Handle specific cases first
+    const roleMap = {
+      'agent foncier': 'agent_foncier',
+      'agent_foncier': 'agent_foncier',
+      'vendeur particulier': 'vendeur_particulier',
+      'particulier': 'particulier',
+      'promoteur': 'promoteur',
+      'banque': 'banque',
+      'notaire': 'notaire',
+      'geometre': 'geometre',
+      'admin': 'admin',
+      'investisseur': 'investisseur',
+      'mairie': 'mairie'
+    };
+    
+    const lowerRole = role.toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // Remove accents
       .trim();
+      
+    return roleMap[lowerRole] || lowerRole.replace(/\s+/g, '_');
   };
 
   const currentRole = normalizeRole(profile.role || profile.user_type || '');

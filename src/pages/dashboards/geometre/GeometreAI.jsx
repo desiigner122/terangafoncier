@@ -1,23 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Brain,
-  MessageSquare,
   Zap,
+  Target,
+  Eye,
   Calculator,
   Map,
   FileText,
   Camera,
   TrendingUp,
-  Target,
+  Activity,
+  Layers,
   Compass,
-  Send,
-  Mic,
-  Paperclip,
+  MessageSquare,
+  Bot,
   Sparkles,
+  BarChart3,
+  AlertCircle,
   CheckCircle,
   Clock,
-  AlertCircle
+  Upload,
+  Download,
+  Settings,
+  Play,
+  Pause,
+  RotateCcw,
+  Send,
+  Mic,
+  Paperclip
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';

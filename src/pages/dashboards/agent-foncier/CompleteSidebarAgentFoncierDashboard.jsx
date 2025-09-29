@@ -1,229 +1,287 @@
-import React, { useState, useEffect, Suspense, useRef } from 'react';
-import { Routes, Route, useNavigate, useLocation } from 'react-router-dom';
-import { motion } from 'framer-motion';
-import { 
-  MapPin,
-  FileText,
-  Search,
-  Users,
-  Calculator,
-  Brain,
-  Blocks,
-  Settings,
-  Bell,
-  User,
+import React, { useState, Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import TerangaLogo from '@/components/ui/TerangaLogo';
+import {
   Menu,
   X,
-  Mail,
+  Home,
+  Users,
+  FileText,
+  MapPin,
+  Calculator,
   BarChart3,
-  Eye,
-  Building2,
-  Lightbulb,
+  Settings,
+  Bell,
+  MessageSquare,
+  User,
   LogOut,
   UserCog,
-  CreditCard,
-  HelpCircle,
   ChevronDown,
-  Map,
-  Ruler,
-  Camera,
+  ChevronRight,
+  ChevronLeft,
+  Search,
+  Globe,
+  Blocks,
+  Brain,
   Shield,
-  BookOpen,
-  Target
+  Database,
+  Network,
+  Smartphone,
+  Eye,
+  Map,
+  Building,
+  AlertTriangle,
+  Star,
+  Zap,
+  TrendingUp
 } from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 // Lazy loading des composants
 const AgentFoncierOverview = React.lazy(() => import('./AgentFoncierOverview'));
 const AgentFoncierTerrains = React.lazy(() => import('./AgentFoncierTerrains'));
-const AgentFoncierCadastral = React.lazy(() => import('./AgentFoncierCadastral'));
 const AgentFoncierClients = React.lazy(() => import('./AgentFoncierClients'));
 const AgentFoncierDocuments = React.lazy(() => import('./AgentFoncierDocuments'));
+const AgentFoncierCadastral = React.lazy(() => import('./AgentFoncierCadastral'));
 const AgentFoncierCalculateurs = React.lazy(() => import('./AgentFoncierCalculateurs'));
-const AgentFoncierAI = React.lazy(() => import('./AgentFoncierAI'));
-const AgentFoncierBlockchain = React.lazy(() => import('./AgentFoncierBlockchain'));
 const AgentFoncierAnalytics = React.lazy(() => import('./AgentFoncierAnalytics'));
-const AgentFoncierMessages = React.lazy(() => import('./AgentFoncierMessages'));
 const AgentFoncierNotifications = React.lazy(() => import('./AgentFoncierNotifications'));
+const AgentFoncierMessages = React.lazy(() => import('./AgentFoncierMessages'));
 const AgentFoncierSettings = React.lazy(() => import('./AgentFoncierSettings'));
+const AgentFoncierCRM = React.lazy(() => import('./AgentFoncierCRM'));
+const AgentFoncierCommunication = React.lazy(() => import('./AgentFoncierCommunication'));
+
+const AgentFoncierServicesDigitaux = React.lazy(() => import('./AgentFoncierServicesDigitaux'));
+const AgentFoncierAntiFraude = React.lazy(() => import('./AgentFoncierAntiFraude'));
+const AgentFoncierGPSVerification = React.lazy(() => import('./AgentFoncierGPSVerification'));
+const AgentFoncierBlockchain = React.lazy(() => import('./AgentFoncierBlockchain'));
+const AgentFoncierAI = React.lazy(() => import('./AgentFoncierAI'));
 
 const CompleteSidebarAgentFoncierDashboard = () => {
-  const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('overview');
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { user, signOut } = useAuth();
-  const profileDropdownRef = useRef(null);
 
-  const [dashboardStats, setDashboardStats] = useState({
-    totalTerrains: 1250,
-    activeClients: 89,
-    documentsTraites: 342,
-    evaluationsEnCours: 23,
-    revenus: 45000000,
-    notifications: 12
-  });
-
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
-
-  // Fermer le dropdown profil quand on clique à l'extérieur
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (profileDropdownRef.current && !profileDropdownRef.current.contains(event.target)) {
-        setProfileDropdownOpen(false);
-      }
-    };
-
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
-    };
-  }, []);
-
-  const handleLogout = async () => {
-    try {
-      await signOut();
-      navigate('/login');
-    } catch (error) {
-      console.error('Erreur lors de la déconnexion:', error);
-    }
+  // Stats du dashboard
+  const dashboardStats = {
+    totalTerrains: 245,
+    clientsActifs: 89,
+    documentsTraites: 156,
+    notifications: 12,
+    messages: 8,
+    communicationAlerts: 3
   };
 
-  const menuItems = [
+  // Configuration des onglets de la sidebar avec descriptions détaillées
+  const sidebarTabs = [
     {
       id: 'overview',
-      name: 'Vue d\'ensemble',
-      icon: BarChart3,
-      path: '/agent-foncier',
-      description: 'Tableau de bord principal'
+      label: 'Vue d\'ensemble',
+      icon: Home,
+      component: AgentFoncierOverview,
+      description: 'Tableau de bord principal et métriques de performance',
+      subtitle: 'Aperçu global de votre activité foncière avec indicateurs clés'
     },
     {
       id: 'terrains',
-      name: 'Gestion Terrains',
-      icon: Map,
-      path: '/agent-foncier/terrains',
-      description: 'Inventaire foncier'
-    },
-    {
-      id: 'cadastral',
-      name: 'Cadastral',
-      icon: Ruler,
-      path: '/agent-foncier/cadastral',
-      description: 'Plans et mesures'
+      label: 'Gestion Terrains',
+      icon: MapPin,
+      component: AgentFoncierTerrains,
+      description: 'Gestion complète du portefeuille terrain',
+      subtitle: 'Suivi, évaluation et commercialisation des propriétés foncières'
     },
     {
       id: 'clients',
-      name: 'Clients',
+      label: 'Clients',
       icon: Users,
-      path: '/agent-foncier/clients',
-      description: 'Gestion clientèle'
+      component: AgentFoncierClients,
+      description: 'Gestion de la relation clientèle',
+      subtitle: 'Suivi des prospects, acheteurs et propriétaires'
     },
     {
-      id: 'documents',
-      name: 'Documents',
-      icon: FileText,
-      path: '/agent-foncier/documents',
-      description: 'Titres et actes'
+      id: 'crm',
+      label: 'CRM Avancé',
+      icon: Database,
+      component: AgentFoncierCRM,
+      description: 'Système CRM complet et analytics',
+      subtitle: 'Gestion avancée des relations clients avec IA intégrée'
+    },
+
+    {
+      id: 'communication',
+      label: 'Communication',
+      icon: Network,
+      component: AgentFoncierCommunication,
+      description: 'Hub de communication multicanal',
+      subtitle: 'Messagerie intégrée, notifications et suivi des interactions',
+      badge: 'NEW'
     },
     {
-      id: 'calculateurs',
-      name: 'Calculateurs',
-      icon: Calculator,
-      path: '/agent-foncier/calculateurs',
-      description: 'Outils d\'évaluation'
+      id: 'services-digitaux',
+      label: 'Services Digitaux',
+      icon: Smartphone,
+      component: AgentFoncierServicesDigitaux,
+      description: 'Plateforme de services numériques',
+      subtitle: 'Outils digitaux pour l\'accompagnement client et la gestion'
     },
     {
-      id: 'ia',
-      name: 'IA Foncière',
-      icon: Brain,
-      path: '/agent-foncier/ia',
-      description: 'Intelligence artificielle'
+      id: 'anti-fraude',
+      label: 'Anti-Fraude',
+      icon: Shield,
+      component: AgentFoncierAntiFraude,
+      description: 'Protection et sécurité des transactions',
+      subtitle: 'Système avancé de détection et prévention des fraudes'
+    },
+    {
+      id: 'gps-verification',
+      label: 'GPS Vérification',
+      icon: Eye,
+      component: AgentFoncierGPSVerification,
+      description: 'Géolocalisation et vérification terrain',
+      subtitle: 'Validation GPS en temps réel des propriétés foncières'
     },
     {
       id: 'blockchain',
-      name: 'Blockchain',
+      label: 'Blockchain',
       icon: Blocks,
-      path: '/agent-foncier/blockchain',
-      description: 'Technologie blockchain'
+      component: AgentFoncierBlockchain,
+      description: 'Registre blockchain sécurisé',
+      subtitle: 'Certification et traçabilité des transactions immobilières'
+    },
+    {
+      id: 'ai',
+      label: 'Intelligence Artificielle',
+      icon: Brain,
+      component: AgentFoncierAI,
+      description: 'IA pour l\'optimisation foncière',
+      subtitle: 'Algorithmes prédictifs et automatisation intelligente'
+    },
+    {
+      id: 'cadastral',
+      label: 'Système Cadastral',
+      icon: Map,
+      component: AgentFoncierCadastral,
+      description: 'Interface cadastrale intégrée',
+      subtitle: 'Consultation et gestion des données cadastrales officielles'
+    },
+    {
+      id: 'documents',
+      label: 'Documents',
+      icon: FileText,
+      component: AgentFoncierDocuments,
+      description: 'Gestion documentaire centralisée',
+      subtitle: 'Stockage, organisation et traitement des actes et contrats'
+    },
+    {
+      id: 'calculateurs',
+      label: 'Calculateurs',
+      icon: Calculator,
+      component: AgentFoncierCalculateurs,
+      description: 'Suite d\'outils de calcul',
+      subtitle: 'Calculateurs fiscaux, financiers et d\'évaluation foncière'
     },
     {
       id: 'analytics',
-      name: 'Analytics',
+      label: 'Analytics',
       icon: BarChart3,
-      path: '/agent-foncier/analytics',
-      description: 'Analyse des performances'
-    },
-    {
-      id: 'messages',
-      name: 'Messages',
-      icon: Mail,
-      path: '/agent-foncier/messages',
-      description: 'Messagerie sécurisée'
+      component: AgentFoncierAnalytics,
+      description: 'Analyses et reporting avancés',
+      subtitle: 'Tableaux de bord et insights pour l\'aide à la décision'
     },
     {
       id: 'notifications',
-      name: 'Notifications',
+      label: 'Notifications',
       icon: Bell,
-      path: '/agent-foncier/notifications',
-      description: 'Alertes et notifications'
+      component: AgentFoncierNotifications,
+      description: 'Centre de notifications intelligent',
+      subtitle: 'Alertes, rappels et notifications personnalisées',
+      badge: 'LIVE'
     },
     {
       id: 'settings',
-      name: 'Paramètres',
+      label: 'Paramètres',
       icon: Settings,
-      path: '/agent-foncier/parametres',
-      description: 'Configuration du compte'
+      component: AgentFoncierSettings,
+      description: 'Configuration et préférences',
+      subtitle: 'Personnalisation de l\'interface et paramètres système'
     }
   ];
 
-  const getCurrentPage = () => {
-    const path = location.pathname;
-    if (path === '/agent-foncier') return 'overview';
-    const segments = path.split('/');
-    return segments[segments.length - 1];
+  // Fonction pour rendre le composant actif
+  const renderActiveComponent = () => {
+    const activeTabData = sidebarTabs.find(tab => tab.id === activeTab);
+    if (activeTabData && activeTabData.component) {
+      const Component = activeTabData.component;
+      return <Component />;
+    }
+    return <AgentFoncierOverview />;
   };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Chargement du dashboard Agent Foncier...</p>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="flex h-screen bg-gray-50">
+      {/* Sidebar Mobile Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
+            onClick={() => setMobileMenuOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
-      <div className={`
-        fixed inset-y-0 left-0 z-50 w-72 bg-white shadow-xl transform transition-transform duration-300 ease-in-out
-        lg:translate-x-0 lg:static lg:inset-0
-        ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'}
-      `}>
-        {/* Header sidebar */}
-        <div className="flex items-center justify-between h-16 px-6 border-b bg-gradient-to-r from-green-600 to-green-700">
-          <div className="flex items-center space-x-3">
-            <div className="w-8 h-8 bg-white rounded-lg flex items-center justify-center">
-              <MapPin className="h-5 w-5 text-green-600" />
-            </div>
-            <div>
-              <h1 className="text-white font-bold text-lg">Agent Foncier</h1>
-              <p className="text-green-100 text-xs">Blockchain & IA</p>
-            </div>
-          </div>
+      <motion.div
+        initial={false}
+        animate={{
+          width: sidebarCollapsed ? 80 : 280
+        }}
+        className={`
+          fixed lg:relative inset-y-0 left-0 z-50 
+          bg-gradient-to-b from-amber-50 via-white to-amber-50 
+          border-r border-amber-200 shadow-xl lg:shadow-none
+          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0
+        `}
+      >
+        {/* Sidebar Header */}
+        <div className="flex items-center justify-between p-4 border-b border-amber-200">
+          <AnimatePresence>
+            {!sidebarCollapsed && (
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                className="flex items-center"
+              >
+                <TerangaLogo className="h-8 w-8 text-amber-600" />
+                <span className="ml-3 text-lg font-bold bg-gradient-to-r from-amber-600 to-orange-600 bg-clip-text text-transparent">
+                  Agent Foncier
+                </span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+          
           <Button
             variant="ghost"
             size="sm"
-            onClick={() => setSidebarOpen(false)}
-            className="lg:hidden text-white hover:bg-green-600"
+            onClick={() => {
+              setSidebarCollapsed(!sidebarCollapsed);
+              setMobileMenuOpen(false);
+            }}
+            className="text-amber-600 hover:bg-amber-100 lg:flex hidden"
+          >
+            {sidebarCollapsed ? <ChevronRight className="h-5 w-5" /> : <ChevronLeft className="h-5 w-5" />}
+          </Button>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setMobileMenuOpen(false)}
+            className="text-amber-600 hover:bg-amber-100 lg:hidden"
           >
             <X className="h-5 w-5" />
           </Button>
@@ -231,277 +289,290 @@ const CompleteSidebarAgentFoncierDashboard = () => {
 
         {/* Stats rapides */}
         <div className="p-4 border-b bg-green-50">
-          <div className="grid grid-cols-2 gap-3 text-xs">
-            <div className="bg-green-100 p-2 rounded-lg">
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div className="bg-white p-2 rounded-lg">
               <p className="text-xs text-green-600">Terrains</p>
               <p className="font-bold text-sm text-green-800">
-                {dashboardStats.totalTerrains.toLocaleString()}
+                {dashboardStats.totalTerrains}
               </p>
             </div>
             <div className="bg-blue-50 p-2 rounded-lg">
               <p className="text-xs text-blue-600">Clients</p>
               <p className="font-bold text-sm text-blue-800">
-                {dashboardStats.activeClients}
+                {dashboardStats.clientsActifs}
               </p>
             </div>
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="flex-1 px-4 py-4 space-y-2">
-          {menuItems.map((item) => {
-            const isActive = getCurrentPage() === item.id;
-            return (
-              <button
-                key={item.id}
-                onClick={() => {
-                  navigate(item.path);
-                  setSidebarOpen(false);
-                }}
-                className={`
-                  w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-left transition-all
-                  ${isActive 
-                    ? 'bg-green-100 text-green-900 shadow-sm' 
-                    : 'text-gray-700 hover:bg-gray-100'
-                  }
-                `}
-              >
-                <item.icon className={`h-5 w-5 ${isActive ? 'text-green-600' : 'text-gray-500'}`} />
-                <div className="flex-1 min-w-0">
-                  <p className={`text-sm font-medium ${isActive ? 'text-green-900' : 'text-gray-900'}`}>
-                    {item.name}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {item.description}
-                  </p>
-                </div>
-                {item.id === 'overview' && dashboardStats.notifications > 0 && (
-                  <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5">
-                    {dashboardStats.notifications}
-                  </Badge>
-                )}
-              </button>
-            );
-          })}
+        <nav className="flex-1 overflow-y-auto py-4">
+          <div className="px-3 space-y-1">
+            {sidebarTabs.map((item) => {
+              const Icon = item.icon;
+              const isActive = activeTab === item.id;
+              
+              return (
+                <motion.button
+                  key={item.id}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    setActiveTab(item.id);
+                    setMobileMenuOpen(false);
+                  }}
+                  className={`
+                    w-full flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-all duration-200
+                    ${isActive 
+                      ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg' 
+                      : 'text-gray-700 hover:bg-amber-100 hover:text-amber-800'
+                    }
+                  `}
+                >
+                  <Icon className={`h-4 w-4 ${sidebarCollapsed ? '' : 'mr-3'}`} />
+                  <AnimatePresence>
+                    {!sidebarCollapsed && (
+                      <motion.div
+                        initial={{ opacity: 0, width: 0 }}
+                        animate={{ opacity: 1, width: 'auto' }}
+                        exit={{ opacity: 0, width: 0 }}
+                        className="flex-1 text-left"
+                      >
+                        <div className="flex flex-col">
+                          <span className="text-sm font-medium">{item.label}</span>
+                          {item.subtitle && (
+                            <span className="text-xs opacity-70 mt-0.5 line-clamp-1">
+                              {item.subtitle}
+                            </span>
+                          )}
+                        </div>
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                  {/* Badge pour vue d'ensemble avec notifications */}
+                  {item.id === 'overview' && dashboardStats.notifications > 0 && (
+                    <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5">
+                      {dashboardStats.notifications}
+                    </Badge>
+                  )}
+                  {/* Badge pour communication avec nombre de messages */}
+                  {item.id === 'communication' && dashboardStats.messages > 0 && !sidebarCollapsed && (
+                    <Badge className="bg-green-500 text-white text-xs px-1.5 py-0.5">
+                      {dashboardStats.messages}
+                    </Badge>
+                  )}
+                  {/* Badge pour notifications avec nombre d'alertes */}
+                  {item.id === 'notifications' && dashboardStats.communicationAlerts > 0 && !sidebarCollapsed && (
+                    <Badge className="bg-red-600 text-white text-xs px-1.5 py-0.5 animate-pulse">
+                      {dashboardStats.communicationAlerts}
+                    </Badge>
+                  )}
+                </motion.button>
+              );
+            })}
+          </div>
         </nav>
 
-        {/* User info */}
+        {/* Profile section */}
         <div className="p-4 border-t">
           <div className="flex items-center space-x-3">
             <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center">
               <User className="h-4 w-4 text-green-600" />
             </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-gray-900 truncate">
-                {user?.fullName || 'Agent Foncier Pro'}
-              </p>
-              <p className="text-xs text-gray-500">Professionnel Certifié</p>
-            </div>
+            <AnimatePresence>
+              {!sidebarCollapsed && (
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  exit={{ opacity: 0, x: -20 }}
+                  className="flex-1"
+                >
+                  <p className="text-sm font-medium text-gray-900">Agent Foncier</p>
+                  <p className="text-xs text-gray-500">En ligne</p>
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
         </div>
-      </div>
-
-      {/* Overlay pour mobile */}
-      {sidebarOpen && (
-        <div 
-          className="fixed inset-0 bg-black bg-opacity-50 z-40 lg:hidden"
-          onClick={() => setSidebarOpen(false)}
-        />
-      )}
+      </motion.div>
 
       {/* Contenu principal */}
-      <div className="flex-1 flex flex-col min-h-screen">
-        {/* Header principal */}
-        <header className="bg-white shadow-sm border-b px-4 lg:px-6 py-3">
+      <div className="flex-1 flex flex-col overflow-hidden">
+        {/* Header */}
+        <motion.header 
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white/95 backdrop-blur-lg border-b border-gray-200/50 px-6 py-4 sticky top-0 z-40"
+        >
           <div className="flex items-center justify-between">
-            {/* Menu mobile uniquement */}
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
-                onClick={() => setSidebarOpen(true)}
-                className="lg:hidden"
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden text-gray-600 hover:bg-gray-100"
               >
                 <Menu className="h-5 w-5" />
               </Button>
               <div className="hidden lg:block">
-                <h1 className="text-xl font-bold text-gray-900">Dashboard Agent Foncier</h1>
-                <p className="text-sm text-gray-600">Gestion foncière & Analytics</p>
-              </div>
-              <div className="lg:hidden">
-                <h1 className="font-semibold text-gray-900">Dashboard Agent Foncier</h1>
+                <motion.div
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.1 }}
+                  className="space-y-1"
+                >
+                  <div className="flex items-center space-x-3">
+                    <h1 className="text-2xl font-bold bg-gradient-to-r from-amber-700 via-orange-700 to-amber-700 bg-clip-text text-transparent">
+                      {sidebarTabs.find(tab => tab.id === activeTab)?.label || 'Dashboard Agent Foncier'}
+                    </h1>
+                    {sidebarTabs.find(tab => tab.id === activeTab)?.badge && (
+                      <Badge className={`text-xs px-2 py-1 ${
+                        sidebarTabs.find(tab => tab.id === activeTab)?.badge === 'NEW' ? 'bg-green-500 text-white' :
+                        sidebarTabs.find(tab => tab.id === activeTab)?.badge === 'HOT' ? 'bg-red-500 text-white' :
+                        sidebarTabs.find(tab => tab.id === activeTab)?.badge === 'PRO' ? 'bg-purple-500 text-white' :
+                        sidebarTabs.find(tab => tab.id === activeTab)?.badge === 'BETA' ? 'bg-blue-500 text-white' :
+                        sidebarTabs.find(tab => tab.id === activeTab)?.badge === 'SECURE' ? 'bg-green-600 text-white' :
+                        sidebarTabs.find(tab => tab.id === activeTab)?.badge === 'LIVE' ? 'bg-red-600 text-white animate-pulse' :
+                        sidebarTabs.find(tab => tab.id === activeTab)?.badge === 'PREMIUM' ? 'bg-yellow-500 text-black' :
+                        sidebarTabs.find(tab => tab.id === activeTab)?.badge === 'AI' ? 'bg-indigo-500 text-white' :
+                        'bg-gray-500 text-white'
+                      }`}>
+                        {sidebarTabs.find(tab => tab.id === activeTab)?.badge}
+                      </Badge>
+                    )}
+                  </div>
+                  <p className="text-sm text-gray-600 font-medium">
+                    {sidebarTabs.find(tab => tab.id === activeTab)?.description || 'Gestion foncière & Analytics'}
+                  </p>
+                  <p className="text-xs text-gray-500">
+                    {sidebarTabs.find(tab => tab.id === activeTab)?.subtitle || 'Plateforme professionnelle pour agents fonciers'}
+                  </p>
+                </motion.div>
               </div>
             </div>
-            
+
             {/* Actions header */}
             <div className="flex items-center space-x-3">
               <div className="hidden md:flex items-center space-x-4 text-sm">
                 <div className="text-center">
                   <p className="font-bold text-green-600">{dashboardStats.totalTerrains}</p>
-                  <p className="text-gray-500">Terrains</p>
+                  <p className="text-xs text-gray-500">Terrains</p>
                 </div>
                 <div className="text-center">
-                  <p className="font-bold text-blue-600">{dashboardStats.activeClients}</p>
-                  <p className="text-gray-500">Clients</p>
+                  <p className="font-bold text-blue-600">{dashboardStats.clientsActifs}</p>
+                  <p className="text-xs text-gray-500">Clients</p>
+                </div>
+                <div className="text-center">
+                  <p className="font-bold text-purple-600">{dashboardStats.documentsTraites}</p>
+                  <p className="text-xs text-gray-500">Documents</p>
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => console.log('Recherche ouverte')}
-                title="Rechercher"
-              >
-                <Search className="h-4 w-4" />
-              </Button>
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/agent-foncier/messages')}
-                title="Messages"
-              >
-                <Mail className="h-4 w-4" />
-              </Button>
+
+              {/* Messages */}
               <Button 
                 variant="ghost" 
                 size="sm" 
-                className="relative"
-                onClick={() => navigate('/agent-foncier/notifications')}
-                title="Notifications"
+                onClick={() => setActiveTab('communication')}
+                className="relative text-gray-600 hover:text-amber-600"
               >
-                <Bell className="h-4 w-4" />
+                <MessageSquare className="h-5 w-5" />
+                {dashboardStats.messages > 0 && (
+                  <Badge className="absolute -top-1 -right-1 bg-green-500 text-white text-xs px-1.5 py-0.5">
+                    {dashboardStats.messages}
+                  </Badge>
+                )}
+              </Button>
+
+              {/* Notifications */}
+              <Button variant="ghost" size="sm" className="relative">
+                <Bell className="h-5 w-5 text-gray-600" />
                 {dashboardStats.notifications > 0 && (
-                  <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5 rounded-full">
+                  <Badge className="absolute -top-1 -right-1 bg-red-500 text-white text-xs px-1.5 py-0.5">
                     {dashboardStats.notifications}
                   </Badge>
                 )}
               </Button>
-              {/* Dropdown profil */}
-              <div className="relative" ref={profileDropdownRef}>
-                <Button 
-                  variant="ghost" 
-                  size="sm"
-                  onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
-                  className="flex items-center space-x-1"
-                  title="Menu profil"
-                >
-                  <User className="h-4 w-4" />
-                  <ChevronDown className="h-3 w-3" />
-                </Button>
-                
-                {/* Menu déroulant */}
-                {profileDropdownOpen && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: -10 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0, scale: 0.95, y: -10 }}
-                    transition={{ duration: 0.1 }}
-                    className="absolute right-0 mt-2 w-56 bg-white rounded-lg shadow-lg border border-gray-200 py-1 z-50"
-                  >
-                    {/* Info utilisateur */}
-                    <div className="px-4 py-3 border-b border-gray-100">
-                      <div className="flex items-center space-x-3">
-                        <div className="w-10 h-10 bg-green-100 rounded-full flex items-center justify-center">
-                          <User className="h-5 w-5 text-green-600" />
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium text-gray-900">
-                            {user?.fullName || 'Agent Foncier Pro'}
-                          </p>
-                          <p className="text-xs text-gray-500">
-                            {user?.email || 'agent@teranga.com'}
-                          </p>
-                        </div>
-                      </div>
-                    </div>
 
-                    {/* Menu items */}
-                    <div className="py-1">
-                      <button
+              {/* Profile Dropdown */}
+              <div className="relative">
+                <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setProfileDropdownOpen(!profileDropdownOpen)}
+                    className="flex items-center space-x-2 text-gray-600 hover:text-amber-600 hover:bg-amber-50"
+                  >
+                    <div className="w-6 h-6 bg-gradient-to-r from-amber-100 to-orange-100 rounded-full flex items-center justify-center">
+                      <User className="h-4 w-4 text-amber-600" />
+                    </div>
+                    <motion.div
+                      animate={{ rotate: profileDropdownOpen ? 180 : 0 }}
+                      transition={{ duration: 0.2 }}
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                    </motion.div>
+                  </Button>
+                </motion.div>
+
+                <AnimatePresence>
+                  {profileDropdownOpen && (
+                    <motion.div
+                      initial={{ opacity: 0, scale: 0.95, y: -10 }}
+                      animate={{ opacity: 1, scale: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.95, y: -10 }}
+                      transition={{ duration: 0.2 }}
+                      className="absolute right-0 mt-2 w-56 bg-white/95 backdrop-blur-lg rounded-xl shadow-xl border border-gray-200/50 py-2 z-50"
+                    >
+                      <motion.button
+                        whileHover={{ x: 4 }}
                         onClick={() => {
-                          navigate('parametres');
+                          setActiveTab('settings');
                           setProfileDropdownOpen(false);
                         }}
-                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
                       >
                         <Settings className="h-4 w-4 mr-3" />
-                        Paramètres du compte
-                      </button>
-                      
-                      <button
+                        Paramètres
+                      </motion.button>
+                      <motion.button
+                        whileHover={{ x: 4 }}
                         onClick={() => {
-                          navigate('/profile');
+                          setActiveTab('profile');
                           setProfileDropdownOpen(false);
                         }}
-                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        className="w-full flex items-center px-4 py-3 text-sm text-gray-700 hover:bg-amber-50 hover:text-amber-700 transition-colors"
                       >
                         <UserCog className="h-4 w-4 mr-3" />
-                        Modifier le profil
-                      </button>
-                      
-                      <button
+                        Mon Profil
+                      </motion.button>
+                      <hr className="my-2 border-gray-200" />
+                      <motion.button
+                        whileHover={{ x: 4 }}
                         onClick={() => {
-                          navigate('parametres');
+                          console.log('Déconnexion...');
                           setProfileDropdownOpen(false);
                         }}
-                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <CreditCard className="h-4 w-4 mr-3" />
-                        Facturation
-                      </button>
-                      
-                      <button
-                        onClick={() => {
-                          navigate('/support');
-                          setProfileDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                      >
-                        <HelpCircle className="h-4 w-4 mr-3" />
-                        Aide et support
-                      </button>
-                    </div>
-
-                    {/* Séparateur et déconnexion */}
-                    <div className="border-t border-gray-100 py-1">
-                      <button
-                        onClick={() => {
-                          handleLogout();
-                          setProfileDropdownOpen(false);
-                        }}
-                        className="w-full flex items-center px-4 py-2 text-sm text-red-600 hover:bg-red-50"
+                        className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition-colors"
                       >
                         <LogOut className="h-4 w-4 mr-3" />
-                        Se déconnecter
-                      </button>
-                    </div>
-                  </motion.div>
-                )}
+                        Déconnexion
+                      </motion.button>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
               </div>
             </div>
           </div>
-        </header>
+        </motion.header>
 
-        {/* Contenu des pages */}
+        {/* Zone de contenu principal */}
         <main className="flex-1 bg-gray-50">
           <Suspense fallback={
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-green-600"></div>
             </div>
           }>
-            <Routes>
-              <Route path="/" element={<AgentFoncierOverview />} />
-              <Route path="/terrains" element={<AgentFoncierTerrains />} />
-              <Route path="/cadastral" element={<AgentFoncierCadastral />} />
-              <Route path="/clients" element={<AgentFoncierClients />} />
-              <Route path="/documents" element={<AgentFoncierDocuments />} />
-              <Route path="/calculateurs" element={<AgentFoncierCalculateurs />} />
-              <Route path="/ia" element={<AgentFoncierAI />} />
-              <Route path="/blockchain" element={<AgentFoncierBlockchain />} />
-              <Route path="/analytics" element={<AgentFoncierAnalytics />} />
-              <Route path="/messages" element={<AgentFoncierMessages />} />
-              <Route path="/notifications" element={<AgentFoncierNotifications />} />
-              <Route path="/parametres" element={<AgentFoncierSettings />} />
-            </Routes>
+            {renderActiveComponent()}
           </Suspense>
         </main>
       </div>

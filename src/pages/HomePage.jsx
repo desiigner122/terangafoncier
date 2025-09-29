@@ -218,11 +218,11 @@ const HomePage = () => {
                 transition={{ duration: 0.8, delay: 0.1 }}
                 className="mb-6"
               >
-                <div className="flex items-center justify-center gap-3 mb-4">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-6">
                   <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 via-green-500 to-red-500 rounded-xl flex items-center justify-center shadow-xl">
                     <Building className="w-8 h-8 text-white" />
                   </div>
-                  <h2 className="text-4xl font-bold bg-gradient-to-r from-yellow-400 via-green-400 to-red-400 bg-clip-text text-transparent">
+                  <h2 className="text-3xl sm:text-4xl lg:text-5xl font-bold bg-gradient-to-r from-yellow-400 via-green-400 to-red-400 bg-clip-text text-transparent text-center sm:text-left leading-relaxed py-2">
                     Teranga Foncier
                   </h2>
                 </div>
@@ -245,7 +245,7 @@ const HomePage = () => {
                 <Button asChild size="lg" className="bg-gradient-to-r from-yellow-500 to-red-500 hover:from-yellow-600 hover:to-red-600 text-white font-bold px-10 py-6 text-lg transform hover:scale-105 transition-all duration-300 shadow-2xl border-0">
                   <Link to="/terrains">Explorer les Terrains<Building className="ml-2 h-5 w-5" /></Link>
                 </Button>
-                <Button asChild variant="outline" size="lg" className="border-slate-400 text-slate-200 hover:bg-slate-800 hover:text-white backdrop-blur-sm px-8 py-6 text-lg font-semibold">
+                <Button asChild variant="outline" size="lg" className="border-slate-400 text-black hover:bg-slate-800 hover:text-white backdrop-blur-sm px-8 py-6 text-lg font-semibold bg-white/90">
                   <Link to="/blockchain"><Play className="mr-2 h-5 w-5" />Voir la Blockchain</Link>
                 </Button>
               </div>
@@ -571,7 +571,7 @@ const HomePage = () => {
                   asChild
                   variant="outline"
                   size="lg" 
-                  className="border-2 border-white text-white hover:bg-white hover:text-emerald-600 px-8 py-4 text-lg font-semibold"
+                  className="border-2 border-white text-white hover:bg-white hover:text-emerald-600 px-8 py-4 text-lg font-semibold bg-black/20 backdrop-blur-sm"
                 >
                   <Link to="/contact">
                     Parler à un Expert

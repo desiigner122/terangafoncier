@@ -15,7 +15,8 @@ import {
   Search,
   Star,
   Trash2,
-  Plus
+  Plus,
+  Award
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,72 +24,110 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 
-const ParticulierFavoris = () => {
+const ParticulierFavoris = ({ dashboardStats }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('tous');
+  const [activeTab, setActiveTab] = useState('tous');
 
-  // Dossiers marqués comme favoris - SUIVI ADMINISTRATIF
-  const [dossiersFavoris] = useState([
+  // Éléments marqués comme favoris - TERRAINS PRIVÉS, ZONES COMMUNALES, PROJETS PROMOTEURS
+  const [favoris] = useState([
+    // Terrains privés favoris
     {
-      id: 'DT-2024-001',
-      type: 'terrain',
-      libelle: 'Demande Terrain Résidentiel - Thiès',
-      commune: 'Thiès',
-      superficie: '300m²',
-      statut: 'En instruction',
-      progression: 75,
-      prochainEtape: 'Validation commission technique',
-      echeance: '2024-02-15',
+      id: 'TP-2024-001',
+      type: 'terrain_prive',
+      libelle: 'Terrain Résidentiel - Almadies',
+      proprietaire: 'Société SÉNÉGAL IMMOBILIER',
+      superficie: '500m²',
+      prix: 75000000,
+      localisation: 'Almadies, Dakar',
+      statut: 'Disponible',
       dateAjoutFavori: '2024-01-20',
-      priorite: 'Élevée',
-      icon: FileText,
+      description: 'Terrain viabilisé avec vue sur mer, idéal pour villa de standing',
+      caracteristiques: ['Viabilisé', 'Vue mer', 'Titre foncier', 'Accès bitumé'],
+      icon: Building2,
       color: 'blue'
     },
     {
-      id: 'PC-2024-007',
-      type: 'permis',
-      libelle: 'Permis de Construire - Villa R+1',
-      adresse: 'Lot 45, Cité Keur Gorgui, Dakar',
-      superficie: '180m²',
-      statut: 'Documents manquants',
-      progression: 45,
-      prochainEtape: 'Fournir étude de sol',
-      echeance: '2024-03-20',
-      dateAjoutFavori: '2024-01-25',
-      priorite: 'Normale',
+      id: 'TP-2024-002',
+      type: 'terrain_prive',
+      libelle: 'Terrain Commercial - Plateau',
+      proprietaire: 'IMMOBILIER DU PLATEAU SARL',
+      superficie: '300m²',
+      prix: 120000000,
+      localisation: 'Plateau, Dakar',
+      statut: 'Disponible',
+      dateAjoutFavori: '2024-02-05',
+      description: 'Terrain commercial en plein centre-ville, très bien situé',
+      caracteristiques: ['Commercial', 'Centre-ville', 'Fort passage', 'Transport'],
       icon: Building2,
+      color: 'blue'
+    },
+    
+    // Zones communales favorites
+    {
+      id: 'ZC-2024-001',
+      type: 'zone_communale',
+      libelle: 'Zone d\'Extension Urbaine - Rufisque',
+      commune: 'Rufisque',
+      superficie: '400m²',
+      prix: 8000000,
+      statut: 'Lots disponibles',
+      dateAjoutFavori: '2024-01-18',
+      description: 'Zone résidentielle en développement avec toutes commodités',
+      caracteristiques: ['Résidentielle', 'Proche commodités', 'Transport', 'École'],
+      lotsDisponibles: 15,
+      icon: MapPin,
       color: 'green'
     },
     {
-      id: 'CP-2024-003',
-      type: 'candidature',
-      libelle: 'Candidature Résidence Les Palmiers',
-      promoteur: 'TERANGA CONSTRUCTION',
+      id: 'ZC-2024-002',
+      type: 'zone_communale',
+      libelle: 'Zone Mixte - Pikine Nord',
+      commune: 'Pikine',
+      superficie: '350m²',
+      prix: 6500000,
+      statut: 'En attribution',
+      dateAjoutFavori: '2024-02-10',
+      description: 'Zone mixte permettant habitation et commerce de proximité',
+      caracteristiques: ['Mixte', 'Commerce autorisé', 'Desserte', 'Marché proche'],
+      lotsDisponibles: 8,
+      icon: MapPin,
+      color: 'green'
+    },
+    
+    // Projets promoteurs favoris
+    {
+      id: 'PP-2024-001',
+      type: 'projet_promoteur',
+      libelle: 'Villa Moderne - Cité Keur Gorgui',
+      promoteur: 'TERANGA DEVELOPMENT',
+      superficie: '250m²',
+      prix: 45000000,
       localisation: 'Cité Keur Gorgui, Dakar',
-      typeLogement: 'Villa F4',
-      statut: 'Pré-sélectionné',
-      progression: 70,
-      prochainEtape: 'Entretien final',
-      echeance: '2024-02-15',
-      dateAjoutFavori: '2024-02-01',
-      priorite: 'Élevée',
-      icon: Star,
+      statut: 'En construction',
+      dateAjoutFavori: '2024-01-22',
+      description: 'Villa R+1 moderne avec finitions haut de gamme',
+      caracteristiques: ['3 chambres', 'Salon', 'Cuisine équipée', 'Jardin', 'Garage'],
+      progression: 65,
+      dateLivraison: '2024-06-30',
+      icon: Award,
       color: 'purple'
     },
     {
-      id: 'CP-2023-045',
-      type: 'candidature',
-      libelle: 'Candidature Villa Almadies',
-      promoteur: 'SÉNÉGAL IMMOBILIER',
+      id: 'PP-2024-002',
+      type: 'projet_promoteur',
+      libelle: 'Résidence Les Palmiers - Almadies',
+      promoteur: 'SÉNÉGAL HABITAT',
+      superficie: '180m²',
+      prix: 38000000,
       localisation: 'Almadies, Dakar',
-      typeLogement: 'Villa F5',
-      statut: 'Accepté',
-      progression: 100,
-      prochainEtape: 'Signature contrat effectuée',
-      dateAcceptation: '2023-12-01',
-      dateAjoutFavori: '2023-10-20',
-      priorite: 'Normale',
-      icon: Star,
+      statut: 'Pré-commercialisation',
+      dateAjoutFavori: '2024-02-15',
+      description: 'Appartement F4 dans résidence sécurisée avec piscine',
+      caracteristiques: ['F4', '2 salles de bain', 'Balcon', 'Piscine', 'Sécurité 24h'],
+      progression: 20,
+      dateLivraison: '2024-12-31',
+      icon: Award,
       color: 'purple'
     }
   ]);
@@ -115,14 +154,14 @@ const ParticulierFavoris = () => {
 
   const getTypeLabel = (type) => {
     const labels = {
-      'terrain': 'Demande Terrain',
-      'permis': 'Permis Construire',
-      'candidature': 'Candidature Promoteur'
+      'terrain_prive': 'Terrain Privé',
+      'zone_communale': 'Zone Communale',
+      'projet_promoteur': 'Projet Promoteur'
     };
     return labels[type] || type;
   };
 
-  const filteredDossiers = dossiersFavoris.filter(dossier => {
+  const filteredDossiers = favoris.filter(dossier => {
     const matchesSearch = dossier.libelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          dossier.id.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = filterType === 'tous' || dossier.type === filterType;
@@ -268,7 +307,7 @@ const ParticulierFavoris = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-600">
-              {dossiersFavoris.length}
+              {favoris.length}
             </div>
             <div className="text-sm text-gray-600">Total favoris</div>
           </CardContent>
@@ -276,7 +315,7 @@ const ParticulierFavoris = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {dossiersFavoris.filter(d => d.type === 'terrain').length}
+              {favoris.filter(d => d.type === 'terrain_prive').length}
             </div>
             <div className="text-sm text-gray-600">Demandes terrains</div>
           </CardContent>
@@ -284,7 +323,7 @@ const ParticulierFavoris = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">
-              {dossiersFavoris.filter(d => d.type === 'permis').length}
+              {favoris.filter(d => d.type === 'projet_promoteur').length}
             </div>
             <div className="text-sm text-gray-600">Permis construire</div>
           </CardContent>
@@ -292,7 +331,7 @@ const ParticulierFavoris = () => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {dossiersFavoris.filter(d => d.type === 'candidature').length}
+              {favoris.filter(d => d.type === 'zone_communale').length}
             </div>
             <div className="text-sm text-gray-600">Candidatures</div>
           </CardContent>
@@ -321,25 +360,25 @@ const ParticulierFavoris = () => {
             Tous
           </Button>
           <Button
-            variant={filterType === 'terrain' ? 'default' : 'outline'}
+            variant={filterType === 'terrain_prive' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilterType('terrain')}
+            onClick={() => setFilterType('terrain_prive')}
           >
-            Terrains
+            Terrains Privés
           </Button>
           <Button
-            variant={filterType === 'permis' ? 'default' : 'outline'}
+            variant={filterType === 'zone_communale' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilterType('permis')}
+            onClick={() => setFilterType('zone_communale')}
           >
-            Permis
+            Zones Communales
           </Button>
           <Button
-            variant={filterType === 'candidature' ? 'default' : 'outline'}
+            variant={filterType === 'projet_promoteur' ? 'default' : 'outline'}
             size="sm"
-            onClick={() => setFilterType('candidature')}
+            onClick={() => setFilterType('projet_promoteur')}
           >
-            Candidatures
+            Projets Promoteurs
           </Button>
         </div>
       </div>

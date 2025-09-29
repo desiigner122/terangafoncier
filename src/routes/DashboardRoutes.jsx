@@ -3,7 +3,7 @@ import { Routes, Route, Navigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
 
 // Dashboard Imports
-import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
+import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboardModern';
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
 import InvestisseurDashboard from '@/pages/dashboards/investisseur/InvestisseurDashboard';
 import AgentFoncierDashboard from '@/pages/dashboards/agent-foncier/CompleteSidebarAgentFoncierDashboard';

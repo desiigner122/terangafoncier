@@ -147,94 +147,107 @@ const PromoteurDashboard = () => {
     setActiveTab(tabId);
   };
 
-  // Configuration des onglets du sidebar
+  // Configuration des onglets du sidebar modernisés
   const sidebarTabs = [
     {
       id: 'overview',
       label: 'Vue d\'ensemble',
       icon: Home,
-      description: 'Tableau de bord principal',
-      component: 'PromoteurOverview'
+      description: 'Dashboard principal & KPIs',
+      component: 'PromoteurOverview',
+      badge: null
     },
     {
       id: 'projects',
-      label: 'Mes Projets',
+      label: 'Projets Actifs',
       icon: Building2,
-      description: 'Gestion des projets immobiliers',
-      component: 'ProjectsPage'
+      description: 'Portfolio immobilier',
+      component: 'ProjectsPage',
+      badge: dashboardStats.activeProjects
     },
     {
       id: 'construction',
-      label: 'Chantiers',
+      label: 'Chantiers Live',
       icon: Hammer,
-      description: 'Suivi des constructions',
-      component: 'PromoteurChantiers'
+      description: 'Suivi temps réel',
+      component: 'PromoteurChantiers',
+      badge: '6'
     },
     {
       id: 'requests',
       label: 'Demandes Clients',
-      icon: MessageSquare,
-      description: 'Demandes de construction',
-      component: 'ConstructionPage'
+      icon: MessageCircle,
+      description: 'Nouvelles opportunités',
+      component: 'ConstructionPage',
+      badge: '23'
     },
     {
       id: 'sales',
-      label: 'Ventes',
+      label: 'Ventes & Revenus',
       icon: TrendingUp,
-      description: 'Suivi des ventes',
-      component: 'PromoteurVentes'
+      description: 'Performance commerciale',
+      component: 'PromoteurVentes',
+      badge: null
     },
     {
       id: 'clients',
-      label: 'Clients',
+      label: 'CRM Clients',
       icon: Users,
-      description: 'Gestion clientèle',
-      component: 'PromoteurClients'
+      description: 'Relation client avancée',
+      component: 'PromoteurClients',
+      badge: '156'
     },
     {
       id: 'finances',
-      label: 'Finances',
-      icon: DollarSign,
-      description: 'Gestion financière',
-      component: 'PromoteurFinances'
+      label: 'Finance Pro',
+      icon: Wallet,
+      description: 'Gestion financière intégrée',
+      component: 'PromoteurFinances',
+      badge: null
     },
     {
       id: 'analytics',
-      label: 'Analytics',
+      label: 'Analytics & BI',
       icon: BarChart3,
-      description: 'Analyses et rapports'
+      description: 'Business Intelligence',
+      badge: null
     },
     {
       id: 'ai',
-      label: 'Assistant IA',
+      label: 'IA Promoteur',
       icon: Brain,
-      description: 'Intelligence artificielle',
-      component: 'PromoteurAI'
+      description: 'Assistant intelligent',
+      component: 'PromoteurAI',
+      badge: 'NEW'
     },
     {
       id: 'blockchain',
-      label: 'Blockchain',
-      icon: Shield,
+      label: 'Blockchain Pro',
+      icon: Database,
       description: 'Contrats intelligents',
-      component: 'PromoteurBlockchain'
+      component: 'PromoteurBlockchain',
+      badge: null
     },
     {
       id: 'messages',
       label: 'Messages',
       icon: MessageSquare,
-      description: 'Centre de messages'
+      description: 'Communication centralisée',
+      badge: '7'
     },
     {
       id: 'notifications',
       label: 'Notifications',
       icon: Bell,
-      description: 'Alertes et notifications'
+      description: 'Alertes importantes',
+      badge: '12'
     },
     {
       id: 'settings',
-      label: 'Paramètres',
+      label: 'Paramètres Pro',
       icon: Settings,
-      description: 'Configuration'
+      description: 'Configuration avancée',
+      badge: null
     }
   ];
 
@@ -1299,82 +1312,167 @@ const PromoteurDashboard = () => {
   };
 
   return (
-    <div className="flex h-screen bg-gray-50">
+    <div className="flex h-screen bg-gradient-to-br from-orange-50 via-red-50 to-pink-50">
+      {/* Mobile Menu Overlay */}
+      <AnimatePresence>
+        {mobileMenuOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setMobileMenuOpen(false)}
+            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+          />
+        )}
+      </AnimatePresence>
+
       {/* Sidebar */}
       <motion.div
         initial={false}
-        animate={{ width: sidebarCollapsed ? 80 : 280 }}
-        className="bg-white border-r border-gray-200 flex flex-col shadow-sm"
+        animate={{ 
+          width: sidebarCollapsed ? 80 : 280,
+          x: mobileMenuOpen ? 0 : (window.innerWidth < 1024 && !mobileMenuOpen ? -280 : 0)
+        }}
+        className="bg-white/80 backdrop-blur-md border-r border-orange-200/30 flex flex-col shadow-xl z-40 fixed lg:relative h-full"
       >
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        {/* Header moderne */}
+        <div className="p-6 border-b border-orange-200/30 bg-gradient-to-r from-orange-600 to-red-600">
           <div className="flex items-center justify-between">
             {!sidebarCollapsed && (
-              <div className="flex items-center space-x-3">
-                <div className="w-8 h-8 bg-orange-600 rounded-lg flex items-center justify-center">
-                  <Building2 className="w-5 h-5 text-white" />
+              <motion.div 
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex items-center space-x-3"
+              >
+                <div className="w-12 h-12 bg-white/20 backdrop-blur-md rounded-xl flex items-center justify-center shadow-lg">
+                  <Building2 className="w-7 h-7 text-white" />
                 </div>
                 <div>
-                  <h1 className="font-bold text-lg text-gray-900">Promoteur</h1>
-                  <p className="text-xs text-gray-500">{profile?.company || 'Dashboard'}</p>
+                  <h1 className="font-bold text-xl text-white">Promoteur Pro</h1>
+                  <p className="text-sm text-orange-100">{profile?.company || 'Dashboard Avancé'}</p>
                 </div>
-              </div>
+              </motion.div>
             )}
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-            >
-              {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(false)}
+                className="lg:hidden text-white hover:bg-white/20"
+              >
+                <X className="w-4 h-4" />
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="hidden lg:flex text-white hover:bg-white/20"  
+              >
+                {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
+              </Button>
+            </div>
           </div>
         </div>
 
-        {/* Navigation */}
-        <div className="flex-1 overflow-y-auto py-4">
-          <nav className="space-y-2 px-3">
-            {sidebarTabs.map((tab) => {
+        {/* Navigation moderne */}
+        <div className="flex-1 overflow-y-auto py-6">
+          <nav className="space-y-3 px-4">
+            {sidebarTabs.map((tab, index) => {
               const Icon = tab.icon;
               const isActive = activeTab === tab.id;
               
               return (
-                <button
+                <motion.button
                   key={tab.id}
-                  onClick={() => handleTabClick(tab.id)}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                  whileHover={{ x: 4 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => {
+                    handleTabClick(tab.id);
+                    setMobileMenuOpen(false);
+                  }}
                   className={`
-                    w-full flex items-center px-3 py-2 rounded-lg text-left transition-colors
+                    w-full group relative flex items-center px-4 py-3 rounded-xl text-left transition-all duration-200
                     ${isActive 
-                      ? 'bg-orange-50 text-orange-700 border-r-2 border-orange-600' 
-                      : 'text-gray-700 hover:bg-gray-50'
+                      ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white shadow-lg shadow-orange-200' 
+                      : 'text-gray-700 hover:bg-orange-50 hover:text-orange-600'
                     }
                   `}
                 >
-                  <Icon className={`w-5 h-5 ${sidebarCollapsed ? 'mx-auto' : 'mr-3'} ${isActive ? 'text-orange-600' : 'text-gray-500'}`} />
-                  {!sidebarCollapsed && (
-                    <span className="font-medium">{tab.label}</span>
+                  {isActive && (
+                    <motion.div
+                      layoutId="activeTab"
+                      className="absolute inset-0 bg-gradient-to-r from-orange-500 to-red-500 rounded-xl"
+                      transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                    />
                   )}
-                </button>
+                  <Icon className={`w-5 h-5 ${sidebarCollapsed ? 'mx-auto' : 'mr-3'} relative z-10 ${
+                    isActive ? 'text-white' : 'text-gray-500 group-hover:text-orange-600'
+                  }`} />
+                  {!sidebarCollapsed && (
+                    <div className="relative z-10 flex-1">
+                      <span className="font-medium">{tab.label}</span>
+                      {tab.description && (
+                        <p className={`text-xs mt-0.5 ${
+                          isActive ? 'text-orange-100' : 'text-gray-500 group-hover:text-orange-500'
+                        }`}>
+                          {tab.description}
+                        </p>
+                      )}
+                    </div>
+                  )}
+                  {!sidebarCollapsed && tab.badge && (
+                    <Badge 
+                      className={`ml-2 relative z-10 ${
+                        isActive 
+                          ? 'bg-white/20 text-white border-white/30' 
+                          : 'bg-orange-100 text-orange-800 group-hover:bg-orange-200'
+                      }`}
+                      variant={isActive ? "secondary" : "default"}
+                    >
+                      {tab.badge}
+                    </Badge>
+                  )}
+                  {!sidebarCollapsed && !tab.badge && (
+                    <div className={`ml-auto relative z-10 ${
+                      isActive ? 'text-white' : 'text-gray-400 group-hover:text-orange-600'
+                    }`}>
+                      <ChevronRight className="w-4 h-4" />
+                    </div>
+                  )}
+                </motion.button>
               );
             })}
           </nav>
         </div>
 
-        {/* User Profile */}
-        <div className="border-t border-gray-200 p-4">
-          <div className="flex items-center space-x-3">
-            <Avatar className="w-10 h-10">
-              <AvatarFallback className="bg-orange-600 text-white">
+        {/* User Profile moderne */}
+        <div className="border-t border-orange-200/30 p-4 bg-gradient-to-r from-orange-50 to-red-50">
+          <motion.div 
+            whileHover={{ scale: 1.02 }}
+            className="flex items-center space-x-3 bg-white/60 backdrop-blur-sm rounded-xl p-3 shadow-sm"
+          >
+            <Avatar className="w-12 h-12 ring-2 ring-orange-200">
+              <AvatarFallback className="bg-gradient-to-br from-orange-500 to-red-500 text-white font-bold">
                 {profile?.first_name?.[0]}{profile?.last_name?.[0]}
               </AvatarFallback>
             </Avatar>
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="font-medium text-sm text-gray-900 truncate">
+                <p className="font-semibold text-sm text-gray-900 truncate">
                   {profile?.first_name} {profile?.last_name}
                 </p>
-                <p className="text-xs text-gray-500 truncate">
+                <p className="text-xs text-gray-600 truncate">
                   {profile?.email}
                 </p>
+                <div className="flex items-center mt-1">
+                  <Badge className="bg-orange-100 text-orange-800 text-xs">
+                    <Crown className="w-3 h-3 mr-1" />
+                    Pro
+                  </Badge>
+                </div>
               </div>
             )}
             {!sidebarCollapsed && (
@@ -1382,87 +1480,126 @@ const PromoteurDashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={handleLogout}
+                className="hover:bg-red-100 hover:text-red-600"
               >
                 <LogOut className="w-4 h-4" />
               </Button>
             )}
-          </div>
+          </motion.div>
         </div>
       </motion.div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top Header */}
-        <header className="bg-white border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
-                {sidebarTabs.find(tab => tab.id === activeTab)?.label}
-              </h1>
-              <p className="text-lg text-gray-600">
-                {sidebarTabs.find(tab => tab.id === activeTab)?.description}
-              </p>
-            </div>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top Header moderne */}
+        <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-orange-200/30 sticky top-0 z-20">
+          <div className="flex items-center justify-between px-6 py-4">
             <div className="flex items-center space-x-4">
-              <Button variant="outline" size="sm" onClick={() => handleTabClick('messages')}>
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Messages
-                <Badge className="ml-2 bg-red-500">3</Badge>
-              </Button>
-              <Button variant="outline" size="sm" onClick={() => handleTabClick('notifications')}>
-                <Bell className="w-4 h-4 mr-2" />
-                Notifications
-                <Badge className="ml-2 bg-orange-500">5</Badge>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(true)}
+                className="lg:hidden text-gray-600"
+              >
+                <Menu className="h-5 w-5" />
               </Button>
               
-              {/* Menu Profil */}
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-                    <Avatar className="h-8 w-8">
-                      <AvatarFallback className="bg-orange-600 text-white">
-                        {profile?.first_name?.[0]}{profile?.last_name?.[0]}
-                      </AvatarFallback>
-                    </Avatar>
-                  </Button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-56" align="end" forceMount>
-                  <DropdownMenuLabel className="font-normal">
-                    <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium leading-none">
-                        {profile?.first_name} {profile?.last_name}
-                      </p>
-                      <p className="text-xs leading-none text-muted-foreground">
-                        {profile?.email}
-                      </p>
-                    </div>
-                  </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => handleTabClick('settings')}>
-                    <Settings className="mr-2 h-4 w-4" />
-                    <span>Paramètres</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => handleTabClick('settings')}>
-                    <User className="mr-2 h-4 w-4" />
-                    <span>Profil</span>
-                  </DropdownMenuItem>
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={handleLogout}>
-                    <LogOut className="mr-2 h-4 w-4" />
-                    <span>Déconnexion</span>
-                  </DropdownMenuItem>
-                </DropdownMenuContent>
-              </DropdownMenu>
+              <div>
+                <h1 className="text-2xl font-bold text-gray-900">
+                  {sidebarTabs.find(tab => tab.id === activeTab)?.label || 'Dashboard'}
+                </h1>
+                <p className="text-sm text-gray-600">
+                  {sidebarTabs.find(tab => tab.id === activeTab)?.description}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex items-center space-x-4">
+              {/* Messages Button */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-600 hover:text-orange-600 hover:bg-orange-50 relative"
+                onClick={() => handleTabClick('messages')}
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  7
+                </span>
+              </Button>
+
+              {/* Notifications Button */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-600 hover:text-orange-600 hover:bg-orange-50 relative"
+                onClick={() => handleTabClick('notifications')}
+              >
+                <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  12
+                </span>
+              </Button>
+
+              {/* User Profile Dropdown */}
+              <div className="flex items-center space-x-3 bg-gradient-to-r from-orange-50 to-red-50 rounded-lg px-3 py-2 border border-orange-200/50">
+                <div className="w-8 h-8 bg-gradient-to-br from-orange-400 to-red-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                  {profile?.first_name?.charAt(0) || user?.email?.charAt(0) || 'P'}
+                </div>
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium text-gray-900">
+                    {profile?.first_name} {profile?.last_name}
+                  </p>
+                  <p className="text-xs text-gray-600">Promoteur Pro</p>
+                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" size="sm" className="hover:bg-orange-100">
+                      <ChevronDown className="h-4 w-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {profile?.first_name} {profile?.last_name}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {profile?.email}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={() => handleTabClick('settings')}>
+                      <Settings className="mr-2 h-4 w-4" />
+                      <span>Paramètres</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuItem onClick={() => handleTabClick('settings')}>
+                      <User className="mr-2 h-4 w-4" />
+                      <span>Profil</span>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="mr-2 h-4 w-4" />
+                      <span>Déconnexion</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </div>
             </div>
           </div>
         </header>
 
         {/* Main Content Area */}
-        <div className="flex-1 overflow-y-auto">
-          <div className="w-full h-full">
+        <main className="flex-1 overflow-auto p-6">
+          <Suspense fallback={
+            <div className="flex items-center justify-center h-64">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-600"></div>
+            </div>
+          }>
             {renderMainContent()}
-          </div>
-        </div>
+          </Suspense>
+        </main>
       </div>
     </div>
   );

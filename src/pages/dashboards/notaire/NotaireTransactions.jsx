@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { 
   FileText, 
   Users, 
@@ -23,7 +23,31 @@ import {
   Stamp,
   Shield,
   Star,
-  Award
+  Award,
+  TrendingUp,
+  Building2,
+  Gavel,
+  PenTool,
+  Zap,
+  BarChart3,
+  Archive,
+  Send,
+  FileCheck,
+  AlertCircle,
+  CreditCard,
+  Wallet,
+  BookOpen,
+  Globe,
+  Lock,
+  Unlock,
+  RefreshCw,
+  Copy,
+  ExternalLink,
+  Settings,
+  MoreHorizontal,
+  ChevronDown,
+  ChevronUp,
+  ArrowUpRight
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -82,67 +106,181 @@ const NotaireTransactions = () => {
     'Constitution société'
   ];
 
-  // Données simulées des transactions
+  // Données simulées des transactions enrichies
   const mockTransactions = [
     {
-      id: 'TXN-001',
+      id: 'TXN-2024-001',
       type: 'Vente immobilière',
       client: 'Famille Diallo',
+      clientAvatar: 'FD',
       property: 'Villa Almadies - Lot 456',
+      propertyType: 'Villa',
       amount: 85000000,
       status: 'completed',
       createdAt: '2024-01-15',
       updatedAt: '2024-01-20',
-      description: 'Vente d\'une villa de 4 chambres dans le quartier des Almadies',
-      documents: ['Titre foncier', 'Acte de vente', 'Certificat de propriété'],
-      blockchainHash: '0x1a2b3c4d5e6f7890abcdef',
+      completedAt: '2024-01-20',
+      description: 'Vente d\'une villa de 4 chambres dans le quartier des Almadies avec piscine et jardin',
+      documents: ['Titre foncier', 'Acte de vente', 'Certificat de propriété', 'Étude de sol'],
+      blockchainHash: '0x1a2b3c4d5e6f7890abcdef123456',
+      blockchainVerified: true,
       notaryFees: 850000,
-      priority: 'high'
+      taxAmount: 4250000,
+      priority: 'high',
+      progress: 100,
+      nextAction: null,
+      parties: ['Vendeur: M. Amadou Ba', 'Acheteur: Famille Diallo'],
+      location: 'Almadies, Dakar',
+      surface: '450m²',
+      estimatedDuration: '15 jours',
+      actualDuration: '5 jours',
+      satisfaction: 5,
+      tags: ['Premium', 'Express', 'Blockchain']
     },
     {
-      id: 'TXN-002',
+      id: 'TXN-2024-002',
       type: 'Succession',
       client: 'Héritiers Ndiaye',
+      clientAvatar: 'HN',
       property: 'Terrain Parcelles Assainies - 500m²',
+      propertyType: 'Terrain',
       amount: 25000000,
       status: 'in_progress',
       createdAt: '2024-01-18',
       updatedAt: '2024-01-22',
-      description: 'Succession d\'un terrain familial entre 5 héritiers',
-      documents: ['Acte de décès', 'Testament', 'Certificat hérédité'],
+      completedAt: null,
+      description: 'Succession d\'un terrain familial entre 5 héritiers avec répartition équitable',
+      documents: ['Acte de décès', 'Testament', 'Certificat hérédité', 'Plan de partage'],
       blockchainHash: null,
+      blockchainVerified: false,
       notaryFees: 375000,
-      priority: 'medium'
+      taxAmount: 1250000,
+      priority: 'medium',
+      progress: 65,
+      nextAction: 'Signature des héritiers restants',
+      parties: ['Défunt: Feu Mamadou Ndiaye', 'Héritiers: 5 personnes'],
+      location: 'Parcelles Assainies, Dakar',
+      surface: '500m²',
+      estimatedDuration: '30 jours',
+      actualDuration: '20 jours',
+      satisfaction: 4,
+      tags: ['Complexe', 'Familial']
     },
     {
-      id: 'TXN-003',
+      id: 'TXN-2024-003',
       type: 'Donation',
       client: 'M. et Mme Seck',
+      clientAvatar: 'MS',
       property: 'Appartement Plateau - 90m²',
+      propertyType: 'Appartement',
       amount: 45000000,
       status: 'review',
       createdAt: '2024-01-20',
       updatedAt: '2024-01-23',
-      description: 'Donation d\'un appartement aux enfants',
-      documents: ['Acte de propriété', 'Certificat fiscal'],
+      completedAt: null,
+      description: 'Donation d\'un appartement aux enfants avec clause d\'usufruit',
+      documents: ['Acte de propriété', 'Certificat fiscal', 'Accord familial'],
       blockchainHash: null,
+      blockchainVerified: false,
       notaryFees: 675000,
-      priority: 'low'
+      taxAmount: 2250000,
+      priority: 'low',
+      progress: 85,
+      nextAction: 'Validation fiscale en cours',
+      parties: ['Donateurs: M. et Mme Seck', 'Bénéficiaires: 2 enfants'],
+      location: 'Plateau, Dakar',
+      surface: '90m²',
+      estimatedDuration: '20 jours',
+      actualDuration: '15 jours',
+      satisfaction: 4,
+      tags: ['Donation', 'Familial']
     },
     {
-      id: 'TXN-004',
+      id: 'TXN-2024-004',
       type: 'Acte de propriété',
       client: 'Entreprise SARLU Teranga',
+      clientAvatar: 'ST',
       property: 'Immeuble commercial Médina - 200m²',
+      propertyType: 'Commercial',
       amount: 120000000,
       status: 'pending',
       createdAt: '2024-01-22',
       updatedAt: '2024-01-22',
-      description: 'Régularisation acte de propriété pour usage commercial',
-      documents: ['Permis de construire', 'Plan cadastral'],
+      completedAt: null,
+      description: 'Régularisation acte de propriété pour usage commercial avec extension',
+      documents: ['Permis de construire', 'Plan cadastral', 'Autorisation commerciale'],
       blockchainHash: null,
+      blockchainVerified: false,
       notaryFees: 1200000,
-      priority: 'high'
+      taxAmount: 6000000,
+      priority: 'high',
+      progress: 25,
+      nextAction: 'Vérification cadastrale',
+      parties: ['Entreprise SARLU Teranga'],
+      location: 'Médina, Dakar',
+      surface: '200m²',
+      estimatedDuration: '25 jours',
+      actualDuration: '2 jours',
+      satisfaction: null,
+      tags: ['Commercial', 'Régularisation']
+    },
+    {
+      id: 'TXN-2024-005',
+      type: 'Hypothèque',
+      client: 'Banque Atlantique',
+      clientAvatar: 'BA',
+      property: 'Villa Sacré-Cœur - 320m²',
+      propertyType: 'Villa',
+      amount: 75000000,
+      status: 'in_progress',
+      createdAt: '2024-01-25',
+      updatedAt: '2024-01-26',
+      completedAt: null,
+      description: 'Constitution d\'hypothèque pour prêt immobilier de 50M FCFA',
+      documents: ['Titre foncier', 'Contrat de prêt', 'Évaluation immobilière'],
+      blockchainHash: null,
+      blockchainVerified: false,
+      notaryFees: 750000,
+      taxAmount: 375000,
+      priority: 'medium',
+      progress: 45,
+      nextAction: 'Évaluation par expert',
+      parties: ['Emprunteur: M. Ousmane Fall', 'Créancier: Banque Atlantique'],
+      location: 'Sacré-Cœur, Dakar',
+      surface: '320m²',
+      estimatedDuration: '18 jours',
+      actualDuration: '8 jours',
+      satisfaction: null,
+      tags: ['Bancaire', 'Hypothèque']
+    },
+    {
+      id: 'TXN-2024-006',
+      type: 'Constitution société',
+      client: 'StartUp TechSen',
+      clientAvatar: 'TS',
+      property: 'Bureau Mermoz - 150m²',
+      propertyType: 'Bureau',
+      amount: 35000000,
+      status: 'completed',
+      createdAt: '2024-01-28',
+      updatedAt: '2024-01-30',
+      completedAt: '2024-01-30',
+      description: 'Constitution SARL avec acquisition du siège social',
+      documents: ['Statuts société', 'Bail commercial', 'Registre commerce'],
+      blockchainHash: '0xabc123def456789ghijklmnop',
+      blockchainVerified: true,
+      notaryFees: 525000,
+      taxAmount: 1750000,
+      priority: 'medium',
+      progress: 100,
+      nextAction: null,
+      parties: ['Associés: 3 fondateurs'],
+      location: 'Mermoz, Dakar',
+      surface: '150m²',
+      estimatedDuration: '10 jours',
+      actualDuration: '2 jours',
+      satisfaction: 5,
+      tags: ['Startup', 'Express', 'Blockchain']
     }
   ];
 
@@ -270,285 +408,420 @@ const NotaireTransactions = () => {
   };
 
   return (
-    <div className="space-y-6">
-      {/* En-tête */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
-        <div>
-          <h2 className="text-3xl font-bold text-gray-900">Gestion des Transactions</h2>
-          <p className="text-gray-600 mt-1">
-            Suivi et gestion des transactions notariales
-          </p>
+    <div className="space-y-8 p-6 bg-gradient-to-br from-amber-50 via-orange-50 to-red-50 min-h-screen">
+      {/* En-tête Hero */}
+      <motion.div 
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="relative overflow-hidden bg-gradient-to-r from-amber-600 via-orange-600 to-red-600 rounded-2xl shadow-2xl"
+      >
+        <div className="absolute inset-0 bg-black/10"></div>
+        <div className="relative px-8 py-12">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+            <div className="text-white">
+              <motion.h1 
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.2 }}
+                className="text-4xl font-bold mb-2 flex items-center"
+              >
+                <Gavel className="h-10 w-10 mr-4" />
+                Transactions Notariales
+              </motion.h1>
+              <motion.p 
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.4 }}
+                className="text-xl text-amber-100 mb-4"
+              >
+                Plateforme avancée de gestion des actes notariés
+              </motion.p>
+              <motion.div 
+                initial={{ opacity: 0, x: -30 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ delay: 0.6 }}
+                className="flex items-center space-x-6 text-amber-100"
+              >
+                <div className="flex items-center">
+                  <Shield className="h-5 w-5 mr-2" />
+                  <span>Blockchain sécurisé</span>
+                </div>
+                <div className="flex items-center">
+                  <Zap className="h-5 w-5 mr-2" />
+                  <span>Traitement express</span>
+                </div>
+                <div className="flex items-center">
+                  <Globe className="h-5 w-5 mr-2" />
+                  <span>Conforme OHADA</span>
+                </div>
+              </motion.div>
+            </div>
+            
+            <motion.div 
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: 0.8 }}
+              className="flex items-center space-x-4 mt-6 lg:mt-0"
+            >
+              <Button 
+                variant="secondary"
+                onClick={handleExportTransactions}
+                disabled={isLoading}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                <Download className="h-4 w-4 mr-2" />
+                Exporter
+              </Button>
+              <Button 
+                onClick={() => setShowCreateDialog(true)}
+                className="bg-white text-amber-600 hover:bg-amber-50 font-semibold"
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Nouvelle Transaction
+              </Button>
+            </motion.div>
+          </div>
         </div>
-        
-        <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-          <Button 
-            variant="outline"
-            onClick={handleExportTransactions}
-            disabled={isLoading}
-          >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-          <Button 
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => setShowCreateDialog(true)}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouvelle Transaction
-          </Button>
-        </div>
-      </div>
+      </motion.div>
 
-      {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total</p>
-                <p className="text-2xl font-bold">{transactions.length}</p>
-              </div>
-              <FileText className="h-8 w-8 text-amber-600" />
+      {/* Statistiques avancées */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.2 }}
+        className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+      >
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl p-6 text-white shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <FileText className="h-6 w-6" />
             </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">En cours</p>
-                <p className="text-2xl font-bold text-blue-600">
-                  {transactions.filter(t => t.status === 'in_progress').length}
-                </p>
-              </div>
-              <ArrowRight className="h-8 w-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Terminées</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {transactions.filter(t => t.status === 'completed').length}
-                </p>
-              </div>
-              <CheckCircle className="h-8 w-8 text-green-600" />
-            </div>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Revenus</p>
-                <p className="text-2xl font-bold text-purple-600">
-                  {(transactions.reduce((sum, t) => sum + t.notaryFees, 0) / 1000000).toFixed(1)}M
-                </p>
-              </div>
-              <DollarSign className="h-8 w-8 text-purple-600" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
+            <TrendingUp className="h-5 w-5 text-blue-200" />
+          </div>
+          <div>
+            <p className="text-blue-100 text-sm">Total Transactions</p>
+            <p className="text-3xl font-bold">{transactions.length}</p>
+            <p className="text-blue-200 text-xs mt-1">+12% ce mois</p>
+          </div>
+        </motion.div>
 
-      {/* Filtres et recherche */}
-      <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0 md:space-x-4">
-            <div className="flex items-center space-x-4">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-orange-500 to-orange-600 rounded-xl p-6 text-white shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Clock className="h-6 w-6" />
+            </div>
+            <ArrowUpRight className="h-5 w-5 text-orange-200" />
+          </div>
+          <div>
+            <p className="text-orange-100 text-sm">En cours</p>
+            <p className="text-3xl font-bold">
+              {transactions.filter(t => t.status === 'in_progress').length}
+            </p>
+            <p className="text-orange-200 text-xs mt-1">Moyenne: 18 jours</p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-green-500 to-green-600 rounded-xl p-6 text-white shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <CheckCircle className="h-6 w-6" />
+            </div>
+            <Star className="h-5 w-5 text-green-200" />
+          </div>
+          <div>
+            <p className="text-green-100 text-sm">Terminées</p>
+            <p className="text-3xl font-bold">
+              {transactions.filter(t => t.status === 'completed').length}
+            </p>
+            <p className="text-green-200 text-xs mt-1">Satisfaction: 4.8/5</p>
+          </div>
+        </motion.div>
+
+        <motion.div
+          whileHover={{ scale: 1.02 }}
+          className="bg-gradient-to-br from-purple-500 to-purple-600 rounded-xl p-6 text-white shadow-lg"
+        >
+          <div className="flex items-center justify-between mb-4">
+            <div className="p-2 bg-white/20 rounded-lg">
+              <Wallet className="h-6 w-6" />
+            </div>
+            <BarChart3 className="h-5 w-5 text-purple-200" />
+          </div>
+          <div>
+            <p className="text-purple-100 text-sm">Revenus ce mois</p>
+            <p className="text-3xl font-bold">
+              {(transactions.reduce((sum, t) => sum + t.notaryFees, 0) / 1000000).toFixed(1)}M
+            </p>
+            <p className="text-purple-200 text-xs mt-1">+23% vs mois dernier</p>
+          </div>
+        </motion.div>
+      </motion.div>
+
+      {/* Barre de recherche et filtres avancés */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+        className="bg-white/70 backdrop-blur-md rounded-2xl shadow-lg border border-white/20"
+      >
+        <div className="p-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between space-y-4 lg:space-y-0 lg:space-x-6">
+            <div className="flex flex-col md:flex-row md:items-center space-y-4 md:space-y-0 md:space-x-4 flex-1">
+              <div className="relative flex-1 max-w-md">
+                <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
                 <Input
-                  placeholder="Rechercher transactions..."
+                  placeholder="Rechercher par client, type, référence..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10 w-80"
+                  className="pl-12 pr-4 py-3 bg-white/80 border-amber-200 focus:border-amber-400 focus:ring-amber-400 rounded-xl"
                 />
               </div>
+              
               <Select value={statusFilter} onValueChange={setStatusFilter}>
-                <SelectTrigger className="w-48">
-                  <SelectValue placeholder="Filtrer par statut" />
+                <SelectTrigger className="w-48 bg-white/80 border-amber-200 focus:border-amber-400 rounded-xl">
+                  <Filter className="h-4 w-4 mr-2 text-gray-500" />
+                  <SelectValue placeholder="Tous les statuts" />
                 </SelectTrigger>
                 <SelectContent>
                   {statusOptions.map(option => (
                     <SelectItem key={option.value} value={option.value}>
-                      {option.label}
+                      <div className="flex items-center">
+                        {getStatusIcon(option.value)}
+                        <span className="ml-2">{option.label}</span>
+                      </div>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
+
+              <Button variant="outline" className="bg-white/80 border-amber-200 hover:bg-amber-50">
+                <Settings className="h-4 w-4 mr-2" />
+                Filtres avancés
+              </Button>
             </div>
-            <div className="flex items-center text-sm text-gray-600">
-              {filteredTransactions.length} transaction(s) trouvée(s)
+            
+            <div className="flex items-center space-x-4">
+              <div className="bg-amber-100 px-4 py-2 rounded-xl">
+                <span className="text-sm font-medium text-amber-800">
+                  {filteredTransactions.length} résultat{filteredTransactions.length > 1 ? 's' : ''}
+                </span>
+              </div>
+              <Button variant="outline" size="sm" className="bg-white/80">
+                <RefreshCw className="h-4 w-4" />
+              </Button>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </motion.div>
 
-      {/* Tableau des transactions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Liste des Transactions</CardTitle>
-          <CardDescription>
-            Gestion complète des transactions notariales
-          </CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>ID Transaction</TableHead>
-                <TableHead>Type</TableHead>
-                <TableHead>Client</TableHead>
-                <TableHead>Propriété</TableHead>
-                <TableHead>Montant</TableHead>
-                <TableHead>Statut</TableHead>
-                <TableHead>Priorité</TableHead>
-                <TableHead>Date</TableHead>
-                <TableHead>Actions</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {paginatedTransactions.map((transaction) => (
-                <TableRow key={transaction.id}>
-                  <TableCell className="font-medium">{transaction.id}</TableCell>
-                  <TableCell>{transaction.type}</TableCell>
-                  <TableCell>{transaction.client}</TableCell>
-                  <TableCell className="max-w-48 truncate">
-                    {transaction.property}
-                  </TableCell>
-                  <TableCell>
-                    {(transaction.amount / 1000000).toFixed(1)}M FCFA
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getStatusColor(transaction.status)}>
-                      {getStatusIcon(transaction.status)}
-                      <span className="ml-1">
-                        {statusOptions.find(s => s.value === transaction.status)?.label}
-                      </span>
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={getPriorityColor(transaction.priority)}>
-                      {transaction.priority}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>{transaction.createdAt}</TableCell>
-                  <TableCell>
+      {/* Grille des transactions moderne */}
+      <motion.div 
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.6 }}
+        className="space-y-4"
+      >
+        <AnimatePresence>
+          {paginatedTransactions.map((transaction, index) => (
+            <motion.div
+              key={transaction.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ delay: index * 0.1 }}
+              whileHover={{ scale: 1.01 }}
+              className="bg-white/80 backdrop-blur-md rounded-2xl shadow-lg border border-white/20 overflow-hidden"
+            >
+              <div className="p-6">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between space-y-4 lg:space-y-0">
+                  {/* Info principale */}
+                  <div className="flex items-start space-x-4 flex-1">
+                    <div className="w-12 h-12 bg-gradient-to-br from-amber-400 to-orange-500 rounded-xl flex items-center justify-center text-white font-bold text-lg shadow-lg">
+                      {transaction.clientAvatar}
+                    </div>
+                    
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-3 mb-2">
+                        <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          {transaction.client}
+                        </h3>
+                        <Badge className={getStatusColor(transaction.status)}>
+                          {getStatusIcon(transaction.status)}
+                          <span className="ml-1">
+                            {statusOptions.find(s => s.value === transaction.status)?.label}
+                          </span>
+                        </Badge>
+                        {transaction.blockchainVerified && (
+                          <Badge className="bg-green-100 text-green-800">
+                            <Shield className="h-3 w-3 mr-1" />
+                            Blockchain
+                          </Badge>
+                        )}
+                      </div>
+                      
+                      <div className="flex items-center space-x-6 text-sm text-gray-600 mb-2">
+                        <div className="flex items-center">
+                          <Building2 className="h-4 w-4 mr-1" />
+                          {transaction.type}
+                        </div>
+                        <div className="flex items-center">
+                          <MapPin className="h-4 w-4 mr-1" />
+                          {transaction.location}
+                        </div>
+                        <div className="flex items-center">
+                          <Calendar className="h-4 w-4 mr-1" />
+                          {transaction.createdAt}
+                        </div>
+                      </div>
+                      
+                      <p className="text-gray-700 text-sm mb-3 line-clamp-2">
+                        {transaction.description}
+                      </p>
+                      
+                      {/* Barre de progression */}
+                      <div className="flex items-center space-x-3 mb-3">
+                        <div className="flex-1">
+                          <div className="flex items-center justify-between text-xs text-gray-600 mb-1">
+                            <span>Progression</span>
+                            <span>{transaction.progress}%</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <motion.div 
+                              initial={{ width: 0 }}
+                              animate={{ width: `${transaction.progress}%` }}
+                              transition={{ duration: 1, delay: index * 0.1 }}
+                              className={`h-2 rounded-full ${
+                                transaction.progress === 100 
+                                  ? 'bg-green-500' 
+                                  : transaction.progress > 70 
+                                  ? 'bg-blue-500' 
+                                  : 'bg-amber-500'
+                              }`}
+                            />
+                          </div>
+                        </div>
+                        <Badge className={getPriorityColor(transaction.priority)} variant="outline">
+                          {transaction.priority}
+                        </Badge>
+                      </div>
+                      
+                      {/* Tags */}
+                      <div className="flex items-center space-x-2">
+                        {transaction.tags.map((tag, tagIndex) => (
+                          <Badge key={tagIndex} variant="secondary" className="text-xs">
+                            {tag}
+                          </Badge>
+                        ))}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Montants et actions */}
+                  <div className="flex flex-col lg:flex-row lg:items-center space-y-4 lg:space-y-0 lg:space-x-6">
+                    <div className="text-right">
+                      <div className="text-2xl font-bold text-gray-900 mb-1">
+                        {(transaction.amount / 1000000).toFixed(1)}M
+                      </div>
+                      <div className="text-sm text-gray-600">
+                        Honoraires: {(transaction.notaryFees / 1000).toFixed(0)}k FCFA
+                      </div>
+                      {transaction.nextAction && (
+                        <div className="text-xs text-amber-600 mt-1 flex items-center">
+                          <Clock className="h-3 w-3 mr-1" />
+                          {transaction.nextAction}
+                        </div>
+                      )}
+                    </div>
+                    
                     <div className="flex items-center space-x-2">
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setSelectedTransaction(transaction);
-                          window.safeGlobalToast({
-                            title: "Transaction consultée",
-                            description: `Détails de ${transaction.id}`,
-                            variant: "success"
-                          });
-                        }}
+                        onClick={() => handleViewTransaction(transaction)}
+                        className="hover:bg-blue-50"
                       >
                         <Eye className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setIsLoading(true);
-                          setTimeout(() => {
-                            window.safeGlobalToast({
-                              title: "Transaction modifiée",
-                              description: `${transaction.id} mis à jour`,
-                              variant: "success"
-                            });
-                            setIsLoading(false);
-                          }, 1000);
-                        }}
-                        disabled={isLoading}
+                        className="hover:bg-amber-50"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setIsLoading(true);
-                          setTimeout(() => {
-                            window.safeGlobalToast({
-                              title: "Transaction validée",
-                              description: `${transaction.id} approuvée`,
-                              variant: "success"
-                            });
-                            setIsLoading(false);
-                          }, 1500);
-                        }}
-                        disabled={isLoading}
+                        className="hover:bg-green-50"
                       >
-                        <CheckCircle className="h-4 w-4 text-green-600" />
+                        <FileCheck className="h-4 w-4 text-green-600" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => {
-                          setIsLoading(true);
-                          setTimeout(() => {
-                            window.safeGlobalToast({
-                              title: "Document généré",
-                              description: `Acte pour ${transaction.id}`,
-                              variant: "success"
-                            });
-                            setIsLoading(false);
-                          }, 2000);
-                        }}
-                        disabled={isLoading}
+                        className="hover:bg-purple-50"
                       >
-                        <Download className="h-4 w-4 text-blue-600" />
+                        <Download className="h-4 w-4 text-purple-600" />
                       </Button>
                       <Button
                         variant="ghost"
                         size="sm"
-                        onClick={() => handleDeleteTransaction(transaction.id)}
-                        disabled={isLoading}
                       >
-                        <Trash2 className="h-4 w-4 text-red-600" />
+                        <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </div>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-
-          {/* Pagination */}
-          {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4">
-              <div className="text-sm text-gray-600">
-                Page {currentPage} sur {totalPages}
+                  </div>
+                </div>
               </div>
-              <div className="flex items-center space-x-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
-                  disabled={currentPage === 1}
-                >
-                  Précédent
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
-                  disabled={currentPage === totalPages}
-                >
-                  Suivant
-                </Button>
-              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+        
+        {/* Pagination améliorée */}
+        {totalPages > 1 && (
+          <motion.div 
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            className="flex items-center justify-between bg-white/70 backdrop-blur-md rounded-xl p-4 mt-6"
+          >
+            <div className="text-sm text-gray-600">
+              Affichage de {startIndex + 1} à {Math.min(startIndex + transactionsPerPage, filteredTransactions.length)} sur {filteredTransactions.length} transactions
             </div>
-          )}
-        </CardContent>
-      </Card>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="bg-white/80"
+              >
+                Précédent
+              </Button>
+              <span className="text-sm font-medium text-gray-700 px-3">
+                {currentPage} / {totalPages}
+              </span>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="bg-white/80"
+              >
+                Suivant
+              </Button>
+            </div>
+          </motion.div>
+        )}
+      </motion.div>
 
       {/* Modal de création de transaction */}
       <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>

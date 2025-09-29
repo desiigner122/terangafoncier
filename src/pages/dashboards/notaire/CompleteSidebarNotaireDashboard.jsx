@@ -12,6 +12,7 @@ import {
   Bell,
   LogOut,
   User,
+  Menu,
   
   // Content Icons
   DollarSign,
@@ -37,7 +38,6 @@ import {
   Award,
   
   // UI Icons
-  Menu,
   X,
   ChevronDown,
   Plus,
@@ -66,6 +66,9 @@ const NotaireAnalytics = React.lazy(() => import('./NotaireAnalytics'));
 const NotaireAI = React.lazy(() => import('./NotaireAI'));
 const NotaireBlockchain = React.lazy(() => import('./NotaireBlockchain'));
 const NotaireSettings = React.lazy(() => import('./NotaireSettings'));
+// Nouvelles pages CRM et Communication
+const LazyNotaireCRM = React.lazy(() => import('./NotaireCRM'));
+const LazyNotaireCommunication = React.lazy(() => import('./NotaireCommunication'));
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -147,6 +150,20 @@ const CompleteSidebarNotaireDashboard = () => {
       description: 'Tableau de bord principal'
     },
     {
+      id: 'crm',
+      label: 'CRM Clients & Banques',
+      icon: Users,
+      description: 'Gestion relation clients et partenaires bancaires',
+      badge: '156'
+    },
+    {
+      id: 'communication',
+      label: 'Communication Tripartite',
+      icon: MessageSquare,
+      description: 'Interface Notaire-Banque-Client',
+      badge: '34'
+    },
+    {
       id: 'transactions',
       label: 'Transactions',
       icon: FileText,
@@ -209,6 +226,10 @@ const CompleteSidebarNotaireDashboard = () => {
     switch (activeTab) {
       case 'overview':
         return <NotaireOverview {...commonProps} />;
+      case 'crm':
+        return <LazyNotaireCRM />;
+      case 'communication':
+        return <LazyNotaireCommunication />;
       case 'transactions':
         return <NotaireTransactions {...commonProps} />;
       case 'authentication':
@@ -443,12 +464,51 @@ const CompleteSidebarNotaireDashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="text-gray-600">
+              {/* Messages Button */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-600 hover:text-amber-600 hover:bg-amber-50 relative"
+                onClick={() => setActiveTab('communication')}
+              >
+                <MessageSquare className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  3
+                </span>
+              </Button>
+
+              {/* Notifications Button */}
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-gray-600 hover:text-amber-600 hover:bg-amber-50 relative"
+              >
                 <Bell className="h-5 w-5" />
+                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                  5
+                </span>
               </Button>
-              <Button variant="ghost" size="sm" className="text-gray-600">
-                <Search className="h-5 w-5" />
-              </Button>
+
+              {/* User Profile Dropdown */}
+              <div className="flex items-center space-x-3 bg-gradient-to-r from-amber-50 to-orange-50 rounded-lg px-3 py-2 border border-amber-200/50">
+                <div className="w-8 h-8 bg-gradient-to-br from-amber-400 to-orange-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
+                  {profile?.first_name?.charAt(0) || user?.email?.charAt(0) || 'N'}
+                </div>
+                <div className="hidden md:block">
+                  <p className="text-sm font-medium text-gray-900">
+                    {profile?.first_name} {profile?.last_name}
+                  </p>
+                  <p className="text-xs text-gray-600">Notaire</p>
+                </div>
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  onClick={handleLogout}
+                  className="text-gray-600 hover:text-red-600 hover:bg-red-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                </Button>
+              </div>
             </div>
           </div>
         </header>

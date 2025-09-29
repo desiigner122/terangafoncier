@@ -70,7 +70,11 @@ import { Link } from 'react-router-dom';
 
 // Import des pages spécialisées
 const VendeurOverview = React.lazy(() => import('./VendeurOverview'));
+const VendeurCRM = React.lazy(() => import('./VendeurCRM'));
 const VendeurPropertiesComplete = React.lazy(() => import('./VendeurPropertiesComplete'));
+const VendeurAntiFraude = React.lazy(() => import('./VendeurAntiFraude'));
+const VendeurGPSVerification = React.lazy(() => import('./VendeurGPSVerification'));
+const VendeurServicesDigitaux = React.lazy(() => import('./VendeurServicesDigitaux'));
 const VendeurAddTerrain = React.lazy(() => import('./VendeurAddTerrain'));
 const VendeurPhotos = React.lazy(() => import('./VendeurPhotos'));
 const VendeurAnalytics = React.lazy(() => import('./VendeurAnalytics'));
@@ -99,13 +103,21 @@ const CompleteSidebarVendeurDashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
 
-  // Navigation Items Configuration pour Vendeur
+  // Navigation Items Configuration pour Vendeur - CRM + Anti-Fraude
   const navigationItems = [
     {
       id: 'overview',
       label: 'Vue d\'ensemble',
       icon: Home,
-      description: 'Dashboard principal et statistiques'
+      description: 'Dashboard CRM + Anti-Fraude'
+    },
+    {
+      id: 'crm',
+      label: 'CRM Prospects',
+      icon: Users,
+      description: 'Gestion clients et prospects',
+      badge: '8',
+      highlight: true
     },
     {
       id: 'properties',
@@ -113,6 +125,27 @@ const CompleteSidebarVendeurDashboard = () => {
       icon: Building2,
       description: 'Gestion complète de vos propriétés',
       badge: '12'
+    },
+    {
+      id: 'anti-fraud',
+      label: 'Vérification Titres',
+      icon: Shield,
+      description: 'Scanner & validation anti-fraude',
+      badge: 'SÉCURISÉ'
+    },
+    {
+      id: 'gps-verification',
+      label: 'Géolocalisation GPS',
+      icon: MapPin,
+      description: 'Validation GPS des parcelles',
+      badge: '9'
+    },
+    {
+      id: 'digital-services',
+      label: 'Services Digitalisés',
+      icon: Zap,
+      description: 'Signature & visites virtuelles',
+      badge: 'DIGITAL'
     },
     {
       id: 'add-property',
@@ -135,17 +168,11 @@ const CompleteSidebarVendeurDashboard = () => {
       description: 'Statistiques et performances'
     },
     {
-      id: 'ai-assistant',
-      label: 'Assistant IA',
-      icon: Brain,
-      description: 'Intelligence artificielle',
-      badge: 'NOUVEAU'
-    },
-    {
       id: 'blockchain',
       label: 'Blockchain',
-      icon: Shield,
-      description: 'Vérification et certification'
+      icon: Network,
+      description: 'Certification blockchain',
+      badge: '10'
     },
     {
       id: 'messages',
@@ -162,7 +189,7 @@ const CompleteSidebarVendeurDashboard = () => {
     }
   ];
 
-  // Stats du tableau de bord
+  // Stats du tableau de bord CRM + Anti-Fraude
   const [dashboardStats, setDashboardStats] = useState({
     totalProperties: 12,
     activeListings: 8,
@@ -170,7 +197,16 @@ const CompleteSidebarVendeurDashboard = () => {
     monthlyRevenue: 2500000,
     pendingInquiries: 5,
     aiOptimized: 6,
-    blockchainVerified: 10
+    blockchainVerified: 10,
+    // Nouvelles stats CRM
+    activeProspects: 8,
+    conversionRate: 15.3,
+    avgDealValue: 28500000,
+    // Nouvelles stats Anti-Fraude
+    fraudAlerts: 2,
+    verifiedTitles: 10,
+    securityScore: 98,
+    gpsVerified: 9
   });
 
   useEffect(() => {
@@ -197,7 +233,11 @@ const CompleteSidebarVendeurDashboard = () => {
   const renderActiveComponent = () => {
     const components = {
       'overview': VendeurOverview,
+      'crm': VendeurCRM,
       'properties': VendeurPropertiesComplete,
+      'anti-fraud': VendeurAntiFraude,
+      'gps-verification': VendeurGPSVerification,
+      'digital-services': VendeurServicesDigitaux,
       'add-property': VendeurAddTerrain,
       'photos': VendeurPhotos,
       'analytics': VendeurAnalytics,
@@ -291,21 +331,35 @@ const CompleteSidebarVendeurDashboard = () => {
           </div>
         </div>
 
-        {/* Stats rapides */}
+        {/* Stats rapides CRM + Anti-Fraude */}
         {!sidebarCollapsed && (
           <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-3 mb-3">
               <div className="text-center">
                 <div className="text-xl font-bold text-purple-600">
-                  {dashboardStats.totalProperties}
+                  {dashboardStats.activeProspects}
                 </div>
-                <div className="text-xs text-gray-600">Biens</div>
+                <div className="text-xs text-gray-600">Prospects</div>
               </div>
               <div className="text-center">
                 <div className="text-xl font-bold text-green-600">
-                  {formatCurrency(dashboardStats.monthlyRevenue)}
+                  {dashboardStats.securityScore}%
                 </div>
-                <div className="text-xs text-gray-600">Revenus</div>
+                <div className="text-xs text-gray-600">Sécurité</div>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              <div className="text-center">
+                <div className="text-lg font-bold text-blue-600">
+                  {dashboardStats.verifiedTitles}
+                </div>
+                <div className="text-xs text-gray-600">Titres vérifiés</div>
+              </div>
+              <div className="text-center">
+                <div className="text-lg font-bold text-orange-600">
+                  {dashboardStats.conversionRate}%
+                </div>
+                <div className="text-xs text-gray-600">Conversion</div>
               </div>
             </div>
           </div>

@@ -3,7 +3,7 @@ import { Routes, Route } from 'react-router-dom';
 
 // Import des dashboards principaux
 import AdminDashboard from '../pages/dashboards/AdminDashboard';
-import ParticularDashboard from '../pages/dashboards/ParticularDashboard';
+import ParticularDashboard from '../pages/dashboards/particulier/ParticulierDashboardModern';
 import VendeurDashboard from '../pages/dashboards/VendeurDashboard';
 import InvestisseurDashboard from '../pages/dashboards/InvestisseurDashboard';
 

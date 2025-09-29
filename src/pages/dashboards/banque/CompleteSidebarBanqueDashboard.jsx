@@ -6,15 +6,15 @@ import {
   Building2,
   FileText,
   Users,
-  CreditCard,
-  Calculator,
-  TrendingUp,
+  Map,
+  Shield,
   Settings,
   Bell,
   LogOut,
   User,
   
   // Content Icons
+  TrendingUp,
   DollarSign,
   MapPin,
   Clock,
@@ -29,66 +29,84 @@ import {
   Activity,
   Target,
   
+  // AI & Blockchain Icons
+  Brain,
+  Zap,
+  Network,
+  Database,
+  Rocket,
+  Lightbulb,
+  
   // Banking Icons
   Banknote,
-  Percent,
-  Shield,
-  Award,
-  Briefcase,
-  PieChart,
+  CreditCard,
+  Wallet,
+  Calculator,
+  PiggyBank,
+  TrendingDown,
   BarChart3,
+  Smartphone,
+  Phone,
+  Mail,
   
   // UI Icons
   Menu,
   X,
+  ChevronLeft,
+  ChevronRight,
   ChevronDown,
-  Plus,
-  Edit,
-  Eye,
-  Trash2
+  ChevronUp
 } from 'lucide-react';
 
+import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/TempSupabaseAuthContext';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
+// Toast import supprimé - utilisation window.safeGlobalToast
 
-// Lazy loading des composants
+// Lazy loading des composants de pages
 const BanqueOverview = React.lazy(() => import('./BanqueOverview'));
-const BanqueCreditRequests = React.lazy(() => import('./BanqueCreditRequests'));
-const BanqueLandValuation = React.lazy(() => import('./BanqueLandValuation'));
-const BanquePortfolio = React.lazy(() => import('./BanquePortfolio'));
-const BanqueRiskManagement = React.lazy(() => import('./BanqueRiskManagement'));
-const BanqueCompliance = React.lazy(() => import('./BanqueCompliance'));
+const BanqueClientManagement = React.lazy(() => import('./BanqueClients'));
+const BanqueCreditManagement = React.lazy(() => import('./BanqueCreditRequests'));
+const BanqueRiskAssessment = React.lazy(() => import('./BanqueRiskManagement'));
+const BanquePortfolioManagement = React.lazy(() => import('./BanquePortfolio'));
+const BanqueMessages = React.lazy(() => import('./BanqueMessages'));
 const BanqueAnalytics = React.lazy(() => import('./BanqueAnalytics'));
 const BanqueAI = React.lazy(() => import('./BanqueAI'));
 const BanqueBlockchain = React.lazy(() => import('./BanqueBlockchain'));
+const BanqueComplianceReporting = React.lazy(() => import('./BanqueCompliance'));
+// Nouvelles pages spécialisées pour la lutte anti-fraude et digitalisation
+const BanqueCRM = React.lazy(() => import('./BanqueCRM'));
+const BanqueAntiFraude = React.lazy(() => import('./BanqueAntiFraude'));
+const BanqueGPSVerification = React.lazy(() => import('./BanqueGPSVerification'));
+const BanqueServicesDigitaux = React.lazy(() => import('./BanqueServicesDigitaux'));
 const BanqueSettings = React.lazy(() => import('./BanqueSettings'));
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
 
 const CompleteSidebarBanqueDashboard = () => {
   const { user, signOut } = useAuth();
+  const [profile, setProfile] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
-
-  // Stats du dashboard banque
+  const [showMessages, setShowMessages] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
   const [dashboardStats, setDashboardStats] = useState({
-    portfolioValue: 2450000000, // 2.45 milliards FCFA
-    pendingCreditRequests: 23,
-    monthlyLoans: 156,
-    activeClients: 1847,
-    riskLevel: 'Faible',
-    complianceScore: 98
+    pendingCreditApplications: 28,
+    approvedCredits: 156,
+    totalCreditVolume: '2.8Md CFA',
+    activeClients: 12847,
+    monthlyRevenue: 485000000,
+    totalGuarantees: 1875
   });
 
   // Chargement du profil utilisateur
@@ -134,62 +152,93 @@ const CompleteSidebarBanqueDashboard = () => {
       id: 'overview',
       label: 'Vue d\'ensemble',
       icon: Home,
-      description: 'Tableau de bord principal'
+      description: 'Tableau de bord bancaire principal'
     },
     {
-      id: 'credit-requests',
-      label: 'Demandes Crédit',
-      icon: FileText,
-      description: 'Gestion des demandes de financement',
-      badge: dashboardStats.pendingCreditRequests
+      id: 'client-management',
+      label: 'Gestion Clients',
+      icon: Users,
+      description: 'Portefeuille clients immobilier',
+      badge: dashboardStats.activeClients > 10000 ? '10k+' : null
     },
     {
-      id: 'land-valuation',
-      label: 'Évaluation Foncière',
-      icon: Calculator,
-      description: 'Expertise et évaluation des biens'
+      id: 'crm',
+      label: 'CRM Bancaire',
+      icon: Banknote,
+      description: 'Relation client et scoring crédit'
     },
     {
-      id: 'portfolio',
-      label: 'Portefeuille',
-      icon: Briefcase,
-      description: 'Gestion du portefeuille de crédits'
-    },
-    {
-      id: 'risk-management',
-      label: 'Gestion Risques',
+      id: 'anti-fraude',
+      label: 'Anti-Fraude IA',
       icon: Shield,
-      description: 'Analyse et gestion des risques'
+      description: 'Détection fraude bancaire avec IA'
     },
     {
-      id: 'compliance',
-      label: 'Conformité',
-      icon: Award,
-      description: 'Respect réglementaire et audits'
+      id: 'gps-verification',
+      label: 'Validation GPS',
+      icon: MapPin,
+      description: 'Vérification GPS des garanties'
+    },
+    {
+      id: 'services-digitaux',
+      label: 'Services Digitaux',
+      icon: Smartphone,
+      description: 'Banking digital et fintech'
+    },
+    {
+      id: 'credit-management',
+      label: 'Gestion Crédits',
+      icon: Calculator,
+      description: 'Crédit immobilier et hypothécaire',
+      badge: dashboardStats.pendingCreditApplications
+    },
+    {
+      id: 'risk-assessment',
+      label: 'Analyse Risques',
+      icon: TrendingDown,
+      description: 'Évaluation et gestion des risques'
+    },
+    {
+      id: 'portfolio-management',
+      label: 'Gestion Portfolio',
+      icon: PiggyBank,
+      description: 'Portfolio crédits et investissements'
+    },
+    {
+      id: 'compliance-reporting',
+      label: 'Conformité & Rapports',
+      icon: FileText,
+      description: 'Compliance bancaire et reporting'
+    },
+    {
+      id: 'messages',
+      label: 'Communications',
+      icon: MessageSquare,
+      description: 'Messagerie bancaire sécurisée'
     },
     {
       id: 'analytics',
-      label: 'Analyses & Rapports',
-      icon: TrendingUp,
-      description: 'Statistiques et analyses financières'
+      label: 'Analytics Bancaire',
+      icon: BarChart3,
+      description: 'Analyses financières et KPI'
     },
     {
       id: 'ai',
       label: 'Assistant IA',
-      icon: Activity,
+      icon: Brain,
       description: 'Intelligence artificielle bancaire'
     },
     {
       id: 'blockchain',
-      label: 'Blockchain Bancaire',
-      icon: Banknote,
-      description: 'Gestion blockchain des transactions'
+      label: 'Blockchain Finance',
+      icon: Network,
+      description: 'Gestion blockchain des garanties'
     },
     {
       id: 'settings',
       label: 'Paramètres',
       icon: Settings,
-      description: 'Configuration du système'
+      description: 'Configuration système bancaire'
     }
   ];
 
@@ -199,16 +248,26 @@ const CompleteSidebarBanqueDashboard = () => {
     switch (activeTab) {
       case 'overview':
         return <BanqueOverview {...commonProps} />;
-      case 'credit-requests':
-        return <BanqueCreditRequests {...commonProps} />;
-      case 'land-valuation':
-        return <BanqueLandValuation {...commonProps} />;
-      case 'portfolio':
-        return <BanquePortfolio {...commonProps} />;
-      case 'risk-management':
-        return <BanqueRiskManagement {...commonProps} />;
-      case 'compliance':
-        return <BanqueCompliance {...commonProps} />;
+      case 'client-management':
+        return <BanqueClientManagement {...commonProps} />;
+      case 'crm':
+        return <BanqueCRM {...commonProps} />;
+      case 'anti-fraude':
+        return <BanqueAntiFraude {...commonProps} />;
+      case 'gps-verification':
+        return <BanqueGPSVerification {...commonProps} />;
+      case 'services-digitaux':
+        return <BanqueServicesDigitaux {...commonProps} />;
+      case 'credit-management':
+        return <BanqueCreditManagement {...commonProps} />;
+      case 'risk-assessment':
+        return <BanqueRiskAssessment {...commonProps} />;
+      case 'portfolio-management':
+        return <BanquePortfolioManagement {...commonProps} />;
+      case 'compliance-reporting':
+        return <BanqueComplianceReporting {...commonProps} />;
+      case 'messages':
+        return <BanqueMessages {...commonProps} />;
       case 'analytics':
         return <BanqueAnalytics {...commonProps} />;
       case 'ai':
@@ -216,42 +275,30 @@ const CompleteSidebarBanqueDashboard = () => {
       case 'blockchain':
         return <BanqueBlockchain {...commonProps} />;
       case 'settings':
-        return <BanqueSettings {...commonProps} />;
+        return <BanqueSettings {...commonProps} profile={profile} />;
       default:
         return <BanqueOverview {...commonProps} />;
     }
   };
 
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
-      {/* Mobile Menu Overlay */}
-      <AnimatePresence>
-        {mobileMenuOpen && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
-            onClick={() => setMobileMenuOpen(false)}
-          />
-        )}
-      </AnimatePresence>
-
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50 flex">
       {/* Sidebar */}
       <motion.div
         initial={false}
-        animate={{
-          width: sidebarCollapsed ? '80px' : '320px'
+        animate={{ 
+          width: sidebarCollapsed ? 80 : 280,
+          x: mobileMenuOpen ? 0 : (window.innerWidth < 1024 ? -280 : 0)
         }}
+        transition={{ duration: 0.3, ease: "easeInOut" }}
         className={`
-          fixed lg:relative h-full bg-white/80 backdrop-blur-md shadow-xl border-r border-blue-200/50 z-40
-          flex flex-col
-          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          transition-transform duration-300 ease-in-out
+          fixed lg:relative left-0 top-0 h-screen bg-white/95 backdrop-blur-md 
+          shadow-xl border-r border-blue-200/50 z-30 flex flex-col
+          ${mobileMenuOpen ? 'block' : 'hidden lg:flex'}
         `}
       >
-        {/* Header Sidebar */}
-        <div className="p-6 border-b border-blue-200/30">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-blue-200/30">
           <div className="flex items-center justify-between">
             {!sidebarCollapsed && (
               <motion.div
@@ -259,33 +306,35 @@ const CompleteSidebarBanqueDashboard = () => {
                 animate={{ opacity: 1 }}
                 className="flex items-center space-x-3"
               >
-                <div className="w-10 h-10 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-xl flex items-center justify-center">
-                  <Building2 className="h-6 w-6 text-white" />
+                <div className="bg-gradient-to-br from-blue-500 to-indigo-600 p-2 rounded-xl shadow-lg">
+                  <Banknote className="h-6 w-6 text-white" />
                 </div>
                 <div>
-                  <h1 className="font-bold text-lg text-gray-900">Dashboard Banque</h1>
-                  <p className="text-xs text-gray-600">Teranga Foncier</p>
+                  <h2 className="font-bold text-gray-900">Dashboard Banque</h2>
+                  <p className="text-xs text-gray-600">Gestion Bancaire</p>
                 </div>
               </motion.div>
             )}
             
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              {sidebarCollapsed ? <ChevronDown className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
-            </Button>
-            
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden text-gray-600"
-            >
-              <X className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center space-x-2">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
+                className="hidden lg:flex text-gray-600 hover:text-blue-600"
+              >
+                {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              </Button>
+              
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setMobileMenuOpen(false)}
+                className="lg:hidden text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
         </div>
 
@@ -433,27 +482,166 @@ const CompleteSidebarBanqueDashboard = () => {
             </div>
 
             <div className="flex items-center space-x-4">
-              <Button variant="ghost" size="sm" className="text-gray-600">
-                <Bell className="h-5 w-5" />
-              </Button>
-              <Button variant="ghost" size="sm" className="text-gray-600">
-                <Search className="h-5 w-5" />
-              </Button>
+              {/* Messages */}
+              <DropdownMenu open={showMessages} onOpenChange={setShowMessages}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative">
+                    <MessageSquare className="h-5 w-5" />
+                    <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                      5
+                    </Badge>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80">
+                  <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-blue-100 text-blue-600">BC</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">Banque Centrale</p>
+                        <p className="text-sm text-gray-600">Nouveau taux directeur</p>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <div className="flex items-center space-x-3">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-green-100 text-green-600">CI</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">Client Investisseur</p>
+                        <p className="text-sm text-gray-600">Demande crédit 50M CFA</p>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setActiveTab('messages')}>
+                    <MessageSquare className="mr-2 h-4 w-4" />
+                    <span>Voir tous les messages</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Notifications */}
+              <DropdownMenu open={showNotifications} onOpenChange={setShowNotifications}>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="relative">
+                    <Bell className="h-5 w-5" />
+                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                      {dashboardStats.pendingCreditApplications}
+                    </Badge>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-80">
+                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem>
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-orange-100 p-2 rounded-full">
+                        <AlertTriangle className="h-4 w-4 text-orange-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Demande crédit urgente</p>
+                        <p className="text-sm text-gray-600">Crédit immobilier 75M CFA - Validation requise</p>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem>
+                    <div className="flex items-center space-x-3">
+                      <div className="bg-green-100 p-2 rounded-full">
+                        <CheckCircle className="h-4 w-4 text-green-600" />
+                      </div>
+                      <div>
+                        <p className="font-medium">Validation automatique IA</p>
+                        <p className="text-sm text-gray-600">18 dossiers de crédit traités cette semaine</p>
+                      </div>
+                    </div>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+
+              {/* Profile Menu */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                    <Avatar className="h-10 w-10">
+                      <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
+                      <AvatarFallback className="bg-blue-100 text-blue-600">
+                        {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'B'}
+                      </AvatarFallback>
+                    </Avatar>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent className="w-56" align="end">
+                  <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium leading-none">
+                        {profile?.full_name || 'Directeur Banque'}
+                      </p>
+                      <p className="text-xs leading-none text-muted-foreground">
+                        {user?.email}
+                      </p>
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => setActiveTab('settings')}>
+                    <User className="mr-2 h-4 w-4" />
+                    <span>Profil</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setActiveTab('settings')}>
+                    <Settings className="mr-2 h-4 w-4" />
+                    <span>Paramètres</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="text-red-600 focus:text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Déconnexion</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto p-6">
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            {renderActiveComponent()}
-          </Suspense>
+        {/* Page Content */}
+        <main className="flex-1 p-6 overflow-auto">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={activeTab}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+              transition={{ duration: 0.2 }}
+            >
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-96">
+                  <motion.div
+                    animate={{ rotate: 360 }}
+                    transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
+                    className="w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full"
+                  />
+                </div>
+              }>
+                {renderActiveComponent()}
+              </Suspense>
+            </motion.div>
+          </AnimatePresence>
         </main>
       </div>
+
+      {/* Mobile Overlay */}
+      {mobileMenuOpen && (
+        <div 
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
     </div>
   );
 };

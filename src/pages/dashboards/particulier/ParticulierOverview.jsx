@@ -19,157 +19,199 @@ import {
   Target,
   Eye,
   Phone,
-  TrendingUp
+  TrendingUp,
+  Heart,
+  Award,
+  Home,
+  Briefcase
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import TerangaLogo from '../../../components/ui/TerangaLogo';
 
 const ParticulierOverview = () => {
   const navigate = useNavigate();
 
-  // Statistiques principales - Suivi des dossiers
+  // Statistiques principales - Focus sur les trois domaines principaux
   const mainStats = [
     {
-      title: "Dossiers en Cours",
-      value: "5",
-      change: "+2",
-      changeType: "increase",
-      icon: FileText,
-      color: "from-blue-500 to-blue-600",
-      description: "En traitement"
-    },
-    {
-      title: "Demandes Approuvées",
-      value: "6",
+      title: "Demandes en Cours",
+      value: "4",
       change: "+1",
-      changeType: "increase", 
-      icon: CheckCircle,
-      color: "from-green-500 to-green-600",
-      description: "Ce mois"
+      changeType: "increase",
+      icon: Clock,
+      color: "from-amber-500 to-yellow-600",
+      description: "Zones & Terrains",
+      details: "2 zones communales, 2 terrains privés"
     },
     {
-      title: "Messages",
+      title: "Favoris Actifs",
       value: "8",
-      change: "+2",
+      change: "+3",
       changeType: "increase",
-      icon: MessageSquare,
-      color: "from-yellow-500 to-yellow-600",
-      description: "Non lus"
+      icon: Heart,
+      color: "from-rose-500 to-pink-600",
+      description: "Sauvegardés",
+      details: "3 terrains, 2 zones, 3 projets"
+    },
+    {
+      title: "Projets Suivis",
+      value: "3",
+      change: "0",
+      changeType: "neutral",
+      icon: Award,
+      color: "from-purple-500 to-indigo-600",
+      description: "Promoteurs",
+      details: "1 en construction, 2 pré-commercialisation"
     },
     {
       title: "Rendez-vous",
       value: "2",
-      change: "+1",
+      change: "+2",
       changeType: "increase",
       icon: Calendar,
-      color: "from-purple-500 to-purple-600",
-      description: "Cette semaine"
+      color: "from-blue-500 to-cyan-600",
+      description: "Cette semaine",
+      details: "Signatures et visites"
     }
   ];
 
-  // Dossiers et demandes en cours
-  const activeRequests = [
+  // Activités récentes - Adaptées au nouveau contexte
+  const recentActivities = [
     {
       id: 1,
-      type: 'certificat',
-      title: 'Certificat de Propriété',
-      refNumber: 'CP-2024-001',
-      location: 'Almadies, Dakar',
-      status: 'En cours',
-      progress: 75,
-      nextAction: 'Validation finale',
-      deadline: '2024-02-01',
-      submitDate: '2024-01-15',
-      service: 'Domaines',
-      priority: 'Normale'
+      type: 'zone_communale',
+      title: 'Demande Zone Communale approuvée',
+      description: 'Votre demande pour la Zone Résidentielle Pikine Nord a été approuvée',
+      time: '2h',
+      status: 'success',
+      icon: CheckCircle,
+      action: 'Voir les détails'
     },
     {
       id: 2,
-      type: 'permis',
-      title: 'Permis de Construire',
-      refNumber: 'PC-2024-005',
-      location: 'Plateau, Dakar',
-      status: 'En attente',
-      progress: 25,
-      nextAction: 'Documents complémentaires',
-      deadline: '2024-02-10',
-      submitDate: '2024-01-10',
-      service: 'Urbanisme',
-      priority: 'Élevée'
+      type: 'terrain_prive',
+      title: 'Nouveau terrain ajouté aux favoris',
+      description: 'Terrain Commercial - Plateau (300m²) ajouté à vos favoris',
+      time: '5h',
+      status: 'info',
+      icon: Heart,
+      action: 'Voir le terrain'
     },
     {
       id: 3,
-      type: 'morcellement',
-      title: 'Demande de Morcellement',
-      refNumber: 'MO-2024-003',
-      location: 'Saly, Mbour',
-      status: 'Approuvé',
-      progress: 100,
-      nextAction: 'Retrait document',
-      deadline: '2024-01-20',
-      submitDate: '2024-01-05',
-      service: 'Cadastre',
-      priority: 'Normale'
+      type: 'projet_promoteur',
+      title: 'Avancement projet Teranga Development',
+      description: 'Villa Moderne - Cité Keur Gorgui: 65% d\'avancement',
+      time: '1j',
+      status: 'progress',
+      icon: TrendingUp,
+      action: 'Suivre le projet'
+    },
+    {
+      id: 4,
+      type: 'rendez_vous',
+      title: 'Rappel rendez-vous',
+      description: 'Signature contrat Zone Mixte Guédiawaye demain à 10h00',
+      time: '1j',
+      status: 'warning',
+      icon: Calendar,
+      action: 'Confirmer'
     }
   ];
 
-  const getRequestTypeIcon = (type) => {
-    switch (type) {
-      case 'certificat': return FileText;
-      case 'permis': return Building2;
-      case 'morcellement': return MapPin;
-      case 'autre': return Activity;
-      default: return FileText;
+  // Actions rapides - Adaptées au nouveau contexte
+  const quickActions = [
+    {
+      title: 'Nouvelle Demande',
+      description: 'Zone communale ou terrain privé',
+      icon: Plus,
+      color: 'bg-gradient-to-r from-blue-500 to-blue-600',
+      action: () => navigate('/particulier/demandes')
+    },
+    {
+      title: 'Mes Favoris',
+      description: 'Terrains, zones et projets sauvegardés',
+      icon: Heart,
+      color: 'bg-gradient-to-r from-rose-500 to-pink-600',
+      action: () => navigate('/particulier/favoris')
+    },
+    {
+      title: 'Projets Promoteurs',
+      description: 'Villas et appartements disponibles',
+      icon: Award,
+      color: 'bg-gradient-to-r from-purple-500 to-indigo-600',
+      action: () => navigate('/particulier/promoteurs')
+    },
+    {
+      title: 'Mes Documents',
+      description: 'Contrats et certificats',
+      icon: FileText,
+      color: 'bg-gradient-to-r from-green-500 to-emerald-600',
+      action: () => navigate('/particulier/documents')
+    }
+  ];
+
+  // Prochains rendez-vous
+  const upcomingAppointments = [
+    {
+      id: 1,
+      title: 'Signature contrat Zone Communale',
+      description: 'Zone Mixte Guédiawaye Centre',
+      date: '2024-03-05',
+      time: '10:00',
+      type: 'signature',
+      contact: 'M. Ousmane DIOP',
+      phone: '77 987 65 43'
+    },
+    {
+      id: 2,
+      title: 'Visite terrain Almadies',
+      description: 'Terrain Résidentiel - 500m²',
+      date: '2024-03-07',
+      time: '15:30',
+      type: 'visite',
+      contact: 'Mme Aïssatou FALL',
+      phone: '77 123 45 67'
+    }
+  ];
+
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
+      case 'warning': return <AlertCircle className="w-4 h-4 text-yellow-500" />;
+      case 'progress': return <TrendingUp className="w-4 h-4 text-blue-500" />;
+      default: return <Bell className="w-4 h-4 text-gray-500" />;
     }
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-7xl mx-auto">
-      {/* Header de bienvenue */}
-      <div className="text-center mb-8">
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="mb-4"
-        >
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            Suivi de vos Dossiers
-          </h1>
-          <p className="text-gray-600">
-            Gérez et suivez toutes vos demandes administratives foncières
-          </p>
-        </motion.div>
-
-        {/* Actions rapides */}
-        <div className="flex flex-wrap justify-center gap-3">
-          <Button 
-            onClick={() => navigate('/particulier/nouvelle-demande')}
-            className="bg-gradient-to-r from-blue-600 to-purple-600"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Nouvelle Demande
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/particulier/rendez-vous')}
-          >
-            <Calendar className="w-4 h-4 mr-2" />
-            Prendre RDV
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={() => navigate('/particulier/messages')}
-          >
-            <MessageSquare className="w-4 h-4 mr-2" />
-            Mes Messages
-          </Button>
+    <div className="p-6 space-y-6 bg-gradient-to-br from-slate-50 via-white to-blue-50 min-h-screen">
+      {/* Header avec logo */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="flex items-center justify-between"
+      >
+        <div className="flex items-center space-x-4">
+          <TerangaLogo className="h-12 w-12" showText={false} />
+          <div>
+            <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-700 via-yellow-700 to-orange-700 bg-clip-text text-transparent">
+              Tableau de Bord
+            </h1>
+            <p className="text-slate-600">Gérez vos demandes foncières et projets immobiliers</p>
+          </div>
         </div>
-      </div>
+        <Button className="bg-gradient-to-r from-amber-500 to-yellow-600 hover:from-amber-600 hover:to-yellow-700">
+          <Plus className="w-4 h-4 mr-2" />
+          Nouvelle Demande
+        </Button>
+      </motion.div>
 
       {/* Statistiques principales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         {mainStats.map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -177,177 +219,165 @@ const ParticulierOverview = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: index * 0.1 }}
           >
-            <Card className="relative overflow-hidden hover:shadow-lg transition-shadow">
+            <Card className="relative overflow-hidden hover:shadow-lg transition-all duration-300">
               <CardContent className="p-6">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-r ${stat.color} shadow-lg`}>
+                <div className="flex items-center justify-between">
+                  <div className="flex-1">
+                    <p className="text-sm text-slate-600 mb-1">{stat.title}</p>
+                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                    <p className="text-xs text-slate-500 mt-1">{stat.description}</p>
+                    <p className="text-xs text-slate-400 mt-1">{stat.details}</p>
+                  </div>
+                  <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
                     <stat.icon className="w-6 h-6 text-white" />
                   </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    <div className="flex items-center gap-1">
-                      <span className={`text-sm font-medium ${
-                        stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600'
-                      }`}>
-                        {stat.change}
-                      </span>
-                      <TrendingUp className={`w-3 h-3 ${
-                        stat.changeType === 'increase' ? 'text-green-600' : 'text-red-600 rotate-180'
-                      }`} />
-                    </div>
-                  </div>
                 </div>
-                <h3 className="text-sm font-medium text-gray-700 mb-1">{stat.title}</h3>
-                <p className="text-xs text-gray-500">{stat.description}</p>
+                {stat.change !== "0" && (
+                  <div className="mt-3 flex items-center">
+                    <Badge 
+                      variant={stat.changeType === 'increase' ? 'default' : 'secondary'}
+                      className="text-xs"
+                    >
+                      {stat.change} ce mois
+                    </Badge>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </motion.div>
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Dossiers en cours */}
-        <Card>
-          <CardHeader>
-            <div className="flex items-center justify-between">
-              <CardTitle className="text-xl">Dossiers en Cours</CardTitle>
-              <Button variant="outline" size="sm" onClick={() => navigate('/particulier/dossiers')}>
-                Voir tout
-              </Button>
-            </div>
-            <CardDescription>
-              Suivez l'avancement de vos demandes administratives
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-4">
-              {activeRequests.map((request, index) => {
-                const IconComponent = getRequestTypeIcon(request.type);
-                return (
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Actions rapides */}
+        <motion.div
+          initial={{ opacity: 0, x: -20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.2 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Target className="w-5 h-5 text-amber-600" />
+                Actions Rapides
+              </CardTitle>
+              <CardDescription>
+                Accédez rapidement à vos fonctionnalités principales
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                {quickActions.map((action, index) => (
                   <motion.div
-                    key={request.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="p-4 border rounded-lg hover:shadow-md transition-shadow"
+                    key={action.title}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`${action.color} p-4 rounded-xl text-white cursor-pointer transition-transform`}
+                    onClick={action.action}
                   >
-                    <div className="flex items-start justify-between mb-3">
-                      <div className="flex items-center gap-3">
-                        <div className="p-2 bg-blue-100 rounded-lg">
-                          <IconComponent className="w-5 h-5 text-blue-600" />
-                        </div>
-                        <div>
-                          <h4 className="font-semibold text-gray-900">{request.title}</h4>
-                          <p className="text-sm text-gray-600 flex items-center gap-1">
-                            <MapPin className="w-3 h-3" />
-                            {request.location}
-                          </p>
-                          <p className="text-xs text-gray-500">Réf: {request.refNumber}</p>
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <Badge variant={request.status === 'Approuvé' ? 'default' : request.status === 'En cours' ? 'secondary' : 'outline'}>
-                          {request.status}
-                        </Badge>
-                        <p className="text-xs text-gray-500 mt-1">{request.service}</p>
-                      </div>
-                    </div>
-
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between text-sm mb-1">
-                        <span className="text-gray-600">Progression</span>
-                        <span className="font-medium">{request.progress}%</span>
-                      </div>
-                      <Progress value={request.progress} className="h-2" />
-                    </div>
-
-                    <div className="flex items-center justify-between text-xs text-gray-600 mb-3">
-                      <span>Soumis le: {request.submitDate}</span>
-                      <span>Échéance: {request.deadline}</span>
-                    </div>
-
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm">
-                        <p className="text-gray-600">Prochaine action:</p>
-                        <p className="font-medium">{request.nextAction}</p>
-                        <Badge variant="outline" className="text-xs mt-1">
-                          Priorité {request.priority}
-                        </Badge>
-                      </div>
-                      <div className="flex gap-2">
-                        <Button size="sm" variant="ghost">
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Phone className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
+                    <action.icon className="w-6 h-6 mb-2" />
+                    <h3 className="font-semibold text-sm">{action.title}</h3>
+                    <p className="text-xs opacity-90">{action.description}</p>
                   </motion.div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
 
-        {/* Notifications et Alertes */}
+        {/* Activités récentes */}
+        <motion.div
+          initial={{ opacity: 0, x: 20 }}
+          animate={{ opacity: 1, x: 0 }}
+          transition={{ delay: 0.3 }}
+        >
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Activity className="w-5 h-5 text-blue-600" />
+                Activités Récentes
+              </CardTitle>
+              <CardDescription>
+                Dernières mises à jour sur vos dossiers
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {recentActivities.map((activity) => (
+                  <div key={activity.id} className="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50 transition-colors">
+                    <div className="flex-shrink-0">
+                      {getStatusIcon(activity.status)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-slate-900">{activity.title}</p>
+                      <p className="text-xs text-slate-600 mt-1">{activity.description}</p>
+                      <div className="flex items-center justify-between mt-2">
+                        <span className="text-xs text-slate-400">il y a {activity.time}</span>
+                        <Button variant="ghost" size="sm" className="text-xs">
+                          {activity.action}
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </motion.div>
+      </div>
+
+      {/* Prochains rendez-vous */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.4 }}
+      >
         <Card>
           <CardHeader>
-            <CardTitle className="text-xl">Notifications Importantes</CardTitle>
+            <CardTitle className="flex items-center gap-2">
+              <Calendar className="w-5 h-5 text-green-600" />
+              Prochains Rendez-vous
+            </CardTitle>
             <CardDescription>
-              Restez informé des mises à jour de vos dossiers
+              Ne manquez aucun de vos rendez-vous importants
             </CardDescription>
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              <div className="p-4 border border-yellow-200 rounded-lg bg-yellow-50">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-yellow-800">Documents manquants</h4>
-                    <p className="text-sm text-yellow-700">
-                      Votre demande PC-2024-005 nécessite des documents complémentaires
-                    </p>
-                    <Button size="sm" variant="outline" className="mt-2">
-                      Voir détails
+              {upcomingAppointments.map((appointment) => (
+                <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-slate-50 transition-colors">
+                  <div className="flex items-center space-x-4">
+                    <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-cyan-600 rounded-xl flex items-center justify-center">
+                      <Calendar className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-slate-900">{appointment.title}</h3>
+                      <p className="text-sm text-slate-600">{appointment.description}</p>
+                      <div className="flex items-center space-x-4 mt-1">
+                        <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded">
+                          {appointment.date} à {appointment.time}
+                        </span>
+                        <span className="text-xs text-slate-500">
+                          {appointment.contact} - {appointment.phone}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="flex space-x-2">
+                    <Button variant="outline" size="sm">
+                      <Phone className="w-4 h-4 mr-1" />
+                      Appeler
+                    </Button>
+                    <Button size="sm" className="bg-gradient-to-r from-green-500 to-emerald-600">
+                      Confirmer
                     </Button>
                   </div>
                 </div>
-              </div>
-
-              <div className="p-4 border border-green-200 rounded-lg bg-green-50">
-                <div className="flex items-start gap-3">
-                  <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-green-800">Dossier approuvé</h4>
-                    <p className="text-sm text-green-700">
-                      Votre demande MO-2024-003 a été approuvée. Document prêt au retrait.
-                    </p>
-                    <Button size="sm" variant="outline" className="mt-2">
-                      Prendre RDV
-                    </Button>
-                  </div>
-                </div>
-              </div>
-
-              <div className="p-4 border border-blue-200 rounded-lg bg-blue-50">
-                <div className="flex items-start gap-3">
-                  <Clock className="w-5 h-5 text-blue-600 mt-0.5" />
-                  <div>
-                    <h4 className="font-semibold text-blue-800">Rendez-vous programmé</h4>
-                    <p className="text-sm text-blue-700">
-                      RDV le 05/02/2024 à 10h pour finaliser votre demande CP-2024-001
-                    </p>
-                    <Button size="sm" variant="outline" className="mt-2">
-                      Voir agenda
-                    </Button>
-                  </div>
-                </div>
-              </div>
+              ))}
             </div>
           </CardContent>
         </Card>
-      </div>
+      </motion.div>
     </div>
   );
 };

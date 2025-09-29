@@ -84,6 +84,11 @@ const MairieAnalytics = React.lazy(() => import('./MairieAnalytics'));
 const MairieAI = React.lazy(() => import('./MairieAI'));
 const MairieBlockchain = React.lazy(() => import('./MairieBlockchain'));
 const MairieZonesCommunales = React.lazy(() => import('./MairieZonesCommunales'));
+// Nouvelles pages spécialisées pour la lutte anti-fraude et digitalisation
+const MairieCRM = React.lazy(() => import('./MairieCRM'));
+const MairieAntiFraude = React.lazy(() => import('./MairieAntiFraude'));
+const MairieGPSVerification = React.lazy(() => import('./MairieGPSVerification'));
+const MairieServicesDigitaux = React.lazy(() => import('./MairieServicesDigitaux'));
 const MairieSettings = React.lazy(() => import('./MairieSettings'));
 
 const CompleteSidebarMairieDashboard = () => {
@@ -156,6 +161,30 @@ const CompleteSidebarMairieDashboard = () => {
       badge: dashboardStats.pendingRequests
     },
     {
+      id: 'crm',
+      label: 'CRM Municipal',
+      icon: Users,
+      description: 'Gestion relation citoyens et entreprises'
+    },
+    {
+      id: 'anti-fraude',
+      label: 'Anti-Fraude IA',
+      icon: Shield,
+      description: 'Détection fraudes avec IA et blockchain'
+    },
+    {
+      id: 'gps-verification',
+      label: 'Vérification GPS',
+      icon: MapPin,
+      description: 'Validation géographique des terrains'
+    },
+    {
+      id: 'services-digitaux',
+      label: 'Services Digitaux',
+      icon: Zap,
+      description: 'Dématérialisation et télé-services'
+    },
+    {
       id: 'urban-planning',
       label: 'Planification Urbaine',
       icon: Building2,
@@ -170,13 +199,13 @@ const CompleteSidebarMairieDashboard = () => {
     {
       id: 'zones-communales',
       label: 'Zones Communales',
-      icon: MapPin,
+      icon: Landmark,
       description: 'Gestion des zones communales publiques'
     },
     {
       id: 'dispute-resolution',
       label: 'Résolution Conflits',
-      icon: Shield,
+      icon: Target,
       description: 'Médiation et arbitrage foncier'
     },
     {
@@ -219,6 +248,14 @@ const CompleteSidebarMairieDashboard = () => {
         return <MairieOverview {...commonProps} />;
       case 'communal-requests':
         return <MairieCommunalRequests {...commonProps} />;
+      case 'crm':
+        return <MairieCRM {...commonProps} />;
+      case 'anti-fraude':
+        return <MairieAntiFraude {...commonProps} />;
+      case 'gps-verification':
+        return <MairieGPSVerification {...commonProps} />;
+      case 'services-digitaux':
+        return <MairieServicesDigitaux {...commonProps} />;
       case 'urban-planning':
         return <MairieUrbanPlanning {...commonProps} />;
       case 'cadastre':

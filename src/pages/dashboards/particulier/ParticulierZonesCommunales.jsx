@@ -1,45 +1,51 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Target,
-  Plus,
-  Calendar,
   MapPin,
-  User,
+  Building,
+  FileText,
   Clock,
   CheckCircle,
   AlertCircle,
-  Eye,
-  Download,
-  Upload,
-  Search,
-  Filter,
-  ArrowRight,
-  ArrowLeft,
-  FileText,
+  Users,
+  Calendar,
   Phone,
   Mail,
-  Users,
-  Send,
+  Search,
+  Filter,
+  Plus,
+  Eye,
+  MessageSquare,
+  Target,
+  Award,
   Star,
   DollarSign,
-  Activity
+  Send,
+  ArrowRight,
+  ArrowLeft,
+  Upload,
+  Download,
+  Activity,
+  Heart,
+  Trash2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 
-const ParticulierZonesCommunales = () => {
-  const [selectedZone, setSelectedZone] = useState(null);
+const ParticulierZonesCommunales = ({ dashboardStats }) => {
+  const [selectedDemande, setSelectedDemande] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [showCandidatureForm, setShowCandidatureForm] = useState(false);
+  const [activeTab, setActiveTab] = useState('demandes');
   const [currentStep, setCurrentStep] = useState(1);
+  const [showCandidatureForm, setShowCandidatureForm] = useState(false);
   const [formData, setFormData] = useState({
     // Informations personnelles
     nom: '',
@@ -58,52 +64,61 @@ const ParticulierZonesCommunales = () => {
     delai: ''
   });
 
-  // Zones communales disponibles
-  const zonesDisponibles = [
+  // Mes demandes de zones communales
+  const mesDemandesZones = [
     {
-      id: 'ZC001',
+      id: 'DZC001',
       nom: 'Zone Résidentielle Pikine Nord',
       commune: 'Pikine',
       region: 'Dakar',
-      superficie: '2.5 hectares',
-      nombreLots: 45,
-      lotsDisponibles: 12,
+      superficie: '200m²',
       prix: '2 500 000',
-      dateOuverture: '2024-02-01',
-      dateLimite: '2024-03-15',
-      statut: 'ouvert',
-      description: 'Zone résidentielle moderne avec toutes les commodités. Lots de 200m² à 300m².',
-      equipements: ['Électricité', 'Eau potable', 'Assainissement', 'Routes bitumées']
+      dateDemande: '2024-02-15',
+      statut: 'en_attente',
+      numeroReference: 'REF-ZC-2024-001',
+      description: 'Demande de lot résidentiel pour construction familiale.',
+      etapeActuelle: 'Évaluation du dossier',
+      documentsManquants: ['Certificat de revenus récent'],
+      prochainRendezVous: '2024-03-10 à 14h00',
+      contactResponsable: {
+        nom: 'Mme Fatou NDIAYE',
+        telephone: '77 123 45 67',
+        email: 'f.ndiaye@teranga.sn'
+      }
     },
     {
-      id: 'ZC002',
+      id: 'DZC002',
       nom: 'Zone Mixte Guédiawaye Centre',
       commune: 'Guédiawaye',
       region: 'Dakar',
-      superficie: '1.8 hectares',
-      nombreLots: 30,
-      lotsDisponibles: 8,
-      prix: '3 200 000',
-      dateOuverture: '2024-01-15',
-      dateLimite: '2024-02-28',
-      statut: 'ouvert',
-      description: 'Zone mixte permettant habitation et commerce. Idéale pour entrepreneurs.',
-      equipements: ['Électricité', 'Eau potable', 'Fibre optique', 'Transport public']
-    },
+      superficie: '150m²',
+      prix: '1 800 000',
+      dateDemande: '2024-01-20',
+      statut: 'approuve',
+      numeroReference: 'REF-ZC-2024-002',
+      description: 'Demande approuvée pour lot commercial.',
+      etapeActuelle: 'Signature du contrat',
+      prochainRendezVous: '2024-03-05 à 10h00',
+      contactResponsable: {
+        nom: 'M. Ousmane DIOP',
+        telephone: '77 987 65 43',
+        email: 'o.diop@teranga.sn'
+      }
+    }
+  ];
+
+  // Zones favorites (venant de la page favoris)
+  const zonesFavorites = [
     {
-      id: 'ZC003',
+      id: 'ZF001',
       nom: 'Zone Résidentielle Thiès Sud',
       commune: 'Thiès',
       region: 'Thiès',
-      superficie: '3.2 hectares',
-      nombreLots: 60,
-      lotsDisponibles: 25,
       prix: '1 800 000',
-      dateOuverture: '2024-02-10',
-      dateLimite: '2024-04-10',
-      statut: 'ouvert',
-      description: 'Nouvelle zone résidentielle calme avec vue panoramique.',
-      equipements: ['Électricité', 'Eau potable', 'Espaces verts', 'École primaire']
+      superficie: '250m²',
+      dateAjoutFavoris: '2024-02-20',
+      description: 'Zone résidentielle calme avec vue panoramique.',
+      disponible: true
     }
   ];
 
@@ -438,152 +453,115 @@ const ParticulierZonesCommunales = () => {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900">Zones Communales</h1>
-          <p className="text-slate-600">Candidatez sur les zones communales ouvertes</p>
+          <h1 className="text-2xl font-bold text-slate-900">Mes Zones Communales</h1>
+          <p className="text-slate-600">Gérez vos demandes et zones favorites</p>
         </div>
       </div>
 
       {/* Tabs */}
-      <Tabs defaultValue="zones-disponibles" className="w-full">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
         <TabsList className="grid w-full grid-cols-2">
-          <TabsTrigger value="zones-disponibles">Zones Disponibles</TabsTrigger>
-          <TabsTrigger value="mes-candidatures">Mes Candidatures</TabsTrigger>
+          <TabsTrigger value="demandes">Mes Demandes</TabsTrigger>
+          <TabsTrigger value="favoris">Zones Favorites</TabsTrigger>
         </TabsList>
 
-        <TabsContent value="zones-disponibles" className="space-y-6">
-          {/* Filters */}
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-4">
-                <div className="flex-1">
-                  <Input
-                    placeholder="Rechercher une zone..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="max-w-sm"
-                  />
-                </div>
-                <Select value={filterStatus} onValueChange={setFilterStatus}>
-                  <SelectTrigger className="w-48">
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les statuts</SelectItem>
-                    <SelectItem value="ouvert">Ouvert</SelectItem>
-                    <SelectItem value="bientot">Bientôt</SelectItem>
-                    <SelectItem value="ferme">Fermé</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Zones disponibles */}
+        <TabsContent value="demandes" className="space-y-6">
+          {/* Mes Demandes de Zones */}
           <div className="grid gap-6">
-            {zonesDisponibles.map((zone) => (
-              <Card key={zone.id} className="hover:shadow-lg transition-shadow">
+            {mesDemandesZones.map((demande) => (
+              <Card key={demande.id} className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-start gap-4">
-                      <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-xl flex items-center justify-center">
-                        <Target className="w-8 h-8 text-white" />
+                      <div className="w-16 h-16 bg-gradient-to-br from-amber-400 to-yellow-500 rounded-xl flex items-center justify-center">
+                        <Building className="w-8 h-8 text-white" />
                       </div>
                       <div>
-                        <h3 className="text-xl font-bold text-slate-900">{zone.nom}</h3>
+                        <h3 className="text-xl font-bold text-slate-900">{demande.nom}</h3>
                         <p className="text-sm text-slate-600 flex items-center gap-2">
                           <MapPin className="w-4 h-4" />
-                          {zone.commune}, {zone.region}
+                          {demande.commune}, {demande.region}
                         </p>
-                        <div className="flex items-center gap-4 mt-2 text-sm text-slate-500">
-                          <span>{zone.superficie}</span>
-                          <span>•</span>
-                          <span>{zone.nombreLots} lots</span>
-                          <span>•</span>
-                          <span className="text-green-600 font-medium">{zone.lotsDisponibles} disponibles</span>
-                        </div>
+                        <p className="text-sm font-medium text-amber-600 mt-1">
+                          Réf: {demande.numeroReference}
+                        </p>
                       </div>
                     </div>
-                    <div className="text-right">
-                      <Badge className={`${getStatusColor(zone.statut)} flex items-center gap-1 mb-2`}>
-                        {getStatusIcon(zone.statut)}
-                        {zone.statut === 'ouvert' && 'Ouvert'}
-                        {zone.statut === 'ferme' && 'Fermé'}
-                        {zone.statut === 'bientot' && 'Bientôt'}
-                      </Badge>
-                      <p className="text-lg font-bold text-slate-900">{zone.prix.toLocaleString()} FCFA</p>
-                      <p className="text-xs text-slate-500">par lot</p>
+                    <Badge 
+                      className={`${
+                        demande.statut === 'approuve' ? 'bg-green-100 text-green-800' :
+                        demande.statut === 'en_attente' ? 'bg-yellow-100 text-yellow-800' :
+                        'bg-red-100 text-red-800'
+                      }`}
+                    >
+                      {demande.statut === 'approuve' ? 'Approuvé' :
+                       demande.statut === 'en_attente' ? 'En attente' : 'Refusé'}
+                    </Badge>
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <p className="text-sm text-slate-500">Superficie demandée</p>
+                      <p className="font-semibold">{demande.superficie}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Prix</p>
+                      <p className="font-semibold text-green-600">{parseInt(demande.prix).toLocaleString()} FCFA</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Date de demande</p>
+                      <p className="font-semibold">{demande.dateDemande}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-slate-500">Étape actuelle</p>
+                      <p className="font-semibold text-blue-600">{demande.etapeActuelle}</p>
                     </div>
                   </div>
 
-                  <div className="mb-4">
-                    <p className="text-sm text-slate-700 mb-3">{zone.description}</p>
-                    <div className="flex flex-wrap gap-2">
-                      {zone.equipements.map((equipement, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {equipement}
-                        </Badge>
-                      ))}
+                  {demande.prochainRendezVous && (
+                    <div className="bg-blue-50 p-4 rounded-lg mb-4">
+                      <div className="flex items-center gap-2 text-blue-800 mb-2">
+                        <Calendar className="w-4 h-4" />
+                        <span className="font-semibold">Prochain rendez-vous</span>
+                      </div>
+                      <p className="text-blue-700">{demande.prochainRendezVous}</p>
                     </div>
-                  </div>
+                  )}
 
-                  <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                  {demande.documentsManquants && demande.documentsManquants.length > 0 && (
+                    <div className="bg-amber-50 p-4 rounded-lg mb-4">
+                      <div className="flex items-center gap-2 text-amber-800 mb-2">
+                        <AlertCircle className="w-4 h-4" />
+                        <span className="font-semibold">Documents manquants</span>
+                      </div>
+                      <ul className="text-amber-700 text-sm space-y-1">
+                        {demande.documentsManquants.map((doc, index) => (
+                          <li key={index}>• {doc}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+
+                  <div className="flex items-center justify-between">
                     <div className="text-sm text-slate-500">
-                      <p>Ouvert le: {new Date(zone.dateOuverture).toLocaleDateString('fr-FR')}</p>
-                      <p>Limite: {new Date(zone.dateLimite).toLocaleDateString('fr-FR')}</p>
+                      <span className="font-medium">Contact: </span>
+                      {demande.contactResponsable.nom} - {demande.contactResponsable.telephone}
                     </div>
                     <div className="flex gap-2">
-                      <Button variant="outline" size="sm">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setSelectedDemande(demande)}
+                      >
                         <Eye className="w-4 h-4 mr-2" />
                         Détails
                       </Button>
-                      {zone.statut === 'ouvert' && (
-                        <Button 
-                          onClick={() => setShowCandidatureForm(true)}
-                          className="bg-green-600 hover:bg-green-700"
-                          size="sm"
-                        >
-                          <Target className="w-4 h-4 mr-2" />
-                          Postuler
-                        </Button>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        <TabsContent value="mes-candidatures" className="space-y-6">
-          {/* Mes candidatures */}
-          <div className="grid gap-4">
-            {mesCandidatures.map((candidature) => (
-              <Card key={candidature.id} className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-4">
-                      <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                        <Star className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900">{candidature.zoneName}</h3>
-                        <p className="text-sm text-slate-600">
-                          {candidature.commune} • Position: {candidature.position}/{candidature.totalCandidats}
-                        </p>
-                        <p className="text-xs text-slate-500">
-                          Postulé le {new Date(candidature.datePostulation).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-3">
-                      <Badge className={`${getStatusColor(candidature.statut)} flex items-center gap-1`}>
-                        {getStatusIcon(candidature.statut)}
-                        {candidature.statut === 'en_cours' && 'En cours'}
-                        {candidature.statut === 'accepte' && 'Accepté'}
-                        {candidature.statut === 'refuse' && 'Refusé'}
-                      </Badge>
-                      <Button variant="ghost" size="sm">
-                        <Eye className="w-4 h-4" />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                      >
+                        <MessageSquare className="w-4 h-4 mr-2" />
+                        Contacter
                       </Button>
                     </div>
                   </div>
@@ -592,12 +570,107 @@ const ParticulierZonesCommunales = () => {
             ))}
           </div>
         </TabsContent>
-      </Tabs>
 
-      {/* Formulaire de candidature */}
-      <AnimatePresence>
-        {showCandidatureForm && renderCandidatureForm()}
-      </AnimatePresence>
+        <TabsContent value="favoris" className="space-y-6">
+          {/* Mes Zones Favorites */}
+          <div className="grid gap-6">
+            {zonesFavorites.length > 0 ? (
+              zonesFavorites.map((zone) => (
+                <Card key={zone.id} className="hover:shadow-lg transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex items-start gap-4">
+                        <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-amber-500 rounded-xl flex items-center justify-center">
+                          <Star className="w-8 h-8 text-white" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-bold text-slate-900">{zone.nom}</h3>
+                          <p className="text-sm text-slate-600 flex items-center gap-2">
+                            <MapPin className="w-4 h-4" />
+                            {zone.commune}, {zone.region}
+                          </p>
+                          <p className="text-sm text-amber-600 mt-1">
+                            Ajouté aux favoris le {zone.dateAjoutFavoris}
+                          </p>
+                        </div>
+                      </div>
+                      <Badge 
+                        className={`${
+                          zone.disponible ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'
+                        }`}
+                      >
+                        {zone.disponible ? 'Disponible' : 'Non disponible'}
+                      </Badge>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <p className="text-sm text-slate-500">Superficie</p>
+                        <p className="font-semibold">{zone.superficie}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-slate-500">Prix estimé</p>
+                        <p className="font-semibold text-green-600">{parseInt(zone.prix).toLocaleString()} FCFA</p>
+                      </div>
+                    </div>
+
+                    <p className="text-slate-600 mb-4">{zone.description}</p>
+
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-sm text-slate-500">
+                        <Heart className="w-4 h-4 text-red-500" />
+                        <span>Zone favorite</span>
+                      </div>
+                      <div className="flex gap-2">
+                        {zone.disponible && (
+                          <Button
+                            size="sm"
+                            className="bg-blue-600 hover:bg-blue-700"
+                          >
+                            <Plus className="w-4 h-4 mr-2" />
+                            Faire une demande
+                          </Button>
+                        )}
+                        <Button
+                          variant="outline"
+                          size="sm"
+                        >
+                          <Eye className="w-4 h-4 mr-2" />
+                          Détails
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="text-red-600 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Retirer
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              <Card>
+                <CardContent className="p-12 text-center">
+                  <div className="w-16 h-16 bg-amber-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                    <Star className="w-8 h-8 text-amber-500" />
+                  </div>
+                  <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucune zone favorite</h3>
+                  <p className="text-slate-600 mb-4">
+                    Vous n'avez pas encore ajouté de zones à vos favoris.
+                  </p>
+                  <Button variant="outline">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Parcourir les zones disponibles
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

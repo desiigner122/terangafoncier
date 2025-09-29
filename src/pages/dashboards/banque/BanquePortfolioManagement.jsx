@@ -41,7 +41,7 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
-const BanquePortfolio = ({ dashboardStats }) => {
+const BanquePortfolioManagement = ({ dashboardStats }) => {
   const [activeView, setActiveView] = useState('overview');
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [filterType, setFilterType] = useState('all');
@@ -575,4 +575,4 @@ const BanquePortfolio = ({ dashboardStats }) => {
   );
 };
 
-export default BanquePortfolio;
+export default BanquePortfolioManagement;

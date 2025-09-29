@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import TerangaLogo from '../../../components/ui/TerangaLogo';
 import { 
   // Navigation Icons
   Home,
@@ -589,13 +590,32 @@ const CompleteSidebarAdminDashboard = () => {
       `}
     >
       <div className="flex flex-col h-full">
-        {/* Header */}
-        <div className="p-4 border-b border-gray-200">
+        {/* Header Modernisé */}
+        <div className="p-6 border-b border-gradient-to-r from-amber-100 to-yellow-100 bg-gradient-to-br from-amber-50 via-yellow-50 to-orange-50">
           <div className="flex items-center justify-between">
             {!sidebarCollapsed && (
-              <div>
-                <h2 className="text-xl font-bold text-gray-900">Admin Panel</h2>
-                <p className="text-sm text-gray-500">Teranga Foncier</p>
+              <motion.div 
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.2 }}
+                className="flex items-center space-x-3"
+              >
+                <div className="flex-shrink-0">
+                  <TerangaLogo className="h-12 w-12" showText={false} />
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold bg-gradient-to-r from-amber-700 via-yellow-700 to-orange-700 bg-clip-text text-transparent">
+                    Admin Panel
+                  </h2>
+                  <p className="text-sm font-medium text-amber-600">
+                    Teranga Foncier - Administration
+                  </p>
+                </div>
+              </motion.div>
+            )}
+            {sidebarCollapsed && (
+              <div className="flex justify-center w-full">
+                <TerangaLogo className="h-8 w-8" showText={false} />
               </div>
             )}
             <div className="flex items-center space-x-2">
@@ -603,7 +623,7 @@ const CompleteSidebarAdminDashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-                className="hidden lg:flex"
+                className="hidden lg:flex hover:bg-amber-100 text-amber-700 transition-colors"
               >
                 {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
               </Button>
@@ -611,7 +631,7 @@ const CompleteSidebarAdminDashboard = () => {
                 variant="ghost"
                 size="sm"
                 onClick={() => setMobileMenuOpen(false)}
-                className="lg:hidden"
+                className="lg:hidden hover:bg-amber-100 text-amber-700 transition-colors"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -619,29 +639,31 @@ const CompleteSidebarAdminDashboard = () => {
           </div>
         </div>
 
-        {/* Navigation */}
+        {/* Navigation Modernisée */}
         <div className="flex-1 overflow-y-auto">
-          <nav className="p-2 space-y-1">
+          <nav className="p-3 space-y-2">
             {navigationItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               
               return (
-                <button
+                <motion.button
                   key={item.id}
                   onClick={() => {
                     setActiveTab(item.id);
                     setMobileMenuOpen(false);
                   }}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
                   className={`
-                    w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all
+                    w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200
                     ${isActive 
-                      ? 'bg-red-50 text-red-700 border border-red-200' 
-                      : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      ? 'bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 text-amber-800 border border-amber-300 shadow-sm' 
+                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:text-amber-700'
                     }
                   `}
                 >
-                  <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-red-600' : 'text-gray-500'}`} />
+                  <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-amber-600' : 'text-gray-500'}`} />
                   
                   {!sidebarCollapsed && (
                     <>
@@ -659,32 +681,37 @@ const CompleteSidebarAdminDashboard = () => {
                       )}
                     </>
                   )}
-                </button>
+                </motion.button>
               );
             })}
           </nav>
         </div>
 
-        {/* User Section */}
-        <div className="p-4 border-t border-gray-200">
+        {/* User Section Modernisée */}
+        <div className="p-4 border-t border-gradient-to-r from-amber-200 to-yellow-200 bg-gradient-to-br from-amber-25 to-yellow-25">
           {!sidebarCollapsed && (
-            <div className="flex items-center space-x-3 mb-3">
-              <div className="w-10 h-10 bg-red-600 rounded-lg flex items-center justify-center">
-                <Shield className="h-5 w-5 text-white" />
+            <motion.div 
+              className="flex items-center space-x-3 mb-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.1 }}
+            >
+              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 via-yellow-500 to-orange-500 rounded-xl flex items-center justify-center shadow-sm">
+                <Shield className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">Administrateur</p>
-                <p className="text-xs text-gray-500 truncate">admin@terangafoncier.sn</p>
+                <p className="text-sm font-bold text-amber-800 truncate">Administrateur</p>
+                <p className="text-xs text-amber-600 truncate">admin@terangafoncier.sn</p>
               </div>
-            </div>
+            </motion.div>
           )}
           
           <div className="flex items-center space-x-2">
-            <Button variant="ghost" size="sm" className="flex-1">
+            <Button variant="ghost" size="sm" className="flex-1 hover:bg-amber-100 text-amber-700">
               <Bell className="h-4 w-4" />
-              {!sidebarCollapsed && <span className="ml-2">Notifications</span>}
+              {!sidebarCollapsed && <span className="ml-2 font-medium">Notifications</span>}
             </Button>
-            <Button variant="ghost" size="sm" onClick={handleLogout}>
+            <Button variant="ghost" size="sm" onClick={handleLogout} className="hover:bg-red-100 text-red-600">
               <LogOut className="h-4 w-4" />
             </Button>
           </div>
@@ -702,47 +729,63 @@ const CompleteSidebarAdminDashboard = () => {
         flex-1 transition-all duration-300 ease-in-out
         ${sidebarCollapsed ? 'lg:ml-16' : 'lg:ml-80'}
       `}>
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4">
+        {/* Header Modernisé */}
+        <div className="bg-gradient-to-r from-white via-amber-50 to-yellow-50 border-b border-amber-200 px-6 py-5 shadow-sm">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden"
+                className="lg:hidden hover:bg-amber-100 text-amber-700"
               >
                 <Menu className="h-5 w-5" />
               </Button>
               
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900 flex items-center">
-                  {activeItem && <activeItem.icon className="h-6 w-6 mr-2 text-red-600" />}
+              <motion.div
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-700 via-yellow-700 to-orange-700 bg-clip-text text-transparent flex items-center">
+                  {activeItem && <activeItem.icon className="h-7 w-7 mr-3 text-amber-600" />}
                   {activeItem?.label}
                 </h1>
-                <p className="text-sm text-gray-500">{activeItem?.description}</p>
-              </div>
+                <p className="text-sm font-medium text-amber-600 mt-1">{activeItem?.description}</p>
+              </motion.div>
             </div>
 
             <div className="flex items-center space-x-4">
-              {/* Statistiques rapides */}
-              <div className="hidden md:flex items-center space-x-6">
-                <div className="text-center">
-                  <p className="text-lg font-bold text-gray-900">{dashboardData.stats.totalUsers}</p>
-                  <p className="text-xs text-gray-500">Utilisateurs</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-green-600">{dashboardData.stats.systemUptime}%</p>
-                  <p className="text-xs text-gray-500">Uptime</p>
-                </div>
-                <div className="text-center">
-                  <p className="text-lg font-bold text-blue-600">{dashboardData.stats.pendingReports}</p>
-                  <p className="text-xs text-gray-500">Reports</p>
-                </div>
+              {/* Statistiques rapides modernisées */}
+              <div className="hidden md:flex items-center space-x-4">
+                <motion.div 
+                  className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-amber-200"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-lg font-bold text-amber-700">{dashboardData.stats.totalUsers}</p>
+                  <p className="text-xs text-amber-600 font-medium">Utilisateurs</p>
+                </motion.div>
+                <motion.div 
+                  className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-green-200"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-lg font-bold text-green-700">{dashboardData.stats.systemUptime}%</p>
+                  <p className="text-xs text-green-600 font-medium">Uptime</p>
+                </motion.div>
+                <motion.div 
+                  className="bg-white/80 backdrop-blur-sm rounded-lg px-3 py-2 shadow-sm border border-blue-200"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ type: "spring", stiffness: 300 }}
+                >
+                  <p className="text-lg font-bold text-blue-700">{dashboardData.stats.pendingReports}</p>
+                  <p className="text-xs text-blue-600 font-medium">Reports</p>
+                </motion.div>
               </div>
 
-              {/* Séparateur */}
-              <div className="hidden md:block w-px h-6 bg-gray-300"></div>
+              {/* Séparateur modernisé */}
+              <div className="hidden md:block w-px h-8 bg-gradient-to-b from-amber-200 via-yellow-300 to-orange-200"></div>
 
               {/* Actions Header */}
               <div className="flex items-center space-x-3">
@@ -2639,7 +2682,7 @@ const CompleteSidebarAdminDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-amber-25 to-yellow-25">
       <Sidebar />
       
       {/* Mobile Overlay */}

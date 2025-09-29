@@ -150,7 +150,7 @@ import AdminContractsPage from '@/pages/admin/AdminContractsPage';
 import AuthDebugPage from '@/pages/AuthDebugPage';
 
 // Import des dashboards
-import ParticularDashboard from '@/pages/ParticularDashboard';
+import ParticularDashboard from '@/pages/dashboards/particulier/ParticulierDashboardModern';
 import CompleteSidebarGeometreDashboard from '@/pages/dashboards/geometre/CompleteSidebarGeometreDashboard';
 import PromoteurDashboard from '@/pages/dashboards/promoteur/PromoteurDashboard';
 import MunicipaliteDashboard from '@/pages/dashboards/MunicipaliteDashboard';
@@ -187,7 +187,7 @@ import VendorVerificationPage from '@/pages/VendorVerificationPage';
 import LandValuationPage from '@/pages/dashboards/banque/LandValuationPage';
 import CompliancePage from '@/pages/dashboards/banque/CompliancePage';
 import CompleteSidebarMairieDashboard from '@/pages/dashboards/mairie/CompleteSidebarMairieDashboard';
-import BanqueDashboardLayout from '@/pages/dashboards/banque/BanqueDashboardLayout';
+import CompleteSidebarBanqueDashboard from '@/pages/dashboards/banque/CompleteSidebarBanqueDashboard';
 import CompleteSidebarNotaireDashboard from '@/pages/dashboards/notaire/CompleteSidebarNotaireDashboard';
 import TerrainOversightPage from '@/pages/solutions/dashboards/mairies/TerrainOversightPage';
 import TerrainAnalyticsPage from '@/pages/solutions/dashboards/mairies/TerrainAnalyticsPage';
@@ -197,7 +197,7 @@ import ArchivesPage from '@/pages/dashboards/notaire/ArchivesPage';
 import ComplianceCheckPage from '@/pages/dashboards/notaire/ComplianceCheckPage';
 // import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
 // import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
-import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboard';
+import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboardModern';
 import CompleteSidebarParticulierDashboard from '@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard';
 
 // Sous-pages particulier refondues pour suivi administratif
@@ -546,7 +546,7 @@ function App() {
 
             {/* Routes directes pour les dashboards */}
             <Route path="/mairie" element={<RoleProtectedRoute allowedRoles={['Mairie', 'admin']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
-            <Route path="/banque" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
+            <Route path="/banque" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><CompleteSidebarBanqueDashboard /></RoleProtectedRoute>} />
             <Route path="/notaire" element={<RoleProtectedRoute allowedRoles={['Notaire', 'admin']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>} />
             <Route path="/promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur', 'admin']}><PromoteurDashboard /></RoleProtectedRoute>} />
             <Route path="/investisseur/*" element={<RoleProtectedRoute allowedRoles={['Investisseur', 'admin']}><CompleteSidebarInvestisseurDashboard /></RoleProtectedRoute>} />
@@ -554,7 +554,7 @@ function App() {
             
             {/* Alias pour solutions */}
             <Route path="/solutions/mairies/dashboard" element={<RoleProtectedRoute allowedRoles={['Mairie', 'admin']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
-            <Route path="/solutions/banques/dashboard" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
+            <Route path="/solutions/banques/dashboard" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><CompleteSidebarBanqueDashboard /></RoleProtectedRoute>} />
             <Route path="/solutions/notaires/dashboard" element={<RoleProtectedRoute allowedRoles={['Notaire', 'admin']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>} />
             <Route path="/solutions/promoteurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Promoteur', 'admin']}><PromoteurDashboard /></RoleProtectedRoute>} />
             <Route path="/solutions/investisseurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Investisseur', 'admin']}><CompleteSidebarInvestisseurDashboard /></RoleProtectedRoute>} />
@@ -597,7 +597,7 @@ function App() {
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}
               <Route path="acheteur/*" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><CompleteSidebarParticulierDashboard /></RoleProtectedRoute>} />
-              <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><BanqueDashboardLayout /></RoleProtectedRoute>} />
+              <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><CompleteSidebarBanqueDashboard /></RoleProtectedRoute>} />
               <Route path="investisseur" element={<Navigate to="/investisseur" replace />} />
               {/* Redirection géomètre supprimée pour éviter les conflits */}
             </Route>

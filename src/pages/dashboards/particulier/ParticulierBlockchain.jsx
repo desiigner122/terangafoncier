@@ -22,7 +22,7 @@ import {
   Link,
   Zap,
   Globe,
-  Certificate,
+  Award,
   Fingerprint,
   Server,
   CreditCard,
@@ -137,7 +137,7 @@ const ParticulierBlockchain = () => {
             Sécurisé
           </Badge>
           <Button className="bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700">
-            <Certificate className="w-4 h-4 mr-2" />
+            <Award className="w-4 h-4 mr-2" />
             Nouveau certificat
           </Button>
         </div>
@@ -181,7 +181,7 @@ const ParticulierBlockchain = () => {
                 <p className="text-2xl font-bold text-purple-900">{portfolioStats.certificates}</p>
               </div>
               <div className="p-3 bg-purple-100 rounded-full">
-                <Certificate className="w-6 h-6 text-purple-600" />
+                <Award className="w-6 h-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -209,7 +209,7 @@ const ParticulierBlockchain = () => {
             Vue d'ensemble
           </TabsTrigger>
           <TabsTrigger value="certificates" className="flex items-center gap-2">
-            <Certificate className="w-4 h-4" />
+            <Award className="w-4 h-4" />
             Certificats
           </TabsTrigger>
           <TabsTrigger value="transactions" className="flex items-center gap-2">
@@ -316,7 +316,7 @@ const ParticulierBlockchain = () => {
                     <div className="flex items-start justify-between">
                       <div className="flex items-start gap-4">
                         <div className="p-3 bg-blue-50 rounded-xl">
-                          <Certificate className="w-6 h-6 text-blue-600" />
+                          <Award className="w-6 h-6 text-blue-600" />
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-2 mb-2">

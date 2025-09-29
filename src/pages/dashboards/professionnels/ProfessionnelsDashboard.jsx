@@ -40,7 +40,7 @@ import {
   Archive,
   BookOpen,
   GraduationCap,
-  Certificate,
+  Award,
   UserCheck
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -356,7 +356,7 @@ const ProfessionnelsDashboard = () => {
                     {dashboardData.stats.certifications}
                   </p>
                 </div>
-                <Certificate className="h-8 w-8 text-purple-600" />
+                <Award className="h-8 w-8 text-purple-600" />
               </div>
               <div className="flex items-center mt-2 text-sm">
                 <Award className="h-4 w-4 text-purple-600 mr-1" />

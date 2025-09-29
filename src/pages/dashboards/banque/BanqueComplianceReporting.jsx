@@ -52,7 +52,7 @@ import {
   TableRow 
 } from '@/components/ui/table';
 
-const BanqueCompliance = ({ dashboardStats }) => {
+const BanqueComplianceReporting = ({ dashboardStats }) => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [complianceFilter, setComplianceFilter] = useState('all');
   const [auditInProgress, setAuditInProgress] = useState(false);
@@ -101,49 +101,54 @@ const BanqueCompliance = ({ dashboardStats }) => {
       completionRate: 85,
       lastSubmission: '2024-01-10',
       criticalLevel: 'Élevé'
+    },
+    {
+      id: 'RPT-GDPR-004',
+      name: 'Rapport Protection Données',
+      type: 'RGPD Compliance',
+      frequency: 'Annuelle',
+      nextDue: '2024-12-31',
+      status: 'Planifié',
+      completionRate: 25,
+      lastSubmission: '2023-12-31',
+      criticalLevel: 'Faible'
     }
   ]);
 
-  // Vérifications KYC des crédits plateforme
-  const [kycVerifications, setKYCVerifications] = useState([
+  // Contrôles de conformité pour crédits fonciers
+  const [creditComplianceChecks, setCreditComplianceChecks] = useState([
     {
-      clientId: 'KYC-TER-001',
+      id: 'CHK-001',
+      creditId: 'PLC-2024-001',
       clientName: 'Mamadou FALL',
-      platformRef: 'TER-2024-001',
-      creditAmount: 20000000,
-      kycStatus: 'Validé',
-      documentsReceived: 8,
-      documentsRequired: 8,
-      riskLevel: 'Faible',
-      lastVerification: '2024-01-20',
-      complianceScore: 98,
-      amlStatus: 'Conforme'
+      checkType: 'KYC Verification',
+      status: 'Conforme',
+      score: 98,
+      lastCheck: '2024-01-20',
+      issues: [],
+      platformRef: 'TER-2024-001'
     },
     {
-      clientId: 'KYC-TER-002',
+      id: 'CHK-002',
+      creditId: 'PLC-2024-002',
       clientName: 'Société SENEGAL INVEST',
-      platformRef: 'TER-2024-002',
-      creditAmount: 96000000,
-      kycStatus: 'En Cours',
-      documentsReceived: 6,
-      documentsRequired: 9,
-      riskLevel: 'Moyen',
-      lastVerification: '2024-01-22',
-      complianceScore: 75,
-      amlStatus: 'En Vérification'
+      checkType: 'AML Screening',
+      status: 'Alerte Mineure',
+      score: 89,
+      lastCheck: '2024-01-22',
+      issues: ['Vérification source revenus requise'],
+      platformRef: 'TER-2024-002'
     },
     {
-      clientId: 'KYC-TER-003',
+      id: 'CHK-003',
+      creditId: 'PLC-2024-003',
       clientName: 'Fatou MBAYE',
-      platformRef: 'TER-2024-003',
-      creditAmount: 15000000,
-      kycStatus: 'Validé',
-      documentsReceived: 7,
-      documentsRequired: 7,
-      riskLevel: 'Très Faible',
-      lastVerification: '2024-01-25',
-      complianceScore: 96,
-      amlStatus: 'Conforme'
+      checkType: 'Credit Risk Assessment',
+      status: 'Conforme',
+      score: 95,
+      lastCheck: '2024-01-25',
+      issues: [],
+      platformRef: 'TER-2024-003'
     }
   ]);
 
@@ -151,36 +156,44 @@ const BanqueCompliance = ({ dashboardStats }) => {
   const [complianceAlerts, setComplianceAlerts] = useState([
     {
       id: 'ALT-001',
-      type: 'Échéance Proche',
-      title: 'Rapport BCEAO dû dans 3 jours',
-      description: 'La déclaration mensuelle BCEAO doit être soumise avant le 5 février.',
-      priority: 'Élevé',
+      type: 'Échéance Rapport',
+      severity: 'Élevé',
+      message: 'Déclaration BCEAO due dans 3 jours',
       dueDate: '2024-02-05',
-      status: 'Active'
+      actionRequired: true
     },
     {
       id: 'ALT-002',
+      type: 'Seuil Dépassé',
+      severity: 'Moyen',
+      message: 'Ratio concentration risque approche limite réglementaire',
+      threshold: '85%',
+      actionRequired: false
+    },
+    {
+      id: 'ALT-003',
       type: 'Document Manquant',
-      title: 'KYC incomplet - SENEGAL INVEST',
-      description: '3 documents manquants pour finaliser la vérification KYC.',
-      priority: 'Moyen',
-      dueDate: '2024-02-15',
-      status: 'Active'
+      severity: 'Faible',
+      message: '2 dossiers crédits manquent justificatifs KYC complémentaires',
+      count: 2,
+      actionRequired: true
     }
   ]);
 
   const getStatusColor = (status) => {
     switch (status) {
+      case 'Conforme': return 'bg-green-100 text-green-800';
       case 'Prêt': return 'bg-green-100 text-green-800';
       case 'En Cours': return 'bg-blue-100 text-blue-800';
       case 'En Attente': return 'bg-yellow-100 text-yellow-800';
-      case 'En Retard': return 'bg-red-100 text-red-800';
+      case 'Alerte Mineure': return 'bg-orange-100 text-orange-800';
+      case 'Non Conforme': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
+  const getSeverityColor = (severity) => {
+    switch (severity) {
       case 'Élevé': return 'text-red-600';
       case 'Moyen': return 'text-yellow-600';
       case 'Faible': return 'text-green-600';
@@ -188,13 +201,12 @@ const BanqueCompliance = ({ dashboardStats }) => {
     }
   };
 
-  const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'Très Faible': return 'text-green-700';
-      case 'Faible': return 'text-green-600';
-      case 'Moyen': return 'text-yellow-600';
-      case 'Élevé': return 'text-red-600';
-      default: return 'text-gray-600';
+  const getCriticalColor = (level) => {
+    switch (level) {
+      case 'Élevé': return 'border-l-red-500';
+      case 'Moyen': return 'border-l-yellow-500';
+      case 'Faible': return 'border-l-green-500';
+      default: return 'border-l-gray-500';
     }
   };
 
@@ -204,7 +216,7 @@ const BanqueCompliance = ({ dashboardStats }) => {
         whileHover={{ scale: 1.02 }}
         className="cursor-pointer"
       >
-        <Card className="h-full hover:shadow-lg transition-all duration-300 border-l-4 border-l-blue-500">
+        <Card className={`h-full hover:shadow-lg transition-all duration-300 border-l-4 ${getCriticalColor(report.criticalLevel)}`}>
           <CardHeader className="pb-3">
             <div className="flex items-start justify-between">
               <div>
@@ -215,17 +227,17 @@ const BanqueCompliance = ({ dashboardStats }) => {
                   <Badge className={getStatusColor(report.status)}>
                     {report.status}
                   </Badge>
-                  <Badge className="bg-purple-100 text-purple-800">
+                  <Badge variant="outline">
                     {report.frequency}
                   </Badge>
                 </CardDescription>
               </div>
               <div className="text-right">
-                <div className={`text-sm font-semibold ${getPriorityColor(report.criticalLevel)}`}>
-                  {report.criticalLevel}
+                <div className="text-sm font-semibold text-blue-600">
+                  {report.completionRate}%
                 </div>
                 <div className="text-xs text-gray-600">
-                  {report.completionRate}%
+                  Complété
                 </div>
               </div>
             </div>
@@ -235,29 +247,23 @@ const BanqueCompliance = ({ dashboardStats }) => {
             <div className="space-y-3">
               <div className="text-sm">
                 <p className="font-medium text-gray-900">{report.type}</p>
-                <p className="text-gray-600">ID: {report.id}</p>
+                <p className="text-red-600 text-xs">
+                  Échéance: {new Date(report.nextDue).toLocaleDateString('fr-FR')}
+                </p>
               </div>
               
               <div className="space-y-2">
                 <div className="flex justify-between text-sm">
-                  <span className="text-gray-600">Progression:</span>
+                  <span className="text-gray-600">Progression</span>
                   <span className="font-semibold">{report.completionRate}%</span>
                 </div>
                 <Progress value={report.completionRate} className="h-2" />
               </div>
 
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Échéance:</span>
-                  <div className="font-semibold text-red-600">
-                    {new Date(report.nextDue).toLocaleDateString('fr-FR')}
-                  </div>
-                </div>
-                <div>
-                  <span className="text-gray-600">Dernière soumission:</span>
-                  <div className="font-semibold text-blue-600">
-                    {new Date(report.lastSubmission).toLocaleDateString('fr-FR')}
-                  </div>
+              <div className="pt-2 border-t text-xs text-gray-500">
+                <div className="flex justify-between">
+                  <span>Dernière soumission:</span>
+                  <span>{new Date(report.lastSubmission).toLocaleDateString('fr-FR')}</span>
                 </div>
               </div>
 
@@ -279,7 +285,7 @@ const BanqueCompliance = ({ dashboardStats }) => {
 
   return (
     <div className="space-y-6">
-      {/* Header avec scores principaux */}
+      {/* Header avec scores de conformité */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -329,7 +335,7 @@ const BanqueCompliance = ({ dashboardStats }) => {
                   <p className="text-purple-600 text-sm font-medium">AML Compliance</p>
                   <p className="text-2xl font-bold text-purple-900">{complianceScores.amlCompliance}%</p>
                 </div>
-                <Flag className="h-8 w-8 text-purple-600" />
+                <Lock className="h-8 w-8 text-purple-600" />
               </div>
             </CardContent>
           </Card>
@@ -340,52 +346,81 @@ const BanqueCompliance = ({ dashboardStats }) => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
+          <Card className="bg-gradient-to-br from-orange-50 to-orange-100 border-orange-200">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-600 text-sm font-medium">Rapports Réglementaires</p>
-                  <p className="text-2xl font-bold text-yellow-900">{complianceScores.regulatoryReporting}%</p>
+                  <p className="text-orange-600 text-sm font-medium">Reporting</p>
+                  <p className="text-2xl font-bold text-orange-900">{complianceScores.regulatoryReporting}%</p>
                 </div>
-                <FileText className="h-8 w-8 text-yellow-600" />
+                <FileText className="h-8 w-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
-      {/* Alertes prioritaires */}
+      {/* Alertes de conformité */}
       {complianceAlerts.length > 0 && (
-        <Alert className="border-yellow-200 bg-yellow-50">
-          <AlertTriangle className="h-4 w-4 text-yellow-600" />
-          <AlertTitle className="text-yellow-800">Alertes de Conformité</AlertTitle>
-          <AlertDescription className="text-yellow-700">
-            {complianceAlerts.length} alerte(s) active(s) nécessitent votre attention.
-          </AlertDescription>
-        </Alert>
+        <Card className="border-l-4 border-l-red-500">
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2 text-red-700">
+              <AlertTriangle className="h-5 w-5" />
+              <span>Alertes de Conformité</span>
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {complianceAlerts.map((alert) => (
+                <div key={alert.id} className="flex items-center justify-between p-3 bg-red-50 rounded-lg border border-red-200">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 rounded-full ${
+                      alert.severity === 'Élevé' ? 'bg-red-500' :
+                      alert.severity === 'Moyen' ? 'bg-yellow-500' : 'bg-green-500'
+                    }`}></div>
+                    <div>
+                      <p className="font-medium text-gray-900">{alert.message}</p>
+                      <p className="text-sm text-gray-600">{alert.type}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Badge className={`${getSeverityColor(alert.severity)} bg-transparent`}>
+                      {alert.severity}
+                    </Badge>
+                    {alert.actionRequired && (
+                      <Button size="sm" variant="outline">
+                        Action Requise
+                      </Button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       )}
 
       {/* Interface principale */}
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
-            <Shield className="h-5 w-5 text-blue-600" />
-            <span>Conformité et Rapports Réglementaires</span>
+            <FileText className="h-5 w-5 text-blue-600" />
+            <span>Conformité & Reporting Bancaire</span>
           </CardTitle>
           <CardDescription>
-            Gestion de la conformité bancaire et reporting BCEAO pour les crédits fonciers
+            Gestion de la conformité réglementaire et reporting pour crédits fonciers
           </CardDescription>
         </CardHeader>
         <CardContent>
           <Tabs defaultValue="reports">
             <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="reports">Rapports</TabsTrigger>
-              <TabsTrigger value="kyc">Vérifications KYC</TabsTrigger>
-              <TabsTrigger value="alerts">Alertes</TabsTrigger>
+              <TabsTrigger value="compliance">Contrôles</TabsTrigger>
               <TabsTrigger value="audit">Audit</TabsTrigger>
+              <TabsTrigger value="analytics">Analytics</TabsTrigger>
             </TabsList>
 
-            {/* Rapports réglementaires */}
+            {/* Rapports Réglementaires */}
             <TabsContent value="reports" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Rapports Réglementaires</h3>
@@ -396,13 +431,13 @@ const BanqueCompliance = ({ dashboardStats }) => {
                   </Button>
                   <Button size="sm">
                     <Upload className="h-4 w-4 mr-2" />
-                    Soumettre
+                    Générer Rapport
                   </Button>
                 </div>
               </div>
 
               <motion.div 
-                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                className="grid grid-cols-1 md:grid-cols-2 gap-6"
                 layout
               >
                 {regulatoryReports.map((report) => (
@@ -411,72 +446,71 @@ const BanqueCompliance = ({ dashboardStats }) => {
               </motion.div>
             </TabsContent>
 
-            {/* Vérifications KYC */}
-            <TabsContent value="kyc" className="space-y-6">
+            {/* Contrôles de Conformité */}
+            <TabsContent value="compliance" className="space-y-6">
               <div className="flex items-center justify-between">
-                <h3 className="text-lg font-semibold text-gray-900">Vérifications KYC - Crédits Plateforme</h3>
+                <h3 className="text-lg font-semibold text-gray-900">Contrôles Crédits Plateforme</h3>
                 <Button size="sm">
-                  <Download className="h-4 w-4 mr-2" />
-                  Exporter
+                  <CheckCircle className="h-4 w-4 mr-2" />
+                  Nouveau Contrôle
                 </Button>
               </div>
 
               <Card>
-                <CardContent className="p-0">
+                <CardContent className="p-6">
                   <Table>
                     <TableHeader>
                       <TableRow>
+                        <TableHead>Crédit ID</TableHead>
                         <TableHead>Client</TableHead>
-                        <TableHead>Réf. Plateforme</TableHead>
-                        <TableHead>Montant</TableHead>
-                        <TableHead>Statut KYC</TableHead>
+                        <TableHead>Type Contrôle</TableHead>
+                        <TableHead>Statut</TableHead>
                         <TableHead>Score</TableHead>
-                        <TableHead>Risque</TableHead>
+                        <TableHead>Dernière Vérif.</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {kycVerifications.map((kyc) => (
-                        <TableRow key={kyc.clientId}>
+                      {creditComplianceChecks.map((check) => (
+                        <TableRow key={check.id}>
                           <TableCell>
                             <div>
-                              <div className="font-medium">{kyc.clientName}</div>
-                              <div className="text-sm text-gray-500">{kyc.clientId}</div>
+                              <div className="font-medium">{check.creditId}</div>
+                              <div className="text-xs text-gray-500">{check.platformRef}</div>
                             </div>
                           </TableCell>
                           <TableCell>
-                            <Badge className="bg-blue-100 text-blue-800">
-                              {kyc.platformRef}
-                            </Badge>
+                            <div className="font-medium">{check.clientName}</div>
                           </TableCell>
                           <TableCell>
-                            <div className="font-semibold">
-                              {(kyc.creditAmount / 1000000).toFixed(0)}M CFA
-                            </div>
+                            <Badge variant="outline">{check.checkType}</Badge>
                           </TableCell>
                           <TableCell>
-                            <Badge className={getStatusColor(kyc.kycStatus)}>
-                              {kyc.kycStatus}
+                            <Badge className={getStatusColor(check.status)}>
+                              {check.status}
                             </Badge>
                           </TableCell>
                           <TableCell>
                             <div className="flex items-center space-x-2">
-                              <Progress value={kyc.complianceScore} className="h-2 w-16" />
-                              <span className="text-sm font-medium">{kyc.complianceScore}%</span>
+                              <span className="font-medium">{check.score}%</span>
+                              <div className={`w-2 h-2 rounded-full ${
+                                check.score >= 95 ? 'bg-green-500' :
+                                check.score >= 80 ? 'bg-yellow-500' : 'bg-red-500'
+                              }`} />
                             </div>
                           </TableCell>
                           <TableCell>
-                            <span className={`font-semibold ${getRiskColor(kyc.riskLevel)}`}>
-                              {kyc.riskLevel}
-                            </span>
+                            <div className="text-sm">
+                              {new Date(check.lastCheck).toLocaleDateString('fr-FR')}
+                            </div>
                           </TableCell>
                           <TableCell>
-                            <div className="flex space-x-1">
+                            <div className="flex space-x-2">
                               <Button size="sm" variant="outline">
                                 <Eye className="h-3 w-3" />
                               </Button>
                               <Button size="sm" variant="outline">
-                                <FileText className="h-3 w-3" />
+                                <RefreshCw className="h-3 w-3" />
                               </Button>
                             </div>
                           </TableCell>
@@ -488,87 +522,100 @@ const BanqueCompliance = ({ dashboardStats }) => {
               </Card>
             </TabsContent>
 
-            {/* Alertes */}
-            <TabsContent value="alerts" className="space-y-6">
-              <div className="space-y-4">
-                {complianceAlerts.map((alert) => (
-                  <Card key={alert.id} className="border-l-4 border-l-yellow-500">
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <CardTitle className="text-lg font-semibold text-gray-900">
-                            {alert.title}
-                          </CardTitle>
-                          <CardDescription className="flex items-center space-x-2 mt-1">
-                            <Badge className="bg-orange-100 text-orange-800">
-                              {alert.type}
-                            </Badge>
-                            <Badge className={`${getPriorityColor(alert.priority)} bg-gray-100`}>
-                              {alert.priority}
-                            </Badge>
-                          </CardDescription>
-                        </div>
-                        <div className="text-right">
-                          <div className="text-sm font-semibold text-red-600">
-                            {new Date(alert.dueDate).toLocaleDateString('fr-FR')}
-                          </div>
-                        </div>
-                      </div>
-                    </CardHeader>
-                    <CardContent className="pt-0">
-                      <p className="text-sm text-gray-600 mb-4">{alert.description}</p>
-                      <div className="flex space-x-2">
-                        <Button size="sm">Traiter</Button>
-                        <Button size="sm" variant="outline">Rappeler plus tard</Button>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
-            </TabsContent>
-
             {/* Audit */}
             <TabsContent value="audit" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Card className="border-l-4 border-l-green-500">
-                  <CardHeader>
-                    <CardTitle className="text-green-700">Audits Réussis</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="text-2xl font-bold text-green-900 mb-2">12</div>
-                    <p className="text-green-600">Audits validés</p>
-                  </CardContent>
-                </Card>
-
                 <Card className="border-l-4 border-l-blue-500">
                   <CardHeader>
-                    <CardTitle className="text-blue-700">En Cours</CardTitle>
+                    <CardTitle className="text-blue-700">Audits Programmés</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="text-2xl font-bold text-blue-900 mb-2">3</div>
-                    <p className="text-blue-600">Audits en cours</p>
+                    <p className="text-blue-600">Ce trimestre</p>
                   </CardContent>
                 </Card>
 
-                <Card className="border-l-4 border-l-yellow-500">
+                <Card className="border-l-4 border-l-green-500">
                   <CardHeader>
-                    <CardTitle className="text-yellow-700">Planifiés</CardTitle>
+                    <CardTitle className="text-green-700">Conformité Moyenne</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-2xl font-bold text-yellow-900 mb-2">5</div>
-                    <p className="text-yellow-600">Audits à venir</p>
+                    <div className="text-2xl font-bold text-green-900 mb-2">{complianceScores.globalScore}%</div>
+                    <p className="text-green-600">Score global</p>
+                  </CardContent>
+                </Card>
+
+                <Card className="border-l-4 border-l-purple-500">
+                  <CardHeader>
+                    <CardTitle className="text-purple-700">Recommandations</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="text-2xl font-bold text-purple-900 mb-2">7</div>
+                    <p className="text-purple-600">Actions correctives</p>
                   </CardContent>
                 </Card>
               </div>
 
               <Alert>
-                <CheckCircle className="h-4 w-4" />
-                <AlertTitle>Conformité Globale</AlertTitle>
+                <Award className="h-4 w-4" />
+                <AlertTitle>Certification Bancaire</AlertTitle>
                 <AlertDescription>
-                  La conformité bancaire affiche un excellent score de {complianceScores.globalScore}% 
-                  avec tous les rapports BCEAO à jour et les vérifications KYC complètes.
+                  La banque maintient une excellente conformité réglementaire avec un score global de {complianceScores.globalScore}%. 
+                  Tous les rapports obligatoires sont à jour et les contrôles KYC/AML sont conformes aux standards BCEAO.
                 </AlertDescription>
               </Alert>
+            </TabsContent>
+
+            {/* Analytics */}
+            <TabsContent value="analytics" className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <BarChart3 className="h-5 w-5 text-blue-600" />
+                      <span>Évolution Conformité</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Janvier 2024</span>
+                        <span className="font-semibold text-green-600">92.1%</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm text-gray-600">Février 2024</span>
+                        <span className="font-semibold text-green-600">{complianceScores.globalScore}%</span>
+                      </div>
+                      <Progress value={complianceScores.globalScore} className="h-2" />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="flex items-center space-x-2">
+                      <Target className="h-5 w-5 text-purple-600" />
+                      <span>Objectifs 2024</span>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Score Global {'>'} 95%</span>
+                        <span className="text-green-600 font-semibold">✓</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">0 Rapport en Retard</span>
+                        <span className="text-green-600 font-semibold">✓</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-sm">Certification ISO 27001</span>
+                        <span className="text-yellow-600 font-semibold">En Cours</span>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
             </TabsContent>
           </Tabs>
         </CardContent>
@@ -577,4 +624,4 @@ const BanqueCompliance = ({ dashboardStats }) => {
   );
 };
 
-export default BanqueCompliance;
+export default BanqueComplianceReporting;

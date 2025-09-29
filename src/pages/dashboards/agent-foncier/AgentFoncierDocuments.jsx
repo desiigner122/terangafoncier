@@ -20,7 +20,7 @@ import {
   AlertTriangle,
   X,
   FileImage,
-  FilePdf,
+  FileText as FilePdf,
   FileSpreadsheet,
   Folder,
   FolderOpen,

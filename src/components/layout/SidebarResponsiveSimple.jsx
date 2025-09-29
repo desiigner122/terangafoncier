@@ -24,7 +24,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MobileDrawer from '@/components/ui/mobile-drawer';
 import { supabase } from '@/lib/customSupabaseClient';
 
-const logoUrl = "/teranga-foncier-logo.svg";
+const logoUrl = "/images/logo.png";
 
 // Configuration sidebar simplifiée
 const getSimpleSidebarConfig = (role) => {

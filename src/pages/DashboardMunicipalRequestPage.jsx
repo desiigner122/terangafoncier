@@ -25,7 +25,7 @@ import {
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { Link } from 'react-router-dom';
 import { senegalRegionsAndDepartments } from '@/data/senegalLocations';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const StepIndicator = ({ currentStep, totalSteps }) => (
   <div className="flex justify-center items-center space-x-2 mb-8">

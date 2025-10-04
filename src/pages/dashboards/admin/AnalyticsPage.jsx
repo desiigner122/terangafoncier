@@ -27,16 +27,18 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { OpenAIService } from '../../../services/ai/OpenAIService';
 import BlockchainWidget from '../../../components/dashboard/blockchain/BlockchainWidget';
+import { hybridDataService } from '../../../services/HybridDataService';
 
 const AnalyticsPage = () => {
-  const [analyticsData, setAnalyticsData] = useState([]);
+  const [analyticsData, setAnalyticsData] = useState({});
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [iaInsights, setIaInsights] = useState([]);
   const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
 
-  // Données analytiques mockup complètes
-  const mockAnalyticsData = {
+  // Structure de données par défaut pour éviter les erreurs
+  const defaultAnalyticsData = {
     kpis: [
       {
         id: 1,
@@ -112,51 +114,159 @@ const AnalyticsPage = () => {
 
   const loadAnalyticsData = async () => {
     setLoading(true);
-    // Simulation de chargement des données
-    setTimeout(() => {
-      setAnalyticsData(mockAnalyticsData);
-      generateIAInsights();
+    setError(null);
+    
+    try {
+      console.log('🔄 Chargement des données analytics depuis Supabase...');
+      
+      // Récupération des données analytics avancées via HybridDataService
+      const analyticsResponse = await hybridDataService.getAdvancedAnalytics(selectedPeriod);
+      
+      if (analyticsResponse.success) {
+        const { kpis, regionPerformance, propertyTypes, userActivity, growthMetrics } = analyticsResponse.data;
+        
+        // Formatage des données pour l'interface
+        const realAnalyticsData = {
+          kpis: [
+            {
+              id: 1,
+              title: 'Chiffre d\'affaires',
+              value: (kpis.totalRevenue || 0).toLocaleString(),
+              unit: 'XOF',
+              change: parseFloat(growthMetrics.userGrowthRate || 0),
+              period: `vs ${selectedPeriod === 'week' ? 'semaine' : selectedPeriod === 'month' ? 'mois' : selectedPeriod === 'quarter' ? 'trimestre' : 'année'} dernière`,
+              icon: DollarSign,
+              color: 'text-green-600',
+              bgColor: 'bg-green-50'
+            },
+            {
+              id: 2,
+              title: 'Utilisateurs actifs',
+              value: (kpis.activeUsers || 0).toString(),
+              unit: 'utilisateurs',
+              change: parseFloat(growthMetrics.userGrowthRate || 0),
+              period: `vs ${selectedPeriod === 'week' ? 'semaine' : selectedPeriod === 'month' ? 'mois' : selectedPeriod === 'quarter' ? 'trimestre' : 'année'} dernière`,
+              icon: Users,
+              color: 'text-blue-600',
+              bgColor: 'bg-blue-50'
+            },
+            {
+              id: 3,
+              title: 'Propriétés listées',
+              value: (kpis.totalProperties || 0).toString(),
+              unit: 'annonces',
+              change: parseFloat(growthMetrics.transactionGrowthRate || 0) * 0.7, // Estimation basée sur les transactions
+              period: `vs ${selectedPeriod === 'week' ? 'semaine' : selectedPeriod === 'month' ? 'mois' : selectedPeriod === 'quarter' ? 'trimestre' : 'année'} dernière`,
+              icon: Building,
+              color: 'text-orange-600',
+              bgColor: 'bg-orange-50'
+            },
+            {
+              id: 4,
+              title: 'Taux de conversion',
+              value: kpis.conversionRate || '0',
+              unit: '%',
+              change: parseFloat(growthMetrics.transactionGrowthRate || 0),
+              period: `vs ${selectedPeriod === 'week' ? 'semaine' : selectedPeriod === 'month' ? 'mois' : selectedPeriod === 'quarter' ? 'trimestre' : 'année'} dernière`,
+              icon: Target,
+              color: 'text-purple-600',
+              bgColor: 'bg-purple-50'
+            }
+          ],
+          regionPerformance: regionPerformance || [],
+          propertyTypes: propertyTypes || [],
+          userActivity: userActivity || []
+        };
+        
+        setAnalyticsData(realAnalyticsData);
+        console.log('✅ Données analytics réelles chargées:', realAnalyticsData);
+        
+        // Génération des insights IA basés sur les vraies données
+        await generateIAInsights(kpis);
+        
+      } else {
+        console.log('⚠️ Erreur données analytics, utilisation données par défaut');
+        setAnalyticsData(defaultAnalyticsData);
+        await generateIAInsights({ totalRevenue: 0, activeUsers: 0, totalProperties: 0, conversionRate: 0 });
+      }
+      
+    } catch (error) {
+      console.error('❌ Erreur chargement analytics:', error);
+      setError(error.message);
+      setAnalyticsData(defaultAnalyticsData);
+      await generateIAInsights({ totalRevenue: 0, activeUsers: 0, totalProperties: 0, conversionRate: 0 });
+    } finally {
       setLoading(false);
-    }, 1500);
+    }
   };
 
-  const generateIAInsights = async () => {
+  const generateIAInsights = async (stats = {}) => {
     try {
       const insights = await OpenAIService.generateAnalyticsInsights({
-        revenue: 45250000,
-        users: 2847,
-        properties: 1234,
-        conversionRate: 8.7,
+        revenue: stats.monthlyRevenue || 0,
+        users: stats.activeUsers || 0,
+        properties: stats.totalProperties || 0,
+        transactions: stats.totalTransactions || 0,
         topRegion: 'Dakar',
         growthRate: 15.2
       });
       setIaInsights(insights);
     } catch (error) {
       console.error('Erreur génération insights IA:', error);
-      // Fallback avec insights mockup
-      setIaInsights([
-        {
-          type: 'opportunity',
-          title: 'Croissance forte à Thiès',
-          description: 'La région de Thiès montre une croissance de 22.1%, représentant une opportunité d\'expansion.',
-          priority: 'high',
-          action: 'Augmenter le marketing local à Thiès'
-        },
-        {
-          type: 'warning',
-          title: 'Déclin à Saint-Louis',
-          description: 'Saint-Louis affiche une croissance négative de -3.5%, nécessitant une attention particulière.',
-          priority: 'medium',
-          action: 'Analyser les causes et ajuster la stratégie'
-        },
-        {
+      // Fallback avec insights basés sur les vraies données
+      const fallbackInsights = [];
+      
+      if (stats.totalRevenue > 1000000) {
+        fallbackInsights.push({
           type: 'success',
-          title: 'Excellent taux de conversion',
-          description: 'Le taux de conversion de 8.7% dépasse la moyenne du secteur de 6.2%.',
+          title: 'Revenus en croissance',
+          description: `Revenus actuels de ${(stats.totalRevenue || 0).toLocaleString()} XOF montrent une bonne performance.`,
           priority: 'low',
           action: 'Maintenir les stratégies actuelles'
-        }
-      ]);
+        });
+      }
+      
+      if (stats.activeUsers < 100) {
+        fallbackInsights.push({
+          type: 'warning',
+          title: 'Base utilisateurs à développer',
+          description: `Avec ${stats.activeUsers || 0} utilisateurs actifs, il y a un potentiel d'acquisition.`,
+          priority: 'high',
+          action: 'Lancer des campagnes d\'acquisition'
+        });
+      }
+      
+      if (stats.totalProperties > 0) {
+        fallbackInsights.push({
+          type: 'opportunity',
+          title: 'Inventaire de propriétés disponible',
+          description: `${stats.totalProperties || 0} propriétés listées offrent de bonnes opportunités.`,
+          priority: 'medium',
+          action: 'Optimiser la visibilité des annonces'
+        });
+      }
+
+      if (parseFloat(stats.conversionRate || 0) > 5) {
+        fallbackInsights.push({
+          type: 'success',      
+          title: 'Excellent taux de conversion',
+          description: `Taux de conversion de ${stats.conversionRate}% dépasse les standards du secteur.`,
+          priority: 'low',
+          action: 'Maintenir les stratégies actuelles'
+        });
+      }
+      
+      if (fallbackInsights.length === 0) {
+        fallbackInsights.push({
+          type: 'opportunity',
+          title: 'Démarrage de la plateforme',
+          description: 'Système prêt à accueillir les premiers utilisateurs et propriétés.',
+          priority: 'high',
+          action: 'Commencer l\'acquisition d\'utilisateurs'
+        });
+      }
+      
+      setIaInsights(fallbackInsights);
     }
   };
 

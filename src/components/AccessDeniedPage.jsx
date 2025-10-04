@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { useSearchParams } from 'react-router-dom';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,7 @@ const AccessDeniedPage = () => {
 
   const defaultDashboard = getDefaultDashboard(profile.role);
   
-  // Obtenir les pages accessibles par le rôle actuel
+  // Obtenir les pages accessibles par le rï¿½le actuel
   const accessiblePages = Object.entries(PERMISSIONS)
     .filter(([, allowedRoles]) => allowedRoles.includes(profile.role))
     .map(([permission]) => permission);
@@ -44,7 +44,7 @@ const AccessDeniedPage = () => {
     'Banque': 'Banque',
     'Mairie': 'Mairie',
     'Notaire': 'Notaire',
-    'Geometre': 'Géomètre',
+    'Geometre': 'Gï¿½omï¿½tre',
     'Investisseur': 'Investisseur',
     'Promoteur': 'Promoteur',
     'Agriculteur': 'Agriculteur'
@@ -53,14 +53,14 @@ const AccessDeniedPage = () => {
   const permissionDisplayNames = {
     'MY_REQUESTS': 'Mes Demandes',
     'FAVORITES': 'Mes Favoris',
-    'DIGITAL_VAULT': 'Coffre-fort Numérique',
+    'DIGITAL_VAULT': 'Coffre-fort Numï¿½rique',
     'REQUEST_MUNICIPAL_LAND': 'Demande Terrain Municipal',
-    'SELL_PROPERTY': 'Vendre une Propriété',
+    'SELL_PROPERTY': 'Vendre une Propriï¿½tï¿½',
     'MY_LISTINGS': 'Mes Annonces',
     'ADD_PARCEL': 'Ajouter une Parcelle',
     'INVESTMENTS': 'Mes Investissements',
-    'MARKET_ANALYSIS': 'Analyse de Marché',
-    'OPPORTUNITIES': 'Opportunités',
+    'MARKET_ANALYSIS': 'Analyse de Marchï¿½',
+    'OPPORTUNITIES': 'Opportunitï¿½s',
     'ROI_CALCULATOR': 'Calculateur ROI',
     'DUE_DILIGENCE': 'Due Diligence',
     'PROJECTS': 'Mes Projets',
@@ -69,21 +69,21 @@ const AccessDeniedPage = () => {
     'MY_LANDS': 'Mes Terres',
     'LOGBOOK': 'Carnet de Bord',
     'SOIL_ANALYSIS': 'Analyse du Sol',
-    'WEATHER': 'Météo',
-    'EQUIPMENT': 'Équipements',
+    'WEATHER': 'Mï¿½tï¿½o',
+    'EQUIPMENT': 'ï¿½quipements',
     'FUNDING_REQUESTS': 'Demandes de Financement',
     'GUARANTEES': 'Garanties',
-    'LAND_VALUATION': 'Évaluation Foncière',
-    'COMPLIANCE': 'Conformité',
+    'LAND_VALUATION': 'ï¿½valuation Fonciï¿½re',
+    'COMPLIANCE': 'Conformitï¿½',
     'MAIRIE_REQUESTS': 'Demandes Mairie',
-    'LAND_MANAGEMENT': 'Gestion Foncière',
+    'LAND_MANAGEMENT': 'Gestion Fonciï¿½re',
     'CADASTRE': 'Cadastre',
     'DISPUTES': 'Litiges',
     'URBAN_PLAN': 'Plan Urbain',
     'CASES': 'Dossiers',
     'AUTHENTICATION': 'Authentification',
     'ARCHIVES': 'Archives',
-    'COMPLIANCE_CHECK': 'Vérification Conformité'
+    'COMPLIANCE_CHECK': 'Vï¿½rification Conformitï¿½'
   };
 
   return (
@@ -103,10 +103,10 @@ const AccessDeniedPage = () => {
             </div>
             <CardTitle className="text-2xl text-red-800 flex items-center justify-center gap-2">
               <AlertTriangle className="h-6 w-6" />
-              Accès Interdit
+              Accï¿½s Interdit
             </CardTitle>
             <CardDescription className="text-red-600 text-lg">
-              Cette page est réservée à certains types d'utilisateurs
+              Cette page est rï¿½servï¿½e ï¿½ certains types d'utilisateurs
             </CardDescription>
           </CardHeader>
           
@@ -115,19 +115,19 @@ const AccessDeniedPage = () => {
             <Alert className="border-blue-200 bg-blue-50">
               <User className="h-4 w-4 text-blue-600" />
               <AlertDescription className="text-blue-800">
-                <strong>Votre rôle actuel :</strong> {roleDisplayNames[profile.role] || profile.role}
+                <strong>Votre rï¿½le actuel :</strong> {roleDisplayNames[profile.role] || profile.role}
                 <Badge variant="outline" className="ml-2 text-blue-600 border-blue-300">
                   {profile.role}
                 </Badge>
               </AlertDescription>
             </Alert>
 
-            {/* Page demandée */}
+            {/* Page demandï¿½e */}
             {requestedPermission && (
               <Alert className="border-orange-200 bg-orange-50">
                 <Shield className="h-4 w-4 text-orange-600" />
                 <AlertDescription className="text-orange-800">
-                  <strong>Page demandée :</strong> {permissionDisplayNames[requestedPermission] || requestedPermission}
+                  <strong>Page demandï¿½e :</strong> {permissionDisplayNames[requestedPermission] || requestedPermission}
                 </AlertDescription>
               </Alert>
             )}
@@ -135,40 +135,40 @@ const AccessDeniedPage = () => {
             {/* Message explicatif */}
             <div className="bg-gray-50 p-4 rounded-lg border">
               <p className="text-gray-700 text-center">
-                Cette fonctionnalité est conçue pour un usage spécialisé. 
-                Chaque rôle a accès à des outils adaptés à ses besoins métier.
+                Cette fonctionnalitï¿½ est conï¿½ue pour un usage spï¿½cialisï¿½. 
+                Chaque rï¿½le a accï¿½s ï¿½ des outils adaptï¿½s ï¿½ ses besoins mï¿½tier.
               </p>
             </div>
 
-            {/* Actions recommandées */}
+            {/* Actions recommandï¿½es */}
             <div className="space-y-4">
               <div className="text-center">
                 <Button asChild size="lg" className="bg-blue-600 hover:bg-blue-700">
                   <Link to={defaultDashboard} className="flex items-center gap-2">
                     <ArrowRight className="h-4 w-4" />
-                    Retour à mon tableau de bord
+                    Retour ï¿½ mon tableau de bord
                   </Link>
                 </Button>
               </div>
 
-              {/* Suggestions d'amélioration du compte */}
+              {/* Suggestions d'amï¿½lioration du compte */}
               <Card className="border-green-200 bg-green-50">
                 <CardHeader className="pb-3">
                   <CardTitle className="text-green-800 text-lg flex items-center gap-2">
                     <Shield className="h-5 w-5" />
-                    Besoin d'accès supplémentaires ?
+                    Besoin d'accï¿½s supplï¿½mentaires ?
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-0">
                   <div className="space-y-2 text-green-700">
                     <p className="text-sm">
-                      • Contactez votre administrateur pour une modification de rôle
+                      ï¿½ Contactez votre administrateur pour une modification de rï¿½le
                     </p>
                     <p className="text-sm">
-                      • Vérifiez si vous devez devenir vendeur pour certaines fonctionnalités
+                      ï¿½ Vï¿½rifiez si vous devez devenir vendeur pour certaines fonctionnalitï¿½s
                     </p>
                     <p className="text-sm">
-                      • Assurez-vous que votre compte est correctement vérifié
+                      ï¿½ Assurez-vous que votre compte est correctement vï¿½rifiï¿½
                     </p>
                   </div>
                 </CardContent>
@@ -178,7 +178,7 @@ const AccessDeniedPage = () => {
             {/* Contact support */}
             <div className="text-center text-sm text-gray-500 border-t pt-4">
               <p>
-                Problème persistant ? {' '}
+                Problï¿½me persistant ? {' '}
                 <Link to="/contact" className="text-blue-600 hover:underline">
                   Contactez le support technique
                 </Link>

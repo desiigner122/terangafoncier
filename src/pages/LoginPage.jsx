@@ -18,46 +18,63 @@
   Users,
   Building
 } from 'lucide-react';
-    import { useAuth } from '@/contexts/TempSupabaseAuthContext';
-    import { localAuth } from '@/services/LocalAuthService';
+    import { useAuth } from '@/contexts/UnifiedAuthContext';
+    import { unifiedAuth } from '@/services/UnifiedAuthService';
 
-    const LoginPage = () => {
-      const [email, setEmail] = useState('');
-      const [password, setPassword] = useState('');
-      const [loading, setLoading] = useState(false);
-      const [error, setError] = useState('');
-      const [loginType, setLoginType] = useState('supabase');
-      const { signIn, session } = useAuth();
-      const navigate = useNavigate();
-      const location = useLocation();
-      
-      // Comptes locaux disponibles
-      const localAccounts = localAuth.getAvailableAccounts();
-      
-      // toast remplacé par window.safeGlobalToast
+  // Helper pour déterminer la route basée sur le rôle
+  const getDashboardPath = (user) => {
+    const roles = user.roles || [];
+    const profile = user.profile || user;
+    const userRole = profile.role || profile.user_type || (roles.length > 0 ? roles[0] : 'Particulier');
+    
+    console.log('🔍 Détermination dashboard pour:', { roles, userRole, user });
+    
+    // Vérification par rôle avec priorité admin
+    if (roles.includes('admin') || userRole === 'Admin') return '/admin/dashboard';
+    if (roles.includes('agent_foncier') || userRole === 'Agent Foncier') return '/agent-foncier/dashboard';
+    if (roles.includes('banque') || userRole === 'Banque') return '/banque/dashboard';
+    if (roles.includes('notaire') || userRole === 'Notaire') return '/notaire/dashboard';
+    if (roles.includes('geometre') || userRole === 'Géomètre') return '/geometre/dashboard';
+    if (roles.includes('mairie') || userRole === 'Mairie') return '/mairie/dashboard';
+    if (roles.includes('vendeur') || userRole === 'Vendeur') return '/dashboard/vendeur';
+    if (roles.includes('investisseur') || userRole === 'Investisseur') return '/dashboard/investisseur';
+    
+    // Par défaut - dashboard particulier
+    return '/dashboard';
+  };
 
-      const handleLogin = async (e) => {
+  const LoginPage = () => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState('');
+    const [loginType, setLoginType] = useState('api');
+    const { signIn, session } = useAuth();
+    const navigate = useNavigate();
+    const location = useLocation();      const handleLogin = async (e) => {
         e.preventDefault();
         setLoading(true);
         setError('');
 
         try {
-          if (loginType === 'local') {
-            // Utiliser l'authentification locale
-            const { user, error: localError } = localAuth.signIn(email, password);
-            if (localError) throw localError;
+          // Utiliser le service d'authentification unifié
+          const { user, error: authError } = await unifiedAuth.signIn(email, password);
+          
+          if (authError) {
+            throw new Error(authError.message);
+          }
+          
+          if (user) {
+            // Debug: afficher les données utilisateur
+            console.log('🔍 Utilisateur connecté:', user);
+            console.log('🎭 Rôles utilisateur:', user.roles);
             
-            // Mettre à jour le contexte d'authentification
-            const session = { access_token: 'local_token', user };
-            localStorage.setItem('temp_auth', JSON.stringify({ user, session }));
+            // Redirection basée sur le rôle de l'utilisateur
+            const dashboardPath = getDashboardPath(user);
+            console.log('🎯 Redirection vers:', dashboardPath);
             
-            // Forcer le rechargement du contexte
-            window.location.reload();
-            return;
-          } else {
-            // Utiliser l'authentification Supabase
-            const { error: signInError } = await signIn(email, password);
-            if (signInError) throw signInError;
+            const from = location.state?.from?.pathname || dashboardPath;
+            navigate(from, { replace: true });
           }
           
           window.safeGlobalToast({
@@ -81,29 +98,30 @@
         }
       };
 
-      // Connexion rapide avec un compte local
-      const handleQuickLogin = async (account) => {
+      // Connexion rapide avec un compte de test
+      const handleQuickLogin = async (role) => {
         setLoading(true);
         setError('');
 
         try {
-          const { user, error: localError } = localAuth.quickSignIn(account.role);
-          if (localError) throw localError;
+          const { user, error: authError } = await unifiedAuth.quickSignIn(role);
           
-          // Mettre à jour le contexte d'authentification
-          const session = { access_token: 'local_token', user };
-          localStorage.setItem('temp_auth', JSON.stringify({ user, session }));
+          if (authError) {
+            throw new Error(authError.message);
+          }
           
-          window.safeGlobalToast({
-            title: `Bienvenue ${account.name} !`,
-            description: "Connexion réussie. Redirection en cours...",
-            className: "bg-green-500 text-white",
-          });
-          
-          // Forcer le rechargement du contexte
-          window.location.reload();
+          if (user) {
+            window.safeGlobalToast({
+              title: `Bienvenue !`,
+              description: "Connexion réussie. Redirection en cours...",
+              className: "bg-green-500 text-white",
+            });
+            
+            const dashboardPath = getDashboardPath(user);
+            navigate(dashboardPath, { replace: true });
+          }
         } catch (err) {
-          console.error("Login error:", err);
+          console.error("Quick login error:", err);
           setError(err.message || "Une erreur est survenue lors de la connexion.");
           window.safeGlobalToast({
             title: "Échec de la Connexion",

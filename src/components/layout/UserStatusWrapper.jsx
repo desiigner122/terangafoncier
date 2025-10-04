@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { Outlet } from 'react-router-dom';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import useUserStatusMonitor from '@/hooks/useUserStatusMonitor';
 
 /**

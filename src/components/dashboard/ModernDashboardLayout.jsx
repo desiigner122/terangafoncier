@@ -34,7 +34,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);

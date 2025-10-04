@@ -31,6 +31,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Helmet } from 'react-helmet-async';
 import MarketTickerBar from '@/components/home/MarketTickerBar';
 import LiveMetricsBar from '@/components/home/LiveMetricsBar';
@@ -46,6 +47,7 @@ import DashboardProcessInfo from '@/components/home/DashboardProcessInfo';
 const HomePage = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [currentStat, setCurrentStat] = useState(0);
+  const { user, isLocalMode } = useAuth();
 
   const testimonials = [
     {
@@ -579,6 +581,26 @@ const HomePage = () => {
                 </Button>
               </div>
               
+              {/* Development Tools */}
+              {process.env.NODE_ENV === 'development' && (
+                <div className="mt-8 p-4 bg-blue-500/20 backdrop-blur-sm rounded-lg border border-blue-400/30">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-blue-100">🧪 Outils de Développement</h3>
+                      <p className="text-sm text-blue-200">
+                        Migration: {user ? `Connecté (${user.user_metadata?.role})` : 'Non connecté'} • 
+                        Mode: {isLocalMode ? 'Local' : 'API'}
+                      </p>
+                    </div>
+                    <Link to="/test-auth">
+                      <Button variant="outline" size="sm" className="bg-white/10 hover:bg-white/20 border-white/30">
+                        Test Auth
+                      </Button>
+                    </Link>
+                  </div>
+                </div>
+              )}
+
               {/* Quick Links */}
               <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4">

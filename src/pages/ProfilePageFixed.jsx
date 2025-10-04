@@ -13,7 +13,7 @@ import {
   ShieldCheck, 
   LogOut
 } from 'lucide-react';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { avatarManager } from '@/lib/avatarManager';

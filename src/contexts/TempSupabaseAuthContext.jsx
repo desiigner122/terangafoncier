@@ -1,6 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { supabase } from '@/lib/customSupabaseClient';
-import { localAuth } from '@/services/LocalAuthService';
+import { unifiedAuth } from '@/services/UnifiedAuthService';
 
 const AuthContext = createContext(undefined);
 

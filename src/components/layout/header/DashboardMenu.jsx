@@ -7,7 +7,7 @@ import React from 'react';
   Settings
 } from 'lucide-react';
     import { cn } from '@/lib/utils';
-    import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+    import { useAuth } from '@/contexts/UnifiedAuthContext';
 
     const DashboardMenu = () => {
         const { profile } = useAuth();
@@ -20,21 +20,21 @@ import React from 'react';
                 { href: '/admin', label: 'Vue d\'ensemble', icon: LayoutDashboard },
                 { href: '/admin/users', label: 'Utilisateurs', icon: Users },
                 { href: '/admin/parcels', label: 'Annonces', icon: MapPin },
-                { href: '/admin/settings', label: 'Paramètres', icon: Settings },
+                { href: '/admin/settings', label: 'Paramï¿½tres', icon: Settings },
             ];
         } else if (profile.role === 'Mairie') {
             navItems = [
-                 { href: '/dashboard/land-management', label: 'Gestion Foncière', icon: MapPin },
+                 { href: '/dashboard/land-management', label: 'Gestion Fonciï¿½re', icon: MapPin },
                  { href: '/dashboard/mairie-requests', label: 'Demandes Citoyens', icon: Users },
                  { href: '/dashboard/cadastre', label: 'Cadastre', icon: LayoutDashboard },
-                 { href: '/settings', label: 'Paramètres', icon: Settings },
+                 { href: '/settings', label: 'Paramï¿½tres', icon: Settings },
             ];
         } else {
             navItems = [
                 { href: '/dashboard', label: 'Vue d\'ensemble', icon: LayoutDashboard },
                 { href: '/my-requests', label: 'Mes Demandes', icon: Users },
                 { href: '/parcelles', label: 'Terrains', icon: MapPin },
-                { href: '/settings', label: 'Paramètres', icon: Settings },
+                { href: '/settings', label: 'Paramï¿½tres', icon: Settings },
             ];
         }
         

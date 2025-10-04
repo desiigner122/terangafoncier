@@ -34,7 +34,7 @@ import {
   Rocket
 } from 'lucide-react';
 import { autonomousAI } from '@/services/AutonomousAIService';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { 
   LineChart as RechartsLine, 
   Line, 

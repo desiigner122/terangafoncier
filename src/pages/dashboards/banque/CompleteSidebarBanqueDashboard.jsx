@@ -70,7 +70,7 @@ import {
   DropdownMenuSeparator, 
   DropdownMenuTrigger 
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 // Toast import supprimé - utilisation window.safeGlobalToast
 

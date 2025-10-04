@@ -51,7 +51,7 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { createClient } from '@supabase/supabase-js';
 import TerangaLogo from '@/components/ui/TerangaLogo';
 
@@ -82,32 +82,141 @@ const CompleteSidebarParticulierDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState(null);
 
-  // Stats du dashboard particulier - Focalisé sur les demandes et dossiers
+  // Stats du dashboard particulier - Données réelles depuis Supabase
   const [dashboardStats, setDashboardStats] = useState({
-    totalDemandes: 8,
-    demandesEnCours: 5,
-    demandesApprouvees: 2,
-    demandesEnAttente: 1,
-    constructionDemandes: 2,
-    zoneCommunaleDemandes: 3,
-    dossiersTraites: 12,
-    rdvProgrammes: 3
+    totalDemandes: 0,
+    demandesEnCours: 0,
+    demandesApprouvees: 0,
+    demandesEnAttente: 0,
+    constructionDemandes: 0,
+    zoneCommunaleDemandes: 0,
+    dossiersTraites: 0,
+    rdvProgrammes: 0,
+    favorisCount: 0,
+    messagesCount: 0
   });
+  
+  const [loading, setLoading] = useState(true);
 
-  // Chargement du profil utilisateur
+  // Chargement du profil utilisateur et des stats réelles
   useEffect(() => {
-    // Utilisation d'un profil par défaut pour éviter les problèmes RLS
     if (user) {
+      loadUserProfileAndStats();
+    }
+  }, [user]);
+
+  const loadUserProfileAndStats = async () => {
+    setLoading(true);
+    try {
+      console.log('🔄 Chargement profil et stats particulier...');
+      
+      // Chargement du profil utilisateur réel
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (!profileError && profile) {
+        setProfile({
+          id: profile.id,
+          email: profile.email || user.email,
+          role: profile.user_type || 'particulier',
+          first_name: profile.first_name,
+          last_name: profile.last_name,
+          full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Particulier'
+        });
+      } else {
+        // Profil par défaut si non trouvé
+        setProfile({
+          id: user.id,
+          email: user.email,
+          role: 'particulier',
+          first_name: user.user_metadata?.first_name || 'Particulier',
+          last_name: user.user_metadata?.last_name || 'Expert',
+          full_name: user.user_metadata?.full_name || 'Particulier Expert'
+        });
+      }
+
+      // Chargement des statistiques réelles
+      await loadRealDashboardStats();
+      
+    } catch (error) {
+      console.error('❌ Erreur chargement profil particulier:', error);
+      // Profil fallback
       setProfile({
         id: user.id,
         email: user.email,
         role: 'particulier',
-        first_name: 'Acheteur',
+        first_name: 'Particulier',
         last_name: 'Expert',
-        full_name: 'Acheteur Expert'
+        full_name: 'Particulier Expert'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const loadRealDashboardStats = async () => {
+    try {
+      console.log('📊 Chargement stats réelles du dashboard particulier...');
+      
+      // Récupération des demandes utilisateur depuis Supabase
+      const { data: requests, error: requestsError } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Récupération des favoris
+      const { data: favorites, error: favoritesError } = await supabase
+        .from('favorites')
+        .select('*')
+        .eq('user_id', user.id);
+
+      // Récupération des messages
+      const { data: messages, error: messagesError } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('recipient_id', user.id);
+
+      // Calcul des statistiques
+      const requestsData = requests || [];
+      const favoritesData = favorites || [];
+      const messagesData = messages || [];
+
+      const stats = {
+        totalDemandes: requestsData.length,
+        demandesEnCours: requestsData.filter(r => r.status === 'pending' || r.status === 'in_progress').length,
+        demandesApprouvees: requestsData.filter(r => r.status === 'approved').length,
+        demandesEnAttente: requestsData.filter(r => r.status === 'pending').length,
+        constructionDemandes: requestsData.filter(r => r.type === 'construction').length,
+        zoneCommunaleDemandes: requestsData.filter(r => r.type === 'zone_communale').length,
+        dossiersTraites: requestsData.filter(r => r.status === 'completed' || r.status === 'approved').length,  
+        rdvProgrammes: requestsData.filter(r => r.appointment_date && new Date(r.appointment_date) > new Date()).length,
+        favorisCount: favoritesData.length,
+        messagesCount: messagesData.filter(m => !m.read_at).length // Messages non lus
+      };
+
+      setDashboardStats(stats);
+      console.log('✅ Stats particulier chargées:', stats);
+      
+    } catch (error) {
+      console.error('❌ Erreur chargement stats particulier:', error);
+      // Stats par défaut en cas d'erreur
+      setDashboardStats({
+        totalDemandes: 0,
+        demandesEnCours: 0,
+        demandesApprouvees: 0,
+        demandesEnAttente: 0,
+        constructionDemandes: 0,
+        zoneCommunaleDemandes: 0,
+        dossiersTraites: 0,
+        rdvProgrammes: 0,
+        favorisCount: 0,
+        messagesCount: 0
       });
     }
-  }, [user]);
+  };
 
   const handleLogout = async () => {
     try {
@@ -144,14 +253,14 @@ const CompleteSidebarParticulierDashboard = () => {
       label: 'Demandes Communales',
       icon: FileText,
       description: 'Toutes vos demandes communales',
-      badge: dashboardStats.totalDemandes
+      badge: loading ? '...' : (dashboardStats.totalDemandes > 0 ? dashboardStats.totalDemandes.toString() : null)
     },
     {
       id: 'terrains',
       label: 'Terrains Privés',
       icon: Building2,
       description: 'Demandes d\'achat terrains privés',
-      badge: '3'
+      badge: loading ? '...' : null // TODO: Ajouter les vraies données terrains privés
     },
     {
       id: 'construction',
@@ -165,7 +274,7 @@ const CompleteSidebarParticulierDashboard = () => {
       label: 'Mes Favoris',
       icon: Heart,
       description: 'Terrains, zones et projets favoris',
-      badge: '12'
+      badge: loading ? '...' : (dashboardStats.favorisCount > 0 ? dashboardStats.favorisCount.toString() : null)
     },
     {
       id: 'promoteurs',
@@ -178,7 +287,7 @@ const CompleteSidebarParticulierDashboard = () => {
       label: 'Communications',
       icon: MessageSquare,
       description: 'Messages avec les services communaux',
-      badge: '5'
+      badge: loading ? '...' : (dashboardStats.messagesCount > 0 ? dashboardStats.messagesCount.toString() : null)
     },
     {
       id: 'calendar',

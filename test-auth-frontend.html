@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Auth Admin - Teranga Foncier</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 40px; }
+        button { padding: 10px 20px; margin: 10px; font-size: 16px; }
+        .success { color: green; }
+        .error { color: red; }
+        .info { color: blue; }
+        #result { margin-top: 20px; padding: 15px; border: 1px solid #ddd; }
+        pre { background: #f5f5f5; padding: 10px; overflow: auto; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Test d'Authentification Admin - Teranga Foncier</h1>
+    
+    <div>
+        <h3>Test des identifiants admin :</h3>
+        <p><strong>Email:</strong> admin@teranga.com</p>
+        <p><strong>Password:</strong> admin123</p>
+        
+        <button onclick="testAuth()" id="testBtn">🔐 Tester l'authentification</button>
+        <button onclick="clearStorage()">🧹 Nettoyer le localStorage</button>
+        <button onclick="checkStorage()">📋 Vérifier le localStorage</button>
+    </div>
+
+    <div id="result"></div>
+
+    <script>
+        const resultDiv = document.getElementById('result');
+        const testBtn = document.getElementById('testBtn');
+
+        function log(message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const className = type === 'success' ? 'success' : type === 'error' ? 'error' : 'info';
+            resultDiv.innerHTML += `<div class="${className}">[${timestamp}] ${message}</div>`;
+        }
+
+        function clearResult() {
+            resultDiv.innerHTML = '';
+        }
+
+        async function testAuth() {
+            clearResult();
+            testBtn.disabled = true;
+            testBtn.textContent = '⏳ Test en cours...';
+            
+            log('🚀 Début du test d\'authentification');
+            
+            try {
+                // Étape 1: Configuration
+                log('📋 Configuration du mode API...');
+                localStorage.setItem('use_local_auth', 'false');
+                localStorage.removeItem('temp_auth');
+                localStorage.removeItem('local_auth_user');
+                log('✅ Mode API activé, données locales nettoyées', 'success');
+                
+                // Étape 2: Test de connectivité API
+                log('🌐 Test de connectivité avec l\'API...');
+                const healthResponse = await fetch('http://localhost:3000/api/health');
+                if (healthResponse.ok) {
+                    log('✅ Serveur API accessible', 'success');
+                } else {
+                    log('❌ Serveur API non accessible', 'error');
+                    return;
+                }
+                
+                // Étape 3: Test d'authentification
+                log('🔐 Test d\'authentification avec admin@teranga.com...');
+                const loginResponse = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@teranga.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (loginResponse.ok) {
+                    const loginData = await loginResponse.json();
+                    log('✅ Authentification réussie !', 'success');
+                    log('👤 Utilisateur: ' + loginData.data.user.email, 'success');
+                    log('🎭 Rôles: ' + JSON.stringify(loginData.data.user.roles), 'success');
+                    log('🔑 Token généré: ' + loginData.data.token.substring(0, 50) + '...', 'success');
+                    
+                    // Sauvegarder le token
+                    localStorage.setItem('auth_token', loginData.data.token);
+                    localStorage.setItem('current_user', JSON.stringify(loginData.data.user));
+                    log('💾 Token et utilisateur sauvegardés dans localStorage', 'success');
+                    
+                    // Test avec le token
+                    log('🧪 Test d\'un endpoint protégé...');
+                    const profileResponse = await fetch('http://localhost:3000/api/auth/profile', {
+                        headers: {
+                            'Authorization': 'Bearer ' + loginData.data.token,
+                            'Content-Type': 'application/json'
+                        }
+                    });
+                    
+                    if (profileResponse.ok) {
+                        const profileData = await profileResponse.json();
+                        log('✅ Endpoint protégé accessible !', 'success');
+                        log('📝 Profil récupéré: ' + profileData.data.email, 'success');
+                    } else {
+                        log('❌ Endpoint protégé inaccessible', 'error');
+                    }
+                    
+                } else {
+                    const errorData = await loginResponse.text();
+                    log('❌ Échec de l\'authentification: ' + errorData, 'error');
+                }
+                
+            } catch (error) {
+                log('💥 Erreur: ' + error.message, 'error');
+                console.error('Erreur complète:', error);
+            } finally {
+                testBtn.disabled = false;
+                testBtn.textContent = '🔐 Tester l\'authentification';
+            }
+        }
+
+        function clearStorage() {
+            localStorage.clear();
+            log('🧹 localStorage nettoyé', 'info');
+        }
+
+        function checkStorage() {
+            clearResult();
+            log('📋 Contenu du localStorage:', 'info');
+            
+            if (localStorage.length === 0) {
+                log('📭 localStorage vide', 'info');
+            } else {
+                for (let i = 0; i < localStorage.length; i++) {
+                    const key = localStorage.key(i);
+                    const value = localStorage.getItem(key);
+                    log(`🔑 ${key}: ${value.length > 100 ? value.substring(0, 100) + '...' : value}`, 'info');
+                }
+            }
+        }
+
+        // Auto-test au chargement
+        window.addEventListener('load', () => {
+            log('🌟 Page chargée. Prêt pour les tests !', 'success');
+        });
+    </script>
+</body>
+</html>

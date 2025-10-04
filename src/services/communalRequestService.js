@@ -1,8 +1,9 @@
-import { supabase } from '@/lib/supabase';
+import { api } from '@/config/api';
 
 /**
  * Service de gestion des demandes communales
  * Gère le business model et les revenus du secteur communal
+ * Migré vers Express API
  */
 export class CommunalRequestService {
   
@@ -88,32 +89,19 @@ export class CommunalRequestService {
       const tfCommission = Math.round(totalAmount * requestType.commissionRate);
       const communeAmount = totalAmount - tfCommission;
 
-      // Création de la demande
-      const { data: request, error } = await supabase
-        .from('communal_requests')
-        .insert({
-          type,
-          citizen_id: citizenId,
-          commune_id: communeId,
-          description,
-          location,
-          status: 'en_attente',
-          total_amount: totalAmount,
-          tf_commission: tfCommission,
-          commune_amount: communeAmount,
-          documents: documents || [],
-          created_at: new Date().toISOString()
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      // Créer la transaction de paiement
-      await this.createPaymentTransaction(request.id, totalAmount, requestType.breakdown);
-
-      // Notifier la commune
-      await this.notifyCommuneNewRequest(communeId, request.id);
+      // Création de la demande via Express API
+      const request = await api.createCommunalRequest({
+        type,
+        citizen_id: citizenId,
+        commune_id: communeId,
+        description,
+        location,
+        status: 'en_attente',
+        total_amount: totalAmount,
+        tf_commission: tfCommission,
+        commune_amount: communeAmount,
+        documents: documents || []
+      });
 
       return {
         success: true,

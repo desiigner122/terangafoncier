@@ -3,7 +3,6 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/index.css';
-import { AuthProvider } from '@/contexts/TempSupabaseAuthContext';
 import { BrowserRouter as Router } from 'react-router-dom';
 
 // 🛡️ PATCH GLOBAL ANTI-CRASH TOAST - Import du système de protection
@@ -21,9 +20,7 @@ if (!rootElement) {
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
     <Router>
-      <AuthProvider>
-        <App />
-      </AuthProvider>
+      <App />
     </Router>
   </React.StrictMode>
 );

@@ -41,7 +41,7 @@ import {
   PieChart as RechartsPieChart, Pie, Cell, 
   XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer 
 } from 'recharts';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabase';
 
 const GeometreDashboard = () => {

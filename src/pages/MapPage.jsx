@@ -74,7 +74,7 @@ const MapLegend = () => (
   </Card>
 );
 
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/customSupabaseClient';
 
 const MapPage = () => {

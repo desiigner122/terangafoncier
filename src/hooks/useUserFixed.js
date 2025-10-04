@@ -1,4 +1,4 @@
-﻿import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+﻿import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 /**
  * Hook pour accéder aux données utilisateur avec protection contre les boucles

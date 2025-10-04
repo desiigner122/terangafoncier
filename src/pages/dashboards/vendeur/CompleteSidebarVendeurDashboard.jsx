@@ -65,7 +65,7 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Link } from 'react-router-dom';
 
 // Import des pages spécialisées

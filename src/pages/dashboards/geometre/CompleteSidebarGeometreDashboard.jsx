@@ -38,7 +38,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 // Lazy loading des composants de pages
 const GeometreOverview = React.lazy(() => import('./GeometreOverview.jsx'));

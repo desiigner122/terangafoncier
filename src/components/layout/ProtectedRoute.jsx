@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate, useLocation, Outlet } from 'react-router-dom';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const ProtectedRoute = ({ children }) => {

@@ -1,6 +1,6 @@
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 // Dashboard Imports
 import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboardModern';

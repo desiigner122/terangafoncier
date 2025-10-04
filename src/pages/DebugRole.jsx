@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const DebugRole = () => {
   const { user } = useAuth();

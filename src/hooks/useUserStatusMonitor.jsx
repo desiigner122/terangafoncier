@@ -1,5 +1,5 @@
 ﻿import { useEffect, useCallback } from 'react';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { useNavigate } from 'react-router-dom';
 import userStatusManager from '@/lib/userStatusManager';
 // useToast import supprimé - utilisation window.safeGlobalToast

@@ -18,7 +18,7 @@ import {
   Search
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MobileDrawer from '@/components/ui/mobile-drawer';

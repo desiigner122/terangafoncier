@@ -1,5 +1,5 @@
 ﻿import React, { useState } from 'react';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const AuthDebugPage = () => {
   const { user, profile, loading, signIn, signOut, revalidate } = useAuth();

@@ -2,6 +2,7 @@ import React from 'react';
 import { Route, Routes, Outlet, Link, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
 import ErrorBoundary from '@/components/ErrorBoundary';
+import { Analytics } from '@vercel/analytics/react';
 import { AIProvider } from '@/hooks/useAI.jsx';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
@@ -49,6 +50,7 @@ import UserProfilePage from '@/pages/profiles/UserProfilePage';
 import ModernAboutPage from '@/pages/ModernAboutPage';
 import BlockchainAboutPage from '@/pages/BlockchainAboutPage';
 import FoncierBlockchainPage from '@/pages/FoncierBlockchainPage';
+import TestAuthPage from '@/pages/TestAuthPage';
 import FoncierSenegalPage from '@/pages/FoncierSenegalPage';
 import MapPage from '@/pages/MapPage';
 import MyRequestsPage from '@/pages/MyRequestsPage';
@@ -133,20 +135,39 @@ import RoleBasedRedirect from '@/components/layout/RoleBasedRedirect';
 import ScrollToTop from '@/components/layout/ScrollToTop';
 import { motion } from 'framer-motion';
 import { ComparisonProvider } from '@/context/ComparisonContext';
+import { AuthProvider } from '@/contexts/UnifiedAuthContext';
 import './lib/errorManager';
 import './lib/securityConfig';
 import DashboardMunicipalRequestPage from '@/pages/DashboardMunicipalRequestPage';
 import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
 import UltraModernAdminDashboard from '@/pages/admin/UltraModernAdminDashboard';
+import AdminDashboard from '@/pages/dashboards/admin/AdminDashboard';
+import AdminDashboardRealData from '@/pages/dashboards/admin/AdminDashboardRealData';
+import ModernAdminDashboardRealData from '@/pages/dashboards/admin/ModernAdminDashboardRealData';
 import CompleteSidebarAdminDashboard from '@/pages/dashboards/admin/CompleteSidebarAdminDashboard';
+
+// PAGES ADMIN MODERNISÉES AVEC DONNÉES RÉELLES
+import ModernUsersPage from '@/pages/dashboards/admin/ModernUsersPage';
+import ModernTransactionsPage from '@/pages/dashboards/admin/ModernTransactionsPage';
+import ModernPropertiesManagementPage from '@/pages/dashboards/admin/ModernPropertiesManagementPage';
+import ModernAnalyticsPage from '@/pages/dashboards/admin/ModernAnalyticsPage';
+import ModernSettingsPage from '@/pages/dashboards/admin/ModernSettingsPage';
 import AdminProjectsPage from '@/pages/admin/AdminProjectsPage';
 import AdminPricingPage from '@/pages/admin/AdminPricingPage';
 import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage';
 import GlobalAdminDashboard from '@/pages/admin/GlobalAdminDashboard';
 import AdminUsersPage from '@/pages/admin/AdminUsersPage';
 import AdminParcelsPage from '@/pages/admin/AdminParcelsPage';
+
+// NOUVELLES PAGES ADMIN - PRIORITÉ 1
+import RevenueManagementPage from '@/pages/admin/RevenueManagementPage';
+import PropertyManagementPage from '@/pages/admin/PropertyManagementPage';
+import SupportTicketsPage from '@/pages/admin/SupportTicketsPage';
+import BulkExportPage from '@/pages/admin/BulkExportPage';
+import UserManagementPage from '@/pages/admin/UserManagementPage';
 import AdminSystemRequestsPage from '@/pages/admin/AdminSystemRequestsPage';
 import AdminContractsPage from '@/pages/admin/AdminContractsPage';
+import SubscriptionManagementPage from '@/pages/admin/SubscriptionManagementPage';
 import AuthDebugPage from '@/pages/AuthDebugPage';
 
 // Import des dashboards
@@ -278,9 +299,10 @@ function App() {
   return (
     <ErrorBoundary>
       <HelmetProvider>
-        <ComparisonProvider>
-          <NotificationProvider>
-            <AIProvider>
+        <AuthProvider>
+          <ComparisonProvider>
+            <NotificationProvider>
+              <AIProvider>
             <ScrollToTop />
             <Routes>
             <Route path="/" element={<PublicLayout />}>
@@ -292,6 +314,7 @@ function App() {
               <Route path="debug-dashboard" element={<DebugDashboard />} />
               <Route path="auth-debug" element={<AuthDebugPage />} />
               <Route path="debug-role" element={<DebugRole />} />
+              <Route path="test-auth" element={<TestAuthPage />} />
               <Route path="banned" element={<BannedPage />} />
               <Route path="terrains-communaux" element={<CommunalLandsPage />} />
               <Route path="promoters-projects" element={<PromoterProjectsPage />} />
@@ -516,6 +539,11 @@ function App() {
 
             <Route path="/admin" element={<AdminRoute />}>
               <Route index element={<CompleteSidebarAdminDashboard />} />
+              <Route path="dashboard" element={<CompleteSidebarAdminDashboard />} />
+              <Route path="modern" element={<ModernAdminDashboardRealData />} />
+              
+              
+              {/* ROUTES ADMIN STANDARDS */}
               <Route path="projects" element={<AdminProjectsPage />} />
               <Route path="pricing" element={<AdminPricingPage />} />
               <Route path="analytics" element={<AdminAnalyticsPage />} />
@@ -524,6 +552,15 @@ function App() {
               <Route path="user-requests" element={<AdminUserRequestsPage />} />
               <Route path="user-verifications" element={<AdminUserVerificationsPage />} />
               <Route path="parcels" element={<AdminParcelsPage />} />
+              <Route path="transactions" element={<TransactionsPage />} />
+              
+              {/* NOUVELLES ROUTES ADMIN - PRIORITÉ 1 */}
+              <Route path="revenue" element={<RevenueManagementPage />} />
+              <Route path="properties" element={<PropertyManagementPage />} />
+              <Route path="support" element={<SupportTicketsPage />} />
+              <Route path="export" element={<BulkExportPage />} />
+              <Route path="user-management" element={<UserManagementPage />} />
+              <Route path="subscriptions" element={<SubscriptionManagementPage />} />
               <Route path="system-requests" element={<AdminSystemRequestsPage />} />
               <Route path="contracts" element={<AdminContractsPage />} />
               <Route path="reports" element={<AdminReportsPage />} />
@@ -617,9 +654,13 @@ function App() {
           {/* IA CONVERSATIONNELLE UNIVERSELLE */}
           <UniversalAIChatbot isFloating={true} />
           
-            </AIProvider>
-          </NotificationProvider>
-        </ComparisonProvider>
+          {/* VERCEL ANALYTICS */}
+          <Analytics />
+          
+              </AIProvider>
+            </NotificationProvider>
+          </ComparisonProvider>
+        </AuthProvider>
       </HelmetProvider>
     </ErrorBoundary>
   );

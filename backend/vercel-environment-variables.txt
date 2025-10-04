@@ -1,0 +1,28 @@
+# Variables d'environnement Vercel - Teranga Foncier
+# Générées le 2025-09-29 14:18:58
+
+# OBLIGATOIRE - Authentification
+JWT_SECRET=e7))j%!x)=P<{nO^2O=pr4L[bb1X;I8VIBNi5.UUaoeUdHHaaz(4qv&>xKe0|&*B
+JWT_REFRESH_SECRET=Kt;(zlYVH=NM$U<VsOYU)FsBG8_?PUpvXvG]Ij9,68l^u|p1]8EhUH8[j>[b;<?c
+
+# OBLIGATOIRE - Configuration serveur
+NODE_ENV=production
+PORT=5000
+FRONTEND_URL=https://votre-domaine-frontend.vercel.app
+
+# OBLIGATOIRE - Base de données (configurer selon votre choix)
+DATABASE_TYPE=postgresql
+DATABASE_URL=postgresql://user:password@host:5432/database
+
+# OPTIONNEL - Services IA
+OPENAI_API_KEY=sk-proj-votre-cle-openai
+GOOGLE_AI_API_KEY=AIza-votre-cle-google
+
+# OPTIONNEL - Blockchain
+POLYGON_RPC_URL=https://polygon-mainnet.infura.io/v3/YOUR_INFURA_KEY
+POLYGON_PRIVATE_KEY=0x1234567890abcdef...
+
+# OPTIONNEL - Services externes
+MAPBOX_API_KEY=pk.eyJ1...
+STRIPE_SECRET_KEY=sk_live_...
+CLOUDINARY_CLOUD_NAME=teranga-foncier

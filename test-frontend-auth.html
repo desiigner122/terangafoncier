@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Frontend Auth</title>
+</head>
+<body>
+    <h1>Test d'authentification frontend</h1>
+    <button onclick="testLogin()">Test Login</button>
+    <div id="result"></div>
+
+    <script>
+        async function testLogin() {
+            const result = document.getElementById('result');
+            result.innerHTML = 'Test en cours...';
+            
+            try {
+                const response = await fetch('http://localhost:3000/api/auth/login', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        email: 'admin@teranga.com',
+                        password: 'admin123'
+                    })
+                });
+                
+                if (response.ok) {
+                    const data = await response.json();
+                    result.innerHTML = `
+                        <h3 style="color: green;">✓ LOGIN SUCCESS</h3>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    const error = await response.text();
+                    result.innerHTML = `
+                        <h3 style="color: red;">✗ LOGIN FAILED</h3>
+                        <p>Status: ${response.status}</p>
+                        <p>Error: ${error}</p>
+                    `;
+                }
+            } catch (error) {
+                result.innerHTML = `
+                    <h3 style="color: red;">✗ NETWORK ERROR</h3>
+                    <p>${error.message}</p>
+                `;
+            }
+        }
+    </script>
+</body>
+</html>

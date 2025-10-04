@@ -39,7 +39,7 @@ import {
   PopoverTrigger,
 } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const ModernAdminLayout = ({ title, subtitle, children }) => {
   const { user, profile, signOut } = useAuth();

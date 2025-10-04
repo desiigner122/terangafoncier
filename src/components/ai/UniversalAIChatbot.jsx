@@ -33,10 +33,17 @@ import {
   TrendingUp
 } from 'lucide-react';
 import { autonomousAI } from '@/services/AutonomousAIService';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
-  const { user } = useAuth();
+  // Protection contre l'absence d'AuthProvider
+  let user = null;
+  try {
+    const auth = useAuth();
+    user = auth?.user;
+  } catch (error) {
+    console.warn('Auth non disponible dans UniversalAIChatbot:', error.message);
+  }
   const [isOpen, setIsOpen] = useState(!isFloating);
   const [messages, setMessages] = useState([]);
   const [currentMessage, setCurrentMessage] = useState('');

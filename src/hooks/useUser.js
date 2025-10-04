@@ -1,4 +1,4 @@
-﻿import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+﻿import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 /**
  * Hook to get current user information

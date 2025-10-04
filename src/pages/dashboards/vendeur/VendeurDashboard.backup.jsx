@@ -20,7 +20,7 @@ import {
   Activity
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Badge } from '@/components/ui/badge';
 
 const ModernVendeurDashboard = () => {

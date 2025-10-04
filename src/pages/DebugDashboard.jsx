@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { useUser } from '@/hooks/useUser';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const DebugDashboard = () => {
   const { user, profile, loading: userLoading } = useUser();

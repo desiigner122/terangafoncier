@@ -2,7 +2,7 @@
 import { useLocation, Link } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { TrendingUp, ArrowLeft, Calculator, Calendar, DollarSign, CheckCircle, AlertCircle, Building, User, CreditCard } from "lucide-react";
-import { useAuth } from "@/contexts/TempSupabaseAuthContext";
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";

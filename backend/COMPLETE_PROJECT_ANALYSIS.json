@@ -1,0 +1,14 @@
+{
+  "pages": {
+    "public": [],
+    "dashboards": {},
+    "auth": [],
+    "profiles": []
+  },
+  "services": [],
+  "hooks": [],
+  "components": [],
+  "dataModels": {},
+  "apiEndpoints": {},
+  "roles": {}
+}

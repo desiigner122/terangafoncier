@@ -12,7 +12,7 @@ import {
   User, 
   Sparkles
 } from 'lucide-react';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const TerrangaFoncierChatbot = ({ className = "" }) => {
   const [isOpen, setIsOpen] = useState(false);

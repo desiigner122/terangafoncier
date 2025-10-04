@@ -81,7 +81,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 // Lazy loading des composants existants
 const PromoteurOverview = React.lazy(() => import('./PromoteurOverview'));

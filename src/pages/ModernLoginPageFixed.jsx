@@ -21,7 +21,7 @@ import {
   Globe,
   Zap
 } from 'lucide-react';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const logoUrl = "/images/logo.png";
 

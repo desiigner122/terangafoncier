@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { 
   UserPlus
 } from 'lucide-react';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { useNavigate } from 'react-router-dom';
 
 const BecomeSellerButton = ({ variant = "default", size = "default", className = "" }) => {
@@ -18,7 +18,7 @@ const BecomeSellerButton = ({ variant = "default", size = "default", className =
     return null;
   }
 
-  // Récupérer le rôle de l'utilisateur
+  // Rï¿½cupï¿½rer le rï¿½le de l'utilisateur
   const userRole = user?.user_metadata?.role || user?.role || 'Particulier';
   
   // Seulement afficher pour les particuliers qui ne sont pas encore vendeurs
@@ -26,7 +26,7 @@ const BecomeSellerButton = ({ variant = "default", size = "default", className =
     return null;
   }
 
-  // Si l'utilisateur est déjà vendeur, ne pas afficher le bouton
+  // Si l'utilisateur est dï¿½jï¿½ vendeur, ne pas afficher le bouton
   if (userRole.includes('Vendeur')) {
     return null;
   }

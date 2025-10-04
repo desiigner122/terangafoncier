@@ -16,7 +16,7 @@ import {
   Clock
 } from 'lucide-react';
 import { advancedAIService } from '@/services/AdvancedAIService';
-import { useAuth } from '@/contexts/TempSupabaseAuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const AISmartNotifications = () => {
   const { user } = useAuth();

@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { OpenAIService } from '../../../services/ai/OpenAIService';
+import { hybridDataService } from '../../../services/HybridDataService';
 
 const TransactionsPage = () => {
   const [transactions, setTransactions] = useState([]);
@@ -38,6 +39,7 @@ const TransactionsPage = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState([]);
+  const [error, setError] = useState(null);
   const [stats, setStats] = useState({
     totalTransactions: 0,
     completedTransactions: 0,
@@ -109,9 +111,68 @@ const TransactionsPage = () => {
 
   const loadTransactions = async () => {
     setLoading(true);
+    setError(null);
+    
     try {
-      // Données mockup transactions réalistes
-      const mockTransactions = [
+      console.log('🔄 Chargement des transactions depuis Supabase...');
+      
+      // Charger les transactions réelles depuis Supabase
+      const realTransactions = await hybridDataService.getTransactions();
+      
+      if (realTransactions && realTransactions.length > 0) {
+        // Transformer les données réelles
+        const formattedTransactions = realTransactions.map((transaction, index) => ({
+          id: transaction.id || `TXN-${Date.now()}-${index}`,
+          type: transaction.type || 'purchase',
+          status: transaction.status || 'pending',
+          amount: transaction.amount || 0,
+          fee: transaction.fee || Math.floor(transaction.amount * 0.03), // 3% de commission par défaut
+          property: {
+            id: transaction.property_id || null,
+            title: transaction.property_title || 'Propriété inconnue',
+            type: transaction.property_type || 'Autre',
+            location: transaction.property_location || 'Location non spécifiée'
+          },
+          buyer: {
+            name: transaction.buyer_name || 'Acheteur inconnu',
+            email: transaction.buyer_email || 'inconnu@email.com'
+          },
+          seller: {
+            name: transaction.seller_name || 'Vendeur inconnu',
+            email: transaction.seller_email || 'inconnu@email.com'
+          },
+          createdAt: transaction.created_at || new Date().toISOString(),
+          completedAt: transaction.completed_at,
+          paymentMethod: transaction.payment_method || 'bank_transfer',
+          escrowAccount: transaction.escrow_account || `ESC-${Date.now()}-${index}`
+        }));
+        
+        setTransactions(formattedTransactions);
+        console.log(`✅ ${formattedTransactions.length} transactions réelles chargées`);
+        
+        // Calcul des statistiques avec les données formatées
+        const totalTransactions = formattedTransactions.length;
+        const completedTransactions = formattedTransactions.filter(t => t.status === 'completed').length;
+        const pendingTransactions = formattedTransactions.filter(t => t.status === 'pending').length;
+        const failedTransactions = formattedTransactions.filter(t => t.status === 'failed').length;
+        const totalVolume = formattedTransactions
+          .filter(t => t.status === 'completed')
+          .reduce((sum, t) => sum + (t.amount || 0), 0);
+        const averageAmount = completedTransactions > 0 ? totalVolume / completedTransactions : 0;
+
+        setStats({ 
+          totalTransactions, 
+          completedTransactions, 
+          pendingTransactions, 
+          failedTransactions, 
+          totalVolume, 
+          averageAmount 
+        });
+        
+      } else {
+        // Si pas de transactions dans Supabase, utiliser des données par défaut
+        console.log('⚠️ Aucune transaction dans Supabase, utilisation de données par défaut');
+        const defaultTransactions = [
         {
           id: 'TXN-2024-001',
           type: 'purchase',
@@ -238,30 +299,41 @@ const TransactionsPage = () => {
           paymentMethod: 'commission',
           escrowAccount: null
         }
-      ];
-
-      setTransactions(mockTransactions);
+        ];
+        
+        setTransactions(defaultTransactions);
+        setStats({ totalTransactions: 1, completedTransactions: 1, pendingTransactions: 0, failedTransactions: 0, totalVolume: 450000000, averageAmount: 450000000 });
+      }
       
-      // Calcul des statistiques
-      const totalTransactions = mockTransactions.length;
-      const completedTransactions = mockTransactions.filter(t => t.status === 'completed').length;
-      const pendingTransactions = mockTransactions.filter(t => t.status === 'pending').length;
-      const failedTransactions = mockTransactions.filter(t => t.status === 'failed').length;
-      const totalVolume = mockTransactions
-        .filter(t => t.status === 'completed')
-        .reduce((sum, t) => sum + t.amount, 0);
-      const averageAmount = totalVolume / (completedTransactions || 1);
-
-      setStats({ 
-        totalTransactions, 
-        completedTransactions, 
-        pendingTransactions, 
-        failedTransactions, 
-        totalVolume, 
-        averageAmount 
-      });
     } catch (error) {
-      console.error('Erreur chargement transactions:', error);
+      console.error('❌ Erreur chargement transactions:', error);
+      setError(error.message);
+      
+      // En cas d'erreur, afficher des données par défaut minimales
+      const fallbackTransactions = [
+        {
+          id: 'fallback-1',
+          type: 'purchase',
+          status: 'pending',
+          amount: 0,
+          fee: 0,
+          property: {
+            id: null,
+            title: 'Aucune transaction disponible',
+            type: 'N/A',
+            location: 'N/A'
+          },
+          buyer: { name: 'N/A', email: 'n/a@email.com' },
+          seller: { name: 'N/A', email: 'n/a@email.com' },
+          createdAt: new Date().toISOString(),
+          completedAt: null,
+          paymentMethod: 'N/A',
+          escrowAccount: null
+        }
+      ];
+      
+      setTransactions(fallbackTransactions);
+      setStats({ totalTransactions: 0, completedTransactions: 0, pendingTransactions: 0, failedTransactions: 0, totalVolume: 0, averageAmount: 0 });
     } finally {
       setLoading(false);
     }

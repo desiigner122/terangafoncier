@@ -313,7 +313,7 @@ const MegaMenuNew = ({ isOpen, onClose }) => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="w-4 h-4" />
-                  <span>contact@terangafoncier.sn</span>
+                  <span>palaye122@gmail.com</span>
                 </div>
               </div>
               <Link

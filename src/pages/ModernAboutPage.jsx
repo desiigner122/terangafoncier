@@ -56,7 +56,7 @@ const ModernAboutPage = () => {
     imgAlt: "Portrait d'Abdoulaye Diémé, fondateur de Teranga Foncier",
     linkedin: "https://www.linkedin.com/in/abdoulaye-di%C3%A9m%C3%A9-58136a1b1/",
     phone: "+221 77 593 42 41",
-    email: "contact@terangafoncier.com",
+    email: "palaye122@gmail.com",
     bio: "Visionnaire passionné de technologie et d'innovation, Abdoulaye Diémé a fondé Teranga Foncier pour démocratiser l'accès au foncier au Sénégal. Fort de plus de 10 ans d'expérience dans le secteur immobilier et technologique, il dirige aujourd'hui la transformation digitale du secteur foncier sénégalais."
   };
 

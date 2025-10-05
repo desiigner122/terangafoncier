@@ -231,7 +231,7 @@ const TermsPage = () => {
                   <CardContent className="p-6 text-center">
                     <Mail className="h-8 w-8 text-blue-600 mx-auto mb-4" />
                     <h3 className="font-semibold text-gray-900 mb-2">Email Juridique</h3>
-                    <p className="text-gray-600">legal@terangafoncier.com</p>
+                    <p className="text-gray-600">palaye122@gmail.com</p>
                   </CardContent>
                 </Card>
                 
@@ -239,7 +239,7 @@ const TermsPage = () => {
                   <CardContent className="p-6 text-center">
                     <Phone className="h-8 w-8 text-blue-600 mx-auto mb-4" />
                     <h3 className="font-semibold text-gray-900 mb-2">Assistance Juridique</h3>
-                    <p className="text-gray-600">+221 33 XXX XX XX</p>
+                    <p className="text-gray-600">+221 77 593 42 41</p>
                   </CardContent>
                 </Card>
               </div>

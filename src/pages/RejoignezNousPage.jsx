@@ -121,9 +121,9 @@ const RejoignezNousPage = () => {
     {
       icon: Mail,
       title: "Écrivez-nous",
-      content: "contact@terangafoncier.com",
+      content: "palaye122@gmail.com",
       description: "Réponse sous 2h en semaine",
-      action: "mailto:contact@terangafoncier.com"
+      action: "mailto:palaye122@gmail.com"
     },
     {
       icon: MessageSquare,
@@ -864,7 +864,7 @@ const RejoignezNousPage = () => {
               <div className="mt-12 flex flex-col md:flex-row justify-center items-center gap-6">
                 <div className="flex items-center space-x-2">
                   <Mail className="w-5 h-5" />
-                  <span>contact@terangafoncier.com</span>
+                  <span>palaye122@gmail.com</span>
                 </div>
                 <div className="flex items-center space-x-2">
                   <Phone className="w-5 h-5" />

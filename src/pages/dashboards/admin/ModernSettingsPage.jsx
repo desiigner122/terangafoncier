@@ -76,6 +76,7 @@ import {
 import { toast } from 'react-hot-toast';
 import ModernAdminSidebar from '@/components/admin/ModernAdminSidebar';
 import globalAdminService from '@/services/GlobalAdminService';
+import { useMaintenanceMode } from '@/contexts/MaintenanceContext';
 
 const ModernSettingsPage = () => {
   // États principaux - UNIQUEMENT DONNÉES RÉELLES
@@ -84,6 +85,9 @@ const ModernSettingsPage = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [activeTab, setActiveTab] = useState('general');
+  
+  // Contexte de maintenance
+  const { enableMaintenanceMode, disableMaintenanceMode } = useMaintenanceMode();
 
   // États pour la sauvegarde
   const [saving, setSaving] = useState(false);
@@ -124,8 +128,8 @@ const ModernSettingsPage = () => {
         general: {
           siteName: 'Teranga Foncier',
           siteDescription: 'Plateforme immobilière intelligente au Sénégal',
-          adminEmail: 'admin@terangafoncier.com',
-          supportEmail: 'support@terangafoncier.com',
+          adminEmail: 'palaye122@gmail.com',
+          supportEmail: 'palaye122@gmail.com',
           language: 'fr',
           timezone: 'Africa/Dakar',
           currency: 'XOF',
@@ -378,6 +382,25 @@ const ModernSettingsPage = () => {
     }
   };
 
+  const handleMaintenanceModeToggle = (enabled) => {
+    if (enabled) {
+      const config = {
+        message: settings.general?.maintenanceMessage || 'Site en maintenance',
+        estimatedDuration: null,
+        allowedUsers: ['admin', 'Admin'],
+        endTime: settings.general?.maintenanceEnd || null
+      };
+      
+      enableMaintenanceMode(config);
+      toast.success('Mode maintenance activé');
+    } else {
+      disableMaintenanceMode();
+      toast.success('Mode maintenance désactivé');
+    }
+    
+    handleSettingChange('general', 'maintenanceMode', enabled);
+  };
+
   // ============================================================================
   // CHARGEMENT INITIAL
   // ============================================================================
@@ -526,15 +549,75 @@ const ModernSettingsPage = () => {
           <CardTitle>Modes Système</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <Label>Mode Maintenance</Label>
-              <p className="text-sm text-gray-600">Désactiver temporairement le site</p>
+          <div className="bg-orange-50 border border-orange-200 rounded-lg p-4 mb-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <Label className="text-lg font-medium">Mode Maintenance</Label>
+                <p className="text-sm text-gray-600">Désactiver temporairement le site pour tous les utilisateurs sauf les admins</p>
+              </div>
+              <Switch
+                checked={settings.general?.maintenanceMode || false}
+                onCheckedChange={(checked) => handleMaintenanceModeToggle(checked)}
+              />
             </div>
-            <Switch
-              checked={settings.general?.maintenanceMode || false}
-              onCheckedChange={(checked) => handleSettingChange('general', 'maintenanceMode', checked)}
-            />
+            
+            {settings.general?.maintenanceMode && (
+              <div className="mt-4 space-y-3 pt-3 border-t border-orange-200">
+                <div>
+                  <Label htmlFor="maintenanceMessage">Message de maintenance</Label>
+                  <Textarea
+                    id="maintenanceMessage"
+                    placeholder="Nous effectuons actuellement des améliorations..."
+                    value={settings.general?.maintenanceMessage || ''}
+                    onChange={(e) => handleSettingChange('general', 'maintenanceMessage', e.target.value)}
+                    rows={2}
+                    className="mt-1"
+                  />
+                </div>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="maintenanceStart">Heure de début</Label>
+                    <Input
+                      id="maintenanceStart"
+                      type="datetime-local"
+                      value={settings.general?.maintenanceStart || ''}
+                      onChange={(e) => handleSettingChange('general', 'maintenanceStart', e.target.value)}
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="maintenanceEnd">Heure de fin estimée</Label>
+                    <Input
+                      id="maintenanceEnd"
+                      type="datetime-local"
+                      value={settings.general?.maintenanceEnd || ''}
+                      onChange={(e) => handleSettingChange('general', 'maintenanceEnd', e.target.value)}
+                    />
+                  </div>
+                </div>
+                
+                <div className="bg-amber-50 border border-amber-200 rounded p-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center">
+                      <AlertTriangle className="h-4 w-4 text-amber-600 mr-2" />
+                      <span className="text-sm text-amber-800">
+                        Le mode maintenance affichera une page spéciale à tous les visiteurs. 
+                        Seuls les administrateurs pourront accéder au site normalement.
+                      </span>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => window.open('/', '_blank')}
+                      className="ml-3"
+                    >
+                      <Eye className="h-3 w-3 mr-1" />
+                      Tester
+                    </Button>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
           
           <div className="flex items-center justify-between">

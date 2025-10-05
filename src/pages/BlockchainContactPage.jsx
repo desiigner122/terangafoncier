@@ -66,16 +66,16 @@ const BlockchainContactPage = () => {
     {
       icon: Phone,
       title: 'Téléphone',
-      primary: '+221 33 XXX XX XX',
-      secondary: '+221 77 XXX XX XX',
+      primary: '+221 77 593 42 41',
+      secondary: '+221 77 593 42 41',
       description: 'Support direct 9h-18h',
       color: 'from-green-500 to-emerald-500'
     },
     {
       icon: Mail,
       title: 'Email',
-      primary: 'contact@terangafoncier.com',
-      secondary: 'support@terangafoncier.com',
+      primary: 'palaye122@gmail.com',
+      secondary: 'palaye122@gmail.com',
       description: 'Réponse sous 2h en moyenne',
       color: 'from-blue-500 to-cyan-500'
     },

@@ -68,8 +68,8 @@ const BannedPage = () => {
             <div className="text-center pt-4 border-t">
               <p className="text-xs text-muted-foreground">
                 Si vous pensez qu'il s'agit d'une erreur, contactez-nous à{' '}
-                <a href="mailto:support@terangafoncier.com" className="text-primary underline">
-                  support@terangafoncier.com
+                <a href="mailto:palaye122@gmail.com" className="text-primary underline">
+                  palaye122@gmail.com
                 </a>
               </p>
             </div>

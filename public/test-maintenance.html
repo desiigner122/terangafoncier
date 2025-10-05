@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Mode Maintenance - Teranga Foncier</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-100 p-8">
+    <div class="max-w-2xl mx-auto bg-white rounded-lg shadow-lg p-6">
+        <h1 class="text-2xl font-bold text-gray-900 mb-6">🔧 Test Mode Maintenance</h1>
+        
+        <div class="space-y-4">
+            <div class="bg-blue-50 border border-blue-200 rounded p-4">
+                <h3 class="font-semibold text-blue-900 mb-2">Instructions :</h3>
+                <ol class="text-sm text-blue-800 space-y-1 list-decimal list-inside">
+                    <li>Cliquez sur "Activer Maintenance" ci-dessous</li>
+                    <li>Ouvrez un nouvel onglet en navigation privée</li>
+                    <li>Visitez <code>http://localhost:5173</code></li>
+                    <li>Vous devriez voir la page de maintenance</li>
+                    <li>Revenez ici et cliquez "Désactiver" pour revenir à la normale</li>
+                </ol>
+            </div>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <button onclick="activerMaintenance()" 
+                        class="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded font-medium">
+                    🔧 Activer Maintenance
+                </button>
+                
+                <button onclick="desactiverMaintenance()" 
+                        class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded font-medium">
+                    ✅ Désactiver Maintenance
+                </button>
+            </div>
+            
+            <button onclick="verifierStatut()" 
+                    class="w-full bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded font-medium">
+                📊 Vérifier Statut
+            </button>
+            
+            <div id="status" class="bg-gray-50 border rounded p-4 hidden">
+                <h4 class="font-semibold mb-2">Statut Actuel :</h4>
+                <pre id="statusContent" class="text-sm text-gray-700"></pre>
+            </div>
+        </div>
+        
+        <div class="mt-6 pt-6 border-t">
+            <h3 class="font-semibold text-gray-900 mb-2">🔗 Liens de Test :</h3>
+            <div class="space-y-2 text-sm">
+                <a href="http://localhost:5173" target="_blank" 
+                   class="block text-blue-600 hover:text-blue-800 underline">
+                   🏠 Page d'accueil (onglet normal)
+                </a>
+                <a href="http://localhost:5173/admin/dashboard" target="_blank" 
+                   class="block text-blue-600 hover:text-blue-800 underline">
+                   👑 Dashboard Admin (doit marcher même en maintenance)
+                </a>
+                <a href="http://localhost:5173/admin/settings" target="_blank" 
+                   class="block text-blue-600 hover:text-blue-800 underline">
+                   ⚙️ Paramètres Admin (contrôle du mode maintenance)
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function activerMaintenance() {
+            localStorage.setItem('maintenanceMode', 'true');
+            localStorage.setItem('maintenanceConfig', JSON.stringify({
+                message: 'Site en maintenance - Test depuis la page de contrôle',
+                estimatedDuration: null,
+                allowedUsers: ['admin', 'Admin'],
+                startTime: new Date().toISOString(),
+                endTime: null
+            }));
+            
+            alert('✅ Mode maintenance activé !\n\n🔄 Ouvrez un nouvel onglet en navigation privée et visitez localhost:5173 pour voir la page de maintenance.');
+        }
+
+        function desactiverMaintenance() {
+            localStorage.removeItem('maintenanceMode');
+            localStorage.removeItem('maintenanceConfig');
+            
+            alert('✅ Mode maintenance désactivé !\n\n🔄 Le site fonctionnera normalement maintenant.');
+        }
+
+        function verifierStatut() {
+            const isActive = localStorage.getItem('maintenanceMode') === 'true';
+            const config = localStorage.getItem('maintenanceConfig');
+            
+            const statusDiv = document.getElementById('status');
+            const statusContent = document.getElementById('statusContent');
+            
+            const statusInfo = {
+                'Mode Maintenance': isActive ? '🔧 ACTIVÉ' : '✅ DÉSACTIVÉ',
+                'Timestamp': new Date().toLocaleString('fr-FR'),
+                'Configuration': config ? JSON.parse(config) : 'Aucune'
+            };
+            
+            statusContent.textContent = JSON.stringify(statusInfo, null, 2);
+            statusDiv.classList.remove('hidden');
+        }
+        
+        // Vérifier le statut au chargement
+        window.onload = function() {
+            verifierStatut();
+        };
+    </script>
+</body>
+</html>

@@ -226,7 +226,7 @@ const AboutPage = () => {
                 {/* Contact Info */}
                 <div className="flex flex-col sm:flex-row gap-4">
                   <Button className="bg-blue-600 hover:bg-blue-700 text-white" asChild>
-                    <a href="mailto:contact@terangafoncier.com">
+                    <a href="mailto:palaye122@gmail.com">
                       <Mail className="h-4 w-4 mr-2" />
                       Me contacter
                     </a>

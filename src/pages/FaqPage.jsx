@@ -90,7 +90,7 @@ const FaqPage = () => {
       id: 9,
       category: 'general',
       question: "Comment contacter le support client ?",
-      answer: "Plusieurs canaux disponibles : chat en direct sur le site, email contact@terangafoncier.com, téléphone +221 77 593 42 41, centre d'aide en ligne. Notre équipe répond sous 2h en moyenne. Pour les urgences, utilisez le chat direct disponible 24h/7j."
+      answer: "Plusieurs canaux disponibles : chat en direct sur le site, email palaye122@gmail.com, téléphone +221 77 593 42 41, centre d'aide en ligne. Notre équipe répond sous 2h en moyenne. Pour les urgences, utilisez le chat direct disponible 24h/7j."
     },
     {
       id: 10,
@@ -300,8 +300,8 @@ const FaqPage = () => {
                       Envoyez-nous vos questions détaillées par email, réponse sous 2h
                     </p>
                     <Button variant="outline" className="w-full" asChild>
-                      <a href="mailto:contact@terangafoncier.com">
-                        contact@terangafoncier.com
+                      <a href="mailto:palaye122@gmail.com">
+                        palaye122@gmail.com
                         <ArrowRight className="h-4 w-4 ml-2" />
                       </a>
                     </Button>

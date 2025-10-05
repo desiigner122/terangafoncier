@@ -156,7 +156,8 @@ const CompleteSidebarAdminDashboard = () => {
       label: 'Vue d\'ensemble',
       icon: Home,
       description: 'Dashboard principal et statistiques',
-      isInternal: true // Reste sur cette page
+      isInternal: true, // Reste sur cette page
+      route: '/admin/dashboard'
     },
     {
       id: 'users',
@@ -165,7 +166,8 @@ const CompleteSidebarAdminDashboard = () => {
       description: 'Gestion complète avec IA et données réelles',
       badge: dashboardData.stats.totalUsers > 0 ? `${Math.floor(dashboardData.stats.totalUsers / 100)}k` : null,
       badgeColor: 'bg-blue-500',
-      isInternal: true
+      isInternal: false,
+      route: '/admin/users'
     },
     {
       id: 'properties',
@@ -174,7 +176,8 @@ const CompleteSidebarAdminDashboard = () => {
       description: 'IA + NFT + Blockchain Ready',
       badge: dashboardData.stats.totalProperties > 0 ? `${Math.floor(dashboardData.stats.totalProperties / 100)}k` : null,
       badgeColor: 'bg-purple-500',
-      isInternal: true
+      isInternal: false,
+      route: '/admin/properties'
     },
     {
       id: 'transactions',
@@ -183,7 +186,8 @@ const CompleteSidebarAdminDashboard = () => {
       description: 'Détection fraude IA + Blockchain',
       badge: dashboardData.stats.totalTransactions > 0 ? `${Math.floor(dashboardData.stats.totalTransactions / 100)}k` : null,
       badgeColor: 'bg-green-500',
-      isInternal: true
+      isInternal: false,
+      route: '/admin/transactions'
     },
     {
       id: 'analytics',
@@ -192,18 +196,20 @@ const CompleteSidebarAdminDashboard = () => {
       description: 'Prédictions IA + Métriques temps réel',
       badge: 'IA',
       badgeColor: 'bg-indigo-500',
-      isInternal: true
+      isInternal: false,
+      route: '/admin/analytics'
     },
     {
       id: 'settings',
       label: 'Paramètres',
       icon: Settings,
-      description: 'Configuration IA + Blockchain',
+      description: 'Configuration IA + Blockchain + Mode Maintenance',
       badge: 'Config',
       badgeColor: 'bg-gray-500',
-      isInternal: true
+      isInternal: false,
+      route: '/admin/settings'
     },
-    // Sections administratives supplémentaires (garder pour compatibilité)
+    // Sections administratives supplémentaires 
     {
       id: 'reports',
       label: 'Signalements',
@@ -211,23 +217,36 @@ const CompleteSidebarAdminDashboard = () => {
       description: 'Modération et signalements',
       badge: dashboardData.stats.pendingReports > 0 ? dashboardData.stats.pendingReports.toString() : null,
       badgeColor: 'bg-red-500',
-      isInternal: true
+      isInternal: false,
+      route: '/admin/reports'
+    },
+    {
+      id: 'revenue',
+      label: 'Revenus',
+      icon: DollarSign,
+      description: 'Gestion financière et revenus',
+      badge: 'NEW',
+      badgeColor: 'bg-green-500',
+      isInternal: false,
+      route: '/admin/revenue'
+    },
+    {
+      id: 'support',
+      label: 'Support',
+      icon: MessageSquare,
+      description: 'Tickets et support client',
+      badge: dashboardData.stats.supportTickets > 0 ? dashboardData.stats.supportTickets.toString() : null,
+      badgeColor: 'bg-blue-500',
+      isInternal: false,
+      route: '/admin/support'
     },
     {
       id: 'audit',
       label: 'Audit & Logs',
       icon: Activity,
       description: 'Journaux d\'activité et audit',
-      isInternal: true
-    },
-    {
-      id: 'notifications',
-      label: 'Notifications',
-      icon: Bell,
-      description: 'Système de notifications',
-      badge: dashboardData.stats.notifications > 0 ? dashboardData.stats.notifications.toString() : null,
-      badgeColor: 'bg-orange-500',
-      isInternal: true
+      isInternal: false,
+      route: '/admin/audit-log'
     },
     {
       id: 'system',
@@ -605,53 +624,83 @@ const CompleteSidebarAdminDashboard = () => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               
-              return (
-                <motion.button
-                  key={item.id}
-                  onClick={() => {
-                    if (item.route) {
-                      // Rediriger vers les pages modernisées
-                      window.location.href = item.route;
-                    } else if (item.isInternal || ['dashboard', 'overview'].includes(item.id)) {
-                      // Rester sur cette page avec onglets internes
+              if (item.isInternal) {
+                // Onglet interne - reste sur cette page
+                return (
+                  <motion.button
+                    key={item.id}
+                    onClick={() => {
                       setActiveTab(item.id);
                       setMobileMenuOpen(false);
-                    } else {
-                      // Fallback
-                      setActiveTab(item.id);
-                      setMobileMenuOpen(false);
-                    }
-                  }}
-                  whileHover={{ scale: 1.02 }}
-                  whileTap={{ scale: 0.98 }}
-                  className={`
-                    w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200
-                    ${isActive 
-                      ? 'bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 text-amber-800 border border-amber-300 shadow-sm' 
-                      : 'text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:text-amber-700'
-                    }
-                  `}
-                >
-                  <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-amber-600' : 'text-gray-500'}`} />
-                  
-                  {!sidebarCollapsed && (
-                    <>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium truncate">{item.label}</p>
-                        <p className="text-xs text-gray-500 truncate">{item.description}</p>
-                      </div>
+                    }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
+                    className={`
+                      w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200
+                      ${isActive 
+                        ? 'bg-gradient-to-r from-amber-100 via-yellow-100 to-orange-100 text-amber-800 border border-amber-300 shadow-sm' 
+                        : 'text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:text-amber-700'
+                      }
+                    `}
+                  >
+                    <Icon className={`h-5 w-5 flex-shrink-0 ${isActive ? 'text-amber-600' : 'text-gray-500'}`} />
+                    
+                    {!sidebarCollapsed && (
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{item.label}</p>
+                          <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                        </div>
+                        
+                        {item.badge && (
+                          <Badge 
+                            className={`text-xs ${item.badgeColor || 'bg-blue-500'} text-white`}
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </>
+                    )}
+                  </motion.button>
+                );
+              } else {
+                // Route externe - vers pages Modern*
+                return (
+                  <Link
+                    key={item.id}
+                    to={item.route}
+                    className="block w-full"
+                  >
+                    <motion.div
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
+                      className={`
+                        w-full flex items-center space-x-3 px-4 py-3 rounded-xl text-left transition-all duration-200
+                        text-gray-700 hover:bg-gradient-to-r hover:from-amber-50 hover:to-yellow-50 hover:text-amber-700
+                      `}
+                    >
+                      <Icon className="h-5 w-5 flex-shrink-0 text-gray-500" />
                       
-                      {item.badge && (
-                        <Badge 
-                          className={`text-xs ${item.badgeColor || 'bg-blue-500'} text-white`}
-                        >
-                          {item.badge}
-                        </Badge>
+                      {!sidebarCollapsed && (
+                        <>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium truncate">{item.label}</p>
+                            <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                          </div>
+                          
+                          {item.badge && (
+                            <Badge 
+                              className={`text-xs ${item.badgeColor || 'bg-blue-500'} text-white`}
+                            >
+                              {item.badge}
+                            </Badge>
+                          )}
+                        </>
                       )}
-                    </>
-                  )}
-                </motion.button>
-              );
+                    </motion.div>
+                  </Link>
+                );
+              }
             })}
           </nav>
         </div>

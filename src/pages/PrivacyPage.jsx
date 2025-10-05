@@ -136,7 +136,7 @@ const PrivacyPage = () => {
               Conformément à la loi sénégalaise n° 2008-08 sur la protection des données personnelles, vous disposez de droits d'accès, de rectification, de suppression, de limitation et d'opposition au traitement de vos données. Vous pouvez également demander la portabilité de vos données.
             </p>
             <p>
-              Exercez ces droits en contactant notre Délégué à la Protection des Données (DPO) à : <a href="mailto:contact@terangafoncier.com" className="text-primary hover:underline">contact@terangafoncier.com</a> ou via votre espace personnel. Une vérification d'identité pourra être demandée.
+              Exercez ces droits en contactant notre Délégué à la Protection des Données (DPO) à : <a href="mailto:palaye122@gmail.com" className="text-primary hover:underline">palaye122@gmail.com</a> ou via votre espace personnel. Une vérification d'identité pourra être demandée.
             </p>
           </PolicyPoint>
 

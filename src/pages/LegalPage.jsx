@@ -50,7 +50,7 @@ const LegalPage = () => {
               <p>Numéro NINEA : <strong className="text-foreground">000000000</strong> (Numéro fictif, à compléter par l'utilisateur).</p>
               <p>Directeur de la publication : Abdoulaye Diémé.</p>
               <p>
-                Contact Principal : <a href="mailto:contact@terangafoncier.com" className="text-primary hover:underline">contact@terangafoncier.com</a>.
+                Contact Principal : <a href="mailto:palaye122@gmail.com" className="text-primary hover:underline">palaye122@gmail.com</a>.
               </p>
               <p>
                 Contact Secondaire : <a href="mailto:palaye122@gmail.com" className="text-primary hover:underline">palaye122@gmail.com</a> | <a href="tel:+221775934241" className="text-primary hover:underline">+221 77 593 42 41</a>.

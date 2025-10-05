@@ -141,8 +141,8 @@ const ModernFooter = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-primary" />
-                  <a href="mailto:contact@terangafoncier.com" className="text-gray-300 hover:text-primary transition-colors">
-                    contact@terangafoncier.com
+                  <a href="mailto:palaye122@gmail.com" className="text-gray-300 hover:text-primary transition-colors">
+                    palaye122@gmail.com
                   </a>
                 </div>
               </div>

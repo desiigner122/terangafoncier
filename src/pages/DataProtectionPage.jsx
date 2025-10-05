@@ -361,7 +361,7 @@ const DataProtectionPage = () => {
                 <div className="bg-white/10 backdrop-blur-sm rounded-lg p-6">
                   <Phone className="h-8 w-8 mx-auto mb-4" />
                   <h3 className="font-semibold mb-2">Téléphone</h3>
-                  <p>+221 33 XXX XX XX</p>
+                  <p>+221 77 593 42 41</p>
                 </div>
               </div>
 

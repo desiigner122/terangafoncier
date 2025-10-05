@@ -116,8 +116,8 @@ const ContactPage = () => {
       icon: Mail,
       title: "Email",
       description: "Réponse sous 24h garantie",
-      value: "contact@terangafoncier.com",
-      action: "mailto:contact@terangafoncier.com",
+      value: "palaye122@gmail.com",
+      action: "mailto:palaye122@gmail.com",
       bg: "from-blue-500 to-cyan-500"
     },
     {
@@ -151,7 +151,7 @@ const ContactPage = () => {
       name: "Équipe Support",
       role: "Service Client",
       description: "Accompagnement personnalisé 7j/7",
-      email: "support@terangafoncier.com",
+      email: "palaye122@gmail.com",
       phone: "+221 77 593 42 41",
       avatar: "https://images.unsplash.com/photo-1551836022-deb4988cc6c0?ixlib=rb-4.0.3&auto=format&fit=crop&w=400&q=80"
     }

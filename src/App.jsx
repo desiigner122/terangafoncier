@@ -5,6 +5,8 @@ import ErrorBoundary from '@/components/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
 import { AIProvider } from '@/hooks/useAI.jsx';
 import { NotificationProvider } from '@/contexts/NotificationContext';
+import { MaintenanceProvider } from '@/contexts/MaintenanceContext';
+import MaintenanceWrapper from '@/components/MaintenanceWrapper';
 import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
 import UniversalAIChatbot from '@/components/ai/UniversalAIChatbot';
 import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
@@ -300,9 +302,11 @@ function App() {
     <ErrorBoundary>
       <HelmetProvider>
         <AuthProvider>
-          <ComparisonProvider>
-            <NotificationProvider>
-              <AIProvider>
+          <MaintenanceProvider>
+            <MaintenanceWrapper>
+              <ComparisonProvider>
+                <NotificationProvider>
+                  <AIProvider>
             <ScrollToTop />
             <Routes>
             <Route path="/" element={<PublicLayout />}>
@@ -554,9 +558,16 @@ function App() {
               <Route path="parcels" element={<AdminParcelsPage />} />
               <Route path="transactions" element={<TransactionsPage />} />
               
-              {/* NOUVELLES ROUTES ADMIN - PRIORITÉ 1 */}
+              {/* ROUTES ADMIN MODERNES - AVEC IA ET BLOCKCHAIN */}
+              <Route path="users" element={<ModernUsersPage />} />
+              <Route path="properties" element={<ModernPropertiesManagementPage />} />
+              <Route path="transactions" element={<ModernTransactionsPage />} />
+              <Route path="analytics" element={<ModernAnalyticsPage />} />
+              <Route path="settings" element={<ModernSettingsPage />} />
+              
+              {/* ROUTES ADMIN LEGACY - GARDÉES POUR COMPATIBILITÉ */}
               <Route path="revenue" element={<RevenueManagementPage />} />
-              <Route path="properties" element={<PropertyManagementPage />} />
+              <Route path="property-management" element={<PropertyManagementPage />} />
               <Route path="support" element={<SupportTicketsPage />} />
               <Route path="export" element={<BulkExportPage />} />
               <Route path="user-management" element={<UserManagementPage />} />
@@ -568,7 +579,7 @@ function App() {
               <Route path="blog/new" element={<AdminBlogFormPage />} />
               <Route path="blog/edit/:slug" element={<AdminBlogFormPage />} />
               <Route path="audit-log" element={<AdminAuditLogPage />} />
-              <Route path="settings" element={<AdminSettingsPage />} />
+              <Route path="admin-settings" element={<AdminSettingsPage />} />
               <Route path="security-diagnostic" element={<SecurityDiagnosticTool />} />
               <Route path="*" element={<NotFoundPage />} />
             </Route>
@@ -657,9 +668,11 @@ function App() {
           {/* VERCEL ANALYTICS */}
           <Analytics />
           
-              </AIProvider>
-            </NotificationProvider>
-          </ComparisonProvider>
+                  </AIProvider>
+                </NotificationProvider>
+              </ComparisonProvider>
+            </MaintenanceWrapper>
+          </MaintenanceProvider>
         </AuthProvider>
       </HelmetProvider>
     </ErrorBoundary>

@@ -214,8 +214,8 @@ const Footer = () => {
                   <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-teal-500 rounded-full flex items-center justify-center">
                     <Mail className="h-4 w-4 text-white" />
                   </div>
-                  <a href="mailto:contact@terangafoncier.com" className="text-gray-300 hover:text-purple-400 transition-colors">
-                    contact@terangafoncier.com
+                  <a href="mailto:palaye122@gmail.com" className="text-gray-300 hover:text-purple-400 transition-colors">
+                    palaye122@gmail.com
                   </a>
                 </div>
               </div>

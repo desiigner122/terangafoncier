@@ -310,7 +310,7 @@ const AdminLoginPage = () => {
                           value={formData.email}
                           onChange={handleInputChange}
                           className="pl-12 bg-white/10 border-white/20 text-white YOUR_API_KEY:text-white/50 focus:border-blue-400"
-                          placeholder="admin@terangafoncier.com"
+                          placeholder="palaye122@gmail.com"
                           disabled={isLoading || isBlocked}
                         />
                       </div>

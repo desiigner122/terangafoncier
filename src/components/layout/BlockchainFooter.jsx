@@ -256,7 +256,7 @@ const BlockchainFooter = () => {
                   <a href="tel:+221775934241" className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-teal-500 to-blue-500 rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-300 group" title="Téléphone">
                     <Phone className="h-4 w-4 md:h-5 md:w-5 text-white" />
                   </a>
-                  <a href="mailto:contact@terangafoncier.com" className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-purple-500 to-teal-500 rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-300 group" title="Email">
+                  <a href="mailto:palaye122@gmail.com" className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-purple-500 to-teal-500 rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-300 group" title="Email">
                     <Mail className="h-4 w-4 md:h-5 md:w-5 text-white" />
                   </a>
                   <a href="https://linkedin.com/in/abdoulaye-dieme" className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-r from-blue-500 to-purple-500 rounded-xl flex items-center justify-center hover:scale-110 transition-all duration-300 group" title="LinkedIn" target="_blank" rel="noopener noreferrer">

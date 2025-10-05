@@ -272,7 +272,7 @@ const PrivateInterests = () => {
     if (method === 'phone') {
       window.open(`tel:${interest.ownerPhone}`);
     } else if (method === 'email') {
-      window.open(`mailto:contact@terangafoncier.com?subject=Intérêt pour ${interest.title}`);
+      window.open(`mailto:palaye122@gmail.com?subject=Intérêt pour ${interest.title}`);
     }
     addNotification({
       type: 'info',

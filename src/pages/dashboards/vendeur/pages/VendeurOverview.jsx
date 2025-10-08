@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import { useNavigate } from 'react-router-dom';
 import { 
   Building2, 
   DollarSign, 
@@ -32,6 +33,7 @@ import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 
 const VendeurOverview = ({ stats }) => {
+  const navigate = useNavigate();
   const [aiInsights] = useState([
     {
       type: 'opportunity',
@@ -364,7 +366,10 @@ const VendeurOverview = ({ stats }) => {
                 IA Optimisé
               </Badge>
             </CardTitle>
-            <Button className="bg-purple-600 hover:bg-purple-700">
+            <Button 
+              className="bg-purple-600 hover:bg-purple-700"
+              onClick={() => navigate('/dashboard/add-parcel')}
+            >
               <Plus className="h-4 w-4 mr-2" />
               Ajouter Bien
             </Button>

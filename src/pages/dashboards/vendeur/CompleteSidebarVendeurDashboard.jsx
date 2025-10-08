@@ -1,5 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { useLocation, useNavigate, Outlet, useParams } from 'react-router-dom';
 import { 
   // Navigation Icons
   Home,
@@ -33,6 +34,7 @@ import {
   Activity,
   Target,
   Users,
+  Headphones,
   
   // AI & Blockchain Icons
   Brain,
@@ -67,28 +69,52 @@ import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 
-// Import des pages spécialisées
-const VendeurOverview = React.lazy(() => import('./VendeurOverview'));
-const VendeurCRM = React.lazy(() => import('./VendeurCRM'));
-const VendeurPropertiesComplete = React.lazy(() => import('./VendeurPropertiesComplete'));
-const VendeurAntiFraude = React.lazy(() => import('./VendeurAntiFraude'));
-const VendeurGPSVerification = React.lazy(() => import('./VendeurGPSVerification'));
-const VendeurServicesDigitaux = React.lazy(() => import('./VendeurServicesDigitaux'));
-const VendeurAddTerrain = React.lazy(() => import('./VendeurAddTerrain'));
-const VendeurPhotos = React.lazy(() => import('./VendeurPhotos'));
-const VendeurAnalytics = React.lazy(() => import('./VendeurAnalytics'));
-const VendeurAI = React.lazy(() => import('./VendeurAI'));
-const VendeurBlockchain = React.lazy(() => import('./VendeurBlockchain'));
-const VendeurMessages = React.lazy(() => import('./VendeurMessages'));
-const VendeurSettings = React.lazy(() => import('./VendeurSettings'));
+// Import des pages spécialisées - VERSION REAL DATA
+// 🆕 NOUVEAU DASHBOARD OVERVIEW MODERNISÉ
+const VendeurOverview = React.lazy(() => import('./VendeurOverviewRealDataModern'));
+const VendeurCRM = React.lazy(() => import('./VendeurCRMRealData'));
+const VendeurPropertiesComplete = React.lazy(() => import('./VendeurPropertiesRealData'));
+const VendeurPurchaseRequests = React.lazy(() => import('./VendeurPurchaseRequests'));
+const VendeurAntiFraude = React.lazy(() => import('./VendeurAntiFraudeRealData'));
+const VendeurGPSVerification = React.lazy(() => import('./VendeurGPSRealData'));
+const VendeurServicesDigitaux = React.lazy(() => import('./VendeurServicesDigitauxRealData'));
+const VendeurAddTerrain = React.lazy(() => import('./VendeurAddTerrainRealData'));
+const VendeurPhotos = React.lazy(() => import('./VendeurPhotosRealData'));
+const VendeurAnalytics = React.lazy(() => import('./VendeurAnalyticsRealData'));
+const VendeurAI = React.lazy(() => import('./VendeurAIRealData'));
+const VendeurBlockchain = React.lazy(() => import('./VendeurBlockchainRealData'));
+const VendeurMessages = React.lazy(() => import('./VendeurMessagesRealData'));
+const VendeurSupport = React.lazy(() => import('./VendeurSupport'));
+const VendeurSettings = React.lazy(() => import('./VendeurSettingsRealData'));
+
+// 🆕 SEMAINE 3 - Nouvelles pages workflows end-to-end
+const TransactionsPage = React.lazy(() => import('./TransactionsPage'));
+const MarketAnalyticsPage = React.lazy(() => import('./MarketAnalyticsPage'));
 
 const CompleteSidebarVendeurDashboard = () => {
   const { user, profile, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const location = useLocation();
+  const navigate = useNavigate();
+  
+  // Extraire l'onglet actif depuis l'URL
+  const getActiveTabFromPath = () => {
+    const path = location.pathname;
+    if (path === '/vendeur' || path === '/vendeur/') return 'overview';
+    const match = path.match(/\/vendeur\/([^\/]+)/);
+    return match ? match[1] : 'overview';
+  };
+  
+  const [activeTab, setActiveTab] = useState(getActiveTabFromPath());
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [loading, setLoading] = useState(true);
+  
+  // Mettre à jour activeTab quand l'URL change
+  useEffect(() => {
+    setActiveTab(getActiveTabFromPath());
+  }, [location.pathname]);
 
   // Fonction de déconnexion
   const handleLogout = async () => {
@@ -102,6 +128,18 @@ const CompleteSidebarVendeurDashboard = () => {
 
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  
+  // États pour données réelles
+  const [notifications, setNotifications] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [dashboardStats, setDashboardStats] = useState({
+    totalProperties: 0,
+    activeProspects: 0,
+    pendingInquiries: 0,
+    pendingRequests: 0, // 🆕 Demandes d'achat en attente
+  });
 
   // Navigation Items Configuration pour Vendeur - CRM + Anti-Fraude
   const navigationItems = [
@@ -116,7 +154,7 @@ const CompleteSidebarVendeurDashboard = () => {
       label: 'CRM Prospects',
       icon: Users,
       description: 'Gestion clients et prospects',
-      badge: '8',
+      badge: dashboardStats.activeProspects?.toString() || '0',
       highlight: true
     },
     {
@@ -124,7 +162,14 @@ const CompleteSidebarVendeurDashboard = () => {
       label: 'Mes Biens & Annonces',
       icon: Building2,
       description: 'Gestion complète de vos propriétés',
-      badge: '12'
+      badge: dashboardStats.totalProperties?.toString() || '0'
+    },
+    {
+      id: 'purchase-requests',
+      label: 'Demandes d\'Achat',
+      icon: FileText,
+      description: 'Offres et négociations clients',
+      badge: dashboardStats.pendingRequests?.toString() || '0'
     },
     {
       id: 'anti-fraud',
@@ -175,11 +220,32 @@ const CompleteSidebarVendeurDashboard = () => {
       badge: '10'
     },
     {
+      id: 'transactions',
+      label: 'Transactions',
+      icon: Activity,
+      description: 'Historique blockchain',
+      badge: 'NOUVEAU'
+    },
+    {
+      id: 'market-analytics',
+      label: 'Analyse Marché',
+      icon: TrendingUp,
+      description: 'Analytics & prédictions IA',
+      badge: 'IA'
+    },
+    {
       id: 'messages',
       label: 'Messages',
       icon: MessageSquare,
       description: 'Communication clients',
-      badge: '3'
+      badge: unreadMessagesCount > 0 ? unreadMessagesCount.toString() : undefined
+    },
+    {
+      id: 'support',
+      label: 'Support & Aide',
+      icon: Headphones,
+      description: 'Tickets et assistance',
+      badge: 'NOUVEAU'
     },
     {
       id: 'settings',
@@ -189,37 +255,104 @@ const CompleteSidebarVendeurDashboard = () => {
     }
   ];
 
-  // Stats du tableau de bord CRM + Anti-Fraude
-  const [dashboardStats, setDashboardStats] = useState({
-    totalProperties: 12,
-    activeListings: 8,
-    totalViews: 1245,
-    monthlyRevenue: 2500000,
-    pendingInquiries: 5,
-    aiOptimized: 6,
-    blockchainVerified: 10,
-    // Nouvelles stats CRM
-    activeProspects: 8,
-    conversionRate: 15.3,
-    avgDealValue: 28500000,
-    // Nouvelles stats Anti-Fraude
-    fraudAlerts: 2,
-    verifiedTitles: 10,
-    securityScore: 98,
-    gpsVerified: 9
-  });
-
   useEffect(() => {
     // Simulation du chargement des données
     const loadDashboardData = async () => {
       setLoading(true);
-      // Simulation API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // Charger données réelles depuis Supabase
+      if (user) {
+        await Promise.all([
+          loadNotifications(),
+          loadMessages(),
+          loadDashboardStats()
+        ]);
+      }
       setLoading(false);
     };
     
     loadDashboardData();
-  }, []);
+  }, [user]);
+
+  // Charger les notifications depuis Supabase
+  const loadNotifications = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('read', false)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (!error && data) {
+        setNotifications(data);
+        setUnreadNotificationsCount(data.length);
+      }
+    } catch (error) {
+      console.error('Erreur chargement notifications:', error);
+    }
+  };
+
+  // Charger les messages depuis Supabase
+  const loadMessages = async () => {
+    try {
+      // Charger depuis la table 'messages' de notre système de messagerie
+      const { data, error } = await supabase
+        .from('messages')
+        .select('*')
+        .eq('conversation_id', user.id) // Messages dans les conversations où l'utilisateur participe
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (!error && data) {
+        setMessages(data);
+        setUnreadMessagesCount(data.filter(m => !m.read_at).length);
+      }
+    } catch (error) {
+      console.error('Erreur chargement messages:', error);
+    }
+  };
+
+  // Charger les statistiques réelles
+  const loadDashboardStats = async () => {
+    try {
+      // Compter les propriétés
+      const { count: totalProperties } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id);
+
+      const { count: activeListings } = await supabase
+        .from('properties')
+        .select('*', { count: 'exact', head: true })
+        .eq('owner_id', user.id)
+        .eq('status', 'active');
+
+      // Compter les demandes en attente
+      const { count: pendingInquiries } = await supabase
+        .from('property_inquiries')
+        .select('*', { count: 'exact', head: true })
+        .eq('vendor_id', user.id)
+        .eq('status', 'pending');
+
+      // 🆕 Compter les demandes d'achat en attente
+      const { count: pendingRequests } = await supabase
+        .from('purchase_requests')
+        .select('*', { count: 'exact', head: true })
+        .eq('vendor_id', user.id)
+        .eq('status', 'pending');
+
+      setDashboardStats(prev => ({
+        ...prev,
+        totalProperties: totalProperties || 0,
+        activeListings: activeListings || 0,
+        pendingInquiries: pendingInquiries || 0,
+        pendingRequests: pendingRequests || 0 // 🆕 Nombre demandes en attente
+      }));
+    } catch (error) {
+      console.error('Erreur chargement stats:', error);
+    }
+  };
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-SN', {
@@ -235,6 +368,7 @@ const CompleteSidebarVendeurDashboard = () => {
       'overview': VendeurOverview,
       'crm': VendeurCRM,
       'properties': VendeurPropertiesComplete,
+      'purchase-requests': VendeurPurchaseRequests,
       'anti-fraud': VendeurAntiFraude,
       'gps-verification': VendeurGPSVerification,
       'digital-services': VendeurServicesDigitaux,
@@ -243,7 +377,10 @@ const CompleteSidebarVendeurDashboard = () => {
       'analytics': VendeurAnalytics,
       'ai-assistant': VendeurAI,
       'blockchain': VendeurBlockchain,
+      'transactions': TransactionsPage, // 🆕 SEMAINE 3
+      'market-analytics': MarketAnalyticsPage, // 🆕 SEMAINE 3
       'messages': VendeurMessages,
+      'support': VendeurSupport,
       'settings': VendeurSettings
     };
 
@@ -366,7 +503,7 @@ const CompleteSidebarVendeurDashboard = () => {
         )}
 
         {/* Navigation */}
-        <nav className="flex-1 p-4 space-y-2 overflow-y-auto">
+<nav className="flex-1 p-4 space-y-2 overflow-y-auto">
           {navigationItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
@@ -374,7 +511,7 @@ const CompleteSidebarVendeurDashboard = () => {
             return (
               <motion.button
                 key={item.id}
-                onClick={() => setActiveTab(item.id)}
+                onClick={() => navigate(`/vendeur/${item.id}`)}
                 className={`w-full flex items-center space-x-3 px-3 py-3 rounded-lg text-left transition-all duration-200 ${
                   isActive 
                     ? 'bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg' 
@@ -397,6 +534,8 @@ const CompleteSidebarVendeurDashboard = () => {
                         className={`text-xs ${
                           item.badge === 'NOUVEAU' ? 'bg-green-100 text-green-800' :
                           item.badge === 'IA' ? 'bg-purple-100 text-purple-800' :
+                          item.badge === 'SÉCURISÉ' ? 'bg-green-100 text-green-800' :
+                          item.badge === 'DIGITAL' ? 'bg-blue-100 text-blue-800' :
                           'bg-blue-100 text-blue-800'
                         }`}
                       >
@@ -474,7 +613,7 @@ const CompleteSidebarVendeurDashboard = () => {
               {/* Messages */}
               <DropdownMenu open={showMessages} onOpenChange={setShowMessages}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative" onClick={() => setActiveTab('messages')}>
+                  <Button variant="ghost" size="sm" className="relative" onClick={() => navigate('/vendeur/messages')}>
                     <MessageSquare className="h-5 w-5" />
                     <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
                       3
@@ -484,7 +623,7 @@ const CompleteSidebarVendeurDashboard = () => {
                 <DropdownMenuContent className="w-80">
                   <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setActiveTab('messages')}>
+                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
                     <div className="flex items-center space-x-3">
                       <div className="bg-green-100 p-2 rounded-full">
                         <Users className="h-4 w-4 text-green-600" />
@@ -495,7 +634,7 @@ const CompleteSidebarVendeurDashboard = () => {
                       </div>
                     </div>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveTab('messages')}>
+                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
                     <div className="flex items-center space-x-3">
                       <div className="bg-blue-100 p-2 rounded-full">
                         <Users className="h-4 w-4 text-blue-600" />
@@ -507,7 +646,7 @@ const CompleteSidebarVendeurDashboard = () => {
                     </div>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setActiveTab('messages')}>
+                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     <span>Voir tous les messages</span>
                   </DropdownMenuItem>
@@ -576,11 +715,11 @@ const CompleteSidebarVendeurDashboard = () => {
                     </div>
                   </DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => setActiveTab('settings')}>
+                  <DropdownMenuItem onClick={() => navigate('/vendeur/settings')}>
                     <User className="mr-2 h-4 w-4" />
                     <span>Profil</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => setActiveTab('settings')}>
+                  <DropdownMenuItem onClick={() => navigate('/vendeur/settings')}>
                     <Settings className="mr-2 h-4 w-4" />
                     <span>Paramètres</span>
                   </DropdownMenuItem>
@@ -608,7 +747,14 @@ const CompleteSidebarVendeurDashboard = () => {
               exit={{ opacity: 0, y: -20 }}
               transition={{ duration: 0.2 }}
             >
-              {renderActiveComponent()}
+              <Suspense fallback={
+                <div className="flex items-center justify-center h-64">
+                  <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
+                </div>
+              }>
+                {/* Outlet pour les routes imbriquées (comme edit-property/:id) */}
+                <Outlet />
+              </Suspense>
             </motion.div>
           </AnimatePresence>
         </main>

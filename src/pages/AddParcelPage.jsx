@@ -8,7 +8,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-// useToast import supprimé - utilisation window.safeGlobalToast
+import { supabase } from '@/lib/customSupabaseClient';
 import { 
   ArrowRight, 
   ArrowLeft, 
@@ -46,7 +46,7 @@ const AddParcelPageComponent = () => {
         isEligibleForInstallments: false,
         attributionConditions: '',
         images: [],
-        FileTexts: [],
+        documents: [],
     });
 
     const isMairie = user?.role === 'Mairie';
@@ -57,6 +57,12 @@ const AddParcelPageComponent = () => {
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
         setFormData(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
+    };
+    
+    const handleFileChange = (e) => {
+        const { name, files } = e.target;
+        const fileArray = Array.from(files);
+        setFormData(prev => ({ ...prev, [name]: fileArray }));
     };
     
     const handleSelectChange = (name, value) => {
@@ -72,43 +78,107 @@ const AddParcelPageComponent = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         setIsSubmitting(true);
-        console.log("Submitting form data:", formData);
-
-        // Simulate API call and data persistence
-        await new Promise(resolve => setTimeout(resolve, 1500));
         
-        const newParcelId = `user-parcel-${Date.now().toString().slice(-5)}`;
-        const newParcel = {
-            id: newParcelId,
-            reference: `REF-${formData.commune?.substring(0,3).toUpperCase()}-${newParcelId.slice(-4)}`,
-            name: formData.name,
-            description: formData.description,
-            price: isMairie ? null : parseFloat(formData.price),
-            area_sqm: parseFloat(formData.area),
-            status: isMairie ? 'Attribution sur demande' : 'Disponible',
-            FileTexts: {}, 
-            images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop"],
-            coordinates: { lat: 14.7167, lng: -17.4677 }, // Default to Dakar, should be dynamic
-            zone: formData.commune,
-            type: formData.type,
-            is_featured: false,
-            titre_foncier: formData.titreFoncier,
-            ownerType: user.role,
-            seller_id: user.id,
-            created_at: new Date().toISOString(),
-            updated_at: new Date().toISOString(),
-            verified: false,
-            isEligibleForInstallments: formData.isEligibleForInstallments,
-            attributionConditions: formData.attributionConditions,
-        };
-        // sampleParcels.unshift(newParcel); // This would be a DB call
-
-        setIsSubmitting(false);
-        window.safeGlobalToast({
-            title: "Parcelle Soumise !",
-            description: "Votre parcelle a été soumise. Elle sera visible après approbation.",
-        });
-        setStep(5);
+        try {
+            // 1. Upload des images vers Supabase Storage
+            const imageUrls = [];
+            if (formData.images && formData.images.length > 0) {
+                for (const image of formData.images) {
+                    const fileName = `${user.id}/${Date.now()}_${image.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('parcel-images')
+                        .upload(fileName, image);
+                    
+                    if (!uploadError) {
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('parcel-images')
+                            .getPublicUrl(fileName);
+                        imageUrls.push(publicUrl);
+                    } else {
+                        console.error('Erreur upload image:', uploadError);
+                    }
+                }
+            }
+            
+            // 2. Upload des documents vers Supabase Storage
+            const documentUrls = [];
+            if (formData.documents && formData.documents.length > 0) {
+                for (const doc of formData.documents) {
+                    const fileName = `${user.id}/${Date.now()}_${doc.name.replace(/[^a-zA-Z0-9.]/g, '_')}`;
+                    const { data: uploadData, error: uploadError } = await supabase.storage
+                        .from('parcel-documents')
+                        .upload(fileName, doc);
+                    
+                    if (!uploadError) {
+                        const { data: { publicUrl } } = supabase.storage
+                            .from('parcel-documents')
+                            .getPublicUrl(fileName);
+                        documentUrls.push(publicUrl);
+                    } else {
+                        console.error('Erreur upload document:', uploadError);
+                    }
+                }
+            }
+            
+            // 3. Préparer les données du terrain
+            const parcelData = {
+                name: formData.name,
+                description: formData.description,
+                price: isMairie ? null : parseFloat(formData.price),
+                area_sqm: parseFloat(formData.area),
+                type: formData.type,
+                status: 'pending_verification',
+                region: formData.region,
+                department: formData.department,
+                commune: formData.commune,
+                address: formData.address,
+                titre_foncier: formData.titreFoncier || null,
+                is_eligible_for_installments: formData.isEligibleForInstallments,
+                attribution_conditions: formData.attributionConditions || null,
+                images: imageUrls.length > 0 ? imageUrls : ['https://images.unsplash.com/photo-1512917774080-9991f1c4c750?q=80&w=2070&auto=format&fit=crop'],
+                documents: documentUrls,
+                seller_id: user.id,
+                owner_type: user.role,
+                coordinates: { lat: 14.7167, lng: -17.4677 },
+                is_featured: false,
+                verified: false,
+            };
+            
+            // 4. Insérer dans Supabase
+            const { data, error } = await supabase
+                .from('parcels')
+                .insert([parcelData])
+                .select()
+                .single();
+            
+            if (error) {
+                throw error;
+            }
+            
+            console.log('Terrain ajouté avec succès:', data);
+            
+            window.safeGlobalToast({
+                title: "Terrain ajouté avec succès !",
+                description: "Votre annonce est en cours de vérification. Vous serez notifié dès sa publication.",
+            });
+            
+            setStep(5);
+            
+            // 5. Redirection automatique après 2 secondes
+            setTimeout(() => {
+                navigate('/dashboard/my-listings');
+            }, 2000);
+            
+        } catch (error) {
+            console.error("Erreur lors de l'ajout du terrain:", error);
+            window.safeGlobalToast({
+                title: "Erreur",
+                description: error.message || "Impossible d'ajouter le terrain. Veuillez réessayer.",
+                variant: "destructive"
+            });
+        } finally {
+            setIsSubmitting(false);
+        }
     };
 
     const selectedRegionData = senegalRegionsAndDepartments.find(r => r.region === formData.region);
@@ -188,8 +258,8 @@ const AddParcelPageComponent = () => {
                             <CardDescription>Ajoutez des visuels et les FileTexts justificatifs.</CardDescription>
                         </CardHeader>
                         <CardContent className="space-y-4">
-                            <div><Label htmlFor="images">Photos du terrain (5 max)</Label><Input id="images" name="images" type="file" multiple accept="image/*" /></div>
-                            <div><Label htmlFor="FileTexts">FileTexts (Titre Foncier, Bail, etc.)</Label><Input id="FileTexts" name="FileTexts" type="file" multiple accept=".pdf,.doc,.docx" /></div>
+                            <div><Label htmlFor="images">Photos du terrain (5 max)</Label><Input id="images" name="images" type="file" multiple accept="image/*" onChange={handleFileChange} /></div>
+                            <div><Label htmlFor="documents">Documents (Titre Foncier, Bail, etc.)</Label><Input id="documents" name="documents" type="file" multiple accept=".pdf,.doc,.docx" onChange={handleFileChange} /></div>
                         </CardContent>
                     </motion.div>
                 );
@@ -200,8 +270,8 @@ const AddParcelPageComponent = () => {
                         <h2 className="text-2xl font-bold">Soumission Réussie !</h2>
                         <p className="text-muted-foreground mt-2">Votre parcelle a été enregistrée et est en cours de vérification par nos équipes. Vous serez notifié(e) dès sa publication.</p>
                         <div className="flex gap-4 justify-center mt-6">
-                            <Button variant="outline" asChild><Link to="/my-listings">Voir mes annonces</Link></Button>
-                            <Button asChild><Link to="/add-parcel" onClick={(e) => { e.preventDefault(); setStep(1); }}>Ajouter une autre parcelle</Link></Button>
+                            <Button variant="outline" asChild><Link to="/dashboard/my-listings">Voir mes annonces</Link></Button>
+                            <Button asChild><Link to="/dashboard/add-parcel" onClick={(e) => { e.preventDefault(); setStep(1); setFormData({ region: '', department: '', commune: '', address: '', name: '', description: '', area: '', type: '', price: '', titreFoncier: '', isEligibleForInstallments: false, attributionConditions: '', images: [], documents: [] }); }}>Ajouter une autre parcelle</Link></Button>
                         </div>
                     </motion.div>
                 );

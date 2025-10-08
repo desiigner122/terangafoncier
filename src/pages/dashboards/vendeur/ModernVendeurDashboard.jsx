@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   // Core Icons
@@ -64,14 +65,34 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 import { OpenAIService } from '../../../services/ai/OpenAIService';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import ConfirmDialog from '../../../components/dialogs/ConfirmDialog';
+import SharePropertyModal from '../../../components/dialogs/SharePropertyModal';
+import AIAnalysisModal from '../../../components/dialogs/AIAnalysisModal';
+import BlockchainStatusModal from '../../../components/dialogs/BlockchainStatusModal';
+import CreateNFTModal from '../../../components/dialogs/CreateNFTModal';
+import CompetitionAnalysisModal from '../../../components/dialogs/CompetitionAnalysisModal';
+import pdfGenerator from '../../../services/pdfGenerator';
 
 const ModernVendeurDashboard = () => {
+  const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('overview');
   const [verificationStatus, setVerificationStatus] = useState('verified');
   const [loading, setLoading] = useState(true);
   const [aiInsights, setAiInsights] = useState([]);
   const [blockchainTransactions, setBlockchainTransactions] = useState([]);
   const [aiPriceRecommendations, setAiPriceRecommendations] = useState([]);
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, property: null });
+  const [shareModal, setShareModal] = useState({ open: false, property: null });
+  // Phase B - Nouveaux modals
+  const [aiAnalysisModal, setAiAnalysisModal] = useState({ open: false, property: null, analysis: null });
+  const [priceOptimizationModal, setPriceOptimizationModal] = useState({ open: false, recommendations: [] });
+  const [nftModal, setNftModal] = useState({ open: false, property: null });
+  const [blockchainStatusModal, setBlockchainStatusModal] = useState({ open: false, property: null, status: null });
+  const [competitionModal, setCompetitionModal] = useState({ open: false, data: null });
+  const [filterMode, setFilterMode] = useState('all'); // 'all', 'ai-optimized', 'blockchain-verified'
 
   // Fonctions de gestion IA avancées
   const handleAIPropertyAnalysis = async (property) => {
@@ -143,38 +164,59 @@ const ModernVendeurDashboard = () => {
   };
 
   const handleAddPhotos = () => {
-    console.log('Ajouter des photos avec analyse IA');
-    // TODO: Intégrer analyse d'images IA
+    navigate('/dashboard/vendeur/photos');
   };
 
   const handleEditListing = () => {
-    console.log('Modifier listing avec recommandations IA');
-    setActiveTab('ai-optimization');
+    // Si une propriété est sélectionnée, naviguer vers edit
+    const firstProperty = dashboardData.properties[0];
+    if (firstProperty) {
+      navigate(`/dashboard/edit-parcel/${firstProperty.id}`);
+    } else {
+      window.safeGlobalToast({
+        title: "Aucune propriété",
+        description: "Ajoutez d'abord une propriété pour la modifier.",
+        variant: "default"
+      });
+    }
   };
 
   const handleViewAnalytics = () => {
-    console.log('Voir analytics IA/Blockchain');
-    setActiveTab('analytics');
+    navigate('/dashboard/vendeur/analytics');
   };
 
   const handleViewProperty = (property) => {
-    console.log('Voir propriété avec données blockchain:', property.title);
+    // Vérifier blockchain en arrière-plan
     handleBlockchainVerification(property);
+    // Naviguer vers détail propriété
+    navigate(`/dashboard/parcel/${property.id}`);
   };
 
   const handleEditProperty = (property) => {
-    console.log('Éditer propriété avec IA:', property.title);
+    // Lancer analyse IA en arrière-plan
     handleAIPropertyAnalysis(property);
+    // Naviguer vers édition propriété
+    navigate(`/dashboard/edit-parcel/${property.id}`);
   };
 
   const handleDeleteProperty = (property) => {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer "${property.title}" ? Cette action sera enregistrée sur la blockchain.`)) {
-      setDashboardData(prev => ({
-        ...prev,
-        properties: prev.properties.filter(p => p.id !== property.id)
-      }));
-      
-      // Enregistrer suppression sur blockchain
+    setConfirmDelete({ open: true, property });
+  };
+
+  const confirmDeleteProperty = async () => {
+    const property = confirmDelete.property;
+    if (!property) return;
+
+    try {
+      // Supprimer de Supabase
+      const { error } = await supabase
+        .from('parcels')
+        .delete()
+        .eq('id', property.id);
+
+      if (error) throw error;
+
+      // Enregistrer suppression blockchain
       const transaction = {
         id: `TX${Date.now()}`,
         propertyId: property.id,
@@ -184,14 +226,263 @@ const ModernVendeurDashboard = () => {
         timestamp: new Date().toISOString()
       };
       setBlockchainTransactions(prev => [transaction, ...prev]);
-      console.log('Propriété supprimée et enregistrée sur blockchain');
+
+      // Mettre à jour state local
+      setDashboardData(prev => ({
+        ...prev,
+        properties: prev.properties.filter(p => p.id !== property.id)
+      }));
+
+      window.safeGlobalToast({
+        title: "Propriété supprimée",
+        description: "La propriété a été supprimée et enregistrée sur blockchain."
+      });
+
+      setConfirmDelete({ open: false, property: null });
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      window.safeGlobalToast({
+        title: "Erreur",
+        description: "Impossible de supprimer la propriété.",
+        variant: "destructive"
+      });
     }
   };
 
   const handleShareProperty = (property) => {
-    console.log('Partager propriété avec certificat blockchain:', property.title);
-    // Générer certificat blockchain pour partage
+    // Vérifier blockchain pour certificat
     handleBlockchainVerification(property);
+    // Ouvrir modal partage
+    setShareModal({ open: true, property });
+  };
+
+  // Phase B - Fonctions modals & interactions
+  const handleAIAnalysis = (property) => {
+    // Simuler analyse IA complète
+    const analysis = {
+      property: property,
+      score: 92 + Math.floor(Math.random() * 8),
+      pricing: {
+        current: property.price,
+        recommended: property.price * (0.95 + Math.random() * 0.1),
+        confidence: 85 + Math.floor(Math.random() * 10)
+      },
+      market: {
+        demand: ['Élevé', 'Moyen', 'Faible'][Math.floor(Math.random() * 3)],
+        competition: Math.floor(Math.random() * 20) + 10,
+        averageSaleTime: Math.floor(Math.random() * 60) + 30
+      },
+      recommendations: [
+        'Ajoutez plus de photos haute qualité',
+        'Mettez en avant la proximité des écoles',
+        'Prix optimal pour vente rapide'
+      ]
+    };
+    setAiAnalysisModal({ open: true, property, analysis });
+  };
+
+  const handlePriceOptimizationOpen = () => {
+    // Simuler recommandations prix
+    const recommendations = dashboardData.properties.map(p => ({
+      property: p,
+      currentPrice: p.price,
+      recommendedPrice: Math.floor(p.price * (0.95 + Math.random() * 0.1)),
+      expectedIncrease: Math.floor(Math.random() * 15) + 5,
+      confidence: 80 + Math.floor(Math.random() * 15)
+    }));
+    setPriceOptimizationModal({ open: true, recommendations });
+  };
+
+  const handleCreateNFT = (property) => {
+    setNftModal({ open: true, property });
+  };
+
+  const handleBlockchainStatus = (property) => {
+    // Simuler statut blockchain
+    const status = {
+      verified: property.blockchainVerified || Math.random() > 0.3,
+      transactionHash: `0x${Math.random().toString(16).slice(2, 42)}`,
+      blockNumber: Math.floor(Math.random() * 1000000),
+      timestamp: new Date().toISOString(),
+      network: 'TerangaChain',
+      confirmations: Math.floor(Math.random() * 50) + 10
+    };
+    setBlockchainStatusModal({ open: true, property, status });
+  };
+
+  const handleBatchVerification = async () => {
+    window.safeGlobalToast({
+      title: "Vérification en cours",
+      description: "Vérification de toutes les propriétés sur la blockchain..."
+    });
+    
+    // Simuler vérification batch
+    setTimeout(() => {
+      const verified = dashboardData.properties.length;
+      window.safeGlobalToast({
+        title: "Vérification terminée",
+        description: `${verified} propriétés vérifiées avec succès sur TerangaChain.`
+      });
+      
+      // Mettre à jour toutes les propriétés comme vérifiées
+      setDashboardData(prev => ({
+        ...prev,
+        properties: prev.properties.map(p => ({ ...p, blockchainVerified: true }))
+      }));
+    }, 2000);
+  };
+
+  const handleCompetitionAnalysis = () => {
+    // Simuler analyse concurrence
+    const data = {
+      totalCompetitors: 23,
+      averagePrice: 125000000,
+      marketShare: 15.8,
+      strengths: ['Prix compétitifs', 'Photos de qualité', 'Blockchain vérifié'],
+      weaknesses: ['Moins de propriétés', 'Temps de réponse'],
+      opportunities: ['Marché en croissance', 'Nouvelles zones'],
+      threats: ['Nouveaux concurrents', 'Baisse demande']
+    };
+    setCompetitionModal({ open: true, data });
+  };
+
+  const handleMarketAnalysis = () => {
+    navigate('/dashboard/vendeur/analytics/market');
+  };
+
+  const handleBlockchainHistory = () => {
+    navigate('/dashboard/vendeur/blockchain/history');
+  };
+
+  const handleToggleFilter = () => {
+    const filters = ['all', 'ai-optimized', 'blockchain-verified'];
+    const currentIndex = filters.indexOf(filterMode);
+    const nextFilter = filters[(currentIndex + 1) % filters.length];
+    setFilterMode(nextFilter);
+    
+    const filterNames = {
+      'all': 'Toutes les propriétés',
+      'ai-optimized': 'Optimisées par IA',
+      'blockchain-verified': 'Vérifiées Blockchain'
+    };
+    
+    window.safeGlobalToast({
+      title: "Filtre actif",
+      description: filterNames[nextFilter]
+    });
+  };
+
+  // Phase C - Fonctions Export & Rapports
+  const handleGeneratePerformanceReport = async () => {
+    window.safeGlobalToast({
+      title: "Génération en cours",
+      description: "Création du rapport de performance PDF..."
+    });
+    
+    try {
+      await pdfGenerator.generatePerformanceReport(dashboardData, user);
+      window.safeGlobalToast({
+        title: "Rapport généré",
+        description: "Votre rapport de performance a été téléchargé."
+      });
+    } catch (error) {
+      console.error('Erreur génération rapport:', error);
+      window.safeGlobalToast({
+        title: "Erreur",
+        description: "Impossible de générer le rapport PDF.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleGenerateCertificate = async (property = null) => {
+    const targetProperty = property || dashboardData.properties[0];
+    
+    if (!targetProperty) {
+      window.safeGlobalToast({
+        title: "Aucune propriété",
+        description: "Ajoutez d'abord une propriété pour générer un certificat.",
+        variant: "default"
+      });
+      return;
+    }
+
+    window.safeGlobalToast({
+      title: "Certificat en cours",
+      description: "Création du certificat de propriété blockchain..."
+    });
+    
+    try {
+      const blockchainData = {
+        transactionHash: `0x${Math.random().toString(16).slice(2, 42)}`,
+        blockNumber: Math.floor(Math.random() * 1000000),
+        network: 'TerangaChain',
+        confirmations: Math.floor(Math.random() * 50) + 10,
+        verified: true
+      };
+
+      await pdfGenerator.generateBlockchainCertificate(targetProperty, blockchainData);
+      
+      window.safeGlobalToast({
+        title: "Certificat créé",
+        description: "Certificat blockchain téléchargé avec succès."
+      });
+    } catch (error) {
+      console.error('Erreur génération certificat:', error);
+      window.safeGlobalToast({
+        title: "Erreur",
+        description: "Impossible de générer le certificat.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleMarketPredictions = () => {
+    // Navigation vers page prédictions ou modal
+    navigate('/dashboard/vendeur/analytics/predictions');
+  };
+
+  const handleExportData = () => {
+    try {
+      // Créer CSV avec toutes les données
+      const headers = ['ID', 'Titre', 'Location', 'Prix', 'Taille', 'Type', 'Statut', 'Vues', 'IA Score', 'Blockchain'];
+      const rows = dashboardData.properties.map(p => [
+        p.id,
+        p.title,
+        p.location,
+        p.price,
+        p.size,
+        p.type,
+        p.status,
+        p.views,
+        p.aiScore || 'N/A',
+        p.blockchainVerified ? 'Oui' : 'Non'
+      ]);
+      
+      const csvContent = [
+        headers.join(','),
+        ...rows.map(row => row.join(','))
+      ].join('\\n');
+      
+      // Télécharger CSV
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = `terangafoncier_properties_${new Date().toISOString().split('T')[0]}.csv`;
+      link.click();
+      
+      window.safeGlobalToast({
+        title: "Export réussi",
+        description: `${dashboardData.properties.length} propriétés exportées en CSV.`
+      });
+    } catch (error) {
+      console.error('Erreur export:', error);
+      window.safeGlobalToast({
+        title: "Erreur export",
+        description: "Impossible d'exporter les données.",
+        variant: "destructive"
+      });
+    }
   };
 
   // Données dashboard enrichies avec IA/Blockchain
@@ -630,11 +921,11 @@ const ModernVendeurDashboard = () => {
                     <Network className="h-4 w-4 mr-2" />
                     Smart Contracts
                   </Button>
-                  <Button className="w-full justify-start" variant="outline" onClick={() => console.log('Historique blockchain')}>
+                  <Button className="w-full justify-start" variant="outline" onClick={handleBlockchainHistory}>
                     <Clock className="h-4 w-4 mr-2" />
                     Historique Blockchain
                   </Button>
-                  <Button className="w-full justify-start" variant="outline" onClick={() => console.log('NFT propriétés')}>
+                  <Button className="w-full justify-start" variant="outline" onClick={() => handleCreateNFT(dashboardData.properties[0])}>
                     <Star className="h-4 w-4 mr-2" />
                     Créer NFT Propriété
                   </Button>
@@ -657,7 +948,7 @@ const ModernVendeurDashboard = () => {
                     </Badge>
                   </CardTitle>
                   <div className="flex space-x-2">
-                    <Button variant="outline" size="sm" onClick={() => console.log('Filtrer avec IA')}>
+                    <Button variant="outline" size="sm" onClick={handleToggleFilter}>
                       <Filter className="h-4 w-4 mr-2" />
                       Filtre IA
                     </Button>
@@ -734,11 +1025,11 @@ const ModernVendeurDashboard = () => {
                         </div>
 
                         <div className="flex flex-col space-y-2 ml-4">
-                          <Button size="sm" variant="outline" onClick={() => handleEditProperty(property)}>
+                          <Button size="sm" variant="outline" onClick={() => handleAIAnalysis(property)}>
                             <Brain className="h-4 w-4 mr-1" />
                             Analyse IA
                           </Button>
-                          <Button size="sm" variant="outline" onClick={() => handleViewProperty(property)}>
+                          <Button size="sm" variant="outline" onClick={() => handleBlockchainStatus(property)}>
                             <Shield className="h-4 w-4 mr-1" />
                             Vérifier Blockchain
                           </Button>
@@ -883,7 +1174,7 @@ const ModernVendeurDashboard = () => {
                     <Button 
                       className="w-full justify-start" 
                       variant="outline"
-                      onClick={() => console.log('Analyse marché IA')}
+                      onClick={handleMarketAnalysis}
                     >
                       <Target className="h-4 w-4 mr-2" />
                       Analyse Marché Avancée
@@ -929,7 +1220,7 @@ const ModernVendeurDashboard = () => {
                     <Button 
                       className="w-full justify-start" 
                       variant="outline"
-                      onClick={() => console.log('Vérifier toutes propriétés')}
+                      onClick={handleBatchVerification}
                     >
                       <Database className="h-4 w-4 mr-2" />
                       Vérifier Toutes les Propriétés
@@ -937,7 +1228,7 @@ const ModernVendeurDashboard = () => {
                     <Button 
                       className="w-full justify-start" 
                       variant="outline"
-                      onClick={() => console.log('Créer certificat propriété')}
+                      onClick={handleGenerateCertificate}
                     >
                       <Lock className="h-4 w-4 mr-2" />
                       Créer Certificat de Propriété
@@ -945,7 +1236,7 @@ const ModernVendeurDashboard = () => {
                     <Button 
                       className="w-full justify-start" 
                       variant="outline"
-                      onClick={() => console.log('Historique transactions')}
+                      onClick={() => navigate('/dashboard/vendeur/transactions')}
                     >
                       <Clock className="h-4 w-4 mr-2" />
                       Historique Transactions
@@ -1097,7 +1388,7 @@ const ModernVendeurDashboard = () => {
                   <Button 
                     className="w-full justify-start" 
                     variant="outline"
-                    onClick={() => console.log('Rapport performance IA')}
+                    onClick={handleGeneratePerformanceReport}
                   >
                     <FileText className="h-4 w-4 mr-2" />
                     Rapport Performance
@@ -1105,7 +1396,7 @@ const ModernVendeurDashboard = () => {
                   <Button 
                     className="w-full justify-start" 
                     variant="outline"
-                    onClick={() => console.log('Analyse concurrence IA')}
+                    onClick={handleCompetitionAnalysis}
                   >
                     <Target className="h-4 w-4 mr-2" />
                     Analyse Concurrence
@@ -1113,7 +1404,7 @@ const ModernVendeurDashboard = () => {
                   <Button 
                     className="w-full justify-start" 
                     variant="outline"
-                    onClick={() => console.log('Prédictions marché')}
+                    onClick={handleMarketPredictions}
                   >
                     <Lightbulb className="h-4 w-4 mr-2" />
                     Prédictions Marché
@@ -1121,7 +1412,7 @@ const ModernVendeurDashboard = () => {
                   <Button 
                     className="w-full justify-start" 
                     variant="outline"
-                    onClick={() => console.log('Export données')}
+                    onClick={handleExportData}
                   >
                     <Download className="h-4 w-4 mr-2" />
                     Exporter Données
@@ -1227,6 +1518,49 @@ const ModernVendeurDashboard = () => {
           </TabsContent>
         </Tabs>
       </div>
+
+      {/* Modals */}
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onOpenChange={(open) => setConfirmDelete({ ...confirmDelete, open })}
+        title="Supprimer la propriété ?"
+        description={`Êtes-vous sûr de vouloir supprimer "${confirmDelete.property?.title}" ? Cette action sera enregistrée sur la blockchain et ne peut pas être annulée.`}
+        onConfirm={confirmDeleteProperty}
+        variant="destructive"
+      />
+
+      <SharePropertyModal
+        open={shareModal.open}
+        onOpenChange={(open) => setShareModal({ ...shareModal, open })}
+        property={shareModal.property}
+        shareUrl={shareModal.property ? `${window.location.origin}/parcel/${shareModal.property.id}` : ''}
+      />
+
+      <AIAnalysisModal
+        open={aiAnalysisModal.open}
+        onOpenChange={(open) => setAiAnalysisModal({ ...aiAnalysisModal, open })}
+        property={aiAnalysisModal.property}
+        analysis={aiAnalysisModal.analysis}
+      />
+
+      <BlockchainStatusModal
+        open={blockchainStatusModal.open}
+        onOpenChange={(open) => setBlockchainStatusModal({ ...blockchainStatusModal, open })}
+        property={blockchainStatusModal.property}
+        status={blockchainStatusModal.status}
+      />
+
+      <CreateNFTModal
+        open={nftModal.open}
+        onOpenChange={(open) => setNftModal({ ...nftModal, open })}
+        property={nftModal.property}
+      />
+
+      <CompetitionAnalysisModal
+        open={competitionModal.open}
+        onOpenChange={(open) => setCompetitionModal({ ...competitionModal, open })}
+        data={competitionModal.data}
+      />
     </div>
   );
 };

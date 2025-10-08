@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Building2, 
@@ -20,6 +21,10 @@ import {
   Star,
   BarChart3
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+import ConfirmDialog from '@/components/dialogs/ConfirmDialog';
+import SharePropertyModal from '@/components/dialogs/SharePropertyModal';
+import PreviewPropertyModal from '@/components/dialogs/PreviewPropertyModal';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -33,9 +38,13 @@ import {
 } from '@/components/ui/select';
 
 const VendeurProperties = ({ stats }) => {
+  const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
-  const [properties] = useState([
+  const [confirmDelete, setConfirmDelete] = useState({ open: false, property: null });
+  const [shareModal, setShareModal] = useState({ open: false, property: null });
+  const [previewModal, setPreviewModal] = useState({ open: false, property: null });
+  const [properties, setProperties] = useState([
     {
       id: 1,
       title: 'Terrain résidentiel Sacré-Cœur',
@@ -181,21 +190,53 @@ const VendeurProperties = ({ stats }) => {
   });
 
   const handleViewProperty = (property) => {
-    console.log('Voir propriété:', property.title);
+    // Ouvrir modal preview au lieu de naviguer
+    setPreviewModal({ open: true, property });
   };
 
   const handleEditProperty = (property) => {
-    console.log('Modifier propriété:', property.title);
+    navigate(`/dashboard/edit-parcel/${property.id}`);
   };
 
   const handleDeleteProperty = (property) => {
-    if (confirm(`Êtes-vous sûr de vouloir supprimer "${property.title}" ?`)) {
-      console.log('Supprimer propriété:', property.title);
+    setConfirmDelete({ open: true, property });
+  };
+
+  const confirmDeleteProperty = async () => {
+    const property = confirmDelete.property;
+    if (!property) return;
+
+    try {
+      const { error } = await supabase
+        .from('parcels')
+        .delete()
+        .eq('id', property.id);
+
+      if (error) throw error;
+
+      // Mettre à jour la liste localement
+      setProperties(prev => prev.filter(p => p.id !== property.id));
+
+      if (window.safeGlobalToast) {
+        window.safeGlobalToast({
+          title: "Propriété supprimée",
+          description: `"${property.title}" a été supprimée avec succès.`
+        });
+      }
+    } catch (error) {
+      console.error('Erreur suppression:', error);
+      if (window.safeGlobalToast) {
+        window.safeGlobalToast({
+          title: "Erreur",
+          description: "Impossible de supprimer la propriété.",
+          variant: "destructive"
+        });
+      }
     }
   };
 
   const handleShareProperty = (property) => {
-    console.log('Partager propriété:', property.title);
+    setShareModal({ open: true, property });
   };
 
   const handleAIAnalysis = (property) => {
@@ -462,6 +503,33 @@ const VendeurProperties = ({ stats }) => {
           </CardContent>
         </Card>
       )}
+
+      {/* Modals */}
+      <ConfirmDialog
+        open={confirmDelete.open}
+        onOpenChange={(open) => setConfirmDelete({ open, property: null })}
+        title="Supprimer la propriété ?"
+        description={`Êtes-vous sûr de vouloir supprimer "${confirmDelete.property?.title}" ? Cette action est irréversible.`}
+        onConfirm={confirmDeleteProperty}
+        confirmText="Supprimer"
+        variant="destructive"
+      />
+
+      <SharePropertyModal
+        open={shareModal.open}
+        onOpenChange={(open) => setShareModal({ open, property: null })}
+        property={shareModal.property}
+        shareUrl={shareModal.property ? `${window.location.origin}/dashboard/parcel/${shareModal.property.id}` : ''}
+      />
+
+      <PreviewPropertyModal
+        open={previewModal.open}
+        onOpenChange={(open) => setPreviewModal({ open, property: null })}
+        property={previewModal.property}
+        onEdit={handleEditProperty}
+        onShare={(property) => setShareModal({ open: true, property })}
+        onDelete={handleDeleteProperty}
+      />
     </div>
   );
 };

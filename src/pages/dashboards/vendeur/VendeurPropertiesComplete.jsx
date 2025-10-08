@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
@@ -36,6 +37,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 
 const VendeurPropertiesComplete = () => {
+  const navigate = useNavigate();
   const [viewMode, setViewMode] = useState('grid');
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
@@ -400,7 +402,10 @@ const VendeurPropertiesComplete = () => {
           </p>
         </div>
         
-        <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700 text-white"
+          onClick={() => navigate('/vendeur/add-property')}
+        >
           <Plus className="w-4 h-4 mr-2" />
           Ajouter un bien
         </Button>
@@ -548,7 +553,10 @@ const VendeurPropertiesComplete = () => {
             <p className="text-gray-600 mb-6">
               Ajustez vos filtres ou ajoutez votre première propriété.
             </p>
-            <Button className="bg-blue-600 hover:bg-blue-700 text-white">
+            <Button 
+              className="bg-blue-600 hover:bg-blue-700 text-white"
+              onClick={() => navigate('/vendeur/add-property')}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Ajouter un bien
             </Button>

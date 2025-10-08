@@ -51,9 +51,12 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const VendeurAddTerrain = () => {
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [formData, setFormData] = useState({
     // Informations générales
     title: '',
@@ -325,16 +328,58 @@ const VendeurAddTerrain = () => {
     }).format(price).replace('XOF', 'FCFA');
   };
 
-  const handleSaveDraft = () => {
-    console.log('Sauvegarde en brouillon:', formData);
-    // Logique de sauvegarde
+  const handleSaveDraft = async () => {
+    if (!user) {
+      if (window.safeGlobalToast) {
+        window.safeGlobalToast({
+          title: "Erreur",
+          description: "Vous devez être connecté.",
+          variant: "destructive"
+        });
+      }
+      return;
+    }
+
+    try {
+      const { data, error } = await supabase
+        .from('parcels')
+        .insert([{
+          ...formData,
+          seller_id: user.id,
+          status: 'draft',
+          created_at: new Date().toISOString()
+        }])
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      if (window.safeGlobalToast) {
+        window.safeGlobalToast({
+          title: "Brouillon sauvegardé",
+          description: "Votre annonce a été sauvegardée en brouillon."
+        });
+      }
+
+      // Redirection vers liste annonces
+      navigate('/vendeur/properties');
+    } catch (error) {
+      console.error('Erreur sauvegarde brouillon:', error);
+      if (window.safeGlobalToast) {
+        window.safeGlobalToast({
+          title: "Erreur",
+          description: "Impossible de sauvegarder le brouillon.",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   const handlePublish = () => {
     if (validateStep(currentStep)) {
       console.log('Publication du terrain:', formData);
       // Logique de publication
-      navigate('/dashboard/vendeur');
+      navigate('/vendeur/overview');
     }
   };
 

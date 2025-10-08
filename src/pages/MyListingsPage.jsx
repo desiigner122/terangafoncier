@@ -15,9 +15,10 @@ import {
   Trash2, 
   UploadCloud, 
   Banknote, 
-  XCircle
+  XCircle,
+  Copy
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import {
   AlertDialog,
@@ -55,9 +56,9 @@ const formatPrice = (price) => {
 
 const MyListingsPage = () => {
    const { user } = useAuth();
+   const navigate = useNavigate();
    const [isLoading, setIsLoading] = useState(true);
    const [listings, setListings] = useState([]);
-   // toast remplacé par window.safeGlobalToast
 
    useEffect(() => {
     const fetchListings = async () => {
@@ -78,7 +79,7 @@ const MyListingsPage = () => {
         setIsLoading(false);
     };
     fetchListings();
-   }, [user, toast]);
+   }, [user]);
 
    const handleDelete = async (listingId) => {
        const { error } = await supabase.from('parcels').delete().eq('id', listingId);
@@ -91,8 +92,43 @@ const MyListingsPage = () => {
    };
    
    const handleEdit = (listing) => {
-      window.safeGlobalToast({title: "Fonctionnalité à venir", description: "La modification des annonces sera bientôt disponible."})
-   }
+      navigate(`/dashboard/parcelles/${listing.id}/edit`);
+   };
+   
+   const handleDuplicate = async (listing) => {
+       try {
+           const { id, created_at, updated_at, reference, ...duplicateData } = listing;
+           
+           const newData = {
+               ...duplicateData,
+               name: `${listing.name} (Copie)`,
+               status: 'pending_verification',
+           };
+           
+           const { data, error } = await supabase
+               .from('parcels')
+               .insert([newData])
+               .select()
+               .single();
+           
+           if (error) throw error;
+           
+           window.safeGlobalToast({
+               title: "Annonce dupliquée",
+               description: "La copie a été créée avec succès."
+           });
+           
+           setListings(prev => [data, ...prev]);
+           
+       } catch (error) {
+           console.error('Erreur duplication:', error);
+           window.safeGlobalToast({
+               title: "Erreur",
+               description: "Impossible de dupliquer l'annonce.",
+               variant: "destructive"
+           });
+       }
+   };
 
    const containerVariants = { hidden: { opacity: 0 }, visible: { opacity: 1, transition: { staggerChildren: 0.1 } } };
    const itemVariants = { hidden: { opacity: 0, y: 20 }, visible: { opacity: 1, y: 0 } };
@@ -138,11 +174,14 @@ const MyListingsPage = () => {
                       <CardFooter className="pt-4 flex flex-wrap gap-2 justify-end">
                          {listing.status === 'available' && (
                              <Button variant="link" size="sm" asChild>
-                                <Link to={`/parcelles/${listing.id}`}>Voir l'annonce <ArrowRight className="ml-1 h-3 w-3"/></Link>
+                                <Link to={`/dashboard/parcelles/${listing.id}`}>Voir l'annonce <ArrowRight className="ml-1 h-3 w-3"/></Link>
                              </Button>
                          )}
                          <Button variant="outline" size="sm" onClick={() => handleEdit(listing)}>
                             <Edit className="mr-2 h-4 w-4"/> Modifier
+                         </Button>
+                         <Button variant="outline" size="sm" onClick={() => handleDuplicate(listing)}>
+                            <Copy className="mr-2 h-4 w-4"/> Dupliquer
                          </Button>
                          <AlertDialog>
                            <AlertDialogTrigger asChild>

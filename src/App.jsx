@@ -1,6 +1,7 @@
 import React from 'react';
 import { Route, Routes, Outlet, Link, Navigate } from 'react-router-dom';
 import { Toaster } from '@/components/ui/toaster';
+import { ToastProvider } from '@/components/ui/NotificationToast';
 import ErrorBoundary from '@/components/ErrorBoundary';
 import { Analytics } from '@vercel/analytics/react';
 import { AIProvider } from '@/hooks/useAI.jsx';
@@ -74,6 +75,9 @@ import ZoneCommunaleDetailPage from '@/pages/ZoneCommunaleDetailPage';
 import MunicipalRequestsPage from '@/pages/MunicipalRequestsPage';
 import GuideAttributionPage from '@/pages/GuideAttributionPage';
 import SellPropertyPage from '@/pages/SellPropertyPage';
+import AddPropertyAdvanced from '@/pages/AddPropertyAdvanced';
+import EditPropertySimple from '@/pages/EditPropertySimple';
+import EditPropertyComplete from '@/pages/EditPropertyComplete';
 import DiasporaGuidePage from '@/pages/DiasporaGuidePage';
 import DocumentsFonciersPage from '@/pages/DocumentsFonciersPage';
 import LoisFoncieresPage from '@/pages/LoisFoncieresPage';
@@ -147,6 +151,7 @@ import AdminDashboard from '@/pages/dashboards/admin/AdminDashboard';
 import AdminDashboardRealData from '@/pages/dashboards/admin/AdminDashboardRealData';
 import ModernAdminDashboardRealData from '@/pages/dashboards/admin/ModernAdminDashboardRealData';
 import CompleteSidebarAdminDashboard from '@/pages/dashboards/admin/CompleteSidebarAdminDashboard';
+import AdminPropertyValidation from '@/pages/dashboards/admin/AdminPropertyValidation';
 
 // PAGES ADMIN MODERNISÉES AVEC DONNÉES RÉELLES
 import ModernUsersPage from '@/pages/dashboards/admin/ModernUsersPage';
@@ -235,6 +240,23 @@ import ParticulierConstructions from '@/pages/dashboards/particulier/Particulier
 import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
 import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard';
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
+
+// Imports pages vendeur RealData
+import VendeurOverviewRealData from '@/pages/dashboards/vendeur/VendeurOverviewRealData';
+import VendeurCRMRealData from '@/pages/dashboards/vendeur/VendeurCRMRealData';
+import VendeurPropertiesRealData from '@/pages/dashboards/vendeur/VendeurPropertiesRealData';
+import VendeurPurchaseRequests from '@/pages/dashboards/vendeur/VendeurPurchaseRequests';
+import VendeurAntiFraudeRealData from '@/pages/dashboards/vendeur/VendeurAntiFraudeRealData';
+import VendeurGPSRealData from '@/pages/dashboards/vendeur/VendeurGPSRealData';
+import VendeurServicesDigitauxRealData from '@/pages/dashboards/vendeur/VendeurServicesDigitauxRealData';
+import VendeurAddTerrainRealData from '@/pages/dashboards/vendeur/VendeurAddTerrainRealData';
+import VendeurPhotosRealData from '@/pages/dashboards/vendeur/VendeurPhotosRealData';
+import VendeurAnalyticsRealData from '@/pages/dashboards/vendeur/VendeurAnalyticsRealData';
+import VendeurAIRealData from '@/pages/dashboards/vendeur/VendeurAIRealData';
+import VendeurBlockchainRealData from '@/pages/dashboards/vendeur/VendeurBlockchainRealData';
+import VendeurMessagesRealData from '@/pages/dashboards/vendeur/VendeurMessagesRealData';
+import VendeurSettingsRealData from '@/pages/dashboards/vendeur/VendeurSettingsRealData';
+import VendeurSupport from '@/pages/dashboards/vendeur/VendeurSupport';
 import CompleteSidebarInvestisseurDashboard from '@/pages/dashboards/investisseur/CompleteSidebarInvestisseurDashboard';
 import { HelmetProvider } from 'react-helmet-async';
 import BanquesDashboardPage from '@/pages/solutions/dashboards/BanquesDashboardPage';
@@ -264,6 +286,9 @@ import AutonomousAIDashboard from '@/pages/AutonomousAIDashboard';
 import PendingVerificationPage from '@/pages/PendingVerificationPage';
 import MunicipalLandInfoPage from '@/pages/MunicipalLandInfoPage';
 import AddParcelPage from '@/pages/AddParcelPage';
+import ParcelDetailPage from '@/pages/ParcelDetailPage';
+import EditParcelPage from '@/pages/EditParcelPage';
+import CheckoutPage from '@/pages/CheckoutPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import MairiePage from '@/pages/MairiePage';
 import RegionInvestmentPage from '@/pages/RegionInvestmentPage';
@@ -453,7 +478,29 @@ function App() {
                 
                 {/* Dashboards modernes par rôle - routes indépendantes (ont leur propre layout) */}
                 <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><CompleteSidebarParticulierDashboard /></RoleProtectedRoute>} />
-                <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><CompleteSidebarVendeurDashboard /></RoleProtectedRoute>} />
+                
+                {/* Dashboard Vendeur avec routes imbriquées pour chaque page */}
+                <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><CompleteSidebarVendeurDashboard /></RoleProtectedRoute>}>
+                  <Route index element={<Navigate to="/vendeur/overview" replace />} />
+                  <Route path="overview" element={<VendeurOverviewRealData />} />
+                  <Route path="crm" element={<VendeurCRMRealData />} />
+                  <Route path="properties" element={<VendeurPropertiesRealData />} />
+                  <Route path="edit-property/:id" element={<EditPropertyComplete />} />
+                  <Route path="purchase-requests" element={<VendeurPurchaseRequests />} />
+                  <Route path="anti-fraud" element={<VendeurAntiFraudeRealData />} />
+                  <Route path="gps-verification" element={<VendeurGPSRealData />} />
+                  <Route path="digital-services" element={<VendeurServicesDigitauxRealData />} />
+                  <Route path="add-property" element={<VendeurAddTerrainRealData />} />
+                  <Route path="photos" element={<VendeurPhotosRealData />} />
+                  <Route path="analytics" element={<VendeurAnalyticsRealData />} />
+                  <Route path="ai-assistant" element={<VendeurAIRealData />} />
+                  <Route path="blockchain" element={<VendeurBlockchainRealData />} />
+                  <Route path="transactions" element={<div />} /> {/* 🆕 SEMAINE 3 - Géré par CompleteSidebarVendeurDashboard */}
+                  <Route path="market-analytics" element={<div />} /> {/* 🆕 SEMAINE 3 - Géré par CompleteSidebarVendeurDashboard */}
+                  <Route path="messages" element={<VendeurMessagesRealData />} />
+                  <Route path="support" element={<VendeurSupport />} />
+                  <Route path="settings" element={<VendeurSettingsRealData />} />
+                </Route>
                 
                 {/* Sous-pages de suivi Particulier/Acheteur */}
                 <Route path="acheteur/private-interests" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PrivateInterests /></RoleProtectedRoute>} />
@@ -510,7 +557,12 @@ function App() {
                   <Route path="request-municipal-land" element={<RoleProtectedRoute permission="REQUEST_MUNICIPAL_LAND"><DashboardMunicipalRequestPage /></RoleProtectedRoute>} />
                   <Route path="vendor-verification" element={<RoleProtectedRoute permission="VENDOR_VERIFICATION"><VendorVerificationPage /></RoleProtectedRoute>} />
                   <Route path="sell-property" element={<RoleProtectedRoute permission="SELL_PROPERTY"><SellPropertyPage /></RoleProtectedRoute>} />
+                  <Route path="add-property-advanced" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddPropertyAdvanced /></RoleProtectedRoute>} />
+                  {/* Route edit-property déplacée sous /vendeur/ (ligne 486) */}
                   <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
+                  <Route path="parcelles/:id" element={<ParcelDetailPage />} />
+                  <Route path="parcelles/:id/edit" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><EditParcelPage /></RoleProtectedRoute>} />
+                  <Route path="parcelles/:id/checkout" element={<RoleProtectedRoute allowedRoles={['Acheteur', 'Particulier']}><CheckoutPage /></RoleProtectedRoute>} />
                   <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
 
                   {/* Parcours d'achat pour Acheteurs/Particuliers */}
@@ -545,7 +597,7 @@ function App() {
               <Route index element={<CompleteSidebarAdminDashboard />} />
               <Route path="dashboard" element={<CompleteSidebarAdminDashboard />} />
               <Route path="modern" element={<ModernAdminDashboardRealData />} />
-              
+              <Route path="validation" element={<AdminPropertyValidation />} />
               
               {/* ROUTES ADMIN STANDARDS */}
               <Route path="projects" element={<AdminProjectsPage />} />
@@ -661,6 +713,7 @@ function App() {
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
           <Toaster />
+          <ToastProvider />
           
           {/* IA CONVERSATIONNELLE UNIVERSELLE */}
           <UniversalAIChatbot isFloating={true} />

@@ -11,6 +11,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { 
   Settings, 
   User, 
@@ -62,6 +64,7 @@ import {
 } from 'lucide-react';
 
 const VendeurSettings = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('profile');
   const [showPassword, setShowPassword] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(false);
@@ -103,9 +106,40 @@ const VendeurSettings = () => {
     }));
   };
 
-  const handleSave = () => {
-    // Simulation de sauvegarde
-    console.log('Paramètres sauvegardés');
+  const handleSave = async () => {
+    if (!user) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          notification_email: notifications.email,
+          notification_sms: notifications.sms,
+          notification_push: notifications.push,
+          notification_marketing: notifications.marketing,
+          preferences: preferences,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      if (window.safeGlobalToast) {
+        window.safeGlobalToast({
+          title: "Paramètres sauvegardés",
+          description: "Vos paramètres ont été mis à jour avec succès."
+        });
+      }
+    } catch (error) {
+      console.error('Erreur sauvegarde paramètres:', error);
+      if (window.safeGlobalToast) {
+        window.safeGlobalToast({
+          title: "Erreur",
+          description: "Impossible de sauvegarder les paramètres.",
+          variant: "destructive"
+        });
+      }
+    }
   };
 
   return (

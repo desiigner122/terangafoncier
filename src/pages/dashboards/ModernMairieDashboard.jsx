@@ -21,7 +21,7 @@ import {
   Bell,
   Home,
   Truck,
-  Trees,
+  TreePine,
   Shield
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs';
@@ -304,7 +304,7 @@ const ModernMairieDashboard = () => {
             {[
               { facility: 'Écoles Primaires', count: 8, capacity: 1200, icon: Building },
               { facility: 'Centres de Santé', count: 3, capacity: 450, icon: Shield },
-              { facility: 'Espaces Verts', count: 12, capacity: null, icon: Trees },
+              { facility: 'Espaces Verts', count: 12, capacity: null, icon: TreePine },
               { facility: 'Terrains de Sport', count: 5, capacity: null, icon: Star },
               { facility: 'Marchés', count: 2, capacity: 300, icon: Home }
             ].map((facility, index) => (

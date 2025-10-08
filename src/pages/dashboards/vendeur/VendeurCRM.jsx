@@ -389,14 +389,20 @@ const VendeurCRM = () => {
 
                   {/* Actions */}
                   <div className="flex items-center space-x-3">
-                    <button className="flex items-center space-x-1 px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors">
+                    <a 
+                      href={`tel:${prospect.phone}`}
+                      className="flex items-center space-x-1 px-3 py-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                    >
                       <Phone className="w-4 h-4" />
                       <span>Appeler</span>
-                    </button>
-                    <button className="flex items-center space-x-1 px-3 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors">
+                    </a>
+                    <a 
+                      href={`mailto:${prospect.email}?subject=Suivi: ${prospect.property}`}
+                      className="flex items-center space-x-1 px-3 py-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                    >
                       <Mail className="w-4 h-4" />
                       <span>Email</span>
-                    </button>
+                    </a>
                     <button className="flex items-center space-x-1 px-3 py-2 bg-purple-100 text-purple-600 rounded-lg hover:bg-purple-200 transition-colors">
                       <Calendar className="w-4 h-4" />
                       <span>RDV</span>

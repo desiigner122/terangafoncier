@@ -23,6 +23,8 @@ import {
   Search,
   Filter
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -31,65 +33,42 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const NotaireCompliance = () => {
+  const { user } = useAuth();
   const [complianceData, setComplianceData] = useState({});
   const [isLoading, setIsLoading] = useState(false);
 
-  // Données de conformité simulées
-  const complianceMetrics = {
-    overallScore: 96,
-    categories: [
-      {
-        name: 'Authentification Documents',
-        score: 98,
-        status: 'excellent',
-        checks: 245,
-        passed: 240,
-        failed: 5
-      },
-      {
-        name: 'Procédures Légales',
-        score: 95,
-        status: 'excellent', 
-        checks: 128,
-        passed: 122,
-        failed: 6
-      },
-      {
-        name: 'Archivage Numérique',
-        score: 92,
-        status: 'bon',
-        checks: 89,
-        passed: 82,
-        failed: 7
-      },
-      {
-        name: 'Sécurité Données',
-        score: 99,
-        status: 'excellent',
-        checks: 156,
-        passed: 155,
-        failed: 1
+  // Chargement des données de conformité depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadComplianceData();
+    }
+  }, [user]);
+
+  const loadComplianceData = async () => {
+    setIsLoading(true);
+    try {
+      const result = await NotaireSupabaseService.getComplianceData(user.id);
+      if (result.success) {
+        setComplianceData(processComplianceData(result.data) || {});
+      } else {
+        console.error('Erreur lors du chargement:', result.error);
+        setComplianceData({});
       }
-    ],
-    recentAudits: [
-      {
-        id: 'AUDIT-001',
-        date: '2024-01-20',
-        type: 'Contrôle réglementaire',
-        score: 97,
-        status: 'passed',
-        auditor: 'Conseil Supérieur du Notariat'
-      },
-      {
-        id: 'AUDIT-002', 
-        date: '2024-01-15',
-        type: 'Audit sécurité',
-        score: 94,
-        status: 'passed',
-        auditor: 'ANSSI Sénégal'
-      }
-    ]
+    } catch (error) {
+      console.error('Erreur chargement conformité:', error);
+      setComplianceData({});
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const processComplianceData = (rawData) => {
+    // Traiter les données brutes de Supabase pour les adapter à l'interface
+    return rawData; // Utiliser les données réelles
+  };
+
+  // ✅ DONNÉES RÉELLES - Mock data supprimé
+  // Les données de conformité sont chargées depuis Supabase via loadComplianceData()
 
   const handleComplianceCheck = () => {
     setIsLoading(true);
@@ -194,13 +173,13 @@ const NotaireCompliance = () => {
                       strokeWidth="8"
                       fill="transparent"
                       strokeDasharray={`${2 * Math.PI * 40}`}
-                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - complianceMetrics.overallScore / 100)}`}
+                      strokeDashoffset={`${2 * Math.PI * 40 * (1 - (complianceData.overallScore || 0) / 100)}`}
                       className="text-purple-600 transition-all duration-1000"
                     />
                   </svg>
                   <div className="absolute inset-0 flex items-center justify-center">
                     <span className="text-2xl font-bold text-purple-600">
-                      {complianceMetrics.overallScore}%
+                      {complianceData.overallScore || 0}%
                     </span>
                   </div>
                 </div>
@@ -224,7 +203,7 @@ const NotaireCompliance = () => {
 
       {/* Catégories de conformité */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {complianceMetrics.categories.map((category, index) => (
+        {(complianceData.categories || []).map((category, index) => (
           <motion.div
             key={category.name}
             initial={{ opacity: 0, y: 20 }}
@@ -285,7 +264,7 @@ const NotaireCompliance = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {complianceMetrics.recentAudits.map((audit) => (
+            {(complianceData.recentAudits || []).map((audit) => (
               <div key={audit.id} className="flex items-center justify-between p-4 border rounded-lg">
                 <div className="flex items-center space-x-4">
                   <div className={`p-2 rounded-lg ${audit.status === 'passed' ? 'bg-green-100' : 'bg-red-100'}`}>

@@ -25,6 +25,8 @@ import {
   Eye,
   AlertTriangle
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -40,69 +42,41 @@ import {
 } from '@/components/ui/table';
 
 const NotaireBlockchain = () => {
-  const [blockchainStats, setBlockchainStats] = useState({
-    totalTransactions: 1247,
-    verifiedDocuments: 983,
-    blockHeight: 45672,
-    networkStatus: 'healthy',
-    hashRate: '1.24 TH/s',
-    gasPrice: '0.0032 TERA'
-  });
-
-  const [recentTransactions, setRecentTransactions] = useState([]);
+  const { user } = useAuth();
+  const [blockchainStats, setBlockchainStats] = useState({});
+  const [blockchainTransactions, setBlockchainTransactions] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
 
-  // Transactions blockchain récentes
-  const mockTransactions = [
-    {
-      id: 'TX-001',
-      hash: '0x1a2b3c4d5e6f7890abcdef1234567890abcdef12',
-      type: 'Document Authentication',
-      document: 'Acte de vente Villa Almadies',
-      client: 'Famille Diallo',
-      timestamp: '2024-01-25 14:30:45',
-      status: 'confirmed',
-      blockNumber: 45671,
-      gasUsed: '21,000',
-      fee: '0.001 TERA'
-    },
-    {
-      id: 'TX-002',
-      hash: '0x2b3c4d5e6f7890abcdef1234567890abcdef123',
-      type: 'Smart Contract',
-      document: 'Contrat succession Ndiaye',
-      client: 'Héritiers Ndiaye',
-      timestamp: '2024-01-25 13:15:22',
-      status: 'confirmed',
-      blockNumber: 45670,
-      gasUsed: '45,000',
-      fee: '0.0023 TERA'
-    },
-    {
-      id: 'TX-003',
-      hash: '0x3c4d5e6f7890abcdef1234567890abcdef1234',
-      type: 'Certificate Issuance',
-      document: 'Certificat authenticité Seck',
-      client: 'M. et Mme Seck',
-      timestamp: '2024-01-25 12:45:10',
-      status: 'pending',
-      blockNumber: null,
-      gasUsed: null,
-      fee: '0.0015 TERA'
-    },
-    {
-      id: 'TX-004',
-      hash: '0x4d5e6f7890abcdef1234567890abcdef12345',
-      type: 'Timestamping',
-      document: 'Testament Ba - Horodatage',
-      client: 'Succession Ba',
-      timestamp: '2024-01-25 11:20:33',
-      status: 'confirmed',
-      blockNumber: 45669,
-      gasUsed: '18,500',
-      fee: '0.0008 TERA'
+  // Chargement des données blockchain depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadBlockchainData();
     }
-  ];
+  }, [user]);
+
+  const loadBlockchainData = async () => {
+    setIsLoading(true);
+    try {
+      const result = await NotaireSupabaseService.getBlockchainData(user.id);
+      if (result.success && result.data) {
+        setBlockchainStats(result.data.stats || {});
+        setBlockchainTransactions(result.data.transactions || []);
+      } else {
+        console.error('Erreur lors du chargement:', result.error);
+        setBlockchainStats({});
+        setBlockchainTransactions([]);
+      }
+    } catch (error) {
+      console.error('Erreur chargement blockchain:', error);
+      setBlockchainStats({});
+      setBlockchainTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ✅ DONNÉES RÉELLES - Mock data supprimé
+  // Les données blockchain sont chargées depuis Supabase via loadBlockchainData()
 
   // Smart contracts déployés
   const smartContracts = [
@@ -139,7 +113,7 @@ const NotaireBlockchain = () => {
   ];
 
   useEffect(() => {
-    setRecentTransactions(mockTransactions);
+    // Sera géré par loadBlockchainData
   }, []);
 
   const handleVerifyDocument = () => {
@@ -355,7 +329,7 @@ const NotaireBlockchain = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {recentTransactions.map((tx) => (
+                  {blockchainTransactions.map((tx) => (
                     <TableRow key={tx.id}>
                       <TableCell className="font-mono text-xs">
                         {tx.hash.slice(0, 10)}...{tx.hash.slice(-8)}

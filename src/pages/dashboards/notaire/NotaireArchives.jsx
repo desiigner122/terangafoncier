@@ -23,6 +23,8 @@ import {
   BookOpen,
   Hash
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +44,7 @@ import {
 import { Separator } from '@/components/ui/separator';
 
 const NotaireArchives = () => {
+  const { user } = useAuth();
   const [archives, setArchives] = useState([]);
   const [filteredArchives, setFilteredArchives] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -79,122 +82,33 @@ const NotaireArchives = () => {
     { value: 'value_asc', label: 'Valeur croissante' }
   ];
 
-  // Données simulées des archives
-  const mockArchives = [
-    {
-      id: 'ARC-2024-001',
-      title: 'Vente Villa Almadies - Famille Diallo',
-      type: 'vente_immobiliere',
-      client: 'Famille Diallo',
-      date: '2024-01-20',
-      year: '2024',
-      value: 85000000,
-      status: 'archived',
-      documents: ['Acte de vente', 'Titre foncier', 'Plan cadastral'],
-      location: 'Almadies, Dakar',
-      notaryFees: 850000,
-      blockchainHash: '0x1a2b3c4d5e6f7890abcdef',
-      tags: ['vente', 'villa', 'almadies'],
-      category: 'immobilier',
-      confidentiality: 'high',
-      storageLocation: 'Armoire A - Rayon 3 - Case 12'
-    },
-    {
-      id: 'ARC-2024-002',
-      title: 'Succession Terrain Parcelles - Héritiers Ndiaye',
-      type: 'succession',
-      client: 'Héritiers Ndiaye',
-      date: '2024-01-15',
-      year: '2024',
-      value: 25000000,
-      status: 'archived',
-      documents: ['Acte de décès', 'Testament', 'Certificat hérédité', 'Acte de partage'],
-      location: 'Parcelles Assainies',
-      notaryFees: 375000,
-      blockchainHash: '0x2b3c4d5e6f7890abcdef12',
-      tags: ['succession', 'terrain', 'parcelles'],
-      category: 'succession',
-      confidentiality: 'high',
-      storageLocation: 'Armoire B - Rayon 1 - Case 8'
-    },
-    {
-      id: 'ARC-2023-156',
-      title: 'Constitution SARLU Teranga Business',
-      type: 'constitution_societe',
-      client: 'SARLU Teranga Business',
-      date: '2023-12-20',
-      year: '2023',
-      value: 10000000,
-      status: 'archived',
-      documents: ['Statuts', 'PV AG constitutive', 'Déclaration notariée'],
-      location: 'Médina, Dakar',
-      notaryFees: 500000,
-      blockchainHash: '0x3c4d5e6f7890abcdef123',
-      tags: ['société', 'constitution', 'sarlu'],
-      category: 'commercial',
-      confidentiality: 'medium',
-      storageLocation: 'Armoire C - Rayon 2 - Case 5'
-    },
-    {
-      id: 'ARC-2023-134',
-      title: 'Donation Appartement - M. et Mme Seck',
-      type: 'donation',
-      client: 'M. et Mme Seck',
-      date: '2023-11-10',
-      year: '2023',
-      value: 45000000,
-      status: 'archived',
-      documents: ['Acte de donation', 'Certificat propriété', 'Quitus fiscal'],
-      location: 'Plateau, Dakar',
-      notaryFees: 675000,
-      blockchainHash: '0x4d5e6f7890abcdef1234',
-      tags: ['donation', 'appartement', 'plateau'],
-      category: 'familial',
-      confidentiality: 'high',
-      storageLocation: 'Armoire A - Rayon 1 - Case 15'
-    },
-    {
-      id: 'ARC-2023-089',
-      title: 'Testament Olographe - Mme Ba',
-      type: 'testament',
-      client: 'Succession Ba',
-      date: '2023-08-15',
-      year: '2023',
-      value: 75000000,
-      status: 'archived',
-      documents: ['Testament olographe', 'Acte d\'ouverture', 'Inventaire succession'],
-      location: 'Fann, Dakar',
-      notaryFees: 450000,
-      blockchainHash: '0x5e6f7890abcdef12345',
-      tags: ['testament', 'succession', 'fann'],
-      category: 'succession',
-      confidentiality: 'high',
-      storageLocation: 'Coffre sécurisé - Section T'
-    },
-    {
-      id: 'ARC-2022-245',
-      title: 'Hypothèque Immeuble Médina - Banque Atlantique',
-      type: 'hypotheque',
-      client: 'Banque Atlantique / M. Diop',
-      date: '2022-09-30',
-      year: '2022',
-      value: 120000000,
-      status: 'archived',
-      documents: ['Acte d\'hypothèque', 'Mainlevée', 'Évaluation bien'],
-      location: 'Médina, Dakar',
-      notaryFees: 1200000,
-      blockchainHash: '0x6f7890abcdef123456',
-      tags: ['hypothèque', 'banque', 'médina'],
-      category: 'financier',
-      confidentiality: 'high',
-      storageLocation: 'Armoire D - Rayon 4 - Case 2'
-    }
-  ];
+  // ✅ DONNÉES RÉELLES - Mock data supprimé
+  // Les archives sont chargées depuis Supabase via loadArchives()
 
+  // Chargement des archives depuis Supabase
   useEffect(() => {
-    setArchives(mockArchives);
-    setFilteredArchives(mockArchives);
-  }, []);
+    if (user) {
+      loadArchives();
+    }
+  }, [user]);
+
+  const loadArchives = async () => {
+    setIsLoading(true);
+    try {
+      const result = await NotaireSupabaseService.getArchivedActs(user.id);
+      if (result.success) {
+        setArchives(result.data || []);
+      } else {
+        console.error('Erreur lors du chargement:', result.error);
+        setArchives([]);
+      }
+    } catch (error) {
+      console.error('Erreur chargement archives:', error);
+      setArchives([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Filtrage et tri des archives
   useEffect(() => {

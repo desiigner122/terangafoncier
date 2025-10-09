@@ -28,6 +28,8 @@ import {
   Zap,
   Plus
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -42,86 +44,38 @@ import {
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
 const NotaireAnalytics = () => {
+  const { user } = useAuth();
   const [timeFilter, setTimeFilter] = useState('12m');
   const [isLoading, setIsLoading] = useState(false);
+  const [analyticsData, setAnalyticsData] = useState({});
 
-  // Données analytiques simulées
-  const analyticsData = {
-    revenue: {
-      current: 24500000,
-      previous: 22100000,
-      growth: 10.9,
-      data: [
-        { month: 'Jan', revenue: 1800000, transactions: 12 },
-        { month: 'Fév', revenue: 2100000, transactions: 14 },
-        { month: 'Mar', revenue: 2400000, transactions: 16 },
-        { month: 'Avr', revenue: 1900000, transactions: 11 },
-        { month: 'Mai', revenue: 2300000, transactions: 15 },
-        { month: 'Jun', revenue: 2500000, transactions: 17 },
-        { month: 'Jul', revenue: 2200000, transactions: 13 },
-        { month: 'Aoû', revenue: 2600000, transactions: 18 },
-        { month: 'Sep', revenue: 2100000, transactions: 14 },
-        { month: 'Oct', revenue: 2400000, transactions: 16 },
-        { month: 'Nov', revenue: 2700000, transactions: 19 },
-        { month: 'Déc', revenue: 2400000, transactions: 16 }
-      ]
-    },
-    clientsSatisfaction: {
-      average: 4.7,
-      total: 892,
-      distribution: [
-        { rating: 5, count: 678, percentage: 76 },
-        { rating: 4, count: 134, percentage: 15 },
-        { rating: 3, count: 53, percentage: 6 },
-        { rating: 2, count: 18, percentage: 2 },
-        { rating: 1, count: 9, percentage: 1 }
-      ]
-    },
-    transactionTypes: [
-      { name: 'Ventes immobilières', value: 45, color: '#F59E0B', revenue: 11200000 },
-      { name: 'Successions', value: 25, color: '#10B981', revenue: 6100000 },
-      { name: 'Donations', value: 18, color: '#3B82F6', revenue: 4400000 },
-      { name: 'Constitutions société', value: 8, color: '#8B5CF6', revenue: 1950000 },
-      { name: 'Autres', value: 4, color: '#EF4444', revenue: 850000 }
-    ],
-    geographicDistribution: [
-      { region: 'Dakar', transactions: 156, revenue: 15200000 },
-      { region: 'Thiès', transactions: 89, revenue: 4600000 },
-      { region: 'Saint-Louis', transactions: 67, revenue: 2800000 },
-      { region: 'Ziguinchor', transactions: 45, revenue: 1400000 },
-      { region: 'Kaolack', transactions: 38, revenue: 500000 }
-    ],
-    performanceMetrics: [
-      { 
-        metric: 'Temps moyen traitement',
-        value: '12.5 jours',
-        change: -8.3,
-        target: '15 jours',
-        status: 'excellent'
-      },
-      {
-        metric: 'Taux de satisfaction client',
-        value: '94.2%',
-        change: 2.1,
-        target: '90%',
-        status: 'excellent'
-      },
-      {
-        metric: 'Documents authentifiés',
-        value: '98.9%',
-        change: 1.2,
-        target: '95%',
-        status: 'excellent'
-      },
-      {
-        metric: 'Revenus par transaction',
-        value: '156K FCFA',
-        change: 5.7,
-        target: '150K FCFA',
-        status: 'bon'
+  // Chargement des données analytiques depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadAnalyticsData();
+    }
+  }, [user, timeFilter]);
+
+  const loadAnalyticsData = async () => {
+    setIsLoading(true);
+    try {
+      const result = await NotaireSupabaseService.getAnalytics(user.id, timeFilter);
+      if (result.success) {
+        setAnalyticsData(result.data || {});
+      } else {
+        console.error('Erreur lors du chargement:', result.error);
+        setAnalyticsData({});
       }
-    ]
+    } catch (error) {
+      console.error('Erreur chargement analytics:', error);
+      setAnalyticsData({});
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  // ✅ DONNÉES RÉELLES - Mock data supprimé
+  // Les analytics sont chargées depuis Supabase via loadAnalyticsData()
 
   const handleRefreshData = () => {
     setIsLoading(true);
@@ -273,7 +227,7 @@ const NotaireAnalytics = () => {
 
       {/* Métriques de performance */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {analyticsData.performanceMetrics.map((metric, index) => (
+        {(analyticsData.performanceMetrics || []).map((metric, index) => (
           <motion.div
             key={metric.metric}
             initial={{ opacity: 0, y: 20 }}
@@ -387,7 +341,7 @@ const NotaireAnalytics = () => {
           </CardHeader>
           <CardContent>
             <ResponsiveContainer width="100%" height={300}>
-              <AreaChart data={analyticsData.revenue.data}>
+              <AreaChart data={analyticsData.revenue?.data || []}>
                 <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="month" />
                 <YAxis />
@@ -458,7 +412,7 @@ const NotaireAnalytics = () => {
             <ResponsiveContainer width="100%" height={300}>
               <RechartsPieChart>
                 <Pie
-                  data={analyticsData.transactionTypes}
+                  data={analyticsData.transactionTypes || []}
                   cx="50%"
                   cy="50%"
                   innerRadius={60}

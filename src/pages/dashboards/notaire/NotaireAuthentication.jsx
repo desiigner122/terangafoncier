@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Stamp, 
@@ -89,8 +90,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 
 const NotaireAuthentication = () => {
+  const { user } = useAuth();
   const [documents, setDocuments] = useState([]);
   const [filteredDocuments, setFilteredDocuments] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -123,194 +127,37 @@ const NotaireAuthentication = () => {
     { value: 'autre', label: 'Autre', icon: Archive }
   ];
 
-  // Données simulées enrichies des documents
-  const mockDocuments = [
-    {
-      id: 'AUTH-2024-001',
-      name: 'Titre propriété Villa Almadies',
-      type: 'titre_propriete',
-      client: 'Famille Diallo',
-      clientAvatar: 'FD',
-      status: 'authenticated',
-      uploadDate: '2024-01-15',
-      authDate: '2024-01-16',
-      fileSize: '2.4 MB',
-      fileType: 'PDF',
-      blockchainHash: '0x1a2b3c4d5e6f7890abcdef1234567890abcdef12',
-      notarySignature: 'Signature numérique valide - Maître Diop',
-      securityLevel: 'high',
-      authenticity: 98,
-      integrity: 100,
-      confidentiality: 95,
-      aiVerification: 'Conforme',
-      biometricCheck: true,
-      watermarkValid: true,
-      timestampVerified: true,
-      qrCodeValid: true,
-      digitalSignature: 'RSA-2048 Valide',
-      certificationLevel: 'Premium',
-      processingTime: '2 heures',
-      expiryDate: '2029-01-16',
-      tags: ['Blockchain', 'IA Vérifié', 'Premium'],
-      location: 'Almadies, Dakar',
-      transactionRef: 'TXN-2024-001'
-    },
-    {
-      id: 'AUTH-2024-002',
-      name: 'Acte de vente Terrain Parcelles',
-      type: 'acte_vente',
-      client: 'M. Ndiaye',
-      clientAvatar: 'MN',
-      status: 'verifying',
-      uploadDate: '2024-01-18',
-      authDate: null,
-      fileSize: '1.8 MB',
-      fileType: 'PDF',
-      blockchainHash: null,
-      notarySignature: 'En cours de vérification...',
-      securityLevel: 'medium',
-      authenticity: 85,
-      integrity: 92,
-      confidentiality: 88,
-      aiVerification: 'En cours',
-      biometricCheck: true,
-      watermarkValid: true,
-      timestampVerified: false,
-      qrCodeValid: null,
-      digitalSignature: 'En attente',
-      certificationLevel: 'Standard',
-      processingTime: 'En cours (6h)',
-      expiryDate: null,
-      tags: ['En cours', 'IA Analyse'],
-      location: 'Parcelles Assainies',
-      transactionRef: 'TXN-2024-002'
-    },
-    {
-      id: 'AUTH-2024-003',
-      name: 'Testament Succession Seck',
-      type: 'testament',
-      client: 'Héritiers Seck',
-      clientAvatar: 'HS',
-      status: 'pending',
-      uploadDate: '2024-01-20',
-      authDate: null,
-      fileSize: '1.2 MB',
-      fileType: 'PDF',
-      blockchainHash: null,
-      notarySignature: 'En attente de traitement',
-      securityLevel: 'high',
-      authenticity: 0,
-      integrity: 0,
-      confidentiality: 0,
-      aiVerification: 'En attente',
-      biometricCheck: false,
-      watermarkValid: null,
-      timestampVerified: null,
-      qrCodeValid: null,
-      digitalSignature: 'Non vérifié',
-      certificationLevel: 'Premium',
-      processingTime: 'Non démarré',
-      expiryDate: null,
-      tags: ['Attente', 'Succession'],
-      location: 'Plateau, Dakar',
-      transactionRef: 'TXN-2024-003'
-    },
-    {
-      id: 'AUTH-2024-004',
-      name: 'Plan cadastral Lot 456',
-      type: 'plan_cadastral',
-      client: 'SARLU Teranga',
-      clientAvatar: 'ST',
-      status: 'rejected',
-      uploadDate: '2024-01-22',
-      authDate: '2024-01-23',
-      fileSize: '5.6 MB',
-      fileType: 'PDF',
-      blockchainHash: null,
-      notarySignature: 'Document non conforme - Signature invalide',
-      securityLevel: 'low',
-      authenticity: 45,
-      integrity: 67,
-      confidentiality: 78,
-      aiVerification: 'Non conforme',
-      biometricCheck: false,
-      watermarkValid: false,
-      timestampVerified: false,
-      qrCodeValid: false,
-      digitalSignature: 'Invalide',
-      certificationLevel: 'Rejeté',
-      processingTime: '4 heures',
-      expiryDate: null,
-      tags: ['Rejeté', 'Non conforme'],
-      location: 'Médina, Dakar',
-      transactionRef: 'TXN-2024-004'
-    },
-    {
-      id: 'AUTH-2024-005',
-      name: 'Contrat Hypothèque Sacré-Cœur',
-      type: 'acte_vente',
-      client: 'Banque Atlantique',
-      clientAvatar: 'BA',
-      status: 'authenticated',
-      uploadDate: '2024-01-25',
-      authDate: '2024-01-25',
-      fileSize: '3.1 MB',
-      fileType: 'PDF',
-      blockchainHash: '0xabcd1234efgh5678ijkl9012mnop3456qrst7890',
-      notarySignature: 'Authentifié - Signature électronique valide',
-      securityLevel: 'high',
-      authenticity: 96,
-      integrity: 98,
-      confidentiality: 94,
-      aiVerification: 'Conforme',
-      biometricCheck: true,
-      watermarkValid: true,
-      timestampVerified: true,
-      qrCodeValid: true,
-      digitalSignature: 'ECDSA-256 Valide',
-      certificationLevel: 'Premium',
-      processingTime: '1.5 heures',
-      expiryDate: '2029-01-25',
-      tags: ['Express', 'Bancaire', 'Blockchain'],
-      location: 'Sacré-Cœur, Dakar',
-      transactionRef: 'TXN-2024-005'
-    },
-    {
-      id: 'AUTH-2024-006',
-      name: 'Statuts SARL TechSen',
-      type: 'certificat',
-      client: 'StartUp TechSen',
-      clientAvatar: 'TS',
-      status: 'authenticated',
-      uploadDate: '2024-01-28',
-      authDate: '2024-01-28',
-      fileSize: '2.8 MB',
-      fileType: 'PDF',
-      blockchainHash: '0xtech789startup123innovation456digital789',
-      notarySignature: 'Authentifié - Constitution société conforme',
-      securityLevel: 'high',
-      authenticity: 99,
-      integrity: 100,
-      confidentiality: 97,
-      aiVerification: 'Excellent',
-      biometricCheck: true,
-      watermarkValid: true,
-      timestampVerified: true,
-      qrCodeValid: true,
-      digitalSignature: 'Ed25519 Valide',
-      certificationLevel: 'Premium+',
-      processingTime: '45 minutes',
-      expiryDate: '2034-01-28',
-      tags: ['Startup', 'Express', 'Premium+'],
-      location: 'Mermoz, Dakar',
-      transactionRef: 'TXN-2024-006'
-    }
-  ];
-
+  // Chargement des données réelles depuis Supabase
   useEffect(() => {
-    setDocuments(mockDocuments);
-    setFilteredDocuments(mockDocuments);
-  }, []);
+    if (user) {
+      loadDocuments();
+    }
+  }, [user]);
+
+  const loadDocuments = async () => {
+    setIsLoading(true);
+    try {
+      const result = await NotaireSupabaseService.getDocumentAuthentications(user.id);
+      if (result.success) {
+        setDocuments(result.data);
+        setFilteredDocuments(result.data);
+      } else {
+        window.safeGlobalToast({
+          title: "Erreur de chargement",
+          description: "Impossible de charger les documents à authentifier",
+          variant: "destructive"
+        });
+      }
+    } catch (error) {
+      console.error('Erreur chargement documents:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // ✅ DONNÉES RÉELLES - Mock data supprimé
+  // Les documents sont chargés depuis Supabase via loadDocuments()
+  // qui est appelé dans le useEffect des lignes précédentes
 
   // Filtrage des documents
   useEffect(() => {

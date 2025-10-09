@@ -67,19 +67,44 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { hybridDataService } from '@/services/HybridDataService';
 
-const ModernAdminOverview = ({ dashboardData, loadingData, onTabChange }) => {
+const ModernAdminOverview = ({ 
+  dashboardData, 
+  loadingData, 
+  onTabChange,
+  pendingPropertiesCount = 0,
+  pendingVerificationsCount = 0,
+  urgentTicketsCount = 0,
+  onNavigate
+}) => {
   const [realtimeStats, setRealtimeStats] = useState({
     onlineUsers: 127,
     activeTransactions: 15,
     systemLoad: 23,
-    alertsCount: 3
+    alertsCount: pendingPropertiesCount + pendingVerificationsCount + urgentTicketsCount
   });
 
   const [quickActions, setQuickActions] = useState([
-    { id: 1, title: 'Valider 5 nouveaux utilisateurs', urgent: true, count: 5 },
-    { id: 2, title: 'Approuver 8 propriétés', urgent: false, count: 8 },
-    { id: 3, title: 'Traiter 3 signalements', urgent: true, count: 3 },
-    { id: 4, title: 'Réviser 12 transactions', urgent: false, count: 12 }
+    { 
+      id: 'property-validation', 
+      title: `Valider ${pendingPropertiesCount} propriété${pendingPropertiesCount > 1 ? 's' : ''}`, 
+      urgent: pendingPropertiesCount > 0, 
+      count: pendingPropertiesCount,
+      action: () => onNavigate && onNavigate('property-validation')
+    },
+    { 
+      id: 'user-verifications', 
+      title: `Vérifier ${pendingVerificationsCount} utilisateur${pendingVerificationsCount > 1 ? 's' : ''}`, 
+      urgent: pendingVerificationsCount > 5, 
+      count: pendingVerificationsCount,
+      action: () => onNavigate && onNavigate('user-verifications')
+    },
+    { 
+      id: 'urgent-tickets', 
+      title: `Traiter ${urgentTicketsCount} ticket${urgentTicketsCount > 1 ? 's' : ''} urgent${urgentTicketsCount > 1 ? 's' : ''}`, 
+      urgent: urgentTicketsCount > 0, 
+      count: urgentTicketsCount,
+      action: () => onNavigate && onNavigate('support')
+    }
   ]);
 
   // Animation variants
@@ -375,14 +400,20 @@ const ModernAdminOverview = ({ dashboardData, loadingData, onTabChange }) => {
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {quickActions.map((action) => (
-                <div key={action.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer">
+              {quickActions.filter(action => action.count > 0).map((action) => (
+                <motion.div 
+                  key={action.id} 
+                  className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
+                  onClick={action.action}
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                >
                   <div className="flex items-center space-x-3">
                     <div className={`w-2 h-2 rounded-full ${action.urgent ? 'bg-red-500 animate-pulse' : 'bg-blue-500'}`}></div>
                     <div>
                       <p className="text-sm font-medium">{action.title}</p>
                       {action.urgent && (
-                        <p className="text-xs text-red-600">Urgent</p>
+                        <p className="text-xs text-red-600 font-semibold">⚠️ Action urgente requise</p>
                       )}
                     </div>
                   </div>
@@ -392,13 +423,22 @@ const ModernAdminOverview = ({ dashboardData, loadingData, onTabChange }) => {
                     </Badge>
                     <ArrowRight className="h-4 w-4 text-gray-400" />
                   </div>
-                </div>
+                </motion.div>
               ))}
 
-              <Button className="w-full mt-4" onClick={() => onTabChange('users')}>
-                <UserCheck className="h-4 w-4 mr-2" />
-                Voir toutes les actions
-              </Button>
+              {quickActions.filter(action => action.count > 0).length === 0 && (
+                <div className="p-6 text-center">
+                  <CheckCircle className="h-12 w-12 text-green-500 mx-auto mb-2" />
+                  <p className="text-sm text-gray-600">Toutes les actions sont à jour !</p>
+                </div>
+              )}
+
+              {onTabChange && (
+                <Button className="w-full mt-4" variant="outline" onClick={() => onTabChange('users')}>
+                  <UserCheck className="h-4 w-4 mr-2" />
+                  Voir toutes les actions
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>

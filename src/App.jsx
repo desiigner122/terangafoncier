@@ -151,6 +151,7 @@ import AdminDashboard from '@/pages/dashboards/admin/AdminDashboard';
 import AdminDashboardRealData from '@/pages/dashboards/admin/AdminDashboardRealData';
 import ModernAdminDashboardRealData from '@/pages/dashboards/admin/ModernAdminDashboardRealData';
 import CompleteSidebarAdminDashboard from '@/pages/dashboards/admin/CompleteSidebarAdminDashboard';
+import ModernCompleteSidebarAdminDashboard from '@/pages/dashboards/admin/ModernCompleteSidebarAdminDashboard';
 import AdminPropertyValidation from '@/pages/dashboards/admin/AdminPropertyValidation';
 
 // PAGES ADMIN MODERNISÉES AVEC DONNÉES RÉELLES
@@ -667,10 +668,11 @@ function App() {
             </Route>
 
             <Route path="/admin" element={<AdminRoute />}>
-              <Route index element={<CompleteSidebarAdminDashboard />} />
-              <Route path="dashboard" element={<CompleteSidebarAdminDashboard />} />
+              <Route index element={<ModernCompleteSidebarAdminDashboard />} />
+              <Route path="dashboard" element={<ModernCompleteSidebarAdminDashboard />} />
               <Route path="modern" element={<ModernAdminDashboardRealData />} />
               <Route path="validation" element={<AdminPropertyValidation />} />
+              <Route path="legacy-complete" element={<CompleteSidebarAdminDashboard />} />
               
               {/* ROUTES ADMIN STANDARDS */}
               <Route path="projects" element={<AdminProjectsPage />} />

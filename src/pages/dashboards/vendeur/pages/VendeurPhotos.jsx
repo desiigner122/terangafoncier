@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -17,50 +17,59 @@ import {
   Target,
   Palette
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 
 const VendeurPhotos = () => {
+  const { user } = useAuth();
+  const [photos, setPhotos] = useState([]);
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [uploadProgress, setUploadProgress] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) loadPhotos();
+  }, [user]);
+
+  const loadPhotos = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await VendeurSupabaseService.getUserPhotos(user.id);
+      if (result.success) {
+        setPhotos(result.data || []);
+      } else {
+        console.error('Erreur chargement photos:', result.error);
+        setPhotos([]);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      setPhotos([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeletePhoto = async (photoId) => {
+    if (!confirm('Supprimer cette photo ?')) return;
+    
+    const result = await VendeurSupabaseService.deletePhoto(photoId);
+    if (result.success) {
+      await loadPhotos(); // Recharger
+    }
+  };
 
   const photoCategories = [
-    { id: 'all', name: 'Toutes', count: 24 },
-    { id: 'exterior', name: 'Extérieur', count: 8 },
-    { id: 'interior', name: 'Intérieur', count: 12 },
-    { id: 'aerial', name: 'Aérienne', count: 4 }
+    { id: 'all', name: 'Toutes', count: photos.length },
+    { id: 'exterior', name: 'Extérieur', count: photos.filter(p => p.type === 'exterior').length },
+    { id: 'interior', name: 'Intérieur', count: photos.filter(p => p.type === 'interior').length },
+    { id: 'aerial', name: 'Aérienne', count: photos.filter(p => p.type === 'aerial').length }
   ];
 
-  const mockPhotos = [
-    {
-      id: 1,
-      url: '/api/placeholder/300/200',
-      category: 'exterior',
-      aiScore: 95,
-      aiAnalysis: 'Excellente qualité, éclairage optimal',
-      suggestions: ['Recadrer légèrement', 'Améliorer contraste'],
-      isMain: true,
-      status: 'approved'
-    },
-    {
-      id: 2,
-      url: '/api/placeholder/300/200',
-      category: 'interior',
-      aiScore: 87,
-      aiAnalysis: 'Bonne composition, espace bien visible',
-      suggestions: ['Augmenter luminosité', 'Retoucher couleurs'],
-      isMain: false,
-      status: 'pending'
-    },
-    {
-      id: 3,
-      url: '/api/placeholder/300/200',
-      category: 'aerial',
-      aiScore: 92,
-      aiAnalysis: 'Vue d\'ensemble parfaite',
-      suggestions: ['Parfait pour mise en avant'],
-      isMain: false,
-      status: 'approved'
-    }
-  ];
+  const filteredPhotos = selectedCategory === 'all' 
+    ? photos 
+    : photos.filter(p => p.type === selectedCategory);
 
   const aiFeatures = [
     {
@@ -121,10 +130,6 @@ const VendeurPhotos = () => {
     };
     return badges[status] || badges.pending;
   };
-
-  const filteredPhotos = selectedCategory === 'all' 
-    ? mockPhotos 
-    : mockPhotos.filter(photo => photo.category === selectedCategory);
 
   return (
     <div className="space-y-6">

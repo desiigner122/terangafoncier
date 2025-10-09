@@ -1,8 +1,8 @@
 import React from 'react';
-import ParticulierDashboardModern from './particulier/ParticulierDashboardModern';
+import CompleteSidebarParticulierDashboard from './particulier/CompleteSidebarParticulierDashboard';
 
 const ParticularDashboard = () => {
-  return <ParticulierDashboardModern />;
+  return <CompleteSidebarParticulierDashboard />;
 };
 
 export default ParticularDashboard;

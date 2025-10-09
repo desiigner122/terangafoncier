@@ -26,23 +26,27 @@ import {
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 
 /**
  * Page historique complet des transactions blockchain
  */
 const TransactionsPage = () => {
+  const { user } = useAuth();
   const [transactions, setTransactions] = useState([]);
   const [filteredTransactions, setFilteredTransactions] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
   const [typeFilter, setTypeFilter] = useState('all');
   const [currentPage, setCurrentPage] = useState(1);
+  const [isLoading, setIsLoading] = useState(false);
   const itemsPerPage = 20;
 
-  // Charger les transactions (mock data)
+  // Charger les transactions depuis Supabase
   useEffect(() => {
-    loadTransactions();
-  }, []);
+    if (user) loadTransactions();
+  }, [user]);
 
   // Filtrer les transactions
   useEffect(() => {
@@ -70,22 +74,29 @@ const TransactionsPage = () => {
     setCurrentPage(1);
   }, [searchQuery, statusFilter, typeFilter, transactions]);
 
-  const loadTransactions = () => {
-    // Mock data - À remplacer par fetch Supabase
-    const mockTransactions = Array.from({ length: 50 }, (_, i) => ({
-      id: i + 1,
-      hash: '0x' + Math.random().toString(16).slice(2, 42),
-      property: `Propriété ${i + 1}`,
-      type: ['verification', 'nft_mint', 'ownership_transfer', 'smart_contract'][Math.floor(Math.random() * 4)],
-      status: ['confirmed', 'pending', 'failed'][Math.floor(Math.random() * 3)],
-      blockNumber: 800000 + Math.floor(Math.random() * 100000),
-      gasUsed: (0.001 + Math.random() * 0.01).toFixed(6),
-      confirmations: Math.floor(Math.random() * 100),
-      timestamp: new Date(Date.now() - Math.random() * 30 * 24 * 60 * 60 * 1000).toISOString(),
-      value: Math.floor(Math.random() * 1000000)
-    }));
+  const loadTransactions = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await VendeurSupabaseService.getBlockchainTransactions(user.id, {
+        status: statusFilter !== 'all' ? statusFilter : null,
+        type: typeFilter !== 'all' ? typeFilter : null,
+        limit: 100
+      });
 
-    setTransactions(mockTransactions);
+      if (result.success) {
+        setTransactions(result.data || []);
+      } else {
+        console.error('Erreur chargement transactions:', result.error);
+        setTransactions([]);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      setTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Export CSV

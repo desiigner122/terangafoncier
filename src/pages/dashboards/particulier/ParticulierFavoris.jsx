@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Heart,
@@ -16,21 +17,183 @@ import {
   Star,
   Trash2,
   Plus,
-  Award
+  Award,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/lib/customSupabaseClient';
+import { toast } from 'react-hot-toast';
 
-const ParticulierFavoris = ({ dashboardStats }) => {
+const ParticulierFavoris = () => {
+  const outletContext = useOutletContext();
+  const { user } = outletContext || {};
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('tous');
-  const [activeTab, setActiveTab] = useState('tous');
+  const [favoris, setFavoris] = useState([]);
+  const [stats, setStats] = useState({
+    total: 0,
+    properties: 0,
+    zones: 0,
+    projects: 0
+  });
 
-  // Éléments marqués comme favoris - TERRAINS PRIVÉS, ZONES COMMUNALES, PROJETS PROMOTEURS
-  const [favoris] = useState([
+  useEffect(() => {
+    if (user?.id) {
+      loadFavorites();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const loadFavorites = async () => {
+    try {
+      setLoading(true);
+
+      // Récupérer tous les favoris avec JOINs
+      const { data: favoritesData, error } = await supabase
+        .from('favorites')
+        .select(`
+          id,
+          created_at,
+          property_id,
+          communal_zone_id,
+          developer_project_id,
+          property:properties (
+            id, title, city, price, surface_area, address, images, status,
+            owner:profiles!owner_id (id, full_name, phone)
+          ),
+          zone:communal_zones (
+            id, name, commune, zone_type, lot_size, price_per_lot, 
+            lots_available, status, address
+          ),
+          project:developer_projects (
+            id, title, developer_name, city, project_type, price_min, 
+            price_max, available_units, status, images, estimated_completion
+          )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      // Transformer les données pour le format de l'interface
+      const transformedFavorites = favoritesData.map(fav => {
+        if (fav.property_id && fav.property) {
+          return {
+            id: fav.id,
+            favoriteId: fav.id,
+            itemId: fav.property.id,
+            type: 'terrain_prive',
+            libelle: fav.property.title,
+            proprietaire: fav.property.owner?.full_name || 'Propriétaire',
+            superficie: fav.property.surface_area ? `${fav.property.surface_area}m²` : 'N/A',
+            prix: fav.property.price,
+            localisation: `${fav.property.city}${fav.property.address ? ', ' + fav.property.address : ''}`,
+            statut: fav.property.status === 'available' ? 'Disponible' : 'Non disponible',
+            dateAjoutFavori: new Date(fav.created_at).toLocaleDateString('fr-FR'),
+            images: fav.property.images || [],
+            icon: Building2,
+            color: 'blue'
+          };
+        } else if (fav.communal_zone_id && fav.zone) {
+          return {
+            id: fav.id,
+            favoriteId: fav.id,
+            itemId: fav.zone.id,
+            type: 'zone_communale',
+            libelle: fav.zone.name,
+            commune: fav.zone.commune,
+            superficie: fav.zone.lot_size ? `${fav.zone.lot_size}m²` : 'N/A',
+            prix: fav.zone.price_per_lot,
+            statut: fav.zone.lots_available > 0 ? 'Lots disponibles' : 'Complet',
+            dateAjoutFavori: new Date(fav.created_at).toLocaleDateString('fr-FR'),
+            lotsDisponibles: fav.zone.lots_available,
+            icon: MapPin,
+            color: 'green'
+          };
+        } else if (fav.developer_project_id && fav.project) {
+          return {
+            id: fav.id,
+            favoriteId: fav.id,
+            itemId: fav.project.id,
+            type: 'projet_promoteur',
+            libelle: fav.project.title,
+            promoteur: fav.project.developer_name,
+            localisation: fav.project.city,
+            prix: fav.project.price_min,
+            prixMax: fav.project.price_max,
+            statut: fav.project.status === 'active' ? 'En construction' : 'Pré-commercialisation',
+            dateAjoutFavori: new Date(fav.created_at).toLocaleDateString('fr-FR'),
+            unitsDisponibles: fav.project.available_units,
+            dateLivraison: fav.project.estimated_completion,
+            images: fav.project.images || [],
+            icon: Award,
+            color: 'purple'
+          };
+        }
+        return null;
+      }).filter(Boolean);
+
+      setFavoris(transformedFavorites);
+
+      // Calculer les statistiques
+      setStats({
+        total: transformedFavorites.length,
+        properties: transformedFavorites.filter(f => f.type === 'terrain_prive').length,
+        zones: transformedFavorites.filter(f => f.type === 'zone_communale').length,
+        projects: transformedFavorites.filter(f => f.type === 'projet_promoteur').length
+      });
+
+    } catch (error) {
+      console.error('Erreur chargement favoris:', error);
+      toast.error('Erreur lors du chargement des favoris');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRemoveFavorite = async (favoriteId) => {
+    try {
+      const { error } = await supabase
+        .from('favorites')
+        .delete()
+        .eq('id', favoriteId);
+
+      if (error) throw error;
+
+      toast.success('Retiré des favoris');
+      loadFavorites(); // Recharger la liste
+    } catch (error) {
+      console.error('Erreur suppression favori:', error);
+      toast.error('Erreur lors de la suppression');
+    }
+  };
+
+  const handleNavigateToItem = (favorite) => {
+    if (favorite.type === 'terrain_prive') {
+      navigate(`/proprietes/${favorite.itemId}`);
+    } else if (favorite.type === 'zone_communale') {
+      navigate('/acheteur/zones-communales');
+    } else if (favorite.type === 'projet_promoteur') {
+      navigate('/acheteur/promoteurs');
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-amber-600" />
+      </div>
+    );
+  }
+
+  const [favoris_mock_removed] = useState([
     // Terrains privés favoris
     {
       id: 'TP-2024-001',
@@ -163,10 +326,19 @@ const ParticulierFavoris = ({ dashboardStats }) => {
 
   const filteredDossiers = favoris.filter(dossier => {
     const matchesSearch = dossier.libelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         dossier.id.toLowerCase().includes(searchTerm.toLowerCase());
+                         (dossier.id && dossier.id.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesFilter = filterType === 'tous' || dossier.type === filterType;
     return matchesSearch && matchesFilter;
   });
+
+  const formatPrice = (price) => {
+    if (!price) return 'Prix non communiqué';
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF',
+      minimumFractionDigits: 0
+    }).format(price);
+  };
 
   const DossierFavoriCard = ({ dossier }) => {
     const IconComponent = dossier.icon;
@@ -195,12 +367,6 @@ const ParticulierFavoris = ({ dashboardStats }) => {
                       {dossier.commune}
                     </div>
                   )}
-                  {dossier.adresse && (
-                    <div className="flex items-center gap-1">
-                      <MapPin className="w-4 h-4" />
-                      {dossier.adresse}
-                    </div>
-                  )}
                   {dossier.localisation && (
                     <div className="flex items-center gap-1">
                       <MapPin className="w-4 h-4" />
@@ -208,15 +374,23 @@ const ParticulierFavoris = ({ dashboardStats }) => {
                     </div>
                   )}
                   <div className="flex items-center gap-4">
-                    <span className="flex items-center gap-1">
-                      <FileText className="w-4 h-4" />
-                      {dossier.id}
-                    </span>
-                    {dossier.superficie && <span>{dossier.superficie}</span>}
-                    {dossier.typeLogement && <span>{dossier.typeLogement}</span>}
+                    {dossier.superficie && <span>Surface: {dossier.superficie}</span>}
+                    {dossier.prix && <span className="font-semibold text-amber-600">{formatPrice(dossier.prix)}</span>}
+                    {dossier.prixMax && dossier.prixMax !== dossier.prix && (
+                      <span className="text-xs text-gray-500">à {formatPrice(dossier.prixMax)}</span>
+                    )}
                   </div>
+                  {dossier.proprietaire && (
+                    <div className="font-medium text-blue-600">{dossier.proprietaire}</div>
+                  )}
                   {dossier.promoteur && (
-                    <div className="font-medium text-blue-600">{dossier.promoteur}</div>
+                    <div className="font-medium text-purple-600">{dossier.promoteur}</div>
+                  )}
+                  {dossier.lotsDisponibles !== undefined && (
+                    <div className="text-green-600">{dossier.lotsDisponibles} lots disponibles</div>
+                  )}
+                  {dossier.unitsDisponibles !== undefined && (
+                    <div className="text-green-600">{dossier.unitsDisponibles} unités disponibles</div>
                   )}
                 </div>
               </div>
@@ -226,61 +400,36 @@ const ParticulierFavoris = ({ dashboardStats }) => {
               <Badge className={getStatusColor(dossier.statut)}>
                 {dossier.statut}
               </Badge>
-              {dossier.priorite && (
-                <Badge className={getPrioriteColor(dossier.priorite)} variant="outline">
-                  {dossier.priorite}
-                </Badge>
-              )}
             </div>
           </div>
 
-          {/* Progression */}
-          <div className="mb-4">
-            <div className="flex justify-between text-sm mb-2">
-              <span>Progression</span>
-              <span>{dossier.progression}%</span>
-            </div>
-            <Progress value={dossier.progression} className="h-2" />
-          </div>
-
-          {/* Prochaine étape */}
-          <div className="flex items-center gap-2 text-sm mb-4">
-            <Clock className="w-4 h-4 text-blue-600" />
-            <span className="font-medium">Prochaine étape:</span>
-            <span>{dossier.prochainEtape}</span>
-          </div>
-
-          {/* Échéance */}
-          {dossier.echeance && (
+          {dossier.dateLivraison && (
             <div className="flex items-center gap-2 text-sm mb-4">
               <Calendar className="w-4 h-4 text-orange-600" />
-              <span className="font-medium">Échéance:</span>
-              <span>{dossier.echeance}</span>
-            </div>
-          )}
-
-          {dossier.dateAcceptation && (
-            <div className="flex items-center gap-2 text-sm mb-4">
-              <CheckCircle className="w-4 h-4 text-green-600" />
-              <span className="font-medium">Accepté le:</span>
-              <span>{dossier.dateAcceptation}</span>
+              <span className="font-medium">Livraison prévue:</span>
+              <span>{new Date(dossier.dateLivraison).toLocaleDateString('fr-FR')}</span>
             </div>
           )}
 
           <div className="flex justify-between items-center pt-4 border-t">
             <div className="text-xs text-gray-500">
-              Ajouté aux favoris le {dossier.dateAjoutFavori}
+              Ajouté le {dossier.dateAjoutFavori}
             </div>
             <div className="flex gap-2">
-              <Button variant="outline" size="sm">
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => handleNavigateToItem(dossier)}
+              >
                 <Eye className="w-4 h-4 mr-1" />
                 Voir
               </Button>
-              <Button variant="outline" size="sm">
-                <MessageSquare className="w-4 h-4 mr-1" />
-                Contact
-              </Button>
-              <Button variant="ghost" size="sm" className="text-red-600 hover:text-red-700">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="text-red-600 hover:text-red-700"
+                onClick={() => handleRemoveFavorite(dossier.favoriteId)}
+              >
                 <Trash2 className="w-4 h-4" />
               </Button>
             </div>
@@ -307,7 +456,7 @@ const ParticulierFavoris = ({ dashboardStats }) => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-red-600">
-              {favoris.length}
+              {stats.total}
             </div>
             <div className="text-sm text-gray-600">Total favoris</div>
           </CardContent>
@@ -315,25 +464,25 @@ const ParticulierFavoris = ({ dashboardStats }) => {
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-blue-600">
-              {favoris.filter(d => d.type === 'terrain_prive').length}
+              {stats.properties}
             </div>
-            <div className="text-sm text-gray-600">Demandes terrains</div>
+            <div className="text-sm text-gray-600">Terrains privés</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-green-600">
-              {favoris.filter(d => d.type === 'projet_promoteur').length}
+              {stats.zones}
             </div>
-            <div className="text-sm text-gray-600">Permis construire</div>
+            <div className="text-sm text-gray-600">Zones communales</div>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4 text-center">
             <div className="text-2xl font-bold text-purple-600">
-              {favoris.filter(d => d.type === 'zone_communale').length}
+              {stats.projects}
             </div>
-            <div className="text-sm text-gray-600">Candidatures</div>
+            <div className="text-sm text-gray-600">Projets promoteurs</div>
           </CardContent>
         </Card>
       </div>

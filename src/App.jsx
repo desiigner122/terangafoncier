@@ -178,7 +178,7 @@ import SubscriptionManagementPage from '@/pages/admin/SubscriptionManagementPage
 import AuthDebugPage from '@/pages/AuthDebugPage';
 
 // Import des dashboards
-import ParticularDashboard from '@/pages/dashboards/particulier/ParticulierDashboardModern';
+import ParticularDashboard from '@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard';
 import CompleteSidebarGeometreDashboard from '@/pages/dashboards/geometre/CompleteSidebarGeometreDashboard';
 import PromoteurDashboard from '@/pages/dashboards/promoteur/PromoteurDashboard';
 import MunicipaliteDashboard from '@/pages/dashboards/MunicipaliteDashboard';
@@ -217,6 +217,34 @@ import CompliancePage from '@/pages/dashboards/banque/CompliancePage';
 import CompleteSidebarMairieDashboard from '@/pages/dashboards/mairie/CompleteSidebarMairieDashboard';
 import CompleteSidebarBanqueDashboard from '@/pages/dashboards/banque/CompleteSidebarBanqueDashboard';
 import CompleteSidebarNotaireDashboard from '@/pages/dashboards/notaire/CompleteSidebarNotaireDashboard';
+// Modules Notaire modernisés avec données réelles Supabase
+import NotaireOverviewModernized from '@/pages/dashboards/notaire/NotaireOverviewModernized';
+import NotaireCRMModernized from '@/pages/dashboards/notaire/NotaireCRMModernized';
+import NotaireCommunicationModernized from '@/pages/dashboards/notaire/NotaireCommunicationModernized';
+import NotaireTransactionsModernized from '@/pages/dashboards/notaire/NotaireTransactionsModernized';
+import NotaireAuthenticationModernized from '@/pages/dashboards/notaire/NotaireAuthenticationModernized';
+import NotaireCasesModernized from '@/pages/dashboards/notaire/NotaireCasesModernized';
+import NotaireArchivesModernized from '@/pages/dashboards/notaire/NotaireArchivesModernized';
+import NotaireComplianceModernized from '@/pages/dashboards/notaire/NotaireComplianceModernized';
+import NotaireAnalyticsModernized from '@/pages/dashboards/notaire/NotaireAnalyticsModernized';
+import NotaireAIModernized from '@/pages/dashboards/notaire/NotaireAIModernized';
+import NotaireBlockchainModernized from '@/pages/dashboards/notaire/NotaireBlockchainModernized';
+import NotaireSettingsModernized from '@/pages/dashboards/notaire/NotaireSettingsModernized';
+
+// Phase 2 - Pages Prioritaires (Sprint 5)
+import NotaireSupportPage from '@/pages/dashboards/notaire/NotaireSupportPage.jsx';
+import NotaireSubscriptionsPage from '@/pages/dashboards/notaire/NotaireSubscriptionsPage.jsx';
+import NotaireHelpPage from '@/pages/dashboards/notaire/NotaireHelpPage.jsx';
+import NotaireNotificationsPage from '@/pages/dashboards/notaire/NotaireNotificationsPage.jsx';
+
+// Phase 3 - Features Avancées
+import NotaireVisioPage from '@/pages/dashboards/notaire/NotaireVisioPage.jsx';
+import NotaireELearningPage from '@/pages/dashboards/notaire/NotaireELearningPage.jsx';
+import NotaireMarketplacePage from '@/pages/dashboards/notaire/NotaireMarketplacePage.jsx';
+import NotaireAPICadastrePage from '@/pages/dashboards/notaire/NotaireAPICadastrePage.jsx';
+import NotaireFinancialDashboardPage from '@/pages/dashboards/notaire/NotaireFinancialDashboardPage.jsx';
+import NotaireMultiOfficePage from '@/pages/dashboards/notaire/NotaireMultiOfficePage.jsx';
+
 import TerrainOversightPage from '@/pages/solutions/dashboards/mairies/TerrainOversightPage';
 import TerrainAnalyticsPage from '@/pages/solutions/dashboards/mairies/TerrainAnalyticsPage';
 import CasesPage from '@/pages/dashboards/notaire/CasesPage';
@@ -225,17 +253,34 @@ import ArchivesPage from '@/pages/dashboards/notaire/ArchivesPage';
 import ComplianceCheckPage from '@/pages/dashboards/notaire/ComplianceCheckPage';
 // import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
 // import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
-import ParticulierDashboard from '@/pages/dashboards/particulier/ParticulierDashboardModern';
 import CompleteSidebarParticulierDashboard from '@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard';
 
+// Nouvelles pages dashboard particulier refonte avec sidebar moderne
+import DashboardParticulierRefonte from '@/pages/dashboards/particulier/DashboardParticulierRefonte';
+import DashboardParticulierHome from '@/pages/dashboards/particulier/DashboardParticulierHome';
+import ParticulierTicketsSupport from '@/pages/dashboards/particulier/ParticulierTicketsSupport';
+import ParticulierAnalytics from '@/pages/dashboards/particulier/ParticulierAnalytics';
+
 // Sous-pages particulier refondues pour suivi administratif
-import ParticulierCommunal from '@/pages/dashboards/particulier/ParticulierCommunal';
+import ParticulierOverview from '@/pages/dashboards/particulier/ParticulierOverview_FIXED_ERRORS';
+import ParticulierRechercheTerrain from '@/pages/dashboards/particulier/ParticulierRechercheTerrain';
+import ParticulierMesOffres from '@/pages/dashboards/particulier/ParticulierMesOffres';
+import ParticulierVisites from '@/pages/dashboards/particulier/ParticulierVisites';
+import ParticulierFinancement from '@/pages/dashboards/particulier/ParticulierFinancement';
+import ParticulierZonesCommunales from '@/pages/dashboards/particulier/ParticulierZonesCommunales_FUNCTIONAL_FIXED';
+import ParticulierDemandesTerrains from '@/pages/dashboards/particulier/ParticulierDemandesTerrains';
+import ParticulierTerrainsPrive from '@/pages/dashboards/particulier/ParticulierTerrainsPrive';
 import ParticulierPromoteurs from '@/pages/dashboards/particulier/ParticulierPromoteurs';
 import ParticulierFavoris from '@/pages/dashboards/particulier/ParticulierFavoris';
 import ParticulierMessages from '@/pages/dashboards/particulier/ParticulierMessages';
-import ParticulierDocuments from '@/pages/dashboards/particulier/ParticulierDocuments';
-import ParticulierNotifications from '@/pages/dashboards/particulier/ParticulierNotifications';
+import ParticulierDocuments from '@/pages/dashboards/particulier/ParticulierDocuments_FUNCTIONAL';
+import ParticulierNotifications from '@/pages/dashboards/particulier/ParticulierNotifications_FUNCTIONAL';
 import ParticulierConstructions from '@/pages/dashboards/particulier/ParticulierConstructions';
+import ParticulierCalendar from '@/pages/dashboards/particulier/ParticulierCalendar';
+import ParticulierTickets from '@/pages/dashboards/particulier/ParticulierTickets';
+import ParticulierAI from '@/pages/dashboards/particulier/ParticulierAI';
+import ParticulierBlockchain from '@/pages/dashboards/particulier/ParticulierBlockchain';
+import ParticulierSettings from '@/pages/dashboards/particulier/ParticulierSettings_FUNCTIONAL';
 
 import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
 import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard';
@@ -476,8 +521,36 @@ function App() {
                 {/* Route de test complètement indépendante pour debugging */}
                 <Route path="test-vendeur" element={<ModernVendeurDashboard />} />
                 
-                {/* Dashboards modernes par rôle - routes indépendantes (ont leur propre layout) */}
-                <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><CompleteSidebarParticulierDashboard /></RoleProtectedRoute>} />
+                {/* Dashboard Particulier/Acheteur avec le nouveau sidebar refonte */}
+                <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><DashboardParticulierRefonte /></RoleProtectedRoute>}>
+                  <Route index element={<DashboardParticulierHome />} />
+                  <Route path="home" element={<DashboardParticulierHome />} />
+                  <Route path="overview" element={<ParticulierOverview />} />
+                  <Route path="recherche" element={<ParticulierRechercheTerrain />} />
+                  <Route path="favoris" element={<ParticulierFavoris />} />
+                  <Route path="offres" element={<ParticulierMesOffres />} />
+                  <Route path="visites" element={<ParticulierVisites />} />
+                  <Route path="financement" element={<ParticulierFinancement />} />
+                  <Route path="zones-communales" element={<ParticulierZonesCommunales />} />
+                  <Route path="demandes" element={<ParticulierDemandesTerrains />} />
+                  <Route path="terrains-prives" element={<ParticulierTerrainsPrive />} />
+                  <Route path="construction" element={<ParticulierConstructions />} />
+                  <Route path="promoteurs" element={<ParticulierPromoteurs />} />
+                  <Route path="suivi-dossiers" element={<ParticulierOverview />} />
+                  <Route path="mes-demandes" element={<ParticulierDemandesTerrains />} />
+                  <Route path="candidatures" element={<ParticulierZonesCommunales />} />
+                  <Route path="messages" element={<ParticulierMessages />} />
+                  <Route path="notifications" element={<ParticulierNotifications />} />
+                  <Route path="calendar" element={<ParticulierCalendar />} />
+                  <Route path="documents" element={<ParticulierDocuments />} />
+                  <Route path="tickets" element={<ParticulierTicketsSupport />} />
+                  <Route path="support" element={<ParticulierTicketsSupport />} />
+                  <Route path="analytics" element={<ParticulierAnalytics />} />
+                  <Route path="ai" element={<ParticulierAI />} />
+                  <Route path="blockchain" element={<ParticulierBlockchain />} />
+                  <Route path="settings" element={<ParticulierSettings />} />
+                  <Route path="profil" element={<ParticulierSettings />} />
+                </Route>
                 
                 {/* Dashboard Vendeur avec routes imbriquées pour chaque page */}
                 <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><CompleteSidebarVendeurDashboard /></RoleProtectedRoute>}>
@@ -503,31 +576,31 @@ function App() {
                 </Route>
                 
                 {/* Sous-pages de suivi Particulier/Acheteur */}
-                <Route path="acheteur/private-interests" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PrivateInterests /></RoleProtectedRoute>} />
-                <Route path="acheteur/municipal-applications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><MunicipalApplications /></RoleProtectedRoute>} />
-                <Route path="acheteur/promoter-reservations" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><PromoterReservations /></RoleProtectedRoute>} />
-                <Route path="acheteur/owned-properties" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><OwnedProperties /></RoleProtectedRoute>} />
-                <Route path="acheteur/construction-request" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ConstructionRequest /></RoleProtectedRoute>} />
+                <Route path="acheteur/private-interests" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PrivateInterests /></RoleProtectedRoute>} />
+                <Route path="acheteur/municipal-applications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><MunicipalApplications /></RoleProtectedRoute>} />
+                <Route path="acheteur/promoter-reservations" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PromoterReservations /></RoleProtectedRoute>} />
+                <Route path="acheteur/owned-properties" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><OwnedProperties /></RoleProtectedRoute>} />
+                <Route path="acheteur/construction-request" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ConstructionRequest /></RoleProtectedRoute>} />
                 
                 {/* Pages particulier refondues - SUIVI ADMINISTRATIF */}
-                <Route path="acheteur/demandes-terrains" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierCommunal /></RoleProtectedRoute>} />
-                <Route path="acheteur/demandes-communales" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierCommunal /></RoleProtectedRoute>} />
-                <Route path="acheteur/candidatures-promoteurs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierPromoteurs /></RoleProtectedRoute>} />
-                <Route path="acheteur/projets-promoteurs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierPromoteurs /></RoleProtectedRoute>} />
-                <Route path="acheteur/favoris-dossiers" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierFavoris /></RoleProtectedRoute>} />
-                <Route path="acheteur/messages-administratifs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierMessages /></RoleProtectedRoute>} />
-                <Route path="acheteur/documents-dossiers" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierDocuments /></RoleProtectedRoute>} />
-                <Route path="acheteur/notifications-administratives" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierNotifications /></RoleProtectedRoute>} />
-                <Route path="acheteur/permis-construire" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierConstructions /></RoleProtectedRoute>} />
+                <Route path="acheteur/demandes-terrains" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDemandesTerrains /></RoleProtectedRoute>} />
+                <Route path="acheteur/demandes-communales" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDemandesTerrains /></RoleProtectedRoute>} />
+                <Route path="acheteur/candidatures-promoteurs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierPromoteurs /></RoleProtectedRoute>} />
+                <Route path="acheteur/projets-promoteurs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierPromoteurs /></RoleProtectedRoute>} />
+                <Route path="acheteur/favoris-dossiers" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierFavoris /></RoleProtectedRoute>} />
+                <Route path="acheteur/messages-administratifs" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierMessages /></RoleProtectedRoute>} />
+                <Route path="acheteur/documents-dossiers" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDocuments /></RoleProtectedRoute>} />
+                <Route path="acheteur/notifications-administratives" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierNotifications /></RoleProtectedRoute>} />
+                <Route path="acheteur/permis-construire" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierConstructions /></RoleProtectedRoute>} />
 
                 {/* Pages communes pour acheteur (avec layout simple) */}
-                <Route path="acheteur/messages" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierMessages /></RoleProtectedRoute>} />
-                <Route path="acheteur/calendar" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurCalendarPage /></RoleProtectedRoute>} />
-                <Route path="acheteur/documents" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierDocuments /></RoleProtectedRoute>} />
-                <Route path="acheteur/settings" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><AcheteurSettingsPage /></RoleProtectedRoute>} />
-                <Route path="acheteur/notifications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierNotifications /></RoleProtectedRoute>} />
-                <Route path="acheteur/favoris" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierFavoris /></RoleProtectedRoute>} />
-                <Route path="acheteur/constructions" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier','admin']}><ParticulierConstructions /></RoleProtectedRoute>} />
+                <Route path="acheteur/messages" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierMessages /></RoleProtectedRoute>} />
+                <Route path="acheteur/calendar" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><AcheteurCalendarPage /></RoleProtectedRoute>} />
+                <Route path="acheteur/documents" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierDocuments /></RoleProtectedRoute>} />
+                <Route path="acheteur/settings" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierSettings /></RoleProtectedRoute>} />
+                <Route path="acheteur/notifications" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierNotifications /></RoleProtectedRoute>} />
+                <Route path="acheteur/favoris" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierFavoris /></RoleProtectedRoute>} />
+                <Route path="acheteur/constructions" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ParticulierConstructions /></RoleProtectedRoute>} />
 
                 <Route element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
                   {/* Dashboard redirection is handled by top-level routes to avoid auth/profile conflicts */}
@@ -645,20 +718,80 @@ function App() {
             </Route>
 
             {/* Routes directes pour les dashboards */}
-            <Route path="/mairie" element={<RoleProtectedRoute allowedRoles={['Mairie', 'admin']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
-            <Route path="/banque" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><CompleteSidebarBanqueDashboard /></RoleProtectedRoute>} />
-            <Route path="/notaire" element={<RoleProtectedRoute allowedRoles={['Notaire', 'admin']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>} />
-            <Route path="/promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur', 'admin']}><PromoteurDashboard /></RoleProtectedRoute>} />
-            <Route path="/investisseur/*" element={<RoleProtectedRoute allowedRoles={['Investisseur', 'admin']}><CompleteSidebarInvestisseurDashboard /></RoleProtectedRoute>} />
-            <Route path="/geometre/*" element={<RoleProtectedRoute allowedRoles={['Géomètre', 'geometre', 'Geometre', 'admin']}><CompleteSidebarGeometreDashboard /></RoleProtectedRoute>} />
+            <Route path="/mairie" element={<RoleProtectedRoute allowedRoles={['Mairie']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
+            <Route path="/banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><CompleteSidebarBanqueDashboard /></RoleProtectedRoute>} />
+            
+            {/* Routes Notaire avec système d'outlets */}
+            <Route path="/notaire" element={<RoleProtectedRoute allowedRoles={['Notaire']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>}>
+              <Route index element={<NotaireOverviewModernized />} />
+              <Route path="crm" element={<NotaireCRMModernized />} />
+              <Route path="communication" element={<NotaireCommunicationModernized />} />
+              <Route path="transactions" element={<NotaireTransactionsModernized />} />
+              <Route path="authentication" element={<NotaireAuthenticationModernized />} />
+              <Route path="cases" element={<NotaireCasesModernized />} />
+              <Route path="archives" element={<NotaireArchivesModernized />} />
+              <Route path="compliance" element={<NotaireComplianceModernized />} />
+              <Route path="analytics" element={<NotaireAnalyticsModernized />} />
+              <Route path="ai" element={<NotaireAIModernized />} />
+              <Route path="blockchain" element={<NotaireBlockchainModernized />} />
+              <Route path="settings" element={<NotaireSettingsModernized />} />
+              
+              {/* Phase 2 - Pages Prioritaires (Sprint 5) */}
+              <Route path="support" element={<NotaireSupportPage />} />
+              <Route path="subscriptions" element={<NotaireSubscriptionsPage />} />
+              <Route path="help" element={<NotaireHelpPage />} />
+              <Route path="notifications" element={<NotaireNotificationsPage />} />
+              
+              {/* Phase 3 - Features Avancées */}
+              <Route path="visio" element={<NotaireVisioPage />} />
+              <Route path="elearning" element={<NotaireELearningPage />} />
+              <Route path="marketplace" element={<NotaireMarketplacePage />} />
+              <Route path="cadastre" element={<NotaireAPICadastrePage />} />
+              <Route path="financial" element={<NotaireFinancialDashboardPage />} />
+              <Route path="multi-office" element={<NotaireMultiOfficePage />} />
+            </Route>
+            
+            <Route path="/promoteur" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><PromoteurDashboard /></RoleProtectedRoute>} />
+            <Route path="/investisseur/*" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><CompleteSidebarInvestisseurDashboard /></RoleProtectedRoute>} />
+            <Route path="/geometre/*" element={<RoleProtectedRoute allowedRoles={['Géomètre', 'geometre', 'Geometre']}><CompleteSidebarGeometreDashboard /></RoleProtectedRoute>} />
             
             {/* Alias pour solutions */}
-            <Route path="/solutions/mairies/dashboard" element={<RoleProtectedRoute allowedRoles={['Mairie', 'admin']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
-            <Route path="/solutions/banques/dashboard" element={<RoleProtectedRoute allowedRoles={['Banque', 'admin']}><CompleteSidebarBanqueDashboard /></RoleProtectedRoute>} />
-            <Route path="/solutions/notaires/dashboard" element={<RoleProtectedRoute allowedRoles={['Notaire', 'admin']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>} />
-            <Route path="/solutions/promoteurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Promoteur', 'admin']}><PromoteurDashboard /></RoleProtectedRoute>} />
-            <Route path="/solutions/investisseurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Investisseur', 'admin']}><CompleteSidebarInvestisseurDashboard /></RoleProtectedRoute>} />
-            <Route path="/solutions/geometres/dashboard" element={<RoleProtectedRoute allowedRoles={['Géomètre', 'geometre', 'Geometre', 'admin']}><CompleteSidebarGeometreDashboard /></RoleProtectedRoute>} />
+            <Route path="/solutions/mairies/dashboard" element={<RoleProtectedRoute allowedRoles={['Mairie']}><CompleteSidebarMairieDashboard /></RoleProtectedRoute>} />
+            <Route path="/solutions/banques/dashboard" element={<RoleProtectedRoute allowedRoles={['Banque']}><CompleteSidebarBanqueDashboard /></RoleProtectedRoute>} />
+            
+            {/* Solutions Notaires avec système d'outlets */}
+            <Route path="/solutions/notaires/dashboard" element={<RoleProtectedRoute allowedRoles={['Notaire']}><CompleteSidebarNotaireDashboard /></RoleProtectedRoute>}>
+              <Route index element={<NotaireOverviewModernized />} />
+              <Route path="crm" element={<NotaireCRMModernized />} />
+              <Route path="communication" element={<NotaireCommunicationModernized />} />
+              <Route path="transactions" element={<NotaireTransactionsModernized />} />
+              <Route path="authentication" element={<NotaireAuthenticationModernized />} />
+              <Route path="cases" element={<NotaireCasesModernized />} />
+              <Route path="archives" element={<NotaireArchivesModernized />} />
+              <Route path="compliance" element={<NotaireComplianceModernized />} />
+              <Route path="analytics" element={<NotaireAnalyticsModernized />} />
+              <Route path="ai" element={<NotaireAIModernized />} />
+              <Route path="blockchain" element={<NotaireBlockchainModernized />} />
+              <Route path="settings" element={<NotaireSettingsModernized />} />
+              
+              {/* Phase 2 - Pages Prioritaires (Sprint 5) */}
+              <Route path="support" element={<NotaireSupportPage />} />
+              <Route path="subscriptions" element={<NotaireSubscriptionsPage />} />
+              <Route path="help" element={<NotaireHelpPage />} />
+              <Route path="notifications" element={<NotaireNotificationsPage />} />
+              
+              {/* Phase 3 - Features Avancées */}
+              <Route path="visio" element={<NotaireVisioPage />} />
+              <Route path="elearning" element={<NotaireELearningPage />} />
+              <Route path="marketplace" element={<NotaireMarketplacePage />} />
+              <Route path="cadastre" element={<NotaireAPICadastrePage />} />
+              <Route path="financial" element={<NotaireFinancialDashboardPage />} />
+              <Route path="multi-office" element={<NotaireMultiOfficePage />} />
+            </Route>
+            
+            <Route path="/solutions/promoteurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Promoteur']}><PromoteurDashboard /></RoleProtectedRoute>} />
+            <Route path="/solutions/investisseurs/dashboard" element={<RoleProtectedRoute allowedRoles={['Investisseur']}><CompleteSidebarInvestisseurDashboard /></RoleProtectedRoute>} />
+            <Route path="/solutions/geometres/dashboard" element={<RoleProtectedRoute allowedRoles={['Géomètre', 'geometre', 'Geometre']}><CompleteSidebarGeometreDashboard /></RoleProtectedRoute>} />
 
             {/* Routes Dashboard avec layout et sous-pages (/dashboard/*) */}
             <Route path="/dashboard" element={<VerifiedRoute><DashboardLayout /></VerifiedRoute>}>
@@ -696,15 +829,15 @@ function App() {
               <Route path="activity" element={<AnalyticsPage />} />
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}
-              <Route path="acheteur/*" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><CompleteSidebarParticulierDashboard /></RoleProtectedRoute>} />
+              <Route path="acheteur/*" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><DashboardParticulierRefonte /></RoleProtectedRoute>} />
               <Route path="banque" element={<RoleProtectedRoute allowedRoles={['Banque']}><CompleteSidebarBanqueDashboard /></RoleProtectedRoute>} />
               <Route path="investisseur" element={<Navigate to="/investisseur" replace />} />
               {/* Redirection géomètre supprimée pour éviter les conflits */}
             </Route>
 
             {/* Routes pour tous les dashboards */}
-            <Route path="/agent-foncier/*" element={<RoleProtectedRoute allowedRoles={['Agent Foncier', 'agent_foncier', 'admin']}><CompleteSidebarAgentFoncierDashboard /></RoleProtectedRoute>} />
-            <Route path="/acheteur/*" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier', 'admin']}><CompleteSidebarParticulierDashboard /></RoleProtectedRoute>} />
+            <Route path="/agent-foncier/*" element={<RoleProtectedRoute allowedRoles={['Agent Foncier', 'agent_foncier']}><CompleteSidebarAgentFoncierDashboard /></RoleProtectedRoute>} />
+            <Route path="/acheteur/*" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><DashboardParticulierRefonte /></RoleProtectedRoute>} />
             <Route path="/particulier" element={<Navigate to="/acheteur" replace />} />
             <Route path="/lotisseur" element={<ProtectedRoute><PromoteurDashboard /></ProtectedRoute>} />
             <Route path="/municipalite" element={<ProtectedRoute><MunicipaliteDashboard /></ProtectedRoute>} />

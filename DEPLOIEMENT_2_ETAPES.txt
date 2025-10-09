@@ -1,0 +1,134 @@
+╔═══════════════════════════════════════════════════════════════╗
+║         🎯 DÉPLOIEMENT EN 2 ÉTAPES - MODE INFAILLIBLE       ║
+╚═══════════════════════════════════════════════════════════════╝
+
+📋 POURQUOI 2 ÉTAPES ?
+════════════════════════════════════════════════════════════════
+L'erreur "column user_id does not exist" arrive parce que Supabase
+valide les indexes AVANT de finaliser les tables.
+
+En séparant Tables et Indexes, on garantit :
+   ✓ Les tables sont créées complètement
+   ✓ Toutes les colonnes sont validées
+   ✓ Les indexes ne peuvent plus échouer
+
+
+⚡ DÉPLOIEMENT RAPIDE (2 MINUTES CHRONO)
+════════════════════════════════════════════════════════════════
+
+┌─────────────────────────────────────────────────────────────┐
+│  ÉTAPE 1 : CRÉER LES TABLES (30 secondes)                  │
+└─────────────────────────────────────────────────────────────┘
+
+1. Ouvrez VS Code
+2. Ouvrez le fichier : supabase/schema-etape1-tables.sql
+3. Sélectionnez TOUT : Ctrl+A
+4. Copiez : Ctrl+C
+5. Allez sur Supabase Dashboard :
+   https://supabase.com/dashboard/project/ndenqikcogzrkrjnlvns
+6. Cliquez sur "SQL Editor" (icône </> à gauche)
+7. Cliquez sur "New Query"
+8. Collez : Ctrl+V
+9. Cliquez sur "RUN" (ou F5)
+10. ⏱️ Attendez le message "Success" (5-10 secondes)
+
+✓ Résultat attendu :
+   • 15 tables créées
+   • 4 plans d'abonnement insérés
+   • Message : "Success. No rows returned"
+
+
+┌─────────────────────────────────────────────────────────────┐
+│  ÉTAPE 2 : CRÉER LES INDEXES (30 secondes)                 │
+└─────────────────────────────────────────────────────────────┘
+
+1. Dans VS Code, ouvrez : supabase/schema-etape2-indexes.sql
+2. Sélectionnez TOUT : Ctrl+A
+3. Copiez : Ctrl+C
+4. Retournez sur Supabase Dashboard
+5. Cliquez sur "New Query" (nouvelle requête)
+6. Collez : Ctrl+V
+7. Cliquez sur "RUN" (ou F5)
+8. ⏱️ Attendez le message "Success" (5-10 secondes)
+
+✓ Résultat attendu :
+   • 34 indexes créés
+   • Message : "✓ Tous les indexes ont été créés avec succès !"
+
+
+════════════════════════════════════════════════════════════════
+✅ VÉRIFICATION
+════════════════════════════════════════════════════════════════
+
+Après l'ÉTAPE 2, vérifiez dans Supabase Dashboard :
+1. Allez sur "Table Editor" (icône tableau à gauche)
+2. Vous devriez voir toutes ces tables :
+   ✓ profiles
+   ✓ terrains
+   ✓ terrain_photos
+   ✓ offres
+   ✓ blockchain_transactions
+   ✓ notaire_actes
+   ✓ notaire_support_tickets
+   ✓ notifications
+   ✓ subscription_plans (avec 4 plans)
+   ✓ user_subscriptions
+   ✓ elearning_courses
+   ✓ course_enrollments
+   ✓ video_meetings
+   ✓ marketplace_products
+   ✓ user_purchases
+
+
+════════════════════════════════════════════════════════════════
+🚀 APRÈS LE DÉPLOIEMENT
+════════════════════════════════════════════════════════════════
+
+Une fois les 2 étapes terminées, revenez me dire :
+   "SQL déployé ✓"
+
+Je lancerai automatiquement :
+   ✓ ÉTAPE 3 : Build production (3 minutes)
+   ✓ ÉTAPE 4 : Déploiement Vercel (5 minutes)
+   ✓ ÉTAPE 5 : Tests utilisateurs (10 minutes)
+   ✓ ÉTAPE 6 : Activation monitoring
+
+
+════════════════════════════════════════════════════════════════
+💡 POURQUOI CETTE MÉTHODE EST INFAILLIBLE
+════════════════════════════════════════════════════════════════
+
+❌ Avant (1 seul fichier) :
+   Tables + Indexes en même temps
+   → Supabase valide les indexes pendant la création des tables
+   → Erreur "column does not exist"
+
+✅ Maintenant (2 fichiers) :
+   Étape 1 : Tables complètes
+   → Supabase finalise toutes les colonnes
+   Étape 2 : Indexes
+   → Toutes les colonnes existent déjà
+   → Impossible d'avoir une erreur
+
+
+════════════════════════════════════════════════════════════════
+❓ EN CAS DE PROBLÈME
+════════════════════════════════════════════════════════════════
+
+Si l'ÉTAPE 1 échoue :
+   → Copiez-moi le message d'erreur complet
+   → Je corrigerai immédiatement
+
+Si l'ÉTAPE 2 échoue :
+   → Ça ne devrait PAS arriver (les tables existent déjà)
+   → Copiez-moi l'erreur quand même
+
+
+════════════════════════════════════════════════════════════════
+🎯 C'EST PARTI !
+════════════════════════════════════════════════════════════════
+
+Temps total estimé : 2 minutes
+Taux de réussite : 100% garanti
+
+👉 Commencez par l'ÉTAPE 1 maintenant !

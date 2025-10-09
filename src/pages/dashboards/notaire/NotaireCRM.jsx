@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -61,15 +62,52 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 
-const NotaireCRM = ({ dashboardStats }) => {
+const NotaireCRM = () => {
+  const { dashboardStats } = useOutletContext();
+  const { user } = useAuth();
   const [selectedClient, setSelectedClient] = useState('client-1');
   const [activeTab, setActiveTab] = useState('clients');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [messageText, setMessageText] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Statistiques CRM Notaire
+  // Chargement des données réelles depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadCRMData();
+    }
+  }, [user]);
+
+  const loadCRMData = async () => {
+    setIsLoading(true);
+    try {
+      const [clientsResult, bankPartnersResult, statsResult] = await Promise.all([
+        NotaireSupabaseService.getClients(user.id),
+        NotaireSupabaseService.getBankingPartners(user.id),
+        NotaireSupabaseService.getCRMStats(user.id)
+      ]);
+
+      if (clientsResult.success) setClients(clientsResult.data);
+      if (bankPartnersResult.success) setBankPartners(bankPartnersResult.data);
+      if (statsResult.success) setCrmStats(statsResult.data);
+      
+    } catch (error) {
+      console.error('Erreur chargement CRM:', error);
+      window.safeGlobalToast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les données CRM",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Statistiques CRM Notaire (données de fallback)
   const [crmStats, setCrmStats] = useState({
     totalClients: 156,
     activeFiles: 89,

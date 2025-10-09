@@ -56,13 +56,72 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 
 const NotaireCommunication = ({ dashboardStats }) => {
+  const { user } = useAuth();
   const [selectedConversation, setSelectedConversation] = useState('conv-1');
   const [messageText, setMessageText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [activeChannel, setActiveChannel] = useState('messages');
+  const [isLoading, setIsLoading] = useState(false);
+
+  // Chargement des données réelles depuis Supabase (temporairement désactivé)
+  useEffect(() => {
+    // Temporairement désactivé pour éviter les conflits avec les données mockées
+    // if (user) {
+    //   loadCommunications();
+    // }
+  }, [user]);
+
+  const loadCommunications = async () => {
+    setIsLoading(true);
+    try {
+      // const result = await NotaireSupabaseService.getTripartiteCommunications(user.id);
+      // if (result.success) {
+      //   setConversations(result.data.conversations || []);
+      //   setMessages(result.data.messages || []);
+      // }
+      // Utilisation des données mockées pour le moment
+      console.log('Communications chargées avec données mockées');
+    } catch (error) {
+      console.error('Erreur chargement communications:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!messageText.trim()) return;
+
+    try {
+      const result = await NotaireSupabaseService.sendTripartiteMessage({
+        notaire_id: user.id,
+        conversation_id: selectedConversation,
+        content: messageText,
+        message_type: 'message'
+      });
+
+      if (result.success) {
+        setMessageText('');
+        await loadCommunications();
+        window.safeGlobalToast({
+          title: "Message envoyé",
+          description: "Votre message a été envoyé avec succès",
+          variant: "success"
+        });
+      }
+    } catch (error) {
+      console.error('Erreur envoi message:', error);
+      window.safeGlobalToast({
+        title: "Erreur d'envoi",
+        description: "Impossible d'envoyer le message",
+        variant: "destructive"
+      });
+    }
+  };
   const [showDetails, setShowDetails] = useState(false);
 
   // Statistiques de communication

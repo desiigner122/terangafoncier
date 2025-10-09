@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
+import { useNavigate, useLocation, Outlet } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   // Navigation Icons
@@ -37,6 +38,16 @@ import {
   Shield,
   Award,
   
+  // New Features Icons
+  HeadphonesIcon,
+  CreditCard,
+  HelpCircle,
+  Video,
+  GraduationCap,
+  Store,
+  Map,
+  TrendingUp,
+  
   // UI Icons
   X,
   ChevronDown,
@@ -54,21 +65,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { createClient } from '@supabase/supabase-js';
-
-// Lazy loading des composants
-const NotaireOverview = React.lazy(() => import('./NotaireOverview'));
-const NotaireTransactions = React.lazy(() => import('./NotaireTransactions'));
-const NotaireAuthentication = React.lazy(() => import('./NotaireAuthentication'));
-const NotaireCases = React.lazy(() => import('./NotaireCases'));
-const NotaireArchives = React.lazy(() => import('./NotaireArchives'));
-const NotaireCompliance = React.lazy(() => import('./NotaireCompliance'));
-const NotaireAnalytics = React.lazy(() => import('./NotaireAnalytics'));
-const NotaireAI = React.lazy(() => import('./NotaireAI'));
-const NotaireBlockchain = React.lazy(() => import('./NotaireBlockchain'));
-const NotaireSettings = React.lazy(() => import('./NotaireSettings'));
-// Nouvelles pages CRM et Communication
-const LazyNotaireCRM = React.lazy(() => import('./NotaireCRM'));
-const LazyNotaireCommunication = React.lazy(() => import('./NotaireCommunication'));
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 
 const supabase = createClient(
   import.meta.env.VITE_SUPABASE_URL,
@@ -77,20 +74,67 @@ const supabase = createClient(
 
 const CompleteSidebarNotaireDashboard = () => {
   const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const navigate = useNavigate();
+  const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState(null);
 
-  // Stats du dashboard notaire
+  // Extraire l'onglet actif depuis l'URL
+  const getActiveTabFromPath = () => {
+    const path = location.pathname;
+    // Routes directes /notaire/*
+    if (path.includes('/notaire/crm') || path.includes('/solutions/notaires/dashboard/crm')) return 'crm';
+    if (path.includes('/notaire/communication') || path.includes('/solutions/notaires/dashboard/communication')) return 'communication';
+    if (path.includes('/notaire/transactions') || path.includes('/solutions/notaires/dashboard/transactions')) return 'transactions';
+    if (path.includes('/notaire/authentication') || path.includes('/solutions/notaires/dashboard/authentication')) return 'authentication';
+    if (path.includes('/notaire/cases') || path.includes('/solutions/notaires/dashboard/cases')) return 'cases';
+    if (path.includes('/notaire/archives') || path.includes('/solutions/notaires/dashboard/archives')) return 'archives';
+    if (path.includes('/notaire/compliance') || path.includes('/solutions/notaires/dashboard/compliance')) return 'compliance';
+    if (path.includes('/notaire/analytics') || path.includes('/solutions/notaires/dashboard/analytics')) return 'analytics';
+    if (path.includes('/notaire/ai') || path.includes('/solutions/notaires/dashboard/ai')) return 'ai';
+    if (path.includes('/notaire/blockchain') || path.includes('/solutions/notaires/dashboard/blockchain')) return 'blockchain';
+    if (path.includes('/notaire/settings') || path.includes('/solutions/notaires/dashboard/settings')) return 'settings';
+    return 'overview';
+  };
+
+  const activeTab = getActiveTabFromPath();
+
+  // Stats du dashboard notaire - chargées depuis Supabase
   const [dashboardStats, setDashboardStats] = useState({
-    totalCases: 245,
-    activeCases: 18,
-    monthlyRevenue: 15400000, // 15.4M FCFA
-    documentsAuthenticated: 1547,
-    complianceScore: 97,
-    clientSatisfaction: 98
+    totalCases: 0,
+    activeCases: 0,
+    monthlyRevenue: 0,
+    documentsAuthenticated: 0,
+    complianceScore: 0,
+    clientSatisfaction: 0,
+    totalClients: 0,
+    unreadCommunications: 0,
+    pendingTickets: 0
   });
+
+  const [isLoadingStats, setIsLoadingStats] = useState(true);
+
+  // Chargement des stats réelles
+  useEffect(() => {
+    const loadDashboardStats = async () => {
+      if (!user) return;
+      
+      setIsLoadingStats(true);
+      try {
+        const result = await NotaireSupabaseService.getDashboardStats(user.id);
+        if (result.success) {
+          setDashboardStats(result.data);
+        }
+      } catch (error) {
+        console.error('Erreur chargement stats sidebar:', error);
+      } finally {
+        setIsLoadingStats(false);
+      }
+    };
+
+    loadDashboardStats();
+  }, [user]);
 
   // Chargement du profil utilisateur
   useEffect(() => {
@@ -141,116 +185,172 @@ const CompleteSidebarNotaireDashboard = () => {
     }
   };
 
-  // Configuration des onglets du sidebar
+  // Configuration des onglets du sidebar avec routes
   const sidebarTabs = [
     {
       id: 'overview',
       label: 'Vue d\'ensemble',
       icon: Home,
-      description: 'Tableau de bord principal'
+      description: 'Tableau de bord principal',
+      route: '/notaire'
     },
     {
       id: 'crm',
       label: 'CRM Clients & Banques',
       icon: Users,
       description: 'Gestion relation clients et partenaires bancaires',
-      badge: '156'
+      badge: dashboardStats.totalClients > 0 ? dashboardStats.totalClients.toString() : null,
+      route: '/notaire/crm'
     },
     {
       id: 'communication',
       label: 'Communication Tripartite',
       icon: MessageSquare,
       description: 'Interface Notaire-Banque-Client',
-      badge: '34'
+      badge: dashboardStats.unreadCommunications > 0 ? dashboardStats.unreadCommunications.toString() : null,
+      route: '/notaire/communication'
     },
     {
       id: 'transactions',
       label: 'Transactions',
       icon: FileText,
       description: 'Gestion des actes et transactions',
-      badge: dashboardStats.activeCases
+      badge: dashboardStats.activeCases > 0 ? dashboardStats.activeCases.toString() : null,
+      route: '/notaire/transactions'
     },
     {
       id: 'authentication',
       label: 'Authentification',
       icon: Stamp,
-      description: 'Authentification de documents'
+      description: 'Authentification de documents',
+      route: '/notaire/authentication'
     },
     {
       id: 'cases',
       label: 'Dossiers',
       icon: BookOpen,
-      description: 'Gestion des dossiers clients'
+      description: 'Gestion des dossiers clients',
+      route: '/notaire/cases'
     },
     {
       id: 'archives',
       label: 'Archives',
       icon: Archive,
-      description: 'Archives notariales numériques'
+      description: 'Archives notariales numériques',
+      route: '/notaire/archives'
     },
     {
       id: 'compliance',
       label: 'Conformité',
       icon: Shield,
-      description: 'Respect réglementaire notarial'
+      description: 'Respect réglementaire notarial',
+      route: '/notaire/compliance'
     },
     {
       id: 'analytics',
       label: 'Analyses & Rapports',
       icon: Activity,
-      description: 'Statistiques et analyses'
+      description: 'Statistiques et analyses',
+      route: '/notaire/analytics'
     },
     {
       id: 'ai',
       label: 'Assistant IA',
       icon: PenTool,
-      description: 'Intelligence artificielle notariale'
+      description: 'Intelligence artificielle notariale',
+      route: '/notaire/ai'
     },
     {
       id: 'blockchain',
       label: 'Blockchain Notariale',
       icon: Scale,
-      description: 'Gestion blockchain des actes'
+      description: 'Gestion blockchain des actes',
+      route: '/notaire/blockchain'
+    },
+    {
+      id: 'support',
+      label: 'Support & Tickets',
+      icon: HeadphonesIcon,
+      description: 'Centre de support technique',
+      badge: dashboardStats.pendingTickets > 0 ? dashboardStats.pendingTickets.toString() : null,
+      route: '/notaire/support'
+    },
+    {
+      id: 'subscriptions',
+      label: 'Abonnements',
+      icon: CreditCard,
+      description: 'Gestion des abonnements',
+      route: '/notaire/subscriptions'
+    },
+    {
+      id: 'help',
+      label: 'Centre d\'Aide',
+      icon: HelpCircle,
+      description: 'Documentation et FAQ',
+      route: '/notaire/help'
+    },
+    {
+      id: 'notifications',
+      label: 'Notifications',
+      icon: Bell,
+      description: 'Centre de notifications',
+      route: '/notaire/notifications'
+    },
+    {
+      id: 'visio',
+      label: 'Visioconférence',
+      icon: Video,
+      description: 'Réunions virtuelles',
+      route: '/notaire/visio'
+    },
+    {
+      id: 'elearning',
+      label: 'Formation en ligne',
+      icon: GraduationCap,
+      description: 'Plateforme e-learning',
+      route: '/notaire/elearning'
+    },
+    {
+      id: 'marketplace',
+      label: 'Marketplace',
+      icon: Store,
+      description: 'Modèles et plugins',
+      route: '/notaire/marketplace'
+    },
+    {
+      id: 'cadastre',
+      label: 'API Cadastre',
+      icon: Map,
+      description: 'Recherche cadastrale',
+      route: '/notaire/cadastre'
+    },
+    {
+      id: 'financial',
+      label: 'Tableau Financier',
+      icon: TrendingUp,
+      description: 'Analyses financières avancées',
+      route: '/notaire/financial'
+    },
+    {
+      id: 'multi-office',
+      label: 'Multi-Offices',
+      icon: Building2,
+      description: 'Gestion multi-bureaux',
+      route: '/notaire/multi-office'
     },
     {
       id: 'settings',
       label: 'Paramètres',
       icon: Settings,
-      description: 'Configuration du système'
+      description: 'Configuration du compte',
+      route: '/notaire/settings'
     }
   ];
 
-  const renderActiveComponent = () => {
-    const commonProps = { dashboardStats };
-    
-    switch (activeTab) {
-      case 'overview':
-        return <NotaireOverview {...commonProps} />;
-      case 'crm':
-        return <LazyNotaireCRM />;
-      case 'communication':
-        return <LazyNotaireCommunication />;
-      case 'transactions':
-        return <NotaireTransactions {...commonProps} />;
-      case 'authentication':
-        return <NotaireAuthentication {...commonProps} />;
-      case 'cases':
-        return <NotaireCases {...commonProps} />;
-      case 'archives':
-        return <NotaireArchives {...commonProps} />;
-      case 'compliance':
-        return <NotaireCompliance {...commonProps} />;
-      case 'analytics':
-        return <NotaireAnalytics {...commonProps} />;
-      case 'ai':
-        return <NotaireAI {...commonProps} />;
-      case 'blockchain':
-        return <NotaireBlockchain {...commonProps} />;
-      case 'settings':
-        return <NotaireSettings {...commonProps} />;
-      default:
-        return <NotaireOverview {...commonProps} />;
-    }
+  // Fonction pour naviguer vers une page
+  const handleNavigateToTab = (tab) => {
+    navigate(tab.route);
+    setMobileMenuOpen(false);
   };
 
   return (
@@ -325,10 +425,7 @@ const CompleteSidebarNotaireDashboard = () => {
           {sidebarTabs.map((tab) => (
             <motion.button
               key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setMobileMenuOpen(false);
-              }}
+              onClick={() => handleNavigateToTab(tab)}
               className={`
                 w-full flex items-center space-x-3 px-4 py-3 mx-2 rounded-xl 
                 transition-all duration-200 group relative
@@ -469,24 +566,30 @@ const CompleteSidebarNotaireDashboard = () => {
                 variant="ghost" 
                 size="sm" 
                 className="text-gray-600 hover:text-amber-600 hover:bg-amber-50 relative"
-                onClick={() => setActiveTab('communication')}
+                onClick={() => navigate('/notaire/communication')}
               >
                 <MessageSquare className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  3
-                </span>
+                {!isLoadingStats && dashboardStats.unreadCommunications > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {dashboardStats.unreadCommunications}
+                  </span>
+                )}
               </Button>
 
-              {/* Notifications Button */}
+              {/* Notifications Button - Tickets en attente */}
               <Button 
                 variant="ghost" 
                 size="sm" 
                 className="text-gray-600 hover:text-amber-600 hover:bg-amber-50 relative"
+                onClick={() => navigate('/notaire/settings')}
+                title="Paramètres & Support"
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  5
-                </span>
+                {!isLoadingStats && dashboardStats.pendingTickets > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {dashboardStats.pendingTickets}
+                  </span>
+                )}
               </Button>
 
               {/* User Profile Dropdown */}
@@ -513,14 +616,14 @@ const CompleteSidebarNotaireDashboard = () => {
           </div>
         </header>
 
-        {/* Content Area */}
+        {/* Content Area avec Outlet */}
         <main className="flex-1 overflow-auto p-6">
           <Suspense fallback={
             <div className="flex items-center justify-center h-64">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-amber-600"></div>
             </div>
           }>
-            {renderActiveComponent()}
+            <Outlet context={{ dashboardStats }} />
           </Suspense>
         </main>
       </div>

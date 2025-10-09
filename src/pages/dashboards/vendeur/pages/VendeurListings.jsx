@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -24,78 +24,67 @@ import {
   Camera,
   Clock
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 
 const VendeurListings = () => {
+  const { user } = useAuth();
+  const [listings, setListings] = useState([]);
   const [selectedStatus, setSelectedStatus] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if (user) loadListings();
+  }, [user]);
+
+  const loadListings = async () => {
+    if (!user) return;
+    
+    setIsLoading(true);
+    try {
+      const result = await VendeurSupabaseService.getVendeurListings(user.id, {
+        status: selectedStatus !== 'all' ? selectedStatus : null
+      });
+      
+      if (result.success) {
+        setListings(result.data || []);
+      } else {
+        console.error('Erreur chargement annonces:', result.error);
+        setListings([]);
+      }
+    } catch (error) {
+      console.error('Erreur:', error);
+      setListings([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDeleteListing = async (listingId) => {
+    if (!confirm('Supprimer cette annonce ?')) return;
+    
+    const result = await VendeurSupabaseService.deleteListing(listingId);
+    if (result.success) {
+      await loadListings(); // Recharger
+    }
+  };
 
   const statusOptions = [
-    { id: 'all', name: 'Toutes', count: 12, color: 'bg-gray-100 text-gray-800' },
-    { id: 'active', name: 'Actives', count: 8, color: 'bg-green-100 text-green-800' },
-    { id: 'pending', name: 'En attente', count: 2, color: 'bg-yellow-100 text-yellow-800' },
-    { id: 'paused', name: 'Suspendues', count: 1, color: 'bg-blue-100 text-blue-800' },
-    { id: 'expired', name: 'Expirées', count: 1, color: 'bg-red-100 text-red-800' }
+    { id: 'all', name: 'Toutes', count: listings.length, color: 'bg-gray-100 text-gray-800' },
+    { id: 'disponible', name: 'Actives', count: listings.filter(l => l.statut === 'disponible').length, color: 'bg-green-100 text-green-800' },
+    { id: 'en_attente', name: 'En attente', count: listings.filter(l => l.statut === 'en_attente').length, color: 'bg-yellow-100 text-yellow-800' },
+    { id: 'suspendu', name: 'Suspendues', count: listings.filter(l => l.statut === 'suspendu').length, color: 'bg-blue-100 text-blue-800' },
+    { id: 'expire', name: 'Expirées', count: listings.filter(l => l.statut === 'expire').length, color: 'bg-red-100 text-red-800' }
   ];
 
-  const mockListings = [
-    {
-      id: 1,
-      title: 'Villa Moderne Almadies',
-      location: 'Almadies, Dakar',
-      price: '85.000.000 FCFA',
-      type: 'Villa',
-      bedrooms: 4,
-      bathrooms: 3,
-      area: 250,
-      status: 'active',
-      views: 1247,
-      favorites: 23,
-      inquiries: 8,
-      photos: 15,
-      createdAt: '2024-01-15',
-      lastUpdate: '2024-01-20',
-      daysOnMarket: 15,
-      performance: 'excellent'
-    },
-    {
-      id: 2,
-      title: 'Appartement Standing Plateau',
-      location: 'Plateau, Dakar',
-      price: '45.000.000 FCFA',
-      type: 'Appartement',
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 120,
-      status: 'active',
-      views: 892,
-      favorites: 15,
-      inquiries: 5,
-      photos: 12,
-      createdAt: '2024-01-10',
-      lastUpdate: '2024-01-18',
-      daysOnMarket: 20,
-      performance: 'good'
-    },
-    {
-      id: 3,
-      title: 'Terrain Constructible Saly',
-      location: 'Saly, Mbour',
-      price: '25.000.000 FCFA',
-      type: 'Terrain',
-      bedrooms: null,
-      bathrooms: null,
-      area: 500,
-      status: 'pending',
-      views: 234,
-      favorites: 4,
-      inquiries: 2,
-      photos: 6,
-      createdAt: '2024-01-22',
-      lastUpdate: '2024-01-22',
-      daysOnMarket: 3,
-      performance: 'new'
-    }
-  ];
+  const filteredListings = listings.filter(listing => {
+    const matchesStatus = selectedStatus === 'all' || listing.statut === selectedStatus;
+    const matchesSearch = !searchTerm || 
+      listing.titre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      listing.localisation?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesStatus && matchesSearch;
+  });
 
   const getStatusBadge = (status) => {
     const option = statusOptions.find(opt => opt.id === status);
@@ -119,13 +108,6 @@ const VendeurListings = () => {
     }
     return <Clock className="h-4 w-4" />;
   };
-
-  const filteredListings = mockListings.filter(listing => {
-    const matchesStatus = selectedStatus === 'all' || listing.status === selectedStatus;
-    const matchesSearch = listing.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         listing.location.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesStatus && matchesSearch;
-  });
 
   return (
     <div className="space-y-6">

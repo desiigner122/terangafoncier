@@ -23,6 +23,8 @@ import {
   RotateCcw,
   Download
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -39,6 +41,7 @@ import {
 } from '@/components/ui/select';
 
 const NotaireAI = () => {
+  const { user } = useAuth();
   const [aiAssistant, setAiAssistant] = useState({
     status: 'active',
     queries: 156,
@@ -49,6 +52,41 @@ const NotaireAI = () => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
   const [selectedAITool, setSelectedAITool] = useState('document_analysis');
+  const [aiData, setAiData] = useState({});
+
+  // Chargement des données IA depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadAIData();
+      loadChatMessages();
+    }
+  }, [user]);
+
+  const loadAIData = async () => {
+    try {
+      const result = await NotaireSupabaseService.getAIAssistantData(user.id);
+      if (result.success && result.data) {
+        setAiAssistant(result.data);
+      }
+    } catch (error) {
+      console.error('Erreur chargement données IA:', error);
+    }
+  };
+
+  const loadChatMessages = async () => {
+    try {
+      const result = await NotaireSupabaseService.getAIChatHistory(user.id);
+      if (result.success && result.data) {
+        setChatMessages(result.data);
+      } else {
+        // Messages d'exemple par défaut
+        setChatMessages(defaultChatMessages);
+      }
+    } catch (error) {
+      console.error('Erreur chargement chat IA:', error);
+      setChatMessages(defaultChatMessages);
+    }
+  };
 
   // Outils IA disponibles
   const aiTools = [
@@ -137,7 +175,7 @@ const NotaireAI = () => {
   ];
 
   // Messages d'exemple pour le chat IA
-  const exampleMessages = [
+  const defaultChatMessages = [
     {
       role: 'user',
       content: 'Analyse le document de vente immobilière pour Mme Diallo',
@@ -150,9 +188,7 @@ const NotaireAI = () => {
     }
   ];
 
-  useEffect(() => {
-    setChatMessages(exampleMessages);
-  }, []);
+
 
   const handleSendMessage = () => {
     if (!currentMessage.trim()) return;

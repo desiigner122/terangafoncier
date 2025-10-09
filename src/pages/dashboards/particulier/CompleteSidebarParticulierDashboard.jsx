@@ -1,363 +1,218 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, Suspense } from 'react';
+import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  // Navigation Icons
+  ChevronLeft, 
+  ChevronRight,
   Home,
   Heart,
   FileText,
   MapPin,
   Building2,
-  Settings,
+  TrendingUp,
   Bell,
-  LogOut,
-  User,
-  Menu,
-  
-  // Content Icons
-  DollarSign,
-  Clock,
-  CheckCircle,
-  AlertTriangle,
-  Star,
-  Share2,
-  Download,
-  Filter,
-  Search,
   MessageSquare,
-  Activity,
-  Target,
-  
-  // Particulier Icons
+  Settings,
   Calendar,
   Eye,
+  Search,
   Plus,
-  Shield,
-  Award,
-  Brain,
-  Link as BlockchainIcon,
-  
-  // UI Icons
+  Menu,
   X,
+  User,
+  DollarSign,
+  Shield,
+  Activity,
+  Zap,
+  Database,
+  Bot,
+  Sparkles,
+  Coins,
+  Lock,
+  Link as BlockchainIcon,
   ChevronDown,
-  ChevronRight,
-  ChevronLeft,
-  Edit,
-  Trash2,
-  Sparkles
+  LogOut
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/customSupabaseClient';
+import { toast } from 'react-hot-toast';
 import TerangaLogo from '@/components/ui/TerangaLogo';
 
-// Lazy loading des composants
-const ParticulierOverview = React.lazy(() => import('./ParticulierOverview'));
-const ParticulierFavoris = React.lazy(() => import('./ParticulierFavoris'));
-const ParticulierTerrainsPrive = React.lazy(() => import('./ParticulierTerrainsPrive'));
-const ParticulierZonesCommunales = React.lazy(() => import('./ParticulierZonesCommunales'));
-const ParticulierMessages = React.lazy(() => import('./ParticulierMessages'));
-const ParticulierNotifications = React.lazy(() => import('./ParticulierNotifications'));
-const ParticulierCalendar = React.lazy(() => import('./ParticulierCalendar'));
-const ParticulierDocuments = React.lazy(() => import('./ParticulierDocuments'));
-const ParticulierAI = React.lazy(() => import('./ParticulierAI'));
-const ParticulierBlockchain = React.lazy(() => import('./ParticulierBlockchain'));
-const ParticulierSettings = React.lazy(() => import('./ParticulierSettings'));
-const ParticulierCommunal = React.lazy(() => import('./ParticulierCommunal'));
-const ParticulierPromoteurs = React.lazy(() => import('./ParticulierPromoteurs'));
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+// Composants rendus via Outlet - pas besoin d'imports
 
 const CompleteSidebarParticulierDashboard = () => {
-  const { user, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState('overview');
+  const { user, profile, signOut } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
+  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
 
-  // Stats du dashboard particulier - Données réelles depuis Supabase
-  const [dashboardStats, setDashboardStats] = useState({
-    totalDemandes: 0,
-    demandesEnCours: 0,
-    demandesApprouvees: 0,
-    demandesEnAttente: 0,
-    constructionDemandes: 0,
-    zoneCommunaleDemandes: 0,
-    dossiersTraites: 0,
-    rdvProgrammes: 0,
-    favorisCount: 0,
-    messagesCount: 0
-  });
-  
-  const [loading, setLoading] = useState(true);
-
-  // Chargement du profil utilisateur et des stats réelles
-  useEffect(() => {
+  // Charger les compteurs au chargement
+  React.useEffect(() => {
     if (user) {
-      loadUserProfileAndStats();
+      loadUnreadCounts();
+      
+      // Souscription aux changements en temps réel
+      const messagesSubscription = supabase
+        .channel('messages_changes')
+        .on('postgres_changes', 
+          { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${user.id}` },
+          () => loadUnreadCounts()
+        )
+        .subscribe();
+
+      const notificationsSubscription = supabase
+        .channel('notifications_changes')
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
+          () => loadUnreadCounts()
+        )
+        .subscribe();
+
+      return () => {
+        messagesSubscription.unsubscribe();
+        notificationsSubscription.unsubscribe();
+      };
     }
   }, [user]);
 
-  const loadUserProfileAndStats = async () => {
-    setLoading(true);
+  const loadUnreadCounts = async () => {
     try {
-      console.log('🔄 Chargement profil et stats particulier...');
-      
-      // Chargement du profil utilisateur réel
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single();
-
-      if (!profileError && profile) {
-        setProfile({
-          id: profile.id,
-          email: profile.email || user.email,
-          role: profile.user_type || 'particulier',
-          first_name: profile.first_name,
-          last_name: profile.last_name,
-          full_name: `${profile.first_name || ''} ${profile.last_name || ''}`.trim() || 'Particulier'
-        });
-      } else {
-        // Profil par défaut si non trouvé
-        setProfile({
-          id: user.id,
-          email: user.email,
-          role: 'particulier',
-          first_name: user.user_metadata?.first_name || 'Particulier',
-          last_name: user.user_metadata?.last_name || 'Expert',
-          full_name: user.user_metadata?.full_name || 'Particulier Expert'
-        });
-      }
-
-      // Chargement des statistiques réelles
-      await loadRealDashboardStats();
-      
-    } catch (error) {
-      console.error('❌ Erreur chargement profil particulier:', error);
-      // Profil fallback
-      setProfile({
-        id: user.id,
-        email: user.email,
-        role: 'particulier',
-        first_name: 'Particulier',
-        last_name: 'Expert',
-        full_name: 'Particulier Expert'
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadRealDashboardStats = async () => {
-    try {
-      console.log('📊 Chargement stats réelles du dashboard particulier...');
-      
-      // Récupération des demandes utilisateur depuis Supabase
-      const { data: requests, error: requestsError } = await supabase
-        .from('requests')
-        .select('*')
-        .eq('user_id', user.id);
-
-      // Récupération des favoris
-      const { data: favorites, error: favoritesError } = await supabase
-        .from('favorites')
-        .select('*')
-        .eq('user_id', user.id);
-
-      // Récupération des messages
-      const { data: messages, error: messagesError } = await supabase
+      const { count: messagesCount } = await supabase
         .from('messages')
-        .select('*')
-        .eq('recipient_id', user.id);
-
-      // Calcul des statistiques
-      const requestsData = requests || [];
-      const favoritesData = favorites || [];
-      const messagesData = messages || [];
-
-      const stats = {
-        totalDemandes: requestsData.length,
-        demandesEnCours: requestsData.filter(r => r.status === 'pending' || r.status === 'in_progress').length,
-        demandesApprouvees: requestsData.filter(r => r.status === 'approved').length,
-        demandesEnAttente: requestsData.filter(r => r.status === 'pending').length,
-        constructionDemandes: requestsData.filter(r => r.type === 'construction').length,
-        zoneCommunaleDemandes: requestsData.filter(r => r.type === 'zone_communale').length,
-        dossiersTraites: requestsData.filter(r => r.status === 'completed' || r.status === 'approved').length,  
-        rdvProgrammes: requestsData.filter(r => r.appointment_date && new Date(r.appointment_date) > new Date()).length,
-        favorisCount: favoritesData.length,
-        messagesCount: messagesData.filter(m => !m.read_at).length // Messages non lus
-      };
-
-      setDashboardStats(stats);
-      console.log('✅ Stats particulier chargées:', stats);
+        .select('*', { count: 'exact', head: true })
+        .eq('recipient_id', user.id)
+        .is('read_at', null);
       
+      setUnreadMessagesCount(messagesCount || 0);
+
+      const { count: notificationsCount } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+      
+      setUnreadNotificationsCount(notificationsCount || 0);
     } catch (error) {
-      console.error('❌ Erreur chargement stats particulier:', error);
-      // Stats par défaut en cas d'erreur
-      setDashboardStats({
-        totalDemandes: 0,
-        demandesEnCours: 0,
-        demandesApprouvees: 0,
-        demandesEnAttente: 0,
-        constructionDemandes: 0,
-        zoneCommunaleDemandes: 0,
-        dossiersTraites: 0,
-        rdvProgrammes: 0,
-        favorisCount: 0,
-        messagesCount: 0
-      });
+      console.error('Erreur chargement compteurs:', error);
     }
   };
 
+  // Fonction de déconnexion
   const handleLogout = async () => {
     try {
       await signOut();
-      window.safeGlobalToast({
-        description: 'Déconnexion réussie',
-        variant: 'success'
-      });
+      toast.success('Déconnexion réussie');
+      navigate('/');
     } catch (error) {
-      window.safeGlobalToast({
-        description: 'Erreur lors de la déconnexion',
-        variant: 'destructive'
-      });
+      console.error('Erreur lors de la déconnexion:', error);
+      toast.error('Erreur lors de la déconnexion');
     }
   };
 
-  // Configuration des onglets du sidebar
-  const sidebarTabs = [
+  // Navigation Items Configuration - DASHBOARD SIMPLIFIÉ SELON SPÉCIFICATIONS
+  const navigationItems = [
     {
       id: 'overview',
-      label: 'Vue d\'ensemble',
+      label: 'Tableau de Bord',
       icon: Home,
-      description: 'Dashboard principal et statistiques'
+      description: 'Vue d\'ensemble activités',
+      path: '/acheteur',
+      badge: unreadMessagesCount + unreadNotificationsCount > 0 ? (unreadMessagesCount + unreadNotificationsCount).toString() : null,
+      badgeColor: 'bg-blue-500'
     },
     {
-      id: 'communal',
-      label: 'Zones Communales',
-      icon: MapPin,
-      description: 'Demandes de terrains communaux',
-      badge: dashboardStats.zoneCommunaleDemandes
-    },
-    {
-      id: 'demandes',
-      label: 'Demandes Communales',
+      id: 'demandes-communales',
+      label: 'Demandes Terrains',
       icon: FileText,
-      description: 'Toutes vos demandes communales',
-      badge: loading ? '...' : (dashboardStats.totalDemandes > 0 ? dashboardStats.totalDemandes.toString() : null)
+      description: 'Suivi demandes terrains communaux',
+      path: '/acheteur/demandes-terrains',
+      badge: '0'
     },
     {
-      id: 'terrains',
-      label: 'Terrains Privés',
-      icon: Building2,
-      description: 'Demandes d\'achat terrains privés',
-      badge: loading ? '...' : null // TODO: Ajouter les vraies données terrains privés
-    },
-    {
-      id: 'construction',
+      id: 'demandes-construction',
       label: 'Demandes Construction',
-      icon: Target,
-      description: 'Demandes de construction à distance',
-      badge: dashboardStats.constructionDemandes
+      icon: Building2,
+      description: 'Demandes aux promoteurs',
+      path: '/acheteur/construction',
+      badge: '0'
     },
     {
-      id: 'favoris',
-      label: 'Mes Favoris',
+      id: 'mes-offres',
+      label: 'Offres Reçues',
       icon: Heart,
-      description: 'Terrains, zones et projets favoris',
-      badge: loading ? '...' : (dashboardStats.favorisCount > 0 ? dashboardStats.favorisCount.toString() : null)
-    },
-    {
-      id: 'promoteurs',
-      label: 'Projets Promoteurs',
-      icon: Award,
-      description: 'Villas et projets de développeurs'
+      description: 'Offres reçues des vendeurs',
+      path: '/acheteur/offres',
+      badge: '0'
     },
     {
       id: 'messages',
-      label: 'Communications',
+      label: 'Messages',
       icon: MessageSquare,
-      description: 'Messages avec les services communaux',
-      badge: loading ? '...' : (dashboardStats.messagesCount > 0 ? dashboardStats.messagesCount.toString() : null)
+      description: 'Messages administratifs',
+      path: '/acheteur/messages',
+      badge: unreadMessagesCount > 0 ? unreadMessagesCount.toString() : null
     },
     {
-      id: 'calendar',
-      label: 'Agenda & RDV',
-      icon: Calendar,
-      description: 'Rendez-vous et démarches programmées'
+      id: 'notifications',
+      label: 'Notifications',
+      icon: Bell,
+      description: 'Alertes système',
+      path: '/acheteur/notifications',
+      badge: unreadNotificationsCount > 0 ? unreadNotificationsCount.toString() : null,
+      badgeColor: 'bg-red-500'
     },
     {
       id: 'documents',
-      label: 'Mes Documents',
+      label: 'Documents',
       icon: FileText,
-      description: 'Pièces justificatives et certificats'
-    },
-    {
-      id: 'ai',
-      label: 'Assistant IA',
-      icon: Brain,
-      description: 'Aide intelligente pour vos démarches'
-    },
-    {
-      id: 'blockchain',
-      label: 'Blockchain Foncier',
-      icon: BlockchainIcon,
-      description: 'Certificats fonciers sécurisés'
+      description: 'Mes documents',
+      path: '/acheteur/documents'
     },
     {
       id: 'settings',
       label: 'Paramètres',
       icon: Settings,
-      description: 'Configuration et préférences'
+      description: 'Configuration compte',
+      path: '/acheteur/settings'
     }
   ];
 
-  const renderActiveComponent = () => {
-    const commonProps = { dashboardStats };
-    
-    switch (activeTab) {
-      case 'overview':
-        return <ParticulierOverview {...commonProps} />;
-      case 'communal':
-        return <ParticulierZonesCommunales {...commonProps} />; // Composant spécifique zones communales
-      case 'demandes':
-        return <ParticulierCommunal {...commonProps} />; // Toutes les demandes communales
-      case 'construction':
-        return <ParticulierCommunal {...commonProps} />; // Composant pour demandes construction
-      case 'favoris':
-        return <ParticulierFavoris {...commonProps} />; // Page des favoris
-      case 'terrains':
-        return <ParticulierTerrainsPrive {...commonProps} />; // Demandes terrains privés
-      case 'promoteurs':
-        return <ParticulierPromoteurs {...commonProps} />;
-      case 'messages':
-        return <ParticulierMessages {...commonProps} />;
-      case 'calendar':
-        return <ParticulierCalendar {...commonProps} />;
-      case 'documents':
-        return <ParticulierDocuments {...commonProps} />;
-      case 'ai':
-        return <ParticulierAI {...commonProps} />;
-      case 'blockchain':
-        return <ParticulierBlockchain {...commonProps} />;
-      case 'settings':
-        return <ParticulierSettings {...commonProps} />;
-      default:
-        return <ParticulierOverview {...commonProps} />;
-    }
+  // Page active
+  const getActiveItem = () => navigationItems.find(item => 
+    location.pathname === item.path || (item.path === '/acheteur' && location.pathname === '/acheteur')
+  );
+
+  const isActivePage = (path) => {
+    if (path === '/acheteur' && location.pathname === '/acheteur') return true;
+    if (path !== '/acheteur' && location.pathname.startsWith(path)) return true;
+    return false;
   };
 
+  const handleNavigation = (path) => {
+    navigate(path);
+    setMobileMenuOpen(false);
+  };
+
+  // Plus besoin de renderActiveComponent - on utilise Outlet
+
   return (
-    <div className="flex h-screen bg-gradient-to-br from-blue-50 via-indigo-50 to-purple-50">
+    <div className="flex h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-100">
       {/* Mobile Menu Overlay */}
       <AnimatePresence>
         {mobileMenuOpen && (
@@ -365,263 +220,278 @@ const CompleteSidebarParticulierDashboard = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/50 z-50 lg:hidden"
+            className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 lg:hidden"
             onClick={() => setMobileMenuOpen(false)}
           />
         )}
       </AnimatePresence>
 
       {/* Sidebar */}
-      <motion.div
+      <motion.aside
         initial={false}
-        animate={{
-          width: sidebarCollapsed ? '80px' : '320px'
+        animate={{ 
+          width: sidebarCollapsed ? '80px' : '320px',
+          x: mobileMenuOpen ? 0 : (typeof window !== 'undefined' && window.innerWidth < 1024) ? '-100%' : 0
         }}
-        className={`
-          fixed lg:relative h-full bg-white/80 backdrop-blur-md shadow-xl border-r border-blue-200/50 z-40
-          flex flex-col
-          ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}
-          transition-transform duration-300 ease-in-out
-        `}
+        transition={{ type: "spring", stiffness: 300, damping: 30 }}
+        className="relative bg-white/95 backdrop-blur-xl border-r border-slate-200/50 shadow-2xl z-40 flex-shrink-0 lg:translate-x-0"
       >
-        {/* Header Sidebar */}
-        <div className="p-6 border-b border-blue-200/30">
+        {/* Sidebar Header */}
+        <div className="p-4 border-b border-slate-200">
           <div className="flex items-center justify-between">
             {!sidebarCollapsed && (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="flex items-center space-x-3"
-              >
-                <TerangaLogo className="w-10 h-10" />
-                <div>
-                  <h1 className="font-bold text-lg text-gray-900">Dashboard Particulier</h1>
-                  <p className="text-xs text-gray-600">Teranga Foncier</p>
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <span className="text-white font-bold text-sm">T</span>
                 </div>
-              </motion.div>
+                <div>
+                  <h1 className="text-sm font-bold text-slate-900">TerangaFoncier</h1>
+                  <p className="text-xs text-slate-500">Suivi Dossiers</p>
+                </div>
+              </div>
             )}
-            
+
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="text-gray-600 hover:text-gray-900"
+              className="hidden lg:flex w-8 h-8 text-slate-600"
             >
-              {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
+              {sidebarCollapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
             </Button>
-            
+
             <Button
               variant="ghost"
               size="sm"
               onClick={() => setMobileMenuOpen(false)}
-              className="lg:hidden text-gray-600"
+              className="lg:hidden w-8 h-8 text-slate-600"
             >
-              <X className="h-4 w-4" />
+              <X className="w-4 h-4" />
             </Button>
           </div>
         </div>
 
-        {/* Navigation Menu */}
-        <nav className="flex-1 overflow-y-auto py-4 space-y-1">
-          {sidebarTabs.map((tab) => (
-            <motion.button
-              key={tab.id}
-              onClick={() => {
-                setActiveTab(tab.id);
-                setMobileMenuOpen(false);
-              }}
-              className={`
-                w-full flex items-center space-x-3 px-4 py-3 mx-2 rounded-xl 
-                transition-all duration-200 group relative
-                ${activeTab === tab.id 
-                  ? 'bg-gradient-to-r from-blue-500 to-purple-600 text-white shadow-lg' 
-                  : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                }
-              `}
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <tab.icon className={`
-                h-5 w-5 flex-shrink-0
-                ${activeTab === tab.id ? 'text-white' : 'text-gray-500 group-hover:text-blue-600'}
-              `} />
+        {/* Navigation */}
+        <div className="flex-1 overflow-y-auto">
+          <nav className="p-2 space-y-1">
+            {navigationItems.map((item) => {
+              const Icon = item.icon;
+              const isActive = item.path && (location.pathname === item.path || (item.path === '/acheteur' && location.pathname === '/acheteur'));
+              const hasActiveChild = item.children?.some(child => location.pathname.startsWith(child.path));
               
-              {!sidebarCollapsed && (
-                <>
-                  <div className="flex-1 text-left">
-                    <div className="font-medium text-sm">{tab.label}</div>
-                    <div className={`
-                      text-xs opacity-75
-                      ${activeTab === tab.id ? 'text-blue-100' : 'text-gray-500'}
-                    `}>
-                      {tab.description}
-                    </div>
-                  </div>
-                  
-                  {tab.badge && (
-                    <Badge className="bg-red-500 text-white text-xs min-w-[20px] h-5 flex items-center justify-center">
-                      {tab.badge}
-                    </Badge>
-                  )}
-                </>
-              )}
-              
-              {activeTab === tab.id && (
-                <motion.div
-                  layoutId="activeTab"
-                  className="absolute left-0 top-0 bottom-0 w-1 bg-white rounded-r-full"
-                  initial={false}
-                  transition={{ type: "spring", stiffness: 500, damping: 30 }}
-                />
-              )}
-            </motion.button>
-          ))}
-        </nav>
+              return (
+                <div key={item.id}>
+                  {/* Item principal */}
+                  <button
+                    onClick={() => {
+                      if (item.path) {
+                        navigate(item.path);
+                        setMobileMenuOpen(false);
+                      }
+                    }}
+                    className={`
+                      w-full flex items-center space-x-3 px-3 py-2.5 rounded-lg text-left transition-all
+                      ${isActive || hasActiveChild
+                        ? 'bg-blue-50 text-blue-700 border border-blue-200' 
+                        : 'text-gray-700 hover:bg-gray-50 hover:text-gray-900'
+                      }
+                    `}
+                  >
+                    <Icon className={`h-5 w-5 flex-shrink-0 ${isActive || hasActiveChild ? 'text-blue-600' : 'text-gray-500'}`} />
+                    
+                    {!sidebarCollapsed && (
+                      <>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium truncate">{item.label}</p>
+                          {item.description && (
+                            <p className="text-xs text-gray-500 truncate">{item.description}</p>
+                          )}
+                        </div>
+                        
+                        {item.badge && (
+                          <Badge 
+                            className={`text-xs ${item.badgeColor || 'bg-blue-500'} text-white`}
+                          >
+                            {item.badge}
+                          </Badge>
+                        )}
+                      </>
+                    )}
+                  </button>
 
-        {/* User Profile dans sidebar */}
-        {!sidebarCollapsed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="p-4 border-t border-blue-200/30"
-          >
+                  {/* Sous-éléments */}
+                  {!sidebarCollapsed && item.children && (
+                    <div className="ml-6 mt-1 space-y-1">
+                      {item.children.map((child) => {
+                        const childIsActive = location.pathname.startsWith(child.path);
+                        return (
+                          <button
+                            key={child.id}
+                            onClick={() => {
+                              navigate(child.path);
+                              setMobileMenuOpen(false);
+                            }}
+                            className={`
+                              w-full flex items-center justify-between px-3 py-2 rounded-md text-sm transition-all
+                              ${childIsActive
+                                ? 'bg-blue-100 text-blue-700 font-medium'
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                              }
+                            `}
+                          >
+                            <span className="truncate">{child.label}</span>
+                            {child.badge && (
+                              <Badge className="text-xs bg-orange-500 text-white ml-2">
+                                {child.badge}
+                              </Badge>
+                            )}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            })}
+          </nav>
+        </div>
+
+        {/* User Section */}
+        <div className="p-4 border-t border-gray-200">
+          {!sidebarCollapsed && (
             <div className="flex items-center space-x-3 mb-3">
-              <Avatar className="h-10 w-10 border-2 border-blue-200">
-                <AvatarImage src={profile?.avatar_url} alt={profile?.full_name} />
-                <AvatarFallback className="bg-blue-100 text-blue-700">
-                  {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'P'}
-                </AvatarFallback>
-              </Avatar>
+              <div className="w-10 h-10 bg-blue-600 rounded-lg flex items-center justify-center">
+                <User className="h-5 w-5 text-white" />
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm font-medium text-gray-900 truncate">
-                  {profile?.full_name || 'Particulier Expert'}
+                  {profile?.full_name || user?.email?.split('@')[0] || 'Particulier'}
                 </p>
-                <p className="text-xs text-gray-600 truncate">
-                  {user?.email}
-                </p>
+                <p className="text-xs text-gray-500 truncate">Compte Particulier</p>
               </div>
             </div>
-            
-            {/* Bouton de déconnexion */}
-            <motion.button
-              onClick={handleLogout}
-              className="w-full flex items-center space-x-3 px-3 py-2 text-red-600 
-                       hover:bg-red-50 rounded-lg transition-all duration-200 group"
-              whileHover={{ scale: 1.02 }}
-              whileTap={{ scale: 0.98 }}
-            >
-              <LogOut className="h-4 w-4 group-hover:text-red-700" />
-              <span className="text-sm font-medium group-hover:text-red-700">
-                Se déconnecter
-              </span>
-            </motion.button>
-          </motion.div>
-        )}
-
-        {/* Bouton de déconnexion pour sidebar collapsed */}
-        {sidebarCollapsed && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="p-2 border-t border-blue-200/30"
-          >
-            <motion.button
-              onClick={handleLogout}
-              className="w-full flex items-center justify-center p-2 text-red-600 
-                       hover:bg-red-50 rounded-lg transition-all duration-200"
-              whileHover={{ scale: 1.05 }}
-              whileTap={{ scale: 0.95 }}
-              title="Se déconnecter"
-            >
-              <LogOut className="h-5 w-5" />
-            </motion.button>
-          </motion.div>
-        )}
-      </motion.div>
+          )}
+          
+          <div className="flex items-center space-x-2">
+            <Button variant="ghost" size="sm" className="flex-1">
+              <Bell className="h-4 w-4" />
+              {!sidebarCollapsed && <span className="ml-2">Notifications</span>}
+            </Button>
+            <Button variant="ghost" size="sm" onClick={handleLogout}>
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+      </motion.aside>
 
       {/* Main Content */}
       <div className="flex-1 flex flex-col min-w-0">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-md shadow-sm border-b border-blue-200/30 sticky top-0 z-20">
-          <div className="flex items-center justify-between px-6 py-4">
-            <div className="flex items-center space-x-4">
+        {/* Header Simplifié */}
+        <header className="bg-white border-b border-slate-200 px-4 py-3 lg:px-6">
+          <div className="flex items-center justify-between">
+            {/* Menu mobile */}
+            <div className="flex items-center gap-4">
               <Button
                 variant="ghost"
                 size="sm"
+                className="lg:hidden p-2"
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden text-gray-600"
               >
                 <Menu className="h-5 w-5" />
               </Button>
               
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
-                  {sidebarTabs.find(tab => tab.id === activeTab)?.label || 'Dashboard'}
-                </h1>
-                <p className="text-sm text-gray-600">
-                  {sidebarTabs.find(tab => tab.id === activeTab)?.description}
-                </p>
-              </div>
+              {/* Titre de la page */}
+              <h1 className="text-lg font-semibold text-slate-900">
+                {getActiveItem()?.label || 'Mes Dossiers'}
+              </h1>
             </div>
 
-            <div className="flex items-center space-x-4">
-              {/* Messages Button */}
+            {/* Actions et Profil */}
+            <div className="flex items-center gap-2">
+              {/* Notifications */}
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 relative"
-                onClick={() => setActiveTab('messages')}
+                size="sm"
+                onClick={() => navigate('/acheteur/notifications')}
+                className="relative"
               >
-                <MessageSquare className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  5
-                </span>
+                <Bell className="h-4 w-4" />
+                {unreadNotificationsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                    {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                  </span>
+                )}
               </Button>
 
-              {/* Notifications Button */}
+              {/* Messages avec notification */}
               <Button 
                 variant="ghost" 
-                size="sm" 
-                className="text-gray-600 hover:text-blue-600 hover:bg-blue-50 relative"
+                size="sm"
+                onClick={() => navigate('/acheteur/messages')}
+                className="relative"
               >
-                <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  3
-                </span>
+                <MessageSquare className="h-4 w-4" />
+                {unreadMessagesCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full text-xs text-white flex items-center justify-center">
+                    {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                  </span>
+                )}
               </Button>
 
-              {/* User Profile Dropdown */}
-              <div className="flex items-center space-x-3 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg px-3 py-2 border border-blue-200/50">
-                <div className="w-8 h-8 bg-gradient-to-br from-blue-400 to-purple-500 rounded-full flex items-center justify-center text-white font-medium text-sm">
-                  {profile?.first_name?.charAt(0) || user?.email?.charAt(0) || 'P'}
-                </div>
-                <div className="hidden md:block">
-                  <p className="text-sm font-medium text-gray-900">
-                    {profile?.first_name} {profile?.last_name}
-                  </p>
-                  <p className="text-xs text-gray-600">Particulier</p>
-                </div>
-                <Button 
-                  variant="ghost" 
-                  size="sm" 
-                  onClick={handleLogout}
-                  className="text-gray-600 hover:text-red-600 hover:bg-red-50"
-                >
-                  <LogOut className="h-4 w-4" />
-                </Button>
-              </div>
+              {/* Calendrier */}
+              <Button 
+                variant="ghost" 
+                size="sm"
+                onClick={() => navigate('/acheteur/calendar')}
+                className="relative"
+              >
+                <Calendar className="h-4 w-4" />
+              </Button>
+
+              {/* Profil simple */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                    <div className="w-7 h-7 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white font-medium text-xs">
+                        {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'U'}
+                      </span>
+                    </div>
+                    <ChevronDown className="h-3 w-3" />
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-48">
+                  <div className="px-3 py-2 border-b">
+                    <p className="text-sm font-medium">
+                      {profile?.full_name || user?.email?.split('@')[0] || 'Utilisateur'}
+                    </p>
+                  </div>
+                  <DropdownMenuItem 
+                    onClick={handleLogout}
+                    className="text-red-600"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    <span>Déconnexion</span>
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
         </header>
 
-        {/* Content Area */}
-        <main className="flex-1 overflow-auto p-6">
-          <Suspense fallback={
-            <div className="flex items-center justify-center h-64">
-              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
-            </div>
-          }>
-            {renderActiveComponent()}
+        {/* Page Content */}
+        <main className="flex-1 overflow-auto bg-slate-50/50">
+          <Suspense 
+            fallback={
+              <div className="flex items-center justify-center h-64">
+                <div className="text-center">
+                  <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+                  <p className="text-slate-600">Chargement...</p>
+                </div>
+              </div>
+            }
+          >
+            <Outlet />
           </Suspense>
         </main>
       </div>

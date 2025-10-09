@@ -1,0 +1,120 @@
+═══════════════════════════════════════════════════════════════
+    🚀 DÉPLOIEMENT SQL - MODE ULTRA RAPIDE (2 MINUTES)
+═══════════════════════════════════════════════════════════════
+
+📁 FICHIER À UTILISER:
+   supabase\schema-clean.sql (OUVERT DANS VS CODE)
+
+═══════════════════════════════════════════════════════════════
+
+✅ 5 ÉTAPES SIMPLES:
+
+   1️⃣  Dans VS Code, fichier schema-clean.sql :
+       → Ctrl+A (tout sélectionner)
+       → Ctrl+C (copier)
+
+   2️⃣  Ouvrez dans votre navigateur :
+       https://supabase.com/dashboard/project/ndenqikcogzrkrjnlvns/sql
+
+   3️⃣  Cliquez sur "New Query"
+
+   4️⃣  Dans l'éditeur SQL :
+       → Ctrl+V (coller)
+
+   5️⃣  Cliquez sur "Run" (ou Ctrl+Enter)
+       → Attendez 30-60 secondes
+
+═══════════════════════════════════════════════════════════════
+
+✅ RÉSULTAT ATTENDU:
+
+   Vous devriez voir dans le résultat en bas:
+   
+   "Success. No rows returned"
+   
+   OU
+   
+   Liste des résultats positifs
+
+   PAS D'ERREUR = SUCCÈS ! ✓
+
+═══════════════════════════════════════════════════════════════
+
+📊 CE QUI SERA CRÉÉ:
+
+   ✓ 15 tables principales
+   ✓ 28 indexes de performance
+   ✓ 4 plans d'abonnement (Free, Basic, Pro, Enterprise)
+   ✓ Row Level Security activé
+   ✓ Toutes les colonnes nécessaires
+
+═══════════════════════════════════════════════════════════════
+
+⚡ APRÈS LE DÉPLOIEMENT:
+
+   1. Revenez ici et dites: "SQL déployé"
+   
+   2. Je lance automatiquement:
+      ✓ Vérification (15/15 tables)
+      ✓ Création du bucket Storage
+      ✓ Build production
+      ✓ Déploiement frontend
+
+═══════════════════════════════════════════════════════════════
+
+💡 POURQUOI CETTE MÉTHODE ?
+
+   L'API JavaScript de Supabase ne peut PAS exécuter du SQL
+   brut pour des raisons de sécurité.
+   
+   Le Dashboard SQL Editor est la SEULE façon officielle
+   de déployer un schema complet.
+   
+   C'est la méthode recommandée par Supabase ! ✓
+
+═══════════════════════════════════════════════════════════════
+
+🎯 ACTION IMMÉDIATE:
+
+   Le fichier schema-clean.sql est OUVERT dans VS Code.
+   
+   → Ctrl+A puis Ctrl+C
+   → Allez sur le Dashboard Supabase
+   → Collez et exécutez
+   
+   C'EST TOUT ! 🚀
+
+═══════════════════════════════════════════════════════════════
+
+❓ EN CAS DE PROBLÈME:
+
+   Si vous voyez une ERREUR après avoir cliqué "Run":
+   
+   1. Copiez le message d'erreur COMPLET
+   2. Revenez me le donner
+   3. Je corrige immédiatement
+
+   Mais normalement, ça devrait fonctionner du premier coup ! ✓
+
+═══════════════════════════════════════════════════════════════
+
+⏱️  TEMPS RESTANT JUSQU'À LA PRODUCTION:
+
+   ✅ Copier/coller SQL:        1 minute
+   ✅ Exécution:                1 minute
+   ✅ Bucket Storage:           30 secondes
+   ✅ Build:                    3 minutes
+   ✅ Déploiement:              5 minutes
+   ─────────────────────────────────────────
+   TOTAL:                       ~11 minutes !
+
+═══════════════════════════════════════════════════════════════
+
+🎉 VOUS ÊTES À 2 MINUTES DE LA PRODUCTION !
+
+Allez-y maintenant ! Le fichier est ouvert, il ne reste qu'à
+copier/coller dans Supabase Dashboard.
+
+Revenez me dire "SQL déployé" et je m'occupe du reste ! 😊
+
+═══════════════════════════════════════════════════════════════

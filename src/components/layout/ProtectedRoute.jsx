@@ -64,7 +64,20 @@ export const AdminRoute = ({ children }) => {
     );
   }
 
-  if (!profile || (profile.role !== 'Admin' && profile.role !== 'admin')) {
+  // SÉCURITÉ RENFORCÉE : Vérification stricte du rôle admin
+  const userRole = (profile?.role || profile?.user_type || '').toLowerCase();
+  const isAdmin = userRole === 'admin' || userRole === 'administrateur';
+
+  console.log('🔐 AdminRoute CHECK:', { 
+    role: profile?.role, 
+    user_type: profile?.user_type, 
+    userRole, 
+    isAdmin,
+    pathname: location.pathname
+  });
+
+  if (!profile || !isAdmin) {
+    console.error('❌ ACCÈS REFUSÉ: Utilisateur non-admin tenté d\'accéder à', location.pathname);
     return <Navigate to="/dashboard" state={{ from: location }} replace />;
   }
 

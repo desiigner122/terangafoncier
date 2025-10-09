@@ -54,8 +54,11 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 
 const NotaireCases = () => {
+  const { user } = useAuth();
   const [cases, setCases] = useState([]);
   const [filteredCases, setFilteredCases] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
@@ -101,8 +104,132 @@ const NotaireCases = () => {
     'Testament'
   ];
 
-  // Données simulées des dossiers de vente de terrains via plateforme
-  const mockCases = [
+  // Chargement des données réelles depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadCases();
+    }
+  }, [user]);
+
+  const loadCases = async () => {
+    setIsLoading(true);
+    try {
+      // CHARGEMENT DOSSIERS ASSIGNÉS PAR L'ADMIN
+      // Via purchase_case_participants où role='notary' et user_id=notaireId
+      const result = await NotaireSupabaseService.getAssignedCases(user.id);
+      
+      if (result.success && result.data) {
+        const formattedCases = result.data.map(caseData => ({
+          id: caseData.id,
+          title: `Vente ${caseData.parcelle?.title || 'Terrain'} - ${caseData.parcelle?.location || 'Location'}`,
+          type: 'Vente terrain plateforme',
+          platformRef: caseData.case_number || caseData.id.substring(0, 8),
+          buyer: {
+            name: caseData.buyer?.full_name || 'Acheteur',
+            phone: caseData.buyer?.phone || 'N/A',
+            email: caseData.buyer?.email || 'N/A',
+            id: caseData.buyer_id
+          },
+          seller: {
+            name: caseData.seller?.full_name || 'Vendeur',
+            phone: caseData.seller?.phone || 'N/A',
+            email: caseData.seller?.email || 'N/A',
+            id: caseData.seller_id
+          },
+          status: caseData.workflow_stage || 'new',
+          priority: caseData.priority || 'medium',
+          openDate: caseData.created_at?.split('T')[0] || new Date().toISOString().split('T')[0],
+          dueDate: caseData.estimated_completion_date?.split('T')[0] || null,
+          lastActivity: caseData.updated_at?.split('T')[0] || caseData.created_at?.split('T')[0],
+          progress: calculateProgress(caseData),
+          description: `Vente de terrain via Teranga Foncier - ${caseData.parcelle?.title || ''}`,
+          property: {
+            address: caseData.parcelle?.location || 'Adresse inconnue',
+            area: caseData.parcelle?.surface_area ? `${caseData.parcelle.surface_area}m²` : 'N/A',
+            value: caseData.agreed_price || caseData.parcelle?.price || 0,
+            landTitle: caseData.parcelle?.title_deed_number || 'TF-PENDING',
+            zoning: caseData.parcelle?.land_use || 'Résidentiel'
+          },
+          transaction: {
+            price: caseData.agreed_price || 0,
+            deposit: caseData.deposit_amount || 0,
+            remaining: (caseData.agreed_price || 0) - (caseData.deposit_amount || 0),
+            paymentStatus: caseData.payment_status || 'pending',
+            escrowAccount: `ESC-${caseData.id.substring(0, 8)}`
+          },
+          documentsCount: caseData.documents?.length || 0,
+          completedDocuments: caseData.documents?.filter(d => d.status === 'verified').length || 0,
+          notaryFees: calculateNotaryFees(caseData.agreed_price || 0),
+          nextAction: getNextAction(caseData),
+          assignedAt: caseData.notary_assigned_at,
+          rawData: caseData // Garder les données brutes
+        }));
+        
+        setCases(formattedCases);
+        setFilteredCases(formattedCases);
+      } else {
+        // Aucun dossier assigné
+        setCases([]);
+        setFilteredCases([]);
+        window.safeGlobalToast({
+          title: "Aucun dossier",
+          description: "Aucun dossier ne vous a encore été assigné",
+          variant: "default"
+        });
+      }
+    } catch (error) {
+      console.error('Erreur chargement dossiers:', error);
+      window.safeGlobalToast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les dossiers assignés",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // HELPER: Calculer la progression du dossier
+  const calculateProgress = (caseData) => {
+    const stages = [
+      'initial_review',
+      'document_collection',
+      'document_verification',
+      'notary_assignment',
+      'deed_preparation',
+      'signature_preparation',
+      'signature_completed',
+      'registration',
+      'completed'
+    ];
+    const currentIndex = stages.indexOf(caseData.workflow_stage || 'initial_review');
+    return Math.round(((currentIndex + 1) / stages.length) * 100);
+  };
+
+  // HELPER: Calculer les frais de notaire (1.5% du prix)
+  const calculateNotaryFees = (price) => {
+    return Math.round(price * 0.015);
+  };
+
+  // HELPER: Déterminer la prochaine action
+  const getNextAction = (caseData) => {
+    const stage = caseData.workflow_stage;
+    const actions = {
+      'initial_review': 'Révision initiale du dossier',
+      'document_collection': 'Collecte des documents manquants',
+      'document_verification': 'Vérification des documents',
+      'notary_assignment': 'Prise en charge du dossier',
+      'deed_preparation': 'Préparation de l\'acte notarié',
+      'signature_preparation': 'Préparation de la signature',
+      'signature_completed': 'Enregistrement au cadastre',
+      'registration': 'Finalisation de l\'enregistrement',
+      'completed': 'Dossier complété'
+    };
+    return actions[stage] || 'Action à déterminer';
+  };
+
+  // PLUS DE MOCK DATA - Supprimé
+  // const mockCases = [
     {
       id: 'CASE-001',
       title: 'Vente Terrain Résidentiel - Ouakam',

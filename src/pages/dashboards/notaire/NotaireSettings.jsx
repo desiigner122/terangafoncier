@@ -56,6 +56,8 @@ import {
   MapPin,
   Building2
 } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -66,12 +68,19 @@ import { Progress } from '@/components/ui/progress';
 import { Slider } from '@/components/ui/slider';
 
 const NotaireSettings = () => {
-  const [settings, setSettings] = useState({
+  const { user } = useAuth();
+  const [settings, setSettings] = useState({});
+  const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState('profile');
+  const [unsavedChanges, setUnsavedChanges] = useState(false);
+
+  // Paramètres par défaut
+  const defaultSettings = {
     // Profil utilisateur
     profile: {
-      firstName: 'Maître',
-      lastName: 'Notaire',
-      email: 'maitre.notaire@terangafoncier.sn',
+      firstName: user?.first_name || 'Maître',
+      lastName: user?.last_name || 'Notaire',
+      email: user?.email || 'maitre.notaire@terangafoncier.sn',
       phone: '+221 77 123 45 67',
       office: 'Étude Notariale Dakar Centre',
       chambre: 'N°12345',
@@ -110,10 +119,37 @@ const NotaireSettings = () => {
       videoConference: true,
       paymentGateway: false
     }
-  });
+  };
 
-  const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState('profile');
+  // Chargement des paramètres depuis Supabase
+  useEffect(() => {
+    if (user) {
+      loadSettings();
+    }
+  }, [user]);
+
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const result = await NotaireSupabaseService.getNotaireSettings(user.id);
+      if (result.success && result.data) {
+        setSettings(result.data);
+      } else {
+        // Si aucun paramètre n'existe, utiliser les paramètres par défaut
+        setSettings(defaultSettings);
+      }
+    } catch (error) {
+      console.error('Erreur chargement paramètres:', error);
+      setSettings(defaultSettings);
+      window.safeGlobalToast({
+        title: "Erreur de chargement",
+        description: "Impossible de charger les paramètres, utilisation des valeurs par défaut",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleSettingChange = (category, key, value) => {
     setSettings(prev => ({
@@ -123,58 +159,120 @@ const NotaireSettings = () => {
         [key]: value
       }
     }));
+    setUnsavedChanges(true);
   };
 
-  const handleSaveSettings = () => {
+  const handleSaveSettings = async () => {
+    if (!user || !unsavedChanges) return;
+    
     setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Paramètres sauvegardés",
-        description: "Vos préférences ont été mises à jour avec succès",
-        variant: "success"
-      });
-      setIsLoading(false);
-    }, 1500);
-  };
-
-  const handleResetSettings = () => {
-    if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les paramètres ?')) {
-      setIsLoading(true);
-      setTimeout(() => {
+    try {
+      const result = await NotaireSupabaseService.updateNotaireSettings(user.id, settings);
+      if (result.success) {
+        setUnsavedChanges(false);
         window.safeGlobalToast({
-          title: "Paramètres réinitialisés",
-          description: "Tous les paramètres ont été restaurés par défaut",
+          title: "Paramètres sauvegardés",
+          description: "Vos préférences ont été mises à jour avec succès",
           variant: "success"
         });
+      } else {
+        throw new Error(result.error || 'Erreur de sauvegarde');
+      }
+    } catch (error) {
+      console.error('Erreur sauvegarde paramètres:', error);
+      window.safeGlobalToast({
+        title: "Erreur de sauvegarde",
+        description: "Impossible de sauvegarder les paramètres",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleResetSettings = async () => {
+    if (confirm('Êtes-vous sûr de vouloir réinitialiser tous les paramètres ?')) {
+      setIsLoading(true);
+      try {
+        setSettings(defaultSettings);
+        const result = await NotaireSupabaseService.updateNotaireSettings(user.id, defaultSettings);
+        if (result.success) {
+          setUnsavedChanges(false);
+          window.safeGlobalToast({
+            title: "Paramètres réinitialisés",
+            description: "Tous les paramètres ont été restaurés par défaut",
+            variant: "success"
+          });
+        }
+      } catch (error) {
+        console.error('Erreur réinitialisation:', error);
+        window.safeGlobalToast({
+          title: "Erreur",
+          description: "Impossible de réinitialiser les paramètres",
+          variant: "destructive"
+        });
+      } finally {
         setIsLoading(false);
-      }, 1000);
+      }
     }
   };
 
   const handleExportSettings = () => {
-    setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const dataStr = JSON.stringify(settings, null, 2);
+      const dataUri = 'data:application/json;charset=utf-8,'+ encodeURIComponent(dataStr);
+      
+      const exportFileDefaultName = `notaire-settings-${new Date().toISOString().split('T')[0]}.json`;
+      
+      const linkElement = document.createElement('a');
+      linkElement.setAttribute('href', dataUri);
+      linkElement.setAttribute('download', exportFileDefaultName);
+      linkElement.click();
+      
       window.safeGlobalToast({
         title: "Export terminé",
         description: "Configuration exportée avec succès",
         variant: "success"
       });
-      setIsLoading(false);
-    }, 1000);
+    } catch (error) {
+      window.safeGlobalToast({
+        title: "Erreur d'export",
+        description: "Impossible d'exporter la configuration",
+        variant: "destructive"
+      });
+    }
   };
 
   const handleImportSettings = () => {
     const input = document.createElement('input');
     input.type = 'file';
     input.accept = '.json';
-    input.onchange = (e) => {
+    input.onchange = async (e) => {
       const file = e.target.files[0];
       if (file) {
-        window.safeGlobalToast({
-          title: "Configuration importée",
-          description: `Paramètres importés depuis ${file.name}`,
-          variant: "success"
-        });
+        try {
+          const text = await file.text();
+          const importedSettings = JSON.parse(text);
+          
+          // Validation basique de la structure
+          if (importedSettings.profile && importedSettings.preferences) {
+            setSettings(importedSettings);
+            setUnsavedChanges(true);
+            window.safeGlobalToast({
+              title: "Configuration importée",
+              description: `Paramètres importés depuis ${file.name}`,
+              variant: "success"
+            });
+          } else {
+            throw new Error('Format de fichier invalide');
+          }
+        } catch (error) {
+          window.safeGlobalToast({
+            title: "Erreur d'import",
+            description: "Format de fichier invalide ou corrompu",
+            variant: "destructive"
+          });
+        }
       }
     };
     input.click();
@@ -211,6 +309,12 @@ const NotaireSettings = () => {
         </div>
         
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+          {unsavedChanges && (
+            <Badge className="bg-yellow-500 text-white px-3 py-1">
+              <AlertTriangle className="h-4 w-4 mr-1" />
+              Modifications non sauvegardées
+            </Badge>
+          )}
           <Button 
             variant="outline"
             onClick={handleExportSettings}
@@ -229,10 +333,14 @@ const NotaireSettings = () => {
           </Button>
           <Button 
             onClick={handleSaveSettings}
-            disabled={isLoading}
-            className="bg-blue-600 hover:bg-blue-700"
+            disabled={isLoading || !unsavedChanges}
+            className="bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
           >
-            <Save className="h-4 w-4 mr-2" />
+            {isLoading ? (
+              <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
             Sauvegarder
           </Button>
         </div>

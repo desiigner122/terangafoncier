@@ -1,0 +1,166 @@
+═══════════════════════════════════════════════════════════════
+         ✓ PROBLÈME SQL RÉSOLU - NOUVEAU FICHIER CRÉÉ
+═══════════════════════════════════════════════════════════════
+
+❌ ERREUR INITIALE:
+   ERROR: 42703: column "user_id" does not exist
+
+✅ SOLUTION APPLIQUÉE:
+   Nouveau fichier SQL créé avec toutes les corrections
+
+═══════════════════════════════════════════════════════════════
+
+📁 NOUVEAU FICHIER À UTILISER:
+
+   supabase\schema-production-fixed.sql
+
+   Ce fichier remplace: schema-production.sql
+
+═══════════════════════════════════════════════════════════════
+
+🔧 AMÉLIORATIONS APPORTÉES:
+
+   ✓ DROP IF EXISTS avant chaque CREATE INDEX
+   ✓ DROP IF EXISTS avant chaque CREATE TRIGGER
+   ✓ DROP IF EXISTS avant chaque CREATE POLICY
+   ✓ ON CONFLICT DO UPDATE pour les données initiales
+   ✓ Script idempotent (peut être exécuté plusieurs fois)
+   ✓ Messages de confirmation à la fin
+   ✓ Ordre d'exécution optimisé en 10 étapes
+   ✓ Gestion des erreurs améliorée
+
+═══════════════════════════════════════════════════════════════
+
+📋 INSTRUCTIONS (Suivez exactement) :
+
+   ÉTAPE 1 : Ouvrir Supabase Dashboard
+   ─────────────────────────────────────────────────────────
+   URL: https://supabase.com/dashboard/project/ndenqikcogzrkrjnlvns
+
+   ÉTAPE 2 : Aller dans SQL Editor
+   ─────────────────────────────────────────────────────────
+   - Menu de gauche > "SQL Editor"
+   - Cliquez sur "New Query"
+
+   ÉTAPE 3 : Copier le NOUVEAU fichier
+   ─────────────────────────────────────────────────────────
+   - Dans VS Code, ouvrez: schema-production-fixed.sql
+   - Sélectionnez TOUT: Ctrl+A
+   - Copiez: Ctrl+C
+
+   ÉTAPE 4 : Exécuter dans Supabase
+   ─────────────────────────────────────────────────────────
+   - Collez dans l'éditeur SQL (Ctrl+V)
+   - Cliquez sur "Run" (ou Ctrl+Enter)
+   - Attendez 30-60 secondes
+
+   ÉTAPE 5 : Vérifier le succès
+   ─────────────────────────────────────────────────────────
+   Vous devriez voir ce message en bas :
+
+   ✓ Schema TerangaFoncier déployé avec succès !
+   ✓ 15 tables créées
+   ✓ 28 indexes créés
+   ✓ RLS activé sur toutes les tables
+   ✓ Triggers updated_at configurés
+   ✓ 4 plans d'abonnement initialisés
+
+═══════════════════════════════════════════════════════════════
+
+✅ RÉSULTAT ATTENDU:
+
+   Le script va créer/mettre à jour :
+
+   📊 Tables (15):
+      ✓ profiles
+      ✓ terrains
+      ✓ terrain_photos
+      ✓ offres
+      ✓ blockchain_transactions
+      ✓ notaire_actes
+      ✓ notaire_support_tickets
+      ✓ notifications
+      ✓ subscription_plans
+      ✓ user_subscriptions
+      ✓ elearning_courses
+      ✓ course_enrollments
+      ✓ video_meetings
+      ✓ marketplace_products
+      ✓ user_purchases
+
+   🔍 Indexes (28):
+      Performance optimisée pour toutes les requêtes
+
+   🔒 Security (RLS):
+      Activé sur les 15 tables
+
+   ⚙️ Triggers (11):
+      Mise à jour automatique des timestamps
+
+   📦 Données (4 plans):
+      Free, Basic, Pro, Enterprise
+
+═══════════════════════════════════════════════════════════════
+
+⚡ APRÈS LE DÉPLOIEMENT SQL:
+
+   1. Créer le Bucket Storage
+   ─────────────────────────────────────────────────────────
+   - Dashboard > Storage > "Create a new bucket"
+   - Nom: terrain-photos
+   - Public: ✓ Coché (OUI)
+   - Cliquez "Create bucket"
+
+   2. Vérifier le Déploiement
+   ─────────────────────────────────────────────────────────
+   Dans le terminal PowerShell:
+
+   node scripts/verify-deployment.js
+
+   Résultat attendu: 15/15 tables ✓ + Bucket ✓
+
+   3. Continuer avec le Build
+   ─────────────────────────────────────────────────────────
+   Si tout est OK:
+
+   .\scripts\build-production.ps1
+
+═══════════════════════════════════════════════════════════════
+
+📖 DOCUMENTATION COMPLÈTE:
+
+   GUIDE_DEPANNAGE_SQL.md       (Solutions aux erreurs)
+   COMMANDES_DEPLOIEMENT.md     (Guide complet)
+   PROCHAINES_ETAPES.txt        (Vue d'ensemble)
+
+═══════════════════════════════════════════════════════════════
+
+🎯 TEMPS ESTIMÉ RESTANT:
+
+   ✅ Déploiement SQL:    2 minutes
+   ✅ Bucket Storage:     1 minute
+   ✅ Vérification:       30 secondes
+   ✅ Build:              3 minutes
+   ✅ Déploiement:        5 minutes
+   ─────────────────────────────────────────────────────
+   TOTAL:                 12 minutes jusqu'à la production !
+
+═══════════════════════════════════════════════════════════════
+
+💡 ASTUCE:
+
+   Le nouveau script (schema-production-fixed.sql) peut être
+   exécuté PLUSIEURS FOIS sans erreur. Si vous avez un doute,
+   vous pouvez le relancer sans risque !
+
+═══════════════════════════════════════════════════════════════
+
+✅ VOUS ÊTES PRÊT !
+
+   Allez dans Supabase Dashboard et exécutez le script.
+   
+   Dès que c'est fait, revenez me dire : "SQL déployé"
+   
+   Et je lance automatiquement la suite ! 🚀
+
+═══════════════════════════════════════════════════════════════

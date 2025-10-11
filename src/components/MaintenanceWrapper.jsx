@@ -29,10 +29,8 @@ const MaintenanceWrapper = ({ children }) => {
 
   // Si le mode maintenance est activé
   if (isMaintenanceMode) {
-    // Vérifier si l'utilisateur est autorisé à accéder
-    const userRole = user?.role || 'guest';
-    
-    if (isUserAllowed(userRole)) {
+    // Vérifier si l'utilisateur est autorisé à accéder (sans paramètre)
+    if (isUserAllowed()) {
       // Utilisateur autorisé (admin) - afficher l'app avec un bandeau
       return (
         <div>

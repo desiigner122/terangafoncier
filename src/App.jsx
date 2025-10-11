@@ -695,11 +695,13 @@ function App() {
                 
                 {/* ROUTES ADMIN LEGACY - GARDÉES POUR COMPATIBILITÉ */}
                 <Route path="revenue" element={<RevenueManagementPage />} />
+                <Route path="financial" element={<RevenueManagementPage />} /> {/* Alias pour sidebar */}
                 <Route path="property-management" element={<PropertyManagementPage />} />
                 <Route path="support" element={<SupportTicketsPage />} />
                 <Route path="export" element={<BulkExportPage />} />
                 <Route path="user-management" element={<UserManagementPage />} />
                 <Route path="subscriptions" element={<SubscriptionManagementPage />} />
+                <Route path="notifications" element={<NotificationsPageNew />} /> {/* Page notifications admin */}
                 <Route path="system-requests" element={<AdminSystemRequestsPage />} />
                 <Route path="contracts" element={<AdminContractsPage />} />
                 <Route path="reports" element={<AdminReportsPage />} />

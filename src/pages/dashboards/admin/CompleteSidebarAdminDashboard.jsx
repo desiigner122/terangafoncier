@@ -6,21 +6,24 @@ import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import ModernAdminOverview from '../../../components/admin/ModernAdminOverview';
 
-// Import des nouvelles pages admin (Phase 2)
+// Import des pages modernes avec données réelles (Modern* - dans dashboards/admin/)
+import ModernUsersPage from './ModernUsersPage';
+import ModernPropertiesManagementPage from './ModernPropertiesManagementPage';
+import ModernTransactionsPage from './ModernTransactionsPage';
+import ModernSettingsPage from './ModernSettingsPage';
+
+// Import des pages admin (dans pages/admin/)
+import AdminAnalyticsPage from '../../admin/AdminAnalyticsPage';
 import RevenueManagementPage from '../../admin/RevenueManagementPage';
-import PropertyManagementPage from '../../admin/PropertyManagementPage';
 import SupportTicketsPage from '../../admin/SupportTicketsPage';
 import BulkExportPage from '../../admin/BulkExportPage';
 import AdvancedSubscriptionManagementPage from '../../admin/AdvancedSubscriptionManagementPage';
-import UserManagementPage from '../../admin/UserManagementPage';
 import SubscriptionManagementPage from '../../admin/SubscriptionManagementPage';
 import AdminAuditLogPage from '../../admin/AdminAuditLogPage';
-import AdminAnalyticsPage from '../../admin/AdminAnalyticsPage';
 import AdminReportsPage from '../../admin/AdminReportsPage';
-import AdminSettingsPage from '../../admin/AdminSettingsPage';
 import AdminBlogPage from '../../admin/AdminBlogPage';
 
-// Import des pages Phase 1 - CMS & Marketing
+// Import des pages CMS & Marketing
 import AdminLeadsList from '../../admin/AdminLeadsList';
 import AdminPagesList from '../../admin/AdminPagesList';
 import AdminPageEditor from '../../admin/AdminPageEditor';
@@ -960,11 +963,17 @@ const CompleteSidebarAdminDashboard = () => {
                   <motion.button
                     key={item.id}
                     onClick={() => {
-                      if (item.id === 'overview') {
-                        navigate('/admin');
-                      } else {
-                        navigate(`/admin/${item.id}`);
-                      }
+                      // Routes spéciales avec chemins personnalisés
+                      const specialRoutes = {
+                        'overview': '/admin',
+                        'cms': '/admin/cms/pages',
+                        'leads': '/admin/marketing/leads',
+                        'audit': '/admin/audit-log',
+                        'financial': '/admin/revenue'
+                      };
+                      
+                      const route = specialRoutes[item.id] || `/admin/${item.id}`;
+                      navigate(route);
                       setMobileMenuOpen(false);
                     }}
                     whileHover={{ scale: 1.02 }}
@@ -1321,13 +1330,13 @@ const CompleteSidebarAdminDashboard = () => {
       case 'validation':
         return renderPropertyValidation();
       case 'users':
-        return <UserManagementPage />; // ✅ NOUVELLE PAGE MODERNE
+        return <ModernUsersPage />; // ✅ PAGE MODERNE AVEC DONNÉES RÉELLES
       case 'subscriptions':
         return <SubscriptionManagementPage />; // ✅ NOUVELLE PAGE MODERNE
       case 'properties':
-        return <PropertyManagementPage />; // ✅ NOUVELLE PAGE MODERNE
+        return <ModernPropertiesManagementPage />; // ✅ PAGE MODERNE AVEC DONNÉES RÉELLES
       case 'transactions':
-        return renderTransactions(); // TODO: Créer AdminTransactionsPage
+        return <ModernTransactionsPage />; // ✅ PAGE MODERNE AVEC DONNÉES RÉELLES
       case 'financial':
         return <RevenueManagementPage />; // ✅ NOUVELLE PAGE MODERNE
       case 'reports':
@@ -1340,22 +1349,22 @@ const CompleteSidebarAdminDashboard = () => {
         return renderSystem(); // TODO: Créer AdminSystemPage
       // 🆕 NOUVELLES PAGES PHASE 1 - CMS & MARKETING
       case 'cms':
-        return renderTempCMS(); // 🔧 TEMP: En cours de développement 
+        return <AdminPagesList />; // ✅ Gestion des pages CMS
       case 'leads':
-        return renderTempLeads(); // 🔧 TEMP: En cours de développement
+        return <AdminLeadsList />; // ✅ Gestion des leads marketing
       case 'blog':
         return <AdminBlogPage />; // ✅ Articles blog
       // 🆕 NOUVELLES PAGES PHASE 2
       case 'notifications':
         return renderNotifications(); // TODO: Créer AdminNotificationsPage
       case 'analytics':
-        return <AdminAnalyticsPage />; // ✅ NOUVELLE PAGE MODERNE
+        return <AdminAnalyticsPage />; // ✅ PAGE ADMIN AVEC GRAPHIQUES
       case 'content':
         return <AdminBlogPage />; // ✅ NOUVELLE PAGE MODERNE
       case 'commissions':
         return renderCommissions(); // TODO: Créer AdminCommissionsPage
       case 'settings':
-        return <AdminSettingsPage />; // ✅ NOUVELLE PAGE MODERNE
+        return <ModernSettingsPage />; // ✅ PAGE MODERNE AVEC CONFIGURATION
       // 🆕 PAGES UTILITAIRES
       case 'bulk-export':
         return <BulkExportPage />;
@@ -3503,75 +3512,6 @@ const CompleteSidebarAdminDashboard = () => {
     </div>
   );
 };
-
-  // 🔧 FONCTIONS DE RENDU TEMPORAIRES (PAGES EN DÉVELOPPEMENT)
-  const renderTempCMS = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">📄 Gestion Pages CMS</h2>
-        <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-          En développement
-        </Badge>
-      </div>
-      <Card>
-        <CardContent className="p-8 text-center">
-          <FileText className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Gestion CMS</h3>
-          <p className="text-gray-600 mb-4">
-            Interface de gestion des pages du site web en cours de développement.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Pages Statiques</h4>
-              <p className="text-sm text-gray-600">À propos, Contact, FAQ</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Contenus Marketing</h4>
-              <p className="text-sm text-gray-600">Landing pages, Offres</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Documentation</h4>
-              <p className="text-sm text-gray-600">Guides, Tutoriels</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
-
-  const renderTempLeads = () => (
-    <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold">📧 Leads Marketing</h2>
-        <Badge variant="outline" className="bg-yellow-100 text-yellow-800">
-          En développement
-        </Badge>
-      </div>
-      <Card>
-        <CardContent className="p-8 text-center">
-          <Mail className="h-16 w-16 text-gray-300 mx-auto mb-4" />
-          <h3 className="text-lg font-semibold mb-2">Centre de Leads</h3>
-          <p className="text-gray-600 mb-4">
-            Gestion des prospects et leads marketing en cours de développement.
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Nouveaux Leads</h4>
-              <p className="text-sm text-gray-600">Contacts récents</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Suivi Commercial</h4>
-              <p className="text-sm text-gray-600">Pipeline de vente</p>
-            </div>
-            <div className="p-4 border rounded-lg">
-              <h4 className="font-medium">Campagnes</h4>
-              <p className="text-sm text-gray-600">Email marketing</p>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    </div>
-  );
 
   // 🎯 RENDER FUNCTIONS TERMINÉES - MAINTENANT LA STRUCTURE PRINCIPALE
 

@@ -6,6 +6,7 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import globalAdminService from '@/services/GlobalAdminService';
+import { supabase } from '@/lib/supabaseClient';
 
 const MaintenanceContext = createContext();
 
@@ -19,6 +20,7 @@ export const useMaintenanceMode = () => {
 
 export const MaintenanceProvider = ({ children }) => {
   const [isMaintenanceMode, setIsMaintenanceMode] = useState(false);
+  const [userProfile, setUserProfile] = useState(null);
   const [maintenanceConfig, setMaintenanceConfig] = useState({
     message: 'Maintenance en cours...',
     estimatedDuration: null,
@@ -28,9 +30,33 @@ export const MaintenanceProvider = ({ children }) => {
   });
   const [loading, setLoading] = useState(true);
 
-  // Vérifier le statut de maintenance au chargement
+  // Vérifier le statut de maintenance ET récupérer le profil utilisateur
   useEffect(() => {
-    checkMaintenanceStatus();
+    const initializeMaintenanceCheck = async () => {
+      try {
+        // 1. Récupérer le profil utilisateur
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('role, email')
+            .eq('id', user.id)
+            .single();
+          
+          setUserProfile(profile);
+          console.log('✅ Profil utilisateur récupéré:', profile);
+        }
+
+        // 2. Vérifier le mode maintenance
+        await checkMaintenanceStatus();
+      } catch (error) {
+        console.error('Erreur initialisation maintenance:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeMaintenanceCheck();
   }, []);
 
   const checkMaintenanceStatus = async () => {
@@ -122,14 +148,23 @@ export const MaintenanceProvider = ({ children }) => {
     }
   };
 
-  const isUserAllowed = (userRole) => {
+  const isUserAllowed = () => {
     if (!isMaintenanceMode) return true;
     
     // Les admins peuvent toujours accéder
-    if (userRole === 'admin' || userRole === 'Admin') return true;
+    if (userProfile?.role === 'admin' || userProfile?.role === 'Admin') {
+      console.log('✅ Admin autorisé malgré maintenance');
+      return true;
+    }
     
     // Vérifier la liste des utilisateurs autorisés
-    return maintenanceConfig.allowedUsers.includes(userRole);
+    if (userProfile?.email && maintenanceConfig.allowedUsers.includes(userProfile.email)) {
+      console.log('✅ Utilisateur autorisé malgré maintenance');
+      return true;
+    }
+
+    console.log('❌ Utilisateur non autorisé - mode maintenance actif');
+    return false;
   };
 
   const value = {
@@ -139,7 +174,8 @@ export const MaintenanceProvider = ({ children }) => {
     enableMaintenanceMode,
     disableMaintenanceMode,
     isUserAllowed,
-    checkMaintenanceStatus
+    checkMaintenanceStatus,
+    userProfile // Exposer le profil utilisateur
   };
 
   return (

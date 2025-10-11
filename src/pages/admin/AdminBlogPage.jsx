@@ -10,11 +10,9 @@ import {
   Trash2
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-// useToast import supprimé - utilisation window.safeGlobalToast
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { Link, useNavigate } from 'react-router-dom';
-
-import { supabase } from '@/lib/supabaseClient';
+import BlogService from '@/services/admin/BlogService';
 
 const AdminBlogPage = () => {
   const [posts, setPosts] = useState([]);
@@ -29,9 +27,12 @@ const AdminBlogPage = () => {
       setLoading(true);
       setFetchError(null);
       try {
-        const { data, error } = await supabase.from('blog').select('*').order('published_at', { ascending: false });
-        if (error) throw error;
-        setPosts(data);
+        // Phase 1: Use BlogService for centralized blog logic
+        const result = await BlogService.getPosts();
+        if (!result.success) {
+          throw new Error(result.error || 'Erreur lors du chargement des articles');
+        }
+        setPosts(result.data || []);
       } catch (err) {
         setFetchError(err.message);
         setPosts([]);
@@ -45,8 +46,11 @@ const AdminBlogPage = () => {
 
   const handleDeletePost = async (postId) => {
     try {
-      const { error } = await supabase.from('blog').delete().eq('id', postId);
-      if (error) throw error;
+      // Phase 1: Use BlogService for delete
+      const result = await BlogService.deletePost(postId);
+      if (!result.success) {
+        throw new Error(result.error || 'Erreur lors de la suppression');
+      }
       setPosts(prev => prev.filter(p => p.id !== postId));
       window.safeGlobalToast({
         title: "Article Supprimé",

@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaTicketAlt, FaReply, FaClock, FaCheckCircle, FaExclamationTriangle, FaUser, FaCalendarAlt } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 const SupportTicketsPage = () => {
   const [tickets, setTickets] = useState([]);
@@ -25,29 +26,45 @@ const SupportTicketsPage = () => {
   const fetchTickets = async () => {
     try {
       setLoading(true);
-      const params = new URLSearchParams({ page: currentPage, limit: 20 });
       
-      if (filters.status) params.append('status', filters.status);
-      if (filters.priority) params.append('priority', filters.priority);
+      // Build Supabase query
+      let query = supabase
+        .from('support_tickets')
+        .select(`
+          *,
+          user:profiles!user_id (
+            id,
+            full_name,
+            email
+          )
+        `)
+        .order('created_at', { ascending: false });
 
-      const response = await fetch(`http://localhost:3000/api/admin/support/tickets?${params}`, {
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        }
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        setTickets(result.data);
-        setTotalPages(result.meta.pagination.pages);
-      } else {
-        toast.error('Erreur lors du chargement des tickets');
+      // Apply filters
+      if (filters.status) {
+        query = query.eq('status', filters.status);
       }
+      if (filters.priority) {
+        query = query.eq('priority', filters.priority);
+      }
+
+      // Pagination
+      const from = (currentPage - 1) * 20;
+      const to = from + 19;
+      query = query.range(from, to);
+
+      const { data, error, count } = await query;
+
+      if (error) throw error;
+
+      setTickets(data || []);
+      setTotalPages(Math.ceil((count || 0) / 20));
+      
+      console.log('✅ Support tickets loaded from Supabase:', data?.length);
+      
     } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur de connexion');
+      console.error('❌ Error loading support tickets:', error);
+      toast.error('Erreur lors du chargement des tickets');
     } finally {
       setLoading(false);
     }
@@ -61,31 +78,25 @@ const SupportTicketsPage = () => {
     }
 
     try {
-      const response = await fetch(`http://localhost:3000/api/admin/support/tickets/${selectedTicket.id}/respond`, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${localStorage.getItem('token')}`,
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          message: responseMessage,
+      // Update ticket status and add response using Supabase
+      const { error } = await supabase
+        .from('support_tickets')
+        .update({
           status: newStatus,
-          internal_note: internalNote
+          internal_note: internalNote,
+          admin_response: responseMessage,
+          updated_at: new Date().toISOString()
         })
-      });
+        .eq('id', selectedTicket.id);
 
-      const result = await response.json();
+      if (error) throw error;
 
-      if (result.success) {
-        toast.success('Réponse envoyée avec succès');
-        setShowResponseModal(false);
-        setSelectedTicket(null);
-        setResponseMessage('');
-        setInternalNote('');
-        fetchTickets(); // Recharger la liste
-      } else {
-        toast.error(result.error.message);
-      }
+      toast.success('Réponse envoyée avec succès');
+      setShowResponseModal(false);
+      setSelectedTicket(null);
+      setResponseMessage('');
+      setInternalNote('');
+      fetchTickets(); // Recharger la liste
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de l\'envoi de la réponse');

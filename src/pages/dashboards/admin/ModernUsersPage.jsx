@@ -46,7 +46,6 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import ModernAdminSidebar from '@/components/admin/ModernAdminSidebar';
 import { 
   Dialog, 
   DialogContent, 
@@ -689,16 +688,9 @@ const ModernUsersPage = () => {
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <ModernAdminSidebar stats={{
-        newUsers: userStats.newUsers || 0,
-        pendingProperties: 0,
-        pendingTransactions: 0
-      }} />
-      
+    <div className="min-h-screen bg-gray-50">
       {/* Contenu principal */}
-      <div className="flex-1 p-6 space-y-6">
+      <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

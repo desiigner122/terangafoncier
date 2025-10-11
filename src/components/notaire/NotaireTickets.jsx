@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { useAuth } from '@/contexts/AuthContext';
-import { supabase } from '@/config/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 /**
  * NotaireTickets - Système de tickets support pour notaires

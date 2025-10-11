@@ -111,8 +111,8 @@ const Sidebar = () => {
         const fetchNotificationsCount = async () => {
             if (user) {
                 // FIX: Utiliser 'read' au lieu de 'is_read' pour correspondre � la structure DB
-                const { count: generalCount } = await supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false);
-                const { count: requestsCount } = await supabase.from('requests').select('*', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ['En cours', 'Nouvelle']);
+                const { count: generalCount } = await supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).eq('read', false).limit(0);
+                const { count: requestsCount } = await supabase.from('requests').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['En cours', 'Nouvelle']).limit(0);
                 setNotifications({
                     general: generalCount || 0,
                     requests: requestsCount || 0,

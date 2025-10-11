@@ -26,7 +26,7 @@ const AdminUserRequestsPage = () => {
             setLoading(true);
             const { data, error } = await supabase
                 .from('requests')
-                .select('*, user:user_id(full_name, role)')
+                .select('*')
                 .eq('request_type', 'account_upgrade');
             
             if (error) {

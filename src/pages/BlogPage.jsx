@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
+import BlogService from '@/services/admin/BlogService';
 import { 
   Tag, 
   Calendar, 
@@ -26,6 +27,30 @@ import {
 const BlogPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('all');
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+
+  useEffect(() => {
+    const fetchPosts = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Phase 1: Fetch published posts from BlogService
+        const result = await BlogService.getPosts({ status: 'published' });
+        if (!result.success) {
+          throw new Error(result.error || 'Erreur lors du chargement des articles');
+        }
+        setPosts(result.data || []);
+      } catch (err) {
+        setError(err.message);
+        console.error('Error loading blog posts:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPosts();
+  }, []);
 
   const categories = [
     { id: 'all', name: 'Tous les articles', count: 12 },
@@ -160,13 +185,15 @@ const BlogPage = () => {
     }
   ];
 
-  const allPosts = [...featuredPosts, ...blogPosts];
+  // Phase 1: Use loaded posts from Supabase instead of hardcoded data
+  // Fallback to hardcoded data if no posts loaded
+  const allPosts = posts.length > 0 ? posts : [...featuredPosts, ...blogPosts];
 
   const filteredPosts = allPosts.filter(post => {
     const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
-    const matchesSearch = post.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()));
+    const matchesSearch = post.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
     return matchesCategory && matchesSearch;
   });
 
@@ -211,6 +238,20 @@ const BlogPage = () => {
                 Guides experts, conseils pratiques et actualités du marché foncier
               </p>
               
+              {/* Loading State */}
+              {loading && (
+                <div className="text-white/80 py-4">
+                  Chargement des articles...
+                </div>
+              )}
+              
+              {/* Error State */}
+              {error && (
+                <div className="bg-red-100 text-red-800 px-4 py-3 rounded-xl mb-4 max-w-2xl mx-auto">
+                  {error}
+                </div>
+              )}
+              
               {/* Search Bar */}
               <div className="relative max-w-2xl mx-auto mb-8">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -219,6 +260,7 @@ const BlogPage = () => {
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-12 py-4 text-lg bg-white/90 backdrop-blur-sm border-0 rounded-xl"
+                  disabled={loading}
                 />
               </div>
 

@@ -27,7 +27,7 @@ const AdminSystemRequestsPage = () => {
             setLoading(true);
             const { data, error } = await supabase
                 .from('requests')
-                .select('*, user:user_id(full_name), parcel:parcel_id(name)')
+                .select('*')
                 .eq('request_type', 'parcel_listing');
             
             if (error) {

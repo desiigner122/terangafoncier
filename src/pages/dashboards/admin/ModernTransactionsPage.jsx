@@ -61,7 +61,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'react-hot-toast';
-import ModernAdminSidebar from '@/components/admin/ModernAdminSidebar';
 import globalAdminService from '@/services/GlobalAdminService';
 
 const ModernTransactionsPage = () => {
@@ -719,16 +718,9 @@ const ModernTransactionsPage = () => {
   // ============================================================================
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <ModernAdminSidebar stats={{
-        newUsers: 0,
-        pendingProperties: 0,
-        pendingTransactions: transactionStats.pendingTransactions || 0
-      }} />
-      
+    <div className="min-h-screen bg-gray-50">
       {/* Contenu principal */}
-      <div className="flex-1 p-6 space-y-6">
+      <div className="p-6 space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>

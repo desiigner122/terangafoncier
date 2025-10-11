@@ -1,4 +1,4 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { useParams, Link, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { sampleBlogPosts } from '@/data';
@@ -13,15 +13,53 @@ import {
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Badge } from '@/components/ui/badge';
-// useToast import supprimé - utilisation window.safeGlobalToast
+import BlogService from '@/services/admin/BlogService';
 
 const BlogPostPage = () => {
   const { slug } = useParams();
   const navigate = useNavigate();
-  // toast remplacé par window.safeGlobalToast
-  const post = sampleBlogPosts.find(p => p.slug === slug);
+  const [post, setPost] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  if (!post) {
+  useEffect(() => {
+    const fetchPost = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        // Phase 1: Load from BlogService
+        const result = await BlogService.getPostBySlug(slug);
+        if (!result.success) {
+          // Fallback to hardcoded data
+          const fallbackPost = sampleBlogPosts.find(p => p.slug === slug);
+          if (fallbackPost) {
+            setPost(fallbackPost);
+          } else {
+            throw new Error('Article non trouvé');
+          }
+        } else {
+          setPost(result.data);
+        }
+      } catch (err) {
+        setError(err.message);
+        console.error('Error loading blog post:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchPost();
+  }, [slug]);
+
+  if (loading) {
+    return (
+      <div className="container mx-auto py-20 text-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-4 text-muted-foreground">Chargement...</p>
+      </div>
+    );
+  }
+
+  if (error || !post) {
     return (
       <div className="container mx-auto py-20 text-center">
         <h1 className="text-4xl font-bold">Article non trouvé</h1>

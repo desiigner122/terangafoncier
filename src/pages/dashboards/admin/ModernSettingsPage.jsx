@@ -44,7 +44,8 @@ import {
   Copy,
   Coins,
   Link,
-  Cpu
+  Cpu,
+  Download // Added missing icon
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -74,7 +75,6 @@ import {
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'react-hot-toast';
-import ModernAdminSidebar from '@/components/admin/ModernAdminSidebar';
 import globalAdminService from '@/services/GlobalAdminService';
 import { useMaintenanceMode } from '@/contexts/MaintenanceContext';
 
@@ -1252,14 +1252,8 @@ const ModernSettingsPage = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
-        {/* Sidebar */}
-        <ModernAdminSidebar stats={{
-          newUsers: systemStats.newUsers || 0,
-          pendingProperties: systemStats.pendingProperties || 0,
-          pendingTransactions: systemStats.pendingTransactions || 0
-        }} />
-        <div className="flex-1 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center">
           <div className="p-6">
             <div className="flex items-center justify-center py-12">
               <RefreshCw className="h-8 w-8 animate-spin mr-3" />
@@ -1273,14 +1267,8 @@ const ModernSettingsPage = () => {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex">
-        {/* Sidebar */}
-        <ModernAdminSidebar stats={{
-          newUsers: systemStats.newUsers || 0,
-          pendingProperties: systemStats.pendingProperties || 0,
-          pendingTransactions: systemStats.pendingTransactions || 0
-        }} />
-        <div className="flex-1 flex items-center justify-center">
+      <div className="min-h-screen bg-gray-50">
+        <div className="flex items-center justify-center">
           <div className="p-6">
             <Card>
               <CardContent className="p-8 text-center">
@@ -1300,16 +1288,9 @@ const ModernSettingsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <ModernAdminSidebar stats={{
-        newUsers: systemStats.newUsers || 0,
-        pendingProperties: systemStats.pendingProperties || 0,
-        pendingTransactions: systemStats.pendingTransactions || 0
-      }} />
-      
+    <div className="min-h-screen bg-gray-50">
       {/* Contenu principal */}
-      <div className="flex-1 p-6 space-y-6">
+      <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>

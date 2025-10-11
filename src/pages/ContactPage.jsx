@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
+import MarketingService from '@/services/admin/MarketingService';
 import { 
   Phone, 
   Mail, 
@@ -58,6 +59,30 @@ const ContactPage = () => {
     setLoading(true);
 
     try {
+      console.log('📝 [ContactPage] Début soumission formulaire:', formData);
+      
+      // Capture lead in marketing_leads table (Phase 1)
+      const leadResult = await MarketingService.createLead({
+        source: 'contact_form',
+        form_name: 'ContactPage',
+        email: formData.email,
+        payload: {
+          name: formData.name,
+          phone: formData.phone,
+          subject: formData.subject,
+          category: formData.category,
+          message: formData.message,
+          preferred_contact: formData.preferredContact
+        }
+      });
+
+      console.log('📊 [ContactPage] Résultat createLead:', leadResult);
+
+      if (!leadResult.success) {
+        throw new Error(leadResult.error || 'Erreur lors de la création du lead');
+      }
+
+      // Also keep original contact_messages insert for backward compatibility
       const { error } = await supabase
         .from('contact_messages')
         .insert([
@@ -73,7 +98,8 @@ const ContactPage = () => {
         ]);
 
       if (error) {
-        throw error;
+        console.warn('Legacy contact_messages insert failed:', error);
+        // Don't throw - lead capture is primary, this is just backup
       }
 
       window.safeGlobalToast({

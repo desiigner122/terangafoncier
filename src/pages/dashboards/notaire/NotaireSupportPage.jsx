@@ -17,6 +17,7 @@ import {
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import supabase from '@/lib/supabaseClient';
 
 const NotaireSupportPage = () => {
   const { user } = useAuth();
@@ -27,6 +28,7 @@ const NotaireSupportPage = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const [newMessage, setNewMessage] = useState('');
+  const [messages, setMessages] = useState([]);
 
   // ✅ DONNÉES RÉELLES - Chargement depuis Supabase
   useEffect(() => {
@@ -53,6 +55,22 @@ const NotaireSupportPage = () => {
     }
   };
 
+  const loadMessages = async (ticket) => {
+    try {
+      if (!ticket) return;
+      const { data, error } = await supabase
+        .from('ticket_responses')
+        .select('*')
+        .eq('ticket_id', ticket.id)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (e) {
+      console.error('Erreur chargement messages:', e);
+      setMessages([]);
+    }
+  };
+
   const statusConfig = {
     open: { label: 'Ouvert', color: 'blue', icon: AlertCircle },
     in_progress: { label: 'En cours', color: 'yellow', icon: Clock },
@@ -68,42 +86,30 @@ const NotaireSupportPage = () => {
 
   const filteredTickets = tickets.filter(ticket => {
     const matchesStatus = filterStatus === 'all' || ticket.status === filterStatus;
-    const matchesSearch = ticket.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         ticket.client_name.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (ticket.subject || ticket.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (ticket.ticket_number || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
-  const ticketMessages = selectedTicket ? [
-    {
-      id: 1,
-      author: selectedTicket.client_name,
-      role: 'client',
-      message: 'Bonjour, je rencontre un problème avec le module Blockchain. Impossible d\'accéder aux transactions.',
-      timestamp: '2025-10-08T10:30:00',
-      attachments: []
-    },
-    {
-      id: 2,
-      author: 'Support Technique',
-      role: 'support',
-      message: 'Bonjour, merci pour votre message. Pouvez-vous préciser le message d\'erreur exact que vous recevez ?',
-      timestamp: '2025-10-08T11:15:00',
-      attachments: []
-    },
-    {
-      id: 3,
-      author: selectedTicket.client_name,
-      role: 'client',
-      message: 'Voici une capture d\'écran de l\'erreur.',
-      timestamp: '2025-10-08T14:20:00',
-      attachments: ['capture_erreur.png']
+  useEffect(() => {
+    if (selectedTicket) {
+      loadMessages(selectedTicket);
+    } else {
+      setMessages([]);
     }
-  ] : [];
+  }, [selectedTicket]);
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Logique d'envoi du message
-      setNewMessage('');
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedTicket) return;
+    try {
+      const result = await NotaireSupabaseService.respondToTicket(selectedTicket.id, user.id, newMessage, false);
+      if (result.success) {
+        setNewMessage('');
+        await loadMessages(selectedTicket);
+        await loadTickets();
+      }
+    } catch (e) {
+      console.error('Erreur envoi message:', e);
     }
   };
 
@@ -204,7 +210,7 @@ const NotaireSupportPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Liste des tickets */}
         <div className="lg:col-span-1 space-y-4">
-          {filteredTickets.map((ticket, index) => {
+            {filteredTickets.map((ticket, index) => {
             const StatusIcon = statusConfig[ticket.status].icon;
             return (
               <motion.div
@@ -221,8 +227,8 @@ const NotaireSupportPage = () => {
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-slate-800 mb-1">{ticket.title}</h3>
-                    <p className="text-sm text-slate-600">{ticket.id}</p>
+                    <h3 className="font-semibold text-slate-800 mb-1">{ticket.subject || ticket.title}</h3>
+                    <p className="text-sm text-slate-600">{ticket.ticket_number || ticket.id}</p>
                   </div>
                   <span className={`px-2 py-1 rounded-full text-xs font-medium bg-${priorityConfig[ticket.priority].color}-100 text-${priorityConfig[ticket.priority].color}-700`}>
                     {priorityConfig[ticket.priority].label}
@@ -230,7 +236,7 @@ const NotaireSupportPage = () => {
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
                   <User size={14} />
-                  <span>{ticket.client_name}</span>
+                  <span>{ticket.user_id}</span>
                 </div>
                 <div className="flex items-center justify-between">
                   <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-${statusConfig[ticket.status].color}-100 text-${statusConfig[ticket.status].color}-700`}>
@@ -239,7 +245,7 @@ const NotaireSupportPage = () => {
                   </span>
                   <span className="flex items-center gap-1 text-xs text-slate-500">
                     <MessageSquare size={14} />
-                    {ticket.messages_count}
+                    {ticket.messages_count?.[0]?.count ?? ticket.messages_count ?? 0}
                   </span>
                 </div>
               </motion.div>
@@ -259,8 +265,8 @@ const NotaireSupportPage = () => {
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">{selectedTicket.title}</h2>
-                    <p className="text-blue-100">{selectedTicket.id}</p>
+                    <h2 className="text-2xl font-bold mb-2">{selectedTicket.subject || selectedTicket.title}</h2>
+                    <p className="text-blue-100">{selectedTicket.ticket_number || selectedTicket.id}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium bg-white bg-opacity-20`}>
                     {statusConfig[selectedTicket.status].label}
@@ -268,8 +274,8 @@ const NotaireSupportPage = () => {
                 </div>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                   <div>
-                    <p className="text-blue-100">Client</p>
-                    <p className="font-semibold">{selectedTicket.client_name}</p>
+                    <p className="text-blue-100">Utilisateur</p>
+                    <p className="font-semibold">{selectedTicket.user_id}</p>
                   </div>
                   <div>
                     <p className="text-blue-100">Catégorie</p>
@@ -281,7 +287,7 @@ const NotaireSupportPage = () => {
                   </div>
                   <div>
                     <p className="text-blue-100">Assigné à</p>
-                    <p className="font-semibold">{selectedTicket.assigned_to}</p>
+                    <p className="font-semibold">{selectedTicket.assigned_to || 'Non assigné'}</p>
                   </div>
                 </div>
               </div>
@@ -289,21 +295,21 @@ const NotaireSupportPage = () => {
               {/* Timeline des messages */}
               <div className="p-6 max-h-96 overflow-y-auto">
                 <div className="space-y-4">
-                  {ticketMessages.map((message) => (
+                  {messages.map((message) => (
                     <div
                       key={message.id}
-                      className={`flex ${message.role === 'client' ? 'justify-start' : 'justify-end'}`}
+                      className={`flex ${message.is_staff ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className={`max-w-[80%] ${message.role === 'client' ? 'bg-slate-100' : 'bg-blue-100'} rounded-lg p-4`}>
+                      <div className={`max-w-[80%] ${message.is_staff ? 'bg-blue-100' : 'bg-slate-100'} rounded-lg p-4`}>
                         <div className="flex items-center gap-2 mb-2">
                           <User size={16} className="text-slate-600" />
-                          <span className="font-semibold text-sm text-slate-800">{message.author}</span>
+                          <span className="font-semibold text-sm text-slate-800">{message.is_staff ? 'Support' : 'Vous'}</span>
                           <span className="text-xs text-slate-500">
-                            {new Date(message.timestamp).toLocaleString('fr-FR')}
+                            {new Date(message.created_at).toLocaleString('fr-FR')}
                           </span>
                         </div>
                         <p className="text-slate-700">{message.message}</p>
-                        {message.attachments.length > 0 && (
+                        {Array.isArray(message.attachments) && message.attachments.length > 0 && (
                           <div className="mt-2 flex items-center gap-2">
                             <Paperclip size={14} className="text-slate-500" />
                             {message.attachments.map((file, idx) => (

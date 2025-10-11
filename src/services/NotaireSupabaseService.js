@@ -1,9 +1,4 @@
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import supabase from '@/lib/supabaseClient';
 
 /**
  * Service Supabase spécialisé pour les fonctionnalités notaire
@@ -1162,7 +1157,7 @@ export class NotaireSupabaseService {
         .from('support_tickets')
         .select(`
           *,
-          responses_count:support_ticket_responses(count),
+          messages_count:ticket_responses(count),
           assigned_profile:profiles!support_tickets_assigned_to_fkey(id, full_name, avatar_url)
         `)
         .eq('user_id', userId)
@@ -1208,7 +1203,7 @@ export class NotaireSupabaseService {
   static async respondToTicket(ticketId, userId, message, isStaff = false) {
     try {
       const { data, error } = await supabase
-        .from('support_ticket_responses')
+        .from('ticket_responses')
         .insert({ ticket_id: ticketId, user_id: userId, message, is_staff: isStaff })
         .select()
         .single();

@@ -106,7 +106,8 @@ const DashboardParticulierRefonte = () => {
     try {
       const { count: messagesCount } = await supabase
         .from('messages')
-        .select('*', { count: 'exact', head: true })
+  .select('id', { count: 'exact' })
+  .limit(0)
         .eq('recipient_id', user.id)
         .is('read_at', null);
       
@@ -114,7 +115,8 @@ const DashboardParticulierRefonte = () => {
 
       const { count: notificationsCount } = await supabase
         .from('notifications')
-        .select('*', { count: 'exact', head: true })
+  .select('id', { count: 'exact' })
+  .limit(0)
         .eq('user_id', user.id)
         .eq('read', false);
       
@@ -123,7 +125,8 @@ const DashboardParticulierRefonte = () => {
       // Charger compteur tickets
       const { count: ticketsCount } = await supabase
         .from('tickets')
-        .select('*', { count: 'exact', head: true })
+  .select('id', { count: 'exact' })
+  .limit(0)
         .eq('user_id', user.id)
         .in('status', ['nouveau', 'en_cours']);
       

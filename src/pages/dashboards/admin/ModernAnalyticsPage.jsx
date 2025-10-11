@@ -55,10 +55,20 @@ import {
   AreaChart as RechartsAreaChart
 } from 'recharts';
 import { toast } from 'react-hot-toast';
-import ModernAdminSidebar from '@/components/admin/ModernAdminSidebar';
 import globalAdminService from '@/services/GlobalAdminService';
+import { useAnalytics } from '@/hooks/admin/usePageTracking';
 
 const ModernAnalyticsPage = () => {
+  // Phase 1: Use AnalyticsService for page tracking analytics
+  const { 
+    analytics, 
+    loading: analyticsLoading, 
+    error: analyticsError,
+    loadGlobalAnalytics,
+    loadPageAnalytics,
+    loadConversionAnalytics
+  } = useAnalytics();
+
   // États principaux - UNIQUEMENT DONNÉES RÉELLES
   const [analyticsData, setAnalyticsData] = useState({
     overview: {},
@@ -87,6 +97,9 @@ const ModernAnalyticsPage = () => {
     
     try {
       console.log('🔄 Chargement des analytics réelles...');
+      
+      // Phase 1: Load page tracking analytics from AnalyticsService
+      await loadGlobalAnalytics({ period: selectedPeriod });
       
       // Charger toutes les données analytiques en parallèle
       const [
@@ -127,9 +140,10 @@ const ModernAnalyticsPage = () => {
       await loadBlockchainAnalytics(realAnalyticsData);
 
       console.log('✅ Analytics réelles chargées avec succès');
+      console.log('📊 Page tracking analytics:', analytics);
     } catch (error) {
       console.error('❌ Erreur chargement analytics:', error);
-      setError(error.message);
+      setError(error.message || analyticsError);
       toast.error('Erreur lors du chargement des analytics');
     } finally {
       setLoading(false);
@@ -397,6 +411,71 @@ const ModernAnalyticsPage = () => {
     </div>
   );
 
+  // Phase 1: Page Tracking Analytics Section
+  const renderPageTrackingAnalytics = () => (
+    <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+            <Eye className="h-4 w-4" />
+            Pages vues
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-2xl font-bold">
+            {analyticsLoading ? '...' : analytics?.global?.totalViews?.toLocaleString() || 0}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Derniers {selectedPeriod}</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+            <Users className="h-4 w-4" />
+            Visiteurs uniques
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-2xl font-bold">
+            {analyticsLoading ? '...' : analytics?.global?.uniqueVisitors?.toLocaleString() || 0}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Visiteurs distincts</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+            <Clock className="h-4 w-4" />
+            Durée moyenne
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-2xl font-bold">
+            {analyticsLoading ? '...' : `${Math.floor((analytics?.global?.avgDuration || 0) / 60)}m`}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Temps par session</p>
+        </CardContent>
+      </Card>
+
+      <Card>
+        <CardHeader className="pb-2">
+          <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+            <Target className="h-4 w-4" />
+            Taux de rebond
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-2xl font-bold">
+            {analyticsLoading ? '...' : `${(analytics?.global?.bounceRate || 0).toFixed(1)}%`}
+          </p>
+          <p className="text-xs text-gray-500 mt-1">Pages à 1 vue</p>
+        </CardContent>
+      </Card>
+    </div>
+  );
+
   const renderControlPanel = () => (
     <Card className="mb-6">
       <CardHeader>
@@ -646,16 +725,9 @@ const ModernAnalyticsPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <ModernAdminSidebar stats={{
-        newUsers: analyticsData.users?.newUsers || 0,
-        pendingProperties: analyticsData.properties?.pending || 0,
-        pendingTransactions: analyticsData.transactions?.pending || 0
-      }} />
-      
+    <div className="min-h-screen bg-gray-50">
       {/* Contenu principal */}
-      <div className="flex-1 p-6 space-y-6">
+      <div className="p-6 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
@@ -678,6 +750,9 @@ const ModernAnalyticsPage = () => {
 
       {/* Control Panel */}
       {renderControlPanel()}
+
+      {/* Phase 1: Page Tracking Analytics */}
+      {renderPageTrackingAnalytics()}
 
       {/* Overview Cards */}
       {renderOverviewCards()}

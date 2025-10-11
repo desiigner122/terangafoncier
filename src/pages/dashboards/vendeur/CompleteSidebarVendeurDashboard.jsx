@@ -319,26 +319,30 @@ const CompleteSidebarVendeurDashboard = () => {
       // Compter les propriétés
       const { count: totalProperties } = await supabase
         .from('properties')
-        .select('*', { count: 'exact', head: true })
+  .select('id', { count: 'exact' })
+  .limit(0)
         .eq('owner_id', user.id);
 
       const { count: activeListings } = await supabase
         .from('properties')
-        .select('*', { count: 'exact', head: true })
+  .select('id', { count: 'exact' })
+  .limit(0)
         .eq('owner_id', user.id)
         .eq('status', 'active');
 
       // Compter les demandes en attente
       const { count: pendingInquiries } = await supabase
         .from('property_inquiries')
-        .select('*', { count: 'exact', head: true })
+  .select('id', { count: 'exact' })
+  .limit(0)
         .eq('vendor_id', user.id)
         .eq('status', 'pending');
 
       // 🆕 Compter les demandes d'achat en attente
       const { count: pendingRequests } = await supabase
         .from('purchase_requests')
-        .select('*', { count: 'exact', head: true })
+  .select('id', { count: 'exact' })
+  .limit(0)
         .eq('vendor_id', user.id)
         .eq('status', 'pending');
 

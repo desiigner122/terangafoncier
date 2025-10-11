@@ -43,31 +43,40 @@ const AdminPropertyValidation = () => {
     try {
       setLoading(true);
       
-      const { data, error } = await supabase
+      // Fetch properties without FK join (FK constraint doesn't exist)
+      const { data: properties, error: propError } = await supabase
         .from('properties')
-        .select(`
-          *,
-          owner:auth.users!owner_id (
-            id,
-            email,
-            user_metadata
-          )
-        `)
+        .select('*')
         .eq('verification_status', 'pending')
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (propError) throw propError;
 
-      // Enrichir avec les photos
-      const enrichedData = await Promise.all(data.map(async (prop) => {
+      // Fetch all profiles to match with owner_id
+      const { data: profiles } = await supabase
+        .from('profiles')
+        .select('id, email, full_name');
+
+      // Create lookup map
+      const profilesMap = (profiles || []).reduce((map, p) => {
+        map[p.id] = p;
+        return map;
+      }, {});
+
+      // Enrichir avec les photos et owner info
+      const enrichedData = await Promise.all((properties || []).map(async (prop) => {
         const { data: photos } = await supabase
           .from('property_photos')
           .select('photo_url, is_main, order_index')
           .eq('property_id', prop.id)
           .order('order_index', { ascending: true });
 
+        // Get owner from profiles map
+        const owner = profilesMap[prop.owner_id] || {};
+
         return {
           ...prop,
+          owner, // Add owner info manually
           photos: photos || [],
           mainPhoto: photos?.find(p => p.is_main)?.photo_url || photos?.[0]?.photo_url
         };

@@ -1,5 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
+import MarketingService from '@/services/admin/MarketingService';
 import { 
   Mail, 
   Phone, 
@@ -147,8 +148,32 @@ const BlockchainContactPage = () => {
     e.preventDefault();
     setIsLoading(true);
 
-    // Simulation d'envoi
-    setTimeout(() => {
+    try {
+      console.log('📝 [BlockchainContactPage] Début soumission formulaire:', formData);
+
+      // Créer un lead dans marketing_leads
+      const leadResult = await MarketingService.createLead({
+        source: 'contact_form',
+        form_name: 'BlockchainContactPage',
+        email: formData.email,
+        payload: {
+          name: formData.name,
+          phone: formData.phone,
+          subject: formData.subject,
+          category: formData.category,
+          message: formData.message,
+          urgency: formData.urgency
+        }
+      });
+
+      console.log('📊 [BlockchainContactPage] Résultat createLead:', leadResult);
+
+      if (!leadResult.success) {
+        throw new Error(leadResult.error || 'Erreur lors de la création du lead');
+      }
+
+      console.log('✅ [BlockchainContactPage] Lead créé avec succès');
+      
       setIsLoading(false);
       setShowSuccess(true);
       setFormData({
@@ -160,7 +185,11 @@ const BlockchainContactPage = () => {
         message: '',
         urgency: 'normal'
       });
-    }, 2000);
+    } catch (error) {
+      console.error('❌ [BlockchainContactPage] Erreur:', error);
+      setIsLoading(false);
+      alert('Erreur lors de l\'envoi du formulaire: ' + error.message);
+    }
   };
 
   return (

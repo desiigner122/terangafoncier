@@ -126,13 +126,15 @@ const SidebarContent = ({ onNavigate }) => {
       try {
         const { count: notifCount } = await supabase
           .from('notifications')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact' })
+          .limit(0)
           .eq('user_id', user.id)
           .eq('read', false);
 
         const { count: reqCount } = await supabase
           .from('requests')
-          .select('*', { count: 'exact', head: true })
+          .select('id', { count: 'exact' })
+          .limit(0)
           .eq('user_id', user.id)
           .in('status', ['pending', 'nouvelle', 'Nouvelle', 'en cours', 'En cours']);
 

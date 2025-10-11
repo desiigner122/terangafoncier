@@ -118,12 +118,12 @@ const DashboardParticulierHome = () => {
         documentsResult,
         favorisResult
       ] = await Promise.allSettled([
-        supabase.from('messages').select('*', { count: 'exact', head: true }).eq('recipient_id', user.id).is('read_at', null),
-        supabase.from('notifications').select('*', { count: 'exact', head: true }).eq('user_id', user.id).eq('read', false),
-        supabase.from('tickets').select('*', { count: 'exact', head: true }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']),
-        supabase.from('demandes_terrains_communaux').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('user_documents').select('*', { count: 'exact', head: true }).eq('user_id', user.id),
-        supabase.from('favoris_properties').select('*', { count: 'exact', head: true }).eq('user_id', user.id)
+  supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
+  supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).eq('read', false).limit(0),
+  supabase.from('tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
+  supabase.from('demandes_terrains_communaux').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
+  supabase.from('user_documents').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
+  supabase.from('favoris_properties').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
       ]);
 
       setStats({

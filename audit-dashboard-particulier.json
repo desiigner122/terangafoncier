@@ -1,0 +1,676 @@
+{
+  "timestamp": "2025-10-08T13:53:51.692Z",
+  "total": 40,
+  "withMockData": [],
+  "withRealData": [
+    {
+      "file": "CompleteSidebarParticulierDashboard.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\CompleteSidebarParticulierDashboard.jsx",
+      "lineCount": 502,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierCommunal.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierCommunal.jsx",
+      "lineCount": 437,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierConstructions.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierConstructions.jsx",
+      "lineCount": 603,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierDemandesTerrains.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierDemandesTerrains.jsx",
+      "lineCount": 560,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierFavoris.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierFavoris.jsx",
+      "lineCount": 560,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierFinancement.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierFinancement.jsx",
+      "lineCount": 299,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierMesOffres.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierMesOffres.jsx",
+      "lineCount": 350,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierMessages.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierMessages.jsx",
+      "lineCount": 534,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierOverview.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierOverview.jsx",
+      "lineCount": 486,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierOverview_FIXED.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierOverview_FIXED.jsx",
+      "lineCount": 469,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierProfil.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierProfil.jsx",
+      "lineCount": 738,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierPromoteurs.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierPromoteurs.jsx",
+      "lineCount": 482,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierRecherche.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierRecherche.jsx",
+      "lineCount": 468,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierSupport.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierSupport.jsx",
+      "lineCount": 628,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierTickets.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierTickets.jsx",
+      "lineCount": 283,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierVisites.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierVisites.jsx",
+      "lineCount": 422,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    }
+  ],
+  "nonFunctional": [
+    {
+      "file": "ParticulierAI.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierAI.jsx",
+      "lineCount": 373,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierAvis.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierAvis.jsx",
+      "lineCount": 464,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "onClick={interactive ? () => setRating(starValue) : undefined"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierCalendar.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierCalendar.jsx",
+      "lineCount": 564,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierCommunal.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierCommunal.jsx",
+      "lineCount": 437,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierCommunal_NEW.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierCommunal_NEW.jsx",
+      "lineCount": 572,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierConstructions.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierConstructions.jsx",
+      "lineCount": 603,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierConstructions_NEW.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierConstructions_NEW.jsx",
+      "lineCount": 721,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierConstructions_SUIVI.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierConstructions_SUIVI.jsx",
+      "lineCount": 520,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierDemandesTerrains.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierDemandesTerrains.jsx",
+      "lineCount": 560,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierDocuments.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierDocuments.jsx",
+      "lineCount": 503,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierDocuments_SUIVI.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierDocuments_SUIVI.jsx",
+      "lineCount": 503,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierFavoris.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierFavoris.jsx",
+      "lineCount": 560,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierFavoris_SUIVI.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierFavoris_SUIVI.jsx",
+      "lineCount": 375,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierMesOffres.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierMesOffres.jsx",
+      "lineCount": 350,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierMessages.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierMessages.jsx",
+      "lineCount": 534,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierMessages_SUIVI.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierMessages_SUIVI.jsx",
+      "lineCount": 525,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierNotifications.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierNotifications.jsx",
+      "lineCount": 540,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierNotifications_SUIVI.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierNotifications_SUIVI.jsx",
+      "lineCount": 540,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierProfil.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierProfil.jsx",
+      "lineCount": 738,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierPromoteurs.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierPromoteurs.jsx",
+      "lineCount": 482,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierProprietes.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierProprietes.jsx",
+      "lineCount": 919,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierRecherche.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierRecherche.jsx",
+      "lineCount": 468,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierSettings.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierSettings.jsx",
+      "lineCount": 660,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierSupport.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierSupport.jsx",
+      "lineCount": 628,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierTerrainsPrive.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierTerrainsPrive.jsx",
+      "lineCount": 386,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    },
+    {
+      "file": "ParticulierTickets.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierTickets.jsx",
+      "lineCount": 283,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierVisites.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierVisites.jsx",
+      "lineCount": 422,
+      "hasMockData": false,
+      "hasSupabase": true,
+      "nonFunctional": [
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": true
+    },
+    {
+      "file": "ParticulierZonesCommunales.jsx",
+      "path": "src\\pages\\dashboards\\particulier\\ParticulierZonesCommunales.jsx",
+      "lineCount": 679,
+      "hasMockData": false,
+      "hasSupabase": false,
+      "nonFunctional": [
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder",
+        "placeholder"
+      ],
+      "mockDataCount": 0,
+      "supabaseIntegration": false
+    }
+  ],
+  "duplicates": [],
+  "missing": [],
+  "recommendations": [
+    "Corriger les pages avec données mockées",
+    "Supprimer ou consolider les pages dupliquées",
+    "Activer les fonctionnalités non fonctionnelles",
+    "Créer les tables Supabase manquantes",
+    "Tester toutes les fonctionnalités"
+  ]
+}

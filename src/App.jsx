@@ -145,14 +145,10 @@ import { AuthProvider } from '@/contexts/UnifiedAuthContext';
 import './lib/errorManager';
 import './lib/securityConfig';
 import DashboardMunicipalRequestPage from '@/pages/DashboardMunicipalRequestPage';
-import AdminDashboardPage from '@/pages/admin/AdminDashboardPage';
-import UltraModernAdminDashboard from '@/pages/admin/UltraModernAdminDashboard';
-import AdminDashboard from '@/pages/dashboards/admin/AdminDashboard';
-import AdminDashboardRealData from '@/pages/dashboards/admin/AdminDashboardRealData';
-import ModernAdminDashboardRealData from '@/pages/dashboards/admin/ModernAdminDashboardRealData';
+// DASHBOARDS ADMIN - NETTOYÉ (1 dashboard principal uniquement)
 import CompleteSidebarAdminDashboard from '@/pages/dashboards/admin/CompleteSidebarAdminDashboard';
-import ModernCompleteSidebarAdminDashboard from '@/pages/dashboards/admin/ModernCompleteSidebarAdminDashboard';
 import AdminPropertyValidation from '@/pages/dashboards/admin/AdminPropertyValidation';
+import ModernAdminOverview from '@/components/admin/ModernAdminOverview';
 
 // PAGES ADMIN MODERNISÉES AVEC DONNÉES RÉELLES
 import ModernUsersPage from '@/pages/dashboards/admin/ModernUsersPage';
@@ -162,9 +158,6 @@ import ModernAnalyticsPage from '@/pages/dashboards/admin/ModernAnalyticsPage';
 import ModernSettingsPage from '@/pages/dashboards/admin/ModernSettingsPage';
 import AdminProjectsPage from '@/pages/admin/AdminProjectsPage';
 import AdminPricingPage from '@/pages/admin/AdminPricingPage';
-import AdminAnalyticsPage from '@/pages/admin/AdminAnalyticsPage';
-import GlobalAdminDashboard from '@/pages/admin/GlobalAdminDashboard';
-import AdminUsersPage from '@/pages/admin/AdminUsersPage';
 import AdminParcelsPage from '@/pages/admin/AdminParcelsPage';
 
 // NOUVELLES PAGES ADMIN - PRIORITÉ 1
@@ -176,6 +169,11 @@ import UserManagementPage from '@/pages/admin/UserManagementPage';
 import AdminSystemRequestsPage from '@/pages/admin/AdminSystemRequestsPage';
 import AdminContractsPage from '@/pages/admin/AdminContractsPage';
 import SubscriptionManagementPage from '@/pages/admin/SubscriptionManagementPage';
+
+// PHASE 1 - PAGES CMS & MARKETING
+import AdminPagesList from '@/pages/admin/AdminPagesList';
+import AdminPageEditor from '@/pages/admin/AdminPageEditor';
+import AdminLeadsList from '@/pages/admin/AdminLeadsList';
 import AuthDebugPage from '@/pages/AuthDebugPage';
 
 // Import des dashboards
@@ -668,47 +666,51 @@ function App() {
             </Route>
 
             <Route path="/admin" element={<AdminRoute />}>
-              <Route index element={<ModernCompleteSidebarAdminDashboard />} />
-              <Route path="dashboard" element={<ModernCompleteSidebarAdminDashboard />} />
-              <Route path="modern" element={<ModernAdminDashboardRealData />} />
-              <Route path="validation" element={<AdminPropertyValidation />} />
-              <Route path="legacy-complete" element={<CompleteSidebarAdminDashboard />} />
-              
-              {/* ROUTES ADMIN STANDARDS */}
-              <Route path="projects" element={<AdminProjectsPage />} />
-              <Route path="pricing" element={<AdminPricingPage />} />
-              <Route path="analytics" element={<AdminAnalyticsPage />} />
-              <Route path="global" element={<GlobalAdminDashboard />} />
-              <Route path="users" element={<AdminUsersPage />} />
-              <Route path="user-requests" element={<AdminUserRequestsPage />} />
-              <Route path="user-verifications" element={<AdminUserVerificationsPage />} />
-              <Route path="parcels" element={<AdminParcelsPage />} />
-              <Route path="transactions" element={<TransactionsPage />} />
-              
-              {/* ROUTES ADMIN MODERNES - AVEC IA ET BLOCKCHAIN */}
-              <Route path="users" element={<ModernUsersPage />} />
-              <Route path="properties" element={<ModernPropertiesManagementPage />} />
-              <Route path="transactions" element={<ModernTransactionsPage />} />
-              <Route path="analytics" element={<ModernAnalyticsPage />} />
-              <Route path="settings" element={<ModernSettingsPage />} />
-              
-              {/* ROUTES ADMIN LEGACY - GARDÉES POUR COMPATIBILITÉ */}
-              <Route path="revenue" element={<RevenueManagementPage />} />
-              <Route path="property-management" element={<PropertyManagementPage />} />
-              <Route path="support" element={<SupportTicketsPage />} />
-              <Route path="export" element={<BulkExportPage />} />
-              <Route path="user-management" element={<UserManagementPage />} />
-              <Route path="subscriptions" element={<SubscriptionManagementPage />} />
-              <Route path="system-requests" element={<AdminSystemRequestsPage />} />
-              <Route path="contracts" element={<AdminContractsPage />} />
-              <Route path="reports" element={<AdminReportsPage />} />
-              <Route path="blog" element={<AdminBlogPage />} />
-              <Route path="blog/new" element={<AdminBlogFormPage />} />
-              <Route path="blog/edit/:slug" element={<AdminBlogFormPage />} />
-              <Route path="audit-log" element={<AdminAuditLogPage />} />
-              <Route path="admin-settings" element={<AdminSettingsPage />} />
-              <Route path="security-diagnostic" element={<SecurityDiagnosticTool />} />
-              <Route path="*" element={<NotFoundPage />} />
+              <Route element={<CompleteSidebarAdminDashboard />}>
+                {/* DASHBOARD PRINCIPAL */}
+                <Route index element={<ModernAdminOverview />} />
+                <Route path="dashboard" element={<ModernAdminOverview />} />
+                <Route path="overview" element={<ModernAdminOverview />} />
+                
+                {/* PHASE 1 - CMS & MARKETING */}
+                <Route path="cms/pages" element={<AdminPagesList />} />
+                <Route path="cms/pages/new" element={<AdminPageEditor />} />
+                <Route path="cms/pages/:pageId/edit" element={<AdminPageEditor />} />
+                <Route path="marketing/leads" element={<AdminLeadsList />} />
+                
+                {/* PAGES MODERNES - AVEC IA ET BLOCKCHAIN */}
+                <Route path="users" element={<ModernUsersPage />} />
+                <Route path="properties" element={<ModernPropertiesManagementPage />} />
+                <Route path="transactions" element={<ModernTransactionsPage />} />
+                <Route path="analytics" element={<ModernAnalyticsPage />} />
+                <Route path="settings" element={<ModernSettingsPage />} />
+                
+                {/* PAGES SPÉCIALISÉES */}
+                <Route path="validation" element={<AdminPropertyValidation />} />
+                <Route path="projects" element={<AdminProjectsPage />} />
+                <Route path="pricing" element={<AdminPricingPage />} />
+                <Route path="parcels" element={<AdminParcelsPage />} />
+                <Route path="user-requests" element={<AdminUserRequestsPage />} />
+                <Route path="user-verifications" element={<AdminUserVerificationsPage />} />
+                
+                {/* ROUTES ADMIN LEGACY - GARDÉES POUR COMPATIBILITÉ */}
+                <Route path="revenue" element={<RevenueManagementPage />} />
+                <Route path="property-management" element={<PropertyManagementPage />} />
+                <Route path="support" element={<SupportTicketsPage />} />
+                <Route path="export" element={<BulkExportPage />} />
+                <Route path="user-management" element={<UserManagementPage />} />
+                <Route path="subscriptions" element={<SubscriptionManagementPage />} />
+                <Route path="system-requests" element={<AdminSystemRequestsPage />} />
+                <Route path="contracts" element={<AdminContractsPage />} />
+                <Route path="reports" element={<AdminReportsPage />} />
+                <Route path="blog" element={<AdminBlogPage />} />
+                <Route path="blog/new" element={<AdminBlogFormPage />} />
+                <Route path="blog/edit/:slug" element={<AdminBlogFormPage />} />
+                <Route path="audit-log" element={<AdminAuditLogPage />} />
+                <Route path="admin-settings" element={<AdminSettingsPage />} />
+                <Route path="security-diagnostic" element={<SecurityDiagnosticTool />} />
+                <Route path="*" element={<NotFoundPage />} />
+              </Route>
             </Route>
 
             <Route path="/agent" element={<RoleProtectedRoute allowedRoles={['Agent Foncier']}><DashboardLayout /></RoleProtectedRoute>}>

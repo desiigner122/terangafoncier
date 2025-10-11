@@ -346,7 +346,7 @@ export class CommunalRequestService {
       // Nombre total de demandes
       const { count: totalRequests } = await supabase
         .from('communal_requests')
-        .select('*', { count: 'exact', head: true });
+  .select('id', { count: 'exact' }).limit(0);
 
       // Demandes par statut
       const { data: statusStats } = await supabase
@@ -363,7 +363,7 @@ export class CommunalRequestService {
       // Communes actives
       const { count: activeCommunes } = await supabase
         .from('commune_subscriptions')
-        .select('*', { count: 'exact', head: true })
+  .select('id', { count: 'exact' }).limit(0)
         .eq('status', 'active');
 
       // Revenus mensuels

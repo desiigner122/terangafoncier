@@ -78,7 +78,7 @@ const ParticulierOverview = () => {
   supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).limit(0),
   supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
   supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).eq('read', false).limit(0)
+  supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0)
       ]);
 
       setStats({

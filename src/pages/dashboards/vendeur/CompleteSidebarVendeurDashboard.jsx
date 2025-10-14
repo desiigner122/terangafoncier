@@ -280,7 +280,7 @@ const CompleteSidebarVendeurDashboard = () => {
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .eq('read', false)
+        .eq('is_read', false)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -330,20 +330,20 @@ const CompleteSidebarVendeurDashboard = () => {
         .eq('owner_id', user.id)
         .eq('status', 'active');
 
-      // Compter les demandes en attente
+      // Compter les demandes en attente (JOIN avec properties pour trouver VOS parcelles)
       const { count: pendingInquiries } = await supabase
         .from('property_inquiries')
-  .select('id', { count: 'exact' })
-  .limit(0)
-        .eq('vendor_id', user.id)
+        .select('id, properties!inner(owner_id)', { count: 'exact' })
+        .limit(0)
+        .eq('properties.owner_id', user.id) // ✅ Correction: JOIN avec properties
         .eq('status', 'pending');
 
       // 🆕 Compter les demandes d'achat en attente
       const { count: pendingRequests } = await supabase
         .from('purchase_requests')
-  .select('id', { count: 'exact' })
-  .limit(0)
-        .eq('vendor_id', user.id)
+        .select('id, properties!inner(owner_id)', { count: 'exact' })
+        .limit(0)
+        .eq('properties.owner_id', user.id) // ✅ Correction: JOIN avec properties
         .eq('status', 'pending');
 
       setDashboardStats(prev => ({

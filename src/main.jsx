@@ -4,6 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/index.css';
 import { BrowserRouter as Router } from 'react-router-dom';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 // 🛡️ PATCH GLOBAL ANTI-CRASH TOAST - Import du système de protection
 import '@/lib/global-toast-patch';
@@ -19,8 +20,10 @@ if (!rootElement) {
 
 ReactDOM.createRoot(rootElement).render(
   <React.StrictMode>
-    <Router>
-      <App />
-    </Router>
+    <AuthProvider>
+      <Router>
+        <App />
+      </Router>
+    </AuthProvider>
   </React.StrictMode>
 );

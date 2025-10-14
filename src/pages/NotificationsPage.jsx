@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const formatDate = (dateString) => {
   if (!dateString) return 'Date inconnue';
@@ -124,7 +124,7 @@ const NotificationsPage = () => {
   }, [user]);
 
   const handleMarkRead = async (notificationId) => {
-    const { error } = await supabase.from('notifications').update({ read: true }).eq('id', notificationId);
+    const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', notificationId);
     if(error) {
       window.safeGlobalToast({ title: "Erreur", description: "Impossible de marquer la notification comme lue.", variant: "destructive" });
     } else {
@@ -134,7 +134,7 @@ const NotificationsPage = () => {
 
    const handleMarkAllRead = async () => {
       if (!user) return;
-      const { error } = await supabase.from('notifications').update({ read: true }).eq('user_id', user.id).eq('read', false);
+      const { error } = await supabase.from('notifications').update({ is_read: true }).eq('user_id', user.id).eq('is_read', false);
       if(error) {
          window.safeGlobalToast({ title: "Erreur", description: "Impossible de marquer toutes les notifications comme lues.", variant: "destructive" });
       } else {

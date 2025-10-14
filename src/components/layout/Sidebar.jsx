@@ -34,7 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from "@/components/ui/collapsible";
 import { getSidebarConfig } from './sidebarConfig';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import BecomeSellerButton from '@/components/auth/BecomeSellerButton';
 
 const logoUrl = "/images/logo.png";

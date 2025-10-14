@@ -549,6 +549,11 @@ function App() {
                   <Route path="blockchain" element={<ParticulierBlockchain />} />
                   <Route path="settings" element={<ParticulierSettings />} />
                   <Route path="profil" element={<ParticulierSettings />} />
+                  
+                  {/* Parcours d'achat intégrés dans le dashboard */}
+                  <Route path="buy/one-time" element={<OneTimePaymentPage />} />
+                  <Route path="buy/installments" element={<InstallmentsPaymentPage />} />
+                  <Route path="buy/bank-financing" element={<BankFinancingPage />} />
                 </Route>
                 
                 {/* Dashboard Vendeur avec routes imbriquées pour chaque page */}
@@ -637,10 +642,7 @@ function App() {
                   <Route path="parcelles/:id/checkout" element={<RoleProtectedRoute allowedRoles={['Acheteur', 'Particulier']}><CheckoutPage /></RoleProtectedRoute>} />
                   <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
 
-                  {/* Parcours d'achat pour Acheteurs/Particuliers */}
-                  <Route path="buy/one-time" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><OneTimePaymentPage /></RoleProtectedRoute>} />
-                  <Route path="buy/installments" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><InstallmentsPaymentPage /></RoleProtectedRoute>} />
-                  <Route path="buy/bank-financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BankFinancingPage /></RoleProtectedRoute>} />
+                  {/* Parcours d'achat déplacés dans /acheteur/buy/* pour utiliser le sidebar CompleteSidebar */}
                   <Route path="buyer/financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BuyerFinancingDashboard /></RoleProtectedRoute>} />
                   <Route path="promoters/purchase-units" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PurchaseUnitsPage /></RoleProtectedRoute>} />
                   <Route path="promoters/payment-plans" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PaymentPlansPage /></RoleProtectedRoute>} />

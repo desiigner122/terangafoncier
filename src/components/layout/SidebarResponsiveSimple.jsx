@@ -22,7 +22,7 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import MobileDrawer from '@/components/ui/mobile-drawer';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const logoUrl = "/images/logo.png";
 
@@ -129,7 +129,7 @@ const SidebarContent = ({ onNavigate }) => {
           .select('id', { count: 'exact' })
           .limit(0)
           .eq('user_id', user.id)
-          .eq('read', false);
+          .eq('is_read', false);
 
         const { count: reqCount } = await supabase
           .from('requests')

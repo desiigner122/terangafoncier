@@ -6,7 +6,7 @@
 
 import PurchaseWorkflowService from './PurchaseWorkflowService';
 import NotificationService from './NotificationService';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 export class PurchaseIntegrationService {
   /**

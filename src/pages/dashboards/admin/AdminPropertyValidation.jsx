@@ -67,9 +67,9 @@ const AdminPropertyValidation = () => {
       const enrichedData = await Promise.all((properties || []).map(async (prop) => {
         const { data: photos } = await supabase
           .from('property_photos')
-          .select('photo_url, is_main, order_index')
+          .select('file_url, is_primary, display_order')
           .eq('property_id', prop.id)
-          .order('order_index', { ascending: true });
+          .order('display_order', { ascending: true });
 
         // Get owner from profiles map
         const owner = profilesMap[prop.owner_id] || {};
@@ -78,7 +78,7 @@ const AdminPropertyValidation = () => {
           ...prop,
           owner, // Add owner info manually
           photos: photos || [],
-          mainPhoto: photos?.find(p => p.is_main)?.photo_url || photos?.[0]?.photo_url
+          mainPhoto: photos?.find(p => p.is_primary)?.file_url || photos?.[0]?.file_url
         };
       }));
 

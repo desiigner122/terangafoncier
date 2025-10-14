@@ -1,4 +1,4 @@
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 /**
  * Service de gestion des actes notariés
@@ -391,7 +391,7 @@ export class NotaireService {
         .from('notarial_acts')
         .select(`
           *,
-          client:profiles(first_name, last_name, email, phone),
+          client:profiles(first_name, last_name, email),
           documents:notarial_documents(*),
           tasks:notarial_tasks(*)
         `)

@@ -1,9 +1,9 @@
-﻿// ================================================================
+// ================================================================
 // CORRECTION UPLOAD AVATAR - ProfilePage
 // Corrige l'erreur "Bucket avatars non disponible"
 // ================================================================
 
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 // Fonction pour créer le bucket avatars s'il n'existe pas
 export const ensureAvatarsBucket = async () => {

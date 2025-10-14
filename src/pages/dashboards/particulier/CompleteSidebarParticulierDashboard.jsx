@@ -46,7 +46,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import TerangaLogo from '@/components/ui/TerangaLogo';
 
@@ -105,7 +105,7 @@ const CompleteSidebarParticulierDashboard = () => {
         .from('notifications')
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id)
-        .eq('read', false);
+        .eq('is_read', false);
       
       setUnreadNotificationsCount(notificationsCount || 0);
     } catch (error) {

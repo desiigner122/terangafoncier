@@ -1,4 +1,4 @@
-﻿import React, { useContext, useState, useEffect } from 'react';
+import React, { useContext, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ComparisonContext } from '@/context/ComparisonContext';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -17,7 +17,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 // useToast import supprimé - utilisation window.safeGlobalToast
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { LoadingSpinner } from '@/components/ui/spinner';
 
 const formatPrice = (price) => {

@@ -25,7 +25,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 
 const ParticulierFavoris = () => {
@@ -66,7 +66,7 @@ const ParticulierFavoris = () => {
           developer_project_id,
           property:properties (
             id, title, city, price, surface_area, address, images, status,
-            owner:profiles!owner_id (id, full_name, phone)
+            owner:profiles!owner_id (id, full_name)
           ),
           zone:communal_zones (
             id, name, commune, zone_type, lot_size, price_per_lot, 

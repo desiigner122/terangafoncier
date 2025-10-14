@@ -3,7 +3,7 @@
  * Collecte et analyse des données à l'échelle mondiale
  */
 
-import { supabase } from './customSupabaseClient';
+import { supabase } from './supabaseClient';
 import { aiManager } from './aiManager';
 
 class GlobalAnalyticsService {

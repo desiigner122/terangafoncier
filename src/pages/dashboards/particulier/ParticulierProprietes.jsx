@@ -66,13 +66,13 @@ const ParticulierProprietes = () => {
     // Rediriger vers la page de paiement appropriée
     switch(paymentType) {
       case 'direct':
-        navigate('/buy/one-time', { state: purchaseData });
+        navigate('/acheteur/buy/one-time', { state: purchaseData });
         break;
       case 'installment':
-        navigate('/buy/installments', { state: purchaseData });
+        navigate('/acheteur/buy/installments', { state: purchaseData });
         break;
       case 'bank':
-        navigate('/buy/bank-financing', { state: purchaseData });
+        navigate('/acheteur/buy/bank-financing', { state: purchaseData });
         break;
       default:
         navigate(`/parcelle/${property.id}`);

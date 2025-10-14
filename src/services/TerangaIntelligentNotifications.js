@@ -5,16 +5,13 @@
  * ==========================================================
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 import { terangaAIService } from './TerangaAIService.js';
 
 class TerangaIntelligentNotifications {
   constructor() {
-    // Configuration Supabase
-    this.supabase = createClient(
-      import.meta.env.VITE_SUPABASE_URL,
-      import.meta.env.VITE_SUPABASE_ANON_KEY
-    );
+    // Utilise l'instance Supabase partagée
+    this.supabase = supabase;
 
     // Configuration des notifications
     this.notificationConfig = {

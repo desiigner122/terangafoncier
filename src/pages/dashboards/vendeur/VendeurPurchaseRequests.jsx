@@ -136,7 +136,7 @@ const VendeurPurchaseRequests = () => {
             avatar_url
           )
         `)
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -160,7 +160,7 @@ const VendeurPurchaseRequests = () => {
           event: '*',
           schema: 'public',
           table: 'purchase_requests',
-          filter: `vendor_id=eq.${user.id}`
+          filter: `owner_id=eq.${user.id}`
         },
         (payload) => {
           switch (payload.eventType) {

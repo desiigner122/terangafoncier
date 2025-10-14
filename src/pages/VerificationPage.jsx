@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
@@ -15,7 +15,7 @@ import {
   Building, 
   AlertCircle
 } from 'lucide-react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const FileUploadField = ({ id, label, required, onFileChange, fileName, description }) => (
   <div className="space-y-2">

@@ -1,19 +1,20 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Banknote, ArrowLeft, Calculator, CreditCard, Shield, CheckCircle, AlertCircle, Building, User, FileText, Gift, TrendingDown, Clock } from 'lucide-react';
+import { Banknote, ArrowLeft, Calculator, CreditCard, Shield, CheckCircle, AlertCircle, Building, User, FileText, Gift, TrendingDown, Clock, Home } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { FEATURES } from '@/config/features';
 import terangaBlockchain from '@/services/TerangaBlockchainService';
 
 const OneTimePaymentPage = () => {
   const { state } = useLocation();
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const context = state || {};
   const hasContext = !!(context.parcelleId || context.projectId);
@@ -156,42 +157,63 @@ const OneTimePaymentPage = () => {
   const backLink = useMemo(() => {
     if (context.parcelleId) return { to: `/parcelle/${context.parcelleId}`, label: 'Retour à la parcelle' };
     if (context.projectId) return { to: `/project/${context.projectId}`, label: 'Retour au projet' };
-    return null;
+    return { to: '/acheteur', label: 'Retour au dashboard' };
   }, [context]);
 
   return (
     <div className="max-w-7xl mx-auto space-y-6 p-6">
-      {hasContext && (
-        <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800 flex items-center justify-between">
-          <div className="flex items-center space-x-4">
-            <Banknote className="w-5 h-5" />
-            <div>
-              {context.parcelle?.title ? (
-                <span>
-                  <strong>{context.parcelle.title}</strong> 
-                  {context.parcelle.location && ` • ${context.parcelle.location}`}
-                  {context.parcelle.surface && ` • ${context.parcelle.surface} m²`}
-                  {context.paymentInfo?.totalPrice && ` • ${context.paymentInfo.totalPrice.toLocaleString()} FCFA`}
-                </span>
-              ) : (
-                <span>
-                  Achat comptant pour: {context.parcelleId ? `Parcelle #${context.parcelleId}` : `Projet #${context.projectId}`}
-                </span>
-              )}
-              <div className="text-blue-600 font-medium">Paiement intégral immédiat</div>
-            </div>
-          </div>
-          {backLink && (
-            <Link to={backLink.to} className="inline-flex items-center text-blue-700 hover:text-blue-800 transition-colors">
-              <ArrowLeft className="w-4 h-4 mr-1"/> {backLink.label}
-            </Link>
-          )}
+      {/* Header avec breadcrumb */}
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2 text-sm text-gray-600">
+          <Home className="w-4 h-4" />
+          <span>/</span>
+          <Link to="/acheteur" className="hover:text-blue-600">Dashboard</Link>
+          <span>/</span>
+          <span className="text-gray-900 font-medium">Paiement Comptant</span>
         </div>
-      )}
+        {backLink && (
+          <Link to={backLink.to} className="inline-flex items-center text-blue-700 hover:text-blue-800 transition-colors">
+            <ArrowLeft className="w-4 h-4 mr-1"/> {backLink.label}
+          </Link>
+        )}
+      </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Colonne principale - Configuration */}
-        <div className="lg:col-span-2 space-y-6">
+          {hasContext && (
+            <div className="p-4 rounded-lg bg-blue-50 border border-blue-200 text-sm text-blue-800">
+              <div className="flex items-center space-x-4">
+                <Banknote className="w-5 h-5" />
+                <div className="flex-1">
+                  {context.parcelle?.title ? (
+                    <div>
+                      <div className="font-semibold text-lg">{context.parcelle.title}</div>
+                      <div className="flex items-center gap-3 mt-1 text-blue-700">
+                        {context.parcelle.location && (
+                          <span>📍 {context.parcelle.location}</span>
+                        )}
+                        {context.parcelle.surface && (
+                          <span>📐 {context.parcelle.surface} m²</span>
+                        )}
+                        {(context.parcelle.price || context.paymentInfo?.totalPrice) && (
+                          <span className="font-bold text-xl">
+                            💰 {(context.parcelle.price || context.paymentInfo.totalPrice).toLocaleString()} FCFA
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <span>
+                      Achat comptant pour: {context.parcelleId ? `Parcelle #${context.parcelleId}` : `Projet #${context.projectId}`}
+                    </span>
+                  )}
+                  <div className="text-blue-600 font-medium mt-1">💳 Paiement intégral immédiat</div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Colonne principale - Configuration */}
+            <div className="lg:col-span-2 space-y-6">
           {/* Informations de l'acheteur */}
           <Card>
             <CardHeader>
@@ -223,7 +245,10 @@ const OneTimePaymentPage = () => {
                     disabled={!!context.parcelle?.price}
                   />
                   {context.parcelle?.price && (
-                    <div className="text-xs text-gray-500 mt-1">Prix fixé par le vendeur</div>
+                    <div className="flex items-center text-xs text-green-600 mt-1">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Prix fixé par le vendeur: {context.parcelle.price.toLocaleString()} FCFA
+                    </div>
                   )}
                 </div>
                 
@@ -507,11 +532,27 @@ const OneTimePaymentPage = () => {
 
                   setSubmitting(true);
                   try {
+                    // Valider que parcelle_id existe dans la base si fournie
+                    let validParcelleId = null;
+                    if (context.parcelleId) {
+                      const { data: parcelExists } = await supabase
+                        .from('parcels')
+                        .select('id')
+                        .eq('id', context.parcelleId)
+                        .maybeSingle();
+
+                      if (parcelExists) {
+                        validParcelleId = context.parcelleId;
+                      } else {
+                        console.warn('Parcelle ID invalide, insertion sans parcelle_id:', context.parcelleId);
+                      }
+                    }
+
                     const payload = {
                       user_id: user.id,
                       type: 'one_time',
                       status: 'pending',
-                      parcelle_id: context.parcelleId || null,
+                      parcelle_id: validParcelleId,
                       project_id: context.projectId || null,
                       offered_price: parseInt(negotiatedPrice || price.replace(/\D/g, ''), 10),
                       note,
@@ -587,15 +628,23 @@ const OneTimePaymentPage = () => {
                     
                     if (txError) throw txError;
                     
+                    console.log('✅ Request créée:', request);
+                    console.log('✅ Transaction créée avec succès');
+                    console.log('📊 Totals:', totals);
+                    
                     const successTitle = context.parcelle?.title 
                       ? `Demande d'achat pour ${context.parcelle.title}` 
                       : 'Demande d\'achat comptant envoyée';
                     const successDescription = `Total: ${totals.finalTotal.toLocaleString()} FCFA (dont ${totals.totalFees.toLocaleString()} FCFA de frais). Économie vs financement: ${totals.savings.toLocaleString()} FCFA.`;
                     
+                    console.log('📢 Affichage toast:', successTitle, successDescription);
+                    
                     window.safeGlobalToast?.({ 
                       title: successTitle, 
                       description: successDescription 
                     });
+                    
+                    console.log('✅ Toast appelé');
                     
                     // Reset form
                     setNegotiatedPrice('');
@@ -615,10 +664,47 @@ const OneTimePaymentPage = () => {
               </Button>
             </CardContent>
           </Card>
-        </div>
+            </div>
 
-        {/* Colonne droite - Résumé et avantages */}
-        <div className="space-y-6">
+            {/* Colonne droite - Résumé et avantages */}
+            <div className="space-y-6">
+          {/* Bien sélectionné */}
+          {context.parcelle && (
+            <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-purple-50">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-blue-900">
+                  <Home className="h-5 w-5" />
+                  Bien Sélectionné
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="text-lg font-bold text-gray-900">
+                  {context.parcelle.title || 'Terrain'}
+                </div>
+                <div className="flex items-center gap-2 text-sm text-gray-600">
+                  {context.parcelle.location && (
+                    <span>📍 {context.parcelle.location}</span>
+                  )}
+                  {context.parcelle.surface && (
+                    <>
+                      <span>•</span>
+                      <span>📐 {context.parcelle.surface} m²</span>
+                    </>
+                  )}
+                </div>
+                <div className="mt-4 pt-4 border-t border-blue-200">
+                  <div className="flex items-center justify-between">
+                    <span className="text-base font-semibold text-gray-700">Prix de vente:</span>
+                    <span className="text-3xl font-bold text-blue-600">
+                      {(context.parcelle.price || context.paymentInfo?.totalPrice || 0).toLocaleString()} 
+                      <span className="text-sm ml-1">FCFA</span>
+                    </span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           {/* Résumé financier */}
           <Card>
             <CardHeader>
@@ -820,8 +906,8 @@ const OneTimePaymentPage = () => {
               )}
             </CardContent>
           </Card>
-        </div>
-      </div>
+            </div>
+          </div>
     </div>
   );
 };

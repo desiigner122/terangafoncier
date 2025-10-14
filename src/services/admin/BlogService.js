@@ -6,7 +6,7 @@
  * Objectif: CRUD articles blog (remplace array hardcodé)
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 class BlogService {
   

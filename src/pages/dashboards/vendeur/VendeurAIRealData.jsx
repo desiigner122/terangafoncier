@@ -68,7 +68,7 @@ const VendeurAIRealData = () => {
       const { data: analysesData, error: analysesError } = await supabase
         .from('ai_analyses')
         .select('*')
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (analysesError) throw analysesError;
@@ -106,7 +106,7 @@ const VendeurAIRealData = () => {
       const { data, error } = await supabase
         .from('ai_chat_history')
         .select('*')
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .eq('session_id', sessionId)
         .order('created_at', { ascending: true });
 
@@ -165,7 +165,7 @@ const VendeurAIRealData = () => {
         .from('ai_analyses')
         .insert({
           property_id: selectedProperty,
-          vendor_id: user.id,
+          owner_id: user.id,
           analysis_type: 'price_suggestion',
           input_data: {
             current_price: property.price,
@@ -229,7 +229,7 @@ const VendeurAIRealData = () => {
         .from('ai_analyses')
         .insert({
           property_id: selectedProperty,
-          vendor_id: user.id,
+          owner_id: user.id,
           analysis_type: 'description_generation',
           input_data: {
             property_type: property.property_type,
@@ -304,7 +304,7 @@ const VendeurAIRealData = () => {
         .from('ai_analyses')
         .insert({
           property_id: selectedProperty,
-          vendor_id: user.id,
+          owner_id: user.id,
           analysis_type: 'keywords_seo',
           input_data: {
             property_type: property.property_type,
@@ -351,7 +351,7 @@ const VendeurAIRealData = () => {
       await supabase
         .from('ai_chat_history')
         .insert({
-          vendor_id: user.id,
+          owner_id: user.id,
           session_id: sessionId,
           role: 'user',
           content: userMessage,
@@ -380,7 +380,7 @@ const VendeurAIRealData = () => {
         await supabase
           .from('ai_chat_history')
           .insert({
-            vendor_id: user.id,
+            owner_id: user.id,
             session_id: sessionId,
             role: 'assistant',
             content: aiResponse,

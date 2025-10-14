@@ -81,7 +81,7 @@ const VendeurPhotosRealData = () => {
       const { data: photosData, error: photosError } = await supabase
         .from('property_photos')
         .select('*')
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (photosError) throw photosError;
@@ -224,7 +224,7 @@ const VendeurPhotosRealData = () => {
           .from('property_photos')
           .insert({
             property_id: selectedProperty,
-            vendor_id: user.id,
+            owner_id: user.id,
             file_path: publicUrl,
             storage_path: fileName,
             file_name: file.name,

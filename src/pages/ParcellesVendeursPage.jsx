@@ -1,4 +1,4 @@
-﻿import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -29,7 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { supabase } from '@/lib/customSupabaseClient';
+import { fetchDirect } from '@/lib/supabaseClient';
 
 const regions = [
   "Toutes les régions", "Dakar", "Thiès", "Saint-Louis", "Diourbel", "Louga", 
@@ -80,260 +80,119 @@ const ParcellesVendeursPage = () => {
     parking: false
   });
   const [favoriteIds, setFavoriteIds] = useState([]);
+  const [parcelles, setParcelles] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
+  // Charger les favoris de l'utilisateur (désactivé car colonne favorites n'existe pas)
   useEffect(() => {
     const loadFavorites = async () => {
-      if (!user) { setFavoriteIds([]); return; }
-      const { data: profile } = await supabase.from('users').select('favorites').eq('id', user.id).single();
-      setFavoriteIds(Array.isArray(profile?.favorites) ? profile.favorites : []);
+      if (!user) { 
+        setFavoriteIds([]); 
+        return; 
+      }
+      // TODO: Implémenter table favorites séparée
+      // const { data: profile } = await supabase.from('profiles').select('favorites').eq('id', user.id).single();
+      // setFavoriteIds(Array.isArray(profile?.favorites) ? profile.favorites : []);
+      setFavoriteIds([]); // Temporaire
     };
     loadFavorites();
   }, [user]);
 
-  // Données de parcelles avec images réelles et vendeurs variés
-  const parcelles = [
-    {
-      id: 1,
-      title: "Terrain Résidentiel Premium - Almadies",
-      location: "Almadies, Dakar",
-      region: "Dakar",
-      city: "Dakar",
-      price: "85 000 000",
-      surface: "500",
-      type: "Résidentiel",
-      seller: "Particulier",
-      sellerName: "Amadou FALL",
-      sellerId: "seller-001",
-      sellerType: "vendeur-particulier",
-      financing: ["Bancaire", "Échelonné"],
-      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000",
-      features: ["Vue mer", "Résidence fermée", "Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport", "Écoles"],
-      rating: 4.8,
-      views: 234,
-      isFavorite: false,
-      isVerified: true,
-      description: "Magnifique terrain avec vue imprenable sur l'océan"
-    },
-    {
-      id: 2,
-      title: "Terrain Agricole - Thiès",
-      location: "Thiès, Thiès",
-      region: "Thiès",
-      city: "Thiès",
-      price: "15 000 000",
-      surface: "2000",
-      type: "Agricole",
-      seller: "Promoteur Pro",
-      sellerName: "SENEGAL AGRO DEVELOPPEMENT",
-      sellerId: "promoter-001",
-      sellerType: "promoteur",
-      financing: ["Crypto", "Bancaire"],
-      image: "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1000",
-      features: ["Parking"],
-      utilities: ["Eau", "Électricité"],
-      access: ["Route pavée", "Transport"],
-      rating: 4.5,
-      views: 156,
-  isFavorite: false,
-      isVerified: true,
-      description: "Terrain agricole fertile, idéal pour l'agriculture moderne"
-    },
-    {
-      id: 3,
-      title: "Terrain Commercial - Plateau",
-      location: "Plateau, Dakar",
-      region: "Dakar",
-      city: "Dakar",
-      price: "120 000 000",
-      surface: "300",
-      type: "Commercial",
-      seller: "Agence Pro",
-      sellerName: "IMMOBILIER DAKAR PREMIUM",
-      sellerId: "agent-001", 
-      sellerType: "agent",
-      financing: ["Bancaire", "Échelonné", "Crypto"],
-      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000",
-      features: ["Résidence fermée", "Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport", "Écoles"],
-      rating: 4.9,
-      views: 445,
-      isFavorite: false,
-      isVerified: true,
-      description: "Emplacement stratégique au cÅ“ur des affaires"
-    },
-    {
-      id: 4,
-      title: "Terrain Mixte - Mbour",
-      location: "Mbour, Thiès",
-      region: "Thiès",
-      city: "Mbour",
-      price: "45 000 000",
-      surface: "800",
-      type: "Mixte",
-      seller: "Particulier",
-      sellerName: "Fatou SECK",
-      sellerId: "seller-002",
-      sellerType: "vendeur-particulier",
-      financing: ["Échelonné"],
-      image: "https://images.unsplash.com/photo-1448630360428-65456885c650?q=80&w=1000",
-      features: ["Vue mer"],
-      utilities: ["Eau", "Électricité"],
-      access: ["Route pavée", "Transport"],
-      rating: 4.3,
-      views: 178,
-      isFavorite: false,
-      isVerified: false,
-      description: "Terrain polyvalent proche de la côte"
-    },
-    {
-      id: 5,
-      title: "Terrain Industriel - Diamniadio",
-      location: "Diamniadio, Dakar",
-      region: "Dakar",
-      city: "Rufisque",
-      price: "200 000 000",
-      surface: "5000",
-      type: "Industriel",
-      seller: "Développeur Pro",
-      sellerName: "SÉNÉGAL INDUSTRIAL PARKS",
-      sellerId: "promoter-003",
-      sellerType: "promoteur",
-      financing: ["Bancaire", "Crypto"],
-      image: "https://images.unsplash.com/photo-1581094794329-c8112a89af12?q=80&w=1000",
-      features: ["Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport"],
-      rating: 4.7,
-      views: 267,
-  isFavorite: false,
-      isVerified: true,
-      description: "Zone industrielle moderne avec toutes commodités"
-    },
-    {
-      id: 6,
-      title: "Terrain Résidentiel - Saint-Louis",
-      location: "Saint-Louis, Saint-Louis",
-      region: "Saint-Louis",
-      city: "Saint-Louis",
-      price: "35 000 000",
-      surface: "600",
-      type: "Résidentiel",
-      seller: "Particulier",
-      sellerName: "Moussa DIAGNE",
-      sellerId: "seller-003",
-      sellerType: "vendeur-particulier",
-      financing: ["Bancaire", "Échelonné"],
-      image: "https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=1000",
-      features: ["Résidence fermée"],
-      utilities: ["Eau", "Électricité"],
-      access: ["Route pavée", "Écoles"],
-      rating: 4.4,
-      views: 189,
-      isFavorite: false,
-      isVerified: true,
-      description: "Terrain dans la ville historique de Saint-Louis"
-    },
-    {
-      id: 7,
-      title: "Lotissement de Luxe - Saly",
-      location: "Saly, Thiès",
-      region: "Thiès",
-      city: "Mbour",
-      price: "75 000 000",
-      surface: "400",
-      type: "Résidentiel",
-      seller: "Promoteur Pro",
-      sellerName: "SALY LUXURY DEVELOPMENT",
-      sellerId: "promoter-004",
-      sellerType: "promoteur",
-      financing: ["Bancaire", "Échelonné", "Crypto"],
-      image: "https://images.unsplash.com/photo-1564013799919-ab600027ffc6?q=80&w=1000",
-      features: ["Vue mer", "Résidence fermée", "Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport", "Écoles"],
-      rating: 4.6,
-      views: 312,
-      isFavorite: false,
-      isVerified: true,
-      description: "Lotissement haut de gamme en bord de mer"
-    },
-    {
-      id: 8,
-      title: "Terrain Commercial - Kaolack",
-      location: "Kaolack, Kaolack",
-      region: "Kaolack",
-      city: "Kaolack",
-      price: "28 000 000",
-      surface: "250",
-      type: "Commercial",
-      seller: "Investisseur Pro",
-      sellerName: "KAOLACK BUSINESS CENTER",
-      sellerId: "investor-001",
-      sellerType: "investisseur",
-      financing: ["Bancaire", "Échelonné"],
-      image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000",
-      features: ["Parking"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport"],
-      rating: 4.2,
-      views: 145,
-      isFavorite: false,
-      isVerified: true,
-      description: "Terrain commercial stratégique en centre-ville"
-    },
-    // Ajout de parcelles communales
-    {
-      id: 9,
-      title: "Lotissement Social - Municipalité de Dakar",
-      location: "Guédiawaye, Dakar",
-      region: "Dakar",
-      city: "Guédiawaye",
-      price: "12 000 000",
-      surface: "200",
-      type: "Résidentiel",
-      seller: "Municipalité",
-      sellerName: "Mairie de Dakar",
-      sellerId: "municipality-001",
-      sellerType: "mairie",
-      financing: ["Bancaire", "Échelonné"],
-      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000",
-      features: ["Prix social", "Titre foncier"],
-      utilities: ["Eau", "Électricité"],
-      access: ["Route pavée", "Transport", "Écoles"],
-      rating: 4.1,
-      views: 89,
-      isFavorite: false,
-      isVerified: true,
-      description: "Programme de logement social municipal"
-    },
-    {
-      id: 10,
-      title: "Zone d'Activité Économique - Thiès",
-      location: "Thiès, Thiès",
-      region: "Thiès",
-      city: "Thiès",
-      price: "25 000 000",
-      surface: "1000",
-      type: "Commercial",
-      seller: "Municipalité",
-      sellerName: "Mairie de Thiès",
-      sellerId: "municipality-002",
-      sellerType: "mairie",
-      financing: ["Bancaire"],
-      image: "https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1000",
-      features: ["Zone économique", "Infrastructures"],
-      utilities: ["Eau", "Électricité", "Internet"],
-      access: ["Route pavée", "Transport"],
-      rating: 4.3,
-      views: 156,
-      isFavorite: false,
-      isVerified: true,
-      description: "Zone dédiée aux activités économiques municipales"
-    }
-  ];
+  // Charger les parcelles depuis Supabase avec FETCH DIRECT
+  useEffect(() => {
+    const loadProperties = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+
+        // FETCH DIRECT via helper centralisé
+        const propertiesData = await fetchDirect(
+          'properties?select=*&status=eq.active&verification_status=eq.verified&order=created_at.desc'
+        );
+
+        if (!propertiesData || propertiesData.length === 0) {
+          setParcelles([]);
+          setLoading(false);
+          return;
+        }
+
+        // Query 2: Charger les profils des propriétaires
+        const ownerIds = propertiesData
+          .map(p => p.owner_id)
+          .filter(id => id != null);
+        
+        const profilesData = ownerIds.length > 0 
+          ? await fetchDirect(`profiles?select=id,full_name,email,role&id=in.(${ownerIds.join(',')})`)
+          : [];
+
+        // Créer un map des profils pour accès rapide
+        const profilesMap = {};
+        (profilesData || []).forEach(profile => {
+          profilesMap[profile.id] = profile;
+        });
+
+        // Mapper les properties avec leurs profils
+        const data = propertiesData.map(prop => ({
+          ...prop,
+          profiles: profilesMap[prop.owner_id] || null
+        }));
+
+        // Mapper les données DB vers le format attendu par le composant
+        const mappedData = (data || []).map(prop => {
+          // Parse JSON fields
+          const images = Array.isArray(prop.images) ? prop.images : 
+                        (typeof prop.images === 'string' ? JSON.parse(prop.images || '[]') : []);
+          const features = Array.isArray(prop.features) ? prop.features :
+                          (typeof prop.features === 'string' ? JSON.parse(prop.features || '[]') : []);
+          const amenities = Array.isArray(prop.amenities) ? prop.amenities :
+                           (typeof prop.amenities === 'string' ? JSON.parse(prop.amenities || '[]') : []);
+          const financingOptions = Array.isArray(prop.financing_options) ? prop.financing_options :
+                                  (typeof prop.financing_options === 'string' ? JSON.parse(prop.financing_options || '[]') : []);
+
+          // Déterminer le type de vendeur
+          const ownerRole = prop.profiles?.role || 'vendeur-particulier';
+          let sellerType = 'Particulier';
+          if (ownerRole === 'agent-foncier') sellerType = 'Agence Pro';
+          else if (ownerRole === 'promoteur') sellerType = 'Promoteur Pro';
+
+          return {
+            id: prop.id,
+            title: prop.title || 'Sans titre',
+            location: prop.location || '',
+            region: prop.region || '',
+            city: prop.city || '',
+            price: prop.price?.toString() || '0',
+            surface: prop.surface?.toString() || '0',
+            type: prop.property_type || 'Résidentiel',
+            seller: sellerType,
+            sellerName: prop.profiles?.full_name || 'Vendeur',
+            sellerId: prop.owner_id,
+            sellerType: ownerRole,
+            financing: financingOptions.length > 0 ? financingOptions : ['Bancaire'],
+            image: images[0] || 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000',
+            features: features,
+            utilities: amenities.filter(a => ['Eau', 'Électricité', 'Internet'].includes(a)),
+            access: amenities.filter(a => ['Route pavée', 'Transport', 'Écoles'].includes(a)),
+            rating: 4.5, // TODO: Implémenter système de notation
+            views: prop.views_count || 0,
+            isFavorite: favoriteIds.includes(prop.id),
+            isVerified: prop.verification_status === 'verified',
+            description: prop.description || ''
+          };
+        });
+
+        setParcelles(mappedData);
+      } catch (err) {
+        console.error('Erreur chargement parcelles:', err);
+        setError(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProperties();
+  }, [favoriteIds]);
 
   // Filtrage des parcelles
   const filteredParcelles = useMemo(() => {
@@ -372,7 +231,7 @@ const ParcellesVendeursPage = () => {
       return matchesSearch && matchesRegion && matchesCity && matchesType && matchesSeller &&
              matchesFinancing && matchesUtilities && matchesAccess && matchesFeatures;
     });
-  }, [searchTerm, selectedRegion, selectedCity, selectedType, selectedSeller, selectedFinancing, utilities, access, features]);
+  }, [parcelles, searchTerm, selectedRegion, selectedCity, selectedType, selectedSeller, selectedFinancing, utilities, access, features]);
 
   const availableCities = selectedRegion === 'Toutes les régions' 
     ? ["Toutes"] 
@@ -734,7 +593,34 @@ const ParcellesVendeursPage = () => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* Loading State */}
+          {loading && (
+            <div className="flex justify-center items-center py-20">
+              <div className="text-center">
+                <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+                <p className="text-gray-600 text-lg">Chargement des parcelles...</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error State */}
+          {error && !loading && (
+            <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
+              <div className="text-red-600 mb-2 text-lg font-semibold">Erreur de chargement</div>
+              <p className="text-red-700">{error}</p>
+              <Button 
+                onClick={() => window.location.reload()} 
+                className="mt-4"
+                variant="outline"
+              >
+                Réessayer
+              </Button>
+            </div>
+          )}
+
+          {/* Parcelles Grid */}
+          {!loading && !error && (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredParcelles.map((parcelle, index) => (
               <motion.div
                 key={parcelle.id}
@@ -862,13 +748,13 @@ const ParcellesVendeursPage = () => {
 
                       {/* Parcours d'achat rapides */}
                       <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/buy/one-time'); }}>
+                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/acheteur/buy/one-time'); }}>
                           Comptant
                         </Button>
-                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/buy/installments'); }}>
+                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/acheteur/buy/installments'); }}>
                           Échelonné
                         </Button>
-                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/buy/bank-financing'); }}>
+                        <Button variant="outline" onClick={(e) => { e.stopPropagation(); navigate('/acheteur/buy/bank-financing'); }}>
                           Bancaire
                         </Button>
                       </div>
@@ -878,8 +764,10 @@ const ParcellesVendeursPage = () => {
               </motion.div>
             ))}
           </div>
+          )} {/* Fin du bloc {!loading && !error && ...} */}
 
-          {filteredParcelles.length === 0 && (
+          {/* Empty State - seulement si pas de loading et pas d'erreur */}
+          {!loading && !error && filteredParcelles.length === 0 && (
             <div className="text-center py-12">
               <div className="text-gray-500 mb-4">
                 <Search className="w-16 h-16 mx-auto mb-4 opacity-50" />

@@ -5,7 +5,7 @@
  * et prépare l'intégration Blockchain et IA.
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 class GlobalAdminService {
   constructor() {

@@ -53,7 +53,7 @@ const VendeurGPSRealData = () => {
             status
           )
         `)
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -103,7 +103,7 @@ const VendeurGPSRealData = () => {
     try {
       const newCoordinate = {
         property_id: propertyId,
-        vendor_id: user.id,
+        owner_id: user.id,
         latitude: gpsData.latitude,
         longitude: gpsData.longitude,
         altitude: gpsData.altitude || null,

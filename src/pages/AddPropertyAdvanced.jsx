@@ -67,7 +67,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Progress } from '@/components/ui/progress';
 import { toast } from 'react-hot-toast';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 // Imports des composants d'étapes
 import { Step1BasicInfo, Step2Location, Step3DimensionsPrice, Step4Features } from './AddPropertyAdvanced/FormSteps';

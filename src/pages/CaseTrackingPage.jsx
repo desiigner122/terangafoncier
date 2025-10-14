@@ -1,5 +1,5 @@
-﻿import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/customSupabaseClient';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useParams, Link } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';

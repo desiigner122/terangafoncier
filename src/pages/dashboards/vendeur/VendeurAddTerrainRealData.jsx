@@ -538,10 +538,10 @@ const VendeurAddTerrainRealData = () => {
       if (imageUrls.length > 0) {
         const photosToInsert = imageUrls.map((url, index) => ({
           property_id: property.id,
-          vendor_id: user.id,
-          photo_url: url,
-          is_main: index === 0,
-          order_index: index,
+          owner_id: user.id,
+          file_url: url,
+          is_primary: index === 0,
+          display_order: index,
           uploaded_at: new Date().toISOString()
         }));
 

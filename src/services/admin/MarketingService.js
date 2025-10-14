@@ -6,7 +6,7 @@
  * Objectif: CRUD leads, team members, tracking events
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 class MarketingService {
   
@@ -14,7 +14,7 @@ class MarketingService {
   
   /**
    * Créer un nouveau lead (depuis formulaire contact, guide, etc.)
-   * @param {Object} leadData - { source, form_name, utm, payload }
+   * @param {Object} leadData - { full_name, email, phone, subject, message, source, etc. }
    * @returns {Promise<Object>}
    */
   async createLead(leadData) {
@@ -24,12 +24,22 @@ class MarketingService {
       const { data, error } = await supabase
         .from('marketing_leads')
         .insert({
-          source: leadData.source,
-          form_name: leadData.form_name,
+          full_name: leadData.full_name || leadData.name || 'Anonymous',
           email: leadData.email,
-          utm: leadData.utm || {},
-          payload: leadData.payload,
-          status: 'new'
+          phone: leadData.phone,
+          company: leadData.company,
+          source: leadData.source || 'website',
+          page_url: leadData.page_url || window.location.href,
+          referrer: leadData.referrer || document.referrer,
+          subject: leadData.subject,
+          message: leadData.message,
+          property_interest: leadData.property_interest,
+          budget_range: leadData.budget_range,
+          status: 'new',
+          priority: leadData.priority || 'medium',
+          user_agent: navigator.userAgent,
+          consent_marketing: leadData.consent_marketing || false,
+          consent_data_processing: leadData.consent_data_processing || false
         })
         .select()
         .single();
@@ -57,17 +67,26 @@ class MarketingService {
         .from('marketing_leads')
         .select(`
           id,
+          full_name,
+          email,
+          phone,
+          company,
           source,
-          form_name,
-          utm,
-          payload,
+          page_url,
+          referrer,
+          subject,
+          message,
+          property_interest,
+          budget_range,
           status,
+          priority,
           assigned_to,
-          replied_at,
-          converted_at,
+          assigned_at,
           notes,
+          tags,
           created_at,
-          updated_at
+          updated_at,
+          last_contacted_at
         `)
         .order('created_at', { ascending: false });
 
@@ -86,9 +105,9 @@ class MarketingService {
         query = query.eq('source', filters.source);
       }
 
-      // Recherche dans payload (email, name)
+      // Recherche dans email ou full_name
       if (filters.search) {
-        query = query.or(`payload->>'email'.ilike.%${filters.search}%,payload->>'name'.ilike.%${filters.search}%`);
+        query = query.or(`email.ilike.%${filters.search}%,full_name.ilike.%${filters.search}%`);
       }
 
       // Limiter résultats
@@ -139,11 +158,9 @@ class MarketingService {
     try {
       const updates = { status };
 
-      // Auto-set timestamps selon status
+      // Auto-set timestamp when contacted
       if (status === 'contacted') {
-        updates.replied_at = new Date().toISOString();
-      } else if (status === 'converted') {
-        updates.converted_at = new Date().toISOString();
+        updates.last_contacted_at = new Date().toISOString();
       }
 
       const { data, error } = await supabase
@@ -239,7 +256,7 @@ class MarketingService {
     try {
       const { data: allLeads, error } = await supabase
         .from('marketing_leads')
-        .select('status, source, converted_at, created_at');
+        .select('status, source, created_at');
 
       if (error) throw error;
 

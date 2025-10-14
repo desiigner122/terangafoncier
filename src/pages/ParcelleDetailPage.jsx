@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
@@ -20,6 +20,7 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProfileLink from '@/components/common/ProfileLink';
+import { supabase } from '@/lib/supabaseClient';
 
 const ParcelleDetailPage = () => {
   const { id } = useParams();
@@ -33,174 +34,199 @@ const ParcelleDetailPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('direct'); // direct, installment, bank, crypto
 
   useEffect(() => {
-    // Simulation de chargement des données de la parcelle
-    const mockParcelleData = {
-      id: parseInt(id),
-      title: "Terrain Résidentiel Premium - Almadies",
-      location: "Almadies, Dakar, Sénégal",
-      region: "Dakar",
-      city: "Dakar",
-      price: "85000000",
-      surface: "500",
-      type: "Résidentiel",
-      seller: {
-        id: "seller-001",
-        name: "Amadou FALL",
-        type: "Particulier",
-        phone: "+221 77 123 45 67",
-        email: "amadou.fall@email.com",
-        verified: true,
-        rating: 4.8,
-        properties_sold: 12
-      },
-      
-      // Localisation précise
-      address: {
-  full: "Route des Almadies, Parcelle N°147, Dakar, Sénégal",
-        coordinates: {
-          latitude: 14.7381,
-          longitude: -17.5094
-        },
-        nearby_landmarks: [
-          "Université Cheikh Anta Diop (8 km)",
-          "Aéroport Léopold Sédar Senghor (12 km)",
-          "Plage des Almadies (1.5 km)",
-          "Centre commercial Sea Plaza (2 km)"
-        ]
-      },
+    const loadProperty = async () => {
+      try {
+        setLoading(true);
 
-      // Coordonnées pour compatibilité
-      coordinates: {
-        lat: 14.7381,
-        lng: -17.5094
-      },
+        console.log('🔍 Chargement parcelle ID:', id);
 
-      // Caractéristiques
-      features: {
-        main: ["Vue mer panoramique", "Résidence fermée sécurisée", "Parking privé"],
-        utilities: ["Eau courante", "Électricité SENELEC", "Internet fibre optique"],
-  access: ["Route pavée", "Transport public", "Écoles à proximité"],
-        zoning: "Zone résidentielle R3",
-        buildable_ratio: "0.6",
-        max_floors: 4
-      },
+        // Charger la property avec le profil du vendeur
+        const { data: property, error } = await supabase
+          .from('properties')
+          .select(`
+            *,
+            profiles:owner_id (
+              id,
+              full_name,
+              email,
+              role
+            )
+          `)
+          .eq('id', id)
+          .single();
 
-      // Options de financement
-      financing: {
-        methods: ["Bancaire", "Échelonné", "Crypto-monnaie"],
-        bank_financing: {
-          available: true,
-          min_down_payment: "30%",
-          max_duration: "25 ans",
-          partner_banks: [
-            { id: "cbao-001", name: "CBAO" },
-            { id: "uba-001", name: "UBA" },
-            { id: "atlantique-001", name: "Banque Atlantique" }
-          ]
-        },
-        installment: {
-          available: true,
-          min_down_payment: "20%",
-          monthly_payment: "1200000",
-          duration: "5 ans"
-        },
-        crypto: {
-          available: true,
-          accepted_currencies: ["Bitcoin", "Ethereum", "USDC"],
-          discount: "5%"
+        console.log('📦 Property chargée:', property);
+        console.log('❌ Erreur:', error);
+
+        if (error) {
+          console.error('❌ Erreur chargement:', error);
+          navigate('/404');
+          return;
         }
-      },
 
-      // NFT et Blockchain
-      nft: {
-        available: true,
-        token_id: "TER_ALM_147_2025",
-        blockchain: "Polygon",
-        mint_date: "2025-01-15",
-        current_owner: "0x742d35Cc6634C0532925a3b8D49a9B8741c55F5d",
-        metadata_uri: "ipfs://QmXyZ...abc123",
-        smart_contract: "0x1234567890abcdef1234567890abcdef12345678"
-      },
+        if (!property) {
+          navigate('/404');
+          return;
+        }
 
-      // Score IA et analytics
-      ai_score: {
-        overall: 9.2,
-        location: 9.5,
-        investment_potential: 8.8,
-        infrastructure: 9.0,
-        price_vs_market: 8.9,
-        growth_prediction: "15-20% dans les 3 prochaines années"
-      },
+        // Parser les JSON fields
+        const images = Array.isArray(property.images) ? property.images :
+                      (typeof property.images === 'string' ? JSON.parse(property.images || '[]') : []);
+        
+        const features = property.features && typeof property.features === 'object' 
+          ? property.features 
+          : (typeof property.features === 'string' ? JSON.parse(property.features || '{}') : {});
+        
+        const amenities = Array.isArray(property.amenities) ? property.amenities :
+                         (typeof property.amenities === 'string' ? JSON.parse(property.amenities || '[]') : []);
+        
+        const metadata = property.metadata && typeof property.metadata === 'object'
+          ? property.metadata
+          : (typeof property.metadata === 'string' ? JSON.parse(property.metadata || '{}') : {});
 
-      // Images
-      images: [
-        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?q=80&w=1000",
-        "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?q=80&w=1000",
-        "https://images.unsplash.com/photo-1448630360428-65456885c650?q=80&w=1000",
-        "https://images.unsplash.com/photo-1582407947304-fd86f028f716?q=80&w=1000",
-        "https://images.unsplash.com/photo-1500595046743-cd271d694d30?q=80&w=1000"
-      ],
+        // Mapper les données vers le format attendu par le composant
+        const mappedData = {
+          id: property.id,
+          title: property.title || 'Terrain sans titre',
+          location: property.location || `${property.city}, ${property.region}`,
+          region: property.region,
+          city: property.city,
+          price: property.price?.toString() || '0',
+          surface: property.surface?.toString() || '0',
+          type: property.property_type || 'Terrain',
+          
+          seller: {
+            id: property.profiles?.id || property.owner_id,
+            name: property.profiles?.full_name || 'Vendeur',
+            type: property.profiles?.role === 'vendeur' ? 'Particulier' : 'Professionnel',
+            email: property.profiles?.email || '',
+            verified: property.verification_status === 'verified',
+            rating: 4.5,
+            properties_sold: 0
+          },
 
-      // Documents légaux
-      documents: [
-        { name: "Titre Foncier", type: "PDF", size: "2.4 MB", verified: true },
-        { name: "Plan de bornage", type: "PDF", size: "1.8 MB", verified: true },
-        { name: "Certificat d'urbanisme", type: "PDF", size: "1.2 MB", verified: true },
-        { name: "Photos aériennes", type: "PDF", size: "5.1 MB", verified: false }
-      ],
+          address: {
+            full: property.address || property.location,
+            coordinates: {
+              latitude: property.latitude || 14.7167,
+              longitude: property.longitude || -17.4677
+            },
+            nearby_landmarks: property.nearby_landmarks || []
+          },
 
-      // Historique des prix
-      price_history: [
-        { date: "2024-01-15", price: 75000000 },
-        { date: "2024-06-15", price: 80000000 },
-        { date: "2025-01-15", price: 85000000 }
-      ],
+          coordinates: {
+            lat: property.latitude || 14.7167,
+            lng: property.longitude || -17.4677
+          },
 
-      // Statistiques
-      stats: {
-        views: 1247,
-        favorites: 89,
-        inquiries: 23,
-        days_on_market: 45,
-        last_updated: "2025-09-05"
-      },
+          features: {
+            main: features.main || [],
+            utilities: features.utilities || [],
+            access: features.access || [
+              'Route goudronnée',
+              'Transport en commun à 500m',
+              'Accès voiture'
+            ],
+            zoning: property.zoning || features.zoning || 'Zone résidentielle',
+            buildable_ratio: property.buildable_ratio || features.buildable_ratio || 0.6,
+            max_floors: property.max_floors || features.max_floors || 3
+          },
 
-  description: `🏖️ **TERRAIN EXCEPTIONNEL AVEC VUE MER - ALMADIES**
+          amenities: amenities,
 
-Découvrez ce magnifique terrain de 500m² situé dans le quartier prestigieux des Almadies, offrant une vue mer panoramique imprenable. Cette parcelle exceptionnelle représente une opportunité unique d'investissement dans l'un des secteurs les plus recherchés de Dakar.
+          documents: metadata.documents?.list || [
+            {
+              name: 'Titre de propriété',
+              type: 'PDF',
+              size: '2.5 MB',
+              verified: !!property.title_deed_number
+            },
+            {
+              name: 'Plan cadastral',
+              type: 'PDF',
+              size: '1.8 MB',
+              verified: property.verification_status === 'verified'
+            }
+          ],
 
-🌟 **ATOUTS MAJEURS**
-• Vue mer panoramique à 180°
-• Résidence fermée avec sécurité 24h/24
-• Proximité immédiate de la plage (1,5 km)
-• Infrastructure complète (eau, électricité, internet)
-• Zone résidentielle haut de gamme
+          financing: {
+            methods: metadata.financing?.methods || ['direct'],
+            bank_financing: metadata.financing?.bank_financing || {
+              partner: 'BICIS',
+              rate: '8.5%',
+              max_duration: '20 ans'
+            },
+            installment: metadata.financing?.installment || {
+              min_down_payment: '30%',
+              monthly_payment: Math.round(property.price * 0.7 / 120).toString(),
+              duration: '10 ans',
+              total_cost: (property.price * 1.2).toString()
+            },
+            crypto: metadata.financing?.crypto || {
+              discount: '5%',
+              accepted_currencies: ['BTC', 'ETH', 'USDT', 'USDC']
+            }
+          },
 
-🏗️ **POTENTIEL DE CONSTRUCTION**
-• Coefficient d'emprise au sol: 0.6
-• Hauteur maximum: 4 étages (R+3)
-• Possibilité villa de luxe ou immeuble résidentiel
-• Accès direct véhicule et parking privé
+          blockchain: {
+            verified: property.blockchain_verified || false,
+            hash: property.blockchain_hash,
+            network: property.blockchain_network,
+            nft_token_id: property.nft_token_id
+          },
 
-💰 **FINANCEMENT FLEXIBLE**
-• Financement bancaire disponible (30% d'apport)
-• Paiement échelonné sur 5 ans possible
-• Acceptation crypto-monnaies avec 5% de réduction
+          nft: {
+            available: !!property.nft_token_id,
+            token_id: property.nft_token_id || null,
+            blockchain: property.blockchain_network || 'Polygon',
+            mint_date: property.nft_minted_at || property.created_at,
+            smart_contract: property.nft_contract_address || null,
+            current_owner: property.nft_owner || property.profiles?.full_name || 'Vendeur'
+          },
 
-🔐 **SÉCURITÉ BLOCKCHAIN**
-• Propriété tokenisée en NFT
-• Smart contract sur blockchain Polygon
-• Transparence et sécurité maximales
-• Transfert de propriété instantané
+          stats: {
+            views: property.views_count || 0,
+            favorites: property.favorites_count || 0,
+            contact_requests: property.contact_requests_count || 0,
+            days_on_market: property.created_at 
+              ? Math.floor((new Date() - new Date(property.created_at)) / (1000 * 60 * 60 * 24))
+              : 0
+          },
 
-Cette parcelle représente un investissement d'exception dans l'un des quartiers les plus prisés de Dakar, alliant prestige, rentabilité et innovation technologique.`
+          ai_score: {
+            overall: property.ai_score || 8.5,
+            location: property.ai_location_score || 9.0,
+            investment_potential: property.ai_investment_score || 8.0,
+            infrastructure: property.ai_infrastructure_score || 8.5,
+            price_vs_market: property.ai_price_score || 8.0,
+            growth_prediction: property.ai_growth_prediction || '+15% dans les 5 prochaines années'
+          },
+
+          images: images,
+          main_image: images[0] || null,
+          description: property.description || 'Aucune description disponible',
+          status: property.status,
+          verification_status: property.verification_status,
+          legal_status: property.legal_status,
+          title_deed_number: property.title_deed_number,
+          land_registry_ref: property.land_registry_ref,
+          created_at: property.created_at,
+          updated_at: property.updated_at
+        };
+
+        setParcelle(mappedData);
+        setLoading(false);
+
+      } catch (error) {
+        console.error('Erreur chargement parcelle:', error);
+        setLoading(false);
+      }
     };
 
-    setTimeout(() => {
-      setParcelle(mockParcelleData);
-      setLoading(false);
-    }, 1000);
-  }, [id]);
+    if (id) {
+      loadProperty();
+    }
+  }, [id, navigate]);
 
   const formatPrice = (price) => {
     return parseInt(price).toLocaleString() + ' FCFA';
@@ -220,7 +246,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
     
     switch (paymentMethod) {
       case 'direct':
-        navigate('/buy/one-time', { 
+        navigate('/acheteur/buy/one-time', { 
           state: { 
             parcelleId: parcelle.id,
             parcelle: {
@@ -235,7 +261,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
         });
         break;
       case 'installment':
-        navigate('/buy/installments', { 
+        navigate('/acheteur/buy/installments', { 
           state: { 
             parcelleId: parcelle.id,
             parcelle: {
@@ -251,7 +277,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
         });
         break;
       case 'bank':
-        navigate('/buy/bank-financing', { 
+        navigate('/acheteur/buy/bank-financing', { 
           state: { 
             parcelleId: parcelle.id,
             parcelle: {
@@ -269,7 +295,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
         break;
       case 'crypto':
         // Pour le crypto, utiliser le flow direct avec info spécifique
-        navigate('/buy/one-time', { 
+        navigate('/acheteur/buy/one-time', { 
           state: { 
             parcelleId: parcelle.id,
             paymentMethod: 'crypto',
@@ -470,7 +496,7 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                   <Badge variant="secondary" className="bg-blue-500 text-white">
                     {parcelle.type}
                   </Badge>
-                  {parcelle.nft.available && (
+                  {parcelle?.nft?.available && (
                     <Badge className="bg-purple-500 text-white">
                       <Bitcoin className="w-3 h-3 mr-1" />
                       NFT
@@ -727,53 +753,54 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                 </TabsContent>
 
                 <TabsContent value="nft" className="mt-6">
-                  <div className="space-y-6">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold">Propriété Tokenisée NFT</h3>
-                      <Badge className="bg-purple-500 text-white">
-                        <Bitcoin className="w-3 h-3 mr-1" />
-                        Actif
-                      </Badge>
-                    </div>
-
-                    <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-lg">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                        <div>
-                          <h4 className="font-medium mb-3">Informations NFT</h4>
-                          <div className="space-y-2 text-sm">
-                            <div>
-                              <span className="text-gray-600">Token ID:</span>
-                              <div className="font-mono bg-white px-2 py-1 rounded mt-1">{parcelle.nft.token_id}</div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Blockchain:</span>
-                              <div className="font-medium">{parcelle.nft.blockchain}</div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Date de mint:</span>
-                              <div className="font-medium">{parcelle.nft.mint_date}</div>
-                            </div>
-                          </div>
-                        </div>
-
-                        <div>
-                          <h4 className="font-medium mb-3">Smart Contract</h4>
-                          <div className="space-y-2 text-sm">
-                            <div>
-                              <span className="text-gray-600">Adresse du contrat:</span>
-                              <div className="font-mono bg-white px-2 py-1 rounded mt-1 break-all">
-                                {parcelle.nft.smart_contract}
-                              </div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Propriétaire actuel:</span>
-                              <div className="font-mono bg-white px-2 py-1 rounded mt-1 break-all">
-                                {parcelle.nft.current_owner}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
+                  {parcelle?.nft?.available ? (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between">
+                        <h3 className="text-lg font-semibold">Propriété Tokenisée NFT</h3>
+                        <Badge className="bg-purple-500 text-white">
+                          <Bitcoin className="w-3 h-3 mr-1" />
+                          Actif
+                        </Badge>
                       </div>
+
+                      <div className="bg-gradient-to-r from-purple-50 to-blue-50 p-6 rounded-lg">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                          <div>
+                            <h4 className="font-medium mb-3">Informations NFT</h4>
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <span className="text-gray-600">Token ID:</span>
+                                <div className="font-mono bg-white px-2 py-1 rounded mt-1">{parcelle.nft.token_id}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Blockchain:</span>
+                                <div className="font-medium">{parcelle.nft.blockchain}</div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Date de mint:</span>
+                                <div className="font-medium">{parcelle.nft.mint_date}</div>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div>
+                            <h4 className="font-medium mb-3">Smart Contract</h4>
+                            <div className="space-y-2 text-sm">
+                              <div>
+                                <span className="text-gray-600">Adresse du contrat:</span>
+                                <div className="font-mono bg-white px-2 py-1 rounded mt-1 break-all">
+                                  {parcelle.nft.smart_contract || 'Non disponible'}
+                                </div>
+                              </div>
+                              <div>
+                                <span className="text-gray-600">Propriétaire actuel:</span>
+                                <div className="font-mono bg-white px-2 py-1 rounded mt-1 break-all">
+                                  {parcelle.nft.current_owner}
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
 
                       <div className="mt-6 flex gap-3">
                         <Button variant="outline" size="sm">
@@ -821,6 +848,13 @@ Cette parcelle représente un investissement d'exception dans l'un des quartiers
                       </div>
                     </div>
                   </div>
+                  ) : (
+                    <div className="text-center py-12">
+                      <Bitcoin className="w-12 h-12 text-gray-400 mx-auto mb-4" />
+                      <h3 className="text-lg font-semibold mb-2">NFT non disponible</h3>
+                      <p className="text-gray-600">Cette propriété n'est pas encore tokenisée en NFT.</p>
+                    </div>
+                  )}
                 </TabsContent>
 
                 <TabsContent value="documents" className="mt-6">

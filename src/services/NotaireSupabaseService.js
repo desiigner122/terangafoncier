@@ -499,7 +499,7 @@ export class NotaireSupabaseService {
           client_rating,
           client_status,
           notes,
-          client:profiles(first_name, last_name, email, phone)
+          client:profiles(first_name, last_name, email)
         `)
         .eq('notaire_id', notaireId)
         .order('last_contact', { ascending: false });

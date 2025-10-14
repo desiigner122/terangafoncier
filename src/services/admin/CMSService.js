@@ -6,7 +6,7 @@
  * Objectif: CRUD pages, sections, media assets
  */
 
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 
 class CMSService {
   

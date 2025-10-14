@@ -5,7 +5,7 @@
  * @author Teranga Foncier Team
  */
 
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import NotificationService from './NotificationService';
 import { terangaBlockchain } from './TerangaBlockchainService';
 

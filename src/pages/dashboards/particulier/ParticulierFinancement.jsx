@@ -63,7 +63,7 @@ import {
   Sparkles,
   Zap
 } from 'lucide-react';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 
 const ParticulierFinancement = () => {

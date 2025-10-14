@@ -191,7 +191,7 @@ const VendeurOverviewRealDataModern = () => {
         const { data: crmContacts } = await supabase
           .from('crm_contacts')
           .select('id, status')
-          .eq('vendor_id', user.id);
+          .eq('owner_id', user.id); // ✅ Correction: vendor_id → owner_id
 
         stats.newProspects = crmContacts?.filter(c => c.status === 'new').length || 0;
         stats.hotLeads = crmContacts?.filter(c => c.status === 'hot').length || 0;

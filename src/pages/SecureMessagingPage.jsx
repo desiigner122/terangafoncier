@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
@@ -17,7 +17,7 @@ import {
 // useToast import supprimé - utilisation window.safeGlobalToast
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const getInitials = (name) => {
   if (!name) return '??';

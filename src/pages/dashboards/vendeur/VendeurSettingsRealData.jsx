@@ -157,7 +157,7 @@ const VendeurSettingsRealData = () => {
       const { count, error: countError } = await supabase
         .from('properties')
         .select('*', { count: 'exact', head: true })
-        .eq('vendor_id', user.id);
+        .eq('owner_id', user.id);
       
       if (!countError) {
         setPropertiesCount(count || 0);

@@ -80,7 +80,7 @@ const VendeurBlockchainRealData = () => {
             images
           )
         `)
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -111,11 +111,11 @@ const VendeurBlockchainRealData = () => {
 
   const loadWalletConnections = async () => {
     try {
-      const { data, error } = await supabase
+      const { data: walletsData } = await supabase
         .from('wallet_connections')
         .select('*')
         .eq('user_id', user.id)
-        .order('connected_at', { ascending: false });
+        .order('created_at', { ascending: false }); // ✅ Correction: connected_at → created_at
 
       if (error) throw error;
       setWalletConnections(data || []);
@@ -145,7 +145,7 @@ const VendeurBlockchainRealData = () => {
       const { data: newCert, error } = await supabase
         .from('blockchain_certificates')
         .insert({
-          vendor_id: user.id,
+          owner_id: user.id,
           property_id: propertyId,
           token_id: tokenId,
           token_standard: 'ERC-721',
@@ -245,8 +245,8 @@ const VendeurBlockchainRealData = () => {
           wallet_address: walletAddress,
           wallet_type: walletType,
           network: 'Polygon',
-          is_active: true,
-          connected_at: new Date().toISOString()
+          is_active: true
+          // created_at sera auto-généré par Supabase
         });
 
       if (error) throw error;
@@ -300,7 +300,7 @@ VALEUR
 ------
 Valeur Token: ${certificate.token_value?.toLocaleString('fr-FR') || 0} FCFA
 Transactions: ${certificate.transaction_count || 0}
-Propriétaire Actuel: ${certificate.current_owner || certificate.vendor_id}
+Propriétaire Actuel: ${certificate.current_owner || certificate.owner_id}
 
 DATES
 -----

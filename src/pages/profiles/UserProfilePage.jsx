@@ -42,41 +42,33 @@ const UserProfilePage = () => {
   }, [userId, userType]);
 
   const loadProfile = async () => {
-    console.log('loadProfile appelé avec:', { userType, userId });
+    console.log('🔍 loadProfile appelé avec:', { userType, userId });
     
-    if (!setLoading) {
-      console.error('setLoading est undefined!');
+    // Vérifier que les paramètres sont présents
+    if (!userType || !userId) {
+      console.error('❌ Paramètres de profil manquants:', { userType, userId });
+      setProfile(null);
+      setLoading(false);
       return;
     }
     
     setLoading(true);
     
-    // Vérifier que les paramètres sont présents
-    if (!userType || !userId) {
-      console.error('Paramètres de profil manquants:', { userType, userId });
-      if (setProfile) setProfile(null);
-      if (setLoading) setLoading(false);
-      // Rediriger vers la page d'accueil si les paramètres sont manquants
-      setTimeout(() => {
-        if (navigate) navigate('/');
-      }, 2000);
-      return;
-    }
-    
     try {
       // Simulation des données de profil selon le type
       const mockProfile = generateMockProfile(userType, userId);
       if (mockProfile) {
-        if (setProfile) setProfile(mockProfile);
+        setProfile(mockProfile);
       } else {
-        console.error('Impossible de générer le profil pour:', { userType, userId });
-        if (setProfile) setProfile(null);
+        console.error('❌ Impossible de générer le profil pour:', { userType, userId });
+        setProfile(null);
       }
     } catch (error) {
-      console.error('Erreur lors du chargement du profil:', error);
-      if (setProfile) setProfile(null);
+      console.error('❌ Erreur lors du chargement du profil:', error);
+      setProfile(null);
+    } finally {
+      setLoading(false);
     }
-    if (setLoading) setLoading(false);
   };
 
   const generateMockProfile = (type, id) => {
@@ -290,7 +282,23 @@ const UserProfilePage = () => {
         };
 
       default:
-        return baseProfile;
+        // Profil par défaut si type inconnu
+        return {
+          ...baseProfile,
+          name: 'Utilisateur',
+          title: 'Profil',
+          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
+          location: 'Dakar, Sénégal',
+          phone: '+221 XX XXX XX XX',
+          email: 'user@teranga-foncier.sn',
+          description: 'Profil utilisateur sur Teranga Foncier.',
+          specialties: ['Utilisateur'],
+          stats: {
+            activity: 0,
+            joined: 'Récent'
+          },
+          achievements: []
+        };
       }
   };
 
@@ -461,16 +469,18 @@ const UserProfilePage = () => {
 
           <TabsContent value="overview" className="space-y-6">
             {/* Stats Cards */}
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {Object.entries(profile.stats).map(([key, value]) => (
-                <Card key={key}>
-                  <CardContent className="p-4 text-center">
-                    <div className="text-2xl font-bold text-gray-900">{value}</div>
-                    <div className="text-sm text-gray-600 capitalize">{key.replace('_', ' ')}</div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
+            {profile?.stats && (
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                {Object.entries(profile.stats).map(([key, value]) => (
+                  <Card key={key}>
+                    <CardContent className="p-4 text-center">
+                      <div className="text-2xl font-bold text-gray-900">{value}</div>
+                      <div className="text-sm text-gray-600 capitalize">{key.replace('_', ' ')}</div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            )}
 
             {/* Achievements */}
             <Card>

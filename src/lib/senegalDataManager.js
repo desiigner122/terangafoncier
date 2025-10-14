@@ -1,10 +1,5 @@
 // Script pour corriger les données simulées avec FCFA Sénégalais
-import { createClient } from '@supabase/supabase-js';
-
-// Configuration Supabase
-const supabaseUrl = process.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = process.env.VITE_SUPABASE_ANON_KEY;
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { supabase } from '@/lib/supabaseClient';
 
 // Données réalistes pour le marché immobilier sénégalais en FCFA
 const REALISTIC_SENEGAL_DATA = {

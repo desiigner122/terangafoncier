@@ -3,7 +3,7 @@
 // Utilise Cloudinary comme fallback temporaire
 // ================================================================
 
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 // Configuration Cloudinary (gratuit 25GB)
 const CLOUDINARY_CONFIG = {

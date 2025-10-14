@@ -1,4 +1,4 @@
-﻿
+
 import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 import { LoadingSpinner } from '@/components/ui/spinner';
 // useToast import supprimé - utilisation window.safeGlobalToast
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 import terangaBlockchain, { terangaBlockchain as blockchain } from '@/services/TerangaBlockchainService';
 
 const MyRequestsPage = () => {

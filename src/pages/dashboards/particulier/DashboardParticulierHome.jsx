@@ -35,7 +35,7 @@ import {
   Sparkles
 } from 'lucide-react';
 import { Progress } from '@/components/ui/progress';
-import { supabase } from '@/lib/customSupabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const DashboardParticulierHome = () => {
   const navigate = useNavigate();
@@ -120,7 +120,7 @@ const DashboardParticulierHome = () => {
       ] = await Promise.allSettled([
   supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
   supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0),
-  supabase.from('tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
+  supabase.from('support_tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
   supabase.from('demandes_terrains_communaux').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
   supabase.from('user_documents').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
   supabase.from('favoris_properties').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)

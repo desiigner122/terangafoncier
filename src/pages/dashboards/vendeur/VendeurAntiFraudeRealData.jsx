@@ -76,7 +76,7 @@ const VendeurAntiFraudeRealData = () => {
             images
           )
         `)
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .order('check_date', { ascending: false });
 
       if (error) throw error;
@@ -137,7 +137,7 @@ const VendeurAntiFraudeRealData = () => {
       const { data: newCheck, error } = await supabase
         .from('fraud_checks')
         .insert({
-          vendor_id: user.id,
+          owner_id: user.id,
           property_id: propertyId,
           check_date: new Date().toISOString(),
           check_type: 'comprehensive',

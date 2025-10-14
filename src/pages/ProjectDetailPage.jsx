@@ -518,7 +518,7 @@ Idéal pour résidence principale ou investissement locatif avec un rendement es
     const unit = unitType ? project.apartment_types.find(u => u.type === unitType) : selectedUnit;
     const price = unit?.price || project.price_range.min;
     
-    navigate('/buy/bank-financing', { 
+    navigate('/acheteur/buy/bank-financing', { 
       state: { 
         projectId: project.id,
         projectName: project.title,

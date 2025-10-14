@@ -3,7 +3,7 @@
  * Intégration avec OpenAI GPT et services d'analytics avancés
  */
 
-import { supabase } from './customSupabaseClient';
+import { supabase } from './supabaseClient';
 
 class AIManager {
   constructor() {

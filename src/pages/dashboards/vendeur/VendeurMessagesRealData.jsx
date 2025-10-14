@@ -77,7 +77,7 @@ const VendeurMessagesRealData = () => {
             reference
           )
         `)
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .eq('is_archived', false)
         .order('updated_at', { ascending: false });
 

@@ -1,5 +1,5 @@
-﻿import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
-import { supabase } from '@/lib/customSupabaseClient';
+import React, { createContext, useState, useEffect, useContext, useCallback } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 // useToast import supprimé - utilisation window.safeGlobalToast
 
 const AuthContext = createContext(null);

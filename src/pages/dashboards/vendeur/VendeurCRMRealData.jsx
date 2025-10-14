@@ -95,7 +95,7 @@ const VendeurCRMRealData = () => {
       const { data: contacts, error: contactsError } = await supabase
         .from('crm_contacts')
         .select('*')
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (contactsError) {
@@ -179,7 +179,7 @@ const VendeurCRMRealData = () => {
           *,
           crm_contacts (first_name, last_name)
         `)
-        .eq('vendor_id', user.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -231,7 +231,7 @@ const VendeurCRMRealData = () => {
       const { data, error } = await supabase
         .from('crm_contacts')
         .insert([{
-          vendor_id: user.id,
+          owner_id: user.id,
           ...prospectData,
           score: calculateInitialScore(prospectData)
         }])
@@ -275,7 +275,7 @@ const VendeurCRMRealData = () => {
         .from('crm_interactions')
         .insert([{
           contact_id: contactId,
-          vendor_id: user.id,
+          owner_id: user.id,
           ...interactionData,
           completed_at: new Date().toISOString()
         }]);

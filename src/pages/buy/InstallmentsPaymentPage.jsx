@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { supabase } from "@/lib/customSupabaseClient";
+import { supabase } from "@/lib/supabaseClient";
 import { FEATURES } from '@/config/features';
 import terangaBlockchain from '@/services/TerangaBlockchainService';
 
@@ -382,11 +382,27 @@ const InstallmentsPaymentPage = () => {
 
                   setSubmitting(true);
                   try {
+                    // Valider que parcelle_id existe dans la base si fournie
+                    let validParcelleId = null;
+                    if (context.parcelleId) {
+                      const { data: parcelExists } = await supabase
+                        .from('parcels')
+                        .select('id')
+                        .eq('id', context.parcelleId)
+                        .maybeSingle();
+
+                      if (parcelExists) {
+                        validParcelleId = context.parcelleId;
+                      } else {
+                        console.warn('Parcelle ID invalide, insertion sans parcelle_id:', context.parcelleId);
+                      }
+                    }
+
                     const payload = {
                       user_id: user.id,
                       type: 'installment_payment',
                       status: 'pending',
-                      parcelle_id: context.parcelleId || null,
+                      parcelle_id: validParcelleId,
                       project_id: context.projectId || null,
                       requested_amount: parseInt(totalAmount.replace(/\D/g, ''), 10),
                       metadata: {

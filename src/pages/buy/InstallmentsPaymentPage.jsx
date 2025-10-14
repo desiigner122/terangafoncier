@@ -495,6 +495,12 @@ const InstallmentsPaymentPage = () => {
                     });
                   } finally {
                     setSubmitting(false);
+                    
+                    // Redirection vers la page de suivi des achats
+                    setTimeout(() => {
+                      console.log('🔄 Redirection vers /acheteur/mes-achats');
+                      navigate('/acheteur/mes-achats');
+                    }, 2500);
                   }
                 }}
               >

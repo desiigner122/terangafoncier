@@ -43,7 +43,8 @@ import {
   Clock,
   Folder,
   Camera,
-  Headphones
+  Headphones,
+  Package
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -197,12 +198,13 @@ const DashboardParticulierRefonte = () => {
       type: 'section'
     },
     {
-      id: 'mes-offres',
-      label: 'Offres Reçues',
-      icon: Heart,
-      description: 'Offres des vendeurs',
-      path: '/acheteur/offres',
-      badge: '0'
+      id: 'mes-achats',
+      label: 'Mes Achats',
+      icon: Package,
+      description: 'Suivi de mes demandes d\'achat',
+      path: '/acheteur/mes-achats',
+      badge: null,
+      badgeColor: 'bg-blue-500'
     },
     {
       id: 'favoris',

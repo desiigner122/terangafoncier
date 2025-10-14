@@ -338,20 +338,33 @@ const CompleteSidebarVendeurDashboard = () => {
         .eq('properties.owner_id', user.id) // ✅ Correction: JOIN avec properties
         .eq('status', 'pending');
 
-      // 🆕 Compter les demandes d'achat en attente
-      const { count: pendingRequests } = await supabase
-        .from('purchase_requests')
-        .select('id, properties!inner(owner_id)', { count: 'exact' })
-        .limit(0)
-        .eq('properties.owner_id', user.id) // ✅ Correction: JOIN avec properties
-        .eq('status', 'pending');
+      // 🆕 Compter les demandes d'achat en attente depuis la table requests
+      // 1. Récupérer les IDs des parcelles du vendeur
+      const { data: sellerParcels } = await supabase
+        .from('parcels')
+        .select('id')
+        .eq('seller_id', user.id);
+
+      const parcelIds = sellerParcels?.map(p => p.id) || [];
+
+      // 2. Compter les requests pour ces parcelles
+      let pendingRequestsCount = 0;
+      if (parcelIds.length > 0) {
+        const { count } = await supabase
+          .from('requests')
+          .select('id', { count: 'exact', head: true })
+          .in('parcel_id', parcelIds)
+          .eq('status', 'pending');
+        
+        pendingRequestsCount = count || 0;
+      }
 
       setDashboardStats(prev => ({
         ...prev,
         totalProperties: totalProperties || 0,
         activeListings: activeListings || 0,
         pendingInquiries: pendingInquiries || 0,
-        pendingRequests: pendingRequests || 0 // 🆕 Nombre demandes en attente
+        pendingRequests: pendingRequestsCount // 🆕 Nombre demandes en attente depuis requests
       }));
     } catch (error) {
       console.error('Erreur chargement stats:', error);

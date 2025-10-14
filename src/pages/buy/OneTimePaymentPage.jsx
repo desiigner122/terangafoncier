@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
 import { FEATURES } from '@/config/features';
 import terangaBlockchain from '@/services/TerangaBlockchainService';
@@ -21,6 +22,8 @@ const OneTimePaymentPage = () => {
   const [price, setPrice] = useState(context.paymentInfo?.totalPrice?.toString() || context.parcelle?.price?.toString() || '');
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdRequestId, setCreatedRequestId] = useState(null);
   
   // Nouveaux états pour les fonctionnalités avancées
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
@@ -517,7 +520,16 @@ const OneTimePaymentPage = () => {
                 className="w-full" 
                 size="lg"
                 disabled={!user || submitting || !price}
-                onClick={async () => {
+                onClick={async (e) => {
+                  // Prevent double-click
+                  e.preventDefault();
+                  e.stopPropagation();
+                  
+                  if (submitting) {
+                    console.log('⏳ Soumission déjà en cours, ignorer...');
+                    return;
+                  }
+                  
                   if (!user) { 
                     window.safeGlobalToast?.({ title: 'Connexion requise' }); 
                     return; 
@@ -530,6 +542,7 @@ const OneTimePaymentPage = () => {
                     return;
                   }
 
+                  console.log('🚀 Début de la soumission...');
                   setSubmitting(true);
                   try {
                     // Valider que parcelle_id existe dans la base si fournie
@@ -639,28 +652,32 @@ const OneTimePaymentPage = () => {
                     
                     console.log('📢 Affichage toast:', successTitle, successDescription);
                     
-                    window.safeGlobalToast?.({ 
-                      title: successTitle, 
-                      description: successDescription 
-                    });
+                    // Stocker l'ID de la request pour le dialog
+                    setCreatedRequestId(requestData.id);
                     
-                    console.log('✅ Toast appelé');
+                    // Afficher le dialog de succès
+                    setShowSuccessDialog(true);
+                    setSubmitting(false);
                     
-                    // Reset form
-                    setNegotiatedPrice('');
-                    setNote('');
                   } catch (err) {
+                    console.error('❌ Erreur lors de la soumission:', err);
                     window.safeGlobalToast?.({ 
                       variant: 'destructive', 
                       title: 'Erreur', 
-                      description: err.message 
+                      description: err.message || 'Une erreur est survenue lors de la soumission'
                     });
-                  } finally {
                     setSubmitting(false);
                   }
                 }}
               >
-                {submitting ? 'Envoi en cours...' : 'Finaliser la demande d\'achat comptant'}
+                {submitting ? (
+                  <span className="flex items-center justify-center gap-2">
+                    <span className="animate-spin">⏳</span>
+                    Envoi en cours...
+                  </span>
+                ) : (
+                  'Finaliser la demande d\'achat comptant'
+                )}
               </Button>
             </CardContent>
           </Card>
@@ -908,6 +925,76 @@ const OneTimePaymentPage = () => {
           </Card>
             </div>
           </div>
+
+      {/* Dialog de Succès */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="flex items-center justify-center mb-4">
+              <div className="rounded-full bg-green-100 p-3">
+                <CheckCircle className="w-8 h-8 text-green-600" />
+              </div>
+            </div>
+            <DialogTitle className="text-center text-2xl">
+              Demande Envoyée !
+            </DialogTitle>
+            <DialogDescription className="text-center text-base mt-2">
+              Votre demande d'achat a été envoyée avec succès au vendeur.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <h4 className="font-semibold text-blue-900 mb-2">✅ Ce qui va se passer :</h4>
+              <ul className="space-y-2 text-sm text-blue-800">
+                <li className="flex items-start gap-2">
+                  <Clock className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Le vendeur sera notifié de votre demande</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <User className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Il pourra accepter ou vous proposer des modifications</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <CheckCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                  <span>Vous recevrez une notification dès qu'il aura répondu</span>
+                </li>
+              </ul>
+            </div>
+
+            <div className="bg-slate-50 rounded-lg p-4">
+              <p className="text-sm text-slate-600 text-center">
+                Vous serez automatiquement redirigé vers votre page 
+                <span className="font-semibold text-slate-900"> "Mes Achats" </span> 
+                où vous pourrez suivre l'évolution de votre demande.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => {
+                setShowSuccessDialog(false);
+                setNegotiatedPrice('');
+                setNote('');
+              }}
+            >
+              Rester ici
+            </Button>
+            <Button
+              className="flex-1 bg-blue-600 hover:bg-blue-700"
+              onClick={() => {
+                setShowSuccessDialog(false);
+                navigate('/acheteur/mes-achats');
+              }}
+            >
+              Voir mes achats
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -264,6 +264,7 @@ import ParticulierAnalytics from '@/pages/dashboards/particulier/ParticulierAnal
 import ParticulierOverview from '@/pages/dashboards/particulier/ParticulierOverview_FIXED_ERRORS';
 import ParticulierRechercheTerrain from '@/pages/dashboards/particulier/ParticulierRechercheTerrain';
 import ParticulierMesOffres from '@/pages/dashboards/particulier/ParticulierMesOffres';
+import ParticulierMesAchats from '@/pages/dashboards/particulier/ParticulierMesAchats';
 import ParticulierVisites from '@/pages/dashboards/particulier/ParticulierVisites';
 import ParticulierFinancement from '@/pages/dashboards/particulier/ParticulierFinancement';
 import ParticulierZonesCommunales from '@/pages/dashboards/particulier/ParticulierZonesCommunales_FUNCTIONAL_FIXED';
@@ -528,6 +529,7 @@ function App() {
                   <Route path="recherche" element={<ParticulierRechercheTerrain />} />
                   <Route path="favoris" element={<ParticulierFavoris />} />
                   <Route path="offres" element={<ParticulierMesOffres />} />
+                  <Route path="mes-achats" element={<ParticulierMesAchats />} />
                   <Route path="visites" element={<ParticulierVisites />} />
                   <Route path="financement" element={<ParticulierFinancement />} />
                   <Route path="zones-communales" element={<ParticulierZonesCommunales />} />

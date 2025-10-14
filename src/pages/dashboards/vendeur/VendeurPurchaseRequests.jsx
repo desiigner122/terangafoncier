@@ -114,29 +114,52 @@ const VendeurPurchaseRequests = () => {
     try {
       setLoading(true);
 
+      // Récupérer d'abord les parcelles du vendeur
+      const { data: sellerParcels, error: parcelsError } = await supabase
+        .from('parcels')
+        .select('id')
+        .eq('seller_id', user.id);
+
+      if (parcelsError) throw parcelsError;
+
+      const parcelIds = sellerParcels?.map(p => p.id) || [];
+
+      if (parcelIds.length === 0) {
+        setRequests([]);
+        calculateStats([]);
+        setLoading(false);
+        return;
+      }
+
+      // Récupérer les demandes pour ces parcelles
       const { data, error } = await supabase
-        .from('purchase_requests')
+        .from('requests')
         .select(`
           *,
-          properties (
+          parcels:parcel_id (
             id,
             title,
+            name,
             price,
             location,
-            city,
-            images,
             surface,
-            property_type
+            status
           ),
-          buyer:profiles!buyer_id (
+          profiles:user_id (
             id,
-            full_name,
+            first_name,
+            last_name,
             email,
-            phone,
-            avatar_url
+            phone
+          ),
+          transactions (
+            id,
+            amount,
+            payment_method,
+            status
           )
         `)
-        .eq('owner_id', user.id)
+        .in('parcel_id', parcelIds)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -153,14 +176,13 @@ const VendeurPurchaseRequests = () => {
 
   const setupRealtimeSubscription = () => {
     const subscription = supabase
-      .channel('purchase_requests_realtime')
+      .channel('requests_realtime')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'purchase_requests',
-          filter: `owner_id=eq.${user.id}`
+          table: 'requests'
         },
         (payload) => {
           switch (payload.eventType) {

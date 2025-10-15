@@ -104,8 +104,8 @@ const BankFinancingPage = () => {
     else if (downPaymentPercent >= 10) score += 15;
     else if (downPaymentPercent >= 5) score += 10;
     
-    // Documents (15 points)
-    const docCount = Object.values(documents).filter(Boolean).length;
+    // Documents (15 points) - Utilise uploadedDocuments au lieu de documents
+    const docCount = Object.keys(uploadedDocuments).length;
     score += (docCount / 5) * 15;
     
     // Garanties (10 points)

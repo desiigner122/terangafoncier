@@ -682,27 +682,68 @@ const BankFinancingPage = () => {
 
       {/* Dialog de succès */}
       <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg">
           <DialogHeader>
             <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
               <CheckCircle className="h-6 w-6 text-green-600" />
             </div>
-            <DialogTitle className="text-center text-xl">Demande Envoyée !</DialogTitle>
+            <DialogTitle className="text-center text-xl">Demande de Financement Transmise !</DialogTitle>
           </DialogHeader>
           
           <div className="space-y-4 py-4">
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
-              <p className="text-blue-900 font-medium mb-2">📋 Processus de traitement :</p>
-              <ol className="text-blue-800 space-y-1 ml-4">
-                <li>1. Le vendeur sera notifié de votre demande</li>
-                <li>2. Il pourra l'accepter, la modifier ou la refuser</li>
-                <li>3. Vous recevrez une notification de sa décision</li>
+            {/* Notification banque */}
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <Building className="h-5 w-5 text-blue-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-blue-900 font-semibold mb-2">🏦 Transmission à la banque</p>
+                  <p className="text-blue-800 text-sm">
+                    Votre demande de financement a été transmise à la banque partenaire. 
+                    Un conseiller analysera votre dossier et vous contactera sous 48-72h.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Notification vendeur */}
+            <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+              <div className="flex items-start gap-3">
+                <User className="h-5 w-5 text-amber-600 mt-0.5 flex-shrink-0" />
+                <div>
+                  <p className="text-amber-900 font-semibold mb-2">👤 Notification au vendeur</p>
+                  <p className="text-amber-800 text-sm">
+                    Le vendeur sera également informé de votre demande d'achat avec financement bancaire.
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* Processus */}
+            <div className="bg-gray-50 border border-gray-200 rounded-lg p-4 text-sm">
+              <p className="text-gray-900 font-medium mb-3">📋 Prochaines étapes :</p>
+              <ol className="text-gray-700 space-y-2 ml-4">
+                <li className="flex items-start gap-2">
+                  <span className="font-semibold text-blue-600">1.</span>
+                  <span>La banque étudie votre dossier (délai: 48-72h)</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-semibold text-blue-600">2.</span>
+                  <span>Le vendeur examine votre proposition</span>
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="font-semibold text-blue-600">3.</span>
+                  <span>Vous recevez les notifications de décision</span>
+                </li>
               </ol>
             </div>
 
-            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
-              <p className="font-medium mb-1">📊 Vous pouvez suivre l'évolution de votre demande</p>
-              <p className="text-gray-600">dans la section "Mes Achats" de votre tableau de bord.</p>
+            {/* Suivi */}
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+              <p className="text-green-900 font-medium mb-2">📊 Double suivi disponible :</p>
+              <ul className="text-green-800 text-sm space-y-1 ml-4">
+                <li>• <strong>Mes Achats</strong> - Suivi côté vendeur</li>
+                <li>• <strong>Solutions Financement → Mes Demandes</strong> - Suivi côté banque</li>
+              </ul>
             </div>
 
             <div className="flex gap-3 pt-2">
@@ -721,6 +762,15 @@ const BankFinancingPage = () => {
                 className="flex-1 bg-blue-600 hover:bg-blue-700"
               >
                 Voir mes achats
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  navigate('/acheteur/solutions-financement');
+                }}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                Suivi financement
               </Button>
             </div>
           </div>

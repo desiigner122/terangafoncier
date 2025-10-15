@@ -61,7 +61,12 @@ import {
   Search,
   Filter,
   Sparkles,
-  Zap
+  Zap,
+  CheckCircle2,
+  XCircle,
+  MessageSquare,
+  Building,
+  User
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
@@ -109,14 +114,86 @@ const ParticulierFinancement = () => {
     try {
       setLoading(true);
       
-      // Charger les données de financement (mode démo pour l'instant)
+      // Charger les demandes de financement bancaire réelles depuis Supabase
+      if (user?.id) {
+        const { data: bankRequests, error } = await supabase
+          .from('requests')
+          .select(`
+            id,
+            user_id,
+            parcel_id,
+            payment_type,
+            installment_plan,
+            bank_details,
+            monthly_income,
+            status,
+            created_at,
+            parcels:parcel_id (
+              id,
+              titre,
+              prix,
+              superficie,
+              localisation
+            )
+          `)
+          .eq('user_id', user.id)
+          .eq('payment_type', 'bank_financing')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          console.error('Erreur chargement demandes financement:', error);
+        } else if (bankRequests && bankRequests.length > 0) {
+          // Transformer les données Supabase en format demandes
+          const realDemandes = bankRequests.map(req => {
+            const bankDetails = req.bank_details || {};
+            const parcel = req.parcels;
+            
+            return {
+              id: req.id,
+              montant: parcel?.prix || 0,
+              duree: bankDetails.loan_duration_years || 0,
+              type: 'bank_financing',
+              
+              // Statut côté banque (basé sur bank_details)
+              bank_status: bankDetails.bank_status || 'en_attente',
+              
+              // Statut côté vendeur (basé sur request status)
+              vendor_status: req.status || 'pending',
+              
+              partenaire: bankDetails.preferred_bank || 'À définir',
+              taux: bankDetails.estimated_rate || 0,
+              mensualite: bankDetails.estimated_monthly_payment || 0,
+              created_at: req.created_at,
+              objet: `Financement bancaire - ${parcel?.titre || 'Parcelle'}`,
+              
+              // Informations supplémentaires
+              monthly_income: req.monthly_income || 0,
+              loan_amount: bankDetails.loan_amount || 0,
+              down_payment: bankDetails.down_payment || 0,
+              
+              // Documents
+              documents_requis: 5,
+              documents_fournis: bankDetails.uploaded_documents ? Object.keys(bankDetails.uploaded_documents).length : 0,
+              
+              // Données parcelle
+              parcel_info: parcel
+            };
+          });
+          
+          setDemandes(realDemandes);
+          return; // Utiliser les vraies données
+        }
+      }
+      
+      // Données démo si pas de vraies demandes
       setDemandes([
         {
           id: 'fin-1',
           montant: 45000000,
           duree: 20,
           type: 'credit_immobilier',
-          status: 'en_cours',
+          bank_status: 'en_cours_etude',
+          vendor_status: 'pending',
           partenaire: 'CBAO Groupe Attijariwafa Bank',
           taux: 7.5,
           mensualite: 362500,
@@ -130,7 +207,8 @@ const ParticulierFinancement = () => {
           montant: 25000000,
           duree: 15,
           type: 'credit_terrain',
-          status: 'approuve',
+          bank_status: 'pre_approuve',
+          vendor_status: 'accepted',
           partenaire: 'Banque de l\'Habitat du Sénégal',
           taux: 6.8,
           mensualite: 228400,
@@ -282,6 +360,88 @@ const ParticulierFinancement = () => {
     
     const config = statusConfig[status] || statusConfig.nouveau;
     return <Badge className={config.color}>{config.label}</Badge>;
+  };
+
+  // Badge pour statut banque
+  const getBankStatusBadge = (bankStatus) => {
+    const statusConfig = {
+      en_attente: { 
+        color: 'bg-blue-100 text-blue-800 border-blue-300', 
+        label: 'En attente banque',
+        icon: Clock 
+      },
+      en_cours_etude: { 
+        color: 'bg-purple-100 text-purple-800 border-purple-300', 
+        label: 'En cours d\'étude',
+        icon: FileText 
+      },
+      pre_approuve: { 
+        color: 'bg-cyan-100 text-cyan-800 border-cyan-300', 
+        label: 'Pré-approuvé',
+        icon: CheckCircle2 
+      },
+      approuve: { 
+        color: 'bg-green-100 text-green-800 border-green-300', 
+        label: 'Approuvé',
+        icon: CheckCircle2 
+      },
+      refuse: { 
+        color: 'bg-red-100 text-red-800 border-red-300', 
+        label: 'Refusé',
+        icon: XCircle 
+      },
+      documents_manquants: { 
+        color: 'bg-yellow-100 text-yellow-800 border-yellow-300', 
+        label: 'Documents requis',
+        icon: AlertCircle 
+      }
+    };
+    
+    const config = statusConfig[bankStatus] || statusConfig.en_attente;
+    const Icon = config.icon;
+    
+    return (
+      <Badge className={`${config.color} border flex items-center gap-1`}>
+        <Icon className="h-3 w-3" />
+        {config.label}
+      </Badge>
+    );
+  };
+
+  // Badge pour statut vendeur
+  const getVendorStatusBadge = (vendorStatus) => {
+    const statusConfig = {
+      pending: { 
+        color: 'bg-amber-100 text-amber-800 border-amber-300', 
+        label: 'En attente vendeur',
+        icon: Clock 
+      },
+      accepted: { 
+        color: 'bg-emerald-100 text-emerald-800 border-emerald-300', 
+        label: 'Accepté',
+        icon: CheckCircle2 
+      },
+      negotiating: { 
+        color: 'bg-orange-100 text-orange-800 border-orange-300', 
+        label: 'En négociation',
+        icon: MessageSquare 
+      },
+      rejected: { 
+        color: 'bg-rose-100 text-rose-800 border-rose-300', 
+        label: 'Refusé',
+        icon: XCircle 
+      }
+    };
+    
+    const config = statusConfig[vendorStatus] || statusConfig.pending;
+    const Icon = config.icon;
+    
+    return (
+      <Badge className={`${config.color} border flex items-center gap-1`}>
+        <Icon className="h-3 w-3" />
+        {config.label}
+      </Badge>
+    );
   };
 
   const formatMontant = (montant) => {

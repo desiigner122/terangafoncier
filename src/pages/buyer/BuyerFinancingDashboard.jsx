@@ -41,6 +41,8 @@ const BuyerFinancingDashboard = () => {
   
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
+  const [myRequests, setMyRequests] = useState([]);
+  const [loadingRequests, setLoadingRequests] = useState(false);
   const [financingData, setFinancingData] = useState({
     creditScore: 750,
     maxBorrowAmount: 45000000,
@@ -100,6 +102,40 @@ const BuyerFinancingDashboard = () => {
     }
   ]);
 
+  // Charger les demandes de financement
+  const loadMyRequests = async () => {
+    if (!user) return;
+    
+    try {
+      setLoadingRequests(true);
+      
+      // Charger toutes les demandes de type financement bancaire
+      const { data, error } = await supabase
+        .from('requests')
+        .select(`
+          *,
+          parcels:parcel_id (
+            id,
+            title,
+            price,
+            location,
+            surface
+          )
+        `)
+        .eq('user_id', user.id)
+        .eq('payment_type', 'bank_financing')
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setMyRequests(data || []);
+    } catch (error) {
+      console.error('Erreur chargement demandes:', error);
+    } finally {
+      setLoadingRequests(false);
+    }
+  };
+
   useEffect(() => {
     const loadFinancingData = async () => {
       // Simulation de chargement des données de financement de l'utilisateur
@@ -109,6 +145,7 @@ const BuyerFinancingDashboard = () => {
     };
     
     loadFinancingData();
+    loadMyRequests();
   }, [user]);
 
   const calculateMonthlyPayment = () => {
@@ -134,6 +171,31 @@ const BuyerFinancingDashboard = () => {
       currency: 'XOF',
       maximumFractionDigits: 0 
     }).format(price);
+  };
+
+  // Helper pour les statuts côté banque
+  const getBankStatusBadge = (status) => {
+    const statuses = {
+      pending: { label: 'En cours d\'étude', color: 'bg-blue-100 text-blue-800', icon: Clock },
+      under_review: { label: 'Analyse en cours', color: 'bg-yellow-100 text-yellow-800', icon: FileText },
+      approved: { label: 'Approuvé par la banque', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      rejected: { label: 'Refusé par la banque', color: 'bg-red-100 text-red-800', icon: AlertCircle },
+      conditional: { label: 'Accord conditionnel', color: 'bg-purple-100 text-purple-800', icon: Shield }
+    };
+    
+    return statuses[status] || statuses.pending;
+  };
+
+  // Helper pour les statuts côté vendeur
+  const getVendorStatusBadge = (status) => {
+    const statuses = {
+      pending: { label: 'En attente vendeur', color: 'bg-amber-100 text-amber-800', icon: Clock },
+      accepted: { label: 'Accepté par vendeur', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+      rejected: { label: 'Refusé par vendeur', color: 'bg-red-100 text-red-800', icon: AlertCircle },
+      negotiating: { label: 'En négociation', color: 'bg-blue-100 text-blue-800', icon: Users }
+    };
+    
+    return statuses[status] || statuses.pending;
   };
 
   const monthlyPayment = calculateMonthlyPayment();
@@ -567,27 +629,202 @@ const BuyerFinancingDashboard = () => {
                   <FileText className="w-5 h-5 text-purple-600" />
                   Mes demandes de financement
                 </CardTitle>
+                <CardDescription>
+                  Suivez l'état de vos demandes - Double suivi : Banque et Vendeur
+                </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="text-center py-12">
-                  <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                    Aucune demande active
-                  </h3>
-                  <p className="text-gray-600 mb-6">
-                    Vous n'avez pas encore de demandes de financement en cours.
-                  </p>
-                  <div className="flex gap-3 justify-center">
-                    <Button onClick={() => setActiveTab('simulator')}>
-                      <Calculator className="w-4 h-4 mr-2" />
-                      Simuler un financement
-                    </Button>
-                    <Button variant="outline" onClick={() => navigate('/parcelles-vendeurs')}>
-                      <MapPin className="w-4 h-4 mr-2" />
-                      Parcourir les terrains
-                    </Button>
+                {loadingRequests ? (
+                  // Loading state
+                  <div className="space-y-4">
+                    {[1, 2, 3].map((i) => (
+                      <div key={i} className="border rounded-lg p-6 animate-pulse">
+                        <div className="flex justify-between mb-4">
+                          <div className="h-6 bg-gray-200 rounded w-1/3"></div>
+                          <div className="h-6 bg-gray-200 rounded w-24"></div>
+                        </div>
+                        <div className="space-y-3">
+                          <div className="h-4 bg-gray-200 rounded w-full"></div>
+                          <div className="h-4 bg-gray-200 rounded w-2/3"></div>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                ) : myRequests.length === 0 ? (
+                  // Empty state
+                  <div className="text-center py-12">
+                    <FileText className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                      Aucune demande active
+                    </h3>
+                    <p className="text-gray-600 mb-6">
+                      Vous n'avez pas encore de demandes de financement en cours.
+                    </p>
+                    <div className="flex gap-3 justify-center">
+                      <Button onClick={() => setActiveTab('simulator')}>
+                        <Calculator className="w-4 h-4 mr-2" />
+                        Simuler un financement
+                      </Button>
+                      <Button variant="outline" onClick={() => navigate('/parcelles-vendeurs')}>
+                        <MapPin className="w-4 h-4 mr-2" />
+                        Parcourir les terrains
+                      </Button>
+                    </div>
+                  </div>
+                ) : (
+                  // Requests list
+                  <div className="space-y-4">
+                    {myRequests.map((request) => {
+                      const bankStatus = getBankStatusBadge(request.bank_status || 'pending');
+                      const vendorStatus = getVendorStatusBadge(request.status || 'pending');
+                      const BankIcon = bankStatus.icon;
+                      const VendorIcon = vendorStatus.icon;
+                      
+                      return (
+                        <motion.div
+                          key={request.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="border rounded-lg p-6 hover:shadow-lg transition-all"
+                        >
+                          {/* Header avec titre terrain et date */}
+                          <div className="flex justify-between items-start mb-4">
+                            <div className="flex-1">
+                              <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                                {request.parcels?.title || 'Terrain'}
+                              </h3>
+                              <div className="flex items-center gap-4 text-sm text-gray-600">
+                                <div className="flex items-center gap-1">
+                                  <MapPin className="w-4 h-4" />
+                                  {request.parcels?.location || 'N/A'}
+                                </div>
+                                <div className="flex items-center gap-1">
+                                  <Calendar className="w-4 h-4" />
+                                  {new Date(request.created_at).toLocaleDateString('fr-FR')}
+                                </div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-sm text-gray-600 mb-1">Prix offert</div>
+                              <div className="text-lg font-bold text-gray-900">
+                                {formatPrice(request.offered_price)}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Dual Status Badges */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                            {/* Bank Status */}
+                            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                              <div className="flex-shrink-0">
+                                <Building2 className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs text-blue-600 font-medium mb-1">
+                                  CÔTÉ BANQUE
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <BankIcon className="w-4 h-4" />
+                                  <Badge className={`${bankStatus.color} border-0`}>
+                                    {bankStatus.label}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+
+                            {/* Vendor Status */}
+                            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                              <div className="flex-shrink-0">
+                                <Users className="w-5 h-5 text-amber-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs text-amber-600 font-medium mb-1">
+                                  CÔTÉ VENDEUR
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <VendorIcon className="w-4 h-4" />
+                                  <Badge className={`${vendorStatus.color} border-0`}>
+                                    {vendorStatus.label}
+                                  </Badge>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Détails financement */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
+                            <div>
+                              <div className="text-xs text-gray-600 mb-1">Surface</div>
+                              <div className="font-semibold text-gray-900">
+                                {request.parcels?.surface || 'N/A'} m²
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-600 mb-1">Revenu mensuel</div>
+                              <div className="font-semibold text-gray-900">
+                                {formatPrice(request.monthly_income || 0)}
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-600 mb-1">Durée prêt</div>
+                              <div className="font-semibold text-gray-900">
+                                {request.bank_details?.loan_duration || 'N/A'} mois
+                              </div>
+                            </div>
+                            <div>
+                              <div className="text-xs text-gray-600 mb-1">Type emploi</div>
+                              <div className="font-semibold text-gray-900">
+                                {request.bank_details?.employment_type === 'salaried' ? 'Salarié' : 
+                                 request.bank_details?.employment_type === 'self_employed' ? 'Indépendant' : 
+                                 'Autre'}
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Actions */}
+                          <div className="flex gap-2">
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                // TODO: Navigate to detailed view
+                                console.log('View request details:', request.id);
+                              }}
+                            >
+                              <FileText className="w-4 h-4 mr-2" />
+                              Voir détails
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                // TODO: Open chat with bank
+                                console.log('Message bank for request:', request.id);
+                              }}
+                            >
+                              <Building2 className="w-4 h-4 mr-2" />
+                              Contacter banque
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                // TODO: Open chat with vendor
+                                console.log('Message vendor for request:', request.id);
+                              }}
+                            >
+                              <Users className="w-4 h-4 mr-2" />
+                              Contacter vendeur
+                            </Button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>

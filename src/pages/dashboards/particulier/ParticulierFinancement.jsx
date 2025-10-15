@@ -140,7 +140,7 @@ const ParticulierFinancement = () => {
             parcels:parcel_id (
               id,
               title,
-              prix,
+              price,
               surface,
               location
             )
@@ -161,7 +161,7 @@ const ParticulierFinancement = () => {
             const parcel = req.parcels;
             
             // Calculer les infos de prêt
-            const loanAmount = bankDetails.loan_amount || (req.offered_price || parcel?.prix || 0);
+            const loanAmount = bankDetails.loan_amount || (req.offered_price || parcel?.price || 0);
             const loanDuration = bankDetails.loan_duration || bankDetails.loan_duration_years || 20;
             const interestRate = bankDetails.interest_rate || bankDetails.estimated_rate || 7.5;
             
@@ -207,7 +207,7 @@ const ParticulierFinancement = () => {
               parcel_info: parcel,
               parcel_title: parcel?.title,
               parcel_location: parcel?.location,
-              parcel_price: parcel?.prix,
+              parcel_price: parcel?.price,
               parcel_surface: parcel?.surface
             };
           });

@@ -229,6 +229,8 @@ const VendeurOverviewRealData = () => {
       //   .eq('property_owner_id', user.id)
       //   .order('created_at', { ascending: false })
       //   .limit(5);
+      
+      const recentContacts = null; // Temporaire jusqu'à création de la table
 
       const activities = [];
 

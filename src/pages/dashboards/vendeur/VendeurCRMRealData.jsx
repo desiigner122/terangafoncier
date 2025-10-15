@@ -91,16 +91,66 @@ const VendeurCRMRealData = () => {
     try {
       setLoading(true);
 
-      // ✅ CHARGER CONTACTS CRM (SANS colonne score ni order by score)
-      // NOTE: Utilise 'user_id' au lieu de 'owner_id'
-      const { data: contacts, error: contactsError } = await supabase
+      // ✅ CHARGER CONTACTS CRM
+      // HOTFIX: Essayer différentes colonnes owner possibles (seller_id, owner_id, created_by)
+      let contacts = null;
+      let contactsError = null;
+
+      // Essai 1: seller_id (le plus probable)
+      const attempt1 = await supabase
         .from('crm_contacts')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('seller_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (contactsError) {
-        console.error('Erreur CRM:', contactsError);
+      if (!attempt1.error) {
+        contacts = attempt1.data;
+        console.log('✅ [CRM] Chargé avec seller_id:', contacts?.length);
+      } else if (attempt1.error.code === '42703') {
+        // Colonne seller_id n'existe pas, essayer owner_id
+        console.log('⚠️ [CRM] seller_id n\'existe pas, essai owner_id...');
+        const attempt2 = await supabase
+          .from('crm_contacts')
+          .select('*')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (!attempt2.error) {
+          contacts = attempt2.data;
+          console.log('✅ [CRM] Chargé avec owner_id:', contacts?.length);
+        } else if (attempt2.error.code === '42703') {
+          // owner_id non plus, essayer created_by
+          console.log('⚠️ [CRM] owner_id n\'existe pas, essai created_by...');
+          const attempt3 = await supabase
+            .from('crm_contacts')
+            .select('*')
+            .eq('created_by', user.id)
+            .order('created_at', { ascending: false });
+
+          if (!attempt3.error) {
+            contacts = attempt3.data;
+            console.log('✅ [CRM] Chargé avec created_by:', contacts?.length);
+          } else {
+            // Aucune colonne ne marche, charger tous et filtrer null
+            console.log('⚠️ [CRM] Aucune colonne owner trouvée, fallback à tous les contacts');
+            const attempt4 = await supabase
+              .from('crm_contacts')
+              .select('*')
+              .order('created_at', { ascending: false })
+              .limit(50);
+
+            contacts = attempt4.data || [];
+            contactsError = attempt4.error;
+          }
+        } else {
+          contactsError = attempt2.error;
+        }
+      } else {
+        contactsError = attempt1.error;
+      }
+
+      if (contactsError && contactsError.code !== '42703') {
+        console.error('❌ Erreur CRM:', contactsError);
         throw contactsError;
       }
 

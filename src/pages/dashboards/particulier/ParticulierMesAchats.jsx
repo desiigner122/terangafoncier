@@ -101,6 +101,11 @@ const ParticulierMesAchats = () => {
     }
   };
 
+  // Helper pour extraire payment_type (colonne ou metadata)
+  const getPaymentType = (request) => {
+    return request.payment_type || request.metadata?.payment_type || request.type || 'one_time';
+  };
+
   const getStatusBadge = (status) => {
     const statusConfig = {
       pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
@@ -424,9 +429,9 @@ const ParticulierMesAchats = () => {
                   <div>
                     <Label className="text-gray-600">Type de paiement</Label>
                     <p className="font-medium mt-1">
-                      {selectedRequest.payment_type === 'one_time' && 'Paiement unique'}
-                      {selectedRequest.payment_type === 'installments' && 'Paiement échelonné'}
-                      {selectedRequest.payment_type === 'bank_financing' && 'Financement bancaire'}
+                      {getPaymentType(selectedRequest) === 'one_time' && 'Paiement unique'}
+                      {getPaymentType(selectedRequest) === 'installments' && 'Paiement échelonné'}
+                      {getPaymentType(selectedRequest) === 'bank_financing' && 'Financement bancaire'}
                     </p>
                   </div>
                   <div>
@@ -486,9 +491,9 @@ const ParticulierMesAchats = () => {
                     <div>
                       <Label className="text-gray-600">Type de paiement</Label>
                       <p className="font-medium mt-1">
-                        {selectedRequest.payment_type === 'one_time' && 'Paiement unique'}
-                        {selectedRequest.payment_type === 'installments' && 'Paiement échelonné'}
-                        {selectedRequest.payment_type === 'bank_financing' && 'Financement bancaire'}
+                        {getPaymentType(selectedRequest) === 'one_time' && 'Paiement unique'}
+                        {getPaymentType(selectedRequest) === 'installments' && 'Paiement échelonné'}
+                        {getPaymentType(selectedRequest) === 'bank_financing' && 'Financement bancaire'}
                       </p>
                     </div>
                   </div>
@@ -522,7 +527,7 @@ const ParticulierMesAchats = () => {
                   )}
 
                   {/* Plan d'échelonnement si applicable */}
-                  {selectedRequest.payment_type === 'installments' && selectedRequest.installment_plan && (
+                  {getPaymentType(selectedRequest) === 'installments' && selectedRequest.installment_plan && (
                     <div className="border-t pt-4">
                       <Label className="text-gray-600 mb-3 block">Plan d'échelonnement</Label>
                       <div className="p-4 bg-blue-50 rounded-lg">
@@ -549,7 +554,7 @@ const ParticulierMesAchats = () => {
                   )}
 
                   {/* Détails financement bancaire si applicable */}
-                  {selectedRequest.payment_type === 'bank_financing' && selectedRequest.bank_details && (
+                  {getPaymentType(selectedRequest) === 'bank_financing' && selectedRequest.bank_details && (
                     <div className="border-t pt-4">
                       <Label className="text-gray-600 mb-3 block">Détails du financement bancaire</Label>
                       <div className="p-4 bg-green-50 rounded-lg space-y-3">

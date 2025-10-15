@@ -1,7 +1,9 @@
 import React, { useMemo, useState, useEffect } from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link, useNavigate } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Banknote, ArrowLeft, Calculator, FileText, CheckCircle, AlertCircle, Building, User, CreditCard, PieChart } from 'lucide-react';
+import { DocumentUploader } from '@/components/DocumentUploader';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -14,12 +16,15 @@ import terangaBlockchain from '@/services/TerangaBlockchainService';
 
 const BankFinancingPage = () => {
   const { state } = useLocation();
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const context = state || {};
   const hasContext = !!(context.parcelleId || context.projectId);
   const [income, setIncome] = useState('');
   const [amount, setAmount] = useState(context.paymentInfo?.totalPrice?.toString() || context.parcelle?.price?.toString() || '');
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdRequestId, setCreatedRequestId] = useState(null);
   
   // Nouveaux états pour les fonctionnalités avancées
   const [loanDuration, setLoanDuration] = useState('15');
@@ -29,13 +34,7 @@ const BankFinancingPage = () => {
   const [bankPreference, setBankPreference] = useState('');
   const [hasGuarantee, setHasGuarantee] = useState(false);
   const [guaranteeType, setGuaranteeType] = useState('');
-  const [documents, setDocuments] = useState({
-    salarySlip: false,
-    bankStatement: false,
-    taxReturn: false,
-    employmentCertificate: false,
-    identityCard: false
-  });
+  const [uploadedDocuments, setUploadedDocuments] = useState({});
 
   // Banques partenaires
   const banks = [
@@ -255,7 +254,14 @@ const BankFinancingPage = () => {
                     placeholder="Prix du terrain/projet" 
                     value={amount} 
                     onChange={(e) => setAmount(e.target.value)}
+                    disabled={hasContext && context.parcelle?.price}
+                    className={hasContext && context.parcelle?.price ? 'bg-gray-100 cursor-not-allowed' : ''}
                   />
+                  {hasContext && context.parcelle?.price && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Prix fixé par le vendeur
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -329,45 +335,28 @@ const BankFinancingPage = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {Object.entries({
-                  salarySlip: 'Bulletins de salaire (3 derniers mois)',
-                  bankStatement: 'Relevés bancaires (6 derniers mois)',
-                  taxReturn: 'Déclaration fiscale (2 dernières années)',
-                  employmentCertificate: 'Attestation d\'emploi',
-                  identityCard: 'Pièce d\'identité'
-                }).map(([key, label]) => (
-                  <div key={key} className="flex items-center space-x-2">
-                    <input
-                      type="checkbox"
-                      id={key}
-                      checked={documents[key]}
-                      onChange={(e) => setDocuments(prev => ({
-                        ...prev,
-                        [key]: e.target.checked
-                      }))}
-                      className="rounded"
-                    />
-                    <label htmlFor={key} className="text-sm text-gray-700">
-                      {label}
-                    </label>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 p-3 bg-orange-50 border border-orange-200 rounded-lg">
-                <div className="flex items-center space-x-2 text-orange-800">
-                  <AlertCircle className="w-4 h-4" />
-                  <span className="text-sm font-medium">
-                    Documents vérifiés: {Object.values(documents).filter(Boolean).length}/5
-                  </span>
-                </div>
-              </div>
+              <DocumentUploader 
+                userId={user?.id}
+                onDocumentsChange={(docs) => setUploadedDocuments(docs)}
+              />
             </CardContent>
           </Card>
 
           {/* Bouton de soumission */}
           <Card>
             <CardContent className="pt-6">
+              {/* Debug: Afficher pourquoi le bouton est désactivé */}
+              {(!user || !hasContext || !income || !amount) && (
+                <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg text-sm">
+                  <p className="font-semibold text-yellow-800 mb-2">⚠️ Champs requis manquants :</p>
+                  <ul className="space-y-1 text-yellow-700">
+                    {!user && <li>• Vous devez être connecté</li>}
+                    {!hasContext && <li>• Vous devez sélectionner une parcelle</li>}
+                    {!income && <li>• Le champ "Revenus mensuels" est requis</li>}
+                    {!amount && <li>• Le champ "Montant du financement" est requis</li>}
+                  </ul>
+                </div>
+              )}
               <Button 
                 className="w-full" 
                 size="lg"
@@ -394,30 +383,54 @@ const BankFinancingPage = () => {
 
                   setSubmitting(true);
                   try {
+                    console.log('🔍 Context reçu:', { 
+                      parcelleId: context.parcelleId, 
+                      parcelle: context.parcelle,
+                      hasContext 
+                    });
+                    
                     // Valider que parcelle_id existe dans la base si fournie
                     let validParcelleId = null;
                     if (context.parcelleId) {
-                      const { data: parcelExists } = await supabase
+                      const { data: parcelExists, error: parcelError } = await supabase
                         .from('parcels')
                         .select('id')
                         .eq('id', context.parcelleId)
                         .maybeSingle();
 
+                      console.log('🏠 Vérification parcelle:', { 
+                        searched: context.parcelleId, 
+                        found: parcelExists,
+                        error: parcelError 
+                      });
+
                       if (parcelExists) {
                         validParcelleId = context.parcelleId;
                       } else {
-                        console.warn('Parcelle ID invalide, insertion sans parcelle_id:', context.parcelleId);
+                        console.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
                       }
+                    } else {
+                      console.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
                     }
 
                     const payload = {
                       user_id: user.id,
                       type: 'bank_financing',
+                      payment_type: 'bank_financing',
                       status: 'pending',
-                      parcelle_id: validParcelleId,
+                      parcel_id: validParcelleId,
                       project_id: context.projectId || null,
                       monthly_income: parseInt(income.replace(/\D/g, ''), 10),
-                      requested_amount: parseInt(amount.replace(/\D/g, ''), 10),
+                      offered_price: parseInt(amount.replace(/\D/g, ''), 10),
+                      bank_details: {
+                        loan_duration: parseInt(loanDuration),
+                        employment_type: employmentType,
+                        monthly_expenses: parseInt(monthlyExpenses.replace(/\D/g, ''), 10) || 0,
+                        down_payment: parseInt(downPayment.replace(/\D/g, ''), 10) || 0,
+                        bank_preference: bankPreference,
+                        has_guarantee: hasGuarantee,
+                        guarantee_type: guaranteeType
+                      },
                       metadata: {
                         loan_duration: parseInt(loanDuration),
                         employment_type: employmentType,
@@ -426,7 +439,7 @@ const BankFinancingPage = () => {
                         bank_preference: bankPreference,
                         has_guarantee: hasGuarantee,
                         guarantee_type: guaranteeType,
-                        documents_provided: documents,
+                        uploaded_documents: uploadedDocuments,
                         eligibility_score: eligibilityScore,
                         loan_details: loanDetails
                       }
@@ -491,15 +504,9 @@ const BankFinancingPage = () => {
                     
                     if (txError) throw txError;
                     
-                    const successTitle = context.parcelle?.title 
-                      ? `Demande envoyée pour ${context.parcelle.title}` 
-                      : 'Demande de financement envoyée';
-                    const successDescription = `Score d'éligibilité: ${eligibilityScore}/100. Frais de dossier: ${amountFee.toLocaleString()} FCFA.`;
-                    
-                    window.safeGlobalToast?.({ 
-                      title: successTitle, 
-                      description: successDescription 
-                    });
+                    // Afficher le dialog de succès
+                    setCreatedRequestId(request?.id);
+                    setShowSuccessDialog(true);
                   } catch (err) {
                     window.safeGlobalToast?.({ 
                       variant: 'destructive', 
@@ -508,12 +515,6 @@ const BankFinancingPage = () => {
                     });
                   } finally {
                     setSubmitting(false);
-                    
-                    // Redirection vers la page de suivi des achats
-                    setTimeout(() => {
-                      console.log('🔄 Redirection vers /acheteur/mes-achats');
-                      navigate('/acheteur/mes-achats');
-                    }, 2500);
                   }
                 }}
               >
@@ -678,6 +679,53 @@ const BankFinancingPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Dialog de succès */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+            <DialogTitle className="text-center text-xl">Demande Envoyée !</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+              <p className="text-blue-900 font-medium mb-2">📋 Processus de traitement :</p>
+              <ol className="text-blue-800 space-y-1 ml-4">
+                <li>1. Le vendeur sera notifié de votre demande</li>
+                <li>2. Il pourra l'accepter, la modifier ou la refuser</li>
+                <li>3. Vous recevrez une notification de sa décision</li>
+              </ol>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+              <p className="font-medium mb-1">📊 Vous pouvez suivre l'évolution de votre demande</p>
+              <p className="text-gray-600">dans la section "Mes Achats" de votre tableau de bord.</p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowSuccessDialog(false)}
+                className="flex-1"
+              >
+                Rester ici
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  navigate('/acheteur/mes-achats');
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Voir mes achats
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

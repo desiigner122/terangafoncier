@@ -136,7 +136,7 @@ import TermsPage from '@/pages/TermsPage';
 import DataProtectionPage from '@/pages/DataProtectionPage';
 import TerrainProgressPage from '@/pages/TerrainProgressPage';
 import { Button } from '@/components/ui/button';
-import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
+import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute, BuyerOnlyRoute } from '@/components/layout/ProtectedRoute';
 import RoleBasedRedirect from '@/components/layout/RoleBasedRedirect';
 import ScrollToTop from '@/components/layout/ScrollToTop';
 import { motion } from 'framer-motion';
@@ -552,10 +552,10 @@ function App() {
                   <Route path="settings" element={<ParticulierSettings />} />
                   <Route path="profil" element={<ParticulierSettings />} />
                   
-                  {/* Parcours d'achat intégrés dans le dashboard */}
-                  <Route path="buy/one-time" element={<OneTimePaymentPage />} />
-                  <Route path="buy/installments" element={<InstallmentsPaymentPage />} />
-                  <Route path="buy/bank-financing" element={<BankFinancingPage />} />
+                  {/* Parcours d'achat intégrés dans le dashboard - RÉSERVÉ AUX ACHETEURS */}
+                  <Route path="buy/one-time" element={<BuyerOnlyRoute><OneTimePaymentPage /></BuyerOnlyRoute>} />
+                  <Route path="buy/installments" element={<BuyerOnlyRoute><InstallmentsPaymentPage /></BuyerOnlyRoute>} />
+                  <Route path="buy/bank-financing" element={<BuyerOnlyRoute><BankFinancingPage /></BuyerOnlyRoute>} />
                 </Route>
                 
                 {/* Dashboard Vendeur avec routes imbriquées pour chaque page */}
@@ -822,13 +822,13 @@ function App() {
               <Route path="payment/:transactionId" element={<PaymentPage />} />
               <Route path="favorites" element={<RoleProtectedRoute permission="FAVORITES"><MyFavoritesPage /></RoleProtectedRoute>} />
 
-              {/* Parcours d'achat pour Acheteurs/Particuliers (alias sous /dashboard) */}
-              <Route path="buy/one-time" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><OneTimePaymentPage /></RoleProtectedRoute>} />
-              <Route path="buy/installments" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><InstallmentsPaymentPage /></RoleProtectedRoute>} />
-              <Route path="buy/bank-financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BankFinancingPage /></RoleProtectedRoute>} />
-              <Route path="buyer/financing" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><BuyerFinancingDashboard /></RoleProtectedRoute>} />
-              <Route path="promoters/purchase-units" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PurchaseUnitsPage /></RoleProtectedRoute>} />
-              <Route path="promoters/payment-plans" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><PaymentPlansPage /></RoleProtectedRoute>} />
+              {/* Parcours d'achat pour Acheteurs/Particuliers/Investisseurs/Promoteurs (alias sous /dashboard) */}
+              <Route path="buy/one-time" element={<BuyerOnlyRoute><OneTimePaymentPage /></BuyerOnlyRoute>} />
+              <Route path="buy/installments" element={<BuyerOnlyRoute><InstallmentsPaymentPage /></BuyerOnlyRoute>} />
+              <Route path="buy/bank-financing" element={<BuyerOnlyRoute><BankFinancingPage /></BuyerOnlyRoute>} />
+              <Route path="buyer/financing" element={<BuyerOnlyRoute><BuyerFinancingDashboard /></BuyerOnlyRoute>} />
+              <Route path="promoters/purchase-units" element={<BuyerOnlyRoute><PurchaseUnitsPage /></BuyerOnlyRoute>} />
+              <Route path="promoters/payment-plans" element={<BuyerOnlyRoute><PaymentPlansPage /></BuyerOnlyRoute>} />
 
               {/* Vendeur: pages et aliases - Dashboard principal déplacé en route indépendante */}
               <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />

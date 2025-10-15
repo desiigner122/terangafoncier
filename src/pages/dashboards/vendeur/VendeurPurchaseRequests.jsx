@@ -113,6 +113,7 @@ const VendeurPurchaseRequests = () => {
   const loadRequests = async () => {
     try {
       setLoading(true);
+      console.log('🔍 [VENDEUR] Chargement demandes pour user:', user.id);
 
       // Récupérer d'abord les parcelles du vendeur
       const { data: sellerParcels, error: parcelsError } = await supabase
@@ -120,11 +121,16 @@ const VendeurPurchaseRequests = () => {
         .select('id')
         .eq('seller_id', user.id);
 
-      if (parcelsError) throw parcelsError;
+      if (parcelsError) {
+        console.error('❌ [VENDEUR] Erreur parcelles:', parcelsError);
+        throw parcelsError;
+      }
 
       const parcelIds = sellerParcels?.map(p => p.id) || [];
+      console.log('🏠 [VENDEUR] Parcelles trouvées:', parcelIds.length, parcelIds);
 
       if (parcelIds.length === 0) {
+        console.log('⚠️ [VENDEUR] Aucune parcelle pour ce vendeur');
         setRequests([]);
         calculateStats([]);
         setLoading(false);
@@ -162,8 +168,12 @@ const VendeurPurchaseRequests = () => {
         .in('parcel_id', parcelIds)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [VENDEUR] Erreur requêtes:', error);
+        throw error;
+      }
 
+      console.log('✅ [VENDEUR] Demandes trouvées:', data?.length || 0, data);
       setRequests(data || []);
       calculateStats(data || []);
     } catch (error) {

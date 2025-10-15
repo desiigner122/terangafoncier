@@ -1,6 +1,7 @@
 ﻿import React, { useMemo, useState, useEffect } from "react";
-import { useLocation, Link } from "react-router-dom";
+import { useLocation, Link, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { TrendingUp, ArrowLeft, Calculator, Calendar, DollarSign, CheckCircle, AlertCircle, Building, User, CreditCard } from "lucide-react";
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Input } from "@/components/ui/input";
@@ -14,12 +15,15 @@ import terangaBlockchain from '@/services/TerangaBlockchainService';
 
 const InstallmentsPaymentPage = () => {
   const { state } = useLocation();
+  const navigate = useNavigate();
   const { user, profile } = useAuth();
   const context = state || {};
   const hasContext = !!(context.parcelleId || context.projectId);
   const [months, setMonths] = useState("12");
   const [downPayment, setDownPayment] = useState("");
   const [submitting, setSubmitting] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdRequestId, setCreatedRequestId] = useState(null);
   
   // Nouveaux états pour les fonctionnalités avancées
   const [totalAmount, setTotalAmount] = useState(context.paymentInfo?.totalPrice?.toString() || context.parcelle?.price?.toString() || '');
@@ -148,6 +152,24 @@ const InstallmentsPaymentPage = () => {
         </div>
       )}
 
+      {/* Avertissement si pas de parcelle */}
+      {!hasContext && (
+        <div className="mb-6">
+          <div className="bg-orange-50 border-l-4 border-orange-400 p-4 rounded">
+            <div className="flex items-start">
+              <AlertCircle className="h-5 w-5 text-orange-400 mt-0.5 mr-3" />
+              <div>
+                <p className="font-medium text-orange-800">⚠️ Attention : Mode Simulation</p>
+                <p className="text-sm text-orange-700 mt-1">
+                  Vous n'avez pas sélectionné de parcelle. Ce formulaire est en mode simulation uniquement.
+                  Pour créer une vraie demande d'achat, veuillez d'abord sélectionner une parcelle sur la plateforme.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Colonne principale - Configuration */}
         <div className="lg:col-span-2 space-y-6">
@@ -179,7 +201,14 @@ const InstallmentsPaymentPage = () => {
                     placeholder="ex: 15000000" 
                     value={totalAmount} 
                     onChange={(e) => setTotalAmount(e.target.value)}
+                    disabled={hasContext && context.parcelle?.price}
+                    className={hasContext && context.parcelle?.price ? 'bg-gray-100 cursor-not-allowed' : ''}
                   />
+                  {hasContext && context.parcelle?.price && (
+                    <p className="text-xs text-gray-500 mt-1">
+                      Prix fixé par le vendeur
+                    </p>
+                  )}
                 </div>
                 
                 <div>
@@ -382,29 +411,53 @@ const InstallmentsPaymentPage = () => {
 
                   setSubmitting(true);
                   try {
+                    console.log('🔍 Context reçu:', { 
+                      parcelleId: context.parcelleId, 
+                      parcelle: context.parcelle,
+                      hasContext 
+                    });
+                    
                     // Valider que parcelle_id existe dans la base si fournie
                     let validParcelleId = null;
                     if (context.parcelleId) {
-                      const { data: parcelExists } = await supabase
+                      const { data: parcelExists, error: parcelError } = await supabase
                         .from('parcels')
                         .select('id')
                         .eq('id', context.parcelleId)
                         .maybeSingle();
 
+                      console.log('🏠 Vérification parcelle:', { 
+                        searched: context.parcelleId, 
+                        found: parcelExists,
+                        error: parcelError 
+                      });
+
                       if (parcelExists) {
                         validParcelleId = context.parcelleId;
                       } else {
-                        console.warn('Parcelle ID invalide, insertion sans parcelle_id:', context.parcelleId);
+                        console.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
+                        // ATTENTION: Ceci crée des demandes orphelines !
                       }
+                    } else {
+                      console.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
                     }
 
                     const payload = {
                       user_id: user.id,
                       type: 'installment_payment',
+                      payment_type: 'installments',
                       status: 'pending',
-                      parcelle_id: validParcelleId,
+                      parcel_id: validParcelleId,
                       project_id: context.projectId || null,
-                      requested_amount: parseInt(totalAmount.replace(/\D/g, ''), 10),
+                      offered_price: parseInt(totalAmount.replace(/\D/g, ''), 10),
+                      installment_plan: {
+                        total_amount: parseInt(totalAmount.replace(/\D/g, ''), 10),
+                        down_payment: parseInt(downPayment.replace(/\D/g, ''), 10) || 0,
+                        number_of_installments: parseInt(months),
+                        frequency: paymentFrequency,
+                        installment_amount: installmentDetails.monthlyPayment,
+                        first_payment_date: firstPaymentDate
+                      },
                       metadata: {
                         total_amount: parseInt(totalAmount.replace(/\D/g, ''), 10),
                         down_payment: parseInt(downPayment.replace(/\D/g, ''), 10) || 0,
@@ -419,15 +472,21 @@ const InstallmentsPaymentPage = () => {
                       }
                     };
                     
+                    console.log('📤 Envoi payload:', payload);
+                    
                     const { data: reqRows, error: reqError } = await supabase
                       .from('requests')
                       .insert(payload)
                       .select()
                       .limit(1);
                       
+                    console.log('📥 Réponse Supabase:', { reqRows, reqError });
+                      
                     if (reqError) throw reqError;
 
                     const request = Array.isArray(reqRows) ? reqRows[0] : reqRows;
+                    
+                    console.log('✅ Request créée:', request);
                     
                     // NFT proof (si activé)
                     if (FEATURES.ENABLE_REQUEST_NFT) {
@@ -478,16 +537,16 @@ const InstallmentsPaymentPage = () => {
                     
                     if (txError) throw txError;
                     
-                    const successTitle = context.parcelle?.title 
-                      ? `Plan créé pour ${context.parcelle.title}` 
-                      : 'Plan de paiement échelonné créé';
-                    const successDescription = `${installmentDetails.numberOfPayments} paiements de ${installmentDetails.monthlyPayment.toLocaleString()} FCFA. Frais: ${amountFee.toLocaleString()} FCFA.`;
+                    console.log('✅ Request créée avec succès:', request?.id);
+                    console.log('✅ Transaction créée avec succès');
                     
-                    window.safeGlobalToast?.({ 
-                      title: successTitle, 
-                      description: successDescription 
-                    });
+                    // Afficher le dialog de succès
+                    setCreatedRequestId(request?.id);
+                    setShowSuccessDialog(true);
+                    
+                    console.log('✅ Dialog state set to true');
                   } catch (err) {
+                    console.error('❌ Erreur création demande:', err);
                     window.safeGlobalToast?.({ 
                       variant: 'destructive', 
                       title: 'Erreur', 
@@ -495,12 +554,6 @@ const InstallmentsPaymentPage = () => {
                     });
                   } finally {
                     setSubmitting(false);
-                    
-                    // Redirection vers la page de suivi des achats
-                    setTimeout(() => {
-                      console.log('🔄 Redirection vers /acheteur/mes-achats');
-                      navigate('/acheteur/mes-achats');
-                    }, 2500);
                   }
                 }}
               >
@@ -671,6 +724,53 @@ const InstallmentsPaymentPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Dialog de succès */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <div className="mx-auto w-12 h-12 rounded-full bg-green-100 flex items-center justify-center mb-4">
+              <CheckCircle className="h-6 w-6 text-green-600" />
+            </div>
+            <DialogTitle className="text-center text-xl">Demande Envoyée !</DialogTitle>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-4">
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-sm">
+              <p className="text-blue-900 font-medium mb-2">📋 Processus de traitement :</p>
+              <ol className="text-blue-800 space-y-1 ml-4">
+                <li>1. Le vendeur sera notifié de votre demande</li>
+                <li>2. Il pourra l'accepter, la modifier ou la refuser</li>
+                <li>3. Vous recevrez une notification de sa décision</li>
+              </ol>
+            </div>
+
+            <div className="bg-gray-50 rounded-lg p-4 text-sm text-gray-700">
+              <p className="font-medium mb-1">📊 Vous pouvez suivre l'évolution de votre demande</p>
+              <p className="text-gray-600">dans la section "Mes Achats" de votre tableau de bord.</p>
+            </div>
+
+            <div className="flex gap-3 pt-2">
+              <Button
+                variant="outline"
+                onClick={() => setShowSuccessDialog(false)}
+                className="flex-1"
+              >
+                Rester ici
+              </Button>
+              <Button
+                onClick={() => {
+                  setShowSuccessDialog(false);
+                  navigate('/acheteur/mes-achats');
+                }}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                Voir mes achats
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

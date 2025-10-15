@@ -92,10 +92,11 @@ const VendeurCRMRealData = () => {
       setLoading(true);
 
       // ✅ CHARGER CONTACTS CRM (SANS colonne score ni order by score)
+      // NOTE: Utilise 'user_id' au lieu de 'owner_id'
       const { data: contacts, error: contactsError } = await supabase
         .from('crm_contacts')
         .select('*')
-        .eq('owner_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (contactsError) {
@@ -126,7 +127,7 @@ const VendeurCRMRealData = () => {
       const { data: soldProperties } = await supabase
         .from('properties')
         .select('price, created_at')
-        .eq('owner_id', user.id)
+        .eq('seller_id', user.id)
         .eq('status', 'sold');
 
       const monthlyRevenue = soldProperties
@@ -179,7 +180,7 @@ const VendeurCRMRealData = () => {
           *,
           crm_contacts (first_name, last_name)
         `)
-        .eq('owner_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 

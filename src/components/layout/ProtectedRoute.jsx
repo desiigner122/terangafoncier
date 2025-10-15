@@ -146,4 +146,62 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
   return children;
 };
 
+export const BuyerOnlyRoute = ({ children }) => {
+  const { user, profile, loading } = useAuth();
+  const location = useLocation();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" state={{ from: location }} replace />;
+  }
+
+  if (!profile) {
+    return <Navigate to="/settings" replace />;
+  }
+
+  // Roles autorisés à acheter des terrains
+  const normalizeRole = (role) => {
+    if (!role) return '';
+    const lowerRole = role.toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+    return lowerRole.replace(/\s+/g, '_');
+  };
+
+  const currentRole = normalizeRole(profile.role || profile.user_type || '');
+  const buyerRoles = ['particulier', 'acheteur', 'investisseur', 'promoteur'];
+
+  console.log('🛒 BuyerOnlyRoute CHECK:', { 
+    role: profile.role, 
+    user_type: profile.user_type, 
+    currentRole, 
+    allowed: buyerRoles.includes(currentRole),
+    pathname: location.pathname
+  });
+
+  if (!buyerRoles.includes(currentRole)) {
+    console.warn('❌ ACCÈS REFUSÉ: Seuls les acheteurs peuvent acheter des terrains. Rôle:', currentRole);
+    return (
+      <Navigate 
+        to="/dashboard" 
+        state={{ 
+          from: location,
+          message: 'Seuls les particuliers, acheteurs et investisseurs peuvent acheter des terrains.' 
+        }} 
+        replace 
+      />
+    );
+  }
+
+  return children ? children : <Outlet />;
+};
+
 export default ProtectedRoute;

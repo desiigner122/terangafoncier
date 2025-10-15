@@ -545,30 +545,45 @@ const OneTimePaymentPage = () => {
                   console.log('🚀 Début de la soumission...');
                   setSubmitting(true);
                   try {
+                    console.log('🔍 Context reçu:', { 
+                      parcelleId: context.parcelleId, 
+                      parcelle: context.parcelle,
+                      hasContext 
+                    });
+                    
                     // Valider que parcelle_id existe dans la base si fournie
                     let validParcelleId = null;
                     if (context.parcelleId) {
-                      const { data: parcelExists } = await supabase
+                      const { data: parcelExists, error: parcelError } = await supabase
                         .from('parcels')
                         .select('id')
                         .eq('id', context.parcelleId)
                         .maybeSingle();
 
+                      console.log('🏠 Vérification parcelle:', { 
+                        searched: context.parcelleId, 
+                        found: parcelExists,
+                        error: parcelError 
+                      });
+
                       if (parcelExists) {
                         validParcelleId = context.parcelleId;
                       } else {
-                        console.warn('Parcelle ID invalide, insertion sans parcelle_id:', context.parcelleId);
+                        console.error('❌ Parcelle ID invalide, insertion SANS parcelle_id:', context.parcelleId);
                       }
+                    } else {
+                      console.error('❌ AUCUN parcelleId dans le contexte ! context:', context);
                     }
 
                     const payload = {
                       user_id: user.id,
                       type: 'one_time',
+                      payment_type: 'one_time',
                       status: 'pending',
-                      parcelle_id: validParcelleId,
+                      parcel_id: validParcelleId,
                       project_id: context.projectId || null,
                       offered_price: parseInt(negotiatedPrice || price.replace(/\D/g, ''), 10),
-                      note,
+                      message: note,
                       metadata: {
                         market_price: parseInt(price.replace(/\D/g, ''), 10),
                         negotiated_price: parseInt(negotiatedPrice.replace(/\D/g, ''), 10) || null,
@@ -653,7 +668,7 @@ const OneTimePaymentPage = () => {
                     console.log('📢 Affichage toast:', successTitle, successDescription);
                     
                     // Stocker l'ID de la request pour le dialog
-                    setCreatedRequestId(requestData.id);
+                    setCreatedRequestId(request.id);
                     
                     // Afficher le dialog de succès
                     setShowSuccessDialog(true);

@@ -119,10 +119,11 @@ const VendeurOverviewRealData = () => {
       };
 
       // Charger les messages en attente
+      // NOTE: Table 'contact_requests' n'existe pas - Utiliser 'requests' à la place
       const { data: messages, error: msgError } = await supabase
-        .from('contact_requests')
+        .from('requests')
         .select('id, status')
-        .eq('property_owner_id', user.id)
+        .eq('user_id', user.id)
         .eq('status', 'pending');
 
       if (!msgError) {
@@ -221,12 +222,13 @@ const VendeurOverviewRealData = () => {
         .limit(10);
 
       // Charger nouvelles demandes de contact
-      const { data: recentContacts } = await supabase
-        .from('contact_requests')
-        .select('id, created_at, property_id, properties!inner(title)')
-        .eq('property_owner_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(5);
+      // NOTE: Table 'contact_requests' n'existe pas - Commenté temporairement
+      // const { data: recentContacts } = await supabase
+      //   .from('contact_requests')
+      //   .select('id, created_at, property_id, properties!inner(title)')
+      //   .eq('property_owner_id', user.id)
+      //   .order('created_at', { ascending: false })
+      //   .limit(5);
 
       const activities = [];
 

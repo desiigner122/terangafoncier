@@ -16,7 +16,9 @@ import {
   Search,
   Download,
   Package,
-  Home
+  Home,
+  Building2,
+  Users
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -28,6 +30,10 @@ import { Label } from '@/components/ui/label';
 import { supabase } from '@/lib/supabaseClient';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { 
+  getBankStatusBadge, 
+  getVendorStatusBadge 
+} from '@/utils/financingStatusHelpers';
 
 const ParticulierMesAchats = () => {
   const outletContext = useOutletContext();
@@ -294,94 +300,144 @@ const ParticulierMesAchats = () => {
             </div>
           ) : (
             <div className="space-y-4">
-              {filteredRequests.map((request) => (
-                <motion.div
-                  key={request.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Home className="w-5 h-5 text-blue-600" />
-                        <h3 className="font-semibold text-lg text-slate-900">
-                          {request.parcels?.title || request.parcels?.name || 'Terrain sans titre'}
-                        </h3>
-                        {getStatusBadge(request.status)}
-                        {getPaymentTypeBadge(request.type)}
-                      </div>
-
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
-                        <div>
-                          <p className="text-xs text-slate-500">Date de demande</p>
-                          <p className="text-sm font-medium text-slate-900">
-                            {formatDate(request.created_at)}
-                          </p>
+              {filteredRequests.map((request) => {
+                const isBankFinancing = request.type === 'bank_financing' || request.payment_type === 'bank_financing';
+                
+                return (
+                  <motion.div
+                    key={request.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="border border-slate-200 rounded-lg p-4 hover:shadow-md transition-shadow"
+                  >
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Home className="w-5 h-5 text-blue-600" />
+                          <h3 className="font-semibold text-lg text-slate-900">
+                            {request.parcels?.title || request.parcels?.name || 'Terrain sans titre'}
+                          </h3>
+                          {getStatusBadge(request.status)}
+                          {getPaymentTypeBadge(request.type || request.payment_type)}
                         </div>
 
-                        {request.parcels?.location && (
+                        {/* Double Suivi pour financement bancaire */}
+                        {isBankFinancing && (
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4 mt-3">
+                            {/* Statut Banque */}
+                            <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                              <div className="flex-shrink-0">
+                                <Building2 className="w-5 h-5 text-blue-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs text-blue-600 font-medium mb-1">
+                                  CÔTÉ BANQUE
+                                </div>
+                                {getBankStatusBadge(request.bank_status || 'pending')}
+                              </div>
+                            </div>
+
+                            {/* Statut Vendeur */}
+                            <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                              <div className="flex-shrink-0">
+                                <Users className="w-5 h-5 text-amber-600" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="text-xs text-amber-600 font-medium mb-1">
+                                  CÔTÉ VENDEUR
+                                </div>
+                                {getVendorStatusBadge(request.status || 'pending')}
+                              </div>
+                            </div>
+                          </div>
+                        )}
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
                           <div>
-                            <p className="text-xs text-slate-500">Localisation</p>
+                            <p className="text-xs text-slate-500">Date de demande</p>
                             <p className="text-sm font-medium text-slate-900">
-                              {request.parcels.location}
+                              {formatDate(request.created_at)}
+                            </p>
+                          </div>
+
+                          {request.parcels?.location && (
+                            <div>
+                              <p className="text-xs text-slate-500">Localisation</p>
+                              <p className="text-sm font-medium text-slate-900">
+                                {request.parcels.location}
+                              </p>
+                            </div>
+                          )}
+
+                          {request.parcels?.surface && (
+                            <div>
+                              <p className="text-xs text-slate-500">Surface</p>
+                              <p className="text-sm font-medium text-slate-900">
+                                {request.parcels.surface} m²
+                              </p>
+                            </div>
+                          )}
+
+                          {(request.transactions && request.transactions.length > 0) ? (
+                            <div>
+                              <p className="text-xs text-slate-500">Montant</p>
+                              <p className="text-sm font-medium text-slate-900">
+                                {formatCurrency(request.transactions[0].amount)}
+                              </p>
+                            </div>
+                          ) : request.offered_price ? (
+                            <div>
+                              <p className="text-xs text-slate-500">Prix offert</p>
+                              <p className="text-sm font-medium text-slate-900">
+                                {formatCurrency(request.offered_price)}
+                              </p>
+                            </div>
+                          ) : null}
+                        </div>
+
+                        {/* Revenu mensuel pour financement bancaire */}
+                        {isBankFinancing && request.monthly_income && (
+                          <div className="mt-3 p-2 bg-slate-50 rounded border-l-4 border-green-500">
+                            <p className="text-xs text-slate-600">
+                              💰 Revenu mensuel déclaré : <span className="font-semibold">{formatCurrency(request.monthly_income)}</span>
                             </p>
                           </div>
                         )}
 
-                        {request.parcels?.surface && (
-                          <div>
-                            <p className="text-xs text-slate-500">Surface</p>
-                            <p className="text-sm font-medium text-slate-900">
-                              {request.parcels.surface} m²
-                            </p>
-                          </div>
-                        )}
-
-                        {request.transactions && request.transactions.length > 0 && (
-                          <div>
-                            <p className="text-xs text-slate-500">Montant</p>
-                            <p className="text-sm font-medium text-slate-900">
-                              {formatCurrency(request.transactions[0].amount)}
-                            </p>
-                          </div>
+                        {request.description && (
+                          <p className="text-sm text-slate-600 mt-3">
+                            {request.description}
+                          </p>
                         )}
                       </div>
 
-                      {request.description && (
-                        <p className="text-sm text-slate-600 mt-3">
-                          {request.description}
-                        </p>
-                      )}
-                    </div>
-
-                    <div className="flex flex-col gap-2 ml-4">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="whitespace-nowrap"
-                        onClick={() => {
-                          setSelectedRequest(request);
-                          setShowDetailDialog(true);
-                        }}
-                      >
-                        <Eye className="w-4 h-4 mr-1" />
-                        Détails
-                      </Button>
-                      {request.status === 'pending' && (
+                      <div className="flex flex-col gap-2 ml-4">
                         <Button
                           variant="outline"
                           size="sm"
-                          className="whitespace-nowrap text-red-600 hover:text-red-700"
+                          className="whitespace-nowrap"
+                          onClick={() => {
+                            setSelectedRequest(request);
+                            setShowDetailDialog(true);
+                          }}
                         >
-                          <XCircle className="w-4 h-4 mr-1" />
-                          Annuler
+                          <Eye className="w-4 h-4 mr-1" />
+                          Détails
                         </Button>
-                      )}
+                        {request.status === 'pending' && (
+                          <Button
+                            variant="outline"
+                            className="whitespace-nowrap text-red-600 hover:text-red-700"
+                          >
+                            <XCircle className="w-4 h-4 mr-1" />
+                            Annuler
+                          </Button>
+                        )}
+                      </div>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                );
+              })}
             </div>
           )}
         </CardContent>

@@ -70,6 +70,12 @@ import {
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
+import { 
+  getBankStatusBadge, 
+  getVendorStatusBadge, 
+  formatCurrency as formatPrice,
+  getProgressScore 
+} from '@/utils/financingStatusHelpers';
 
 const ParticulierFinancement = () => {
   const { user, profile } = useOutletContext();
@@ -125,15 +131,18 @@ const ParticulierFinancement = () => {
             payment_type,
             installment_plan,
             bank_details,
+            bank_status,
             monthly_income,
             status,
+            offered_price,
             created_at,
+            updated_at,
             parcels:parcel_id (
               id,
-              titre,
+              title,
               prix,
-              superficie,
-              localisation
+              surface,
+              location
             )
           `)
           .eq('user_id', user.id)
@@ -141,54 +150,79 @@ const ParticulierFinancement = () => {
           .order('created_at', { ascending: false });
 
         if (error) {
-          console.error('Erreur chargement demandes financement:', error);
+          console.error('❌ Erreur chargement demandes financement:', error);
+          toast.error('Erreur lors du chargement de vos demandes');
         } else if (bankRequests && bankRequests.length > 0) {
+          console.log('✅ Chargé', bankRequests.length, 'demande(s) de financement réelles');
+          
           // Transformer les données Supabase en format demandes
           const realDemandes = bankRequests.map(req => {
             const bankDetails = req.bank_details || {};
             const parcel = req.parcels;
             
+            // Calculer les infos de prêt
+            const loanAmount = bankDetails.loan_amount || (req.offered_price || parcel?.prix || 0);
+            const loanDuration = bankDetails.loan_duration || bankDetails.loan_duration_years || 20;
+            const interestRate = bankDetails.interest_rate || bankDetails.estimated_rate || 7.5;
+            
+            // Calculer mensualité si pas fournie
+            let monthlyPayment = bankDetails.monthly_payment || bankDetails.estimated_monthly_payment;
+            if (!monthlyPayment && loanAmount > 0) {
+              const monthlyRate = (interestRate / 100) / 12;
+              const numberOfPayments = loanDuration * 12;
+              monthlyPayment = (loanAmount * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) / 
+                              (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
+            }
+            
             return {
               id: req.id,
-              montant: parcel?.prix || 0,
-              duree: bankDetails.loan_duration_years || 0,
+              montant: loanAmount,
+              duree: loanDuration,
               type: 'bank_financing',
               
-              // Statut côté banque (basé sur bank_details)
-              bank_status: bankDetails.bank_status || 'en_attente',
-              
-              // Statut côté vendeur (basé sur request status)
+              // Statuts double suivi
+              bank_status: req.bank_status || bankDetails.bank_status || 'pending',
               vendor_status: req.status || 'pending',
               
-              partenaire: bankDetails.preferred_bank || 'À définir',
-              taux: bankDetails.estimated_rate || 0,
-              mensualite: bankDetails.estimated_monthly_payment || 0,
+              partenaire: bankDetails.preferred_bank || bankDetails.bank_name || 'À définir',
+              taux: interestRate,
+              mensualite: Math.round(monthlyPayment || 0),
               created_at: req.created_at,
-              objet: `Financement bancaire - ${parcel?.titre || 'Parcelle'}`,
+              updated_at: req.updated_at,
+              objet: `Financement bancaire - ${parcel?.title || 'Parcelle'}`,
               
               // Informations supplémentaires
               monthly_income: req.monthly_income || 0,
-              loan_amount: bankDetails.loan_amount || 0,
+              loan_amount: loanAmount,
               down_payment: bankDetails.down_payment || 0,
+              employment_type: bankDetails.employment_type,
               
               // Documents
-              documents_requis: 5,
-              documents_fournis: bankDetails.uploaded_documents ? Object.keys(bankDetails.uploaded_documents).length : 0,
+              documents_requis: 8,
+              documents_fournis: bankDetails.uploaded_documents ? 
+                Object.keys(bankDetails.uploaded_documents).filter(k => bankDetails.uploaded_documents[k]).length : 
+                3, // Par défaut 3 si non spécifié
               
               // Données parcelle
-              parcel_info: parcel
+              parcel_info: parcel,
+              parcel_title: parcel?.title,
+              parcel_location: parcel?.location,
+              parcel_price: parcel?.prix,
+              parcel_surface: parcel?.surface
             };
           });
           
           setDemandes(realDemandes);
           return; // Utiliser les vraies données
+        } else {
+          console.log('ℹ️ Aucune demande de financement trouvée');
         }
       }
       
-      // Données démo si pas de vraies demandes
+      // Données démo si pas de vraies demandes (pour preview)
       setDemandes([
         {
-          id: 'fin-1',
+          id: 'demo-1',
           montant: 45000000,
           duree: 20,
           type: 'credit_immobilier',
@@ -203,7 +237,7 @@ const ParticulierFinancement = () => {
           documents_fournis: 5
         },
         {
-          id: 'fin-2',
+          id: 'demo-2',
           montant: 25000000,
           duree: 15,
           type: 'credit_terrain',
@@ -836,21 +870,25 @@ const ParticulierFinancement = () => {
           </Card>
         </TabsContent>
 
-        {/* Tab Mes Demandes */}
+        {/* Tab Mes Demandes avec Double Suivi */}
         <TabsContent value="demandes" className="space-y-6">
           {demandes.length > 0 ? (
             <div className="space-y-4">
-              {demandes.map((demande) => (
-                <motion.div
-                  key={demande.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                >
-                  <Card className="hover:shadow-lg transition-all duration-200">
-                    <CardContent className="p-6">
-                      <div className="flex items-start justify-between gap-4">
-                        <div className="flex-1">
-                          <div className="flex items-center gap-3 mb-3">
+              {demandes.map((demande) => {
+                const BankStatusBadge = getBankStatusBadge(demande.bank_status || 'en_attente');
+                const VendorStatusBadge = getVendorStatusBadge(demande.vendor_status || 'pending');
+                
+                return (
+                  <motion.div
+                    key={demande.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                  >
+                    <Card className="hover:shadow-lg transition-all duration-200">
+                      <CardContent className="p-6">
+                        {/* Header avec type et partenaire */}
+                        <div className="flex items-start justify-between gap-4 mb-4">
+                          <div className="flex items-center gap-3">
                             <div className="p-2 bg-blue-100 rounded-lg">
                               <CreditCard className="h-5 w-5 text-blue-600" />
                             </div>
@@ -862,57 +900,112 @@ const ParticulierFinancement = () => {
                                 {demande.partenaire}
                               </p>
                             </div>
-                            {getStatusBadge(demande.status)}
+                          </div>
+                          <div className="text-xs text-slate-500">
+                            <Calendar className="h-3 w-3 inline mr-1" />
+                            {new Date(demande.created_at).toLocaleDateString('fr-FR')}
+                          </div>
+                        </div>
+
+                        {/* Double Suivi : Badges Banque + Vendeur */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-4">
+                          {/* Statut Banque */}
+                          <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg border border-blue-200">
+                            <div className="flex-shrink-0">
+                              <Building2 className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs text-blue-600 font-medium mb-1">
+                                CÔTÉ BANQUE
+                              </div>
+                              {BankStatusBadge}
+                            </div>
                           </div>
 
-                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                            <div>
-                              <p className="text-xs text-slate-500">Montant</p>
-                              <p className="font-semibold">{formatMontant(demande.montant)}</p>
+                          {/* Statut Vendeur */}
+                          <div className="flex items-center gap-3 p-3 bg-amber-50 rounded-lg border border-amber-200">
+                            <div className="flex-shrink-0">
+                              <Users className="w-5 h-5 text-amber-600" />
                             </div>
-                            <div>
-                              <p className="text-xs text-slate-500">Durée</p>
-                              <p className="font-semibold">{demande.duree} ans</p>
-                            </div>
-                            {demande.taux > 0 && (
-                              <div>
-                                <p className="text-xs text-slate-500">Taux</p>
-                                <p className="font-semibold">{demande.taux}%</p>
+                            <div className="flex-1 min-w-0">
+                              <div className="text-xs text-amber-600 font-medium mb-1">
+                                CÔTÉ VENDEUR
                               </div>
-                            )}
-                            {demande.mensualite > 0 && (
-                              <div>
-                                <p className="text-xs text-slate-500">Mensualité</p>
-                                <p className="font-semibold">{formatMontant(demande.mensualite)}</p>
-                              </div>
-                            )}
-                          </div>
-
-                          <p className="text-sm text-slate-600 mb-3">{demande.objet}</p>
-
-                          <div className="flex items-center gap-4 text-xs text-slate-500">
-                            <div className="flex items-center gap-1">
-                              <Calendar className="h-3 w-3" />
-                              <span>Créé le {new Date(demande.created_at).toLocaleDateString('fr-FR')}</span>
-                            </div>
-                            <div className="flex items-center gap-1">
-                              <FileText className="h-3 w-3" />
-                              <span>{demande.documents_fournis}/{demande.documents_requis} documents</span>
+                              {VendorStatusBadge}
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-2">
-                          <Button variant="outline" size="sm">
+                        {/* Détails financiers */}
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 p-3 bg-gray-50 rounded-lg">
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Montant</p>
+                            <p className="font-semibold text-slate-900">{formatMontant(demande.montant)}</p>
+                          </div>
+                          <div>
+                            <p className="text-xs text-slate-500 mb-1">Durée</p>
+                            <p className="font-semibold text-slate-900">{demande.duree} ans</p>
+                          </div>
+                          {demande.taux > 0 && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">Taux</p>
+                              <p className="font-semibold text-slate-900">{demande.taux}%</p>
+                            </div>
+                          )}
+                          {demande.mensualite > 0 && (
+                            <div>
+                              <p className="text-xs text-slate-500 mb-1">Mensualité</p>
+                              <p className="font-semibold text-slate-900">{formatMontant(demande.mensualite)}</p>
+                            </div>
+                          )}
+                        </div>
+
+                        {/* Objet de la demande */}
+                        <p className="text-sm text-slate-600 mb-3 px-3 py-2 bg-slate-50 rounded border-l-4 border-blue-500">
+                          {demande.objet}
+                        </p>
+
+                        {/* Progression documents */}
+                        <div className="flex items-center gap-3 mb-4">
+                          <FileText className="h-4 w-4 text-slate-400" />
+                          <div className="flex-1">
+                            <div className="flex justify-between text-xs text-slate-600 mb-1">
+                              <span>Documents fournis</span>
+                              <span className="font-medium">{demande.documents_fournis}/{demande.documents_requis}</span>
+                            </div>
+                            <div className="w-full bg-slate-200 rounded-full h-2">
+                              <div 
+                                className={`h-2 rounded-full transition-all ${
+                                  demande.documents_fournis === demande.documents_requis 
+                                    ? 'bg-green-500' 
+                                    : 'bg-blue-500'
+                                }`}
+                                style={{ width: `${(demande.documents_fournis / demande.documents_requis) * 100}%` }}
+                              />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Actions */}
+                        <div className="flex gap-2 pt-3 border-t">
+                          <Button variant="outline" size="sm" className="flex-1">
+                            <FileText className="h-3 w-3 mr-1" />
                             Voir détails
-                            <ArrowRight className="h-3 w-3 ml-1" />
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1">
+                            <Building2 className="h-3 w-3 mr-1" />
+                            Contacter banque
+                          </Button>
+                          <Button variant="outline" size="sm" className="flex-1">
+                            <Users className="h-3 w-3 mr-1" />
+                            Contacter vendeur
                           </Button>
                         </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
             </div>
           ) : (
             <Card>

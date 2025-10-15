@@ -71,7 +71,7 @@ const VendeurPhotosRealData = () => {
       const { data: propertiesData, error: propertiesError } = await supabase
         .from('properties')
         .select('id, title, status, images')
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (propertiesError) throw propertiesError;
@@ -81,7 +81,7 @@ const VendeurPhotosRealData = () => {
       const { data: photosData, error: photosError } = await supabase
         .from('property_photos')
         .select('*')
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (photosError) throw photosError;
@@ -224,7 +224,7 @@ const VendeurPhotosRealData = () => {
           .from('property_photos')
           .insert({
             property_id: selectedProperty,
-            owner_id: user.id,
+            vendor_id: user.id,
             file_path: publicUrl,
             storage_path: fileName,
             file_name: file.name,

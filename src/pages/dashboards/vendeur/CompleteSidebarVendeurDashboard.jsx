@@ -296,17 +296,32 @@ const CompleteSidebarVendeurDashboard = () => {
   // Charger les messages depuis Supabase
   const loadMessages = async () => {
     try {
-      // Charger depuis la table 'messages' de notre système de messagerie
+      // Charger les conversations du vendeur puis les messages récents
+      const { data: conversations, error: convError } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('vendor_id', user.id)
+        .limit(20);
+
+      if (convError || !conversations || conversations.length === 0) {
+        console.log('Aucune conversation trouvée');
+        return;
+      }
+
+      const conversationIds = conversations.map(c => c.id);
+
+      // Charger les messages récents de ces conversations
       const { data, error } = await supabase
         .from('messages')
         .select('*')
-        .eq('conversation_id', user.id) // Messages dans les conversations où l'utilisateur participe
+        .in('thread_id', conversationIds)
         .order('created_at', { ascending: false })
         .limit(10);
 
       if (!error && data) {
         setMessages(data);
-        setUnreadMessagesCount(data.filter(m => !m.read_at).length);
+        // Compter non lus où recipient_id = user.id
+        setUnreadMessagesCount(data.filter(m => !m.read_at && m.recipient_id === user.id).length);
       }
     } catch (error) {
       console.error('Erreur chargement messages:', error);

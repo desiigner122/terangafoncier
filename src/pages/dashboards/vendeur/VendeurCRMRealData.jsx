@@ -91,68 +91,19 @@ const VendeurCRMRealData = () => {
     try {
       setLoading(true);
 
-      // ✅ CHARGER CONTACTS CRM
-      // HOTFIX: Essayer différentes colonnes owner possibles (seller_id, owner_id, created_by)
-      let contacts = null;
-      let contactsError = null;
-
-      // Essai 1: seller_id (le plus probable)
-      const attempt1 = await supabase
+      // ✅ CHARGER CONTACTS CRM avec vendor_id (confirmé par audit SQL)
+      const { data: contacts, error: contactsError } = await supabase
         .from('crm_contacts')
         .select('*')
-        .eq('seller_id', user.id)
+        .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (!attempt1.error) {
-        contacts = attempt1.data;
-        console.log('✅ [CRM] Chargé avec seller_id:', contacts?.length);
-      } else if (attempt1.error.code === '42703') {
-        // Colonne seller_id n'existe pas, essayer owner_id
-        console.log('⚠️ [CRM] seller_id n\'existe pas, essai owner_id...');
-        const attempt2 = await supabase
-          .from('crm_contacts')
-          .select('*')
-          .eq('owner_id', user.id)
-          .order('created_at', { ascending: false });
-
-        if (!attempt2.error) {
-          contacts = attempt2.data;
-          console.log('✅ [CRM] Chargé avec owner_id:', contacts?.length);
-        } else if (attempt2.error.code === '42703') {
-          // owner_id non plus, essayer created_by
-          console.log('⚠️ [CRM] owner_id n\'existe pas, essai created_by...');
-          const attempt3 = await supabase
-            .from('crm_contacts')
-            .select('*')
-            .eq('created_by', user.id)
-            .order('created_at', { ascending: false });
-
-          if (!attempt3.error) {
-            contacts = attempt3.data;
-            console.log('✅ [CRM] Chargé avec created_by:', contacts?.length);
-          } else {
-            // Aucune colonne ne marche, charger tous et filtrer null
-            console.log('⚠️ [CRM] Aucune colonne owner trouvée, fallback à tous les contacts');
-            const attempt4 = await supabase
-              .from('crm_contacts')
-              .select('*')
-              .order('created_at', { ascending: false })
-              .limit(50);
-
-            contacts = attempt4.data || [];
-            contactsError = attempt4.error;
-          }
-        } else {
-          contactsError = attempt2.error;
-        }
-      } else {
-        contactsError = attempt1.error;
-      }
-
-      if (contactsError && contactsError.code !== '42703') {
+      if (contactsError) {
         console.error('❌ Erreur CRM:', contactsError);
         throw contactsError;
       }
+
+      console.log('✅ [CRM] Chargé', contacts?.length, 'contacts');
 
       setProspects(contacts || []);
 
@@ -228,16 +179,16 @@ const VendeurCRMRealData = () => {
         .from('crm_interactions')
         .select(`
           *,
-          crm_contacts (first_name, last_name)
+          crm_contacts (name, email)
         `)
-        .eq('user_id', user.id)
+        .eq('vendor_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
       const activities = (interactions || []).map(interaction => ({
         id: interaction.id,
         type: interaction.interaction_type,
-        prospect: `${interaction.crm_contacts.first_name} ${interaction.crm_contacts.last_name}`,
+        prospect: interaction.crm_contacts?.name || interaction.crm_contacts?.email || 'Contact',
         action: interaction.content || interaction.subject,
         time: formatTimeAgo(new Date(interaction.created_at))
       }));
@@ -282,7 +233,7 @@ const VendeurCRMRealData = () => {
       const { data, error } = await supabase
         .from('crm_contacts')
         .insert([{
-          owner_id: user.id,
+          vendor_id: user.id,
           ...prospectData,
           score: calculateInitialScore(prospectData)
         }])
@@ -326,7 +277,7 @@ const VendeurCRMRealData = () => {
         .from('crm_interactions')
         .insert([{
           contact_id: contactId,
-          owner_id: user.id,
+          vendor_id: user.id,
           ...interactionData,
           completed_at: new Date().toISOString()
         }]);

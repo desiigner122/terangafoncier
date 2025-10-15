@@ -53,7 +53,7 @@ const VendeurGPSRealData = () => {
             status
           )
         `)
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -88,7 +88,7 @@ const VendeurGPSRealData = () => {
       const { data, error } = await supabase
         .from('properties')
         .select('id, title, address, status')
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -103,12 +103,12 @@ const VendeurGPSRealData = () => {
     try {
       const newCoordinate = {
         property_id: propertyId,
-        owner_id: user.id,
+        vendor_id: user.id,
         latitude: gpsData.latitude,
         longitude: gpsData.longitude,
         altitude: gpsData.altitude || null,
         accuracy: gpsData.accuracy || null,
-        address: gpsData.address || null,
+        label: gpsData.address || null,
         verified: false,
         source: 'manual'
       };

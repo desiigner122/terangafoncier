@@ -129,7 +129,7 @@ const SecureMessagingPage = () => {
           const { data: msgs, error: msgsError } = await supabase
             .from('messages')
             .select('*')
-            .eq('conversation_id', selectedConversationId)
+            .eq('thread_id', selectedConversationId)
             .order('created_at', { ascending: true });
           if (msgsError) throw msgsError;
           setMessages(msgs);

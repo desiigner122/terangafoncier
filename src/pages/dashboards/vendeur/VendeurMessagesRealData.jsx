@@ -61,23 +61,23 @@ const VendeurMessagesRealData = () => {
       
       // Charger vraies conversations vendeur depuis Supabase
       const { data: conversationsData, error } = await supabase
-        .from('conversations_vendeur')
+        .from('conversations')
         .select(`
           *,
-          buyer:profiles!conversations_vendeur_buyer_id_fkey(
+          buyer:profiles!buyer_id(
             id,
             first_name,
             last_name,
             email,
             avatar_url
           ),
-          property:properties!conversations_vendeur_property_id_fkey(
+          property:properties!property_id(
             id,
             title,
             reference
           )
         `)
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .eq('is_archived', false)
         .order('updated_at', { ascending: false });
 
@@ -152,7 +152,7 @@ const VendeurMessagesRealData = () => {
             role
           )
         `)
-        .eq('conversation_id', conversationId)
+        .eq('thread_id', conversationId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -183,7 +183,7 @@ const VendeurMessagesRealData = () => {
       const { error } = await supabase
         .from('messages_vendeur')
         .update({ read_at: new Date().toISOString() })
-        .eq('conversation_id', conversationId)
+        .eq('thread_id', conversationId)
         .is('read_at', null)
         .neq('sender_id', user.id);
 
@@ -237,7 +237,7 @@ const VendeurMessagesRealData = () => {
 
       // Mettre à jour conversation
       const { error: updateError } = await supabase
-        .from('conversations_vendeur')
+        .from('conversations')
         .update({
           last_message: message.content,
           updated_at: new Date().toISOString()
@@ -266,7 +266,7 @@ const VendeurMessagesRealData = () => {
       const newPinnedState = !conversation.is_pinned;
 
       const { error } = await supabase
-        .from('conversations_vendeur')
+        .from('conversations')
         .update({ is_pinned: newPinnedState })
         .eq('id', conversationId);
 
@@ -286,7 +286,7 @@ const VendeurMessagesRealData = () => {
   const handleArchiveConversation = async (conversationId) => {
     try {
       const { error } = await supabase
-        .from('conversations_vendeur')
+        .from('conversations')
         .update({ is_archived: true })
         .eq('id', conversationId);
 

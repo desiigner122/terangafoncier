@@ -53,7 +53,7 @@ const VendeurBlockchainRealData = () => {
       const { data, error } = await supabase
         .from('properties')
         .select('id, title, location, price, surface, property_type, images')
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -80,7 +80,7 @@ const VendeurBlockchainRealData = () => {
             images
           )
         `)
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -145,7 +145,7 @@ const VendeurBlockchainRealData = () => {
       const { data: newCert, error } = await supabase
         .from('blockchain_certificates')
         .insert({
-          owner_id: user.id,
+          vendor_id: user.id,
           property_id: propertyId,
           token_id: tokenId,
           token_standard: 'ERC-721',

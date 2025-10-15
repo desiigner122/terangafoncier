@@ -50,8 +50,8 @@ const VendeurAntiFraudeRealData = () => {
       const { data, error } = await supabase
         .from('properties')
         .select('id, title, location, price, surface, status')
-        .eq('owner_id', user.id)
-        .order('created_at', { ascending: false });
+        .eq('vendor_id', user.id)
+        .order('created_at', { ascending: false});
 
       if (error) throw error;
       setProperties(data || []);
@@ -76,8 +76,8 @@ const VendeurAntiFraudeRealData = () => {
             images
           )
         `)
-        .eq('owner_id', user.id)
-        .order('check_date', { ascending: false });
+        .eq('vendor_id', user.id)
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
 
@@ -137,25 +137,19 @@ const VendeurAntiFraudeRealData = () => {
       const { data: newCheck, error } = await supabase
         .from('fraud_checks')
         .insert({
-          owner_id: user.id,
+          vendor_id: user.id,
           property_id: propertyId,
-          check_date: new Date().toISOString(),
-          check_type: 'comprehensive',
-          fraud_score: fraudScore,
+          verified_at: new Date().toISOString(),
+          overall_score: fraudScore,
+          ocr_score: ocrResults.score || 0,
+          gps_score: gpsResults.score || 0,
+          price_score: priceResults.score || 0,
           risk_level: riskLevel,
           status: status,
-          ai_analysis: {
-            ocr: ocrResults,
-            gps: gpsResults,
-            price: priceResults,
-            confidence: Math.random() * 20 + 80 // 80-100%
-          },
-          results: {
-            document_authenticity: ocrResults.authentic,
-            gps_verification: gpsResults.verified,
-            price_consistency: priceResults.consistent,
-            overall_verdict: status === 'verified' ? 'Property verified' : 'Issues detected'
-          },
+          ocr_results: ocrResults,
+          gps_results: gpsResults,
+          price_results: priceResults,
+          is_approved: status === 'verified',
           alerts: generateAlerts(fraudScore, ocrResults, gpsResults, priceResults)
         })
         .select()

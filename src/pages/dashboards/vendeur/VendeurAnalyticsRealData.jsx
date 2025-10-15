@@ -69,7 +69,7 @@ const VendeurAnalyticsRealData = () => {
           created_at,
           updated_at
         `)
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .gte('created_at', startDate.toISOString());
 
       if (propError) throw propError;
@@ -81,19 +81,12 @@ const VendeurAnalyticsRealData = () => {
       const aiOptimizedCount = properties?.filter(p => p.ai_analysis && Object.keys(p.ai_analysis).length > 0).length || 0;
       const blockchainCount = properties?.filter(p => p.blockchain_verified).length || 0;
 
-      // 3. Charger property_views pour visiteurs uniques
-      const { data: views, error: viewsError } = await supabase
-        .from('property_views')
-        .select('visitor_id, property_id, viewed_at, time_spent, source')
-        .in('property_id', properties?.map(p => p.id) || [])
-        .gte('viewed_at', startDate.toISOString());
-
-      if (viewsError) console.warn('Erreur chargement vues détaillées:', viewsError);
-
-      const uniqueVisitors = new Set(views?.filter(v => v.visitor_id).map(v => v.visitor_id)).size || 0;
-      const averageTime = views?.length > 0
-        ? Math.round(views.reduce((sum, v) => sum + (v.time_spent || 0), 0) / views.length)
-        : 0;
+      // 3. property_views table n'existe pas encore - utiliser données mockées temporairement
+      // TODO: Créer table property_views dans Supabase
+      console.warn('⚠️ Table property_views non disponible - statistiques limitées');
+      
+      const uniqueVisitors = 0; // Temporaire
+      const averageTime = 0; // Temporaire
 
       // 4. Taux de conversion
       const conversionRate = totalViews > 0 ? ((totalInquiries / totalViews) * 100).toFixed(1) : 0;
@@ -105,7 +98,7 @@ const VendeurAnalyticsRealData = () => {
       const { data: previousProps } = await supabase
         .from('properties')
         .select('views_count')
-        .eq('owner_id', user.id)
+        .eq('vendor_id', user.id)
         .gte('created_at', previousStartDate.toISOString())
         .lt('created_at', startDate.toISOString());
 

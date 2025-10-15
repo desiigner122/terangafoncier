@@ -137,34 +137,10 @@ const VendeurPurchaseRequests = () => {
         return;
       }
 
-      // Récupérer les demandes pour ces parcelles
-      const { data, error } = await supabase
+      // Récupérer les demandes pour ces parcelles (sans foreign key hints)
+      const { data: requestsData, error } = await supabase
         .from('requests')
-        .select(`
-          *,
-          parcels:parcel_id (
-            id,
-            title,
-            name,
-            price,
-            location,
-            surface,
-            status
-          ),
-          profiles:user_id (
-            id,
-            first_name,
-            last_name,
-            email,
-            phone
-          ),
-          transactions (
-            id,
-            amount,
-            payment_method,
-            status
-          )
-        `)
+        .select('*')
         .in('parcel_id', parcelIds)
         .order('created_at', { ascending: false });
 
@@ -173,9 +149,44 @@ const VendeurPurchaseRequests = () => {
         throw error;
       }
 
-      console.log('✅ [VENDEUR] Demandes trouvées:', data?.length || 0, data);
-      setRequests(data || []);
-      calculateStats(data || []);
+      if (!requestsData || requestsData.length === 0) {
+        console.log('⚠️ [VENDEUR] Aucune demande trouvée');
+        setRequests([]);
+        calculateStats([]);
+        return;
+      }
+
+      // Charger les parcelles manuellement
+      const { data: parcelsData } = await supabase
+        .from('parcels')
+        .select('id, title, name, price, location, surface, status')
+        .in('id', parcelIds);
+
+      // Charger les profils acheteurs manuellement
+      const buyerIds = [...new Set(requestsData.map(r => r.user_id).filter(Boolean))];
+      const { data: profilesData } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, phone')
+        .in('id', buyerIds);
+
+      // Charger les transactions manuellement
+      const requestIds = requestsData.map(r => r.id);
+      const { data: transactionsData } = await supabase
+        .from('transactions')
+        .select('id, amount, payment_method, status, request_id')
+        .in('request_id', requestIds);
+
+      // Combiner les données
+      const enrichedRequests = requestsData.map(request => ({
+        ...request,
+        parcels: parcelsData?.find(p => p.id === request.parcel_id) || null,
+        profiles: profilesData?.find(p => p.id === request.user_id) || null,
+        transactions: transactionsData?.filter(t => t.request_id === request.id) || []
+      }));
+
+      console.log('✅ [VENDEUR] Demandes enrichies:', enrichedRequests.length, enrichedRequests);
+      setRequests(enrichedRequests);
+      calculateStats(enrichedRequests);
     } catch (error) {
       console.error('Erreur chargement demandes:', error);
       toast.error('Erreur lors du chargement des demandes');

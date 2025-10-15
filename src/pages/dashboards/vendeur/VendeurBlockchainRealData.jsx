@@ -109,14 +109,14 @@ const VendeurBlockchainRealData = () => {
 
   const loadWalletConnections = async () => {
     try {
-      const { data: walletsData } = await supabase
+      const { data: walletsData, error } = await supabase
         .from('wallet_connections')
         .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false }); // ✅ Correction: connected_at → created_at
 
       if (error) throw error;
-      setWalletConnections(data || []);
+      setWalletConnections(walletsData || []);
     } catch (error) {
       console.error('Erreur chargement wallets:', error);
     }

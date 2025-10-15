@@ -128,7 +128,7 @@ const VendeurCRMRealData = () => {
       const { data: soldProperties } = await supabase
         .from('properties')
         .select('price, created_at')
-        .eq('seller_id', user.id)
+        .eq('owner_id', user.id)
         .eq('status', 'sold');
 
       const monthlyRevenue = soldProperties
@@ -175,20 +175,40 @@ const VendeurCRMRealData = () => {
 
   const loadRecentActivities = async () => {
     try {
+      // Charger les interactions sans join (relation non définie)
       const { data: interactions } = await supabase
         .from('crm_interactions')
-        .select(`
-          *,
-          crm_contacts (name, email)
-        `)
+        .select('*')
         .eq('vendor_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
-      const activities = (interactions || []).map(interaction => ({
+      if (!interactions || interactions.length === 0) {
+        setRecentActivities([]);
+        return;
+      }
+
+      // Charger les contacts associés manuellement
+      const contactIds = [...new Set(interactions.map(i => i.contact_id).filter(Boolean))];
+      
+      let contactsMap = {};
+      if (contactIds.length > 0) {
+        const { data: contacts } = await supabase
+          .from('crm_contacts')
+          .select('id, name, email')
+          .in('id', contactIds);
+
+        contacts?.forEach(c => {
+          contactsMap[c.id] = c;
+        });
+      }
+
+      const activities = interactions.map(interaction => ({
         id: interaction.id,
         type: interaction.interaction_type,
-        prospect: interaction.crm_contacts?.name || interaction.crm_contacts?.email || 'Contact',
+        prospect: contactsMap[interaction.contact_id]?.name || 
+                 contactsMap[interaction.contact_id]?.email || 
+                 'Contact',
         action: interaction.content || interaction.subject,
         time: formatTimeAgo(new Date(interaction.created_at))
       }));

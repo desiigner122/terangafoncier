@@ -82,6 +82,7 @@ const VendeurAnalyticsRealData = () => {
       // 3. property_views table n'existe pas encore - utiliser données mockées temporairement
       // TODO: Créer table property_views dans Supabase
       console.warn('⚠️ Table property_views non disponible - statistiques limitées');
+      const views = []; // Initialiser views vide pour éviter erreur
       
       const uniqueVisitors = 0; // Temporaire
       const averageTime = 0; // Temporaire

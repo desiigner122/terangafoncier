@@ -64,21 +64,21 @@ const VendeurMessagesRealData = () => {
         .from('conversations')
         .select(`
           *,
-          buyer:profiles(
+          buyer:buyer_id(
             id,
             first_name,
             last_name,
             email,
             avatar_url
           ),
-          property:properties(
+          property:property_id(
             id,
             title,
             reference
           )
         `)
         .eq('vendor_id', user.id)
-        .eq('is_archived', false)
+        .eq('is_archived_vendor', false)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;

@@ -69,9 +69,7 @@ const VendeurPhotosRealData = () => {
 
       // Charger les propriétés du vendeur
       const { data: propertiesData, error: propertiesError } = await supabase
-        .from('properties')
-        .select('id, title, status, images')
-        .eq('vendor_id', user.id)
+        .from('properties').select('id, title, status, images').eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (propertiesError) throw propertiesError;

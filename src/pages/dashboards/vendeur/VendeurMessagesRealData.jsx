@@ -64,14 +64,14 @@ const VendeurMessagesRealData = () => {
         .from('conversations')
         .select(`
           *,
-          buyer:profiles!buyer_id(
+          buyer:profiles(
             id,
             first_name,
             last_name,
             email,
             avatar_url
           ),
-          property:properties!property_id(
+          property:properties(
             id,
             title,
             reference

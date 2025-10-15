@@ -57,8 +57,7 @@ const VendeurAnalyticsRealData = () => {
 
       // 1. Charger toutes les propriétés du vendeur
       const { data: properties, error: propError } = await supabase
-        .from('properties')
-        .select(`
+        .from('properties').select(`
           id,
           title,
           views_count,
@@ -68,8 +67,7 @@ const VendeurAnalyticsRealData = () => {
           blockchain_verified,
           created_at,
           updated_at
-        `)
-        .eq('vendor_id', user.id)
+        `).eq('owner_id', user.id)
         .gte('created_at', startDate.toISOString());
 
       if (propError) throw propError;
@@ -96,9 +94,7 @@ const VendeurAnalyticsRealData = () => {
       previousStartDate.setDate(previousStartDate.getDate() - getDaysDiff(selectedPeriod));
 
       const { data: previousProps } = await supabase
-        .from('properties')
-        .select('views_count')
-        .eq('vendor_id', user.id)
+        .from('properties').select('views_count').eq('owner_id', user.id)
         .gte('created_at', previousStartDate.toISOString())
         .lt('created_at', startDate.toISOString());
 

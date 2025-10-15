@@ -86,9 +86,7 @@ const VendeurGPSRealData = () => {
   const loadProperties = async () => {
     try {
       const { data, error } = await supabase
-        .from('properties')
-        .select('id, title, address, status')
-        .eq('vendor_id', user.id)
+        .from('properties').select('id, title, address, status').eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;

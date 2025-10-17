@@ -639,6 +639,18 @@ const VendeurPurchaseRequests = () => {
   };
 
   const getStatusBadge = (status) => {
+    // Map case statuses to simple statuses for display
+    let displayStatus = status;
+    if (status && status !== 'pending' && status !== 'accepted' && status !== 'negotiation' && status !== 'completed' && status !== 'rejected' && status !== 'cancelled') {
+      // If it's a case status, map it to accepted/completed
+      if (status === 'completed' || status === 'property_transfer' || status === 'payment_processing') {
+        displayStatus = 'completed';
+      } else {
+        // All other case statuses show as 'accepted'
+        displayStatus = 'accepted';
+      }
+    }
+    
     const configs = {
       pending: { color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock, label: 'En attente' },
       accepted: { color: 'bg-blue-100 text-blue-700 border-blue-200', icon: CheckCircle2, label: 'Acceptée' },
@@ -647,7 +659,7 @@ const VendeurPurchaseRequests = () => {
       rejected: { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle, label: 'Refusée' },
       cancelled: { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle, label: 'Annulée' }
     };
-    const config = configs[status] || configs.pending;
+    const config = configs[displayStatus] || configs.pending;
     const Icon = config.icon;
     return (
       <Badge className={`${config.color} border`}>

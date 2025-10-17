@@ -79,19 +79,42 @@ const ParticulierMesAchats = () => {
       // Charger les transactions pour chaque request
       if (requestsData && requestsData.length > 0) {
         const requestIds = requestsData.map(r => r.id);
+        
+        // 🔥 FIX: Charger aussi les purchase_cases
         const { data: transactionsData } = await supabase
           .from('transactions')
           .select('*')
           .in('request_id', requestIds);
 
-        // Associer les transactions aux requests
-        const requestsWithTransactions = requestsData.map(request => ({
+        const { data: purchaseCasesData } = await supabase
+          .from('purchase_cases')
+          .select('id, request_id, case_number, status, created_at, updated_at')
+          .in('request_id', requestIds);
+
+        // Créer une map des purchase_cases par request_id
+        const purchaseCaseMap = {};
+        purchaseCasesData?.forEach(pc => {
+          purchaseCaseMap[pc.request_id] = {
+            caseId: pc.id,
+            caseNumber: pc.case_number,
+            caseStatus: pc.status,
+            caseCreatedAt: pc.created_at,
+            caseUpdatedAt: pc.updated_at
+          };
+        });
+
+        // Associer les transactions et purchase_cases aux requests
+        const requestsWithData = requestsData.map(request => ({
           ...request,
-          transactions: transactionsData?.filter(t => t.request_id === request.id) || []
+          transactions: transactionsData?.filter(t => t.request_id === request.id) || [],
+          purchaseCase: purchaseCaseMap[request.id] || null,
+          // Pour l'affichage: utiliser le status du purchase_case si existe, sinon du request
+          displayStatus: purchaseCaseMap[request.id]?.caseStatus || request.status
         }));
 
-        setRequests(requestsWithTransactions);
-        console.log('✅ Demandes d\'achat chargées:', requestsWithTransactions.length);
+        setRequests(requestsWithData);
+        console.log('✅ Demandes d\'achat chargées:', requestsWithData.length);
+        console.log('🔥 Purchase cases loadés:', purchaseCasesData?.length || 0);
       } else {
         setRequests([]);
         console.log('✅ Aucune demande d\'achat trouvée');
@@ -162,7 +185,24 @@ const ParticulierMesAchats = () => {
   };
 
   const filteredRequests = requests.filter(request => {
-    const matchesTab = activeTab === 'all' || request.status === activeTab;
+    let matchesTab = false;
+    
+    if (activeTab === 'all') {
+      matchesTab = true;
+    } else if (activeTab === 'pending') {
+      // Demandes en attente: pas de purchase_case OU pas d'acceptation
+      matchesTab = !request.purchaseCase && request.status === 'pending';
+    } else if (activeTab === 'accepted') {
+      // Demandes acceptées: purchase_case existe (vendeur a accepté)
+      matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'preliminary_agreement';
+    } else if (activeTab === 'processing') {
+      // En cours: purchase_case en cours de traitement
+      matchesTab = !!request.purchaseCase && ['contract_preparation', 'legal_verification', 'document_audit', 'payment_processing'].includes(request.purchaseCase.caseStatus);
+    } else if (activeTab === 'completed') {
+      // Complétées: purchase_case terminé
+      matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'completed';
+    }
+    
     const matchesSearch = searchTerm === '' || 
       request.parcels?.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.parcels?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -172,9 +212,10 @@ const ParticulierMesAchats = () => {
 
   const stats = {
     total: requests.length,
-    pending: requests.filter(r => r.status === 'pending').length,
-    approved: requests.filter(r => r.status === 'approved').length,
-    completed: requests.filter(r => r.status === 'completed').length
+    pending: requests.filter(r => !r.purchaseCase && r.status === 'pending').length,
+    accepted: requests.filter(r => !!r.purchaseCase && r.purchaseCase.caseStatus === 'preliminary_agreement').length,
+    processing: requests.filter(r => !!r.purchaseCase && ['contract_preparation', 'legal_verification', 'document_audit', 'payment_processing'].includes(r.purchaseCase.caseStatus)).length,
+    completed: requests.filter(r => !!r.purchaseCase && r.purchaseCase.caseStatus === 'completed').length
   };
 
   return (
@@ -222,10 +263,22 @@ const ParticulierMesAchats = () => {
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-slate-600">Approuvées</p>
-                <p className="text-2xl font-bold text-green-600">{stats.approved}</p>
+                <p className="text-sm font-medium text-slate-600">Acceptées</p>
+                <p className="text-2xl font-bold text-green-600">{stats.accepted}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600">En cours</p>
+                <p className="text-2xl font-bold text-blue-600">{stats.processing}</p>
+              </div>
+              <Clock className="w-8 h-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
@@ -271,11 +324,11 @@ const ParticulierMesAchats = () => {
               <TabsTrigger value="pending">
                 En attente ({stats.pending})
               </TabsTrigger>
-              <TabsTrigger value="approved">
-                Approuvées ({stats.approved})
+              <TabsTrigger value="accepted">
+                Acceptées ({stats.accepted})
               </TabsTrigger>
               <TabsTrigger value="processing">
-                En cours
+                En cours ({stats.processing})
               </TabsTrigger>
               <TabsTrigger value="completed">
                 Terminées ({stats.completed})
@@ -317,7 +370,14 @@ const ParticulierMesAchats = () => {
                           <h3 className="font-semibold text-lg text-slate-900">
                             {request.parcels?.title || request.parcels?.name || 'Terrain sans titre'}
                           </h3>
-                          {getStatusBadge(request.status)}
+                          {/* Afficher le numéro du dossier si accepté */}
+                          {request.purchaseCase && (
+                            <Badge className="bg-purple-100 text-purple-800 border border-purple-300">
+                              Dossier #{request.purchaseCase.caseNumber}
+                            </Badge>
+                          )}
+                          {/* Afficher le status de la demande/dossier */}
+                          {getStatusBadge(request.purchaseCase?.caseStatus || request.status)}
                           {getPaymentTypeBadge(request.type || request.payment_type)}
                         </div>
 

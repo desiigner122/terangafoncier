@@ -567,7 +567,27 @@ const VendeurPurchaseRequests = () => {
 
   // Filtrer les demandes
   const filteredRequests = requests.filter(request => {
-    const matchesTab = activeTab === 'all' || request.status === activeTab;
+    let matchesTab = false;
+    
+    if (activeTab === 'all') {
+      matchesTab = true;
+    } else if (activeTab === 'pending') {
+      // Demandes en attente: pas de purchase_case
+      matchesTab = !request.hasCase && request.status === 'pending';
+    } else if (activeTab === 'accepted') {
+      // Demandes acceptées: purchase_case EXISTS (peu importe le status du case)
+      matchesTab = !!request.hasCase;
+    } else if (activeTab === 'negotiation') {
+      // En négociation: transaction status = 'negotiation'
+      matchesTab = request.status === 'negotiation';
+    } else if (activeTab === 'completed') {
+      // Complétées: purchase_case status = 'completed'
+      matchesTab = request.hasCase && request.caseStatus === 'completed';
+    } else if (activeTab === 'rejected') {
+      // Refusées: transaction status = 'rejected'
+      matchesTab = request.status === 'rejected';
+    }
+    
     const matchesSearch = searchTerm === '' || 
       request.buyer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.buyer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -578,12 +598,12 @@ const VendeurPurchaseRequests = () => {
   // Statistiques
   const stats = {
     total: requests.length,
-    pending: requests.filter(r => r.status === 'pending').length,
-    accepted: requests.filter(r => r.status === 'accepted').length,
+    pending: requests.filter(r => !r.hasCase && r.status === 'pending').length,
+    accepted: requests.filter(r => !!r.hasCase).length,
     negotiation: requests.filter(r => r.status === 'negotiation').length,
-    completed: requests.filter(r => r.status === 'completed').length,
+    completed: requests.filter(r => r.hasCase && r.caseStatus === 'completed').length,
     rejected: requests.filter(r => r.status === 'rejected').length,
-    revenue: requests.filter(r => r.status === 'completed').reduce((sum, r) => sum + (r.offered_price || 0), 0)
+    revenue: requests.filter(r => r.hasCase && r.caseStatus === 'completed').reduce((sum, r) => sum + (r.offered_price || 0), 0)
   };
 
   // Helpers
@@ -823,7 +843,14 @@ const VendeurPurchaseRequests = () => {
                               <h3 className="text-xl font-bold text-slate-900">
                                 {request.buyer_name}
                               </h3>
-                              {getStatusBadge(request.status)}
+                              {/* Afficher le case number si accepté */}
+                              {request.hasCase && (
+                                <Badge className="bg-purple-100 text-purple-700 border border-purple-300">
+                                  Dossier #{request.caseNumber}
+                                </Badge>
+                              )}
+                              {/* Afficher le status du case ou de la transaction */}
+                              {getStatusBadge(request.caseStatus || request.status)}
                               <Badge className="bg-blue-100 text-blue-700 border-blue-200">
                                 {getPaymentMethodIcon(request.payment_method)}
                                 <span className="ml-1">{getPaymentMethodLabel(request.payment_method)}</span>

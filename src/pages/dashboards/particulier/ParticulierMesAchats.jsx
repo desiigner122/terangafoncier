@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useOutletContext } from 'react-router-dom';
+import { useOutletContext, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -7,6 +7,7 @@ import {
   CheckCircle, 
   XCircle, 
   Eye,
+  ArrowRight,
   MessageSquare,
   DollarSign,
   Calendar,
@@ -39,6 +40,7 @@ import RealtimeSyncService from '@/services/RealtimeSyncService';
 const ParticulierMesAchats = () => {
   const outletContext = useOutletContext();
   const { user } = outletContext || {};
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(true);
   const [requests, setRequests] = useState([]);
   const [activeTab, setActiveTab] = useState('all');
@@ -552,6 +554,16 @@ const ParticulierMesAchats = () => {
                           <Eye className="w-4 h-4 mr-1" />
                           Détails
                         </Button>
+                        {request.purchaseCase && (
+                          <Button
+                            size="sm"
+                            className="whitespace-nowrap bg-blue-600 hover:bg-blue-700"
+                            onClick={() => navigate(`/acheteur/cases/${request.purchaseCase.case_number}`)}
+                          >
+                            <ArrowRight className="w-4 h-4 mr-1" />
+                            Suivi dossier
+                          </Button>
+                        )}
                         {request.status === 'pending' && (
                           <Button
                             variant="outline"

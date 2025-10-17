@@ -293,6 +293,7 @@ import VendeurCRMRealData from '@/pages/dashboards/vendeur/VendeurCRMRealData';
 import VendeurPropertiesRealData from '@/pages/dashboards/vendeur/VendeurPropertiesRealData';
 import VendeurPurchaseRequests from '@/pages/dashboards/vendeur/VendeurPurchaseRequests';
 import VendeurCaseTracking from '@/pages/dashboards/vendeur/VendeurCaseTracking';
+import ParticulierCaseTracking from '@/pages/dashboards/particulier/ParticulierCaseTracking';
 import VendeurAntiFraudeRealData from '@/pages/dashboards/vendeur/VendeurAntiFraudeRealData';
 import VendeurGPSRealData from '@/pages/dashboards/vendeur/VendeurGPSRealData';
 import VendeurServicesDigitauxRealData from '@/pages/dashboards/vendeur/VendeurServicesDigitauxRealData';
@@ -532,6 +533,7 @@ function App() {
                   <Route path="favoris" element={<ParticulierFavoris />} />
                   <Route path="offres" element={<ParticulierMesOffres />} />
                   <Route path="mes-achats" element={<ParticulierMesAchats />} />
+                  <Route path="cases/:caseNumber" element={<ParticulierCaseTracking />} />
                   <Route path="visites" element={<ParticulierVisites />} />
                   <Route path="financement" element={<ParticulierFinancement />} />
                   <Route path="zones-communales" element={<ParticulierZonesCommunales />} />

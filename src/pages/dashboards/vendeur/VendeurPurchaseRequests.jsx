@@ -44,6 +44,7 @@ import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
 import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
 import NotificationService from '@/services/NotificationService';
+import RealtimeSyncService from '@/services/RealtimeSyncService';
 import NegotiationModal from '@/components/modals/NegotiationModal';
 import RequestDetailsModal from '@/components/modals/RequestDetailsModal';
 
@@ -74,6 +75,18 @@ const VendeurPurchaseRequests = () => {
   useEffect(() => {
     if (user) {
       loadRequests();
+      
+      // 🔄 REALTIME: Subscribe aux requests changes pour les parcelles du vendeur
+      const unsubscribe = RealtimeSyncService.subscribeToVendorRequests(
+        [], // Les parcel IDs seront chargés dans loadRequests
+        (payload) => {
+          console.log('🔄 [REALTIME] Vendor request update detected, reloading...');
+          // Recharger les demandes quand il y a un changement
+          loadRequests();
+        }
+      );
+      
+      return unsubscribe;
     } else {
       console.warn('⚠️ [VENDEUR REQUESTS] Pas de user, attente...');
     }

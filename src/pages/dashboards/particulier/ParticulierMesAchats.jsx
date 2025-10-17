@@ -34,6 +34,7 @@ import {
   getBankStatusBadge, 
   getVendorStatusBadge 
 } from '@/utils/financingStatusHelpers';
+import RealtimeSyncService from '@/services/RealtimeSyncService';
 
 const ParticulierMesAchats = () => {
   const outletContext = useOutletContext();
@@ -48,6 +49,19 @@ const ParticulierMesAchats = () => {
   useEffect(() => {
     if (user) {
       loadPurchaseRequests();
+      
+      // 🔄 REALTIME: Subscribe à purchase_cases changes
+      const unsubscribe = RealtimeSyncService.subscribeToBuyerRequests(
+        user.id,
+        (payload) => {
+          console.log('🔄 [REALTIME] Purchase case update detected, reloading...');
+          // Recharger les demandes quand il y a un changement
+          loadPurchaseRequests();
+        }
+      );
+      
+      // Unsubscribe au unmount
+      return unsubscribe;
     }
   }, [user]);
 

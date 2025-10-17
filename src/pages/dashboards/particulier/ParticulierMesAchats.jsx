@@ -48,18 +48,22 @@ const ParticulierMesAchats = () => {
 
   useEffect(() => {
     if (user) {
+      console.log('🎯 [BUYER DASHBOARD] Mount with user:', user.id);
       loadPurchaseRequests();
       
       // 🔄 REALTIME: Subscribe à purchase_cases changes
       const unsubscribe = RealtimeSyncService.subscribeToBuyerRequests(
         user.id,
         (payload) => {
-          console.log('🔄 [REALTIME] Purchase case update detected, reloading...');
+          console.log('� [BUYER DASHBOARD] REAL-TIME EVENT RECEIVED!');
+          console.log('   Payload:', payload);
+          console.log('   🔄 Reloading purchase requests...');
           // Recharger les demandes quand il y a un changement
           loadPurchaseRequests();
         }
       );
       
+      console.log('🎯 [BUYER DASHBOARD] Subscription established, returning cleanup');
       // Unsubscribe au unmount
       return unsubscribe;
     }
@@ -68,7 +72,7 @@ const ParticulierMesAchats = () => {
   const loadPurchaseRequests = async () => {
     try {
       setLoading(true);
-      console.log('📊 Chargement des demandes d\'achat...');
+      console.log('🎯 [LOAD] Starting loadPurchaseRequests for user:', user.id);
 
       // Charger les requests de l'utilisateur
       const { data: requestsData, error: requestsError } = await supabase
@@ -89,10 +93,12 @@ const ParticulierMesAchats = () => {
         .order('created_at', { ascending: false });
 
       if (requestsError) throw requestsError;
+      console.log('✅ [LOAD] Requests loaded:', requestsData?.length);
 
       // Charger les transactions pour chaque request
       if (requestsData && requestsData.length > 0) {
         const requestIds = requestsData.map(r => r.id);
+        console.log('   Request IDs:', requestIds);
         
         // 🔥 FIX: Charger aussi les purchase_cases
         const { data: transactionsData } = await supabase
@@ -100,10 +106,20 @@ const ParticulierMesAchats = () => {
           .select('*')
           .in('request_id', requestIds);
 
+        console.log('✅ [LOAD] Transactions loaded:', transactionsData?.length);
+        transactionsData?.forEach(t => {
+          console.log(`   - TX: ${t.id}, Status: ${t.status}, Request: ${t.request_id}`);
+        });
+
         const { data: purchaseCasesData } = await supabase
           .from('purchase_cases')
           .select('id, request_id, case_number, status, created_at, updated_at')
           .in('request_id', requestIds);
+
+        console.log('✅ [LOAD] Purchase cases loaded:', purchaseCasesData?.length);
+        purchaseCasesData?.forEach(pc => {
+          console.log(`   - PC: ${pc.id}, Case#: ${pc.case_number}, Status: ${pc.status}, RequestID: ${pc.request_id}`);
+        });
 
         // Créer une map des purchase_cases par request_id
         const purchaseCaseMap = {};
@@ -117,24 +133,35 @@ const ParticulierMesAchats = () => {
           };
         });
 
+        console.log('📊 [LOAD] Purchase case map:', purchaseCaseMap);
+
         // Associer les transactions et purchase_cases aux requests
-        const requestsWithData = requestsData.map(request => ({
-          ...request,
-          transactions: transactionsData?.filter(t => t.request_id === request.id) || [],
-          purchaseCase: purchaseCaseMap[request.id] || null,
-          // Pour l'affichage: utiliser le status du purchase_case si existe, sinon du request
-          displayStatus: purchaseCaseMap[request.id]?.caseStatus || request.status
-        }));
+        const requestsWithData = requestsData.map(request => {
+          const hasCase = !!purchaseCaseMap[request.id];
+          const caseStatus = purchaseCaseMap[request.id]?.caseStatus;
+          console.log(`   🔗 Request ${request.id}: hasCase=${hasCase}, caseStatus=${caseStatus}`);
+          
+          return {
+            ...request,
+            transactions: transactionsData?.filter(t => t.request_id === request.id) || [],
+            purchaseCase: purchaseCaseMap[request.id] || null,
+            // Pour l'affichage: utiliser le status du purchase_case si existe, sinon du request
+            displayStatus: purchaseCaseMap[request.id]?.caseStatus || request.status
+          };
+        });
 
         setRequests(requestsWithData);
-        console.log('✅ Demandes d\'achat chargées:', requestsWithData.length);
-        console.log('🔥 Purchase cases loadés:', purchaseCasesData?.length || 0);
+        console.log('✅ [LOAD] FINAL requests set:', requestsWithData.length);
+        console.log('   Stats:');
+        requestsWithData.forEach(r => {
+          console.log(`     - ID: ${r.id}, Status: ${r.status}, HasCase: ${!!r.purchaseCase}, CaseStatus: ${r.purchaseCase?.caseStatus}`);
+        });
       } else {
         setRequests([]);
-        console.log('✅ Aucune demande d\'achat trouvée');
+        console.log('✅ [LOAD] Aucune demande d\'achat trouvée');
       }
     } catch (error) {
-      console.error('❌ Erreur chargement demandes:', error);
+      console.error('🔴 [LOAD] Error:', error);
       window.safeGlobalToast({
         description: 'Erreur lors du chargement de vos demandes d\'achat',
         variant: 'destructive'
@@ -203,21 +230,27 @@ const ParticulierMesAchats = () => {
     
     if (activeTab === 'all') {
       matchesTab = true;
+      console.log(`📋 [FILTER] ALL: ${request.id} matches`);
     } else if (activeTab === 'pending') {
       // Demandes en attente: pas de purchase_case OU pas d'acceptation
       matchesTab = !request.purchaseCase && request.status === 'pending';
+      if (matchesTab) console.log(`📋 [FILTER] PENDING: ${request.id} matches (hasCase=${!!request.purchaseCase})`);
     } else if (activeTab === 'accepted') {
       // Demandes acceptées: purchase_case existe (vendeur a accepté)
       matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'preliminary_agreement';
+      if (matchesTab) console.log(`📋 [FILTER] ACCEPTED: ${request.id} matches (caseStatus=${request.purchaseCase?.caseStatus})`);
     } else if (activeTab === 'processing') {
       // En cours: purchase_case en cours de traitement
       matchesTab = !!request.purchaseCase && ['contract_preparation', 'legal_verification', 'document_audit', 'payment_processing'].includes(request.purchaseCase.caseStatus);
+      if (matchesTab) console.log(`📋 [FILTER] PROCESSING: ${request.id} matches`);
     } else if (activeTab === 'completed') {
       // Complétées: purchase_case terminé
       matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'completed';
+      if (matchesTab) console.log(`📋 [FILTER] COMPLETED: ${request.id} matches`);
     } else if (activeTab === 'rejected') {
       // Refusées: transaction status = 'rejected'
       matchesTab = request.status === 'rejected';
+      if (matchesTab) console.log(`📋 [FILTER] REJECTED: ${request.id} matches`);
     }
     
     const matchesSearch = searchTerm === '' || 
@@ -226,6 +259,8 @@ const ParticulierMesAchats = () => {
       request.parcels?.location?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTab && matchesSearch;
   });
+
+  console.log(`📊 [FILTER] Tab '${activeTab}': ${filteredRequests.length} results`);
 
   const stats = {
     total: requests.length,

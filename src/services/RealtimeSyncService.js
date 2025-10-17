@@ -206,7 +206,7 @@ export class RealtimeSyncService {
    * @returns {function} Fonction pour unsubscribe
    */
   static subscribeToBuyerRequests(buyerId, callback) {
-    console.log(`🔄 [REALTIME] Subscribe aux demandes acheteur: ${buyerId}`);
+    console.log(`� [REALTIME] Creating subscription for buyer: ${buyerId}`);
 
     try {
       const subscription = supabase
@@ -219,13 +219,20 @@ export class RealtimeSyncService {
             table: 'purchase_cases'
           },
           (payload) => {
-            console.log('📨 [REALTIME] Buyer request update:', payload);
+            console.log('� [REALTIME] CALLBACK TRIGGERED!');
+            console.log('   Event type:', payload.eventType);
+            console.log('   New data:', payload.new);
+            console.log('   Old data:', payload.old);
+            console.log('   🔄 Calling callback to reload...');
             callback(payload);
           }
         )
-        .subscribe();
+        .subscribe((status) => {
+          console.log(`🟢 [REALTIME] Subscription status: ${status}`);
+        });
 
       this.subscriptions.push(subscription);
+      console.log(`🟢 [REALTIME] Subscription established successfully`);
 
       return () => {
         console.log(`🔴 [REALTIME] Unsubscribe buyer requests`);
@@ -233,7 +240,7 @@ export class RealtimeSyncService {
         this.subscriptions = this.subscriptions.filter(s => s !== subscription);
       };
     } catch (error) {
-      console.error('❌ [REALTIME] Error subscribing to buyer requests:', error);
+      console.error('🔴 [REALTIME] Error subscribing to buyer requests:', error);
       return () => {}; // Return empty cleanup function
     }
   }

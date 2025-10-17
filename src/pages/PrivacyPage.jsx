@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import SEO from '@/components/SEO';
 import { 
   Shield, 
   UserCircle, 
@@ -37,12 +38,19 @@ const PrivacyPage = () => {
   );
 
   return (
-    <motion.div
-      variants={sectionVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-gradient-to-b from-background to-gray-50 dark:from-background dark:to-gray-900/20 min-h-screen"
-    >
+    <>
+      <SEO
+        title="Politique de Confidentialité - Protection de Vos Données"
+        description="Politique de confidentialité de Teranga Foncier. Comment nous collectons, utilisons et protégeons vos données personnelles selon la loi sénégalaise."
+        keywords="politique confidentialité, protection données, privacy policy, sécurité données personnelles"
+        canonicalUrl="https://www.terangafoncier.sn/privacy"
+      />
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        className="bg-gradient-to-b from-background to-gray-50 dark:from-background dark:to-gray-900/20 min-h-screen"
+      >
       <div className="container mx-auto py-16 px-4 max-w-4xl">
         <motion.div variants={itemVariants} className="text-center mb-12 md:mb-16">
           <Shield className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-6 text-primary" />
@@ -166,6 +174,7 @@ const PrivacyPage = () => {
         </div>
       </div>
     </motion.div>
+    </>
   );
 };
 

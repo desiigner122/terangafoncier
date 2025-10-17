@@ -537,12 +537,16 @@ const VendeurPurchaseRequests = () => {
         const caseInfo = requestCaseMap[transaction.id];
         const hasCase = !!caseInfo;
         const caseNumber = caseInfo?.caseNumber;
+        const caseStatus = caseInfo?.caseStatus;
+
+        // ✅ Prioriser le statut workflow lorsqu'il existe pour refléter l'acceptation vendeur
+        const effectiveStatus = caseStatus || transaction.status;
         
         return {
           id: transaction.id,
           user_id: transaction.buyer_id,
           parcel_id: transaction.parcel_id,
-          status: transaction.status,
+          status: effectiveStatus,
           created_at: transaction.created_at,
           updated_at: transaction.updated_at,
           payment_method: transaction.payment_method,
@@ -562,8 +566,9 @@ const VendeurPurchaseRequests = () => {
           // FIX #1: Add case info
           hasCase,
           caseNumber,
-          caseStatus: caseInfo?.caseStatus,
-          effectiveStatus: hasCase ? 'has_case' : transaction.status
+          caseStatus,
+          rawStatus: transaction.status,
+          effectiveStatus
         };
       });
 

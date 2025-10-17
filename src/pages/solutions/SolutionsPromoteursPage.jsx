@@ -24,7 +24,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/hooks/useUser';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
 
 const SolutionsPromoteursPage = () => {
@@ -89,10 +89,12 @@ const SolutionsPromoteursPage = () => {
 
       return (
         <>
-          <Helmet>
-            <title>Solutions Promoteurs Immobiliers - Teranga Foncier</title>
-            <meta name="description" content="Solutions pour promoteurs immobiliers au Sénégal. Identifiez des terrains stratégiques, analysez le potentiel et connectez-vous avec de futurs clients." />
-          </Helmet>
+          <SEO
+            title="Solutions Promoteurs - Vendre Vos Projets Immobiliers à Grande Échelle"
+            description="Solutions complètes pour promoteurs immobiliers sénégalais. Identifiez les meilleurs terrains, finalisez vos projets, accédez à 15K+ investisseurs diaspora et pré-vendez efficacement."
+            keywords="promoteur immobilier sénégal, vendre projet construction, terrains stratégiques, financement promotion immobilière, pré-vente diaspora"
+            canonicalUrl="https://www.terangafoncier.sn/solutions-promoteurs"
+          />
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

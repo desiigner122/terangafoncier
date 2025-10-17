@@ -289,9 +289,8 @@ import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/Complete
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
 
 // Imports pages vendeur RealData
-import VendeurOverviewRealData from '@/pages/dashboards/vendeur/VendeurOverviewRealData';
-import VendeurOverview from '@/pages/dashboards/vendeur/VendeurOverview';
-import VendeurCRMRealData from '@/pages/dashboards/vendeur/VendeurCRMRealData';
+import VendeurOverviewRealDataModern from '@/pages/dashboards/vendeur/VendeurOverviewRealDataModern';
+import VendeurCRMModernized from '@/pages/dashboards/vendeur/VendeurCRMModernized';
 import VendeurPropertiesRealData from '@/pages/dashboards/vendeur/VendeurPropertiesRealData';
 import VendeurPurchaseRequests from '@/pages/dashboards/vendeur/VendeurPurchaseRequests';
 import VendeurCaseTracking from '@/pages/dashboards/vendeur/VendeurCaseTracking';
@@ -570,8 +569,8 @@ function App() {
                 {/* Dashboard Vendeur avec routes imbriquées pour chaque page */}
                 <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><CompleteSidebarVendeurDashboard /></RoleProtectedRoute>}>
                   <Route index element={<Navigate to="/vendeur/overview" replace />} />
-                  <Route path="overview" element={<VendeurOverview />} />
-                  <Route path="crm" element={<VendeurCRMRealData />} />
+                  <Route path="overview" element={<VendeurOverviewRealDataModern />} />
+                  <Route path="crm" element={<VendeurCRMModernized />} />
                   <Route path="properties" element={<VendeurPropertiesRealData />} />
                   <Route path="edit-property/:id" element={<EditPropertyComplete />} />
                   <Route path="purchase-requests" element={<VendeurPurchaseRequests />} />

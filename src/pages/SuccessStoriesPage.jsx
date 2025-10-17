@@ -18,7 +18,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const SuccessStoriesPage = () => {
   const [activeTab, setActiveTab] = useState('all');
@@ -126,10 +126,12 @@ const SuccessStoriesPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Success Stories - Témoignages Clients | Teranga Foncier</title>
-        <meta name="description" content="Découvrez les témoignages de nos clients : diaspora, promoteurs, particuliers. +2500 projets réussis, 98.5% de satisfaction." />
-      </Helmet>
+      <SEO
+        title="Success Stories - Témoignages de Nos Clients Satisfaits"
+        description="Découvrez les témoignages de clients satisfaits : diaspora, promoteurs, particuliers, agents. +2500 projets réussis, 98.5% de satisfaction client. Lisez leurs histoires de succès immobilier."
+        keywords="témoignages clients, histoires réussite immobilière, avis clients terrain, expériences investisseurs, cas réussis"
+        canonicalUrl="https://www.terangafoncier.sn/success-stories"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
         {/* Hero Section */}

@@ -32,7 +32,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const FoncierBlockchainPage = () => {
   const blockchainFeatures = [
@@ -130,10 +130,12 @@ const FoncierBlockchainPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Foncier & Blockchain | Teranga Foncier - Révolution Immobilière Sénégal</title>
-        <meta name="description" content="Découvrez comment la blockchain révolutionne le foncier au Sénégal. Sécurité, transparence et innovation pour vos investissements immobiliers." />
-      </Helmet>
+      <SEO
+        title="Foncier et Blockchain - Révolution Immobilière au Sénégal"
+        description="Découvrez comment la blockchain révolutionne le foncier au Sénégal. Sécurité immuable, transparence totale, vérification instantanée des titres et lutte contre fraude foncière."
+        keywords="blockchain foncier, foncier sénégal, lutte contre fraude foncière, titre foncier blockchain, immobilier transparent"
+        canonicalUrl="https://www.terangafoncier.sn/foncier-blockchain"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
         

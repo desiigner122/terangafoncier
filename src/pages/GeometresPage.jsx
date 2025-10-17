@@ -35,7 +35,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const GeometresPage = () => {
   const [activeService, setActiveService] = useState(0);
@@ -270,12 +270,12 @@ const GeometresPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Partenariat Géomètres - Teranga Foncier | +234% de missions garanties</title>
-        <meta name="description" content="Rejoignez +30 géomètres partenaires : équipements fournis, 800+ projets/mois, formation incluse. Boostez vos revenus de +145% avec la diaspora." />
-        <meta property="og:title" content="Partenariat Géomètres - Multipliez vos missions par 3" />
-        <meta property="og:description" content="Drones, scanners 3D, GPS RTK fournis. Accès à 800+ projets mensuels. Formation et certification incluses." />
-      </Helmet>
+      <SEO
+        title="Géomètres - Augmentez Vos Missions de 234% avec la Plateforme Immobilière"
+        description="Programme de partenariat exclusive pour géomètres sénégalais. Accédez à 800+ projets mensuels, utilisez nos équipements (drones, GPS RTK), et multipliez vos revenus de 145%."
+        keywords="géomètres sénégal, missions géomètrage, partenariat géomètre, technologie géomètrage, levé géodésique"
+        canonicalUrl="https://www.terangafoncier.sn/geometres"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section Géomètres */}

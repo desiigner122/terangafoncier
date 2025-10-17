@@ -5,70 +5,143 @@ import { Badge } from '@/components/ui/badge';
 import { motion } from 'framer-motion';
 
 const CaseTrackingStatus = ({ caseData = {} }) => {
-  // Define workflow phases
-  const phases = useMemo(() => [
-    {
-      id: 1,
-      title: 'Demande Créée',
-      description: 'Demande d\'achat initiée',
-      icon: '📋',
-      status: caseData?.created_at ? 'completed' : 'pending',
-      date: caseData?.created_at,
-      color: 'bg-blue-50 border-blue-200',
-      textColor: 'text-blue-900'
-    },
-    {
-      id: 2,
-      title: 'Acceptation Vendeur',
-      description: 'Le vendeur accepte la demande',
-      icon: '✅',
-      // FIX: Check if seller has already accepted
-      status: (caseData?.seller_status === 'accepted' || caseData?.status === 'seller_accepted') ? 'completed' : (caseData?.seller_status === 'declined' || caseData?.status === 'declined') ? 'declined' : 'pending',
-      date: caseData?.seller_response_date,
-      color: 'bg-green-50 border-green-200',
-      textColor: 'text-green-900'
-    },
-    {
-      id: 3,
-      title: 'Vérification Documents',
-      description: 'Tous les documents sont vérifiés',
-      icon: '🔍',
-      status: (caseData?.status === 'verified' || caseData?.status === 'legal_processing') ? 'completed' : (caseData?.status === 'seller_accepted') ? 'current' : 'pending',
-      date: null,
-      color: 'bg-purple-50 border-purple-200',
-      textColor: 'text-purple-900'
-    },
-    {
-      id: 4,
-      title: 'Traitement Juridique',
-      description: 'Notaire et vérification légale',
-      icon: '⚖️',
-      status: (caseData?.status === 'legal_processing' || caseData?.status === 'payment_pending') ? 'current' : (caseData?.status === 'verified' || caseData?.status === 'payment_processed') ? 'completed' : 'pending',
-      date: null,
-      color: 'bg-orange-50 border-orange-200',
-      textColor: 'text-orange-900'
-    },
-    {
-      id: 5,
-      title: 'Traitement Paiement',
-      description: 'Les frais et paiements sont traités',
-      icon: '💰',
-      status: (caseData?.status === 'payment_processed' || caseData?.status === 'completed') ? 'completed' : (caseData?.status === 'payment_pending') ? 'current' : 'pending',
-      date: null,
-      color: 'bg-yellow-50 border-yellow-200',
-      textColor: 'text-yellow-900'
-    },
-    {
-      id: 6,
-      title: 'Transfert Complété',
-      description: 'Transfert de propriété enregistré',
-      icon: '🎉',
-      status: caseData?.status === 'completed' ? 'completed' : 'pending',
-      date: caseData?.completed_at,
-      color: 'bg-emerald-50 border-emerald-200',
-      textColor: 'text-emerald-900'
+  const translateStatus = (status) => {
+    if (!status) return 'En attente';
+    const normalized = status.toLowerCase();
+    const translations = {
+      pending: 'En attente',
+      initiated: 'Initiée',
+      seller_notification: 'Notification vendeur',
+      seller_accepted: 'Acceptée par le vendeur',
+      seller_declined: 'Refusée par le vendeur',
+      negotiation: 'En négociation',
+      preliminary_agreement: 'Accord préliminaire',
+      buyer_verification: 'Vérification acheteur',
+      verified: 'Documents vérifiés',
+      legal_processing: 'Traitement juridique',
+      payment_pending: 'Paiement en attente',
+      payment_processing: 'Traitement du paiement',
+      payment_processed: 'Paiement traité',
+      property_transfer: 'Transfert de propriété',
+      contract_preparation: 'Préparation du contrat',
+      completed: 'Terminé',
+      declined: 'Refusée',
+      cancelled: 'Annulée'
+    };
+
+    if (translations[normalized]) {
+      return translations[normalized];
     }
-  ], [caseData]);
+
+    const fallback = normalized.replace(/_/g, ' ');
+    return fallback.charAt(0).toUpperCase() + fallback.slice(1);
+  };
+
+  const currentStatusLabel = translateStatus(caseData?.status);
+  const normalizedStatus = typeof caseData?.status === 'string' ? caseData.status.toLowerCase() : '';
+  const normalizedSellerStatus = typeof caseData?.seller_status === 'string' ? caseData.seller_status.toLowerCase() : '';
+  const vendorAcceptedStatuses = useMemo(
+    () => new Set([
+      'seller_accepted',
+      'preliminary_agreement',
+      'buyer_verification',
+      'verified',
+      'legal_processing',
+      'payment_pending',
+      'payment_processing',
+      'payment_processed',
+      'property_transfer',
+      'contract_preparation',
+      'completed'
+    ]),
+    []
+  );
+  const vendorAccepted = normalizedSellerStatus === 'accepted' || vendorAcceptedStatuses.has(normalizedStatus);
+  const vendorDeclined = normalizedSellerStatus === 'declined' || normalizedStatus === 'seller_declined' || normalizedStatus === 'declined';
+
+  // Define workflow phases
+  const phases = useMemo(() => {
+    const documentCompletedStatuses = ['verified', 'legal_processing', 'payment_pending', 'payment_processing', 'payment_processed', 'property_transfer', 'contract_preparation', 'completed'];
+    const documentCurrentStatuses = ['seller_accepted', 'preliminary_agreement', 'buyer_verification'];
+    const legalCompletedStatuses = ['verified', 'payment_pending', 'payment_processing', 'payment_processed', 'property_transfer', 'contract_preparation', 'completed'];
+    const paymentCurrentStatuses = ['payment_pending', 'payment_processing'];
+    const paymentCompletedStatuses = ['payment_processed', 'property_transfer', 'contract_preparation', 'completed'];
+
+    return [
+      {
+        id: 1,
+        title: 'Demande Créée',
+        description: 'Demande d\'achat initiée',
+        icon: '📋',
+        status: caseData?.created_at ? 'completed' : 'pending',
+        date: caseData?.created_at,
+        color: 'bg-blue-50 border-blue-200',
+        textColor: 'text-blue-900'
+      },
+      {
+        id: 2,
+        title: 'Acceptation Vendeur',
+        description: 'Le vendeur accepte la demande',
+        icon: '✅',
+        status: vendorAccepted ? 'completed' : vendorDeclined ? 'declined' : 'pending',
+        date: caseData?.seller_response_date,
+        color: 'bg-green-50 border-green-200',
+        textColor: 'text-green-900'
+      },
+      {
+        id: 3,
+        title: 'Vérification Documents',
+        description: 'Tous les documents sont vérifiés',
+        icon: '🔍',
+        status: documentCompletedStatuses.includes(normalizedStatus)
+          ? 'completed'
+          : documentCurrentStatuses.includes(normalizedStatus)
+            ? 'current'
+            : 'pending',
+        date: null,
+        color: 'bg-purple-50 border-purple-200',
+        textColor: 'text-purple-900'
+      },
+      {
+        id: 4,
+        title: 'Traitement Juridique',
+        description: 'Notaire et vérification légale',
+        icon: '⚖️',
+        status: normalizedStatus === 'legal_processing'
+          ? 'current'
+          : legalCompletedStatuses.includes(normalizedStatus)
+            ? 'completed'
+            : 'pending',
+        date: null,
+        color: 'bg-orange-50 border-orange-200',
+        textColor: 'text-orange-900'
+      },
+      {
+        id: 5,
+        title: 'Traitement Paiement',
+        description: 'Les frais et paiements sont traités',
+        icon: '💰',
+        status: paymentCurrentStatuses.includes(normalizedStatus)
+          ? 'current'
+          : paymentCompletedStatuses.includes(normalizedStatus)
+            ? 'completed'
+            : 'pending',
+        date: null,
+        color: 'bg-yellow-50 border-yellow-200',
+        textColor: 'text-yellow-900'
+      },
+      {
+        id: 6,
+        title: 'Transfert Complété',
+        description: 'Transfert de propriété enregistré',
+        icon: '🎉',
+        status: normalizedStatus === 'completed' ? 'completed' : 'pending',
+        date: caseData?.completed_at,
+        color: 'bg-emerald-50 border-emerald-200',
+        textColor: 'text-emerald-900'
+      }
+    ];
+  }, [caseData, normalizedStatus, vendorAccepted, vendorDeclined]);
 
   // Get status badge color and text
   const getStatusDisplay = (status) => {
@@ -100,7 +173,7 @@ const CaseTrackingStatus = ({ caseData = {} }) => {
               </Badge>
             </CardTitle>
             <p className="text-sm text-gray-600 mt-1">
-              Statut actuel: <span className="font-semibold text-blue-700">{(caseData?.status || 'pending').toUpperCase().replace(/_/g, ' ')}</span>
+              Statut actuel: <span className="font-semibold text-blue-700">{currentStatusLabel}</span>
             </p>
           </div>
         </div>

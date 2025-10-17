@@ -31,7 +31,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const BlockchainContactPage = () => {
   const [formData, setFormData] = useState({
@@ -194,10 +194,12 @@ const BlockchainContactPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Contact - Teranga Foncier | Support Blockchain 24/7</title>
-        <meta name="description" content="Contactez notre équipe d'experts blockchain immobilier. Support multicanal, réponse rapide et assistance personnalisée." />
-      </Helmet>
+      <SEO 
+        title="Contactez-Nous - Support Expert Blockchain Immobilier"
+        description="Contactez Teranga Foncier pour toute question sur l'achat de terrain, l'investissement immobilier via blockchain, ou nos services pour la diaspora. Support expert disponible."
+        keywords="contact immobilier sénégal, support blockchain, question foncier, aide investissement diaspora, service client teranga foncier"
+        canonicalUrl="https://www.terangafoncier.sn/contact"
+      />
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
         {/* Hero Section */}

@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const SolutionsNotairesPage = () => {
   const { user } = useAuth();
@@ -79,10 +79,12 @@ const SolutionsNotairesPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Solutions Notaires - Teranga Foncier</title>
-        <meta name="description" content="Solutions pour notaires : vérification de titres, rédaction sécurisée, gestion de successions et actes blockchain infalsifiables." />
-      </Helmet>
+      <SEO 
+        title="Solutions pour Notaires - Vérification et Sécurisation Foncière"
+        description="Solutions blockchain pour notaires au Sénégal. Vérification de titres fonciers, rédaction sécurisée d'actes, gestion digitale et archives infalsifiables sur blockchain."
+        keywords="notaire sénégal, vérification titre foncier, acte de vente sécurisé, rôle notaire immobilier, authentification document"
+        canonicalUrl="https://www.terangafoncier.sn/solutions/notaires"
+      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

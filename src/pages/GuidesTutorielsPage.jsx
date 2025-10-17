@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -191,15 +191,18 @@ const GuidesTutorielsPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 to-white pt-24">
-      <Helmet>
-        <title>Guides et Tutoriels - Apprenez l'Immobilier | Teranga Foncier</title>
-        <meta name="description" content="Guides complets, tutoriels vidéo et ressources pour maîtriser l'immobilier au Sénégal. Formation gratuite par des experts." />
-      </Helmet>
+    <>
+      <SEO
+        title="Guides et Tutoriels Complets - Maîtrisez l'Immobilier Sénégalais"
+        description="Guides complets, tutoriels vidéo, ressources gratuites pour maîtriser l'immobilier au Sénégal. Formation par experts en achat, vente, financement, aspects juridiques."
+        keywords="guides immobilier sénégal, tutoriels achat terrain, formation foncière, ressources immobilier"
+        canonicalUrl="https://www.terangafoncier.sn/guides-tutoriels"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-green-50 to-white pt-24">
 
-      <div className="container mx-auto px-4 py-16 max-w-7xl">
-        
-        {/* Hero Section */}
+        <div className="container mx-auto px-4 py-16 max-w-7xl">
+          
+          {/* Hero Section */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -517,6 +520,7 @@ const GuidesTutorielsPage = () => {
         </motion.div>
       </div>
     </div>
+    </>
   );
 };
 

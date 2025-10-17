@@ -27,7 +27,8 @@ import {
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import VendeurSupabaseService from '@/services/VendeurSupabaseService';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'react-hot-toast';
 
 /**
  * Page historique complet des transactions blockchain
@@ -76,24 +77,62 @@ const TransactionsPage = () => {
 
   const loadTransactions = async () => {
     if (!user) return;
-    
+
     setIsLoading(true);
     try {
-      const result = await VendeurSupabaseService.getBlockchainTransactions(user.id, {
-        status: statusFilter !== 'all' ? statusFilter : null,
-        type: typeFilter !== 'all' ? typeFilter : null,
-        limit: 100
+      const { data, error } = await supabase
+        .from('blockchain_transactions')
+        .select(`
+          id,
+          transaction_hash,
+          transaction_type,
+          status,
+          block_number,
+          gas_used,
+          confirmations,
+          value,
+          created_at,
+          terrain_id,
+          terrain:terrains ( id, titre, localisation )
+        `)
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (error) {
+        throw error;
+      }
+
+      const normalizedTransactions = (data || []).map((tx) => {
+        const rawGas = tx.gas_used !== null && tx.gas_used !== undefined ? Number(tx.gas_used) : 0;
+        const blockNumber = tx.block_number !== null && tx.block_number !== undefined ? Number(tx.block_number) : 0;
+        const hash = tx.transaction_hash || 'hash-inconnu';
+        const propertyLabel = tx.terrain?.titre
+          || tx.transaction_data?.property_title
+          || tx.property_title
+          || 'Propriété';
+
+        return {
+          id: tx.id,
+          hash,
+          type: tx.transaction_type || 'verification',
+          status: tx.status || 'pending',
+          blockNumber,
+          gasUsed: Number.isFinite(rawGas) ? rawGas : 0,
+          confirmations: tx.confirmations ?? 0,
+          value: tx.value ?? null,
+          timestamp: tx.created_at || new Date().toISOString(),
+          property: propertyLabel,
+          propertyId: tx.terrain_id || tx.terrain?.id || null,
+          location: tx.terrain?.localisation || null,
+        };
       });
 
-      if (result.success) {
-        setTransactions(result.data || []);
-      } else {
-        console.error('Erreur chargement transactions:', result.error);
-        setTransactions([]);
-      }
+      setTransactions(normalizedTransactions);
     } catch (error) {
-      console.error('Erreur:', error);
+      console.error('Erreur chargement transactions blockchain:', error);
       setTransactions([]);
+      toast.error("Impossible de charger les transactions blockchain.");
     } finally {
       setIsLoading(false);
     }

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { motion } from 'framer-motion';
 import { 
   CheckCircle, 
@@ -167,17 +167,20 @@ const GuideAttributionPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
-      <Helmet>
-        <title>Guide d'Attribution - Terrains Communaux | Teranga Foncier</title>
-        <meta name="description" content="Guide complet pour l'attribution de terrains communaux : critères d'éligibilité, processus, documents requis et conseils pratiques." />
-      </Helmet>
+    <>
+      <SEO
+        title="Guide Complet Attribution - Comment Obtenir un Terrain Communal"
+        description="Guide complet pour l'attribution de terrains communaux au Sénégal. Critères d'éligibilité, processus d'attribution, documents requis, conseils et témoignages."
+        keywords="attribution terrain communal, guide attribution, critères éligibilité, terrains sociaux sénégal"
+        canonicalUrl="https://www.terangafoncier.sn/guide-attribution"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-green-50 via-white to-blue-50">
 
-      {/* Hero Section */}
-      <section className="relative py-20 bg-gradient-to-r from-green-600 to-blue-600 text-white overflow-hidden">
-        <div className="absolute inset-0 bg-black/10"></div>
-        <div className="container mx-auto px-4 relative z-10">
-          <motion.div
+        {/* Hero Section */}
+        <section className="relative py-20 bg-gradient-to-r from-green-600 to-blue-600 text-white overflow-hidden">
+          <div className="absolute inset-0 bg-black/10"></div>
+          <div className="container mx-auto px-4 relative z-10">
+            <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             className="text-center max-w-4xl mx-auto"
@@ -500,6 +503,7 @@ const GuideAttributionPage = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

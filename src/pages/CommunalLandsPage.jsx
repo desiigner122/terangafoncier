@@ -1,7 +1,7 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { 
   MapPin, 
   Building2, 
@@ -84,10 +84,12 @@ const CommunalLandsPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Terrains Communaux - Attribution et Lotissements | Teranga Foncier</title>
-        <meta name="description" content="Découvrez les terrains communaux disponibles pour attribution. Processus transparent, critères d'éligibilité et lotissements sociaux au Sénégal." />
-      </Helmet>
+      <SEO
+        title="Terrains Communaux - Attribution de Parcelles Sociales au Sénégal"
+        description="Découvrez les terrains communaux disponibles pour attribution au Sénégal. Lotissements sociaux, critères d'éligibilité, processus d'attribution transparent, demandes terrains communales."
+        keywords="terrains communaux sénégal, lotissement social, attribution parcelle, demandes terrains communales, terrain pas cher"
+        canonicalUrl="https://www.terangafoncier.sn/communal-lands"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 pt-20">
         

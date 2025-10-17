@@ -29,7 +29,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 
 const BlockchainAboutPage = () => {
@@ -161,10 +161,12 @@ const BlockchainAboutPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>À Propos - Teranga Foncier | Révolution Blockchain Immobilière</title>
-        <meta name="description" content="Découvrez Teranga Foncier, la première plateforme blockchain immobilière du Sénégal. Notre mission, notre équipe et notre vision pour l'avenir." />
-      </Helmet>
+      <SEO 
+        title="À Propos - Notre Mission pour le Foncier au Sénégal"
+        description="Découvrez la mission de Teranga Foncier : sécuriser le marché immobilier sénégalais avec la blockchain. Notre vision, notre équipe et notre technologie au service du foncier."
+        keywords="mission teranga foncier, vision immobilier sénégal, équipe blockchain, histoire foncier sénégal, à propos de nous"
+        canonicalUrl="https://www.terangafoncier.sn/about"
+      />
 
       <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
         {/* Hero Section */}

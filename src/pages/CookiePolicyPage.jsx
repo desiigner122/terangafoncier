@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import SEO from '@/components/SEO';
 import { 
   Cookie, 
   Settings, 
@@ -33,12 +34,19 @@ const CookiePolicyPage = () => {
   );
 
   return (
-    <motion.div
-      variants={sectionVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-gradient-to-b from-background to-gray-50 dark:from-background dark:to-gray-900/20 min-h-screen"
-    >
+    <>
+      <SEO
+        title="Politique Relative aux Cookies - Gestion des Cookies"
+        description="Politique relative aux cookies de Teranga Foncier. Apprenez comment nous utilisons les cookies pour améliorer votre expérience et comment les gérer."
+        keywords="cookies, politique cookies, gestion cookies, cookies site web"
+        canonicalUrl="https://www.terangafoncier.sn/cookie-policy"
+      />
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        className="bg-gradient-to-b from-background to-gray-50 dark:from-background dark:to-gray-900/20 min-h-screen"
+      >
       <div className="container mx-auto py-16 px-4 max-w-4xl">
         <motion.div variants={itemVariants} className="text-center mb-12 md:mb-16">
           <Cookie className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-6 text-primary" />
@@ -159,6 +167,7 @@ const CookiePolicyPage = () => {
         </div>
       </div>
     </motion.div>
+    </>
   );
 };
 

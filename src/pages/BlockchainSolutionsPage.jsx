@@ -19,7 +19,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
 
 const BlockchainSolutionsPage = () => {
@@ -187,10 +187,12 @@ const BlockchainSolutionsPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Solutions Blockchain - Teranga Foncier | Révolution Immobilière</title>
-        <meta name="description" content="Découvrez comment la blockchain révolutionne l'immobilier sénégalais. NFT propriétés, smart contracts, escrow décentralisé." />
-      </Helmet>
+      <SEO
+        title="Solutions Blockchain - Révolution de l'Immobilier Sénégalais par la Technologie"
+        description="Découvrez les solutions blockchain pour le foncier au Sénégal. NFT propriétés, smart contracts, escrow décentralisé et tokenisation immobilière pour des transactions sécurisées."
+        keywords="blockchain immobilier, nft propriété, smart contract foncier, escrow blockchain, immobilier sénégal"
+        canonicalUrl="https://www.terangafoncier.sn/blockchain-solutions"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section */}

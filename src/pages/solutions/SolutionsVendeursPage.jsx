@@ -13,7 +13,7 @@ import {
   Coins
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -79,10 +79,12 @@ const SolutionsVendeursPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Vendez Votre Terrain - Solutions Vendeurs | Teranga Foncier</title>
-        <meta name="description" content="Vendez votre terrain rapidement et au meilleur prix. Profitez d'une visibilité maximale, d'acheteurs qualifiés et d'un processus sécurisé." />
-      </Helmet>
+      <SEO
+        title="Solutions Vendeurs - Vendre Votre Terrain au Meilleur Prix au Sénégal"
+        description="Vendez votre terrain rapidement au Sénégal. Bénéficiez d'une visibilité maximale auprès de 15K+ acheteurs, d'une vérification légale complète et d'un processus transparent et sécurisé."
+        keywords="vendre terrain sénégal, vendre parcelle dakar, estimer terrain, vendre immeuble, vendre propriété"
+        canonicalUrl="https://www.terangafoncier.sn/solutions-vendeurs"
+      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

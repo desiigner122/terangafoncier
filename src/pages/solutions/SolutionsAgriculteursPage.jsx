@@ -15,7 +15,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import CallToActionSection from '@/components/home/sections/CallToActionSection';
 import { useUser } from '@/hooks/useUser';
 import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
@@ -43,10 +43,12 @@ const SolutionsAgriculteursPage = () => {
 
     return (
         <>
-            <Helmet>
-                <title>Solutions pour Agriculteurs - Optimisez Votre Exploitation | Teranga Foncier</title>
-                <meta name="description" content="Découvrez nos outils dédiés aux agriculteurs pour la gestion de parcelles, l'analyse des sols, la météo agricole et la sécurisation foncière." />
-            </Helmet>
+            <SEO
+                title="Solutions Agriculteurs - Optimisez Vos Terres et Sécurisez Votre Foncier"
+                description="Solutions complètes pour agriculteurs sénégalais. Gérez vos parcelles, analysez vos sols, suivez la météo agricole et sécurisez vos titres fonciers avec la blockchain."
+                keywords="agriculteur sénégal, gestion parcelles, analyse sols, terre agricole, sécurisation foncière agricole"
+                canonicalUrl="https://www.terangafoncier.sn/solutions-agriculteurs"
+            />
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
                 <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-28 text-center bg-gradient-to-br from-green-600 to-lime-800 text-white">
                     <div className="container mx-auto px-4">

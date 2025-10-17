@@ -1,6 +1,7 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import SEO from '@/components/SEO';
 import { 
   FileText, 
   Landmark, 
@@ -23,12 +24,19 @@ const LegalPage = () => {
   };
 
   return (
-    <motion.div
-      variants={sectionVariants}
-      initial="hidden"
-      animate="visible"
-      className="bg-gradient-to-b from-background to-gray-50 dark:from-background dark:to-gray-900/20 min-h-screen"
-    >
+    <>
+      <SEO
+        title="Mentions Légales - Informations Juridiques"
+        description="Mentions légales et informations juridiques de Teranga Foncier. Conditions d'utilisation, responsabilité, propriété intellectuelle et données personnelles."
+        keywords="mentions légales, conditions d'utilisation, informations juridiques, teranga foncier"
+        canonicalUrl="https://www.terangafoncier.sn/legal"
+      />
+      <motion.div
+        variants={sectionVariants}
+        initial="hidden"
+        animate="visible"
+        className="bg-gradient-to-b from-background to-gray-50 dark:from-background dark:to-gray-900/20 min-h-screen"
+      >
       <div className="container mx-auto py-16 px-4 max-w-4xl">
         <motion.div variants={itemVariants} className="text-center mb-12 md:mb-16">
           <FileText className="h-16 w-16 md:h-20 md:w-20 mx-auto mb-6 text-primary" />
@@ -116,6 +124,7 @@ const LegalPage = () => {
         </div>
       </div>
     </motion.div>
+    </>
   );
 };
 

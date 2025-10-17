@@ -34,7 +34,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const FoncierSenegalPage = () => {
   const [activeTab, setActiveTab] = useState('overview');
@@ -209,10 +209,12 @@ const FoncierSenegalPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Système Foncier Sénégalais | Teranga Foncier - Guide Complet</title>
-        <meta name="description" content="Guide complet du système foncier sénégalais. Comprenez les procédures, types de terrains et solutions blockchain pour investir au Sénégal." />
-      </Helmet>
+      <SEO
+        title="Système Foncier Sénégalais - Guide Complet et Explications"
+        description="Guide complet du système foncier sénégalais. Types de terrains, procédures juridiques, domaine national, propriétés privées. Comprenez le foncier au Sénégal pour investir."
+        keywords="foncier sénégal, système foncier, domaine national, propriété terrain, loi foncière sénégal"
+        canonicalUrl="https://www.terangafoncier.sn/foncier-senegal"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
         

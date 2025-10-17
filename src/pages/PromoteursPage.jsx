@@ -34,7 +34,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const PromoteursPage = () => {
   const [activeService, setActiveService] = useState(0);
@@ -324,12 +324,12 @@ const PromoteursPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Promoteurs Immobiliers - Teranga Foncier | +245% de pré-ventes diaspora</title>
-        <meta name="description" content="Accélérez vos ventes : 15K+ investisseurs diaspora, -58% délai commercial, marketing premium inclus. Garantie objectifs commerciaux." />
-        <meta property="og:title" content="Promoteurs - Multipliez vos pré-ventes par 3.5" />
-        <meta property="og:description" content="Réseau diaspora exclusif, commercialisation accélérée, partenariats bancaires. ROI +189% garanti." />
-      </Helmet>
+      <SEO 
+        title="Promoteurs Immobiliers - Vendre Vos Projets à la Diaspora Sénégalaise"
+        description="Augmentez vos pré-ventes de 245% avec Teranga Foncier. Accès à 15K+ investisseurs diaspora, marketing premium, financement facilité et commercialisation accélérée pour projets immobiliers."
+        keywords="promoteur immobilier sénégal, vente immobilière diaspora, projet VEFA, immobilier dakar"
+        canonicalUrl="https://www.terangafoncier.sn/promoteurs"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section Promoteurs */}

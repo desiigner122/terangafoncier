@@ -74,10 +74,10 @@ import { supabase } from '@/lib/supabaseClient';
 // Import des pages spécialisées - VERSION REAL DATA
 // 🆕 PAGES MODERNISÉES - LAZY LOADING
 console.log('🔧 [DEBUG] Chargement CompleteSidebarVendeurDashboard.jsx - V4');
-const VendeurOverview = React.lazy(() => import('./VendeurOverview'));
+const VendeurOverview = React.lazy(() => import('./VendeurOverviewRealDataModern'));
 const VendeurPurchaseRequests = React.lazy(() => import('./VendeurPurchaseRequests'));
 
-const VendeurCRM = React.lazy(() => import('./VendeurCRMRealData'));
+const VendeurCRM = React.lazy(() => import('./VendeurCRMModernized'));
 const VendeurPropertiesComplete = React.lazy(() => import('./VendeurPropertiesRealData'));
 const VendeurAntiFraude = React.lazy(() => import('./VendeurAntiFraudeRealData'));
 const VendeurGPSVerification = React.lazy(() => import('./VendeurGPSRealData'));
@@ -141,9 +141,17 @@ const CompleteSidebarVendeurDashboard = () => {
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [dashboardStats, setDashboardStats] = useState({
     totalProperties: 0,
+    activeListings: 0,
     activeProspects: 0,
     pendingInquiries: 0,
-    pendingRequests: 0, // 🆕 Demandes d'achat en attente
+    pendingRequests: 0,
+    verifiedTitles: 0,
+    securityScore: 0,
+    conversionRate: 0,
+    gpsCoordinates: 0,
+    digitalServices: 0,
+    aiOptimized: 0,
+    blockchainVerified: 0,
   });
 
   // Navigation Items Configuration pour Vendeur - CRM + Anti-Fraude
@@ -181,21 +189,21 @@ const CompleteSidebarVendeurDashboard = () => {
       label: 'Vérification Titres',
       icon: Shield,
       description: 'Scanner & validation anti-fraude',
-      badge: 'SÉCURISÉ'
+      badge: dashboardStats.verifiedTitles > 0 ? dashboardStats.verifiedTitles.toString() : undefined
     },
     {
       id: 'gps-verification',
       label: 'Géolocalisation GPS',
       icon: MapPin,
       description: 'Validation GPS des parcelles',
-      badge: '9'
+      badge: dashboardStats.gpsCoordinates > 0 ? dashboardStats.gpsCoordinates.toString() : undefined
     },
     {
       id: 'digital-services',
       label: 'Services Digitalisés',
       icon: Zap,
       description: 'Signature & visites virtuelles',
-      badge: 'DIGITAL'
+      badge: dashboardStats.digitalServices > 0 ? dashboardStats.digitalServices.toString() : undefined
     },
     {
       id: 'add-property',
@@ -222,7 +230,7 @@ const CompleteSidebarVendeurDashboard = () => {
       label: 'Blockchain',
       icon: Network,
       description: 'Certification blockchain',
-      badge: '10'
+      badge: dashboardStats.blockchainVerified > 0 ? dashboardStats.blockchainVerified.toString() : undefined
     },
     {
       id: 'transactions',
@@ -336,56 +344,133 @@ const CompleteSidebarVendeurDashboard = () => {
   // Charger les statistiques réelles
   const loadDashboardStats = async () => {
     try {
-      // Compter les propriétés
-      const { count: totalProperties } = await supabase
-        .from('properties')
-  .select('id', { count: 'exact' })
-  .limit(0)
-        .eq('owner_id', user.id);
+      if (!user) return;
 
-      const { count: activeListings } = await supabase
-        .from('properties')
-  .select('id', { count: 'exact' })
-  .limit(0)
-        .eq('owner_id', user.id)
-        .eq('status', 'active');
-
-      // Compter les demandes en attente (JOIN avec properties pour trouver VOS parcelles)
-      const { count: pendingInquiries } = await supabase
-        .from('property_inquiries')
-        .select('id, properties!inner(owner_id)', { count: 'exact' })
-        .limit(0)
-        .eq('properties.owner_id', user.id) // ✅ Correction: JOIN avec properties
-        .eq('status', 'pending');
-
-      // 🆕 Compter les demandes d'achat en attente depuis la table transactions
-      // 1. Récupérer les IDs des parcelles du vendeur
-      const { data: sellerParcels } = await supabase
-        .from('parcels')
-        .select('id')
-        .eq('seller_id', user.id);
-
-      const parcelIds = sellerParcels?.map(p => p.id) || [];
-
-      // 2. Compter les transactions (demandes d'achat) pour ces parcelles
-      let pendingRequestsCount = 0;
-      if (parcelIds.length > 0) {
-        const { count } = await supabase
-          .from('transactions')
+      const [
+        totalPropertiesRes,
+        activeListingsRes,
+        verifiedTitlesRes,
+        aiOptimizedRes,
+        blockchainVerifiedRes,
+        pendingInquiriesRes,
+        activeProspectsRes,
+        gpsRes,
+        digitalServicesRes,
+        parcelsRes
+      ] = await Promise.all([
+        supabase
+          .from('properties')
           .select('id', { count: 'exact', head: true })
-          .in('parcel_id', parcelIds)
-          .eq('transaction_type', 'purchase')
-          .eq('status', 'pending');
-        
-        pendingRequestsCount = count || 0;
+          .eq('owner_id', user.id),
+        supabase
+          .from('properties')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id)
+          .eq('status', 'active'),
+        supabase
+          .from('properties')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id)
+          .eq('verification_status', 'verified'),
+        supabase
+          .from('properties')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id)
+          .not('ai_analysis', 'is', null),
+        supabase
+          .from('properties')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id)
+          .eq('blockchain_verified', true),
+        supabase
+          .from('property_inquiries')
+          .select('id, properties!inner(owner_id)', { count: 'exact', head: true })
+          .eq('properties.owner_id', user.id)
+          .eq('status', 'pending'),
+        supabase
+          .from('crm_contacts')
+          .select('id', { count: 'exact', head: true })
+          .eq('vendor_id', user.id)
+          .not('status', 'eq', 'lost'),
+        supabase
+          .from('gps_coordinates')
+          .select('id', { count: 'exact', head: true })
+          .eq('vendor_id', user.id),
+        supabase
+          .from('service_subscriptions')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('status', 'active'),
+        supabase
+          .from('parcels')
+          .select('id')
+          .eq('seller_id', user.id)
+      ]);
+
+      const queryErrors = [
+        totalPropertiesRes?.error,
+        activeListingsRes?.error,
+        verifiedTitlesRes?.error,
+        aiOptimizedRes?.error,
+        blockchainVerifiedRes?.error,
+        pendingInquiriesRes?.error,
+        activeProspectsRes?.error,
+        gpsRes?.error,
+        digitalServicesRes?.error,
+        parcelsRes?.error
+      ].filter(Boolean);
+
+      if (queryErrors.length > 0) {
+        throw queryErrors[0];
       }
+
+      const parcelIds = parcelsRes?.data?.map(p => p.id) || [];
+
+      let pendingRequestsCount = 0;
+      let conversionRate = 0;
+
+      if (parcelIds.length > 0) {
+        const { data: sellerTransactions, error: transactionsError } = await supabase
+          .from('transactions')
+          .select('id, status, transaction_type')
+          .in('parcel_id', parcelIds);
+
+        if (transactionsError) throw transactionsError;
+
+        const requestTransactions = (sellerTransactions || []).filter(t =>
+          ['purchase', 'request'].includes(t.transaction_type)
+        );
+
+        pendingRequestsCount = requestTransactions.filter(t =>
+          ['pending', 'initiated'].includes(t.status)
+        ).length;
+
+        const convertedStatuses = ['accepted', 'seller_accepted', 'completed', 'payment_processed', 'property_transfer'];
+        const convertedCount = requestTransactions.filter(t => convertedStatuses.includes(t.status)).length;
+        const totalRequests = requestTransactions.length;
+        conversionRate = totalRequests > 0 ? Math.round((convertedCount / totalRequests) * 100) : 0;
+      }
+
+      const totalPropertiesCount = totalPropertiesRes?.count || 0;
+      const verifiedTitlesCount = verifiedTitlesRes?.count || 0;
+      const securityScore = totalPropertiesCount > 0
+        ? Math.round((verifiedTitlesCount / totalPropertiesCount) * 100)
+        : 0;
 
       setDashboardStats(prev => ({
         ...prev,
-        totalProperties: totalProperties || 0,
-        activeListings: activeListings || 0,
-        pendingInquiries: pendingInquiries || 0,
-        pendingRequests: pendingRequestsCount // 🆕 Nombre demandes en attente depuis requests
+        totalProperties: totalPropertiesCount,
+        activeListings: activeListingsRes?.count || 0,
+        pendingInquiries: pendingInquiriesRes?.count || 0,
+        pendingRequests: pendingRequestsCount,
+        activeProspects: activeProspectsRes?.count || 0,
+        verifiedTitles: verifiedTitlesCount,
+        securityScore,
+        conversionRate,
+        gpsCoordinates: gpsRes?.count || 0,
+        digitalServices: digitalServicesRes?.count || 0,
+        aiOptimized: aiOptimizedRes?.count || 0,
+        blockchainVerified: blockchainVerifiedRes?.count || 0,
       }));
     } catch (error) {
       console.error('Erreur chargement stats:', error);

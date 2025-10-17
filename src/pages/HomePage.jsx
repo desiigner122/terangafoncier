@@ -32,7 +32,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import MarketTickerBar from '@/components/home/MarketTickerBar';
 import LiveMetricsBar from '@/components/home/LiveMetricsBar';
 import AILiveMetricsBar from '@/components/home/AILiveMetricsBar';
@@ -90,7 +90,7 @@ const HomePage = () => {
 
   const mainFeatures = [
     {
-      icon: Database,
+      icon: Blocks,
       title: "Blockchain NFT",
       description: "Vos propriétés sont tokenisées en NFT sur blockchain pour une sécurité maximale et une traçabilité totale",
       color: "from-yellow-500 to-orange-500",
@@ -190,15 +190,12 @@ const HomePage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Teranga Foncier | Plateforme Blockchain Immobilière Sénégal</title>
-        <meta name="description" content="La première plateforme blockchain du Sénégal pour l'immobilier sécurisé. Terrains vérifiés, transactions transparentes, construction intelligente." />
-        <meta name="keywords" content="blockchain, immobilier, Sénégal, terrains, propriétés, crypto, sécurité" />
-        <meta property="og:title" content="Teranga Foncier | Blockchain Immobilier Sénégal" />
-        <meta property="og:description" content="Plateforme blockchain révolutionnaire pour l'immobilier sécurisé au Sénégal." />
-        <meta property="og:type" content="website" />
-        <link rel="canonical" href="https://www.terangafoncier.com" />
-      </Helmet>
+      <SEO 
+        title="Accueil - Plateforme Blockchain Immobilière au Sénégal"
+        description="Teranga Foncier, la plateforme leader pour l'achat et la vente de terrains et de biens immobiliers au Sénégal. Sécurisez votre investissement foncier avec la technologie blockchain."
+        keywords="blockchain immobilier, foncier sénégal, achat terrain sénégal, vente terrain, immobilier dakar, investissement diaspora"
+        canonicalUrl="https://www.terangafoncier.sn"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-900 via-blue-900 to-slate-900">
         {/* Market Ticker Bar - Marché foncier entre menu et hero */}

@@ -1,6 +1,6 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -148,10 +148,12 @@ const PartnersPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900">
-      <Helmet>
-        <title>Nos Partenaires - Écosystème Blockchain Immobilier | Teranga Foncier</title>
-        <meta name="description" content="Découvrez notre réseau de partenaires certifiés : banques, notaires, mairies et technologies blockchain pour sécuriser vos transactions immobilières." />
-      </Helmet>
+      <SEO
+        title="Nos Partenaires - Écosystème Fiable de l'Immobilier Sénégalais"
+        description="Découvrez nos partenaires certifiés : banques, notaires, mairies, géomètres et experts blockchain. Un réseau complet pour sécuriser vos transactions immobilières au Sénégal."
+        keywords="partenaires immobilier sénégal, banques sénégal, notaires partenaires, mairies sénégal, écosystème foncier"
+        canonicalUrl="https://www.terangafoncier.sn/partners"
+      />
 
       {/* Hero Section */}
       <div className="relative pt-24 pb-16 overflow-hidden">

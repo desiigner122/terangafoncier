@@ -33,7 +33,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const DiasporaPage = () => {
   const [activeStep, setActiveStep] = useState(0);
@@ -183,12 +183,12 @@ const DiasporaPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Solutions Diaspora - Teranga Foncier | Construisez au Sénégal depuis l'étranger</title>
-        <meta name="description" content="Solutions complètes pour la diaspora sénégalaise : achat de terrain, construction à distance, suivi temps réel. Investissez au Sénégal depuis n'importe où." />
-        <meta property="og:title" content="Solutions Diaspora - Construisez au Sénégal depuis l'étranger" />
-        <meta property="og:description" content="Achat, construction et suivi de votre projet immobilier au Sénégal avec supervision temps réel." />
-      </Helmet>
+      <SEO
+        title="Solutions Diaspora - Investir et Construire au Sénégal depuis l'Étranger"
+        description="Solutions complètes pour la diaspora sénégalaise. Achetez des terrains, construisez à distance, suivez vos projets en temps réel. Investissez au Sénégal depuis n'importe où dans le monde."
+        keywords="diaspora sénégal, investir au sénégal, construire maison sénégal, immobilier diaspora, terrain pour diaspora"
+        canonicalUrl="https://www.terangafoncier.sn/diaspora"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section Diaspora */}

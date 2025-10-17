@@ -29,7 +29,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const RejoignezNousPage = () => {
   const [activeRole, setActiveRole] = useState(0);
@@ -231,12 +231,12 @@ const RejoignezNousPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Rejoignez-nous - Teranga Foncier | Devenez partenaire du leader immobilier diaspora</title>
-        <meta name="description" content="Rejoignez le réseau Teranga Foncier : 7 façons de collaborer, 15K+ clients diaspora, formations incluses, commissions attractives. Candidature en 2 minutes." />
-        <meta property="og:title" content="Rejoignez-nous - Opportunités partenariat immobilier" />
-        <meta property="og:description" content="Diaspora, banques, notaires, géomètres, agents, vendeurs, promoteurs : trouvez votre place dans l'écosystème leader." />
-      </Helmet>
+      <SEO
+        title="Rejoignez-nous - Devenez Partenaire du Leader de l'Immobilier Sénégalais"
+        description="Rejoignez le réseau Teranga Foncier. 7 rôles disponibles (diaspora, banques, notaires, agents, géomètres, promoteurs). Accédez à 15K+ clients, formations incluses, commissions attractives."
+        keywords="partenariat immobilier sénégal, rejoindre teranga foncier, devenir agent immobilier, partenaire notaire, opportunité immobilier"
+        canonicalUrl="https://www.terangafoncier.sn/rejoignez-nous"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section */}

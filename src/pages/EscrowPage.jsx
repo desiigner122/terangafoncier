@@ -17,7 +17,7 @@ import {
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const EscrowPage = () => {
   const escrowTypes = [
@@ -115,10 +115,12 @@ const EscrowPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Escrow Décentralisé - Séquestre Blockchain | Teranga Foncier</title>
-        <meta name="description" content="Système d'escrow décentralisé pour l'immobilier. Sécurité maximale, frais réduits, automatisation complète des transactions." />
-      </Helmet>
+      <SEO
+        title="Escrow Blockchain - Séquestre Décentralisé Sécurisé pour l'Immobilier"
+        description="Système d'escrow décentralisé pour transactions immobilières au Sénégal. Protection maximale acheteur-vendeur, frais réduits, libération automatique des fonds via smart contracts."
+        keywords="escrow blockchain, séquestre immobilier, paiement sécurisé, protection acheteur, transaction foncière"
+        canonicalUrl="https://www.terangafoncier.sn/escrow"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-50 to-cyan-50">
         {/* Hero Section */}

@@ -35,7 +35,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const BanquesPage = () => {
   const [activeMetric, setActiveMetric] = useState(0);
@@ -206,12 +206,12 @@ const BanquesPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Partenariat Banques - Teranga Foncier | Captez +15K investisseurs qualifiés</title>
-        <meta name="description" content="Partenariat bancaire premium : accès à +15K investisseurs pré-qualifiés, API d'intégration, scoring IA avancé. Boostez vos crédits immobiliers de +34%." />
-        <meta property="og:title" content="Partenariat Banques - Boostez vos crédits immobiliers" />
-        <meta property="og:description" content="Accédez à notre communauté de +15K investisseurs qualifiés et augmentez vos revenus de crédit immobilier." />
-      </Helmet>
+      <SEO 
+        title="Partenariat Banques - Financement Immobilier Blockchain au Sénégal"
+        description="Partenariat bancaire avec Teranga Foncier. Accédez à 15K+ investisseurs qualifiés, API blockchain pour crédit immobilier sécurisé, scoring IA et augmentez vos revenus de prêts fonciers."
+        keywords="financement immobilier banque sénégal, partenariat bancaire, crédit foncier, plateforme immobilière banque"
+        canonicalUrl="https://www.terangafoncier.sn/banques"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section Banques */}

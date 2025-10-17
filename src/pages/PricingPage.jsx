@@ -8,7 +8,7 @@ import {
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const PricingPage = () => {
   const pageVariants = {
@@ -62,10 +62,12 @@ const PricingPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Tarifs & Frais - Teranga Foncier</title>
-        <meta name="description" content="Découvrez notre grille tarifaire transparente pour l'achat de terrain au Sénégal. Comprenez nos frais de service, les frais de notaire et les taxes gouvernementales." />
-      </Helmet>
+      <SEO
+        title="Tarifs et Frais Transparents - Achetez un Terrain au Sénégal sans Surprise"
+        description="Grille tarifaire transparente pour l'achat de terrain au Sénégal. Frais de service 5%, frais de notaire ~3-5%, taxes gouvernementales claires. Pas de frais cachés."
+        keywords="prix terrain sénégal, frais immobilier, tarifs notaire, prix achat terrain, frais transaction foncière"
+        canonicalUrl="https://www.terangafoncier.sn/pricing"
+      />
       <motion.div
         variants={pageVariants}
         initial="hidden"

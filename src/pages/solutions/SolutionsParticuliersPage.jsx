@@ -27,7 +27,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useUser } from '@/hooks/useUser';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
 
 const SolutionsParticuliersPage = () => {
@@ -170,10 +170,12 @@ const SolutionsParticuliersPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Solutions pour Particuliers - Achat de Terrain Sécurisé | Teranga Foncier</title>
-        <meta name="description" content="Achetez votre terrain en toute sécurité au Sénégal. Terrains vérifiés, documentation complète, paiement sécurisé. Trouvez le terrain de vos rêves." />
-      </Helmet>
+      <SEO 
+        title="Solutions pour Particuliers - Achat de Terrain Sécurisé au Sénégal"
+        description="Achetez votre terrain en toute sécurité au Sénégal avec Teranga Foncier. Terrains vérifiés, vérification titre foncier, documentation complète, paiement sécurisé pour acheteurs particuliers et diaspora."
+        keywords="achat terrain sénégal particulier, acheter parcelle dakar, terrain vérifié sénégal, acheteur immobilier sénégal"
+        canonicalUrl="https://www.terangafoncier.sn/solutions/particuliers"
+      />
 
       <div className="min-h-screen bg-gray-50">
         {/* Hero Section */}

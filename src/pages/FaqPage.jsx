@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -116,10 +116,12 @@ const FaqPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>FAQ - Questions fréquentes | Teranga Foncier</title>
-        <meta name="description" content="Trouvez toutes les réponses Ï  vos questions sur l'achat, la vente et la vérification de terrains au Sénégal. Support expert disponible 24h/7j." />
-      </Helmet>
+      <SEO 
+        title="FAQ - Questions sur le Foncier et l'Immobilier au Sénégal"
+        description="Trouvez les réponses à vos questions sur l'achat de terrain, la vérification de parcelle, le rôle du notaire, et l'investissement pour la diaspora au Sénégal avec Teranga Foncier."
+        keywords="faq immobilier sénégal, question achat terrain, vérification titre foncier, rôle notaire sénégal, investir au sénégal diaspora"
+        canonicalUrl="https://www.terangafoncier.sn/faq"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pt-20">
         

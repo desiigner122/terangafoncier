@@ -1,6 +1,6 @@
 ﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -215,10 +215,12 @@ const BlogPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Blog - Guides et conseils immobiliers | Teranga Foncier</title>
-        <meta name="description" content="Découvrez nos guides experts, conseils pratiques et actualités du marché foncier sénégalais. Tout pour réussir votre projet immobilier." />
-      </Helmet>
+      <SEO
+        title="Blog - Guides et Conseils Experts en Immobilier Sénégalais"
+        description="Découvrez nos guides experts, conseils pratiques et actualités du marché foncier sénégalais. Apprenez comment acheter terrain, investir diaspora, vérifier titre foncier et sécuriser transaction."
+        keywords="blog immobilier sénégal, guides achat terrain, conseils foncier, actualités immobilière, tutos terrains"
+        canonicalUrl="https://www.terangafoncier.sn/blog"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pt-20">
         

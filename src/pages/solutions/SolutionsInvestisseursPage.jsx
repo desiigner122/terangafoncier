@@ -11,7 +11,7 @@ import {
   LayoutDashboard
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUser';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
 import { Card, CardContent } from '@/components/ui/card';
 
@@ -65,10 +65,12 @@ const SolutionsInvestisseursPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Solutions Investisseurs - Teranga Foncier</title>
-        <meta name="description" content="Solutions d'investissement foncier au Sénégal. Découvrez des opportunités vérifiées, analysez le rendement potentiel et diversifiez votre portefeuille en toute sécurité." />
-      </Helmet>
+      <SEO
+        title="Solutions Investisseurs - Placer Votre Capital dans l'Immobilier Sénégalais"
+        description="Investissez dans le foncier sénégalais avec confiance. Accédez à des opportunités vérifiées, analysez le rendement potentiel, diversifiez votre portefeuille d'investissement immobilier et générez des revenus passifs."
+        keywords="investir terrain sénégal, immobilier sénégal, placer argent immobilier, investissement foncier, rendement immobilier diaspora"
+        canonicalUrl="https://www.terangafoncier.sn/solutions-investisseurs"
+      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

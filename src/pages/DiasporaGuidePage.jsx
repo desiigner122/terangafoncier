@@ -1,5 +1,6 @@
 ﻿import React from 'react';
 import { motion } from 'framer-motion';
+import SEO from '@/components/SEO';
 import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -97,14 +98,21 @@ const DiasporaGuidePage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-      {/* Hero Section */}
-      <section className="pt-32 pb-20 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+    <>
+      <SEO
+        title="Guide Complet Diaspora - Investir et Construire au Sénégal"
+        description="Guide complet pour la diaspora sénégalaise. Construction à distance, investissement immobilier, suivi en temps réel. Réalisez votre rêve au Sénégal depuis l'étranger."
+        keywords="guide diaspora sénégal, construire maison distance, investir sénégal, diaspora immobilier"
+        canonicalUrl="https://www.terangafoncier.sn/diaspora-guide"
+      />
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
+        {/* Hero Section */}
+        <section className="pt-32 pb-20 px-4">
+          <div className="container mx-auto max-w-6xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.6 }}
             className="text-center mb-16"
           >
             <Badge className="mb-4 bg-primary/10 text-primary border-primary/20">
@@ -307,6 +315,7 @@ const DiasporaGuidePage = () => {
         </div>
       </section>
     </div>
+    </>
   );
 };
 

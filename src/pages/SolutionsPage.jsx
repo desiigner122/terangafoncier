@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import SEO from '@/components/SEO';
 import { 
   Users, 
   Building, 
@@ -175,15 +176,22 @@ const SolutionsPage = () => {
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-primary via-blue-600 to-purple-600 text-white">
-        <div className="absolute inset-0 bg-black/20"></div>
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+    <>
+      <SEO
+        title="Nos Solutions - Immobilier Sécurisé pour Tous les Profils"
+        description="Découvrez les solutions Teranga Foncier adaptées à votre profil. Particul iers, investisseurs, banques, notaires, géomètres, agents, promoteurs et agriculteurs."
+        keywords="solutions immobilier sénégal, acheter terrain, investir immobilier, solutions foncières, plateforme immobilière"
+        canonicalUrl="https://www.terangafoncier.sn/solutions"
+      />
+      <div className="min-h-screen bg-gray-50">
+        {/* Hero Section */}
+        <section className="relative bg-gradient-to-br from-primary via-blue-600 to-purple-600 text-white">
+          <div className="absolute inset-0 bg-black/20"></div>
+          <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.8 }}
             className="text-center"
           >
             <h1 className="text-4xl md:text-6xl font-bold mb-6">
@@ -331,9 +339,8 @@ const SolutionsPage = () => {
             </div>
           </motion.div>
         </div>
-      </section>
-    </div>
+        </section>
+      </div>
+    </>
   );
-};
-
-export default SolutionsPage;
+};export default SolutionsPage;

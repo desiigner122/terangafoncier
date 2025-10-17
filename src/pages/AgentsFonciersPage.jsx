@@ -39,7 +39,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const AgentsFonciersPage = () => {
   const [activeService, setActiveService] = useState(0);
@@ -286,12 +286,12 @@ const AgentsFonciersPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Agents Fonciers Partenaires - Teranga Foncier | +278% commissions garanties</title>
-        <meta name="description" content="Rejoignez +120 agents partenaires : 15K biens exclusifs, 25K clients diaspora, CRM fourni, 4% commission. Boostez vos revenus de +278%." />
-        <meta property="og:title" content="Agents Fonciers - Multipliez vos commissions par 3.5" />
-        <meta property="og:description" content="Inventory premium, clients diaspora qualifiés, outils digitaux fournis. Formation et support inclus." />
-      </Helmet>
+      <SEO
+        title="Agents Fonciers - Augmentez Vos Commissions de 278% Auprès de la Diaspora"
+        description="Programme de partenariat pour agents immobiliers sénégalais. Accédez à 15K biens premium, 25K clients diaspora qualifiés, CRM complet, et augmentez vos commissions de 278%."
+        keywords="agents immobiliers sénégal, agent foncier, vendre terrain sénégal, courtier immobilier, commission immobilière"
+        canonicalUrl="https://www.terangafoncier.sn/agents-fonciers"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section Agents Fonciers */}

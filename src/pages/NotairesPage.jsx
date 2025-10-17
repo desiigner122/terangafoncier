@@ -32,7 +32,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const NotairesPage = () => {
   const [activeService, setActiveService] = useState(0);
@@ -267,12 +267,12 @@ const NotairesPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Partenariat Notaires - Teranga Foncier | +156% d'actes immobiliers</title>
-        <meta name="description" content="Rejoignez +50 notaires partenaires : +15K clients actifs, digitalisation complète, revenus garantis. Boostez vos honoraires de +89% avec la diaspora." />
-        <meta property="og:title" content="Partenariat Notaires - Multipliez vos actes par 2.5" />
-        <meta property="og:description" content="Plateforme notariale digitale : visioconférence, signature électronique, clients diaspora. +156% d'actes en moyenne." />
-      </Helmet>
+      <SEO 
+        title="Partenariat Notaires - Digitaliser Vos Actes Immobiliers au Sénégal"
+        description="Rejoignez 50+ notaires partenaires de Teranga Foncier. Digitalisation complète des actes, 15K clients qualifiés, signature électronique sécurisée et revenus augmentés de 89%."
+        keywords="notaire sénégal, acte immobilier, signature électronique, rôle du notaire, partenaire notaire"
+        canonicalUrl="https://www.terangafoncier.sn/notaires"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section Notaires */}

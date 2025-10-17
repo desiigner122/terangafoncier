@@ -5,4 +5,4 @@ Disallow: /agent/
 Disallow: /dashboard/
 Disallow: /api/
 
-Sitemap: https://terangafoncier.vercel.app/sitemap.xml
+Sitemap: https://www.terangafoncier.sn/sitemap.xml

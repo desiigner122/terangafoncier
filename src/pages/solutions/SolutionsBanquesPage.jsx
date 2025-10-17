@@ -15,7 +15,7 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const SolutionsBanquesPage = () => {
   const { user } = useAuth();
@@ -79,10 +79,12 @@ const SolutionsBanquesPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Solutions Banques & Finances - Teranga Foncier</title>
-        <meta name="description" content="Solutions pour banques : évaluation de garanties, acquisition de clients, facilitation de financements et analyse de portefeuille foncier." />
-      </Helmet>
+      <SEO 
+        title="Solutions Banques - Financement Immobilier Sécurisé au Sénégal"
+        description="Solutions blockchain pour banques et institutions financières au Sénégal. Évaluation de garanties foncières, financement immobilier, acquisition de clients et analyse de portefeuille."
+        keywords="financement immobilier sénégal, crédit foncier, garantie terrain, évaluation propriété, banque sénégal"
+        canonicalUrl="https://www.terangafoncier.sn/solutions/banques"
+      />
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}

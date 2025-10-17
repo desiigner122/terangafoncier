@@ -34,7 +34,7 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 
 const VendeursPage = () => {
   const [activeService, setActiveService] = useState(0);
@@ -281,12 +281,12 @@ const VendeursPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Vendeurs Immobilier - Teranga Foncier | +34% prix de vente garantis</title>
-        <meta name="description" content="Vendez +34% plus cher en -67% de temps : 25K acheteurs diaspora, marketing premium, IA d'estimation. Commission réduite 2-3% vs 5% classique." />
-        <meta property="og:title" content="Vendeurs - Vendez +34% plus cher, 67% plus vite" />
-        <meta property="og:description" content="Réseau exclusif diaspora, marketing 4K inclus, vente sécurisée. Estimation gratuite en 24h." />
-      </Helmet>
+      <SEO 
+        title="Vendeurs - Vendre Votre Terrain au Meilleur Prix au Sénégal"
+        description="Vendez votre terrain 34% plus cher et 67% plus rapide avec Teranga Foncier. 25K acheteurs diaspora, marketing premium, vérification sécurisée et commission réduite."
+        keywords="vendre terrain sénégal, vendre parcelle dakar, estimation terrain sénégal, vendre immeuble sénégal"
+        canonicalUrl="https://www.terangafoncier.sn/vendeurs"
+      />
 
       <div className="min-h-screen bg-white">
         {/* Hero Section Vendeurs */}

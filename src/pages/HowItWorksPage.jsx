@@ -1,6 +1,6 @@
 ﻿import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -124,10 +124,12 @@ const HowItWorksPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Comment ça marche - Processus d'achat et vente sécurisé | Teranga Foncier</title>
-        <meta name="description" content="Découvrez comment Teranga Foncier sécurise vos transactions foncières. Processus transparent d'achat et vente de terrains au Sénégal." />
-      </Helmet>
+      <SEO 
+        title="Comment ça marche - Guide du Processus d'Achat et Vente Sécurisé"
+        description="Découvrez étape par étape comment acheter ou vendre un terrain au Sénégal en toute sécurité avec Teranga Foncier. Processus transparent et vérifications rigoureuses."
+        keywords="processus achat terrain sénégal, comment vendre un terrain, sécuriser transaction immobilière, vérification titre foncier"
+        canonicalUrl="https://www.terangafoncier.sn/how-it-works"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pt-20">
         

@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -104,10 +104,12 @@ const TermsPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Conditions d'Utilisation | Teranga Foncier</title>
-        <meta name="description" content="Conditions générales d'utilisation de la plateforme Teranga Foncier. Droits, obligations et responsabilités des utilisateurs." />
-      </Helmet>
+      <SEO
+        title="Conditions d'Utilisation - Termes et Conditions Légales"
+        description="Conditions générales d'utilisation de la plateforme Teranga Foncier. Droits, obligations, responsabilités et conditions d'acceptation pour les utilisateurs."
+        keywords="conditions d'utilisation, CGU, termes et conditions, utilisateur, plateforme"
+        canonicalUrl="https://www.terangafoncier.sn/terms"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 pt-20">
         

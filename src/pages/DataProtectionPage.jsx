@@ -1,5 +1,5 @@
 import React from 'react';
-import { Helmet } from 'react-helmet-async';
+import SEO from '@/components/SEO';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -119,10 +119,12 @@ const DataProtectionPage = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Protection des Données | Teranga Foncier</title>
-        <meta name="description" content="Politique de protection des données personnelles de Teranga Foncier. Vos droits, nos engagements et mesures de sécurité." />
-      </Helmet>
+      <SEO
+        title="Protection des Données - Vos Droits et Notre Engagement"
+        description="Protection des données personnelles de Teranga Foncier. Découvrez vos droits (accès, rectification, effacement), mesures de sécurité et comment nous vous protégeons."
+        keywords="protection données, RGPD, droits utilisateur, sécurité données, privacy"
+        canonicalUrl="https://www.terangafoncier.sn/data-protection"
+      />
 
       <div className="min-h-screen bg-gradient-to-br from-green-50 to-blue-50 pt-20">
         

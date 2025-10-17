@@ -234,6 +234,7 @@ const VendeurPurchaseRequests = () => {
       }
 
       // 6. Mettre à jour l'état local directement
+      console.log('🔄 [ACCEPT] Mise à jour locale du statut → accepted');
       setRequests(prevRequests =>
         prevRequests.map(req =>
           req.id === requestId 
@@ -242,15 +243,18 @@ const VendeurPurchaseRequests = () => {
         )
       );
       
-      // Recharger en arrière-plan (non-bloquant)
-      loadRequests().catch(err => {
-        console.warn('⚠️ Rechargement en arrière-plan échoué:', err);
-      });
-      
       toast.success(
         `🚀 Workflow d'achat lancé ! Dossier: ${purchaseCase.case_number}`,
         { duration: 5000 }
       );
+      
+      // 7. Recharger après un court délai pour laisser la DB se mettre à jour
+      setTimeout(() => {
+        console.log('🔄 [ACCEPT] Rechargement des demandes après delay...');
+        loadRequests().catch(err => {
+          console.warn('⚠️ Rechargement en arrière-plan échoué:', err);
+        });
+      }, 2000); // Attendre 2 secondes que la DB soit mise à jour
 
     } catch (error) {
       console.error('❌ [ACCEPT] Erreur:', error);

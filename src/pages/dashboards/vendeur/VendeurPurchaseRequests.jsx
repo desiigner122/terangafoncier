@@ -578,18 +578,19 @@ const VendeurPurchaseRequests = () => {
     }
   };
 
-  // Filtrer les demandes
+  // Filtrer les demandes - FIX: Vérifier hasCase ET status
   const filteredRequests = requests.filter(request => {
     let matchesTab = false;
     
     if (activeTab === 'all') {
       matchesTab = true;
     } else if (activeTab === 'pending') {
-      // Demandes en attente: pas de purchase_case
-      matchesTab = !request.hasCase && request.status === 'pending';
+      // Demandes en attente: pas de purchase_case ET status pending/initiated
+      matchesTab = !request.hasCase && (request.status === 'pending' || request.status === 'initiated');
     } else if (activeTab === 'accepted') {
-      // Demandes acceptées: purchase_case EXISTS (peu importe le status du case)
-      matchesTab = !!request.hasCase;
+      // Demandes acceptées: purchase_case EXISTS OU status='accepted'
+      // (Même si hasCase est temporairement faux, hasCase=true le rendra vrai)
+      matchesTab = !!request.hasCase || request.status === 'accepted' || request.status === 'seller_accepted';
     } else if (activeTab === 'negotiation') {
       // En négociation: transaction status = 'negotiation'
       matchesTab = request.status === 'negotiation';
@@ -608,11 +609,11 @@ const VendeurPurchaseRequests = () => {
     return matchesTab && matchesSearch;
   });
 
-  // Statistiques
+  // Statistiques - FIX: Inclure status='accepted' et 'seller_accepted'
   const stats = {
     total: requests.length,
-    pending: requests.filter(r => !r.hasCase && r.status === 'pending').length,
-    accepted: requests.filter(r => !!r.hasCase).length,
+    pending: requests.filter(r => !r.hasCase && (r.status === 'pending' || r.status === 'initiated')).length,
+    accepted: requests.filter(r => !!r.hasCase || r.status === 'accepted' || r.status === 'seller_accepted').length,
     negotiation: requests.filter(r => r.status === 'negotiation').length,
     completed: requests.filter(r => r.hasCase && r.caseStatus === 'completed').length,
     rejected: requests.filter(r => r.status === 'rejected').length,

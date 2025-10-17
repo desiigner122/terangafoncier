@@ -262,10 +262,9 @@ const ModernNotificationsPage = () => {
 
   // Simulation du chargement
   useEffect(() => {
-    setTimeout(() => {
-      setNotifications(mockNotifications);
-      setIsLoading(false);
-    }, 1000);
+    // Charger les vraies notifications de Supabase
+    setNotifications([]);
+    setIsLoading(false);
   }, []);
 
   // Filtres des notifications

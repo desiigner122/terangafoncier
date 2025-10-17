@@ -91,78 +91,8 @@ const AISmartNotifications = () => {
     setUnreadCount(prev => Math.max(0, prev - 1));
   };
 
-  const mockNotifications = [
-    {
-      id: 1,
-      type: 'ai_insight',
-      title: 'Nouvelle Opportunité Détectée',
-      message: 'L\'IA a identifié une opportunité d\'investissement à Diamniadio avec un potentiel de +15% sur 12 mois.',
-      priority: 7,
-      timestamp: new Date(Date.now() - 1000 * 60 * 30), // 30 min ago
-      read: false,
-      data: {
-        zone: 'Diamniadio',
-        potential: '+15%',
-        confidence: 0.89
-      }
-    },
-    {
-      id: 2,
-      type: 'price_alert',
-      title: 'Alerte Prix - Zone Surveillée',
-      message: 'Les prix à Almadies ont augmenté de 3.2% cette semaine. Votre propriété a gagné en valeur.',
-      priority: 6,
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2h ago
-      read: false,
-      data: {
-        zone: 'Almadies',
-        change: '+3.2%',
-        impact: '+2.1M FCFA'
-      }
-    },
-    {
-      id: 3,
-      type: 'blockchain_activity',
-      title: 'Transaction Blockchain Confirmée',
-      message: 'Votre smart contract pour la villa Ngor a été exécuté avec succès.',
-      priority: 5,
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 4), // 4h ago
-      read: true,
-      data: {
-        contract: '0x1234...5678',
-        amount: '75M FCFA',
-        status: 'Confirmed'
-      }
-    },
-    {
-      id: 4,
-      type: 'risk_warning',
-      title: 'Évaluation des Risques',
-      message: 'L\'IA détecte une légère augmentation du risque de marché. Recommandation: diversifier le portefeuille.',
-      priority: 4,
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 6), // 6h ago
-      read: true,
-      data: {
-        riskScore: 3.2,
-        recommendation: 'Diversification',
-        confidence: 0.84
-      }
-    },
-    {
-      id: 5,
-      type: 'market_update',
-      title: 'Rapport Marché Hebdomadaire',
-      message: 'Le marché immobilier sénégalais affiche une croissance de 8.5% cette année.',
-      priority: 3,
-      timestamp: new Date(Date.now() - 1000 * 60 * 60 * 24), // 1 day ago
-      read: true,
-      data: {
-        growth: '+8.5%',
-        period: 'Année 2024',
-        trend: 'Positive'
-      }
-    }
-  ];
+  // Tableau vide - les vraies notifications viennent de Supabase (voir loadNotifications)
+  const mockNotifications = [];
 
   const displayNotifications = notifications.length > 0 ? notifications : mockNotifications;
 

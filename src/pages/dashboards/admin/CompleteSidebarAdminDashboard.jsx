@@ -792,8 +792,8 @@ const CompleteSidebarAdminDashboard = () => {
 
   // Charger les données au montage du composant
   useEffect(() => {
-    // Nous utilisons maintenant des données de test réalistes intégrées
-    // clearMockedData(); // Commenté car nous voulons garder nos données de test
+    // Effacer immédiatement les données mockées au démarrage
+    clearMockedData();
     // Puis charger les vraies données
     loadRealData();
   }, []);

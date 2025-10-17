@@ -34,84 +34,9 @@ const BanqueNotifications = () => {
 
   // Simulation des notifications bancaires
   useEffect(() => {
-    const mockNotifications = [
-      {
-        id: 1,
-        type: 'credit_request',
-        priority: 'high',
-        title: 'Nouvelle demande de crédit immobilier',
-        message: 'Demande de crédit de 45 000 000 XOF pour un terrain à Almadies',
-        timestamp: new Date(Date.now() - 15 * 60 * 1000),
-        read: false,
-        sender: 'Système KYC',
-        category: 'Crédit',
-        amount: '45 000 000 XOF',
-        client: 'Amadou Diallo'
-      },
-      {
-        id: 2,
-        type: 'compliance',
-        priority: 'critical',
-        title: 'Alerte conformité réglementaire',
-        message: 'Transaction suspecte détectée - Vérification manuelle requise',
-        timestamp: new Date(Date.now() - 30 * 60 * 1000),
-        read: false,
-        sender: 'Compliance AI',
-        category: 'Conformité',
-        amount: '12 500 000 XOF',
-        client: 'Société XBAT SARL'
-      },
-      {
-        id: 3,
-        type: 'payment',
-        priority: 'medium',
-        title: 'Paiement diaspora confirmé',
-        message: 'Virement international reçu depuis la France',
-        timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-        read: true,
-        sender: 'Système Paiements',
-        category: 'Paiements',
-        amount: '2 500 EUR',
-        client: 'Fatou Sene'
-      },
-      {
-        id: 4,
-        type: 'kyc',
-        priority: 'medium',
-        title: 'Vérification KYC complétée',
-        message: 'Documents client validés avec succès',
-        timestamp: new Date(Date.now() - 4 * 60 * 60 * 1000),
-        read: true,
-        sender: 'KYC Automation',
-        category: 'KYC',
-        client: 'Moussa Ba'
-      },
-      {
-        id: 5,
-        type: 'blockchain',
-        priority: 'low',
-        title: 'Nouveau certificat TerangaChain',
-        message: 'Titre foncier enregistré sur la blockchain',
-        timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-        read: false,
-        sender: 'TerangaChain',
-        category: 'Blockchain',
-        property: 'TF-12458-DK',
-        client: 'Omar Ndiaye'
-      },
-      {
-        id: 6,
-        type: 'analytics',
-        priority: 'low',
-        title: 'Rapport mensuel disponible',
-        message: 'Les analyses de performance du mois sont prêtes',
-        timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000),
-        read: true,
-        sender: 'Analytics Engine',
-        category: 'Rapports'
-      }
-    ];
-    setNotifications(mockNotifications);
+    // Les notifications réelles viennent de Supabase via loadNotifications()
+    // Commencer avec un tableau vide pour laisser charger les données réelles
+    setNotifications([]);
   }, []);
 
   const getNotificationIcon = (type) => {

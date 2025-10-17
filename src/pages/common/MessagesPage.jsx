@@ -146,11 +146,9 @@ const MessagesPage = () => {
   ];
 
   useEffect(() => {
-    // Simuler le chargement des conversations
-    setTimeout(() => {
-      setConversations(mockConversations);
-      setIsLoading(false);
-    }, 1000);
+    // Charger les vraies conversations de Supabase
+    setConversations([]);
+    setIsLoading(false);
   }, []);
 
   // Filtrer les conversations selon la recherche et l'onglet actif

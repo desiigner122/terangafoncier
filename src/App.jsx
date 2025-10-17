@@ -8,6 +8,7 @@ import { AIProvider } from '@/hooks/useAI.jsx';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { MaintenanceProvider } from '@/contexts/MaintenanceContext';
 import MaintenanceWrapper from '@/components/MaintenanceWrapper';
+import { useTitleByRoute } from '@/hooks/usePageTitle';
 import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
 import UniversalAIChatbot from '@/components/ai/UniversalAIChatbot';
 import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
@@ -139,6 +140,7 @@ import { Button } from '@/components/ui/button';
 import ProtectedRoute, { AdminRoute, VerifiedRoute, RoleProtectedRoute, BuyerOnlyRoute } from '@/components/layout/ProtectedRoute';
 import RoleBasedRedirect from '@/components/layout/RoleBasedRedirect';
 import ScrollToTop from '@/components/layout/ScrollToTop';
+import TitleUpdater from '@/components/layout/TitleUpdater';
 import { motion } from 'framer-motion';
 import { ComparisonProvider } from '@/context/ComparisonContext';
 import { AuthProvider } from '@/contexts/UnifiedAuthContext';
@@ -381,6 +383,7 @@ function App() {
                 <NotificationProvider>
                   <AIProvider>
             <ScrollToTop />
+            <TitleUpdater />
             <Routes>
             <Route path="/" element={<PublicLayout />}>
               <Route index element={<HomePage />} />

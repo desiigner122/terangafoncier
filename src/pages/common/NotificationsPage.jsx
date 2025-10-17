@@ -160,11 +160,9 @@ const NotificationsPage = () => {
   ];
 
   useEffect(() => {
-    // Simuler le chargement des notifications
-    setTimeout(() => {
-      setNotifications(mockNotifications);
-      setIsLoading(false);
-    }, 1000);
+    // Charger les vraies notifications de Supabase
+    setNotifications([]);
+    setIsLoading(false);
   }, []);
 
   // Filtrer les notifications

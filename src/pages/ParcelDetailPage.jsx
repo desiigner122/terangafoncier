@@ -8,6 +8,9 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { LoadingSpinner } from '@/components/ui/spinner';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import {
   MapPin,
   Home,
@@ -35,6 +38,8 @@ const ParcelDetailPage = () => {
   const [parcel, setParcel] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [currentImageIndex, setCurrentImageIndex] = useState(0);
+  const [showPaymentTypeModal, setShowPaymentTypeModal] = useState(false);
+  const [selectedPaymentType, setSelectedPaymentType] = useState(null);
 
   useEffect(() => {
     const fetchParcel = async () => {
@@ -80,8 +85,21 @@ const ParcelDetailPage = () => {
       return;
     }
     
-    // Redirection vers page de checkout
-    navigate(`/dashboard/parcelles/${id}/checkout`);
+    // Show payment type selection modal
+    setShowPaymentTypeModal(true);
+  };
+
+  const handlePaymentTypeSelected = (paymentType) => {
+    setSelectedPaymentType(paymentType);
+    setShowPaymentTypeModal(false);
+    
+    // Redirection vers page de checkout avec le type de paiement
+    navigate(`/dashboard/parcelles/${id}/checkout`, { 
+      state: { 
+        paymentType,
+        parcelId: id 
+      } 
+    });
   };
 
   const handleContactSeller = () => {
@@ -413,6 +431,66 @@ const ParcelDetailPage = () => {
           </Card>
         </div>
       </div>
+
+      {/* Payment Type Selection Modal */}
+      <Dialog open={showPaymentTypeModal} onOpenChange={setShowPaymentTypeModal}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Choisissez votre mode de paiement</DialogTitle>
+            <DialogDescription>
+              Sélectionnez comment vous souhaitez financer votre achat
+            </DialogDescription>
+          </DialogHeader>
+
+          <RadioGroup value={selectedPaymentType || ''} onValueChange={handlePaymentTypeSelected}>
+            <div className="space-y-4">
+              {/* One-time payment */}
+              <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition">
+                <RadioGroupItem value="one_time" id="one-time" />
+                <Label htmlFor="one-time" className="flex-1 cursor-pointer">
+                  <div className="font-semibold">Paiement comptant</div>
+                  <div className="text-sm text-gray-600">Payez le montant complet maintenant</div>
+                </Label>
+              </div>
+
+              {/* Installments */}
+              <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition">
+                <RadioGroupItem value="installments" id="installments" />
+                <Label htmlFor="installments" className="flex-1 cursor-pointer">
+                  <div className="font-semibold">Paiement échelonné</div>
+                  <div className="text-sm text-gray-600">Répartissez votre paiement sur plusieurs mois</div>
+                </Label>
+              </div>
+
+              {/* Bank financing */}
+              <div className="flex items-center space-x-3 p-4 border border-gray-200 rounded-lg hover:bg-blue-50 cursor-pointer transition">
+                <RadioGroupItem value="bank_financing" id="bank-financing" />
+                <Label htmlFor="bank-financing" className="flex-1 cursor-pointer">
+                  <div className="font-semibold">Financement bancaire</div>
+                  <div className="text-sm text-gray-600">Accédez à nos programmes de crédit avec nos partenaires</div>
+                </Label>
+              </div>
+            </div>
+          </RadioGroup>
+
+          <div className="flex gap-3 pt-4 border-t">
+            <Button
+              variant="outline"
+              className="flex-1"
+              onClick={() => setShowPaymentTypeModal(false)}
+            >
+              Annuler
+            </Button>
+            <Button
+              className="flex-1"
+              disabled={!selectedPaymentType}
+              onClick={() => selectedPaymentType && handlePaymentTypeSelected(selectedPaymentType)}
+            >
+              Continuer
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </motion.div>
   );
 };

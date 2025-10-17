@@ -54,7 +54,8 @@ CREATE INDEX IF NOT EXISTS idx_purchase_case_messages_case_created
 ALTER TABLE purchase_case_messages ENABLE ROW LEVEL SECURITY;
 
 -- RLS Policy: Users can view messages in their cases
-CREATE POLICY IF NOT EXISTS "Users can view messages of their cases" ON purchase_case_messages
+DROP POLICY IF EXISTS "Users can view messages of their cases" ON purchase_case_messages;
+CREATE POLICY "Users can view messages of their cases" ON purchase_case_messages
     FOR SELECT USING (
         EXISTS (
             SELECT 1 FROM purchase_cases 
@@ -64,7 +65,8 @@ CREATE POLICY IF NOT EXISTS "Users can view messages of their cases" ON purchase
     );
 
 -- RLS Policy: Users can insert messages to their cases
-CREATE POLICY IF NOT EXISTS "Users can send messages to their cases" ON purchase_case_messages
+DROP POLICY IF EXISTS "Users can send messages to their cases" ON purchase_case_messages;
+CREATE POLICY "Users can send messages to their cases" ON purchase_case_messages
     FOR INSERT WITH CHECK (
         sender_id = auth.uid() AND
         EXISTS (
@@ -75,7 +77,8 @@ CREATE POLICY IF NOT EXISTS "Users can send messages to their cases" ON purchase
     );
 
 -- RLS Policy: Users can update their own messages (mark as read, edit)
-CREATE POLICY IF NOT EXISTS "Users can update their own messages" ON purchase_case_messages
+DROP POLICY IF EXISTS "Users can update their own messages" ON purchase_case_messages;
+CREATE POLICY "Users can update their own messages" ON purchase_case_messages
     FOR UPDATE USING (sender_id = auth.uid());
 
 -- Trigger to update updated_at timestamp

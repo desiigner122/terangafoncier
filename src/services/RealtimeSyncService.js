@@ -186,10 +186,15 @@ export class RealtimeSyncService {
 
       this.subscriptions.push(subscription);
 
-      return () => {
-        console.log(`🔴 [REALTIME] Unsubscribe vendor requests`);
-        supabase.removeChannel('vendor-requests');
-        this.subscriptions = this.subscriptions.filter(s => s !== subscription);
+      return async () => {
+        try {
+          console.log(`🔴 [REALTIME] Unsubscribe vendor requests`);
+          await supabase.channel('vendor-requests').unsubscribe();
+          this.subscriptions = this.subscriptions.filter(s => s !== subscription);
+          console.log(`✅ [REALTIME] Vendor unsubscribe successful`);
+        } catch (err) {
+          console.log(`⚠️ [REALTIME] Vendor unsubscribe error (acceptable):`, err.message);
+        }
       };
     } catch (error) {
       console.error('❌ [REALTIME] Error subscribing to vendor requests:', error);
@@ -234,10 +239,15 @@ export class RealtimeSyncService {
       this.subscriptions.push(subscription);
       console.log(`🟢 [REALTIME] Subscription established successfully`);
 
-      return () => {
-        console.log(`🔴 [REALTIME] Unsubscribe buyer requests`);
-        supabase.removeChannel(`buyer-requests-${buyerId}`);
-        this.subscriptions = this.subscriptions.filter(s => s !== subscription);
+      return async () => {
+        try {
+          console.log(`🔴 [REALTIME] Unsubscribe buyer requests`);
+          await supabase.channel(`buyer-requests-${buyerId}`).unsubscribe();
+          this.subscriptions = this.subscriptions.filter(s => s !== subscription);
+          console.log(`✅ [REALTIME] Unsubscribe successful`);
+        } catch (err) {
+          console.log(`⚠️ [REALTIME] Unsubscribe error (acceptable):`, err.message);
+        }
       };
     } catch (error) {
       console.error('🔴 [REALTIME] Error subscribing to buyer requests:', error);

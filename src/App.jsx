@@ -10,7 +10,7 @@ import { MaintenanceProvider } from '@/contexts/MaintenanceContext';
 import MaintenanceWrapper from '@/components/MaintenanceWrapper';
 import { useTitleByRoute } from '@/hooks/usePageTitle';
 import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
-import UniversalAIChatbot from '@/components/ai/UniversalAIChatbot';
+import PremiumAIChatbot from '@/components/ai/PremiumAIChatbot';
 import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
 import ModernHeader from '@/components/layout/ModernHeader';
 import BlockchainFooter from '@/components/layout/BlockchainFooter';
@@ -495,7 +495,7 @@ function App() {
               {/* === ROUTES IA AUTONOME === */}
               <Route path="ai-terrain-config" element={<AIAssistedTerrainConfigPage />} />
               <Route path="autonomous-dashboard" element={<AutonomousAIDashboard />} />
-              <Route path="ai-chat" element={<UniversalAIChatbot fullScreen={true} />} />
+              <Route path="ai-chat" element={<PremiumAIChatbot fullScreen={true} />} />
               
               <Route path="fonctionnalites-avancees" element={<FonctionnalitesAvanceesPage />} />
               <Route path="blockchain" element={<BlockchainSolutionsPage />} />
@@ -866,8 +866,8 @@ function App() {
           <Toaster />
           <ToastProvider />
           
-          {/* IA CONVERSATIONNELLE UNIVERSELLE */}
-          <UniversalAIChatbot isFloating={true} />
+          {/* IA CONVERSATIONNELLE PREMIUM */}
+          <PremiumAIChatbot />
           
           {/* VERCEL ANALYTICS */}
           <Analytics />

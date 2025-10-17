@@ -522,13 +522,7 @@ export class PurchaseWorkflowService {
     try {
       const { data: caseData, error: caseError } = await supabase
         .from('purchase_cases')
-        .select(`
-          *,
-          buyer:buyer_id(*),
-          seller:seller_id(*),
-          parcelle:parcelle_id(*),
-          request:request_id(*)
-        `)
+        .select('*, parcelle:parcelle_id(*), request:request_id(*)')
         .eq('id', caseId)
         .single();
 

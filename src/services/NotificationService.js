@@ -182,12 +182,7 @@ export class NotificationService {
       // Récupérer les détails du dossier
       const { data: purchaseCase, error: caseError } = await supabase
         .from('purchase_cases')
-        .select(`
-          *,
-          buyer:buyer_id(*),
-          seller:seller_id(*),
-          parcelle:parcelle_id(title, location)
-        `)
+        .select('*, parcelle:parcelle_id(title, location)')
         .eq('id', caseId)
         .single();
 

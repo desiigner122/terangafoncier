@@ -87,15 +87,14 @@ export class AdvancedCaseTrackingService {
 
   /**
    * Get all participants in a case
+   * FIX: Supabase REST API doesn't support nested auth.users relationships
+   * Query participants without user metadata (only participant data)
    */
   static async getCaseParticipants(caseId) {
     try {
       const { data, error } = await supabase
         .from('purchase_case_participants')
-        .select(`
-          *,
-          user:user_id(id, email, raw_user_meta_data)
-        `)
+        .select('*')
         .eq('case_id', caseId)
         .order('created_at', { ascending: true });
 

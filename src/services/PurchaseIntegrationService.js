@@ -202,17 +202,13 @@ export class PurchaseIntegrationService {
 
   /**
    * Récupérer le statut d'un dossier depuis une demande
+   * FIX: REST API cannot join auth.users directly, removed nested relationships
    */
   static async getPurchaseCaseFromRequest(requestId) {
     try {
       const { data: purchaseCase, error } = await supabase
         .from('purchase_cases')
-        .select(`
-          *,
-          buyer:buyer_id(*),
-          seller:seller_id(*),
-          parcelle:parcelle_id(*)
-        `)
+        .select('*, parcelle:parcelle_id(*)')
         .eq('request_id', requestId)
         .single();
 

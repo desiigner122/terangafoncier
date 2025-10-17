@@ -63,6 +63,10 @@ const VendeurPurchaseRequests = () => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isNegotiating, setIsNegotiating] = useState(false);
+  
+  // FIX #1: Persistent state for accepted requests
+  const [acceptedRequests, setAcceptedRequests] = useState(new Set());
+  const [caseNumbers, setCaseNumbers] = useState({});
 
   console.log('🎯 [VENDEUR REQUESTS] Context:', outletContext);
   console.log('🎯 [VENDEUR REQUESTS] User reçu:', user);
@@ -233,12 +237,20 @@ const VendeurPurchaseRequests = () => {
         console.error('⚠️ [ACCEPT] Erreur notification (non bloquante):', notifError);
       }
 
-      // 6. Mettre à jour l'état local directement
+      // 6. FIX #1: Track this acceptance in persistent state
+      console.log('📍 [ACCEPT] Tracking acceptance in persistent state');
+      setAcceptedRequests(prev => new Set(prev).add(requestId));
+      setCaseNumbers(prev => ({
+        ...prev,
+        [requestId]: purchaseCase.case_number
+      }));
+
+      // 7. Mettre à jour l'état local directement
       console.log('🔄 [ACCEPT] Mise à jour locale du statut → accepted');
       setRequests(prevRequests =>
         prevRequests.map(req =>
           req.id === requestId 
-            ? { ...req, status: 'accepted' }
+            ? { ...req, status: 'accepted', caseNumber: purchaseCase.case_number, hasCase: true }
             : req
         )
       );
@@ -248,13 +260,14 @@ const VendeurPurchaseRequests = () => {
         { duration: 5000 }
       );
       
-      // 7. Recharger après un court délai pour laisser la DB se mettre à jour
+      // 8. Recharger après un court délai pour laisser la DB se mettre à jour
+      // BUT: This won't override our persistent state
       setTimeout(() => {
         console.log('🔄 [ACCEPT] Rechargement des demandes après delay...');
         loadRequests().catch(err => {
           console.warn('⚠️ Rechargement en arrière-plan échoué:', err);
         });
-      }, 2000); // Attendre 2 secondes que la DB soit mise à jour
+      }, 3000); // Augmenté à 3 secondes
 
     } catch (error) {
       console.error('❌ [ACCEPT] Erreur:', error);
@@ -481,11 +494,36 @@ const VendeurPurchaseRequests = () => {
         .select('id, first_name, last_name, email')
         .in('id', buyerIds);
 
+      // FIX #1: Charger les purchase_cases pour savoir lesquels sont acceptés
+      console.log('📋 [VENDEUR] Chargement des purchase_cases...');
+      const { data: purchaseCases } = await supabase
+        .from('purchase_cases')
+        .select('id, request_id, case_number, status')
+        .in('request_id', transactionsData.map(t => t.id));
+
+      // Créer une map request_id -> case_number
+      const requestCaseMap = {};
+      if (purchaseCases && purchaseCases.length > 0) {
+        purchaseCases.forEach(pc => {
+          requestCaseMap[pc.request_id] = {
+            caseNumber: pc.case_number,
+            caseId: pc.id,
+            caseStatus: pc.status
+          };
+        });
+        console.log('✅ [VENDEUR] Purchase cases trouvées:', Object.keys(requestCaseMap).length);
+      }
+
       // Transformer les transactions
       const enrichedRequests = transactionsData.map(transaction => {
         const buyer = profilesData?.find(p => p.id === transaction.buyer_id);
         const parcel = parcelsData?.find(p => p.id === transaction.parcel_id);
         const buyerInfo = transaction.buyer_info || {};
+        
+        // FIX #1: Vérifier si un case existe pour cette transaction
+        const caseInfo = requestCaseMap[transaction.id];
+        const hasCase = !!caseInfo;
+        const caseNumber = caseInfo?.caseNumber;
         
         return {
           id: transaction.id,
@@ -507,7 +545,12 @@ const VendeurPurchaseRequests = () => {
           properties: parcel,
           profiles: buyer,
           buyer: buyer,
-          transactions: [transaction]
+          transactions: [transaction],
+          // FIX #1: Add case info
+          hasCase,
+          caseNumber,
+          caseStatus: caseInfo?.caseStatus,
+          effectiveStatus: hasCase ? 'has_case' : transaction.status
         };
       });
 
@@ -862,7 +905,28 @@ const VendeurPurchaseRequests = () => {
                         </div>
 
                         {/* Actions selon le statut */}
-                        {request.status === 'pending' && (
+                        {/* FIX #1: Check for hasCase first, then check status */}
+                        {(request.hasCase || request.status === 'accepted' || acceptedRequests.has(request.id)) && (
+                          <div className="flex gap-2">
+                            <Button 
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl flex-1"
+                              onClick={() => {
+                                const caseNum = request.caseNumber || caseNumbers[request.id];
+                                if (caseNum) {
+                                  navigate(`/vendeur/cases/${caseNum}`);
+                                } else {
+                                  toast.error('Numéro de dossier non disponible');
+                                }
+                              }}
+                            >
+                              <FileText className="w-4 h-4 mr-2" />
+                              👁️ Voir le dossier {request.caseNumber && `(${request.caseNumber})`}
+                            </Button>
+                          </div>
+                        )}
+
+                        {/* Standard actions for pending requests */}
+                        {request.status === 'pending' && !request.hasCase && !acceptedRequests.has(request.id) && (
                           <div className="flex gap-2 flex-wrap">
                             <Button 
                               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl"
@@ -889,37 +953,6 @@ const VendeurPurchaseRequests = () => {
                             >
                               <XCircle className="w-4 h-4 mr-2" />
                               Refuser
-                            </Button>
-                          </div>
-                        )}
-                        
-                        {/* Demande acceptée - voir le dossier */}
-                        {request.status === 'accepted' && (
-                          <div className="flex gap-2">
-                            <Button 
-                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl flex-1"
-                              onClick={async () => {
-                                try {
-                                  // Trouver le dossier associé à cette demande
-                                  const { data: caseData } = await supabase
-                                    .from('purchase_cases')
-                                    .select('case_number')
-                                    .eq('request_id', request.id)
-                                    .single();
-                                  
-                                  if (caseData) {
-                                    navigate(`/vendeur/cases/${caseData.case_number}`);
-                                  } else {
-                                    toast.error('Dossier non trouvé');
-                                  }
-                                } catch (error) {
-                                  console.error('❌ Erreur:', error);
-                                  toast.error('Erreur lors de la redirection');
-                                }
-                              }}
-                            >
-                              <FileText className="w-4 h-4 mr-2" />
-                              Voir le dossier
                             </Button>
                           </div>
                         )}

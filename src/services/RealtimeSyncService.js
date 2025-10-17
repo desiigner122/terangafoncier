@@ -162,24 +162,39 @@ export class RealtimeSyncService {
   static subscribeToVendorRequests(parcelIds, callback) {
     console.log(`🔄 [REALTIME] Subscribe aux demandes vendeur:`, parcelIds);
 
-    const subscription = supabase
-      .from('transactions')
-      .on('*', (payload) => {
-        // Vérifier que c'est une des parcelles
-        if (parcelIds.includes(payload.new?.parcel_id) || parcelIds.includes(payload.old?.parcel_id)) {
-          console.log('📨 [REALTIME] Vendor request update:', payload);
-          callback(payload);
-        }
-      })
-      .subscribe();
+    try {
+      const subscription = supabase
+        .channel('vendor-requests')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'transactions'
+          },
+          (payload) => {
+            // Vérifier que c'est une des parcelles (si parcelIds fourni)
+            if (parcelIds.length === 0 || 
+                parcelIds.includes(payload.new?.parcel_id) || 
+                parcelIds.includes(payload.old?.parcel_id)) {
+              console.log('📨 [REALTIME] Vendor request update:', payload);
+              callback(payload);
+            }
+          }
+        )
+        .subscribe();
 
-    this.subscriptions.push(subscription);
+      this.subscriptions.push(subscription);
 
-    return () => {
-      console.log(`🔴 [REALTIME] Unsubscribe vendor requests`);
-      supabase.removeSubscription(subscription);
-      this.subscriptions = this.subscriptions.filter(s => s !== subscription);
-    };
+      return () => {
+        console.log(`🔴 [REALTIME] Unsubscribe vendor requests`);
+        supabase.removeChannel('vendor-requests');
+        this.subscriptions = this.subscriptions.filter(s => s !== subscription);
+      };
+    } catch (error) {
+      console.error('❌ [REALTIME] Error subscribing to vendor requests:', error);
+      return () => {};
+    }
   }
 
   /**
@@ -193,21 +208,34 @@ export class RealtimeSyncService {
   static subscribeToBuyerRequests(buyerId, callback) {
     console.log(`🔄 [REALTIME] Subscribe aux demandes acheteur: ${buyerId}`);
 
-    const subscription = supabase
-      .from(`purchase_cases:buyer_id=eq.${buyerId}`)
-      .on('*', (payload) => {
-        console.log('📨 [REALTIME] Buyer request update:', payload);
-        callback(payload);
-      })
-      .subscribe();
+    try {
+      const subscription = supabase
+        .channel(`buyer-requests-${buyerId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'purchase_cases'
+          },
+          (payload) => {
+            console.log('📨 [REALTIME] Buyer request update:', payload);
+            callback(payload);
+          }
+        )
+        .subscribe();
 
-    this.subscriptions.push(subscription);
+      this.subscriptions.push(subscription);
 
-    return () => {
-      console.log(`🔴 [REALTIME] Unsubscribe buyer requests`);
-      supabase.removeSubscription(subscription);
-      this.subscriptions = this.subscriptions.filter(s => s !== subscription);
-    };
+      return () => {
+        console.log(`🔴 [REALTIME] Unsubscribe buyer requests`);
+        supabase.removeChannel(`buyer-requests-${buyerId}`);
+        this.subscriptions = this.subscriptions.filter(s => s !== subscription);
+      };
+    } catch (error) {
+      console.error('❌ [REALTIME] Error subscribing to buyer requests:', error);
+      return () => {}; // Return empty cleanup function
+    }
   }
 }
 

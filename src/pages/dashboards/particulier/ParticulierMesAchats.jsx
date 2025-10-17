@@ -215,6 +215,9 @@ const ParticulierMesAchats = () => {
     } else if (activeTab === 'completed') {
       // Complétées: purchase_case terminé
       matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'completed';
+    } else if (activeTab === 'rejected') {
+      // Refusées: transaction status = 'rejected'
+      matchesTab = request.status === 'rejected';
     }
     
     const matchesSearch = searchTerm === '' || 
@@ -229,7 +232,8 @@ const ParticulierMesAchats = () => {
     pending: requests.filter(r => !r.purchaseCase && r.status === 'pending').length,
     accepted: requests.filter(r => !!r.purchaseCase && r.purchaseCase.caseStatus === 'preliminary_agreement').length,
     processing: requests.filter(r => !!r.purchaseCase && ['contract_preparation', 'legal_verification', 'document_audit', 'payment_processing'].includes(r.purchaseCase.caseStatus)).length,
-    completed: requests.filter(r => !!r.purchaseCase && r.purchaseCase.caseStatus === 'completed').length
+    completed: requests.filter(r => !!r.purchaseCase && r.purchaseCase.caseStatus === 'completed').length,
+    rejected: requests.filter(r => r.status === 'rejected').length
   };
 
   return (
@@ -248,7 +252,7 @@ const ParticulierMesAchats = () => {
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
@@ -308,6 +312,18 @@ const ParticulierMesAchats = () => {
             </div>
           </CardContent>
         </Card>
+
+        <Card>
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-slate-600">Refusées</p>
+                <p className="text-2xl font-bold text-red-600">{stats.rejected}</p>
+              </div>
+              <XCircle className="w-8 h-8 text-red-600" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Barre de recherche et filtres */}
@@ -331,7 +347,7 @@ const ParticulierMesAchats = () => {
       <Card>
         <CardHeader>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-5">
+            <TabsList className="grid w-full grid-cols-6">
               <TabsTrigger value="all">
                 Toutes ({stats.total})
               </TabsTrigger>
@@ -346,6 +362,9 @@ const ParticulierMesAchats = () => {
               </TabsTrigger>
               <TabsTrigger value="completed">
                 Terminées ({stats.completed})
+              </TabsTrigger>
+              <TabsTrigger value="rejected">
+                Refusées ({stats.rejected})
               </TabsTrigger>
             </TabsList>
           </Tabs>

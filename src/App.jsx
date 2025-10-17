@@ -296,6 +296,8 @@ import VendeurPropertiesRealData from '@/pages/dashboards/vendeur/VendeurPropert
 import VendeurPurchaseRequests from '@/pages/dashboards/vendeur/VendeurPurchaseRequests';
 import VendeurCaseTracking from '@/pages/dashboards/vendeur/VendeurCaseTracking';
 import ParticulierCaseTracking from '@/pages/dashboards/particulier/ParticulierCaseTracking';
+import RefactoredParticulierCaseTracking from '@/pages/dashboards/particulier/RefactoredParticulierCaseTracking';
+import RefactoredVendeurCaseTracking from '@/pages/dashboards/vendeur/RefactoredVendeurCaseTracking';
 import VendeurAntiFraudeRealData from '@/pages/dashboards/vendeur/VendeurAntiFraudeRealData';
 import VendeurGPSRealData from '@/pages/dashboards/vendeur/VendeurGPSRealData';
 import VendeurServicesDigitauxRealData from '@/pages/dashboards/vendeur/VendeurServicesDigitauxRealData';
@@ -536,7 +538,7 @@ function App() {
                   <Route path="favoris" element={<ParticulierFavoris />} />
                   <Route path="offres" element={<ParticulierMesOffres />} />
                   <Route path="mes-achats" element={<ParticulierMesAchats />} />
-                  <Route path="cases/:caseNumber" element={<ParticulierCaseTracking />} />
+                  <Route path="cases/:caseNumber" element={<RefactoredParticulierCaseTracking />} />
                   <Route path="visites" element={<ParticulierVisites />} />
                   <Route path="financement" element={<ParticulierFinancement />} />
                   <Route path="zones-communales" element={<ParticulierZonesCommunales />} />
@@ -573,7 +575,7 @@ function App() {
                   <Route path="properties" element={<VendeurPropertiesRealData />} />
                   <Route path="edit-property/:id" element={<EditPropertyComplete />} />
                   <Route path="purchase-requests" element={<VendeurPurchaseRequests />} />
-                  <Route path="cases/:caseNumber" element={<VendeurCaseTracking />} />
+                  <Route path="cases/:caseNumber" element={<RefactoredVendeurCaseTracking />} />
                   <Route path="anti-fraud" element={<VendeurAntiFraudeRealData />} />
                   <Route path="gps-verification" element={<VendeurGPSRealData />} />
                   <Route path="digital-services" element={<VendeurServicesDigitauxRealData />} />

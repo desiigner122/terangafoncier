@@ -288,9 +288,11 @@ import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
 
 // Imports pages vendeur RealData
 import VendeurOverviewRealData from '@/pages/dashboards/vendeur/VendeurOverviewRealData';
+import VendeurOverview from '@/pages/dashboards/vendeur/VendeurOverview';
 import VendeurCRMRealData from '@/pages/dashboards/vendeur/VendeurCRMRealData';
 import VendeurPropertiesRealData from '@/pages/dashboards/vendeur/VendeurPropertiesRealData';
 import VendeurPurchaseRequests from '@/pages/dashboards/vendeur/VendeurPurchaseRequests';
+import VendeurCaseTracking from '@/pages/dashboards/vendeur/VendeurCaseTracking';
 import VendeurAntiFraudeRealData from '@/pages/dashboards/vendeur/VendeurAntiFraudeRealData';
 import VendeurGPSRealData from '@/pages/dashboards/vendeur/VendeurGPSRealData';
 import VendeurServicesDigitauxRealData from '@/pages/dashboards/vendeur/VendeurServicesDigitauxRealData';
@@ -561,11 +563,12 @@ function App() {
                 {/* Dashboard Vendeur avec routes imbriquées pour chaque page */}
                 <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><CompleteSidebarVendeurDashboard /></RoleProtectedRoute>}>
                   <Route index element={<Navigate to="/vendeur/overview" replace />} />
-                  <Route path="overview" element={<VendeurOverviewRealData />} />
+                  <Route path="overview" element={<VendeurOverview />} />
                   <Route path="crm" element={<VendeurCRMRealData />} />
                   <Route path="properties" element={<VendeurPropertiesRealData />} />
                   <Route path="edit-property/:id" element={<EditPropertyComplete />} />
                   <Route path="purchase-requests" element={<VendeurPurchaseRequests />} />
+                  <Route path="cases/:caseNumber" element={<VendeurCaseTracking />} />
                   <Route path="anti-fraud" element={<VendeurAntiFraudeRealData />} />
                   <Route path="gps-verification" element={<VendeurGPSRealData />} />
                   <Route path="digital-services" element={<VendeurServicesDigitauxRealData />} />

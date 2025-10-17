@@ -1,45 +1,36 @@
-/**
- * PAGE DEMANDES D'ACHAT - VERSION COMPLÈTE AVEC WORKFLOWS
- * Gestion complète des demandes d'acheteurs avec:
- * - Liste et filtres avancés
- * - Statuts: pending, accepted, rejected, negotiating, completed
- * - Actions: Accepter, Refuser, Négocier, Générer contrat
- * - Chat intégré pour communication
- * - Historique complet des négociations
- * - Intégration paiement et blockchain
- */
-
 import React, { useState, useEffect } from 'react';
+import { useNavigate, useOutletContext } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import {
-  FileText, Check, X, MessageSquare, Eye, DollarSign, Calendar,
-  User, Mail, Phone, MapPin, TrendingUp, Clock, AlertCircle,
-  Filter, Search, Download, Send, Edit, History, FileCheck,
-  CreditCard, Shield, RefreshCw, MoreVertical, Building2,
-  ChevronDown, ChevronUp, ExternalLink, Star, Target
+import { 
+  ShoppingBag, 
+  Clock, 
+  CheckCircle2, 
+  XCircle, 
+  Eye,
+  TrendingUp,
+  Filter,
+  Search,
+  Calendar,
+  DollarSign,
+  Building2,
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  MoreVertical,
+  MessageSquare,
+  FileText,
+  CreditCard,
+  Wallet,
+  ArrowUpRight,
+  ArrowDownRight,
+  Sparkles
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Progress } from '@/components/ui/progress';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -47,1049 +38,949 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
-import {
-  Tabs,
-  TabsContent,
-  TabsList,
-  TabsTrigger,
-} from '@/components/ui/tabs';
-import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import { toast } from 'react-hot-toast';
-import { useNavigate } from 'react-router-dom';
+import { format, formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
+import { toast } from 'sonner';
+import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
+import NotificationService from '@/services/NotificationService';
+import NegotiationModal from '@/components/modals/NegotiationModal';
+import RequestDetailsModal from '@/components/modals/RequestDetailsModal';
 
 const VendeurPurchaseRequests = () => {
-  const { user } = useAuth();
   const navigate = useNavigate();
-  
-  const [loading, setLoading] = useState(true);
+  const outletContext = useOutletContext();
+  const { user } = outletContext || {};
+
   const [requests, setRequests] = useState([]);
-  const [filteredRequests, setFilteredRequests] = useState([]);
-  const [selectedRequest, setSelectedRequest] = useState(null);
-  
-  // Filtres
-  const [statusFilter, setStatusFilter] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [dateFilter, setDateFilter] = useState('all'); // all, today, week, month
-  const [sortBy, setSortBy] = useState('recent'); // recent, price-high, price-low, urgent
+  const [actionLoading, setActionLoading] = useState(null);
   
-  // Dialogs
-  const [showDetailDialog, setShowDetailDialog] = useState(false);
-  const [showNegotiateDialog, setShowNegotiateDialog] = useState(false);
-  const [showContractDialog, setShowContractDialog] = useState(false);
-  const [showChatDialog, setShowChatDialog] = useState(false);
-  
-  // Négociation
-  const [counterOffer, setCounterOffer] = useState('');
-  const [negotiationMessage, setNegotiationMessage] = useState('');
-  
-  // Chat
-  const [chatMessages, setChatMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  
-  // Stats
-  const [stats, setStats] = useState({
-    total: 0,
-    pending: 0,
-    accepted: 0,
-    negotiating: 0,
-    completed: 0,
-    rejected: 0,
-    totalRevenue: 0,
-    avgResponseTime: '0h'
-  });
+  // États pour les modals
+  const [showNegotiationModal, setShowNegotiationModal] = useState(false);
+  const [showDetailsModal, setShowDetailsModal] = useState(false);
+  const [selectedRequest, setSelectedRequest] = useState(null);
+  const [isNegotiating, setIsNegotiating] = useState(false);
+
+  console.log('🎯 [VENDEUR REQUESTS] Context:', outletContext);
+  console.log('🎯 [VENDEUR REQUESTS] User reçu:', user);
 
   useEffect(() => {
     if (user) {
       loadRequests();
-      setupRealtimeSubscription();
+    } else {
+      console.warn('⚠️ [VENDEUR REQUESTS] Pas de user, attente...');
     }
   }, [user]);
 
-  useEffect(() => {
-    filterRequests();
-  }, [requests, statusFilter, searchTerm, dateFilter, sortBy]);
+  // Actions sur les demandes
+  // ========================================
+  // 🎯 HANDLERS WORKFLOW COMPLETS
+  // ========================================
+  
+  const handleAccept = async (requestId) => {
+    setActionLoading(requestId);
+    try {
+      console.log('🎯 [ACCEPT] Début acceptation:', requestId);
+      setActionLoading(requestId);
+      
+      // 1. Récupérer la transaction COMPLÈTE depuis la DB
+      const { data: transaction, error: txError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('id', requestId)
+        .single();
+      
+      if (txError) {
+        console.error('❌ Erreur récupération transaction:', txError);
+        throw new Error('Impossible de récupérer la transaction: ' + txError.message);
+      }
+      
+      console.log('📊 [ACCEPT] Transaction récupérée:', transaction);
+      
+      // 2. Récupérer les relations séparément pour éviter les problèmes RLS
+      let buyer = null, seller = null, parcel = null;
+      
+      if (transaction.buyer_id) {
+        const { data: buyerData } = await supabase
+          .from('profiles')
+          .select('id, email, first_name, last_name')
+          .eq('id', transaction.buyer_id)
+          .single();
+        buyer = buyerData;
+      }
+      
+      if (transaction.seller_id) {
+        const { data: sellerData } = await supabase
+          .from('profiles')
+          .select('id, email, first_name, last_name')
+          .eq('id', transaction.seller_id)
+          .single();
+        seller = sellerData;
+      }
+      
+      if (transaction.parcel_id) {
+        const { data: parcelData } = await supabase
+          .from('parcels')
+          .select('id, title, location, surface, price, seller_id')
+          .eq('id', transaction.parcel_id)
+          .single();
+        parcel = parcelData;
+      }
+      
+      // 3. Vérifier que toutes les données essentielles existent
+      if (!transaction.buyer_id || !transaction.seller_id || !transaction.parcel_id) {
+        throw new Error('Transaction incomplète - données manquantes');
+      }
+      
+      // 4. Vérifier s'il existe déjà un dossier
+      const { data: existingCase } = await supabase
+        .from('purchase_cases')
+        .select('*')
+        .eq('request_id', requestId)
+        .single();
 
-  const loadRequests = async () => {
+      let purchaseCase;
+      
+      if (!existingCase) {
+        console.log('📋 [ACCEPT] Création nouveau dossier...');
+        
+        // Créer le dossier avec le workflow service
+        const result = await PurchaseWorkflowService.createPurchaseCase({
+          request_id: requestId,
+          buyer_id: transaction.buyer_id,
+          seller_id: transaction.seller_id,
+          parcelle_id: transaction.parcel_id,
+          purchase_price: transaction.amount,
+          payment_method: transaction.payment_method || 'unknown',
+          initiation_method: 'seller_acceptance',
+          property_details: {
+            title: parcel?.title,
+            location: parcel?.location,
+            surface: parcel?.surface
+          },
+          buyer_details: {
+            name: buyer?.first_name && buyer?.last_name 
+              ? `${buyer.first_name} ${buyer.last_name}` 
+              : 'Acheteur',
+            email: buyer?.email,
+            phone: transaction.metadata?.buyer_phone || 'Non fourni'
+          },
+          payment_details: transaction.metadata?.payment_details || {}
+        });
+
+        if (!result.success) throw new Error(result.error);
+        purchaseCase = result.case;
+        
+        console.log('✅ [ACCEPT] Dossier créé:', purchaseCase.case_number);
+        toast.success(`🎉 Offre acceptée ! Dossier créé: ${purchaseCase.case_number}`);
+      } else {
+        console.log('📋 [ACCEPT] Dossier existant, vérification du statut...');
+        
+        // Vérifier le statut actuel du dossier
+        const currentStatus = existingCase.status;
+        
+        // Si le dossier est déjà accepté ou plus loin, ne pas essayer une transition invalide
+        if (currentStatus === 'preliminary_agreement' || currentStatus === 'contract_preparation' || currentStatus === 'accepted') {
+          console.log('✅ [ACCEPT] Dossier déjà accepté, pas de mise à jour nécessaire');
+          purchaseCase = existingCase;
+          toast.success('✅ Cette demande a déjà été acceptée ! Consultez votre dossier.');
+        } else if (currentStatus === 'initiated' || currentStatus === 'seller_notification') {
+          // Mettre à jour le statut du dossier existant
+          const result = await PurchaseWorkflowService.updateCaseStatus(
+            existingCase.id,
+            'preliminary_agreement',
+            user.id,
+            'Vendeur a accepté l\'offre d\'achat'
+          );
+
+          if (!result.success) throw new Error(result.error);
+          purchaseCase = existingCase;
+          
+          toast.success('✅ Offre acceptée ! Passage à l\'accord préliminaire');
+        } else {
+          console.log('⚠️ [ACCEPT] Statut dossier incompatible:', currentStatus);
+          purchaseCase = existingCase;
+          toast.info(`Dossier en état: ${currentStatus}. Consultez votre dossier pour plus d'infos.`);
+        }
+      }
+
+      // 4. Mettre à jour le statut de la transaction
+      const { error: updateError } = await supabase
+        .from('transactions')
+        .update({ 
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (updateError) throw updateError;
+
+      // 5. Envoyer notification à l'acheteur
+      try {
+        await NotificationService.sendPurchaseRequestAccepted({
+          buyerId: transaction.buyer_id,
+          buyerEmail: buyer?.email,
+          sellerName: user.email,
+          caseNumber: purchaseCase.case_number,
+          parcelTitle: parcel?.title,
+          purchasePrice: transaction.amount
+        });
+        console.log('✅ [ACCEPT] Notification envoyée à l\'acheteur');
+      } catch (notifError) {
+        console.error('⚠️ [ACCEPT] Erreur notification (non bloquante):', notifError);
+      }
+
+      // 6. Mettre à jour l'état local directement
+      setRequests(prevRequests =>
+        prevRequests.map(req =>
+          req.id === requestId 
+            ? { ...req, status: 'accepted' }
+            : req
+        )
+      );
+      
+      // Recharger en arrière-plan (non-bloquant)
+      loadRequests().catch(err => {
+        console.warn('⚠️ Rechargement en arrière-plan échoué:', err);
+      });
+      
+      toast.success(
+        `🚀 Workflow d'achat lancé ! Dossier: ${purchaseCase.case_number}`,
+        { duration: 5000 }
+      );
+
+    } catch (error) {
+      console.error('❌ [ACCEPT] Erreur:', error);
+      toast.error('Erreur lors de l\'acceptation: ' + error.message);
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleReject = async (requestId) => {
+    setActionLoading(requestId);
+    try {
+      // 1. Vérifier s'il y a un dossier workflow existant
+      const { data: existingCase } = await supabase
+        .from('purchase_cases')
+        .select('*')
+        .eq('request_id', requestId)
+        .single();
+
+      if (existingCase) {
+        // Mettre à jour le workflow vers "seller_declined"
+        const result = await PurchaseWorkflowService.updateCaseStatus(
+          existingCase.id,
+          'seller_declined',
+          user.id,
+          'Vendeur a refusé l\'offre d\'achat'
+        );
+
+        if (!result.success) throw new Error(result.error);
+        toast.success('Offre refusée - Dossier workflow mis à jour');
+      }
+
+      // 2. Mettre à jour la transaction
+      const { error } = await supabase
+        .from('transactions')
+        .update({ 
+          status: 'rejected',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (error) throw error;
+
+      toast.success('Offre refusée avec succès');
+      await loadRequests();
+      
+    } catch (error) {
+      console.error('❌ Erreur refus:', error);
+      toast.error('Erreur lors du refus de l\'offre');
+    } finally {
+      setActionLoading(null);
+    }
+  };
+
+  const handleNegotiate = (request) => {
+    console.log('💬 [NEGOTIATE] Ouverture modal de négociation pour:', request.id);
+    setSelectedRequest(request);
+    setShowNegotiationModal(true);
+  };
+  
+  const handleSubmitNegotiation = async (counterOffer) => {
+    setIsNegotiating(true);
+    try {
+      console.log('💬 [NEGOTIATE] Soumission contre-offre:', counterOffer);
+      
+      // 1. Vérifier/créer le dossier workflow
+      const { data: existingCase } = await supabase
+        .from('purchase_cases')
+        .select('*')
+        .eq('request_id', selectedRequest.id)
+        .single();
+
+      let caseId = existingCase?.id;
+      
+      if (!existingCase) {
+        // Créer le dossier en mode négociation
+        const result = await PurchaseWorkflowService.createPurchaseCase({
+          request_id: selectedRequest.id,
+          buyer_id: selectedRequest.user_id || selectedRequest.buyer_id,
+          seller_id: user.id,
+          parcelle_id: selectedRequest.parcel_id,
+          purchase_price: selectedRequest.offered_price || selectedRequest.offer_price,
+          payment_method: selectedRequest.payment_method || 'unknown',
+          initiation_method: 'seller_negotiation'
+        });
+
+        if (!result.success) throw new Error(result.error);
+        caseId = result.case.id;
+        
+        console.log('📋 [NEGOTIATE] Dossier créé:', caseId);
+      }
+      
+      // 2. Mettre le dossier en mode négociation
+      await PurchaseWorkflowService.updateCaseStatus(
+        caseId,
+        'negotiation',
+        user.id,
+        `Vendeur a proposé une contre-offre: ${counterOffer.new_price} FCFA`
+      );
+      
+      // 3. Enregistrer la contre-offre dans purchase_case_negotiations
+      const { error: negotiationError } = await supabase
+        .from('purchase_case_negotiations')
+        .insert({
+          case_id: caseId,
+          proposed_by: user.id,
+          proposed_to: selectedRequest.user_id || selectedRequest.buyer_id,
+          proposed_price: counterOffer.new_price,
+          message: counterOffer.message,
+          conditions: counterOffer.conditions,
+          valid_until: counterOffer.valid_until,
+          status: 'pending'
+        });
+      
+      if (negotiationError) throw negotiationError;
+      
+      // 4. Mettre à jour la transaction
+      const { error: txError } = await supabase
+        .from('transactions')
+        .update({
+          status: 'negotiation',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedRequest.id);
+      
+      if (txError) throw txError;
+      
+      // 5. Fermer modal et recharger
+      setShowNegotiationModal(false);
+      setSelectedRequest(null);
+      await loadRequests();
+      
+      toast.success('💬 Contre-offre envoyée avec succès ! L\'acheteur sera notifié.');
+      
+    } catch (error) {
+      console.error('❌ [NEGOTIATE] Erreur:', error);
+      toast.error('Erreur lors de l\'envoi de la contre-offre: ' + error.message);
+    } finally {
+      setIsNegotiating(false);
+    }
+  };
+
+  const handleViewDetails = (request) => {
+    console.log('👁️ [DETAILS] Ouverture modal détails pour:', request.id);
+    setSelectedRequest(request);
+    setShowDetailsModal(true);
+  };
+
+  const handleContact = (request) => {
+    if (request.buyer_email) {
+      window.location.href = `mailto:${request.buyer_email}`;
+    } else {
+      toast.error('Email de l\'acheteur non disponible');
+    }
+  };
+
+  const handleGenerateContract = (request) => {
+    toast.info('Génération de contrat à venir ! 📄');
+    // TODO: Générer PDF du contrat de vente
+  };
+
+  const loadRequests = async (retryCount = 0) => {
+    const MAX_RETRIES = 2;
     try {
       setLoading(true);
       console.log('🔍 [VENDEUR] Chargement demandes pour user:', user.id);
 
-      // Récupérer d'abord les parcelles du vendeur
+      // Récupérer les parcelles du vendeur
       const { data: sellerParcels, error: parcelsError } = await supabase
         .from('parcels')
         .select('id')
         .eq('seller_id', user.id);
 
-      if (parcelsError) {
-        console.error('❌ [VENDEUR] Erreur parcelles:', parcelsError);
-        throw parcelsError;
-      }
+      if (parcelsError) throw parcelsError;
 
       const parcelIds = sellerParcels?.map(p => p.id) || [];
       console.log('🏠 [VENDEUR] Parcelles trouvées:', parcelIds.length, parcelIds);
 
       if (parcelIds.length === 0) {
-        console.log('⚠️ [VENDEUR] Aucune parcelle pour ce vendeur');
         setRequests([]);
-        calculateStats([]);
         setLoading(false);
         return;
       }
 
-      // Récupérer les demandes pour ces parcelles (sans foreign key hints)
-      const { data: requestsData, error } = await supabase
-        .from('requests')
+      // Charger depuis transactions au lieu de requests
+      // ✅ CORRECTION: Charger TOUTES les transactions (purchase + request)
+      const { data: transactionsData, error } = await supabase
+        .from('transactions')
         .select('*')
         .in('parcel_id', parcelIds)
+        .in('transaction_type', ['purchase', 'request', 'offer']) // Accepter plusieurs types
         .order('created_at', { ascending: false });
 
       if (error) {
-        console.error('❌ [VENDEUR] Erreur requêtes:', error);
+        // Si NetworkError et retries disponibles, réessayer
+        if (error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
+          if (retryCount < MAX_RETRIES) {
+            console.warn(`⚠️ NetworkError détecté. Retry ${retryCount + 1}/${MAX_RETRIES}`);
+            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Délai croissant
+            return loadRequests(retryCount + 1);
+          }
+        }
         throw error;
       }
 
-      if (!requestsData || requestsData.length === 0) {
-        console.log('⚠️ [VENDEUR] Aucune demande trouvée');
+      console.log('📊 [VENDEUR] Transactions brutes:', transactionsData);
+
+      if (!transactionsData || transactionsData.length === 0) {
         setRequests([]);
-        calculateStats([]);
+        setLoading(false);
         return;
       }
 
-      // Charger les parcelles manuellement
+      // Charger les parcelles
       const { data: parcelsData } = await supabase
         .from('parcels')
         .select('id, title, name, price, location, surface, status')
         .in('id', parcelIds);
 
-      // Charger les profils acheteurs manuellement
-      const buyerIds = [...new Set(requestsData.map(r => r.user_id).filter(Boolean))];
+      // Charger les profils acheteurs
+      const buyerIds = [...new Set(transactionsData.map(t => t.buyer_id).filter(Boolean))];
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email, phone')
+        .select('id, first_name, last_name, email')
         .in('id', buyerIds);
 
-      // Charger les transactions manuellement
-      const requestIds = requestsData.map(r => r.id);
-      const { data: transactionsData } = await supabase
-        .from('transactions')
-        .select('id, amount, payment_method, status, request_id')
-        .in('request_id', requestIds);
+      // Transformer les transactions
+      const enrichedRequests = transactionsData.map(transaction => {
+        const buyer = profilesData?.find(p => p.id === transaction.buyer_id);
+        const parcel = parcelsData?.find(p => p.id === transaction.parcel_id);
+        const buyerInfo = transaction.buyer_info || {};
+        
+        return {
+          id: transaction.id,
+          user_id: transaction.buyer_id,
+          parcel_id: transaction.parcel_id,
+          status: transaction.status,
+          created_at: transaction.created_at,
+          updated_at: transaction.updated_at,
+          payment_method: transaction.payment_method,
+          offered_price: transaction.amount,
+          offer_price: transaction.amount,
+          request_type: transaction.payment_method || 'general',
+          message: transaction.description || '',
+          buyer_info: buyerInfo,
+          buyer_name: buyerInfo.full_name || `${buyer?.first_name || ''} ${buyer?.last_name || ''}`.trim() || 'Acheteur',
+          buyer_email: buyerInfo.email || buyer?.email || '',
+          buyer_phone: buyerInfo.phone || buyer?.phone || '',
+          parcels: parcel,
+          properties: parcel,
+          profiles: buyer,
+          buyer: buyer,
+          transactions: [transaction]
+        };
+      });
 
-      // Combiner les données
-      const enrichedRequests = requestsData.map(request => ({
-        ...request,
-        parcels: parcelsData?.find(p => p.id === request.parcel_id) || null,
-        profiles: profilesData?.find(p => p.id === request.user_id) || null,
-        transactions: transactionsData?.filter(t => t.request_id === request.id) || []
-      }));
-
-      console.log('✅ [VENDEUR] Demandes enrichies:', enrichedRequests.length, enrichedRequests);
+      console.log('✅ [VENDEUR] Transactions chargées:', enrichedRequests.length, enrichedRequests);
       setRequests(enrichedRequests);
-      calculateStats(enrichedRequests);
     } catch (error) {
-      console.error('Erreur chargement demandes:', error);
-      toast.error('Erreur lors du chargement des demandes');
+      console.error('❌ Erreur chargement demandes:', error);
+      // Ne pas toast l'erreur pour ne pas surcharger l'UI
+      // Les demandes restent dans l'état précédent (optimistic update)
     } finally {
       setLoading(false);
     }
   };
 
-  const setupRealtimeSubscription = () => {
-    const subscription = supabase
-      .channel('requests_realtime')
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'requests'
-        },
-        (payload) => {
-          switch (payload.eventType) {
-            case 'INSERT':
-              toast.success('🎉 Nouvelle demande d\'achat reçue !', {
-                duration: 5000,
-                icon: '🔔'
-              });
-              loadRequests();
-              break;
-            case 'UPDATE':
-              loadRequests();
-              break;
-          }
-        }
-      )
-      .subscribe();
+  // Filtrer les demandes
+  const filteredRequests = requests.filter(request => {
+    const matchesTab = activeTab === 'all' || request.status === activeTab;
+    const matchesSearch = searchTerm === '' || 
+      request.buyer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.buyer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      request.parcels?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesTab && matchesSearch;
+  });
 
-    return () => {
-      subscription.unsubscribe();
+  // Statistiques
+  const stats = {
+    total: requests.length,
+    pending: requests.filter(r => r.status === 'pending').length,
+    accepted: requests.filter(r => r.status === 'accepted').length,
+    negotiation: requests.filter(r => r.status === 'negotiation').length,
+    completed: requests.filter(r => r.status === 'completed').length,
+    rejected: requests.filter(r => r.status === 'rejected').length,
+    revenue: requests.filter(r => r.status === 'completed').reduce((sum, r) => sum + (r.offered_price || 0), 0)
+  };
+
+  // Helpers
+  const getPaymentMethodIcon = (method) => {
+    switch (method) {
+      case 'one-time': return <Wallet className="w-4 h-4" />;
+      case 'installments': return <Calendar className="w-4 h-4" />;
+      case 'bank-financing': return <Building2 className="w-4 h-4" />;
+      default: return <CreditCard className="w-4 h-4" />;
+    }
+  };
+
+  const getPaymentMethodLabel = (method) => {
+    switch (method) {
+      case 'one-time': return 'Comptant';
+      case 'installments': return 'Échelonné';
+      case 'bank-financing': return 'Financement';
+      default: return 'Autre';
+    }
+  };
+
+  const getStatusBadge = (status) => {
+    const configs = {
+      pending: { color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock, label: 'En attente' },
+      accepted: { color: 'bg-blue-100 text-blue-700 border-blue-200', icon: CheckCircle2, label: 'Acceptée' },
+      negotiation: { color: 'bg-purple-100 text-purple-700 border-purple-200', icon: TrendingUp, label: 'En négociation' },
+      completed: { color: 'bg-emerald-100 text-emerald-700 border-emerald-200', icon: CheckCircle2, label: 'Complétée' },
+      rejected: { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle, label: 'Refusée' },
+      cancelled: { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle, label: 'Annulée' }
     };
+    const config = configs[status] || configs.pending;
+    const Icon = config.icon;
+    return (
+      <Badge className={`${config.color} border`}>
+        <Icon className="w-3 h-3 mr-1" />
+        {config.label}
+      </Badge>
+    );
   };
 
-  const calculateStats = (data) => {
-    const stats = {
-      total: data.length,
-      pending: data.filter(r => r.status === 'pending').length,
-      accepted: data.filter(r => r.status === 'accepted').length,
-      negotiating: data.filter(r => r.status === 'negotiating').length,
-      completed: data.filter(r => r.status === 'completed').length,
-      rejected: data.filter(r => r.status === 'rejected').length,
-      totalRevenue: data
-        .filter(r => r.status === 'completed')
-        .reduce((sum, r) => sum + (r.final_price || r.offer_price || 0), 0),
-      avgResponseTime: calculateAvgResponseTime(data)
-    };
-    setStats(stats);
-  };
-
-  const calculateAvgResponseTime = (data) => {
-    const respondedRequests = data.filter(r => r.responded_at);
-    if (respondedRequests.length === 0) return '0h';
-
-    const totalHours = respondedRequests.reduce((sum, r) => {
-      const created = new Date(r.created_at);
-      const responded = new Date(r.responded_at);
-      const hours = (responded - created) / (1000 * 60 * 60);
-      return sum + hours;
-    }, 0);
-
-    const avgHours = Math.round(totalHours / respondedRequests.length);
-    return avgHours < 24 ? `${avgHours}h` : `${Math.round(avgHours / 24)}j`;
-  };
-
-  const filterRequests = () => {
-    let filtered = [...requests];
-
-    // Filtre par statut
-    if (statusFilter !== 'all') {
-      filtered = filtered.filter(r => r.status === statusFilter);
-    }
-
-    // Filtre par recherche
-    if (searchTerm) {
-      filtered = filtered.filter(r =>
-        r.buyer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.buyer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        r.properties?.title?.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    // Filtre par date
-    if (dateFilter !== 'all') {
-      const now = new Date();
-      filtered = filtered.filter(r => {
-        const created = new Date(r.created_at);
-        switch (dateFilter) {
-          case 'today':
-            return created.toDateString() === now.toDateString();
-          case 'week':
-            const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
-            return created >= weekAgo;
-          case 'month':
-            const monthAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
-            return created >= monthAgo;
-          default:
-            return true;
-        }
-      });
-    }
-
-    // Tri
-    filtered.sort((a, b) => {
-      switch (sortBy) {
-        case 'recent':
-          return new Date(b.created_at) - new Date(a.created_at);
-        case 'price-high':
-          return (b.offer_price || 0) - (a.offer_price || 0);
-        case 'price-low':
-          return (a.offer_price || 0) - (b.offer_price || 0);
-        case 'urgent':
-          // Priorité: pending récents, puis negotiating, puis accepted
-          const priorityScore = (r) => {
-            if (r.status === 'pending') return new Date(r.created_at).getTime() + 10000000000;
-            if (r.status === 'negotiating') return new Date(r.created_at).getTime() + 5000000000;
-            return new Date(r.created_at).getTime();
-          };
-          return priorityScore(b) - priorityScore(a);
-        default:
-          return 0;
-      }
-    });
-
-    setFilteredRequests(filtered);
-  };
-
-  const handleAccept = async (requestId) => {
-    try {
-      const { error } = await supabase
-        .from('purchase_requests')
-        .update({
-          status: 'accepted',
-          responded_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      toast.success('✅ Demande acceptée ! L\'acheteur a été notifié.');
-      loadRequests();
-      
-      // TODO: Envoyer notification email/push à l'acheteur
-      sendBuyerNotification(requestId, 'accepted');
-      
-    } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de l\'acceptation');
-    }
-  };
-
-  const handleReject = async (requestId, reason = '') => {
-    if (!confirm('Êtes-vous sûr de vouloir refuser cette demande ?')) return;
-
-    try {
-      const { error } = await supabase
-        .from('purchase_requests')
-        .update({
-          status: 'rejected',
-          rejection_reason: reason,
-          responded_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      toast.success('Demande refusée.');
-      loadRequests();
-      sendBuyerNotification(requestId, 'rejected');
-      
-    } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors du refus');
-    }
-  };
-
-  const handleStartNegotiation = async () => {
-    if (!counterOffer || !negotiationMessage) {
-      toast.error('Veuillez remplir tous les champs');
-      return;
-    }
-
-    try {
-      const negotiationEntry = {
-        type: 'counter_offer',
-        from: 'vendor',
-        price: parseFloat(counterOffer),
-        message: negotiationMessage,
-        timestamp: new Date().toISOString()
-      };
-
-      const currentHistory = selectedRequest.negotiation_history || [];
-      
-      const { error } = await supabase
-        .from('purchase_requests')
-        .update({
-          status: 'negotiating',
-          counter_offer_price: parseFloat(counterOffer),
-          negotiation_history: [...currentHistory, negotiationEntry],
-          responded_at: selectedRequest.responded_at || new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedRequest.id);
-
-      if (error) throw error;
-
-      toast.success('💬 Contre-offre envoyée !');
-      setShowNegotiateDialog(false);
-      setCounterOffer('');
-      setNegotiationMessage('');
-      loadRequests();
-      sendBuyerNotification(selectedRequest.id, 'counter_offer');
-      
-    } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de l\'envoi');
-    }
-  };
-
-  const handleGenerateContract = async (requestId) => {
-    try {
-      // TODO: Implémenter génération contrat PDF
-      toast.success('📄 Génération du contrat...');
-      
-      const { error } = await supabase
-        .from('purchase_requests')
-        .update({
-          status: 'contract_pending',
-          contract_generated_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', requestId);
-
-      if (error) throw error;
-
-      // Ouvrir page de contrat
-      // navigate(`/dashboard/contracts/${requestId}`);
-      
-    } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur génération contrat');
-    }
-  };
-
-  const sendBuyerNotification = async (requestId, type) => {
-    // TODO: Implémenter notifications email/push
-    console.log(`Notification ${type} envoyée pour demande ${requestId}`);
-  };
-
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      accepted: 'bg-green-100 text-green-800 border-green-200',
-      rejected: 'bg-red-100 text-red-800 border-red-200',
-      negotiating: 'bg-blue-100 text-blue-800 border-blue-200',
-      completed: 'bg-purple-100 text-purple-800 border-purple-200',
-      contract_pending: 'bg-orange-100 text-orange-800 border-orange-200'
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
-  };
-
-  const getStatusLabel = (status) => {
-    const labels = {
-      pending: 'En attente',
-      accepted: 'Acceptée',
-      rejected: 'Refusée',
-      negotiating: 'Négociation',
-      completed: 'Terminée',
-      contract_pending: 'Contrat en cours'
-    };
-    return labels[status] || status;
-  };
-
-  const getStatusIcon = (status) => {
-    const icons = {
-      pending: Clock,
-      accepted: Check,
-      rejected: X,
-      negotiating: MessageSquare,
-      completed: FileCheck,
-      contract_pending: FileText
-    };
-    const Icon = icons[status] || AlertCircle;
-    return <Icon className="h-4 w-4" />;
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('fr-FR', {
+      style: 'currency',
+      currency: 'XOF',
+      minimumFractionDigits: 0
+    }).format(amount || 0);
   };
 
   const formatTimeAgo = (date) => {
-    const now = new Date();
-    const created = new Date(date);
-    const diffMs = now - created;
-    const diffMins = Math.floor(diffMs / 60000);
-    const diffHours = Math.floor(diffMs / 3600000);
-    const diffDays = Math.floor(diffMs / 86400000);
-
-    if (diffMins < 60) return `Il y a ${diffMins}min`;
-    if (diffHours < 24) return `Il y a ${diffHours}h`;
-    return `Il y a ${diffDays}j`;
+    if (!date) return 'N/A';
+    try {
+      return formatDistanceToNow(new Date(date), { addSuffix: true, locale: fr });
+    } catch {
+      return 'N/A';
+    }
   };
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <RefreshCw className="h-12 w-12 animate-spin text-blue-600 mx-auto mb-4" />
-          <p className="text-lg text-muted-foreground">Chargement des demandes...</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="p-6 space-y-6 bg-gradient-to-br from-blue-50 via-white to-purple-50 min-h-screen">
-      {/* Header */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-        <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <FileText className="h-8 w-8 text-blue-600" />
-            Demandes d'Achat
-          </h1>
-          <p className="text-gray-600 mt-1">
-            Gérez toutes vos demandes d'acheteurs en un seul endroit
-          </p>
-        </div>
-        <div className="flex gap-3">
-          <Button variant="outline" onClick={() => loadRequests()}>
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualiser
-          </Button>
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Exporter
-          </Button>
-        </div>
-      </div>
-
-      {/* Stats Cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-4">
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-xl p-4 shadow-sm border border-gray-100"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <FileText className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-blue-700">{stats.total}</span>
-          </div>
-          <p className="text-sm font-medium text-gray-600">Total</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-xl p-4 shadow-sm border border-yellow-100"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <Clock className="h-8 w-8 text-yellow-600" />
-            <span className="text-2xl font-bold text-yellow-700">{stats.pending}</span>
-          </div>
-          <p className="text-sm font-medium text-gray-600">En attente</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-xl p-4 shadow-sm border border-blue-100"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <MessageSquare className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-blue-700">{stats.negotiating}</span>
-          </div>
-          <p className="text-sm font-medium text-gray-600">Négociation</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-xl p-4 shadow-sm border border-green-100"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <Check className="h-8 w-8 text-green-600" />
-            <span className="text-2xl font-bold text-green-700">{stats.accepted}</span>
-          </div>
-          <p className="text-sm font-medium text-gray-600">Acceptées</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-xl p-4 shadow-sm border border-purple-100"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <FileCheck className="h-8 w-8 text-purple-600" />
-            <span className="text-2xl font-bold text-purple-700">{stats.completed}</span>
-          </div>
-          <p className="text-sm font-medium text-gray-600">Terminées</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-xl p-4 shadow-sm border border-red-100"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <X className="h-8 w-8 text-red-600" />
-            <span className="text-2xl font-bold text-red-700">{stats.rejected}</span>
-          </div>
-          <p className="text-sm font-medium text-gray-600">Refusées</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-xl p-4 shadow-sm border border-green-100"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <DollarSign className="h-8 w-8 text-green-600" />
-            <span className="text-lg font-bold text-green-700">
-              {(stats.totalRevenue / 1000000).toFixed(1)}M
-            </span>
-          </div>
-          <p className="text-sm font-medium text-gray-600">Revenus FCFA</p>
-        </motion.div>
-
-        <motion.div
-          whileHover={{ scale: 1.05 }}
-          className="bg-white rounded-xl p-4 shadow-sm border border-blue-100"
-        >
-          <div className="flex items-center justify-between mb-2">
-            <TrendingUp className="h-8 w-8 text-blue-600" />
-            <span className="text-2xl font-bold text-blue-700">{stats.avgResponseTime}</span>
-          </div>
-          <p className="text-sm font-medium text-gray-600">Temps réponse</p>
-        </motion.div>
-      </div>
-
-      {/* Filtres et recherche */}
-      <Card>
-        <CardContent className="pt-6">
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            {/* Recherche */}
-            <div className="md:col-span-2">
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Rechercher par nom, email, propriété..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
-                />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+      {/* En-tête moderne */}
+      <motion.div
+        initial={{ opacity: 0, y: -20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="mb-8"
+      >
+        <div className="flex items-center justify-between mb-6">
+          <div>
+            <div className="flex items-center gap-3 mb-2">
+              <div className="p-3 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl shadow-lg">
+                <ShoppingBag className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-slate-900 to-slate-700 bg-clip-text text-transparent">
+                  Demandes d'Achat Reçues
+                </h1>
+                <p className="text-slate-600 mt-1">Gérez les offres de vos acheteurs en temps réel</p>
               </div>
             </div>
-
-            {/* Statut */}
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Statut" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Tous les statuts</SelectItem>
-                <SelectItem value="pending">En attente</SelectItem>
-                <SelectItem value="negotiating">Négociation</SelectItem>
-                <SelectItem value="accepted">Acceptées</SelectItem>
-                <SelectItem value="completed">Terminées</SelectItem>
-                <SelectItem value="rejected">Refusées</SelectItem>
-              </SelectContent>
-            </Select>
-
-            {/* Date */}
-            <Select value={dateFilter} onValueChange={setDateFilter}>
-              <SelectTrigger>
-                <SelectValue placeholder="Période" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Toutes les dates</SelectItem>
-                <SelectItem value="today">Aujourd'hui</SelectItem>
-                <SelectItem value="week">Cette semaine</SelectItem>
-                <SelectItem value="month">Ce mois</SelectItem>
-              </SelectContent>
-            </Select>
           </div>
+        </div>
 
-          <div className="flex items-center justify-between mt-4 pt-4 border-t">
-            <p className="text-sm text-muted-foreground">
-              {filteredRequests.length} demande(s) trouvée(s)
-            </p>
-            <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-48">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="recent">Plus récentes</SelectItem>
-                <SelectItem value="urgent">Urgentes</SelectItem>
-                <SelectItem value="price-high">Prix croissant</SelectItem>
-                <SelectItem value="price-low">Prix décroissant</SelectItem>
-              </SelectContent>
-            </Select>
+        {/* Statistiques modernes */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-blue-100 rounded-xl">
+                <ShoppingBag className="w-5 h-5 text-blue-600" />
+              </div>
+              <span className="text-xs font-medium text-slate-500">TOTAL</span>
+            </div>
+            <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
+            <p className="text-sm text-slate-600 mt-1">Demandes reçues</p>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-gradient-to-br from-amber-50 to-orange-50 rounded-2xl p-6 shadow-sm border border-amber-200"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-amber-100 rounded-xl">
+                <Clock className="w-5 h-5 text-amber-600" />
+              </div>
+              <span className="text-xs font-medium text-amber-600">EN ATTENTE</span>
+            </div>
+            <p className="text-3xl font-bold text-amber-900">{stats.pending}</p>
+            <p className="text-sm text-amber-700 mt-1">À traiter rapidement</p>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-6 shadow-sm border border-emerald-200"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-emerald-100 rounded-xl">
+                <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+              </div>
+              <span className="text-xs font-medium text-emerald-600">COMPLÉTÉES</span>
+            </div>
+            <p className="text-3xl font-bold text-emerald-900">{stats.completed}</p>
+            <p className="text-sm text-emerald-700 mt-1">Ventes finalisées</p>
+          </motion.div>
+
+          <motion.div
+            whileHover={{ scale: 1.02 }}
+            className="bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl p-6 shadow-lg text-white"
+          >
+            <div className="flex items-center justify-between mb-3">
+              <div className="p-2 bg-white/20 rounded-xl">
+                <TrendingUp className="w-5 h-5" />
+              </div>
+              <ArrowUpRight className="w-5 h-5" />
+            </div>
+            <p className="text-2xl font-bold">{formatCurrency(stats.revenue)}</p>
+            <p className="text-sm text-blue-100 mt-1">Revenu total</p>
+          </motion.div>
+        </div>
+      </motion.div>
+
+      {/* Barre de recherche et filtres */}
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.1 }}
+        className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 mb-6"
+      >
+        <div className="flex flex-col md:flex-row gap-4">
+          <div className="flex-1 relative">
+            <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 w-5 h-5" />
+            <Input
+              placeholder="Rechercher par acheteur, email ou terrain..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-12 h-12 border-slate-200 focus:border-blue-500 rounded-xl"
+            />
           </div>
-        </CardContent>
-      </Card>
+          <Button variant="outline" className="h-12 px-6 rounded-xl border-slate-200">
+            <Filter className="w-4 h-4 mr-2" />
+            Filtres avancés
+          </Button>
+        </div>
+      </motion.div>
 
-      {/* Liste des demandes */}
-      {filteredRequests.length === 0 ? (
-        <Card>
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <FileText className="h-16 w-16 text-gray-300 mb-4" />
-            <h3 className="text-xl font-semibold text-gray-700 mb-2">
-              Aucune demande trouvée
-            </h3>
-            <p className="text-gray-500 text-center max-w-md">
-              {searchTerm || statusFilter !== 'all'
-                ? 'Essayez de modifier vos filtres'
-                : 'Vous n\'avez pas encore de demandes d\'achat'}
-            </p>
-          </CardContent>
-        </Card>
-      ) : (
-        <div className="space-y-4">
-          <AnimatePresence>
-            {filteredRequests.map((request, index) => (
-              <motion.div
-                key={request.id}
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                transition={{ delay: index * 0.05 }}
-              >
-                <Card className="overflow-hidden hover:shadow-lg transition-all">
-                  <CardContent className="p-6">
-                    <div className="flex gap-4">
-                      {/* Image propriété */}
+      {/* Onglets et liste */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
+        <TabsList className="bg-white p-2 rounded-xl shadow-sm border border-slate-200 flex flex-wrap">
+          <TabsTrigger value="all" className="rounded-lg px-4 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-600 data-[state=active]:to-indigo-600 data-[state=active]:text-white">
+            Toutes ({stats.total})
+          </TabsTrigger>
+          <TabsTrigger value="pending" className="rounded-lg px-4 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-amber-500 data-[state=active]:to-orange-500 data-[state=active]:text-white">
+            En attente ({stats.pending})
+          </TabsTrigger>
+          <TabsTrigger value="accepted" className="rounded-lg px-4 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-cyan-500 data-[state=active]:text-white">
+            Acceptées ({stats.accepted})
+          </TabsTrigger>
+          <TabsTrigger value="negotiation" className="rounded-lg px-4 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-500 data-[state=active]:to-pink-500 data-[state=active]:text-white">
+            En négociation ({stats.negotiation})
+          </TabsTrigger>
+          <TabsTrigger value="completed" className="rounded-lg px-4 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-emerald-500 data-[state=active]:to-teal-500 data-[state=active]:text-white">
+            Complétées ({stats.completed})
+          </TabsTrigger>
+          <TabsTrigger value="rejected" className="rounded-lg px-4 text-sm data-[state=active]:bg-gradient-to-r data-[state=active]:from-red-500 data-[state=active]:to-orange-500 data-[state=active]:text-white">
+            Refusées ({stats.rejected})
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value={activeTab}>
+          {loading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <div className="animate-spin rounded-full h-16 w-16 border-4 border-blue-600 border-t-transparent"></div>
+              <p className="text-slate-600 mt-4 font-medium">Chargement des demandes...</p>
+            </div>
+          ) : filteredRequests.length === 0 ? (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="bg-white rounded-2xl p-16 text-center shadow-sm border border-slate-200"
+            >
+              <div className="w-20 h-20 bg-gradient-to-br from-slate-100 to-slate-200 rounded-full flex items-center justify-center mx-auto mb-6">
+                <ShoppingBag className="w-10 h-10 text-slate-400" />
+              </div>
+              <h3 className="text-2xl font-bold text-slate-900 mb-2">Aucune demande trouvée</h3>
+              <p className="text-slate-600">
+                {searchTerm || activeTab !== 'all'
+                  ? 'Essayez de modifier vos filtres de recherche'
+                  : 'Vous n\'avez pas encore reçu de demandes d\'achat'}
+              </p>
+            </motion.div>
+          ) : (
+            <div className="grid grid-cols-1 gap-4">
+              <AnimatePresence>
+                {filteredRequests.map((request, index) => (
+                  <motion.div
+                    key={request.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -20 }}
+                    transition={{ delay: index * 0.05 }}
+                    whileHover={{ scale: 1.01 }}
+                    className="bg-white rounded-2xl p-6 shadow-sm border border-slate-200 hover:shadow-xl transition-all duration-300"
+                  >
+                    <div className="flex gap-6">
+                      {/* Avatar acheteur */}
                       <div className="flex-shrink-0">
-                        {request.properties?.images?.[0] ? (
-                          <img
-                            src={request.properties.images[0]}
-                            alt={request.properties.title}
-                            className="w-32 h-32 object-cover rounded-lg"
-                          />
-                        ) : (
-                          <div className="w-32 h-32 bg-gray-200 rounded-lg flex items-center justify-center">
-                            <Building2 className="h-12 w-12 text-gray-400" />
-                          </div>
-                        )}
+                        <div className="w-16 h-16 bg-gradient-to-br from-blue-600 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+                          <User className="w-8 h-8 text-white" />
+                        </div>
                       </div>
 
                       {/* Contenu */}
                       <div className="flex-1">
-                        <div className="flex items-start justify-between mb-3">
+                        <div className="flex items-start justify-between mb-4">
                           <div>
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="text-lg font-semibold text-gray-900">
-                                {request.buyer_name || request.buyer?.full_name || 'Acheteur'}
+                            <div className="flex items-center gap-3 mb-2">
+                              <h3 className="text-xl font-bold text-slate-900">
+                                {request.buyer_name}
                               </h3>
-                              <Badge className={`${getStatusColor(request.status)} flex items-center gap-1`}>
-                                {getStatusIcon(request.status)}
-                                {getStatusLabel(request.status)}
+                              {getStatusBadge(request.status)}
+                              <Badge className="bg-blue-100 text-blue-700 border-blue-200">
+                                {getPaymentMethodIcon(request.payment_method)}
+                                <span className="ml-1">{getPaymentMethodLabel(request.payment_method)}</span>
                               </Badge>
-                              {request.priority === 'urgent' && (
-                                <Badge className="bg-red-100 text-red-800">
-                                  ⚡ Urgent
-                                </Badge>
-                              )}
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-gray-600">
+                            <div className="flex items-center gap-4 text-sm text-slate-600">
+                              {request.buyer_email && (
+                                <span className="flex items-center gap-1">
+                                  <Mail className="w-4 h-4" />
+                                  {request.buyer_email}
+                                </span>
+                              )}
+                              {request.buyer_phone && (
+                                <span className="flex items-center gap-1">
+                                  <Phone className="w-4 h-4" />
+                                  {request.buyer_phone}
+                                </span>
+                              )}
                               <span className="flex items-center gap-1">
-                                <Mail className="h-3 w-3" />
-                                {request.buyer_email || request.buyer?.email}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Phone className="h-3 w-3" />
-                                {request.buyer_phone || request.buyer?.phone}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <Clock className="h-3 w-3" />
+                                <Clock className="w-4 h-4" />
                                 {formatTimeAgo(request.created_at)}
                               </span>
                             </div>
                           </div>
 
-                          {/* Menu actions */}
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild>
-                              <Button variant="ghost" size="sm">
-                                <MoreVertical className="h-4 w-4" />
+                              <Button variant="ghost" size="sm" className="rounded-xl">
+                                <MoreVertical className="w-4 h-4" />
                               </Button>
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="end">
-                              <DropdownMenuItem onClick={() => {
-                                setSelectedRequest(request);
-                                setShowDetailDialog(true);
-                              }}>
-                                <Eye className="h-4 w-4 mr-2" />
+                            <DropdownMenuContent align="end" className="w-56">
+                              <DropdownMenuItem onClick={() => handleViewDetails(request)}>
+                                <Eye className="w-4 h-4 mr-2" />
                                 Voir détails
                               </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => navigate(`/parcelle/${request.property_id}`)}>
-                                <ExternalLink className="h-4 w-4 mr-2" />
-                                Voir propriété
-                              </DropdownMenuItem>
-                              <DropdownMenuItem onClick={() => {
-                                setSelectedRequest(request);
-                                setShowChatDialog(true);
-                              }}>
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                Ouvrir chat
+                              <DropdownMenuItem onClick={() => handleContact(request)}>
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Contacter l'acheteur
                               </DropdownMenuItem>
                               <DropdownMenuSeparator />
-                              <DropdownMenuItem onClick={() => handleGenerateContract(request.id)}>
-                                <FileText className="h-4 w-4 mr-2" />
+                              <DropdownMenuItem onClick={() => handleGenerateContract(request)}>
+                                <FileText className="w-4 h-4 mr-2" />
                                 Générer contrat
                               </DropdownMenuItem>
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
 
-                        {/* Propriété */}
-                        <div className="mb-3 p-3 bg-gray-50 rounded-lg">
-                          <p className="font-medium text-gray-900 mb-1">
-                            🏠 {request.properties?.title || 'Propriété'}
-                          </p>
-                          <div className="flex items-center gap-4 text-sm text-gray-600">
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {request.properties?.location || request.properties?.city}
-                            </span>
-                            <span>
-                              {request.properties?.surface} m²
-                            </span>
-                            <span>
-                              {request.properties?.property_type}
-                            </span>
-                          </div>
-                        </div>
-
-                        {/* Prix */}
-                        <div className="grid grid-cols-3 gap-4 mb-3">
-                          <div>
-                            <p className="text-xs text-gray-500 mb-1">Prix demandé</p>
-                            <p className="text-lg font-bold text-gray-900">
-                              {parseInt(request.properties?.price || 0).toLocaleString('fr-FR')} FCFA
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500 mb-1">Offre acheteur</p>
-                            <p className="text-lg font-bold text-blue-600">
-                              {parseInt(request.offer_price || 0).toLocaleString('fr-FR')} FCFA
-                            </p>
-                          </div>
-                          {request.counter_offer_price && (
-                            <div>
-                              <p className="text-xs text-gray-500 mb-1">Contre-offre</p>
-                              <p className="text-lg font-bold text-orange-600">
-                                {parseInt(request.counter_offer_price).toLocaleString('fr-FR')} FCFA
+                        {/* Terrain */}
+                        <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-4 mb-4 border border-slate-200">
+                          <div className="flex items-center gap-3">
+                            <div className="p-2 bg-white rounded-lg shadow-sm">
+                              <Building2 className="w-5 h-5 text-blue-600" />
+                            </div>
+                            <div className="flex-1">
+                              <p className="font-semibold text-slate-900">
+                                {request.parcels?.title || request.parcels?.name || 'Propriété'}
+                              </p>
+                              <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
+                                {request.parcels?.location && (
+                                  <span className="flex items-center gap-1">
+                                    <MapPin className="w-3 h-3" />
+                                    {request.parcels.location}
+                                  </span>
+                                )}
+                                {request.parcels?.surface && (
+                                  <span>{request.parcels.surface} m²</span>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-sm text-slate-600">Offre</p>
+                              <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                {formatCurrency(request.offered_price)}
                               </p>
                             </div>
-                          )}
+                          </div>
                         </div>
 
-                        {/* Message */}
-                        {request.message && (
-                          <div className="mb-3 p-3 bg-blue-50 rounded-lg border-l-4 border-blue-500">
-                            <p className="text-sm text-gray-700 italic">
-                              "{request.message}"
+                        {/* Actions selon le statut */}
+                        {request.status === 'pending' && (
+                          <div className="flex gap-2 flex-wrap">
+                            <Button 
+                              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl"
+                              onClick={() => handleAccept(request.id)}
+                              disabled={actionLoading === request.id}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                              {actionLoading === request.id ? 'Traitement...' : 'Accepter l\'offre'}
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              className="rounded-xl border-slate-200"
+                              onClick={() => handleNegotiate(request)}
+                              disabled={actionLoading}
+                            >
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Négocier
+                            </Button>
+                            <Button 
+                              variant="outline" 
+                              className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
+                              onClick={() => handleReject(request.id)}
+                              disabled={actionLoading === request.id}
+                            >
+                              <XCircle className="w-4 h-4 mr-2" />
+                              Refuser
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {/* Demande acceptée - voir le dossier */}
+                        {request.status === 'accepted' && (
+                          <div className="flex gap-2">
+                            <Button 
+                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl flex-1"
+                              onClick={async () => {
+                                try {
+                                  // Trouver le dossier associé à cette demande
+                                  const { data: caseData } = await supabase
+                                    .from('purchase_cases')
+                                    .select('case_number')
+                                    .eq('request_id', request.id)
+                                    .single();
+                                  
+                                  if (caseData) {
+                                    navigate(`/vendeur/cases/${caseData.case_number}`);
+                                  } else {
+                                    toast.error('Dossier non trouvé');
+                                  }
+                                } catch (error) {
+                                  console.error('❌ Erreur:', error);
+                                  toast.error('Erreur lors de la redirection');
+                                }
+                              }}
+                            >
+                              <FileText className="w-4 h-4 mr-2" />
+                              Voir le dossier
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {/* Demande en négociation */}
+                        {request.status === 'negotiation' && (
+                          <div className="flex gap-2 flex-wrap">
+                            <Button 
+                              variant="outline"
+                              className="rounded-xl border-orange-200"
+                              onClick={() => handleNegotiate(request)}
+                              disabled={actionLoading}
+                            >
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Répondre à la négociation
+                            </Button>
+                            <Button 
+                              className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl"
+                              onClick={() => handleAccept(request.id)}
+                              disabled={actionLoading === request.id}
+                            >
+                              <CheckCircle2 className="w-4 h-4 mr-2" />
+                              Accepter la contre-offre
+                            </Button>
+                          </div>
+                        )}
+                        
+                        {/* Demande refusée/annulée */}
+                        {['rejected', 'seller_declined', 'cancelled'].includes(request.status) && (
+                          <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                            <p className="text-sm text-red-700 font-medium">
+                              ✗ Demande refusée ou annulée
                             </p>
                           </div>
                         )}
-
-                        {/* Actions */}
-                        <div className="flex gap-2">
-                          {request.status === 'pending' && (
-                            <>
-                              <Button
-                                onClick={() => handleAccept(request.id)}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Check className="h-4 w-4 mr-2" />
-                                Accepter
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  setSelectedRequest(request);
-                                  setShowNegotiateDialog(true);
-                                }}
-                                variant="outline"
-                                className="border-blue-600 text-blue-600 hover:bg-blue-50"
-                              >
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                Négocier
-                              </Button>
-                              <Button
-                                onClick={() => handleReject(request.id)}
-                                variant="outline"
-                                className="border-red-600 text-red-600 hover:bg-red-50"
-                              >
-                                <X className="h-4 w-4 mr-2" />
-                                Refuser
-                              </Button>
-                            </>
-                          )}
-
-                          {request.status === 'negotiating' && (
-                            <>
-                              <Button
-                                onClick={() => handleAccept(request.id)}
-                                className="bg-green-600 hover:bg-green-700"
-                              >
-                                <Check className="h-4 w-4 mr-2" />
-                                Accepter l'offre finale
-                              </Button>
-                              <Button
-                                onClick={() => {
-                                  setSelectedRequest(request);
-                                  setShowChatDialog(true);
-                                }}
-                                variant="outline"
-                              >
-                                <MessageSquare className="h-4 w-4 mr-2" />
-                                Continuer négociation
-                              </Button>
-                            </>
-                          )}
-
-                          {request.status === 'accepted' && (
-                            <Button
-                              onClick={() => handleGenerateContract(request.id)}
-                              className="bg-purple-600 hover:bg-purple-700"
-                            >
-                              <FileText className="h-4 w-4 mr-2" />
-                              Générer le contrat
-                            </Button>
-                          )}
-
-                          {request.status === 'completed' && (
-                            <Button
-                              variant="outline"
-                              onClick={() => {
-                                setSelectedRequest(request);
-                                setShowDetailDialog(true);
-                              }}
-                            >
-                              <Eye className="h-4 w-4 mr-2" />
-                              Voir détails
-                            </Button>
-                          )}
-                        </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </AnimatePresence>
-        </div>
-      )}
-
-      {/* Dialog Négociation */}
-      <Dialog open={showNegotiateDialog} onOpenChange={setShowNegotiateDialog}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <MessageSquare className="h-5 w-5 text-blue-600" />
-              Faire une contre-offre
-            </DialogTitle>
-            <DialogDescription>
-              Proposez un prix différent et expliquez votre position
-            </DialogDescription>
-          </DialogHeader>
-
-          <div className="space-y-4">
-            <div>
-              <Label htmlFor="counter-offer">Votre contre-offre (FCFA) *</Label>
-              <Input
-                id="counter-offer"
-                type="number"
-                placeholder="Ex: 45000000"
-                value={counterOffer}
-                onChange={(e) => setCounterOffer(e.target.value)}
-              />
-              <p className="text-xs text-muted-foreground mt-1">
-                Offre initiale: {parseInt(selectedRequest?.offer_price || 0).toLocaleString('fr-FR')} FCFA
-              </p>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
             </div>
-
-            <div>
-              <Label htmlFor="negotiation-message">Message *</Label>
-              <Textarea
-                id="negotiation-message"
-                placeholder="Expliquez votre proposition..."
-                rows={4}
-                value={negotiationMessage}
-                onChange={(e) => setNegotiationMessage(e.target.value)}
-              />
-            </div>
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowNegotiateDialog(false)}>
-              Annuler
-            </Button>
-            <Button onClick={handleStartNegotiation} className="bg-blue-600">
-              <Send className="h-4 w-4 mr-2" />
-              Envoyer contre-offre
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Détails */}
-      <Dialog open={showDetailDialog} onOpenChange={setShowDetailDialog}>
-        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Détails de la demande</DialogTitle>
-          </DialogHeader>
-
-          {selectedRequest && (
-            <Tabs defaultValue="info" className="w-full">
-              <TabsList className="grid w-full grid-cols-3">
-                <TabsTrigger value="info">Informations</TabsTrigger>
-                <TabsTrigger value="negotiation">Négociation</TabsTrigger>
-                <TabsTrigger value="history">Historique</TabsTrigger>
-              </TabsList>
-
-              <TabsContent value="info" className="space-y-4">
-                {/* Contenu onglet Info */}
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <Label>Acheteur</Label>
-                    <p className="font-medium">{selectedRequest.buyer_name}</p>
-                  </div>
-                  <div>
-                    <Label>Email</Label>
-                    <p className="font-medium">{selectedRequest.buyer_email}</p>
-                  </div>
-                  <div>
-                    <Label>Téléphone</Label>
-                    <p className="font-medium">{selectedRequest.buyer_phone}</p>
-                  </div>
-                  <div>
-                    <Label>Date demande</Label>
-                    <p className="font-medium">
-                      {new Date(selectedRequest.created_at).toLocaleString('fr-FR')}
-                    </p>
-                  </div>
-                </div>
-              </TabsContent>
-
-              <TabsContent value="negotiation" className="space-y-4">
-                {/* Historique négociations */}
-                <div className="space-y-3">
-                  {selectedRequest.negotiation_history?.map((entry, index) => (
-                    <div key={index} className="p-3 bg-gray-50 rounded-lg">
-                      <div className="flex justify-between items-start mb-2">
-                        <Badge>{entry.from === 'vendor' ? 'Vous' : 'Acheteur'}</Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(entry.timestamp).toLocaleString('fr-FR')}
-                        </span>
-                      </div>
-                      <p className="font-semibold text-blue-600 mb-1">
-                        {parseInt(entry.price).toLocaleString('fr-FR')} FCFA
-                      </p>
-                      <p className="text-sm text-gray-700">{entry.message}</p>
-                    </div>
-                  ))}
-                </div>
-              </TabsContent>
-
-              <TabsContent value="history">
-                {/* Historique activités */}
-                <div className="text-center text-muted-foreground py-8">
-                  Historique des activités à venir
-                </div>
-              </TabsContent>
-            </Tabs>
           )}
-        </DialogContent>
-      </Dialog>
-
-      {/* Dialog Chat (placeholder) */}
-      <Dialog open={showChatDialog} onOpenChange={setShowChatDialog}>
-        <DialogContent className="max-w-2xl h-[600px] flex flex-col">
-          <DialogHeader>
-            <DialogTitle>Chat avec l'acheteur</DialogTitle>
-          </DialogHeader>
-          
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 overflow-y-auto p-4 bg-gray-50 rounded-lg mb-4">
-              <p className="text-center text-muted-foreground">
-                Fonctionnalité chat en développement...
-              </p>
-            </div>
-            
-            <div className="flex gap-2">
-              <Input
-                placeholder="Tapez votre message..."
-                value={newMessage}
-                onChange={(e) => setNewMessage(e.target.value)}
-              />
-              <Button>
-                <Send className="h-4 w-4" />
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+        </TabsContent>
+      </Tabs>
+      
+      {/* Modals */}
+      <NegotiationModal
+        request={selectedRequest}
+        isOpen={showNegotiationModal}
+        onClose={() => {
+          setShowNegotiationModal(false);
+          setSelectedRequest(null);
+        }}
+        onSubmit={handleSubmitNegotiation}
+        isSubmitting={isNegotiating}
+      />
+      
+      <RequestDetailsModal
+        request={selectedRequest}
+        isOpen={showDetailsModal}
+        onClose={() => {
+          setShowDetailsModal(false);
+          setSelectedRequest(null);
+        }}
+      />
     </div>
   );
 };

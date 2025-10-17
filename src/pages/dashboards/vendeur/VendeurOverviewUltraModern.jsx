@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   TrendingUp,
@@ -26,11 +26,8 @@ import { supabase } from '@/lib/supabaseClient';
 import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-const VendeurOverview = () => {
+const VendeurOverviewUltraModern = ({ user }) => {
   const navigate = useNavigate();
-  const outletContext = useOutletContext();
-  const { user } = outletContext || {};
-  
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
     totalProperties: 0,
@@ -41,15 +38,9 @@ const VendeurOverview = () => {
   });
   const [recentRequests, setRecentRequests] = useState([]);
 
-  console.log('🏠 [VENDEUR OVERVIEW] Context:', outletContext);
-  console.log('🏠 [VENDEUR OVERVIEW] User reçu:', user);
-
   useEffect(() => {
     if (user) {
-      console.log('✅ [VENDEUR OVERVIEW] Chargement dashboard pour:', user.id);
       loadDashboardData();
-    } else {
-      console.warn('⚠️ [VENDEUR OVERVIEW] Pas de user!');
     }
   }, [user]);
 
@@ -376,4 +367,4 @@ const VendeurOverview = () => {
   );
 };
 
-export default VendeurOverview;
+export default VendeurOverviewUltraModern;

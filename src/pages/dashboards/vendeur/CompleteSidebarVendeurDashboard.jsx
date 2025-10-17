@@ -72,11 +72,13 @@ import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 
 // Import des pages spécialisées - VERSION REAL DATA
-// 🆕 NOUVEAU DASHBOARD OVERVIEW MODERNISÉ
-const VendeurOverview = React.lazy(() => import('./VendeurOverviewRealDataModern'));
+// 🆕 PAGES MODERNISÉES - LAZY LOADING
+console.log('🔧 [DEBUG] Chargement CompleteSidebarVendeurDashboard.jsx - V4');
+const VendeurOverview = React.lazy(() => import('./VendeurOverview'));
+const VendeurPurchaseRequests = React.lazy(() => import('./VendeurPurchaseRequests'));
+
 const VendeurCRM = React.lazy(() => import('./VendeurCRMRealData'));
 const VendeurPropertiesComplete = React.lazy(() => import('./VendeurPropertiesRealData'));
-const VendeurPurchaseRequests = React.lazy(() => import('./VendeurPurchaseRequests'));
 const VendeurAntiFraude = React.lazy(() => import('./VendeurAntiFraudeRealData'));
 const VendeurGPSVerification = React.lazy(() => import('./VendeurGPSRealData'));
 const VendeurServicesDigitaux = React.lazy(() => import('./VendeurServicesDigitauxRealData'));
@@ -97,6 +99,9 @@ const CompleteSidebarVendeurDashboard = () => {
   const { user, profile, signOut } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
+  
+  console.log('🏢 [SIDEBAR VENDEUR] User depuis useAuth:', user);
+  console.log('🏢 [SIDEBAR VENDEUR] Profile:', profile);
   
   // Extraire l'onglet actif depuis l'URL
   const getActiveTabFromPath = () => {
@@ -353,7 +358,7 @@ const CompleteSidebarVendeurDashboard = () => {
         .eq('properties.owner_id', user.id) // ✅ Correction: JOIN avec properties
         .eq('status', 'pending');
 
-      // 🆕 Compter les demandes d'achat en attente depuis la table requests
+      // 🆕 Compter les demandes d'achat en attente depuis la table transactions
       // 1. Récupérer les IDs des parcelles du vendeur
       const { data: sellerParcels } = await supabase
         .from('parcels')
@@ -362,13 +367,14 @@ const CompleteSidebarVendeurDashboard = () => {
 
       const parcelIds = sellerParcels?.map(p => p.id) || [];
 
-      // 2. Compter les requests pour ces parcelles
+      // 2. Compter les transactions (demandes d'achat) pour ces parcelles
       let pendingRequestsCount = 0;
       if (parcelIds.length > 0) {
         const { count } = await supabase
-          .from('requests')
+          .from('transactions')
           .select('id', { count: 'exact', head: true })
           .in('parcel_id', parcelIds)
+          .eq('transaction_type', 'purchase')
           .eq('status', 'pending');
         
         pendingRequestsCount = count || 0;
@@ -396,6 +402,9 @@ const CompleteSidebarVendeurDashboard = () => {
 
   // Rendu du composant de page active
   const renderActiveComponent = () => {
+    console.log('📍 [RENDER] Début renderActiveComponent, activeTab:', activeTab);
+    console.log('📍 [RENDER] User disponible:', user ? `✅ ID: ${user.id}` : '❌ undefined');
+    
     const components = {
       'overview': VendeurOverview,
       'crm': VendeurCRM,
@@ -417,6 +426,7 @@ const CompleteSidebarVendeurDashboard = () => {
     };
 
     const ActiveComponent = components[activeTab];
+    console.log('📍 [RENDER] ActiveComponent trouvé:', ActiveComponent ? '✅' : '❌', 'pour tab:', activeTab);
     
     if (!ActiveComponent) {
       return (
@@ -432,13 +442,15 @@ const CompleteSidebarVendeurDashboard = () => {
       );
     }
 
+    console.log('🚀 [RENDER] Passage de user à ActiveComponent:', user);
+
     return (
       <Suspense fallback={
         <div className="flex items-center justify-center h-64">
           <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
         </div>
       }>
-        <ActiveComponent stats={dashboardStats} />
+        <ActiveComponent stats={dashboardStats} user={user} />
       </Suspense>
     );
   };
@@ -785,7 +797,7 @@ const CompleteSidebarVendeurDashboard = () => {
                 </div>
               }>
                 {/* Outlet pour les routes imbriquées (comme edit-property/:id) */}
-                <Outlet />
+                <Outlet context={{ user, profile, dashboardStats }} />
               </Suspense>
             </motion.div>
           </AnimatePresence>

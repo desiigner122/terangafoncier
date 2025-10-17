@@ -644,8 +644,23 @@ const OneTimePaymentPage = () => {
                       ? `Achat comptant projet #${context.projectId}`
                       : `Achat comptant`;
                     
+                    // Récupérer seller_id depuis la parcelle
+                    let seller_id = null;
+                    if (validParcelleId) {
+                      const { data: parcelData } = await supabase
+                        .from('parcels')
+                        .select('seller_id')
+                        .eq('id', validParcelleId)
+                        .maybeSingle();
+                      seller_id = parcelData?.seller_id;
+                    }
+                    
                     const { error: txError } = await supabase.from('transactions').insert({
                       user_id: user.id,
+                      buyer_id: user.id, // ✅ AJOUTÉ
+                      seller_id: seller_id, // ✅ AJOUTÉ
+                      parcel_id: validParcelleId, // ✅ AJOUTÉ
+                      transaction_type: 'purchase', // ✅ AJOUTÉ (one_time = achat)
                       request_id: request?.id || null,
                       status: 'pending',
                       amount: totals.finalTotal,

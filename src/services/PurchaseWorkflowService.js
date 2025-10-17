@@ -20,7 +20,7 @@ export class PurchaseWorkflowService {
       order: 1,
       description: 'L\'acheteur a initié une demande d\'achat',
       duration: '0-2h',
-      nextStatuses: ['buyer_verification', 'cancelled'],
+      nextStatuses: ['buyer_verification', 'cancelled', 'seller_declined', 'negotiation', 'preliminary_agreement'],
       color: 'blue',
       icon: 'FileText',
       automated: true
@@ -59,7 +59,7 @@ export class PurchaseWorkflowService {
       order: 4,
       description: 'Négociation du prix et des conditions entre les parties',
       duration: '1-7 jours',
-      nextStatuses: ['preliminary_agreement', 'negotiation_failed'],
+      nextStatuses: ['preliminary_agreement', 'negotiation_failed', 'seller_declined'],
       color: 'orange',
       icon: 'MessageSquare',
       manual: true
@@ -71,7 +71,7 @@ export class PurchaseWorkflowService {
       order: 5,
       description: 'Accord de principe sur le prix et les conditions',
       duration: '0-1h',
-      nextStatuses: ['contract_preparation'],
+      nextStatuses: ['contract_preparation', 'seller_declined'],
       color: 'green',
       icon: 'Heart',
       manual: true,

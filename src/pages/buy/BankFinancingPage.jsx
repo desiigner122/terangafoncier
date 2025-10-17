@@ -492,9 +492,32 @@ const BankFinancingPage = () => {
                       ? `Frais de dossier financement - Projet #${context.projectId}`
                       : `Frais de dossier financement`;
                     
+                    // Récupérer les informations de la demande pour avoir le parcel_id
+                    const { data: requestData, error: requestError } = await supabase
+                      .from('requests')
+                      .select('*, parcel_id, user_id')
+                      .eq('id', request?.id)
+                      .single();
+                    
+                    if (requestError) throw requestError;
+                    
+                    // Récupérer le seller_id de la parcelle
+                    const { data: parcelData, error: parcelError } = await supabase
+                      .from('parcels')
+                      .select('seller_id')
+                      .eq('id', requestData.parcel_id)
+                      .single();
+                    
+                    if (parcelError) throw parcelError;
+                    
                     const { error: txError } = await supabase.from('transactions').insert({
                       user_id: user.id,
                       request_id: request?.id || null,
+                      transaction_type: 'purchase',
+                      buyer_id: requestData.user_id,
+                      seller_id: parcelData.seller_id,
+                      parcel_id: requestData.parcel_id,
+                      payment_method: 'bank_financing',
                       status: 'pending',
                       amount: amountFee,
                       currency: 'XOF',

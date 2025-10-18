@@ -199,6 +199,9 @@ export default defineConfig({
 		addTransformIndexHtml
 	],
 	server: {
+		host: 'localhost',
+		port: 5173,
+		strictPort: false,
 		cors: true,
 		headers: {
 			'Cross-Origin-Embedder-Policy': 'credentialless',
@@ -206,7 +209,7 @@ export default defineConfig({
 		allowedHosts: true,
 		hmr: {
 			protocol: 'ws',
-			host: '127.0.0.1',
+			host: 'localhost',
 			port: 5173,
 		},
 	},

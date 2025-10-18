@@ -32,10 +32,10 @@ CREATE TABLE IF NOT EXISTS public.crm_contacts (
 );
 
 -- Indexes
-CREATE INDEX idx_crm_contacts_email ON public.crm_contacts(email);
-CREATE INDEX idx_crm_contacts_status ON public.crm_contacts(status);
-CREATE INDEX idx_crm_contacts_assigned_to ON public.crm_contacts(assigned_to);
-CREATE INDEX idx_crm_contacts_created_at ON public.crm_contacts(created_at);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_email ON public.crm_contacts(email);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_status ON public.crm_contacts(status);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_assigned_to ON public.crm_contacts(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_crm_contacts_created_at ON public.crm_contacts(created_at);
 
 -- =====================================================
 -- 2. TABLE: CRM_DEALS
@@ -59,10 +59,10 @@ CREATE TABLE IF NOT EXISTS public.crm_deals (
 );
 
 -- Indexes
-CREATE INDEX idx_crm_deals_contact_id ON public.crm_deals(contact_id);
-CREATE INDEX idx_crm_deals_stage ON public.crm_deals(stage);
-CREATE INDEX idx_crm_deals_assigned_to ON public.crm_deals(assigned_to);
-CREATE INDEX idx_crm_deals_expected_close_date ON public.crm_deals(expected_close_date);
+CREATE INDEX IF NOT EXISTS idx_crm_deals_contact_id ON public.crm_deals(contact_id);
+CREATE INDEX IF NOT EXISTS idx_crm_deals_stage ON public.crm_deals(stage);
+CREATE INDEX IF NOT EXISTS idx_crm_deals_assigned_to ON public.crm_deals(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_crm_deals_expected_close_date ON public.crm_deals(expected_close_date);
 
 -- =====================================================
 -- 3. TABLE: CRM_ACTIVITIES
@@ -86,10 +86,10 @@ CREATE TABLE IF NOT EXISTS public.crm_activities (
 );
 
 -- Indexes
-CREATE INDEX idx_crm_activities_contact_id ON public.crm_activities(contact_id);
-CREATE INDEX idx_crm_activities_deal_id ON public.crm_activities(deal_id);
-CREATE INDEX idx_crm_activities_type ON public.crm_activities(type);
-CREATE INDEX idx_crm_activities_created_at ON public.crm_activities(created_at);
+CREATE INDEX IF NOT EXISTS idx_crm_activities_contact_id ON public.crm_activities(contact_id);
+CREATE INDEX IF NOT EXISTS idx_crm_activities_deal_id ON public.crm_activities(deal_id);
+CREATE INDEX IF NOT EXISTS idx_crm_activities_type ON public.crm_activities(type);
+CREATE INDEX IF NOT EXISTS idx_crm_activities_created_at ON public.crm_activities(created_at);
 
 -- =====================================================
 -- 4. TABLE: CRM_TASKS
@@ -100,26 +100,40 @@ CREATE TABLE IF NOT EXISTS public.crm_tasks (
   description TEXT,
   contact_id UUID REFERENCES public.crm_contacts(id) ON DELETE CASCADE,
   deal_id UUID REFERENCES public.crm_deals(id) ON DELETE CASCADE,
-  assigned_to UUID NOT NULL REFERENCES auth.users(id) ON DELETE CASCADE,
+  assigned_to UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   due_date DATE NOT NULL,
   priority VARCHAR(20) DEFAULT 'medium', -- low, medium, high, urgent
   status VARCHAR(20) DEFAULT 'open', -- open, in_progress, completed, cancelled
   category VARCHAR(50), -- follow-up, reminder, meeting, call, etc
-  created_by UUID NOT NULL REFERENCES auth.users(id) ON DELETE SET NULL,
+  created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
   completed_at TIMESTAMP WITH TIME ZONE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
 );
 
 -- Indexes
-CREATE INDEX idx_crm_tasks_assigned_to ON public.crm_tasks(assigned_to);
-CREATE INDEX idx_crm_tasks_status ON public.crm_tasks(status);
-CREATE INDEX idx_crm_tasks_due_date ON public.crm_tasks(due_date);
-CREATE INDEX idx_crm_tasks_priority ON public.crm_tasks(priority);
+CREATE INDEX IF NOT EXISTS idx_crm_tasks_assigned_to ON public.crm_tasks(assigned_to);
+CREATE INDEX IF NOT EXISTS idx_crm_tasks_status ON public.crm_tasks(status);
+CREATE INDEX IF NOT EXISTS idx_crm_tasks_due_date ON public.crm_tasks(due_date);
+CREATE INDEX IF NOT EXISTS idx_crm_tasks_priority ON public.crm_tasks(priority);
 
 -- =====================================================
 -- 5. RLS POLICIES
 -- =====================================================
+
+-- Drop existing policies if they exist
+DROP POLICY IF EXISTS "Authenticated users can view contacts" ON public.crm_contacts;
+DROP POLICY IF EXISTS "Authenticated users can create contacts" ON public.crm_contacts;
+DROP POLICY IF EXISTS "Users can update their assigned contacts" ON public.crm_contacts;
+DROP POLICY IF EXISTS "Only assigned user or admin can delete contacts" ON public.crm_contacts;
+DROP POLICY IF EXISTS "Authenticated users can view deals" ON public.crm_deals;
+DROP POLICY IF EXISTS "Authenticated users can create deals" ON public.crm_deals;
+DROP POLICY IF EXISTS "Users can update their assigned deals" ON public.crm_deals;
+DROP POLICY IF EXISTS "Authenticated users can view activities" ON public.crm_activities;
+DROP POLICY IF EXISTS "Authenticated users can create activities" ON public.crm_activities;
+DROP POLICY IF EXISTS "Users can view their tasks" ON public.crm_tasks;
+DROP POLICY IF EXISTS "Authenticated users can create tasks" ON public.crm_tasks;
+DROP POLICY IF EXISTS "Users can update their tasks" ON public.crm_tasks;
 
 -- Enable RLS
 ALTER TABLE public.crm_contacts ENABLE ROW LEVEL SECURITY;
@@ -181,7 +195,7 @@ CREATE POLICY "Authenticated users can create activities"
 CREATE POLICY "Users can view their tasks"
   ON public.crm_tasks
   FOR SELECT
-  USING (auth.uid() = assigned_to OR auth.role() = 'admin');
+  USING (auth.uid() = assigned_to OR auth.role() = 'admin' OR auth.role() = 'authenticated');
 
 CREATE POLICY "Authenticated users can create tasks"
   ON public.crm_tasks
@@ -191,8 +205,8 @@ CREATE POLICY "Authenticated users can create tasks"
 CREATE POLICY "Users can update their tasks"
   ON public.crm_tasks
   FOR UPDATE
-  USING (auth.uid() = assigned_to OR auth.role() = 'admin')
-  WITH CHECK (auth.uid() = assigned_to OR auth.role() = 'admin');
+  USING (auth.uid() = assigned_to OR auth.role() = 'admin' OR assigned_to IS NULL)
+  WITH CHECK (auth.uid() = assigned_to OR auth.role() = 'admin' OR assigned_to IS NULL);
 
 -- =====================================================
 -- 6. PERMISSIONS & GRANTS

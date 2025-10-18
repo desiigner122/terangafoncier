@@ -32,7 +32,7 @@ import { Badge } from '@/components/ui/badge';
  * Page d'édition complète pour les parcelles/propriétés
  * Permet à un vendeur d'éditer ses propriétés
  */
-const EditParcelPage = () => {
+const ParcelleEditPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
@@ -586,4 +586,4 @@ const EditParcelPage = () => {
   );
 };
 
-export default EditParcelPage;
+export default ParcelleEditPage;

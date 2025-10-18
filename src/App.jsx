@@ -338,7 +338,7 @@ import PendingVerificationPage from '@/pages/PendingVerificationPage';
 import MunicipalLandInfoPage from '@/pages/MunicipalLandInfoPage';
 import AddParcelPage from '@/pages/AddParcelPage';
 import ParcelDetailPage from '@/pages/ParcelDetailPage';
-import EditParcelPage from '@/pages/EditParcelPage';
+import ParcelleEditPage from '@/pages/ParcelleEditPage';
 import CheckoutPage from '@/pages/CheckoutPage';
 import AnalyticsPage from '@/pages/AnalyticsPage';
 import MairiePage from '@/pages/MairiePage';
@@ -653,7 +653,7 @@ function App() {
                   {/* Route edit-property déplacée sous /vendeur/ (ligne 486) */}
                   <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
                   <Route path="parcelles/:id" element={<ParcelDetailPage />} />
-                  <Route path="parcelles/:id/edit" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><EditParcelPage /></RoleProtectedRoute>} />
+                  <Route path="parcelles/:id/edit" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><ParcelleEditPage /></RoleProtectedRoute>} />
                   <Route path="parcelles/:id/checkout" element={<RoleProtectedRoute allowedRoles={['Acheteur', 'Particulier']}><CheckoutPage /></RoleProtectedRoute>} />
                   <Route path="my-listings" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyListingsPage /></RoleProtectedRoute>} />
 

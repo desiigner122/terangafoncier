@@ -2,12 +2,13 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { 
   ArrowLeft, MapPin, Building2, Users, Calendar, Clock, FileText,
   CheckCircle, AlertTriangle, Info, Phone, Mail, Globe, Shield,
   Download, Upload, Euro, TrendingUp, Map, Navigation, Zap,
   Heart, Star, Share2, Eye, Car, Wifi, Droplets, Camera,
-  Bath, Bed, Home, Ruler, CreditCard, Bitcoin, Banknote
+  Bath, Bed, Home, Ruler, CreditCard, Bitcoin, Banknote, Edit
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -25,6 +26,7 @@ import { supabase } from '@/lib/supabaseClient';
 const ParcelleDetailPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const [parcelle, setParcelle] = useState(null);
   const [loading, setLoading] = useState(true);
   const [activeImageIndex, setActiveImageIndex] = useState(0);
@@ -459,6 +461,19 @@ const ParcelleDetailPage = () => {
             </Button>
             
             <div className="flex items-center gap-2">
+              {/* Bouton Éditer pour le propriétaire */}
+              {user?.id === parcelle?.owner_id && (
+                <Button 
+                  variant="default" 
+                  size="sm"
+                  onClick={() => navigate(`/parcelles/${id}/edit`)}
+                  className="bg-blue-600 hover:bg-blue-700"
+                >
+                  <Edit className="w-4 h-4 mr-1" />
+                  Éditer
+                </Button>
+              )}
+              
               <Button variant="outline" size="sm" onClick={toggleFavorite}>
                 <Heart className={`w-4 h-4 mr-1 ${isFavorite ? 'fill-red-500 text-red-500' : ''}`} />
                 {isFavorite ? 'Sauvegardé' : 'Sauvegarder'}

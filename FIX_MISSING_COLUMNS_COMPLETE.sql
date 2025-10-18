@@ -25,7 +25,7 @@ BEGIN
     WHERE table_name = 'fraud_checks'
   ) THEN
     -- Vérifier les status valides
-    SELECT 'fraud_checks table exists. Status values should be: pending, processing, passed, warning, failed' as status;
+    RAISE NOTICE 'fraud_checks table exists. Status values should be: pending, processing, passed, warning, failed';
   END IF;
 END $$;
 
@@ -47,8 +47,8 @@ CREATE TABLE IF NOT EXISTS public.analytics_views (
   UNIQUE(property_id, viewer_id, viewed_at)
 );
 
-CREATE INDEX idx_analytics_views_property ON public.analytics_views(property_id);
-CREATE INDEX idx_analytics_views_date ON public.analytics_views(viewed_at DESC);
+CREATE INDEX IF NOT EXISTS idx_analytics_views_property ON public.analytics_views(property_id);
+CREATE INDEX IF NOT EXISTS idx_analytics_views_date ON public.analytics_views(viewed_at DESC);
 
 -- Trigger pour mettre à jour view_count
 CREATE OR REPLACE FUNCTION update_property_view_count()
@@ -108,8 +108,8 @@ CREATE TABLE IF NOT EXISTS public.subscriptions (
   UNIQUE(user_id)
 );
 
-CREATE INDEX idx_subscriptions_user ON public.subscriptions(user_id);
-CREATE INDEX idx_subscriptions_status ON public.subscriptions(status);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON public.subscriptions(user_id);
+CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON public.subscriptions(status);
 
 -- ============================================
 -- FIX: Créer table payment_transactions
@@ -139,8 +139,8 @@ CREATE TABLE IF NOT EXISTS public.payment_transactions (
   metadata JSONB DEFAULT '{}'::jsonb
 );
 
-CREATE INDEX idx_payment_transactions_user ON public.payment_transactions(user_id);
-CREATE INDEX idx_payment_transactions_status ON public.payment_transactions(status);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_user ON public.payment_transactions(user_id);
+CREATE INDEX IF NOT EXISTS idx_payment_transactions_status ON public.payment_transactions(status);
 
 -- ============================================
 -- FIX: Vérifier RLS policies
@@ -151,27 +151,33 @@ ALTER TABLE public.payment_transactions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.analytics_views ENABLE ROW LEVEL SECURITY;
 
 -- Policy: Users can view their own profile
-CREATE POLICY IF NOT EXISTS "users_view_own_profile" ON public.profiles
+DROP POLICY IF EXISTS "users_view_own_profile" ON public.profiles;
+CREATE POLICY "users_view_own_profile" ON public.profiles
   FOR SELECT USING (id = auth.uid());
 
 -- Policy: Users can update their own profile
-CREATE POLICY IF NOT EXISTS "users_update_own_profile" ON public.profiles
+DROP POLICY IF EXISTS "users_update_own_profile" ON public.profiles;
+CREATE POLICY "users_update_own_profile" ON public.profiles
   FOR UPDATE USING (id = auth.uid());
 
 -- Policy: Users can view their subscriptions
-CREATE POLICY IF NOT EXISTS "users_view_own_subscriptions" ON public.subscriptions
+DROP POLICY IF EXISTS "users_view_own_subscriptions" ON public.subscriptions;
+CREATE POLICY "users_view_own_subscriptions" ON public.subscriptions
   FOR SELECT USING (user_id = auth.uid());
 
 -- Policy: Users can view their payment transactions
-CREATE POLICY IF NOT EXISTS "users_view_own_transactions" ON public.payment_transactions
+DROP POLICY IF EXISTS "users_view_own_transactions" ON public.payment_transactions;
+CREATE POLICY "users_view_own_transactions" ON public.payment_transactions
   FOR SELECT USING (user_id = auth.uid());
 
 -- Policy: Anyone can insert analytics views
-CREATE POLICY IF NOT EXISTS "anyone_insert_analytics_views" ON public.analytics_views
+DROP POLICY IF EXISTS "anyone_insert_analytics_views" ON public.analytics_views;
+CREATE POLICY "anyone_insert_analytics_views" ON public.analytics_views
   FOR INSERT WITH CHECK (true);
 
 -- Policy: Users can view analytics for their properties
-CREATE POLICY IF NOT EXISTS "users_view_property_analytics" ON public.analytics_views
+DROP POLICY IF EXISTS "users_view_property_analytics" ON public.analytics_views;
+CREATE POLICY "users_view_property_analytics" ON public.analytics_views
   FOR SELECT USING (
     property_id IN (
       SELECT id FROM public.properties WHERE owner_id = auth.uid()
@@ -183,4 +189,4 @@ COMMIT;
 -- ============================================
 -- Afficher confirmation
 -- ============================================
-SELECT '✅ Toutes les colonnes manquantes ont été ajoutées!' as status;
+-- ✅ Toutes les colonnes manquantes ont été ajoutées!

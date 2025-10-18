@@ -74,10 +74,11 @@ import { supabase } from '@/lib/supabaseClient';
 // Import des pages spécialisées - VERSION REAL DATA
 // 🆕 PAGES MODERNISÉES - LAZY LOADING
 console.log('🔧 [DEBUG] Chargement CompleteSidebarVendeurDashboard.jsx - V4');
+const VendeurDashboardRefactored = React.lazy(() => import('./VendeurDashboardRefactored'));
 const VendeurOverview = React.lazy(() => import('./VendeurOverviewRealDataModern'));
 const VendeurPurchaseRequests = React.lazy(() => import('./VendeurPurchaseRequests'));
 
-const VendeurCRM = React.lazy(() => import('./VendeurCRMModernized'));
+const VendeurCRM = React.lazy(() => import('@/pages/CRM/CRMPageModernNew'));
 const VendeurPropertiesComplete = React.lazy(() => import('./VendeurPropertiesRealData'));
 const VendeurAntiFraude = React.lazy(() => import('./VendeurAntiFraudeRealData'));
 const VendeurGPSVerification = React.lazy(() => import('./VendeurGPSRealData'));
@@ -354,7 +355,6 @@ const CompleteSidebarVendeurDashboard = () => {
         blockchainVerifiedRes,
         pendingInquiriesRes,
         activeProspectsRes,
-        gpsRes,
         digitalServicesRes,
         parcelsRes
       ] = await Promise.all([
@@ -390,12 +390,8 @@ const CompleteSidebarVendeurDashboard = () => {
         supabase
           .from('crm_contacts')
           .select('id', { count: 'exact', head: true })
-          .eq('vendor_id', user.id)
-          .not('status', 'eq', 'lost'),
-        supabase
-          .from('gps_coordinates')
-          .select('id', { count: 'exact', head: true })
-          .eq('vendor_id', user.id),
+          .eq('user_id', user.id)
+          .neq('status', 'lost'),
         supabase
           .from('service_subscriptions')
           .select('id', { count: 'exact', head: true })
@@ -415,7 +411,6 @@ const CompleteSidebarVendeurDashboard = () => {
         blockchainVerifiedRes?.error,
         pendingInquiriesRes?.error,
         activeProspectsRes?.error,
-        gpsRes?.error,
         digitalServicesRes?.error,
         parcelsRes?.error
       ].filter(Boolean);
@@ -467,7 +462,6 @@ const CompleteSidebarVendeurDashboard = () => {
         verifiedTitles: verifiedTitlesCount,
         securityScore,
         conversionRate,
-        gpsCoordinates: gpsRes?.count || 0,
         digitalServices: digitalServicesRes?.count || 0,
         aiOptimized: aiOptimizedRes?.count || 0,
         blockchainVerified: blockchainVerifiedRes?.count || 0,
@@ -491,7 +485,7 @@ const CompleteSidebarVendeurDashboard = () => {
     console.log('📍 [RENDER] User disponible:', user ? `✅ ID: ${user.id}` : '❌ undefined');
     
     const components = {
-      'overview': VendeurOverview,
+      'overview': VendeurDashboardRefactored,
       'crm': VendeurCRM,
       'properties': VendeurPropertiesComplete,
       'purchase-requests': VendeurPurchaseRequests,
@@ -881,8 +875,8 @@ const CompleteSidebarVendeurDashboard = () => {
                   <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600"></div>
                 </div>
               }>
-                {/* Outlet pour les routes imbriquées (comme edit-property/:id) */}
-                <Outlet context={{ user, profile, dashboardStats }} />
+                {/* Rendu du composant actif mappé au tab sélectionné */}
+                {renderActiveComponent()}
               </Suspense>
             </motion.div>
           </AnimatePresence>

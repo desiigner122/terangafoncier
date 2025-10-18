@@ -128,7 +128,7 @@ import MesTerrainsPageNew from '@/pages/common/MesTerrainsPage';
 import PurchaseSuccessPage from '@/pages/PurchaseSuccessPage';
 import MessagesPage from '@/pages/MessagesPage';
 import DocumentsPage from '@/pages/DocumentsPage';
-import CRMPageNew from '@/pages/CRM/CRMPageNew';
+import CRMPageModernNew from '@/pages/CRM/CRMPageNew';
 import ExportPage from '@/pages/ExportPage';
 import UploadsPage from '@/pages/UploadsPage';
 import CityDetailPage from '@/pages/CityDetailPage';
@@ -499,8 +499,8 @@ function App() {
               <Route path="ai-chat" element={<PremiumAIChatbot fullScreen={true} />} />
               
               {/* ===== NOUVELLE PAGE CRM MODERNE ===== */}
-              <Route path="crm" element={<ProtectedRoute><CRMPageNew /></ProtectedRoute>} />
-              <Route path="crm/new" element={<ProtectedRoute><CRMPageNew /></ProtectedRoute>} />
+              <Route path="crm" element={<ProtectedRoute><CRMPageModernNew /></ProtectedRoute>} />
+              <Route path="crm/new" element={<ProtectedRoute><CRMPageModernNew /></ProtectedRoute>} />
               
               <Route path="fonctionnalites-avancees" element={<FonctionnalitesAvanceesPage />} />
               <Route path="blockchain" element={<BlockchainSolutionsPage />} />
@@ -574,7 +574,7 @@ function App() {
                 <Route path="vendeur" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><CompleteSidebarVendeurDashboard /></RoleProtectedRoute>}>
                   <Route index element={<Navigate to="/vendeur/overview" replace />} />
                   <Route path="overview" element={<VendeurOverviewRealDataModern />} />
-                  <Route path="crm" element={<VendeurCRMModernized />} />
+                  <Route path="crm" element={<CRMPageModernNew />} />
                   <Route path="properties" element={<VendeurPropertiesRealData />} />
                   <Route path="edit-property/:id" element={<EditPropertyComplete />} />
                   <Route path="purchase-requests" element={<VendeurPurchaseRequests />} />
@@ -637,7 +637,7 @@ function App() {
                   <Route path="settings" element={<SettingsPageNew />} />
                   <Route path="mes-terrains" element={<MesTerrainsPageNew />} />
                   <Route path="my-properties" element={<MesTerrainsPageNew />} />
-                  <Route path="crm" element={<CRMPageNew />} />
+                  <Route path="crm" element={<CRMPageModernNew />} />
                   <Route path="export" element={<ExportPage />} />
                   <Route path="uploads" element={<UploadsPage />} />
                   <Route path="messaging" element={<SecureMessagingPage />} />
@@ -848,7 +848,7 @@ function App() {
               <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
               <Route path="my-requests" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyRequestsPageNew /></RoleProtectedRoute>} />
               {/* Aliases utilisés par le composant vendeur */}
-              <Route path="clients" element={<CRMPageNew />} />
+              <Route path="clients" element={<CRMPageModernNew />} />
               <Route path="activity" element={<AnalyticsPage />} />
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}

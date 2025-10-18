@@ -34,7 +34,8 @@ import {
   Target,
   Clock,
   Loader2,
-  RefreshCw
+  RefreshCw,
+  CheckCircle
 } from 'lucide-react';
 import { format, subMonths } from 'date-fns';
 import { fr } from 'date-fns/locale';
@@ -200,7 +201,7 @@ const MarketAnalyticsPage = () => {
       if (propertyIds.length > 0) {
         const { data: transactionData, error: txError } = await supabase
           .from('transactions')
-          .select('id, property_id, status, amount, created_at, updated_at, completion_date')
+          .select('id, property_id, status, amount, created_at, updated_at')
           .in('property_id', propertyIds);
 
         if (txError) {
@@ -547,15 +548,44 @@ const MarketAnalyticsPage = () => {
 
   const exportReport = async () => {
     try {
-      await pdfGenerator.generateMarketAnalysis({
-        averagePrice: Math.round(kpis.avgPrice || 0),
-        totalProperties: kpis.totalListings || 0,
-        demand: kpis.demandLevel,
-        trend: kpis.trend === 'up' ? 'Croissante' : kpis.trend === 'down' ? 'Décroissante' : 'Stable',
-        priceChange: kpis.priceChange,
-        bestZones: predictions.bestZones,
-        bestTime: predictions.bestTime
-      });
+      // Vérifier si la fonction existe
+      if (pdfGenerator && typeof pdfGenerator.generateMarketAnalysis === 'function') {
+        await pdfGenerator.generateMarketAnalysis({
+          averagePrice: Math.round(kpis.avgPrice || 0),
+          totalProperties: kpis.totalListings || 0,
+          demand: kpis.demandLevel,
+          trend: kpis.trend === 'up' ? 'Croissante' : kpis.trend === 'down' ? 'Décroissante' : 'Stable',
+          priceChange: kpis.priceChange,
+          bestZones: predictions.bestZones,
+          bestTime: predictions.bestTime
+        });
+      } else if (pdfGenerator && typeof pdfGenerator.generateReport === 'function') {
+        // Fallback vers generateReport si disponible
+        await pdfGenerator.generateReport({
+          title: 'Analyse Marché - Rapport d\'Analytics',
+          data: {
+            kpis,
+            predictions,
+            analytics
+          }
+        });
+      } else {
+        // Fallback simple : créer un lien de téléchargement avec les données en JSON
+        const data = {
+          date: new Date().toLocaleDateString('fr-FR'),
+          kpis,
+          predictions,
+          analytics
+        };
+        const dataStr = JSON.stringify(data, null, 2);
+        const dataBlob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(dataBlob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `market-analysis-${new Date().getTime()}.json`;
+        link.click();
+        URL.revokeObjectURL(url);
+      }
       toast.success('Rapport exporté avec succès');
     } catch (error) {
       console.error('Erreur export PDF:', error);

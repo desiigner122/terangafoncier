@@ -186,12 +186,12 @@ const VendeurOverviewRealDataModern = () => {
         ? Math.round(properties.reduce((sum, p) => sum + calculateCompletion(p), 0) / properties.length)
         : 0;
 
-      // ✅ PROSPECTS CRM (SANS colonne score qui n'existe pas)
+      // ✅ PROSPECTS CRM
       try {
         const { data: crmContacts } = await supabase
           .from('crm_contacts')
           .select('id, status')
-          .eq('owner_id', user.id); // ✅ Correction: vendor_id → owner_id
+          .eq('user_id', user.id);
 
         stats.newProspects = crmContacts?.filter(c => c.status === 'new').length || 0;
         stats.hotLeads = crmContacts?.filter(c => c.status === 'hot').length || 0;

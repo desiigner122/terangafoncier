@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import React from 'react';
+import VendeurPropertiesRealData from '../VendeurPropertiesRealData';
 import { motion } from 'framer-motion';
 import { 
   Building2, 
@@ -37,105 +37,9 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 
-const VendeurProperties = ({ stats }) => {
-  const navigate = useNavigate();
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterStatus, setFilterStatus] = useState('all');
-  const [confirmDelete, setConfirmDelete] = useState({ open: false, property: null });
-  const [shareModal, setShareModal] = useState({ open: false, property: null });
-  const [previewModal, setPreviewModal] = useState({ open: false, property: null });
-  const [properties, setProperties] = useState([
-    {
-      id: 1,
-      title: 'Terrain résidentiel Sacré-Cœur',
-      location: 'Sacré-Cœur, Dakar',
-      price: 85000000,
-      size: '500m²',
-      type: 'Terrain',
-      status: 'active',
-      photos: 8,
-      views: 145,
-      inquiries: 3,
-      datePosted: '2024-02-15',
-      aiScore: 92,
-      blockchainVerified: true,
-      smartContract: true,
-      priceRecommendation: 82000000,
-      marketPosition: 'optimal'
-    },
-    {
-      id: 2,
-      title: 'Villa moderne Almadies',
-      location: 'Almadies, Dakar',
-      price: 350000000,
-      size: '300m²',
-      type: 'Villa',
-      status: 'active',
-      photos: 15,
-      views: 89,
-      inquiries: 7,
-      datePosted: '2024-02-20',
-      aiScore: 88,
-      blockchainVerified: true,
-      smartContract: false,
-      priceRecommendation: 345000000,
-      marketPosition: 'competitive'
-    },
-    {
-      id: 3,
-      title: 'Appartement haut standing Mermoz',
-      location: 'Mermoz, Dakar',
-      price: 125000000,
-      size: '120m²',
-      type: 'Appartement',
-      status: 'pending',
-      photos: 12,
-      views: 67,
-      inquiries: 2,
-      datePosted: '2024-02-25',
-      aiScore: 85,
-      blockchainVerified: false,
-      smartContract: false,
-      priceRecommendation: 130000000,
-      marketPosition: 'underpriced'
-    },
-    {
-      id: 4,
-      title: 'Maison familiale Ouakam',
-      location: 'Ouakam, Dakar',
-      price: 180000000,
-      size: '200m²',
-      type: 'Maison',
-      status: 'sold',
-      photos: 10,
-      views: 234,
-      inquiries: 12,
-      datePosted: '2024-01-10',
-      aiScore: 90,
-      blockchainVerified: true,
-      smartContract: true,
-      priceRecommendation: 180000000,
-      marketPosition: 'optimal'
-    },
-    {
-      id: 5,
-      title: 'Studio moderne Plateau',
-      location: 'Plateau, Dakar',
-      price: 65000000,
-      size: '45m²',
-      type: 'Studio',
-      status: 'draft',
-      photos: 5,
-      views: 0,
-      inquiries: 0,
-      datePosted: '2024-02-28',
-      aiScore: 78,
-      blockchainVerified: false,
-      smartContract: false,
-      priceRecommendation: 68000000,
-      marketPosition: 'underpriced'
-    }
-  ]);
+const VendeurProperties = (props) => {
+  return <VendeurPropertiesRealData {...props} />;
+};
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-SN', {

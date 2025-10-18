@@ -80,7 +80,7 @@ const VendeurCRMModernized = () => {
       const { data: contactsData, error: contactsError } = await supabase
         .from('crm_contacts')
         .select('*')
-        .eq('vendor_id', user.id)
+        .eq('user_id', user.id)
         .order('score', { ascending: false });
 
       if (contactsError) throw contactsError;
@@ -88,11 +88,11 @@ const VendeurCRMModernized = () => {
       setContacts(contactsData || []);
       console.log('✅ Contacts chargés:', contactsData?.length);
 
-      // Charger les interactions
+      // Charger les activités
       if (contactsData && contactsData.length > 0) {
         const contactIds = contactsData.map(c => c.id);
         const { data: interactionsData } = await supabase
-          .from('crm_interactions')
+          .from('crm_activities')
           .select('*')
           .in('contact_id', contactIds)
           .order('created_at', { ascending: false });
@@ -154,7 +154,7 @@ const VendeurCRMModernized = () => {
       const { error } = await supabase
         .from('crm_contacts')
         .insert([{
-          vendor_id: user.id,
+          user_id: user.id,
           first_name: formData.firstName,
           last_name: formData.lastName,
           email: formData.email,
@@ -201,12 +201,13 @@ const VendeurCRMModernized = () => {
   const handleAddInteraction = async (contactId, type, content) => {
     try {
       const { error } = await supabase
-        .from('crm_interactions')
+        .from('crm_activities')
         .insert([{
           contact_id: contactId,
-          vendor_id: user.id,
-          interaction_type: type,
-          content: content,
+          user_id: user.id,
+          type: type,
+          title: content,
+          description: content,
           created_at: new Date().toISOString()
         }]);
 

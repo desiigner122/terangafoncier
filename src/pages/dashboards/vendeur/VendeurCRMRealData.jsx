@@ -91,11 +91,11 @@ const VendeurCRMRealData = () => {
     try {
       setLoading(true);
 
-      // ✅ CHARGER CONTACTS CRM avec vendor_id (confirmé par audit SQL)
+      // ✅ CHARGER CONTACTS CRM avec user_id
       const { data: contacts, error: contactsError } = await supabase
         .from('crm_contacts')
         .select('*')
-        .eq('vendor_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (contactsError) {
@@ -175,11 +175,11 @@ const VendeurCRMRealData = () => {
 
   const loadRecentActivities = async () => {
     try {
-      // Charger les interactions sans join (relation non définie)
+      // Charger les activités récentes
       const { data: interactions } = await supabase
-        .from('crm_interactions')
+        .from('crm_activities')
         .select('*')
-        .eq('vendor_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(10);
 
@@ -253,7 +253,7 @@ const VendeurCRMRealData = () => {
       const { data, error } = await supabase
         .from('crm_contacts')
         .insert([{
-          vendor_id: user.id,
+          user_id: user.id,
           ...prospectData,
           score: calculateInitialScore(prospectData)
         }])
@@ -294,12 +294,12 @@ const VendeurCRMRealData = () => {
   const handleAddInteraction = async (contactId, interactionData) => {
     try {
       const { error } = await supabase
-        .from('crm_interactions')
+        .from('crm_activities')
         .insert([{
           contact_id: contactId,
-          vendor_id: user.id,
+          user_id: user.id,
           ...interactionData,
-          completed_at: new Date().toISOString()
+          created_at: new Date().toISOString()
         }]);
 
       if (error) throw error;

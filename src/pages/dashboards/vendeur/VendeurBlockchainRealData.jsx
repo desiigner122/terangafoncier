@@ -139,33 +139,35 @@ const VendeurBlockchainRealData = () => {
       // 3. Simuler transaction blockchain
       const txHash = `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
       
-      // 4. Créer certificat blockchain
+      // 4. Créer certificat blockchain (sans blockchain_network s'il n'existe pas)
+      const certData = {
+        vendor_id: user.id,
+        property_id: propertyId,
+        token_id: tokenId,
+        token_standard: 'ERC-721',
+        contract_address: '0x742d35cc6634c0532925a3b844bc9e7595f0aae8',
+        token_value: property?.price || 0,
+        transaction_hash: txHash,
+        mint_date: new Date().toISOString(),
+        status: 'active',
+        transaction_count: 0,
+        metadata: {
+          name: property?.title || 'Property NFT',
+          description: `NFT Certificate for ${property?.title || 'Property'}`,
+          image: property?.images?.[0] || '',
+          attributes: {
+            location: property?.location || 'Unknown',
+            surface: property?.surface || 0,
+            type: property?.property_type || 'Property',
+            price: property?.price || 0,
+            blockchain_network: 'Polygon'
+          }
+        }
+      };
+
       const { data: newCert, error } = await supabase
         .from('blockchain_certificates')
-        .insert({
-          vendor_id: user.id,
-          property_id: propertyId,
-          token_id: tokenId,
-          token_standard: 'ERC-721',
-          blockchain_network: 'Polygon',
-          contract_address: '0x742d35cc6634c0532925a3b844bc9e7595f0aae8',
-          token_value: property?.price || 0,
-          transaction_hash: txHash,
-          mint_date: new Date().toISOString(),
-          status: 'active',
-          transaction_count: 0,
-          metadata: {
-            name: property?.title || 'Property NFT',
-            description: `NFT Certificate for ${property?.title || 'Property'}`,
-            image: property?.images?.[0] || '',
-            attributes: {
-              location: property?.location || 'Unknown',
-              surface: property?.surface || 0,
-              type: property?.property_type || 'Property',
-              price: property?.price || 0
-            }
-          }
-        })
+        .insert(certData)
         .select()
         .single();
 

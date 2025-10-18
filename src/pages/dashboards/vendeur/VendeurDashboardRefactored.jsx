@@ -96,7 +96,7 @@ const VendeurDashboardRefactored = ({ stats: parentStats = {} }) => {
         try {
           const { data: inquiriesData, error: inquiriesError } = await supabase
             .from('property_inquiries')
-            .select('id, property_id, status, created_at, contact_id')
+            .select('id, property_id, status, created_at')
             .in('property_id', propertyIds);
           if (!inquiriesError && Array.isArray(inquiriesData)) {
             const merged = [...requests, ...inquiriesData.map(i => ({

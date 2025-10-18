@@ -45,7 +45,7 @@ const loadDashboardDataMock = async (userId) => {
       try {
         const { data: inquiriesData, error: inquiriesError } = await supabase
           .from('property_inquiries')
-          .select('id, property_id, status, created_at, contact_id')
+          .select('id, property_id, status, created_at')
           .in('property_id', propertyIds);
         if (!inquiriesError && Array.isArray(inquiriesData)) {
           const merged = [...requests, ...inquiriesData.map(i => ({
@@ -200,7 +200,7 @@ describe('loadDashboardData', () => {
       { id: 'req1', property_id: 'prop1', status: 'pending' }
     ];
     const mockInquiries = [
-      { id: 'inq1', property_id: 'prop1', status: 'new', contact_id: 'contact1' }
+      { id: 'inq1', property_id: 'prop1', status: 'new' }
     ];
 
     supabase.from.mockReturnValue({

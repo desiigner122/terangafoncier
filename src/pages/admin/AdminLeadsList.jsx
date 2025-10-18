@@ -18,13 +18,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import {
-  Sheet,
-  SheetContent,
-  SheetDescription,
-  SheetHeader,
-  SheetTitle,
-} from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -46,7 +39,8 @@ import {
   AlertCircle,
   Tag,
   Eye,
-  ArrowRight
+  ArrowRight,
+  X
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -718,21 +712,21 @@ export default function AdminLeadsList() {
         </DialogContent>
       </Dialog>
 
-      {/* Details Sheet */}
-      <Sheet open={detailsSheetOpen} onOpenChange={setDetailsSheetOpen}>
-        <SheetContent className="w-full sm:max-w-2xl max-h-screen overflow-y-auto">
-          <SheetHeader>
-            <SheetTitle className="flex items-center gap-2">
+      {/* Details Dialog */}
+      <Dialog open={detailsSheetOpen} onOpenChange={setDetailsSheetOpen}>
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
               <Eye className="h-5 w-5" />
               Détails du Lead
-            </SheetTitle>
-            <SheetDescription>
+            </DialogTitle>
+            <DialogDescription>
               Toutes les informations du formulaire de contact
-            </SheetDescription>
-          </SheetHeader>
+            </DialogDescription>
+          </DialogHeader>
 
           {selectedLead && (
-            <div className="space-y-6 mt-6">
+            <div className="space-y-6">
               {/* Contact Info */}
               <div className="space-y-4">
                 <h3 className="font-semibold text-lg flex items-center gap-2">
@@ -880,40 +874,40 @@ export default function AdminLeadsList() {
 
               {/* Notes */}
               {selectedLead.notes && (
-                <div className="space-y-4">
+                <div className="space-y-4 border-t pt-4">
                   <h3 className="font-semibold text-lg flex items-center gap-2">
                     <MessageSquare className="h-5 w-5 text-yellow-600" />
                     Notes Internes
                   </h3>
-                  <p className="text-sm text-gray-900 bg-yellow-50 p-3 rounded whitespace-pre-wrap">
+                  <p className="text-sm text-gray-900 bg-yellow-50 p-3 rounded whitespace-pre-wrap max-h-32 overflow-y-auto">
                     {selectedLead.notes}
                   </p>
                 </div>
               )}
-
-              {/* Quick Actions */}
-              <div className="flex gap-2 pt-4 border-t">
-                <Button
-                  variant="outline"
-                  onClick={() => openAssignDialog(selectedLead)}
-                  className="flex-1"
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  Assigner
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => openNotesDialog(selectedLead)}
-                  className="flex-1"
-                >
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Ajouter notes
-                </Button>
-              </div>
             </div>
           )}
-        </SheetContent>
-      </Sheet>
+
+          <DialogFooter className="pt-4 border-t">
+            <Button
+              variant="outline"
+              onClick={() => openAssignDialog(selectedLead)}
+            >
+              <UserPlus className="h-4 w-4 mr-2" />
+              Assigner
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => openNotesDialog(selectedLead)}
+            >
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Ajouter notes
+            </Button>
+            <Button variant="default" onClick={() => setDetailsSheetOpen(false)}>
+              Fermer
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

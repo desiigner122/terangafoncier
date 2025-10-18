@@ -230,14 +230,19 @@ const EditPropertyComplete = () => {
   ];
 
   useEffect(() => {
-    if (id && user) {
+    if (id && user?.id) {
       loadProperty();
     }
-  }, [id, user]);
+  }, [id, user?.id]);
 
   const loadProperty = async () => {
     try {
       setLoading(true);
+      
+      if (!user?.id) {
+        setError('Utilisateur non authentifié');
+        return;
+      }
       
       const { data, error: loadError } = await supabase
         .from('properties')

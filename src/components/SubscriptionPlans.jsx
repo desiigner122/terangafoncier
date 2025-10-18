@@ -1,9 +1,16 @@
 import React, { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Zap, Shield, TrendingUp } from 'lucide-react';
+import { Check, Zap, Shield, TrendingUp, AlertCircle } from 'lucide-react';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { toast } from 'sonner';
+import {
+  createCheckoutSession,
+  upsertSubscription,
+  getSubscription
+} from '@/api/stripe';
 
 const SUBSCRIPTION_PLANS = {
   free: {
@@ -103,17 +110,51 @@ const SUBSCRIPTION_PLANS = {
 export function SubscriptionPlans({ user, currentPlan = 'free', onPlanSelected }) {
   const [loading, setLoading] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(currentPlan);
+  const [subscription, setSubscription] = useState(null);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadSubscription();
+    }
+  }, [user?.id]);
+
+  const loadSubscription = async () => {
+    try {
+      const sub = await getSubscription(user.id);
+      setSubscription(sub);
+      if (sub?.plan_name) {
+        setSelectedPlan(sub.plan_name.toLowerCase());
+      }
+    } catch (error) {
+      console.error('Erreur chargement abonnement:', error);
+    }
+  };
 
   const handlePlanSelect = async (planName) => {
+    if (!user?.id) {
+      toast.error('Vous devez être connecté');
+      return;
+    }
+
+    if (selectedPlan === planName) {
+      toast.info('Vous avez déjà ce plan');
+      return;
+    }
+
     if (planName === 'free') {
-      // Pas de paiement pour Free
-      await updateSubscription(planName);
+      try {
+        await upsertSubscription(user.id, 'free', 0);
+        setSelectedPlan('free');
+        if (onPlanSelected) onPlanSelected('free');
+        toast.success('Vous restez sur le plan Gratuit');
+      } catch (error) {
+        toast.error('Erreur mise à jour abonnement');
+      }
       return;
     }
 
     if (planName === 'enterprise') {
-      // Rediriger vers contact
-      window.location.href = '/contact?plan=enterprise';
+      window.location.href = '/contact?plan=enterprise&reason=pricing';
       return;
     }
 
@@ -121,52 +162,28 @@ export function SubscriptionPlans({ user, currentPlan = 'free', onPlanSelected }
     setSelectedPlan(planName);
 
     try {
-      // Créer une session Stripe Checkout
-      const response = await fetch('/api/create-checkout-session', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          priceId: getPriceIdForPlan(planName),
-          userId: user.id,
-          planName
-        })
-      });
+      const planData = SUBSCRIPTION_PLANS[planName];
+      const session = await createCheckoutSession(
+        planName,
+        planData.price,
+        user.id,
+        user.email
+      );
 
-      const data = await response.json();
+      await upsertSubscription(user.id, planName, planData.price);
 
-      if (data.checkoutUrl) {
-        window.location.href = data.checkoutUrl;
+      if (session.url && session.type !== 'test') {
+        window.location.href = session.url;
+      } else {
+        setSelectedPlan(planName);
+        if (onPlanSelected) onPlanSelected(planName);
+        toast.success(`✅ Abonnement ${planData.name} activé!`);
+        await loadSubscription();
       }
     } catch (error) {
-      console.error('Erreur création session paiement:', error);
-      alert('Erreur lors de l\'initialisation du paiement');
+      console.error('❌ Erreur activation abonnement:', error);
+      toast.error('Erreur lors de l\'activation de l\'abonnement');
       setLoading(false);
-    }
-  };
-
-  const updateSubscription = async (planName) => {
-    try {
-      const { error } = await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: user.id,
-          plan_name: planName,
-          plan_price: SUBSCRIPTION_PLANS[planName].price,
-          status: 'active',
-          started_at: new Date().toISOString(),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      setSelectedPlan(planName);
-      if (onPlanSelected) onPlanSelected(planName);
-    } catch (error) {
-      console.error('Erreur mise à jour abonnement:', error);
     }
   };
 

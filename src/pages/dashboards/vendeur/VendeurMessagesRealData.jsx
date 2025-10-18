@@ -60,11 +60,12 @@ const VendeurMessagesRealData = () => {
       setLoading(true);
       
       // Charger vraies conversations vendeur depuis Supabase
+      // Note: conversations utilise participant1_id et participant2_id, pas buyer_id
       const { data: conversationsData, error } = await supabase
         .from('conversations')
         .select(`
           *,
-          profiles!buyer_id(
+          profiles!participant1_id(
             id,
             first_name,
             last_name,
@@ -77,26 +78,30 @@ const VendeurMessagesRealData = () => {
             reference
           )
         `)
-        .eq('vendor_id', user.id)
-        .eq('is_archived_vendor', false)
+        .eq('participant2_id', user.id)
+        .eq('is_archived_by_p2', false)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
-      const formattedConversations = (conversationsData || []).map(conv => ({
-        id: conv.id,
-        buyer_name: `${conv.buyer?.first_name || ''} ${conv.buyer?.last_name || ''}`.trim() || 'Utilisateur',
-        buyer_email: conv.buyer?.email || '',
-        buyer_avatar: conv.buyer?.avatar_url,
-        property_title: conv.property?.title || 'Propriété',
-        property_id: conv.property?.reference || '',
-        last_message: conv.last_message || '',
-        last_message_time: conv.updated_at,
-        unread_count: conv.unread_count || 0,
-        is_pinned: conv.is_pinned || false,
-        is_archived: conv.is_archived || false,
-        status: conv.status || 'active'
-      }));
+      // Mapper les données: participant1_id devient 'profiles' (le participant1)
+      const formattedConversations = (conversationsData || []).map(conv => {
+        const participant = conv.profiles || {};
+        return {
+          id: conv.id,
+          buyer_name: `${participant?.first_name || ''} ${participant?.last_name || ''}`.trim() || 'Utilisateur',
+          buyer_email: participant?.email || '',
+          buyer_avatar: participant?.avatar_url,
+          property_title: conv.properties?.title || 'Propriété',
+          property_id: conv.properties?.reference || '',
+          last_message: conv.last_message_preview || '',
+          last_message_time: conv.updated_at,
+          unread_count: conv.unread_count_p2 || 0,
+          is_pinned: conv.is_pinned_by_p2 || false,
+          is_archived: conv.is_archived_by_p2 || false,
+          status: 'active'
+        };
+      });
 
       setConversations(formattedConversations);
 
@@ -267,7 +272,7 @@ const VendeurMessagesRealData = () => {
 
       const { error } = await supabase
         .from('conversations')
-        .update({ is_pinned: newPinnedState })
+        .update({ is_pinned_by_p2: newPinnedState })
         .eq('id', conversationId);
 
       if (error) throw error;
@@ -287,7 +292,7 @@ const VendeurMessagesRealData = () => {
     try {
       const { error } = await supabase
         .from('conversations')
-        .update({ is_archived: true })
+        .update({ is_archived_by_p2: true })
         .eq('id', conversationId);
 
       if (error) throw error;

@@ -153,17 +153,14 @@ const BlockchainContactPage = () => {
 
       // Créer un lead dans marketing_leads
       const leadResult = await MarketingService.createLead({
-        source: 'contact_form',
-        form_name: 'BlockchainContactPage',
+        full_name: formData.name,
         email: formData.email,
-        payload: {
-          name: formData.name,
-          phone: formData.phone,
-          subject: formData.subject,
-          category: formData.category,
-          message: formData.message,
-          urgency: formData.urgency
-        }
+        phone: formData.phone,
+        subject: formData.subject,
+        message: formData.message,
+        source: 'contact_form',
+        category: formData.category,
+        urgency: formData.urgency
       });
 
       console.log('📊 [BlockchainContactPage] Résultat createLead:', leadResult);

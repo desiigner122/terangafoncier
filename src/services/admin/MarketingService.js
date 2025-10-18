@@ -14,7 +14,7 @@ class MarketingService {
   
   /**
    * Créer un nouveau lead (depuis formulaire contact, guide, etc.)
-   * @param {Object} leadData - { full_name, email, phone, subject, message, source, etc. }
+   * @param {Object} leadData - { full_name, email, phone, subject, message, source, category, urgency, etc. }
    * @returns {Promise<Object>}
    */
   async createLead(leadData) {
@@ -29,15 +29,17 @@ class MarketingService {
           phone: leadData.phone,
           company: leadData.company,
           source: leadData.source || 'website',
-          page_url: leadData.page_url || window.location.href,
-          referrer: leadData.referrer || document.referrer,
+          page_url: leadData.page_url || (typeof window !== 'undefined' ? window.location.href : ''),
+          referrer: leadData.referrer || (typeof document !== 'undefined' ? document.referrer : ''),
           subject: leadData.subject,
           message: leadData.message,
+          category: leadData.category || null,
+          urgency: leadData.urgency || 'normal',
           property_interest: leadData.property_interest,
           budget_range: leadData.budget_range,
           status: 'new',
           priority: leadData.priority || 'medium',
-          user_agent: navigator.userAgent,
+          user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : '',
           consent_marketing: leadData.consent_marketing || false,
           consent_data_processing: leadData.consent_data_processing || false
         })
@@ -76,6 +78,8 @@ class MarketingService {
           referrer,
           subject,
           message,
+          category,
+          urgency,
           property_interest,
           budget_range,
           status,

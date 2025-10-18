@@ -484,6 +484,12 @@ const CompleteSidebarVendeurDashboard = () => {
     console.log('📍 [RENDER] Début renderActiveComponent, activeTab:', activeTab);
     console.log('📍 [RENDER] User disponible:', user ? `✅ ID: ${user.id}` : '❌ undefined');
     
+    // Vérifier si c'est une route dynamique avec paramètres
+    if (activeTab.includes('edit-property')) {
+      console.log('📍 [RENDER] Route dynamique détectée (edit-property), rendu via <Outlet />');
+      return <Outlet />;
+    }
+    
     const components = {
       'overview': VendeurDashboardRefactored,
       'crm': VendeurCRM,

@@ -7,13 +7,13 @@ import {
   Loader2,
   AlertCircle,
 } from 'lucide-react';
-import ContactForm from './ContactForm';
-import ContactList from './ContactList';
-import DealForm from './DealForm';
-import KanbanBoard from './KanbanBoard';
-import StatsCard from './StatsCard';
-import ActivityTimeline from './ActivityTimeline';
-import { useCRM } from '../../hooks/useCRM';
+import ContactForm from '@/components/CRM/ContactForm';
+import ContactList from '@/components/CRM/ContactList';
+import DealForm from '@/components/CRM/DealForm';
+import KanbanBoard from '@/components/CRM/KanbanBoard';
+import StatsCard from '@/components/CRM/StatsCard';
+import ActivityTimeline from '@/components/CRM/ActivityTimeline';
+import { useCRM } from '@/hooks/useCRM';
 
 const CRMPageNew = () => {
   const [activeTab, setActiveTab] = useState('overview');

@@ -18,6 +18,13 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+} from '@/components/ui/sheet';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -35,7 +42,11 @@ import {
   Clock,
   TrendingUp,
   XCircle,
-  Target
+  Target,
+  AlertCircle,
+  Tag,
+  Eye,
+  ArrowRight
 } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -77,6 +88,30 @@ const SOURCE_LABELS = {
   other: 'Autre'
 };
 
+// Category mapping
+const CATEGORY_LABELS = {
+  blockchain: 'Blockchain/NFT',
+  investment: 'Opportunités Investissement',
+  diaspora: 'Services Diaspora',
+  construction: 'Suivi Construction',
+  technical: 'Support Technique',
+  partnership: 'Partenariats',
+  other: 'Autre'
+};
+
+// Urgency mapping
+const URGENCY_CONFIG = {
+  low: { label: 'Basse - 48h', color: 'bg-green-100 text-green-800' },
+  normal: { label: 'Normale - 24h', color: 'bg-blue-100 text-blue-800' },
+  high: { label: 'Élevée - 4h', color: 'bg-orange-100 text-orange-800' },
+  urgent: { label: 'Urgente - Immédiate', color: 'bg-red-100 text-red-800' }
+};
+
+// Helper functions
+const getCategoryLabel = (category) => CATEGORY_LABELS[category] || category;
+const getUrgencyLabel = (urgency) => URGENCY_CONFIG[urgency]?.label || urgency;
+const getUrgencyColor = (urgency) => URGENCY_CONFIG[urgency]?.color || 'bg-gray-100 text-gray-800';
+
 export default function AdminLeadsList() {
   const { 
     leads, 
@@ -102,6 +137,7 @@ export default function AdminLeadsList() {
   const [assignDialogOpen, setAssignDialogOpen] = useState(false);
   const [notesDialogOpen, setNotesDialogOpen] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [detailsSheetOpen, setDetailsSheetOpen] = useState(false);
   const [selectedLead, setSelectedLead] = useState(null);
   
   // Form states
@@ -195,6 +231,11 @@ export default function AdminLeadsList() {
     } else {
       toast.error('Erreur lors de la suppression');
     }
+  };
+
+  const openDetailsSheet = (lead) => {
+    setSelectedLead(lead);
+    setDetailsSheetOpen(true);
   };
 
   const openAssignDialog = (lead) => {
@@ -483,6 +524,14 @@ export default function AdminLeadsList() {
                             <Button
                               variant="outline"
                               size="sm"
+                              onClick={() => openDetailsSheet(lead)}
+                              title="Voir tous les détails"
+                            >
+                              <Eye className="h-4 w-4" />
+                            </Button>
+                            <Button
+                              variant="outline"
+                              size="sm"
                               onClick={() => openAssignDialog(lead)}
                             >
                               <UserPlus className="h-4 w-4" />
@@ -668,6 +717,203 @@ export default function AdminLeadsList() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Details Sheet */}
+      <Sheet open={detailsSheetOpen} onOpenChange={setDetailsSheetOpen}>
+        <SheetContent className="w-full sm:max-w-2xl max-h-screen overflow-y-auto">
+          <SheetHeader>
+            <SheetTitle className="flex items-center gap-2">
+              <Eye className="h-5 w-5" />
+              Détails du Lead
+            </SheetTitle>
+            <SheetDescription>
+              Toutes les informations du formulaire de contact
+            </SheetDescription>
+          </SheetHeader>
+
+          {selectedLead && (
+            <div className="space-y-6 mt-6">
+              {/* Contact Info */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <Mail className="h-5 w-5 text-blue-600" />
+                  Informations de Contact
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Nom</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedLead.full_name || selectedLead.payload?.name || 'N/A'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Email</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      <a href={`mailto:${selectedLead.email}`} className="text-blue-600 hover:underline">
+                        {selectedLead.email}
+                      </a>
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Téléphone</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      {selectedLead.phone || selectedLead.payload?.phone || 'N/A'}
+                    </p>
+                  </div>
+
+                  {selectedLead.company && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase">Entreprise</label>
+                      <p className="text-sm font-medium text-gray-900">{selectedLead.company}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Message Info */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <MessageSquare className="h-5 w-5 text-purple-600" />
+                  Détails de la Demande
+                </h3>
+
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase">Sujet</label>
+                  <p className="text-sm font-medium text-gray-900 bg-gray-50 p-3 rounded mt-1">
+                    {selectedLead.subject || 'N/A'}
+                  </p>
+                </div>
+
+                <div>
+                  <label className="text-xs font-semibold text-gray-500 uppercase">Message</label>
+                  <p className="text-sm text-gray-900 bg-gray-50 p-3 rounded mt-1 whitespace-pre-wrap">
+                    {selectedLead.message || 'N/A'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Category & Urgency */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <Tag className="h-5 w-5 text-amber-600" />
+                  Catégorie & Urgence
+                </h3>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Catégorie</label>
+                    {selectedLead.category ? (
+                      <Badge className="mt-2 bg-purple-100 text-purple-800 border-0">
+                        {getCategoryLabel(selectedLead.category)}
+                      </Badge>
+                    ) : (
+                      <p className="text-sm text-gray-500 mt-2">Non spécifiée</p>
+                    )}
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Urgence</label>
+                    {selectedLead.urgency && (
+                      <Badge className={`mt-2 border-0 ${getUrgencyColor(selectedLead.urgency)}`}>
+                        <AlertCircle className="h-3 w-3 mr-1" />
+                        {getUrgencyLabel(selectedLead.urgency)}
+                      </Badge>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Additional Info */}
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg flex items-center gap-2">
+                  <Calendar className="h-5 w-5 text-green-600" />
+                  Informations Supplémentaires
+                </h3>
+
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Source</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      {SOURCE_LABELS[selectedLead.source] || selectedLead.source}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Statut</label>
+                    <Badge className="mt-2 bg-blue-100 text-blue-800 border-0">
+                      {STATUS_CONFIG[selectedLead.status]?.label || selectedLead.status}
+                    </Badge>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Priorité</label>
+                    <p className="text-sm font-medium text-gray-900 mt-2 capitalize">
+                      {selectedLead.priority || 'N/A'}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Créé le</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      {formatDate(selectedLead.created_at)}
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="text-xs font-semibold text-gray-500 uppercase">Assigné à</label>
+                    <p className="text-sm font-medium text-gray-900">
+                      {getAssigneeName(selectedLead.assigned_to) || 'Non assigné'}
+                    </p>
+                  </div>
+
+                  {selectedLead.budget_range && (
+                    <div>
+                      <label className="text-xs font-semibold text-gray-500 uppercase">Budget</label>
+                      <p className="text-sm font-medium text-gray-900">{selectedLead.budget_range}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Notes */}
+              {selectedLead.notes && (
+                <div className="space-y-4">
+                  <h3 className="font-semibold text-lg flex items-center gap-2">
+                    <MessageSquare className="h-5 w-5 text-yellow-600" />
+                    Notes Internes
+                  </h3>
+                  <p className="text-sm text-gray-900 bg-yellow-50 p-3 rounded whitespace-pre-wrap">
+                    {selectedLead.notes}
+                  </p>
+                </div>
+              )}
+
+              {/* Quick Actions */}
+              <div className="flex gap-2 pt-4 border-t">
+                <Button
+                  variant="outline"
+                  onClick={() => openAssignDialog(selectedLead)}
+                  className="flex-1"
+                >
+                  <UserPlus className="h-4 w-4 mr-2" />
+                  Assigner
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={() => openNotesDialog(selectedLead)}
+                  className="flex-1"
+                >
+                  <MessageSquare className="h-4 w-4 mr-2" />
+                  Ajouter notes
+                </Button>
+              </div>
+            </div>
+          )}
+        </SheetContent>
+      </Sheet>
     </div>
   );
 }

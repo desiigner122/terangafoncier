@@ -128,7 +128,7 @@ import MesTerrainsPageNew from '@/pages/common/MesTerrainsPage';
 import PurchaseSuccessPage from '@/pages/PurchaseSuccessPage';
 import MessagesPage from '@/pages/MessagesPage';
 import DocumentsPage from '@/pages/DocumentsPage';
-import CRMPage from '@/pages/CRMPage';
+import CRMPageNew from '@/pages/CRM/CRMPageNew';
 import ExportPage from '@/pages/ExportPage';
 import UploadsPage from '@/pages/UploadsPage';
 import CityDetailPage from '@/pages/CityDetailPage';
@@ -498,6 +498,10 @@ function App() {
               <Route path="autonomous-dashboard" element={<AutonomousAIDashboard />} />
               <Route path="ai-chat" element={<PremiumAIChatbot fullScreen={true} />} />
               
+              {/* ===== NOUVELLE PAGE CRM MODERNE ===== */}
+              <Route path="crm" element={<ProtectedRoute><CRMPageNew /></ProtectedRoute>} />
+              <Route path="crm/new" element={<ProtectedRoute><CRMPageNew /></ProtectedRoute>} />
+              
               <Route path="fonctionnalites-avancees" element={<FonctionnalitesAvanceesPage />} />
               <Route path="blockchain" element={<BlockchainSolutionsPage />} />
               <Route path="solutions/mairies/apercu" element={<MairiesDashboardPage />} />
@@ -633,7 +637,7 @@ function App() {
                   <Route path="settings" element={<SettingsPageNew />} />
                   <Route path="mes-terrains" element={<MesTerrainsPageNew />} />
                   <Route path="my-properties" element={<MesTerrainsPageNew />} />
-                  <Route path="crm" element={<CRMPage />} />
+                  <Route path="crm" element={<CRMPageNew />} />
                   <Route path="export" element={<ExportPage />} />
                   <Route path="uploads" element={<UploadsPage />} />
                   <Route path="messaging" element={<SecureMessagingPage />} />
@@ -844,7 +848,7 @@ function App() {
               <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
               <Route path="my-requests" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyRequestsPageNew /></RoleProtectedRoute>} />
               {/* Aliases utilisés par le composant vendeur */}
-              <Route path="clients" element={<CRMPage />} />
+              <Route path="clients" element={<CRMPageNew />} />
               <Route path="activity" element={<AnalyticsPage />} />
 
               {/* Autres dashboards (pour cohérence sous /dashboard) */}

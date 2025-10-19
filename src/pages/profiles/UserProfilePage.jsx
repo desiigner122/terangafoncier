@@ -57,9 +57,12 @@ const UserProfilePage = () => {
     
     try {
       // 🔗 Fetch le profil réel depuis Supabase
+      console.log('📡 Fetching profile from Supabase with userId:', userId);
       const profileData = await fetchDirect(
         `profiles?select=*&id=eq.${userId}`
       );
+      
+      console.log('📦 Profile data received:', { count: profileData?.length, data: profileData });
       
       if (!profileData || profileData.length === 0) {
         console.warn('⚠️ Profil utilisateur non trouvé:', userId);
@@ -70,7 +73,16 @@ const UserProfilePage = () => {
 
       // 📦 Mapper le profil Supabase vers le format affichage
       const userProfile = profileData[0];
-      console.log('✅ Profil chargé depuis Supabase:', userProfile);
+      console.log('✅ Profil chargé depuis Supabase:', {
+        id: userProfile.id,
+        name: userProfile.full_name,
+        role: userProfile.role,
+        email: userProfile.email,
+        verified: userProfile.verification_status,
+        address: userProfile.address,
+        bio: userProfile.bio?.substring(0, 50),
+        avatar: userProfile.avatar_url ? '✅ Present' : '❌ Missing'
+      });
 
       const mappedProfile = {
         id: userProfile.id,

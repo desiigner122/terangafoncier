@@ -323,6 +323,7 @@ import GlossaryPage from '@/pages/GlossaryPage';
 import TaxGuidePage from '@/pages/TaxGuidePage';
 import BannedPage from '@/pages/BannedPage';
 import DebugRole from '@/pages/DebugRole';
+import DiagnosticVendorProfilePage from '@/pages/DiagnosticVendorProfilePage';
 import UserStatusWrapper from '@/components/layout/UserStatusWrapper';
 import CaseTrackingPage from '@/pages/CaseTrackingPage';
 import DigitalVaultPage from '@/pages/DigitalVaultPage';
@@ -395,6 +396,7 @@ function App() {
               <Route path="debug-dashboard" element={<DebugDashboard />} />
               <Route path="auth-debug" element={<AuthDebugPage />} />
               <Route path="debug-role" element={<DebugRole />} />
+              <Route path="diagnostic-vendor-profile" element={<DiagnosticVendorProfilePage />} />
               <Route path="test-auth" element={<TestAuthPage />} />
               <Route path="banned" element={<BannedPage />} />
               <Route path="terrains-communaux" element={<CommunalLandsPage />} />

@@ -117,7 +117,7 @@ const ParcelleDetailPage = () => {
           seller: {
             id: propertyData.profiles?.id || propertyData.owner_id,
             name: propertyData.profiles?.full_name || 'Vendeur',
-            type: propertyData.profiles?.role === 'particulier' ? 'Particulier' : 'Professionnel',
+            type: propertyData.profiles?.role || 'particulier',  // 🔧 Send actual role for ProfileLink mapping
             email: propertyData.profiles?.email || '',
             coordinates: {
               lat: propertyData.latitude || 14.7167,
@@ -1892,7 +1892,13 @@ const ParcelleDetailPage = () => {
                       >
                         {parcelle.seller.name}
                       </ProfileLink>
-                      <div className="text-sm text-gray-600">{parcelle.seller.type}</div>
+                      <div className="text-sm text-gray-600">
+                        {parcelle.seller.type === 'particulier' ? 'Particulier' :
+                         parcelle.seller.type === 'agent-foncier' ? 'Agent Foncier' :
+                         parcelle.seller.type === 'promoteur' ? 'Promoteur' :
+                         parcelle.seller.type === 'vendeur' ? 'Vendeur' :
+                         parcelle.seller.type?.charAt(0).toUpperCase() + parcelle.seller.type?.slice(1) || 'Professionnel'}
+                      </div>
                     </div>
                   </div>
 

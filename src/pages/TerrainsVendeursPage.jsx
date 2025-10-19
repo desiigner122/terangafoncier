@@ -29,7 +29,6 @@ import {
   Tractor,
   Store,
   Star,
-  TrendingUp,
   FileText,
   CheckCircle,
   X,
@@ -39,6 +38,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabase';
+import { generatePropertySlug } from '@/utils/propertySlug';
 
 const TerrainsVendeursPage = () => {
   const [properties, setProperties] = useState([]);
@@ -53,147 +54,57 @@ const TerrainsVendeursPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [sortBy, setSortBy] = useState('price_asc');
 
-  // Données mockées enrichies des terrains avec statut blockchain
   useEffect(() => {
-    const mockProperties = [
-      {
-        id: 1,
-        title: "Villa Modern - Terrain 500mÂ² - Dakar Plateau",
-        region: "Dakar",
-        city: "Dakar",
-        area: "Plateau",
-        size: 500,
-        price: 75000000,
-        type: "Résidentiel",
-        description: "Terrain de prestige au cÅ“ur du Plateau, idéal pour villa moderne. Accès facile, environnement sécurisé.",
-        image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=400&fit=crop",
-        verification_status: "verified",
-        blockchain_hash: "0x1a2b3c4d5e6f7890abcdef1234567890",
-        notary_validated: true,
-        title_deed_number: "TF-DK-2024-001",
-        owner: "Amadou Seck",
-        owner_type: "Particulier",
-        posted_date: "2024-01-15",
-        views: 234,
-        favorites: 12,
-        legal_documents: ["Titre foncier", "Attestation mairie", "Plan cadastral"],
-        blockchain_confirmations: 156,
-        rating: 4.8,
-        features: ["Électricité", "Eau courante", "Égouts", "Route goudronnée"],
-        nearby: ["École", "Hôpital", "Marché", "Transport public"]
-      },
-      {
-        id: 2,
-        title: "Terrain Commercial 1200mÂ² - Thiès Centre",
-        region: "Thiès",
-        city: "Thiès",
-        area: "Centre-ville",
-        size: 1200,
-        price: 48000000,
-        type: "Commercial",
-        description: "Emplacement stratégique pour commerce ou bureaux. Forte fréquentation, potentiel d'investissement élevé.",
-        image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=600&h=400&fit=crop",
-        verification_status: "pending",
-        blockchain_hash: "pending",
-        notary_validated: false,
-        title_deed_number: "TF-TH-2024-045",
-        owner: "Entreprise Sénégal Commerce",
-        owner_type: "Professionnel",
-        posted_date: "2024-01-20",
-        views: 89,
-        favorites: 5,
-        legal_documents: ["Titre foncier", "Plan cadastral"],
-        blockchain_confirmations: 0,
-        rating: 4.2,
-        features: ["Électricité", "Eau courante", "Parkings"],
-        nearby: ["Banque", "Poste", "Gare routière"]
-      },
-      {
-        id: 3,
-        title: "Terrain Agricole 2000mÂ² - Saint-Louis",
-        region: "Saint-Louis",
-        city: "Saint-Louis", 
-        area: "Périphérie",
-        size: 2000,
-        price: 25000000,
-        type: "Agricole",
-        description: "Terrain fertile avec accès Ï  l'irrigation. Parfait pour agriculture moderne ou élevage.",
-        image: "https://images.unsplash.com/photo-1500937386664-56d1dfef3854?w=600&h=400&fit=crop",
-        verification_status: "verified",
-        blockchain_hash: "0x9876543210fedcba0987654321abcdef",
-        notary_validated: true,
-        title_deed_number: "TF-SL-2024-078",
-        owner: "Coopérative Agricole du Nord",
-        owner_type: "Coopérative",
-        posted_date: "2024-01-10",
-        views: 156,
-        favorites: 8,
-        legal_documents: ["Titre foncier", "Attestation mairie", "Plan cadastral", "Étude de sol"],
-        blockchain_confirmations: 89,
-        rating: 4.5,
-        features: ["Irrigation", "Accès route", "Sol fertile"],
-        nearby: ["Marché de gros", "Entrepôts", "Transport"]
-      },
-      {
-        id: 4,
-        title: "Terrain Résidentiel 800mÂ² - Mbour Plage",
-        region: "Thiès",
-        city: "Mbour",
-        area: "Zone côtière",
-        size: 800,
-        price: 65000000,
-        type: "Résidentiel",
-        description: "Terrain face Ï  l'océan, zone touristique en développement. Idéal pour résidence secondaire.",
-        image: "https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&h=400&fit=crop",
-        verification_status: "verified",
-        blockchain_hash: "0xabcdef1234567890fedcba0987654321",
-        notary_validated: true,
-        title_deed_number: "TF-MB-2024-032",
-        owner: "Fatou Diallo",
-        owner_type: "Particulier",
-        posted_date: "2024-01-25",
-        views: 312,
-        favorites: 18,
-        legal_documents: ["Titre foncier", "Attestation mairie", "Plan cadastral"],
-        blockchain_confirmations: 145,
-        rating: 4.9,
-        features: ["Vue mer", "Électricité", "Eau courante", "Sécurité"],
-        nearby: ["Plage", "Restaurants", "Hôtels", "Aéroport"]
-      },
-      {
-        id: 5,
-        title: "Terrain Industriel 5000mÂ² - Rufisque",
-        region: "Dakar",
-        city: "Rufisque",
-        area: "Zone industrielle",
-        size: 5000,
-        price: 120000000,
-        type: "Industriel",
-        description: "Grande parcelle pour activités industrielles. Accès direct Ï  l'autoroute et au port.",
-        image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=600&h=400&fit=crop",
-        verification_status: "verified",
-        blockchain_hash: "0x5555666677778888aaabbbcccddd9999",
-        notary_validated: true,
-        title_deed_number: "TF-RF-2024-067",
-        owner: "Société Industrielle Moderne",
-        owner_type: "Société",
-        posted_date: "2024-01-30",
-        views: 78,
-        favorites: 3,
-        legal_documents: ["Titre foncier", "Permis de construire", "Étude d'impact"],
-        blockchain_confirmations: 203,
-        rating: 4.3,
-        features: ["Accès autoroute", "Électricité haute tension", "Sécurité"],
-        nearby: ["Port", "Aéroport", "Douanes", "Banques"]
-      }
-    ];
+    const fetchProperties = async () => {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('properties')
+        .select(`
+          *,
+          profiles:owner_id (
+            id,
+            full_name,
+            role
+          )
+        `);
 
-    // Simulation du chargement
-    setTimeout(() => {
-      setProperties(mockProperties);
-      setFilteredProperties(mockProperties);
+      if (error) {
+        console.error('Error fetching properties:', error);
+        setProperties([]);
+      } else {
+        const formatted = data.map(p => ({
+          id: p.id,
+          title: p.title,
+          region: p.region,
+          city: p.city,
+          area: p.location, // ou un champ plus spécifique si disponible
+          size: p.surface,
+          price: p.price,
+          type: p.property_type,
+          description: p.description,
+          image: (p.images && p.images.length > 0) ? p.images[0] : "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=400&fit=crop",
+          verification_status: p.verification_status,
+          blockchain_hash: p.blockchain_hash,
+          notary_validated: p.legal_status === 'validated', // Assumption
+          title_deed_number: p.title_deed_number,
+          owner: p.profiles?.full_name || 'Vendeur Anonyme',
+          owner_type: p.profiles?.role || 'Particulier',
+          posted_date: p.created_at,
+          views: p.views_count || 0,
+          favorites: p.favorites_count || 0,
+          legal_documents: p.metadata?.documents?.list?.map(d => d.name) || [],
+          blockchain_confirmations: p.metadata?.blockchain?.confirmations || 0,
+          rating: p.ai_score || 4.0,
+          features: p.features?.main || [],
+          nearby: p.nearby_landmarks || []
+        }));
+        setProperties(formatted);
+        setFilteredProperties(formatted);
+      }
       setLoading(false);
-    }, 1000);
+    };
+
+    fetchProperties();
   }, []);
 
   // Filtrage et tri
@@ -361,7 +272,7 @@ const TerrainsVendeursPage = () => {
 
         <div className="flex gap-2">
           <Button asChild className="flex-1">
-            <Link to={`/terrains/${property.id}`}>
+            <Link to={`/parcelle/${generatePropertySlug(property.title)}`}>
               <Eye className="w-4 h-4 mr-2" />
               Voir détails
             </Link>

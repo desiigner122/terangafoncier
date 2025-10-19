@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams, useNavigate, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
@@ -22,11 +22,16 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProfileLink from '@/components/common/ProfileLink';
 import { supabase, fetchDirect } from '@/lib/supabaseClient';
+import { generatePropertySlug, extractIdFromPropertySlug, isUUID as isUUIDValue } from '@/utils/propertySlug';
 import { toast } from 'sonner';
 
 const ParcelleDetailPage = () => {
-  const { id } = useParams();
+  const { id: rawParam } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const baseDetailPath = location.pathname.includes('parcel-blockchain')
+    ? '/parcel-blockchain'
+    : '/parcelle';
   const { user } = useAuth();
   const [parcelle, setParcelle] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -35,63 +40,54 @@ const ParcelleDetailPage = () => {
   const [showMapModal, setShowMapModal] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('direct'); // direct, installment, bank, crypto
-
-  // Determine if id is a UUID or slug
-  const isUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
-  const isSlug = id && !isUUID; // Slug contains hyphens and letters
+  // Nouvelle logique : slug = titre uniquement (pas d'id)
+  const { slug: slugFromParam } = extractIdFromPropertySlug(rawParam);
+  const effectiveSlug = slugFromParam || rawParam || '';
+  const isSlugLookup = true;
 
   useEffect(() => {
     const loadProperty = async () => {
       try {
         setLoading(true);
 
-        console.log('🔍 Chargement parcelle:', { id, isUUID, isSlug });
+        console.log('🔍 Chargement parcelle:', {
+          rawParam,
+          isSlugLookup,
+          slugFromParam
+        });
 
         let property;
         let error;
 
-        if (isUUID) {
-          // Direct ID lookup
-          console.log('📌 Using direct ID lookup:', id);
-          ({ data: property, error } = await supabase
-            .from('properties')
-            .select(`
-              *,
-              profiles:owner_id (
-                id,
-                full_name,
-                email,
-                role
-              )
-            `)
-            .eq('id', id)
-            .single());
-        } else if (isSlug) {
-          // Slug lookup - search by title and create slug to match
-          console.log('🔍 Using slug lookup:', id);
-          const { data: properties } = await supabase
-            .from('properties')
-            .select(`
-              *,
-              profiles:owner_id (
-                id,
-                full_name,
-                email,
-                role
-              )
-            `);
-          
-          // Find property by slug (generated from title)
-          property = properties?.find(p => {
-            const slug = (p.title || 'terrain').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
-            return slug === id;
-          });
-          
-          if (!property) {
-            error = { message: 'Property not found with slug: ' + id };
-          }
+        // Recherche par slug uniquement (titre)
+        console.log('🔍 Using slug lookup (titre seul):', effectiveSlug);
+        const { data: properties, error: slugError } = await supabase
+          .from('properties')
+          .select(`
+            *,
+            profiles:owner_id (
+              id,
+              full_name,
+              email,
+              role
+            )
+          `);
+        if (slugError) {
+          error = slugError;
         } else {
-          error = { message: 'Invalid ID format' };
+          property = properties?.find(p => {
+            const baseSlug = generatePropertySlug(p.title);
+            if (baseSlug === effectiveSlug) {
+              return true;
+            }
+            if (p.slug && p.slug === effectiveSlug) {
+              return true;
+            }
+            return false;
+          });
+          if (!property) {
+            error = { message: `Property not found with slug: ${effectiveSlug}` };
+          }
         }
 
         console.log('📦 Property chargée:', property);
@@ -100,18 +96,7 @@ const ParcelleDetailPage = () => {
         let propertyData = property;
 
         // Fallback: utiliser fetchDirect si Supabase client échoue (problèmes RLS)
-        if (error && !property) {
-          console.log('🔄 Tentative avec fetchDirect...');
-          try {
-            const directData = await fetchDirect(`properties?id=eq.${id}&select=*`);
-            if (directData && directData.length > 0) {
-              propertyData = directData[0];
-              console.log('✅ Données chargées avec fetchDirect:', propertyData);
-            }
-          } catch (fetchError) {
-            console.error('❌ Erreur fetchDirect:', fetchError);
-          }
-        }
+        // (Supabase RLS fallback désactivé, slug only)
 
         if (error && !propertyData) {
           console.error('❌ Erreur chargement:', error);
@@ -122,6 +107,25 @@ const ParcelleDetailPage = () => {
         if (!propertyData) {
           navigate('/404');
           return;
+        }
+
+        // Fetch owner profile if missing (fallback for fetchDirect)
+        if (propertyData && (!propertyData.profiles || !propertyData.profiles.full_name) && propertyData.owner_id) {
+          try {
+            const ownerProfiles = await fetchDirect(`profiles?select=id,full_name,email,role,phone,avatar_url&id=eq.${propertyData.owner_id}`);
+            if (Array.isArray(ownerProfiles) && ownerProfiles.length > 0) {
+              propertyData = { ...propertyData, profiles: ownerProfiles[0] };
+            }
+          } catch (profileError) {
+            console.error('❌ Erreur récupération profil propriétaire:', profileError);
+          }
+        }
+
+        if (propertyData?.title) {
+          const computedCanonicalSlug = generatePropertySlug(propertyData.title);
+          if (rawParam !== computedCanonicalSlug) {
+            navigate(`${baseDetailPath}/${computedCanonicalSlug}`, { replace: true });
+          }
         }
 
         // Parser les JSON fields
@@ -150,11 +154,23 @@ const ParcelleDetailPage = () => {
           surface: propertyData.surface?.toString() || '0',
           type: propertyData.property_type || 'Terrain',
           
-          seller: {
-            id: propertyData.profiles?.id || propertyData.owner_id,
-            name: propertyData.profiles?.full_name || 'Vendeur',
-            type: propertyData.profiles?.role || 'particulier',  // 🔧 Send actual role for ProfileLink mapping
-            email: propertyData.profiles?.email || '',
+          seller: propertyData.profiles ? {
+            id: propertyData.profiles.id,
+            name: propertyData.profiles.full_name,
+            type: propertyData.profiles.role,
+            email: propertyData.profiles.email,
+            coordinates: {
+              lat: propertyData.latitude || 14.7167,
+              lng: propertyData.longitude || -17.4677
+            },
+            verified: propertyData.verification_status === 'verified',
+            rating: 4.5,
+            properties_sold: 0
+          } : {
+            id: propertyData.owner_id,
+            name: 'Vendeur inconnu',
+            type: 'particulier',
+            email: '',
             coordinates: {
               lat: propertyData.latitude || 14.7167,
               lng: propertyData.longitude || -17.4677
@@ -282,7 +298,7 @@ const ParcelleDetailPage = () => {
             .from('favorites')
             .select('id')
             .eq('user_id', user.id)
-            .eq('property_id', id)
+            .eq('property_id', propertyData.id)
             .maybeSingle();
           
           setIsFavorite(!!favorite);
@@ -296,10 +312,10 @@ const ParcelleDetailPage = () => {
       }
     };
 
-    if (id) {
+    if (rawParam) {
       loadProperty();
     }
-  }, [id, navigate, user?.id]);
+  }, [rawParam, navigate, user?.id, baseDetailPath]);
 
   // 🔍 DIAGNOSTIC: Suivi du bouton Éditer
   useEffect(() => {
@@ -423,13 +439,18 @@ const ParcelleDetailPage = () => {
     }
 
     try {
+      if (!parcelle?.id) {
+        toast.error('Parcelle introuvable');
+        return;
+      }
+
       if (isFavorite) {
         // Supprimer des favoris
         const { error } = await supabase
           .from('favorites')
           .delete()
           .eq('user_id', user.id)
-          .eq('property_id', id);
+          .eq('property_id', parcelle.id);
 
         if (error) throw error;
         setIsFavorite(false);
@@ -441,7 +462,7 @@ const ParcelleDetailPage = () => {
           .insert([
             {
               user_id: user.id,
-              property_id: id,
+              property_id: parcelle.id,
               created_at: new Date().toISOString()
             }
           ]);
@@ -556,7 +577,7 @@ const ParcelleDetailPage = () => {
           <div className="text-lg font-medium text-gray-700">Parcelle non trouvée</div>
           <div className="text-sm text-gray-500 mt-2">Cette parcelle n'existe pas ou a été supprimée</div>
           <div className="text-xs text-gray-400 mt-4 p-3 bg-gray-100 rounded font-mono break-all">
-            ID recherché: {id}
+            Slug recherché: {rawParam}
           </div>
           <Button onClick={() => navigate('/parcelles-vendeurs')} className="mt-6">
             Retour aux parcelles

@@ -13,6 +13,7 @@ import {
 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Link, useNavigate } from 'react-router-dom';
+import { generatePropertySlug } from '@/utils/propertySlug';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { supabase } from '@/lib/supabaseClient';
@@ -114,7 +115,7 @@ const TransactionsPage = () => {
                       <p className="font-medium">{tx.description}</p>
                       <div className="flex flex-col gap-1">
                         {tx.requests?.parcels?.id && (
-                          <Link to={`/parcelle/${tx.requests.parcels.id}`} className="text-xs text-primary hover:underline">Voir la parcelle</Link>
+                          <Link to={`/parcelle/${generatePropertySlug(tx.requests.parcels.name || tx.requests.parcels.title || '')}`} className="text-xs text-primary hover:underline">Voir la parcelle</Link>
                         )}
                         {tx.blockchain_hash && (
                           <a

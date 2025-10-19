@@ -12,6 +12,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { generatePropertySlug } from '@/utils/propertySlug';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Home,
@@ -407,7 +408,7 @@ const AddPropertyAdvanced = () => {
       }
 
       toast.success('Propriété ajoutée avec succès !');
-      navigate(`/parcelle/${data.id}`);
+  navigate(`/parcelle/${generatePropertySlug(data.title || '')}`);
       
     } catch (error) {
       console.error('Erreur:', error);

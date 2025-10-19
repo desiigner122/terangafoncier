@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
 import { useNavigate } from 'react-router-dom';
+import { generatePropertySlug } from '@/utils/propertySlug';
 import { 
   Home,
   Building2,
@@ -74,8 +75,8 @@ const ParticulierProprietes = () => {
       case 'bank':
         navigate('/acheteur/buy/bank-financing', { state: purchaseData });
         break;
-      default:
-        navigate(`/parcelle/${property.id}`);
+    default:
+  navigate(`/parcelle/${generatePropertySlug(property.title || '')}`);
     }
   };
 
@@ -546,7 +547,7 @@ const ParticulierProprietes = () => {
             </div>
             
             <div className="flex gap-2 mt-3">
-              <Button className="flex-1" variant="outline" size="sm" onClick={() => navigate(`/parcelle/${property.id}`)}>
+              <Button className="flex-1" variant="outline" size="sm" onClick={() => navigate(`/parcelle/${generatePropertySlug(property.title || '')}`)}>
                 <Eye className="w-4 h-4 mr-1" />
                 Détails
               </Button>

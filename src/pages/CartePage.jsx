@@ -36,6 +36,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
+import { generatePropertySlug } from '@/utils/propertySlug';
 const CartePage = () => {
   const navigate = useNavigate();
   const [activeFilter, setActiveFilter] = useState('all');
@@ -59,7 +60,6 @@ const CartePage = () => {
   const predictiveData = {
     growth_prediction: "+15.2%",
     investment_score: 8.7,
-    infrastructure_development: "85%",
     market_trend: "Croissance forte",
     best_roi_zones: ["Almadies", "Mermoz", "Point E"],
     risk_level: "Faible"
@@ -531,7 +531,7 @@ const CartePage = () => {
                               if (property.is_municipal) {
                                 navigate(`/zone-communale/${property.id}`);
                               } else {
-                                navigate(`/parcelle/${property.id}`);
+                                navigate(`/parcelle/${generatePropertySlug(property.title)}`);
                               }
                             }}
                           >

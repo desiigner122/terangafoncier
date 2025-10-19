@@ -35,6 +35,7 @@ import {
   AlertCircle
 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { generatePropertySlug } from '@/utils/propertySlug';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
@@ -669,7 +670,7 @@ const VendeurOverviewRealData = () => {
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.8 + index * 0.1 }}
                     className="p-4 rounded-xl bg-gradient-to-br from-blue-50 to-purple-50 border border-blue-100 hover:shadow-lg transition-all cursor-pointer"
-                    onClick={() => navigate(`/parcelle/${property.id}`)}
+                    onClick={() => navigate(`/parcelle/${generatePropertySlug(property.title || '')}`)}
                   >
                     <div className="flex items-start justify-between mb-3">
                       <div className="flex-1">

@@ -43,109 +43,45 @@ const UserProfilePage = () => {
   }, [userId, userType]);
 
   const loadProfile = async () => {
-    console.log('🔍 loadProfile appelé avec:', { userType, userId });
-    
-    // Vérifier que les paramètres sont présents
     if (!userId) {
-      console.error('❌ userId manquant:', { userType, userId });
       setProfile(null);
       setLoading(false);
       return;
     }
-    
     setLoading(true);
-    
     try {
-      // 🔗 Fetch le profil réel depuis Supabase
-      console.log('📡 Fetching profile from Supabase with userId:', userId);
-      const profileData = await fetchDirect(
-        `profiles?select=*&id=eq.${userId}`
-      );
+      // Correction: The user ID from the URL corresponds to the 'id' column in the 'profiles' table.
+      const data = await fetchDirect(`profiles?select=*&id=eq.${userId}`);
       
-      console.log('📦 Profile data received:', { count: profileData?.length, data: profileData });
-      
-      if (!profileData || profileData.length === 0) {
-        console.warn('⚠️ Profil utilisateur non trouvé:', userId);
-        // Fallback: retourner un profil vide au lieu de rien
-        const emptyProfile = {
-          id: userId,
-          full_name: 'Utilisateur',
-          email: '',
-          phone: '',
-          avatar_url: '',
-          address: '',
-          website: '',
-          role: 'particulier',
-          bio: '',
-          verification_status: 'unverified'
-        };
-        console.log('📋 Using fallback empty profile:', emptyProfile);
-        const userProfile = emptyProfile;
-        
+      if (data && data.length > 0) {
+        const userProfile = data[0];
         const mappedProfile = {
           id: userProfile.id,
           name: userProfile.full_name || 'Utilisateur',
           email: userProfile.email || '',
           phone: userProfile.phone || '',
-          avatar: userProfile.avatar_url || '',
-          location: userProfile.address || '',
+          avatar: userProfile.avatar_url || `https://i.pravatar.cc/150?u=${userProfile.id}`,
+          location: userProfile.address || 'Non spécifié',
           website: userProfile.website || '',
           role: userProfile.role || 'particulier',
-          description: userProfile.bio || '',
+          description: userProfile.bio || 'Aucune description disponible.',
           isVerified: userProfile.verification_status === 'verified',
-          createdAt: new Date(),
-          rating: 4.5,
-          reviewCount: 0,
-          followers: 0,
-          views: 0,
-          stats: {},
-          achievements: []
+          createdAt: new Date(userProfile.created_at),
+          rating: parseFloat(userProfile.rating || 4.5),
+          reviewCount: userProfile.review_count || 0,
+          followers: userProfile.followers_count || 0,
+          views: userProfile.views_count || 0,
+          stats: await loadUserStats(userProfile.id, userProfile.role),
+          achievements: generateAchievements(userProfile)
         };
-
         setProfile(mappedProfile);
-        setLoading(false);
-        return;
+      } else {
+        // If no profile is found, display a 'not found' state.
+        setProfile(null);
       }
-
-      // 📦 Mapper le profil Supabase vers le format affichage
-      const userProfile = profileData[0];
-      console.log('✅ Profil chargé depuis Supabase:', {
-        id: userProfile.id,
-        name: userProfile.full_name,
-        role: userProfile.role,
-        email: userProfile.email,
-        verified: userProfile.verification_status,
-        address: userProfile.address,
-        bio: userProfile.bio?.substring(0, 50),
-        avatar: userProfile.avatar_url ? '✅ Present' : '❌ Missing'
-      });
-
-      const mappedProfile = {
-        id: userProfile.id,
-        name: userProfile.full_name || 'Utilisateur',
-        email: userProfile.email || '',
-        phone: userProfile.phone || '',
-        avatar: userProfile.avatar_url || '',
-        location: userProfile.address || '',
-        website: userProfile.website || '',
-        role: userProfile.role || 'particulier',
-        description: userProfile.bio || '',
-        isVerified: userProfile.verification_status === 'verified',
-        createdAt: new Date(userProfile.created_at),
-        rating: parseFloat(userProfile.rating || 4.5),
-        reviewCount: userProfile.review_count || 0,
-        followers: userProfile.followers_count || 0,
-        views: userProfile.views_count || 0,
-        
-        // Informations de comptage selon le rôle
-        stats: await loadUserStats(userProfile.id, userProfile.role),
-        achievements: generateAchievements(userProfile)
-      };
-
-      setProfile(mappedProfile);
     } catch (error) {
       console.error('❌ Erreur lors du chargement du profil:', error);
-      setProfile(null);
+      setProfile(null); // Fallback to null on any error.
     } finally {
       setLoading(false);
     }

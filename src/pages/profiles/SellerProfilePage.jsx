@@ -42,40 +42,42 @@ const SellerProfilePage = () => {
   }, [sellerId]);
 
   const loadSellerProfile = async () => {
-    // Simulation des données vendeur
-    const mockSeller = {
-      id: sellerId,
-      name: 'Amadou Diallo',
-      type: 'Vendeur Particulier',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-      coverImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=300&fit=crop',
-      location: 'Liberté 6, Dakar',
-      joinedDate: '2022-03-15',
-      isVerified: true,
-      rating: 4.8,
-      reviewCount: 47,
-      description: 'Propriétaire foncier expérimenté avec plus de 10 ans d\'expérience dans la vente de terrains à Dakar. Spécialisé dans les zones résidentielles avec tous les documents légaux en règle.',
-      phone: '+221 77 123 45 67',
-      email: 'amadou.diallo@email.com',
-      specialties: ['Terrains Résidentiels', 'Zone Liberté', 'Titres Fonciers', 'Négociation'],
-      stats: {
-        totalProperties: 15,
-        propertiesSold: 8,
-        activeListings: 7,
-        totalValue: '450M FCFA',
-        averagePrice: '32M FCFA',
-        responseTime: '2h'
-      },
-      certifications: [
-        'Vendeur Certifié Teranga Foncier',
-        'Documents Vérifiés',
-        'Transactions Sécurisées',
-        'Service Client Excellence'
-      ],
-      languages: ['Français', 'Wolof', 'Peul'],
-      serviceAreas: ['Liberté 6', 'Mermoz', 'Sacré-Cœur', 'Point E']
-    };
-    setSeller(mockSeller);
+    setLoading(true);
+    try {
+      const sellerData = await fetchDirect(`profiles?select=*&id=eq.${sellerId}`);
+      if (sellerData && sellerData.length > 0) {
+        const profile = sellerData[0];
+        setSeller({
+          id: profile.id,
+          name: profile.full_name || 'Vendeur',
+          type: profile.role || 'Vendeur Particulier',
+          avatar: profile.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+          coverImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=300&fit=crop',
+          location: profile.address || 'Adresse non spécifiée',
+          joinedDate: profile.created_at,
+          isVerified: profile.verification_status === 'verified',
+          rating: 4.8, // Mocked
+          reviewCount: 47, // Mocked
+          description: profile.bio || 'Aucune description.',
+          phone: profile.phone || 'Non spécifié',
+          email: profile.email || 'Non spécifié',
+          specialties: ['Terrains Résidentiels', 'Titres Fonciers'], // Mocked
+          stats: {
+            totalProperties: 15, // Mocked
+            propertiesSold: 8, // Mocked
+            activeListings: 7, // Mocked
+          },
+          certifications: ['Vendeur Certifié Teranga Foncier'], // Mocked
+          languages: ['Français', 'Wolof'], // Mocked
+          serviceAreas: ['Dakar', 'Thiès'] // Mocked
+        });
+      } else {
+        setSeller(null);
+      }
+    } catch (error) {
+      console.error("Erreur lors du chargement du profil vendeur:", error);
+      setSeller(null);
+    }
     setLoading(false);
   };
 

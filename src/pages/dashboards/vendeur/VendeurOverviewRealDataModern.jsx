@@ -19,9 +19,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { generatePropertySlug } from '@/utils/propertySlug';
 
 // 🆕 COMPOSANTS MODERNES
 import EmptyState from '@/components/ui/EmptyState';
@@ -231,8 +233,7 @@ const VendeurOverviewRealDataModern = () => {
           icon: p.status === 'sold' ? DollarSign : p.status === 'active' ? CheckCircle : Edit
         }));
 
-      setRecentActivities(activities);
-
+  setRecentActivities(activities);
       // Générer alertes
       generateAlerts(properties, stats);
 
@@ -506,7 +507,7 @@ const VendeurOverviewRealDataModern = () => {
                     animate={{ opacity: 1, x: 0 }}
                     transition={{ delay: idx * 0.1 }}
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
-                    onClick={() => navigate(`/parcelle/${property.id}`)}
+                    onClick={() => navigate(`/parcelle/${generatePropertySlug(property.title || '')}`)}
                   >
                     <div className="flex items-center gap-3 flex-1">
                       {property.image ? (

@@ -460,7 +460,7 @@ const AdminPropertyValidation = () => {
                             Rejeter
                           </Button>
                           <Button
-                            onClick={() => window.open(`/parcelle/${property.id}`, '_blank')}
+                            onClick={() => window.open(`/parcelle/${generatePropertySlug(property.title || '')}`, '_blank')}
                             variant="outline"
                           >
                             <Eye className="h-4 w-4 mr-2" />

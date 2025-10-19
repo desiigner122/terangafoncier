@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
+import { generatePropertySlug } from '@/utils/propertySlug';
 import { Button } from '@/components/ui/button';
 import { 
   ExternalLink, 
@@ -87,6 +88,7 @@ const MapPage = () => {
   const { user } = useAuth();
   const [favoriteIds, setFavoriteIds] = useState([]);
   const { position: userPosition, error: geoError, loading: geoLoading, getCurrentPosition } = useSecureGeolocation();
+  
   const browserCapabilities = getBrowserCapabilities();
 
   useEffect(() => {
@@ -246,7 +248,7 @@ const MapPage = () => {
                         <Heart className={`h-4 w-4 ${favoriteIds.includes(parcel.id) ? 'text-red-500 fill-current' : ''}`} />
                       </Button>
                       <Button asChild size="sm" className="flex-1">
-                        <Link to={`/parcelle/${parcel.id}`}>
+                          <Link to={`/parcelle/${generatePropertySlug(parcel.location_name || parcel.title || '')}`}>
                           Voir les détails <ExternalLink className="ml-2 h-3.5 w-3.5"/>
                         </Link>
                       </Button>

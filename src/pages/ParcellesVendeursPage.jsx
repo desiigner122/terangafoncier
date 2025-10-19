@@ -28,6 +28,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
 import { useNavigate, Link } from 'react-router-dom';
+import { generatePropertySlug } from '@/utils/propertySlug';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { fetchDirect } from '@/lib/supabaseClient';
 
@@ -237,8 +238,8 @@ const ParcellesVendeursPage = () => {
     ? ["Toutes"] 
     : cities[selectedRegion] || ["Toutes"];
 
-  const handleParcelleClick = (id) => {
-    navigate(`/parcelle/${id}`);
+  const handleParcelleClick = (id, title) => {
+  navigate(`/parcelle/${generatePropertySlug(title || '')}`);
   };
 
   const toggleUtility = (utility) => {
@@ -724,10 +725,9 @@ const ParcellesVendeursPage = () => {
                         className="w-full flex items-center justify-center gap-2 text-blue-600 border-blue-200 hover:bg-blue-50"
                         onClick={(e) => {
                           e.stopPropagation();
-                          // 🔗 Navigation vers le profil du vendeur avec ID
-                          const profilePath = `/profile/seller/${parcelle.sellerId}`;
-                          console.log('🔗 Navigating to seller profile:', { profilePath, sellerId: parcelle.sellerId });
-                          navigate(profilePath);
+                          // Navigation simplifiée vers le profil utilisateur
+                          const userType = parcelle.sellerType || 'seller';
+                          navigate(`/profile/${userType}/${parcelle.sellerId}`);
                         }}
                       >
                         <User className="w-4 h-4" />
@@ -736,9 +736,9 @@ const ParcellesVendeursPage = () => {
 
                       <Button 
                         className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700"
-                        onClick={(e) => {
+                          onClick={(e) => {
                           e.stopPropagation();
-                          navigate(`/parcelle/${parcelle.id}`);
+                          navigate(`/parcelle/${generatePropertySlug(parcelle.title || '')}`);
                         }}
                       >
                         Voir les détails

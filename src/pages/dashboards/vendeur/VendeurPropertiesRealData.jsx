@@ -27,6 +27,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useNavigate, Link } from 'react-router-dom';
+import { generatePropertySlug } from '@/utils/propertySlug';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -803,8 +804,8 @@ const VendeurPropertiesRealData = () => {
                           Gérer les photos
                         </DropdownMenuItem>
                         <DropdownMenuItem onClick={() => {
-                          // Ouvrir dans nouvel onglet pour voir l'annonce publique
-                          window.open(`/parcelle/${property.id}`, '_blank');
+                          // Ouvrir dans nouvel onglet pour voir l'annonce publique (slug)
+                          window.open(`/parcelle/${generatePropertySlug(property.title || '')}`, '_blank');
                         }}>
                           <ExternalLink className="h-4 w-4 mr-2" />
                           Voir l'annonce

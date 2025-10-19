@@ -66,7 +66,43 @@ const UserProfilePage = () => {
       
       if (!profileData || profileData.length === 0) {
         console.warn('⚠️ Profil utilisateur non trouvé:', userId);
-        setProfile(null);
+        // Fallback: retourner un profil vide au lieu de rien
+        const emptyProfile = {
+          id: userId,
+          full_name: 'Utilisateur',
+          email: '',
+          phone: '',
+          avatar_url: '',
+          address: '',
+          website: '',
+          role: 'particulier',
+          bio: '',
+          verification_status: 'unverified'
+        };
+        console.log('📋 Using fallback empty profile:', emptyProfile);
+        const userProfile = emptyProfile;
+        
+        const mappedProfile = {
+          id: userProfile.id,
+          name: userProfile.full_name || 'Utilisateur',
+          email: userProfile.email || '',
+          phone: userProfile.phone || '',
+          avatar: userProfile.avatar_url || '',
+          location: userProfile.address || '',
+          website: userProfile.website || '',
+          role: userProfile.role || 'particulier',
+          description: userProfile.bio || '',
+          isVerified: userProfile.verification_status === 'verified',
+          createdAt: new Date(),
+          rating: 4.5,
+          reviewCount: 0,
+          followers: 0,
+          views: 0,
+          stats: {},
+          achievements: []
+        };
+
+        setProfile(mappedProfile);
         setLoading(false);
         return;
       }
@@ -118,11 +154,15 @@ const UserProfilePage = () => {
   // Charger les statistiques de l'utilisateur selon son rôle
   const loadUserStats = async (userId, role) => {
     try {
-      if (role === 'vendeur' || role === 'agent-foncier' || role === 'promoteur') {
+      // Charger les propriétés pour tout utilisateur qui a des propriétés (vendeur, agent, promoteur, particulier)
+      if (role && ['vendeur', 'particulier', 'agent-foncier', 'promoteur', 'seller'].includes(role)) {
         // Compter les propriétés
+        console.log(`📊 Loading properties for ${role} user ${userId}`);
         const properties = await fetchDirect(
           `properties?select=id,status&owner_id=eq.${userId}`
         );
+        
+        console.log(`✅ Found ${properties.length} properties`);
         
         const sold = properties.filter(p => p.status === 'sold').length;
         const available = properties.filter(p => p.status === 'active').length;

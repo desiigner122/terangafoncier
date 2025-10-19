@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { fetchDirect } from '@/lib/supabaseClient';
 import { 
   Star, 
   MapPin, 
@@ -45,8 +46,8 @@ const UserProfilePage = () => {
     console.log('🔍 loadProfile appelé avec:', { userType, userId });
     
     // Vérifier que les paramètres sont présents
-    if (!userType || !userId) {
-      console.error('❌ Paramètres de profil manquants:', { userType, userId });
+    if (!userId) {
+      console.error('❌ userId manquant:', { userType, userId });
       setProfile(null);
       setLoading(false);
       return;
@@ -55,20 +56,94 @@ const UserProfilePage = () => {
     setLoading(true);
     
     try {
-      // Simulation des données de profil selon le type
-      const mockProfile = generateMockProfile(userType, userId);
-      if (mockProfile) {
-        setProfile(mockProfile);
-      } else {
-        console.error('❌ Impossible de générer le profil pour:', { userType, userId });
+      // 🔗 Fetch le profil réel depuis Supabase
+      const profileData = await fetchDirect(
+        `profiles?select=*&id=eq.${userId}`
+      );
+      
+      if (!profileData || profileData.length === 0) {
+        console.warn('⚠️ Profil utilisateur non trouvé:', userId);
         setProfile(null);
+        setLoading(false);
+        return;
       }
+
+      // 📦 Mapper le profil Supabase vers le format affichage
+      const userProfile = profileData[0];
+      console.log('✅ Profil chargé depuis Supabase:', userProfile);
+
+      const mappedProfile = {
+        id: userProfile.id,
+        name: userProfile.full_name || 'Utilisateur',
+        email: userProfile.email || '',
+        phone: userProfile.phone || '',
+        avatar: userProfile.avatar_url || '',
+        location: userProfile.address || '',
+        website: userProfile.website || '',
+        role: userProfile.role || 'particulier',
+        description: userProfile.bio || '',
+        isVerified: userProfile.verification_status === 'verified',
+        createdAt: new Date(userProfile.created_at),
+        rating: parseFloat(userProfile.rating || 4.5),
+        reviewCount: userProfile.review_count || 0,
+        followers: userProfile.followers_count || 0,
+        views: userProfile.views_count || 0,
+        
+        // Informations de comptage selon le rôle
+        stats: await loadUserStats(userProfile.id, userProfile.role),
+        achievements: generateAchievements(userProfile)
+      };
+
+      setProfile(mappedProfile);
     } catch (error) {
       console.error('❌ Erreur lors du chargement du profil:', error);
       setProfile(null);
     } finally {
       setLoading(false);
     }
+  };
+
+  // Charger les statistiques de l'utilisateur selon son rôle
+  const loadUserStats = async (userId, role) => {
+    try {
+      if (role === 'vendeur' || role === 'agent-foncier' || role === 'promoteur') {
+        // Compter les propriétés
+        const properties = await fetchDirect(
+          `properties?select=id,status&owner_id=eq.${userId}`
+        );
+        
+        const sold = properties.filter(p => p.status === 'sold').length;
+        const available = properties.filter(p => p.status === 'active').length;
+        
+        return {
+          properties: properties.length,
+          sold: sold,
+          available: available,
+          totalValue: 'Non disponible'
+        };
+      }
+      return {};
+    } catch (error) {
+      console.error('Erreur chargement stats:', error);
+      return {};
+    }
+  };
+
+  // Générer les achievements basés sur les données réelles
+  const generateAchievements = (profile) => {
+    const achievements = [];
+    
+    if (profile.verification_status === 'verified') {
+      achievements.push('Vendeur Vérifiés');
+    }
+    if (profile.email_verified) {
+      achievements.push('Email Vérifié');
+    }
+    if (profile.phone_verified) {
+      achievements.push('Téléphone Vérifié');
+    }
+    
+    return achievements.length > 0 ? achievements : ['Utilisateur Actif'];
   };
 
   const generateMockProfile = (type, id) => {
@@ -302,51 +377,56 @@ const UserProfilePage = () => {
       }
   };
 
-  const getRoleColor = (type) => {
-    const colors = {
-      'vendeur-particulier': 'bg-blue-500',
+  const getRoleColor = (role) => {
+    const roleMap = {
+      'particulier': 'bg-blue-500',
       'seller': 'bg-blue-500',
-      'vendeur-pro': 'bg-purple-500',
-      'seller-pro': 'bg-purple-500',
-      'promoteur': 'bg-orange-500',
-      'promoter': 'bg-orange-500',
-      'banque': 'bg-green-500',
-      'bank': 'bg-green-500',
-      'geometre': 'bg-cyan-500',
-      'geometer': 'bg-cyan-500',
-      'notaire': 'bg-indigo-500',
-      'notary': 'bg-indigo-500',
-      'municipality': 'bg-red-500',
-      'agent': 'bg-yellow-500',
+      'vendeur': 'bg-blue-500',
       'agent-foncier': 'bg-yellow-500',
-      'investor': 'bg-pink-500',
+      'promoteur': 'bg-orange-500',
+      'banque': 'bg-green-500',
+      'geometre': 'bg-cyan-500',
+      'notaire': 'bg-indigo-500',
+      'mairie': 'bg-red-500',
+      'municipality': 'bg-red-500',
       'investisseur': 'bg-pink-500'
     };
-    return colors[type] || 'bg-gray-500';
+    return roleMap[role] || 'bg-gray-500';
   };
 
-  const getRoleIcon = (type) => {
-    const icons = {
-      'vendeur-particulier': Users,
+  const getRoleIcon = (role) => {
+    const iconMap = {
+      'particulier': Users,
       'seller': Users,
-      'vendeur-pro': Building2,
-      'seller-pro': Building2,
-      'promoteur': Award,
-      'promoter': Award,
-      'banque': TrendingUp,
-      'bank': TrendingUp,
-      'geometre': MapPin,
-      'geometer': MapPin,
-      'notaire': Shield,
-      'notary': Shield,
-      'municipality': Building2,
-      'agent': Users,
+      'vendeur': Users,
       'agent-foncier': Users,
-      'investor': TrendingUp,
+      'promoteur': Award,
+      'banque': TrendingUp,
+      'geometre': MapPin,
+      'notaire': Shield,
+      'mairie': Building2,
+      'municipality': Building2,
       'investisseur': TrendingUp
     };
-    const IconComponent = icons[type] || Users;
+    const IconComponent = iconMap[role] || Users;
     return <IconComponent className="h-5 w-5" />;
+  };
+
+  const getRoleLabel = (role) => {
+    const labels = {
+      'particulier': 'Particulier',
+      'seller': 'Vendeur',
+      'vendeur': 'Vendeur',
+      'agent-foncier': 'Agent Foncier',
+      'promoteur': 'Promoteur',
+      'banque': 'Banque',
+      'geometre': 'Géomètre',
+      'notaire': 'Notaire',
+      'mairie': 'Mairie',
+      'municipality': 'Municipalité',
+      'investisseur': 'Investisseur'
+    };
+    return labels[role] || 'Utilisateur';
   };
 
   if (loading) {
@@ -400,19 +480,21 @@ const UserProfilePage = () => {
             <div className="flex-1">
               <div className="flex items-center gap-3 mb-2">
                 <h1 className="text-2xl md:text-3xl font-bold text-gray-900">{profile.name}</h1>
-                <Badge className={`${getRoleColor(profile.type)} text-white`}>
+                <Badge className={`${getRoleColor(profile.role)} text-white`}>
                   <div className="flex items-center gap-1">
-                    {getRoleIcon(profile.type)}
-                    {profile.title}
+                    {getRoleIcon(profile.role)}
+                    {getRoleLabel(profile.role)}
                   </div>
                 </Badge>
               </div>
 
-              <div className="flex items-center gap-4 text-gray-600 mb-4">
-                <div className="flex items-center gap-1">
-                  <MapPin className="h-4 w-4" />
-                  <span>{profile.location}</span>
-                </div>
+              <div className="flex items-center gap-4 text-gray-600 mb-4 flex-wrap">
+                {profile.location && (
+                  <div className="flex items-center gap-1">
+                    <MapPin className="h-4 w-4" />
+                    <span>{profile.location}</span>
+                  </div>
+                )}
                 <div className="flex items-center gap-1">
                   <Star className="h-4 w-4 text-yellow-500" />
                   <span>{profile.rating}</span>
@@ -424,14 +506,23 @@ const UserProfilePage = () => {
                 </div>
               </div>
 
-              <p className="text-gray-700 mb-4 max-w-3xl">{profile.description}</p>
+              {profile.description && (
+                <p className="text-gray-700 mb-4 max-w-3xl">{profile.description}</p>
+              )}
 
               <div className="flex flex-wrap gap-2 mb-4">
-                {profile.specialties?.map((specialty, index) => (
-                  <Badge key={index} variant="outline" className="text-xs">
-                    {specialty}
-                  </Badge>
-                ))}
+                {profile.phone && (
+                  <div className="flex items-center gap-2 text-sm bg-gray-100 px-3 py-1 rounded-full">
+                    <Phone className="h-4 w-4" />
+                    <span>{profile.phone}</span>
+                  </div>
+                )}
+                {profile.email && (
+                  <div className="flex items-center gap-2 text-sm bg-gray-100 px-3 py-1 rounded-full">
+                    <Mail className="h-4 w-4" />
+                    <span className="text-blue-600">{profile.email}</span>
+                  </div>
+                )}
               </div>
             </div>
 

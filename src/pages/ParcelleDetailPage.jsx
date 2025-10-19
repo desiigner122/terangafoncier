@@ -36,27 +36,63 @@ const ParcelleDetailPage = () => {
   const [isFavorite, setIsFavorite] = useState(false);
   const [paymentMethod, setPaymentMethod] = useState('direct'); // direct, installment, bank, crypto
 
+  // Determine if id is a UUID or slug
+  const isUUID = id && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id);
+  const isSlug = id && !isUUID; // Slug contains hyphens and letters
+
   useEffect(() => {
     const loadProperty = async () => {
       try {
         setLoading(true);
 
-        console.log('🔍 Chargement parcelle ID:', id);
+        console.log('🔍 Chargement parcelle:', { id, isUUID, isSlug });
 
-        // Charger la property avec le profil du vendeur
-        const { data: property, error } = await supabase
-          .from('properties')
-          .select(`
-            *,
-            profiles:owner_id (
-              id,
-              full_name,
-              email,
-              role
-            )
-          `)
-          .eq('id', id)
-          .single();
+        let property;
+        let error;
+
+        if (isUUID) {
+          // Direct ID lookup
+          console.log('📌 Using direct ID lookup:', id);
+          ({ data: property, error } = await supabase
+            .from('properties')
+            .select(`
+              *,
+              profiles:owner_id (
+                id,
+                full_name,
+                email,
+                role
+              )
+            `)
+            .eq('id', id)
+            .single());
+        } else if (isSlug) {
+          // Slug lookup - search by title and create slug to match
+          console.log('🔍 Using slug lookup:', id);
+          const { data: properties } = await supabase
+            .from('properties')
+            .select(`
+              *,
+              profiles:owner_id (
+                id,
+                full_name,
+                email,
+                role
+              )
+            `);
+          
+          // Find property by slug (generated from title)
+          property = properties?.find(p => {
+            const slug = (p.title || 'terrain').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, '');
+            return slug === id;
+          });
+          
+          if (!property) {
+            error = { message: 'Property not found with slug: ' + id };
+          }
+        } else {
+          error = { message: 'Invalid ID format' };
+        }
 
         console.log('📦 Property chargée:', property);
         console.log('❌ Erreur:', error);

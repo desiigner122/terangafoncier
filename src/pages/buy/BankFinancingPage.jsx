@@ -19,12 +19,13 @@ const BankFinancingPage = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const context = state || {};
-  const hasContext = !!(context.parcelleId || context.projectId);
+  const hasContext = !!(context.parcelleId || context.projectId || context.offerId);
   const [income, setIncome] = useState('');
-  const [amount, setAmount] = useState(context.paymentInfo?.totalPrice?.toString() || context.parcelle?.price?.toString() || '');
+  const [amount, setAmount] = useState(context.paymentInfo?.totalPrice?.toString() || context.parcelle?.price?.toString() || context.offer?.offer_price?.toString() || '');
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdRequestId, setCreatedRequestId] = useState(null);
+  const [offer, setOffer] = useState(context.offer || null);
   
   // Nouveaux états pour les fonctionnalités avancées
   const [loanDuration, setLoanDuration] = useState('15');
@@ -45,6 +46,31 @@ const BankFinancingPage = () => {
     { id: 'ecobank', name: 'Ecobank', rate: 9.0, maxDuration: 22 },
     { id: 'ubs', name: 'UBS', rate: 8.7, maxDuration: 20 }
   ];
+
+  // Charger l'offre si offerId est fourni
+  useEffect(() => {
+    const loadOffer = async () => {
+      if (context.offerId && !offer) {
+        try {
+          const { data, error } = await supabase
+            .from('purchase_requests')
+            .select('*')
+            .eq('id', context.offerId)
+            .single();
+
+          if (error) throw error;
+
+          console.log('✅ Offre chargée:', data);
+          setOffer(data);
+          setAmount(data.offer_price?.toString() || '');
+        } catch (error) {
+          console.error('❌ Erreur chargement offre:', error);
+        }
+      }
+    };
+
+    loadOffer();
+  }, [context.offerId, offer]);
 
   // Calculs financiers
   const calculateLoanDetails = () => {
@@ -254,12 +280,13 @@ const BankFinancingPage = () => {
                     placeholder="Prix du terrain/projet" 
                     value={amount} 
                     onChange={(e) => setAmount(e.target.value)}
-                    disabled={hasContext && context.parcelle?.price}
-                    className={hasContext && context.parcelle?.price ? 'bg-gray-100 cursor-not-allowed' : ''}
+                    disabled={true}
+                    className="bg-gray-100 cursor-not-allowed"
                   />
-                  {hasContext && context.parcelle?.price && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Prix fixé par le vendeur
+                  {amount && (
+                    <p className="text-xs text-blue-600 mt-1 flex items-center">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Prix de votre offre acceptée
                     </p>
                   )}
                 </div>

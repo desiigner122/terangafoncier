@@ -18,16 +18,17 @@ const OneTimePaymentPage = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const context = state || {};
-  const hasContext = !!(context.parcelleId || context.projectId);
+  const hasContext = !!(context.parcelleId || context.projectId || context.offerId);
   const [price, setPrice] = useState(context.paymentInfo?.totalPrice?.toString() || context.parcelle?.price?.toString() || '');
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdRequestId, setCreatedRequestId] = useState(null);
+  const [offer, setOffer] = useState(context.offer || null);
   
   // Nouveaux états pour les fonctionnalités avancées
   const [paymentMethod, setPaymentMethod] = useState('bank_transfer');
-  const [negotiatedPrice, setNegotiatedPrice] = useState('');
+  const [negotiatedPrice, setNegotiatedPrice] = useState(context.offer?.offer_price?.toString() || '');
   const [paymentSource, setPaymentSource] = useState('');
   const [urgentPayment, setUrgentPayment] = useState(false);
   const [includeInsurance, setIncludeInsurance] = useState(true);
@@ -38,6 +39,31 @@ const OneTimePaymentPage = () => {
     legalCheck: true,
     titleTransfer: true
   });
+
+  // Charger l'offre si offerId est fourni
+  useEffect(() => {
+    const loadOffer = async () => {
+      if (context.offerId && !offer) {
+        try {
+          const { data, error } = await supabase
+            .from('purchase_requests')
+            .select('*')
+            .eq('id', context.offerId)
+            .single();
+
+          if (error) throw error;
+
+          console.log('✅ Offre chargée:', data);
+          setOffer(data);
+          setNegotiatedPrice(data.offer_price?.toString() || '');
+        } catch (error) {
+          console.error('❌ Erreur chargement offre:', error);
+        }
+      }
+    };
+
+    loadOffer();
+  }, [context.offerId, offer]);
 
   // Modes de paiement disponibles
   const paymentMethods = [
@@ -263,7 +289,15 @@ const OneTimePaymentPage = () => {
                     value={negotiatedPrice} 
                     onChange={(e) => setNegotiatedPrice(e.target.value)}
                     placeholder="Votre offre d'achat"
+                    disabled={true}
+                    className="bg-gray-100 cursor-not-allowed"
                   />
+                  {negotiatedPrice && (
+                    <div className="flex items-center text-xs text-blue-600 mt-1">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Prix de votre offre acceptée
+                    </div>
+                  )}
                 </div>
                 
                 <div>

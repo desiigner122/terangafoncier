@@ -113,7 +113,7 @@ CREATE INDEX IF NOT EXISTS idx_gps_verifications_status ON public.gps_verificati
 -- ============================================
 CREATE TABLE IF NOT EXISTS public.analytics_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID REFERENCES public.profiles(id) ON DELETE SET NULL,
+  user_id UUID,
   
   event_type TEXT,
   event_category TEXT,

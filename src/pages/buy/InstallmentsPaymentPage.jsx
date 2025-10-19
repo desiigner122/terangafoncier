@@ -18,15 +18,16 @@ const InstallmentsPaymentPage = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
   const context = state || {};
-  const hasContext = !!(context.parcelleId || context.projectId);
+  const hasContext = !!(context.parcelleId || context.projectId || context.offerId);
   const [months, setMonths] = useState("12");
   const [downPayment, setDownPayment] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdRequestId, setCreatedRequestId] = useState(null);
+  const [offer, setOffer] = useState(context.offer || null);
   
   // Nouveaux états pour les fonctionnalités avancées
-  const [totalAmount, setTotalAmount] = useState(context.paymentInfo?.totalPrice?.toString() || context.parcelle?.price?.toString() || '');
+  const [totalAmount, setTotalAmount] = useState(context.paymentInfo?.totalPrice?.toString() || context.parcelle?.price?.toString() || context.offer?.offer_price?.toString() || '');
   const [monthlyIncome, setMonthlyIncome] = useState('');
   const [paymentFrequency, setPaymentFrequency] = useState('monthly');
   const [firstPaymentDate, setFirstPaymentDate] = useState('');
@@ -50,6 +51,31 @@ const InstallmentsPaymentPage = () => {
     { value: "quarterly", label: "Trimestriel", multiplier: 3 },
     { value: "semi-annual", label: "Semestriel", multiplier: 6 }
   ];
+
+  // Charger l'offre si offerId est fourni
+  useEffect(() => {
+    const loadOffer = async () => {
+      if (context.offerId && !offer) {
+        try {
+          const { data, error } = await supabase
+            .from('purchase_requests')
+            .select('*')
+            .eq('id', context.offerId)
+            .single();
+
+          if (error) throw error;
+
+          console.log('✅ Offre chargée:', data);
+          setOffer(data);
+          setTotalAmount(data.offer_price?.toString() || '');
+        } catch (error) {
+          console.error('❌ Erreur chargement offre:', error);
+        }
+      }
+    };
+
+    loadOffer();
+  }, [context.offerId, offer]);
 
   // Calculs détaillés du paiement échelonné
   const calculateInstallmentDetails = () => {
@@ -201,12 +227,13 @@ const InstallmentsPaymentPage = () => {
                     placeholder="ex: 15000000" 
                     value={totalAmount} 
                     onChange={(e) => setTotalAmount(e.target.value)}
-                    disabled={hasContext && context.parcelle?.price}
-                    className={hasContext && context.parcelle?.price ? 'bg-gray-100 cursor-not-allowed' : ''}
+                    disabled={true}
+                    className="bg-gray-100 cursor-not-allowed"
                   />
-                  {hasContext && context.parcelle?.price && (
-                    <p className="text-xs text-gray-500 mt-1">
-                      Prix fixé par le vendeur
+                  {totalAmount && (
+                    <p className="text-xs text-blue-600 mt-1 flex items-center">
+                      <CheckCircle className="w-3 h-3 mr-1" />
+                      Prix de votre offre acceptée
                     </p>
                   )}
                 </div>

@@ -21,7 +21,8 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProfileLink from '@/components/common/ProfileLink';
-import { supabase } from '@/lib/supabaseClient';
+import { supabase, fetchDirect } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
 
 const ParcelleDetailPage = () => {
   const { id } = useParams();
@@ -60,65 +61,86 @@ const ParcelleDetailPage = () => {
         console.log('📦 Property chargée:', property);
         console.log('❌ Erreur:', error);
 
-        if (error) {
+        let propertyData = property;
+
+        // Fallback: utiliser fetchDirect si Supabase client échoue (problèmes RLS)
+        if (error && !property) {
+          console.log('🔄 Tentative avec fetchDirect...');
+          try {
+            const directData = await fetchDirect(`properties?id=eq.${id}&select=*`);
+            if (directData && directData.length > 0) {
+              propertyData = directData[0];
+              console.log('✅ Données chargées avec fetchDirect:', propertyData);
+            }
+          } catch (fetchError) {
+            console.error('❌ Erreur fetchDirect:', fetchError);
+          }
+        }
+
+        if (error && !propertyData) {
           console.error('❌ Erreur chargement:', error);
           navigate('/404');
           return;
         }
 
-        if (!property) {
+        if (!propertyData) {
           navigate('/404');
           return;
         }
 
         // Parser les JSON fields
-        const images = Array.isArray(property.images) ? property.images :
-                      (typeof property.images === 'string' ? JSON.parse(property.images || '[]') : []);
+        const images = Array.isArray(propertyData.images) ? propertyData.images :
+                      (typeof propertyData.images === 'string' ? JSON.parse(propertyData.images || '[]') : []);
         
-        const features = property.features && typeof property.features === 'object' 
-          ? property.features 
-          : (typeof property.features === 'string' ? JSON.parse(property.features || '{}') : {});
+        const features = propertyData.features && typeof propertyData.features === 'object' 
+          ? propertyData.features 
+          : (typeof propertyData.features === 'string' ? JSON.parse(propertyData.features || '{}') : {});
         
-        const amenities = Array.isArray(property.amenities) ? property.amenities :
-                         (typeof property.amenities === 'string' ? JSON.parse(property.amenities || '[]') : []);
+        const amenities = Array.isArray(propertyData.amenities) ? propertyData.amenities :
+                         (typeof propertyData.amenities === 'string' ? JSON.parse(propertyData.amenities || '[]') : []);
         
-        const metadata = property.metadata && typeof property.metadata === 'object'
-          ? property.metadata
-          : (typeof property.metadata === 'string' ? JSON.parse(property.metadata || '{}') : {});
+        const metadata = propertyData.metadata && typeof propertyData.metadata === 'object'
+          ? propertyData.metadata
+          : (typeof propertyData.metadata === 'string' ? JSON.parse(propertyData.metadata || '{}') : {});
 
         // Mapper les données vers le format attendu par le composant
         const mappedData = {
-          id: property.id,
-          title: property.title || 'Terrain sans titre',
-          location: property.location || `${property.city}, ${property.region}`,
-          region: property.region,
-          city: property.city,
-          price: property.price?.toString() || '0',
-          surface: property.surface?.toString() || '0',
-          type: property.property_type || 'Terrain',
+          id: propertyData.id,
+          title: propertyData.title || 'Terrain sans titre',
+          location: propertyData.location || `${propertyData.city}, ${propertyData.region}`,
+          region: propertyData.region,
+          city: propertyData.city,
+          price: propertyData.price?.toString() || '0',
+          surface: propertyData.surface?.toString() || '0',
+          type: propertyData.property_type || 'Terrain',
           
           seller: {
-            id: property.profiles?.id || property.owner_id,
-            name: property.profiles?.full_name || 'Vendeur',
-            type: property.profiles?.role === 'vendeur' ? 'Particulier' : 'Professionnel',
-            email: property.profiles?.email || '',
-            verified: property.verification_status === 'verified',
+            id: propertyData.profiles?.id || propertyData.owner_id,
+            name: propertyData.profiles?.full_name || 'Vendeur',
+            type: propertyData.profiles?.role === 'particulier' ? 'Particulier' : 'Professionnel',
+            email: propertyData.profiles?.email || '',
+            coordinates: {
+              lat: propertyData.latitude || 14.7167,
+              lng: propertyData.longitude || -17.4677
+            },
+            verified: propertyData.verification_status === 'verified',
             rating: 4.5,
             properties_sold: 0
           },
 
           address: {
-            full: property.address || property.location,
+            slug: (propertyData.title || 'terrain').toLowerCase().replace(/\s+/g, '-').replace(/[^\w-]/g, ''),
+            full: propertyData.address || propertyData.location,
             coordinates: {
-              latitude: property.latitude || 14.7167,
-              longitude: property.longitude || -17.4677
+              latitude: propertyData.latitude || 14.7167,
+              longitude: propertyData.longitude || -17.4677
             },
-            nearby_landmarks: property.nearby_landmarks || []
+            nearby_landmarks: propertyData.nearby_landmarks || []
           },
 
           coordinates: {
-            lat: property.latitude || 14.7167,
-            lng: property.longitude || -17.4677
+            lat: propertyData.latitude || 14.7167,
+            lng: propertyData.longitude || -17.4677
           },
 
           features: {
@@ -129,9 +151,9 @@ const ParcelleDetailPage = () => {
               'Transport en commun à 500m',
               'Accès voiture'
             ],
-            zoning: property.zoning || features.zoning || 'Zone résidentielle',
-            buildable_ratio: property.buildable_ratio || features.buildable_ratio || 0.6,
-            max_floors: property.max_floors || features.max_floors || 3
+            zoning: propertyData.zoning || features.zoning || 'Zone résidentielle',
+            buildable_ratio: propertyData.buildable_ratio || features.buildable_ratio || 0.6,
+            max_floors: propertyData.max_floors || features.max_floors || 3
           },
 
           amenities: amenities,
@@ -141,13 +163,13 @@ const ParcelleDetailPage = () => {
               name: 'Titre de propriété',
               type: 'PDF',
               size: '2.5 MB',
-              verified: !!property.title_deed_number
+              verified: !!propertyData.title_deed_number
             },
             {
               name: 'Plan cadastral',
               type: 'PDF',
               size: '1.8 MB',
-              verified: property.verification_status === 'verified'
+              verified: propertyData.verification_status === 'verified'
             }
           ],
 
@@ -160,9 +182,9 @@ const ParcelleDetailPage = () => {
             },
             installment: metadata.financing?.installment || {
               min_down_payment: '30%',
-              monthly_payment: Math.round(property.price * 0.7 / 120).toString(),
+              monthly_payment: Math.round(propertyData.price * 0.7 / 120).toString(),
               duration: '10 ans',
-              total_cost: (property.price * 1.2).toString()
+              total_cost: (propertyData.price * 1.2).toString()
             },
             crypto: metadata.financing?.crypto || {
               discount: '5%',
@@ -171,52 +193,65 @@ const ParcelleDetailPage = () => {
           },
 
           blockchain: {
-            verified: property.blockchain_verified || false,
-            hash: property.blockchain_hash,
-            network: property.blockchain_network,
-            nft_token_id: property.nft_token_id
+            verified: propertyData.blockchain_verified || false,
+            hash: propertyData.blockchain_hash,
+            network: propertyData.blockchain_network,
+            nft_token_id: propertyData.nft_token_id
           },
 
           nft: {
-            available: !!property.nft_token_id,
-            token_id: property.nft_token_id || null,
-            blockchain: property.blockchain_network || 'Polygon',
-            mint_date: property.nft_minted_at || property.created_at,
-            smart_contract: property.nft_contract_address || null,
-            current_owner: property.nft_owner || property.profiles?.full_name || 'Vendeur'
+            available: !!propertyData.nft_token_id,
+            token_id: propertyData.nft_token_id || null,
+            blockchain: propertyData.blockchain_network || 'Polygon',
+            mint_date: propertyData.nft_minted_at || propertyData.created_at,
+            smart_contract: propertyData.nft_contract_address || null,
+            current_owner: propertyData.nft_owner || propertyData.profiles?.full_name || 'Vendeur'
           },
 
           stats: {
-            views: property.views_count || 0,
-            favorites: property.favorites_count || 0,
-            contact_requests: property.contact_requests_count || 0,
-            days_on_market: property.created_at 
-              ? Math.floor((new Date() - new Date(property.created_at)) / (1000 * 60 * 60 * 24))
+            views: propertyData.views_count || 0,
+            favorites: propertyData.favorites_count || 0,
+            contact_requests: propertyData.contact_requests_count || 0,
+            days_on_market: propertyData.created_at 
+              ? Math.floor((new Date() - new Date(propertyData.created_at)) / (1000 * 60 * 60 * 24))
               : 0
           },
 
           ai_score: {
-            overall: property.ai_score || 8.5,
-            location: property.ai_location_score || 9.0,
-            investment_potential: property.ai_investment_score || 8.0,
-            infrastructure: property.ai_infrastructure_score || 8.5,
-            price_vs_market: property.ai_price_score || 8.0,
-            growth_prediction: property.ai_growth_prediction || '+15% dans les 5 prochaines années'
+            overall: propertyData.ai_score || 8.5,
+            location: propertyData.ai_location_score || 9.0,
+            investment_potential: propertyData.ai_investment_score || 8.0,
+            infrastructure: propertyData.ai_infrastructure_score || 8.5,
+            price_vs_market: propertyData.ai_price_score || 8.0,
+            growth_prediction: propertyData.ai_growth_prediction || '+15% dans les 5 prochaines années'
           },
 
           images: images,
           main_image: images[0] || null,
-          description: property.description || 'Aucune description disponible',
-          status: property.status,
-          verification_status: property.verification_status,
-          legal_status: property.legal_status,
-          title_deed_number: property.title_deed_number,
-          land_registry_ref: property.land_registry_ref,
-          created_at: property.created_at,
-          updated_at: property.updated_at
+          description: propertyData.description || 'Aucune description disponible',
+          status: propertyData.status,
+          verification_status: propertyData.verification_status,
+          legal_status: propertyData.legal_status,
+          title_deed_number: propertyData.title_deed_number,
+          land_registry_ref: propertyData.land_registry_ref,
+          created_at: propertyData.created_at,
+          updated_at: propertyData.updated_at
         };
 
         setParcelle(mappedData);
+        
+        // Charger l'état des favoris si l'utilisateur est connecté
+        if (user?.id) {
+          const { data: favorite } = await supabase
+            .from('favorites')
+            .select('id')
+            .eq('user_id', user.id)
+            .eq('property_id', id)
+            .maybeSingle();
+          
+          setIsFavorite(!!favorite);
+        }
+
         setLoading(false);
 
       } catch (error) {
@@ -228,7 +263,7 @@ const ParcelleDetailPage = () => {
     if (id) {
       loadProperty();
     }
-  }, [id, navigate]);
+  }, [id, navigate, user?.id]);
 
   const formatPrice = (price) => {
     return parseInt(price).toLocaleString() + ' FCFA';
@@ -329,8 +364,45 @@ const ParcelleDetailPage = () => {
     }
   };
 
-  const toggleFavorite = () => {
-    setIsFavorite(!isFavorite);
+  const toggleFavorite = async () => {
+    if (!user) {
+      toast.error('Vous devez être connecté pour ajouter aux favoris');
+      navigate('/login');
+      return;
+    }
+
+    try {
+      if (isFavorite) {
+        // Supprimer des favoris
+        const { error } = await supabase
+          .from('favorites')
+          .delete()
+          .eq('user_id', user.id)
+          .eq('property_id', id);
+
+        if (error) throw error;
+        setIsFavorite(false);
+        toast.success('Retiré de vos favoris');
+      } else {
+        // Ajouter aux favoris
+        const { error } = await supabase
+          .from('favorites')
+          .insert([
+            {
+              user_id: user.id,
+              property_id: id,
+              created_at: new Date().toISOString()
+            }
+          ]);
+
+        if (error) throw error;
+        setIsFavorite(true);
+        toast.success('Ajouté à vos favoris');
+      }
+    } catch (error) {
+      console.error('❌ Erreur lors de la mise à jour des favoris:', error);
+      toast.error('Erreur lors de la mise à jour des favoris');
+    }
   };
 
   // Calcul intelligent des prix selon la méthode de paiement
@@ -428,12 +500,18 @@ const ParcelleDetailPage = () => {
   if (!parcelle) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        <div className="text-center">
+        <div className="text-center max-w-md">
           <AlertTriangle className="w-16 h-16 text-orange-500 mx-auto mb-4" />
           <div className="text-lg font-medium text-gray-700">Parcelle non trouvée</div>
           <div className="text-sm text-gray-500 mt-2">Cette parcelle n'existe pas ou a été supprimée</div>
-          <Button onClick={() => navigate('/parcelles-vendeurs')} className="mt-4">
+          <div className="text-xs text-gray-400 mt-4 p-3 bg-gray-100 rounded font-mono break-all">
+            ID recherché: {id}
+          </div>
+          <Button onClick={() => navigate('/parcelles-vendeurs')} className="mt-6">
             Retour aux parcelles
+          </Button>
+          <Button variant="outline" onClick={() => navigate('/')} className="mt-2 ml-2">
+            Accueil
           </Button>
         </div>
       </div>
@@ -593,177 +671,459 @@ const ParcelleDetailPage = () => {
               </CardContent>
             </Card>
 
-            {/* Onglets détaillés */}
-            <Card>
-              <Tabs defaultValue="caracteristiques" className="w-full">
-                <TabsList className="grid w-full grid-cols-4">
-                  <TabsTrigger value="caracteristiques">Caractéristiques</TabsTrigger>
-                  <TabsTrigger value="financement">Financement</TabsTrigger>
-                  <TabsTrigger value="nft">NFT & Blockchain</TabsTrigger>
-                  <TabsTrigger value="documents">Documents</TabsTrigger>
-                </TabsList>
-                
-                <TabsContent value="caracteristiques" className="mt-6">
-                  <div className="space-y-6">
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Caractéristiques principales</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {parcelle.features.main.map((feature, index) => (
-                          <div key={index} className="flex items-center">
-                            <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
-                            <span className="text-sm">{feature}</span>
+            {/* Localisation - Horizontal */}
+            <Card className="bg-gradient-to-br from-green-50 to-blue-50 border-2 border-green-200">
+              <CardHeader className="bg-gradient-to-r from-green-100 to-blue-100 border-b-2 border-green-200">
+                <CardTitle className="text-xl flex items-center">
+                  <MapPin className="w-6 h-6 mr-2 text-green-600" />
+                  Localisation du terrain
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                  
+                  {/* Carte - Gauche */}
+                  <div className="space-y-4">
+                    <div className="relative h-96 bg-gradient-to-br from-green-100 to-blue-100 rounded-lg overflow-hidden border-2 border-green-200 shadow-lg">
+                      <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100">
+                        {/* Simulation de carte interactive */}
+                        <div className="relative w-full h-full">
+                          {/* Zone de terrain simulée */}
+                          <div 
+                            className="absolute bg-red-500 border-2 border-red-600 opacity-80 shadow-lg"
+                            style={{
+                              left: '45%',
+                              top: '40%',
+                              width: '10%',
+                              height: '20%',
+                              borderRadius: '2px'
+                            }}
+                          ></div>
+                          
+                          {/* Points de repère simulés */}
+                          <div className="absolute top-4 left-4 bg-white px-4 py-2 rounded-lg text-sm font-bold shadow-lg border-l-4 border-green-600">
+                            Terrain: {parcelle.surface} m²
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Commodités</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {parcelle.features.utilities.map((utility, index) => (
-                          <div key={index} className="flex items-center">
-                            <Zap className="w-4 h-4 text-blue-500 mr-2" />
-                            <span className="text-sm">{utility}</span>
+                          
+                          {/* Coordonnées GPS */}
+                          <div className="absolute bottom-4 left-4 bg-gradient-to-r from-gray-900 to-gray-800 text-white px-4 py-2 rounded-lg text-sm font-mono shadow-lg">
+                            GPS: {parcelle.coordinates.lat.toFixed(4)}, {parcelle.coordinates.lng.toFixed(4)}
                           </div>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div>
-                      <h3 className="text-lg font-semibold mb-4">Accès et transport</h3>
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {parcelle.features.access.map((access, index) => (
-                          <div key={index} className="flex items-center">
-                            <Navigation className="w-4 h-4 text-purple-500 mr-2" />
-                            <span className="text-sm">{access}</span>
+                          
+                          {/* Contrôles de zoom simulés */}
+                          <div className="absolute top-4 right-4 bg-white rounded-lg shadow-lg overflow-hidden border border-gray-200">
+                            <button className="w-10 h-10 text-gray-700 hover:text-gray-900 hover:bg-gray-100 flex items-center justify-center border-b font-bold text-lg">
+                              +
+                            </button>
+                            <button className="w-10 h-10 text-gray-700 hover:text-gray-900 hover:bg-gray-100 flex items-center justify-center font-bold text-lg">
+                              −
+                            </button>
                           </div>
-                        ))}
-                      </div>
-                    </div>
 
-                    <div className="bg-gray-50 p-4 rounded-lg">
-                      <h4 className="font-medium mb-2">Informations d'urbanisme</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-600">Zone:</span>
-                          <span className="ml-2 font-medium">{parcelle.features.zoning}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">CES:</span>
-                          <span className="ml-2 font-medium">{parcelle.features.buildable_ratio}</span>
-                        </div>
-                        <div>
-                          <span className="text-gray-600">Hauteur max:</span>
-                          <span className="ml-2 font-medium">{parcelle.features.max_floors} étages</span>
+                          {/* Échelle */}
+                          <div className="absolute bottom-4 right-4 bg-white px-3 py-2 rounded-lg text-xs font-semibold shadow-lg border-l-2 border-green-600">
+                            100m
+                          </div>
                         </div>
                       </div>
                     </div>
                   </div>
+
+                  {/* Détails - Droite */}
+                  <div className="space-y-6 flex flex-col justify-between">
+                    <div>
+                      <div className="font-semibold text-base text-gray-800 mb-3">Adresse exacte</div>
+                      <div className="text-base text-gray-700 bg-white p-4 rounded-lg border border-green-100 shadow-sm">
+                        {parcelle.address.full}
+                      </div>
+                    </div>
+
+                    <div>
+                      <div className="font-semibold text-base text-gray-800 mb-3">Points de repère</div>
+                      <div className="space-y-3 bg-white p-4 rounded-lg border border-green-100 max-h-48 overflow-y-auto">
+                        {parcelle.address.nearby_landmarks.map((landmark, index) => (
+                          <div key={index} className="flex items-start text-base text-gray-700">
+                            <Navigation className="w-5 h-5 mr-3 text-green-600 flex-shrink-0 mt-0.5" />
+                            <span>{landmark}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="space-y-3 pt-2">
+                      <Button 
+                        onClick={handleShowMap} 
+                        variant="outline" 
+                        className="w-full text-base h-10 border-green-300 hover:bg-green-50"
+                      >
+                        <Map className="w-5 h-5 mr-2" />
+                        Carte plein écran
+                      </Button>
+                      <Button 
+                        onClick={openGoogleMaps} 
+                        variant="outline" 
+                        className="w-full text-base h-10 border-green-300 hover:bg-green-50"
+                      >
+                        <Navigation className="w-5 h-5 mr-2" />
+                        Ouvrir dans Google Maps
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* ═══════════════════════════════════════════════════════ */}
+            {/* SECTION REFONDÉE: Caractéristiques & Financement */}
+            {/* ═══════════════════════════════════════════════════════ */}
+
+            {/* TAB SECTION MODERNISÉE */}
+            <Card className="border-0 shadow-md">
+              <Tabs defaultValue="caracteristiques" className="w-full">
+                <div className="bg-gradient-to-r from-slate-50 to-blue-50 border-b">
+                  <TabsList className="grid w-full grid-cols-4 bg-transparent p-0 h-auto rounded-none">
+                    <TabsTrigger 
+                      value="caracteristiques" 
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-white"
+                    >
+                      <Home className="w-4 h-4 mr-2" />
+                      Caractéristiques
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="financement" 
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-white"
+                    >
+                      <CreditCard className="w-4 h-4 mr-2" />
+                      Financement
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="nft" 
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-white"
+                    >
+                      <Bitcoin className="w-4 h-4 mr-2" />
+                      NFT & Blockchain
+                    </TabsTrigger>
+                    <TabsTrigger 
+                      value="documents" 
+                      className="rounded-none border-b-2 border-transparent data-[state=active]:border-blue-600 data-[state=active]:bg-white"
+                    >
+                      <FileText className="w-4 h-4 mr-2" />
+                      Documents
+                    </TabsTrigger>
+                  </TabsList>
+                </div>
+                
+                {/* ═══ ONGLET 1: CARACTÉRISTIQUES MODERNISÉES ═══ */}
+                <TabsContent value="caracteristiques" className="mt-0 p-6">
+                  <div className="space-y-8">
+                    
+                    {/* Sous-section: Caractéristiques principales */}
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                          <Home className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">Caractéristiques principales</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {parcelle.features.main && parcelle.features.main.length > 0 ? (
+                          parcelle.features.main.map((feature, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, y: 10 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="flex items-start gap-3 p-4 bg-gradient-to-br from-green-50 to-emerald-50 rounded-lg border border-green-100 hover:shadow-md transition-shadow"
+                            >
+                              <CheckCircle className="w-5 h-5 text-green-600 mt-1 flex-shrink-0" />
+                              <span className="text-sm text-gray-700 font-medium">{feature}</span>
+                            </motion.div>
+                          ))
+                        ) : (
+                          <div className="col-span-full text-center py-6 text-gray-500">
+                            Aucune caractéristique principale disponible
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Sous-section: Commodités & Utilités */}
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-yellow-500 to-orange-600 rounded-lg flex items-center justify-center">
+                          <Zap className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">Commodités & Utilités</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {parcelle.features.utilities && parcelle.features.utilities.length > 0 ? (
+                          parcelle.features.utilities.map((utility, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, y: 10 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="flex items-start gap-3 p-4 bg-gradient-to-br from-yellow-50 to-amber-50 rounded-lg border border-yellow-100 hover:shadow-md transition-shadow"
+                            >
+                              <Zap className="w-5 h-5 text-yellow-600 mt-1 flex-shrink-0" />
+                              <span className="text-sm text-gray-700 font-medium">{utility}</span>
+                            </motion.div>
+                          ))
+                        ) : (
+                          <div className="col-span-full text-center py-6 text-gray-500">
+                            Aucune commodité disponible
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Sous-section: Accès & Transport */}
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                          <Navigation className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">Accès & Transport</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {parcelle.features.access && parcelle.features.access.length > 0 ? (
+                          parcelle.features.access.map((access, index) => (
+                            <motion.div
+                              key={index}
+                              initial={{ opacity: 0, y: 10 }}
+                              whileInView={{ opacity: 1, y: 0 }}
+                              transition={{ delay: index * 0.05 }}
+                              className="flex items-start gap-3 p-4 bg-gradient-to-br from-purple-50 to-pink-50 rounded-lg border border-purple-100 hover:shadow-md transition-shadow"
+                            >
+                              <Navigation className="w-5 h-5 text-purple-600 mt-1 flex-shrink-0" />
+                              <span className="text-sm text-gray-700 font-medium">{access}</span>
+                            </motion.div>
+                          ))
+                        ) : (
+                          <div className="col-span-full text-center py-6 text-gray-500">
+                            Aucun accès/transport disponible
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Sous-section: Informations d'urbanisme */}
+                    <div className="bg-gradient-to-br from-slate-50 to-blue-50 p-6 rounded-lg border-2 border-blue-200">
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-lg flex items-center justify-center">
+                          <Building2 className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="text-xl font-bold text-gray-900">Informations d'urbanisme</h3>
+                      </div>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                        <motion.div 
+                          whileHover={{ y: -4 }}
+                          className="bg-white p-4 rounded-lg border border-blue-200 shadow-sm"
+                        >
+                          <div className="text-sm text-gray-600 font-semibold mb-2">Zone de destination</div>
+                          <div className="text-2xl font-bold text-blue-600">{parcelle.features.zoning}</div>
+                        </motion.div>
+                        <motion.div 
+                          whileHover={{ y: -4 }}
+                          className="bg-white p-4 rounded-lg border border-green-200 shadow-sm"
+                        >
+                          <div className="text-sm text-gray-600 font-semibold mb-2">Coefficient d'Emprise Sol (CES)</div>
+                          <div className="text-2xl font-bold text-green-600">{parcelle.features.buildable_ratio * 100}%</div>
+                        </motion.div>
+                        <motion.div 
+                          whileHover={{ y: -4 }}
+                          className="bg-white p-4 rounded-lg border border-purple-200 shadow-sm"
+                        >
+                          <div className="text-sm text-gray-600 font-semibold mb-2">Hauteur maximale</div>
+                          <div className="text-2xl font-bold text-purple-600">{parcelle.features.max_floors} étages</div>
+                        </motion.div>
+                      </div>
+                    </div>
+
+                  </div>
                 </TabsContent>
 
-                <TabsContent value="financement" className="mt-6">
-                  <div className="space-y-6">
-                    <h3 className="text-lg font-semibold">Options de financement disponibles</h3>
+                {/* ═══ ONGLET 2: FINANCEMENT MODERNISÉ ═══ */}
+                <TabsContent value="financement" className="mt-0 p-6">
+                  <div className="space-y-8">
                     
-                    <div className="grid gap-4">
-                      <Card className="border-blue-200">
-                        <CardContent className="p-4">
-                          <div className="flex items-center mb-3">
-                            <Banknote className="w-5 h-5 text-blue-500 mr-2" />
-                            <h4 className="font-semibold">Financement bancaire</h4>
+                    <div>
+                      <div className="flex items-center gap-3 mb-6">
+                        <div className="w-10 h-10 bg-gradient-to-br from-green-500 to-emerald-600 rounded-lg flex items-center justify-center">
+                          <CreditCard className="w-5 h-5 text-white" />
+                        </div>
+                        <h3 className="text-2xl font-bold text-gray-900">Options de financement disponibles</h3>
+                      </div>
+
+                      <div className="grid grid-cols-1 gap-6">
+                        
+                        {/* OPTION 1: Paiement Direct */}
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          className="bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-300 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg flex items-center justify-center">
+                                <Euro className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-bold text-gray-900">Paiement Direct</h4>
+                                <p className="text-sm text-gray-600">Achat sans financement</p>
+                              </div>
+                            </div>
+                            <Badge className="bg-blue-600">Recommandé</Badge>
                           </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600">Apport minimum:</span>
-                              <div className="font-medium">{parcelle.financing.bank_financing.min_down_payment}</div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-3 rounded border border-blue-200">
+                              <div className="text-xs text-gray-600 font-semibold">Prix Total</div>
+                              <div className="text-2xl font-bold text-blue-600 mt-1">{formatPrice(parcelle.price)}</div>
                             </div>
-                            <div>
-                              <span className="text-gray-600">Durée maximum:</span>
-                              <div className="font-medium">{parcelle.financing.bank_financing.max_duration}</div>
+                            <div className="bg-white p-3 rounded border border-blue-200">
+                              <div className="text-xs text-gray-600 font-semibold">Prix par m²</div>
+                              <div className="text-2xl font-bold text-blue-600 mt-1">{formatPricePerM2(parcelle.price, parcelle.surface)}</div>
                             </div>
-                            <div>
-                              <span className="text-gray-600">Banques partenaires:</span>
-                              <div className="flex flex-wrap gap-1 mt-1">
-                                {parcelle.financing.bank_financing.partner_banks.map((bank, index) => (
-                                  <ProfileLink 
-                                    key={index}
-                                    type="bank" 
-                                    id={bank.id} 
-                                    className="text-xs"
-                                  >
-                                    <Badge variant="outline" className="text-xs cursor-pointer hover:bg-blue-50">
-                                      {bank.name}
-                                    </Badge>
-                                  </ProfileLink>
-                                ))}
+                          </div>
+                        </motion.div>
+
+                        {/* OPTION 2: Financement Bancaire */}
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.1 }}
+                          className="bg-gradient-to-br from-green-50 to-emerald-50 border-2 border-green-300 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-green-600 rounded-lg flex items-center justify-center">
+                                <Banknote className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-bold text-gray-900">Financement Bancaire</h4>
+                                <p className="text-sm text-gray-600">Avec nos partenaires bancaires</p>
+                              </div>
+                            </div>
+                            <Badge className="bg-green-600">Partenaires</Badge>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="bg-white p-3 rounded border border-green-200">
+                              <div className="text-xs text-gray-600 font-semibold">Apport minimum</div>
+                              <div className="text-lg font-bold text-green-600 mt-1">30%</div>
+                              <div className="text-xs text-gray-600 mt-1">{formatPrice(Math.round(parcelle.price * 0.3))}</div>
+                            </div>
+                            <div className="bg-white p-3 rounded border border-green-200">
+                              <div className="text-xs text-gray-600 font-semibold">Taux d'intérêt</div>
+                              <div className="text-lg font-bold text-green-600 mt-1">8.5%</div>
+                              <div className="text-xs text-gray-600 mt-1">Partenaire: BICIS</div>
+                            </div>
+                            <div className="bg-white p-3 rounded border border-green-200">
+                              <div className="text-xs text-gray-600 font-semibold">Durée maximale</div>
+                              <div className="text-lg font-bold text-green-600 mt-1">20 ans</div>
+                              <div className="text-xs text-gray-600 mt-1">240 mois</div>
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* OPTION 3: Paiement Échelonné */}
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.2 }}
+                          className="bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-300 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-amber-500 to-orange-600 rounded-lg flex items-center justify-center">
+                                <CreditCard className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-bold text-gray-900">Paiement Échelonné</h4>
+                                <p className="text-sm text-gray-600">Flexible & adapté</p>
+                              </div>
+                            </div>
+                            <Badge className="bg-amber-600">Flexible</Badge>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div className="bg-white p-3 rounded border border-amber-200">
+                              <div className="text-xs text-gray-600 font-semibold">Apport initial</div>
+                              <div className="text-lg font-bold text-amber-600 mt-1">30%</div>
+                              <div className="text-xs text-gray-600 mt-1">{formatPrice(Math.round(parcelle.price * 0.3))}</div>
+                            </div>
+                            <div className="bg-white p-3 rounded border border-amber-200">
+                              <div className="text-xs text-gray-600 font-semibold">Mensualité</div>
+                              <div className="text-lg font-bold text-amber-600 mt-1">{formatPrice(Math.round(parcelle.price * 0.7 / 120))}</div>
+                              <div className="text-xs text-gray-600 mt-1">10 ans / 120 mois</div>
+                            </div>
+                            <div className="bg-white p-3 rounded border border-amber-200">
+                              <div className="text-xs text-gray-600 font-semibold">Coût total</div>
+                              <div className="text-lg font-bold text-amber-600 mt-1">{formatPrice(Math.round(parcelle.price * 1.2))}</div>
+                              <div className="text-xs text-gray-600 mt-1">+20% d'intérêts</div>
+                            </div>
+                          </div>
+                        </motion.div>
+
+                        {/* OPTION 4: Crypto-monnaie */}
+                        <motion.div
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ delay: 0.3 }}
+                          className="bg-gradient-to-br from-purple-50 to-pink-50 border-2 border-purple-300 rounded-lg p-6 hover:shadow-lg transition-shadow"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-purple-500 to-pink-600 rounded-lg flex items-center justify-center">
+                                <Bitcoin className="w-6 h-6 text-white" />
+                              </div>
+                              <div>
+                                <h4 className="text-lg font-bold text-gray-900">Paiement en Crypto-monnaie</h4>
+                                <p className="text-sm text-gray-600">Bitcoin, Ethereum & stablecoins</p>
+                              </div>
+                            </div>
+                            <Badge className="bg-purple-600">-5% Réduction</Badge>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div className="bg-white p-3 rounded border border-purple-200">
+                              <div className="text-xs text-gray-600 font-semibold">Prix avec réduction</div>
+                              <div className="text-lg font-bold text-purple-600 mt-1">{formatPrice(Math.round(parcelle.price * 0.95))}</div>
+                              <div className="text-xs text-green-600 font-semibold mt-1">Économies: {formatPrice(Math.round(parcelle.price * 0.05))}</div>
+                            </div>
+                            <div className="bg-white p-3 rounded border border-purple-200">
+                              <div className="text-xs text-gray-600 font-semibold">Devises acceptées</div>
+                              <div className="flex flex-wrap gap-2 mt-2">
+                                <Badge variant="outline" className="text-xs">BTC</Badge>
+                                <Badge variant="outline" className="text-xs">ETH</Badge>
+                                <Badge variant="outline" className="text-xs">USDT</Badge>
+                                <Badge variant="outline" className="text-xs">USDC</Badge>
                               </div>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
+                        </motion.div>
 
-                      <Card className="border-green-200">
-                        <CardContent className="p-4">
-                          <div className="flex items-center mb-3">
-                            <CreditCard className="w-5 h-5 text-green-500 mr-2" />
-                            <h4 className="font-semibold">Paiement échelonné</h4>
-                          </div>
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <span className="text-gray-600">Apport minimum:</span>
-                              <div className="font-medium">{parcelle.financing.installment.min_down_payment}</div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Mensualité:</span>
-                              <div className="font-medium">{formatPrice(parcelle.financing.installment.monthly_payment)}</div>
-                            </div>
-                            <div>
-                              <span className="text-gray-600">Durée:</span>
-                              <div className="font-medium">{parcelle.financing.installment.duration}</div>
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-
-                      <Card className="border-purple-200">
-                        <CardContent className="p-4">
-                          <div className="flex items-center mb-3">
-                            <Bitcoin className="w-5 h-5 text-purple-500 mr-2" />
-                            <h4 className="font-semibold">Crypto-monnaie</h4>
-                            <Badge className="ml-2 bg-purple-100 text-purple-700">-{parcelle.financing.crypto.discount} de réduction</Badge>
-                          </div>
-                          <div>
-                            <span className="text-gray-600 text-sm">Devises acceptées:</span>
-                            <div className="flex flex-wrap gap-1 mt-1">
-                              {parcelle.financing.crypto.accepted_currencies.map((currency, index) => (
-                                <Badge key={index} variant="outline" className="text-xs">{currency}</Badge>
-                              ))}
-                            </div>
-                          </div>
-                        </CardContent>
-                      </Card>
+                      </div>
                     </div>
 
-                    {/* Bouton pour accéder au centre de financement */}
-                    <div className="mt-6 pt-4 border-t">
+                    {/* CTA Button */}
+                    <motion.div
+                      initial={{ opacity: 0, y: 20 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      className="flex gap-3"
+                    >
                       <Button 
                         onClick={() => navigate('/buyer/financing', { 
                           state: { 
                             parcelId: parcelle?.id,
                             parcelDetails: parcelle,
-                            returnPath: location.pathname 
+                            returnPath: window.location.pathname 
                           } 
                         })}
-                        className="w-full bg-gradient-to-r from-green-600 to-blue-600 hover:from-green-700 hover:to-blue-700 text-white py-3"
-                        size="lg"
+                        className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white py-6 text-lg font-bold rounded-lg"
                       >
                         <CreditCard className="w-5 h-5 mr-2" />
-                        Découvrir Toutes les Options de Financement
+                        Centre de Financement Complet
                       </Button>
-                      <p className="text-center text-sm text-gray-600 mt-2">
-                        Accédez à notre centre de financement pour des options personnalisées et des outils de simulation
-                      </p>
-                    </div>
+                    </motion.div>
+
                   </div>
                 </TabsContent>
 
@@ -893,10 +1253,12 @@ const ParcelleDetailPage = () => {
                                 Vérifié
                               </Badge>
                             )}
-                            <Button variant="outline" size="sm">
-                              <Download className="w-4 h-4 mr-1" />
-                              Télécharger
-                            </Button>
+                            {!doc.verified && (
+                              <Badge className="bg-yellow-100 text-yellow-700">
+                                <Clock className="w-3 h-3 mr-1" />
+                                En attente
+                              </Badge>
+                            )}
                           </div>
                         </div>
                       ))}
@@ -917,6 +1279,200 @@ const ParcelleDetailPage = () => {
                   </div>
                 </TabsContent>
               </Tabs>
+            </Card>
+
+            {/* 🔒 Bloc de Sécurité et Vérification - HORIZONTAL 3 COLONNES */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+              <CardHeader className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
+                <CardTitle className="text-lg flex items-center">
+                  <Shield className="w-5 h-5 mr-2 text-blue-600" />
+                  Sécurité et Vérification
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+                  {/* Colonne 1: Vérification */}
+                  <div className="p-4 bg-white rounded-lg border-l-4 border-green-500 shadow-sm">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-lg flex items-center justify-center">
+                        <CheckCircle className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-base">Tous nos terrains sont vérifiés</h4>
+                        <p className="text-xs text-gray-600">Authentification complète</p>
+                      </div>
+                    </div>
+                    <ul className="space-y-3 text-sm text-gray-700">
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-600 font-bold mt-0.5 text-lg">✓</span>
+                        <span>Authenticité des titres fonciers</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-600 font-bold mt-0.5 text-lg">✓</span>
+                        <span>Conformité réglementation</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-600 font-bold mt-0.5 text-lg">✓</span>
+                        <span>Localisation GPS vérifiée</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <span className="text-green-600 font-bold mt-0.5 text-lg">✓</span>
+                        <span>Absence de litiges</span>
+                      </li>
+                    </ul>
+                  </div>
+
+                  {/* Colonne 2: Sécurité */}
+                  <div className="p-4 bg-white rounded-lg border-l-4 border-red-500 shadow-sm">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-12 h-12 bg-gradient-to-br from-red-400 to-red-600 rounded-lg flex items-center justify-center">
+                        <AlertTriangle className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-base">Transactionnez en sécurité</h4>
+                        <p className="text-xs text-gray-600">Protection maximale</p>
+                      </div>
+                    </div>
+                    <div className="space-y-3">
+                      <div className="bg-blue-50 border-l-4 border-blue-600 p-3 rounded text-xs">
+                        <p className="font-semibold text-blue-900 mb-2">✅ À FAIRE:</p>
+                        <ul className="space-y-1 text-blue-800">
+                          <li>• Transactions via plateforme</li>
+                          <li>• Paiements sécurisés</li>
+                          <li>• Support disponible</li>
+                        </ul>
+                      </div>
+                      <div className="bg-red-50 border-l-4 border-red-600 p-3 rounded text-xs">
+                        <p className="font-semibold text-red-900 mb-2">❌ NE PAS:</p>
+                        <ul className="space-y-1 text-red-800">
+                          <li>• Transactions externes</li>
+                          <li>• Paiements directs</li>
+                          <li>• Partager infos sensibles</li>
+                        </ul>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Colonne 3: Protection */}
+                  <div className="p-4 bg-white rounded-lg border-l-4 border-indigo-500 shadow-sm">
+                    <div className="flex items-center gap-3 mb-5">
+                      <div className="w-12 h-12 bg-gradient-to-br from-indigo-400 to-indigo-600 rounded-lg flex items-center justify-center">
+                        <Shield className="w-7 h-7 text-white" />
+                      </div>
+                      <div>
+                        <h4 className="font-bold text-gray-900 text-base">Nous vous protégeons</h4>
+                        <p className="text-xs text-gray-600">Couverture complète</p>
+                      </div>
+                    </div>
+                    <ul className="space-y-3 text-sm text-gray-700">
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                        <span>Contrats digitaux sécurisés</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                        <span>Dépôt fiduciaire notaire</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                        <span>Assurance transaction</span>
+                      </li>
+                      <li className="flex items-start gap-2">
+                        <CheckCircle className="w-5 h-5 text-indigo-600 flex-shrink-0 mt-0.5" />
+                        <span>Support 24/7</span>
+                      </li>
+                    </ul>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Étapes de l'Achat - Timeline Horizontale */}
+            <Card className="bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200">
+              <CardHeader className="bg-gradient-to-r from-blue-100 to-indigo-100 border-b-2 border-blue-200">
+                <CardTitle className="text-xl flex items-center">
+                  <CheckCircle className="w-6 h-6 mr-2 text-blue-600" />
+                  Processus d'Achat
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-8">
+                {/* Timeline Horizontale */}
+                <div className="relative mb-8">
+                  {/* Ligne de connexion - Gradient line connecting stages */}
+                  <div className="hidden md:block absolute top-7 left-0 right-0 h-2 bg-gradient-to-r from-blue-400 via-green-400 via-purple-400 via-orange-400 via-indigo-400 to-red-400 rounded-full" />
+                  
+                  {/* Étapes horizontales */}
+                  <div className="grid grid-cols-1 md:grid-cols-6 gap-4 relative z-10">
+                    
+                    {/* Étape 1 */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white mb-3">1</div>
+                      <div className="text-center">
+                        <div className="font-bold text-gray-900 text-sm">Demande</div>
+                        <div className="text-xs text-gray-600 mt-1">Vous proposez</div>
+                      </div>
+                    </div>
+
+                    {/* Étape 2 */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-green-500 to-green-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white mb-3">2</div>
+                      <div className="text-center">
+                        <div className="font-bold text-gray-900 text-sm">Acceptation</div>
+                        <div className="text-xs text-gray-600 mt-1">Vendeur valide</div>
+                      </div>
+                    </div>
+
+                    {/* Étape 3 */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white mb-3">3</div>
+                      <div className="text-center">
+                        <div className="font-bold text-gray-900 text-sm">Notaire</div>
+                        <div className="text-xs text-gray-600 mt-1">Acte préparé</div>
+                      </div>
+                    </div>
+
+                    {/* Étape 4 */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-orange-500 to-orange-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white mb-3">4</div>
+                      <div className="text-center">
+                        <div className="font-bold text-gray-900 text-sm">Géomètre</div>
+                        <div className="text-xs text-gray-600 mt-1">Mesures validées</div>
+                      </div>
+                    </div>
+
+                    {/* Étape 5 */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-indigo-600 rounded-full flex items-center justify-center text-white font-bold text-lg shadow-lg border-4 border-white mb-3">5</div>
+                      <div className="text-center">
+                        <div className="font-bold text-gray-900 text-sm">Enregistrement</div>
+                        <div className="text-xs text-gray-600 mt-1">Officiel validé</div>
+                      </div>
+                    </div>
+
+                    {/* Étape 6 */}
+                    <div className="flex flex-col items-center">
+                      <div className="w-16 h-16 bg-gradient-to-br from-red-500 to-red-600 rounded-full flex items-center justify-center text-white font-bold text-2xl shadow-lg border-4 border-white mb-3">✓</div>
+                      <div className="text-center">
+                        <div className="font-bold text-gray-900 text-sm">Propriétaire</div>
+                        <div className="text-xs text-gray-600 mt-1">Finalisé</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Info box */}
+                <div className="bg-gradient-to-r from-blue-100 to-indigo-100 border-l-4 border-blue-600 p-5 rounded-lg">
+                  <div className="flex gap-4">
+                    <Info className="w-6 h-6 text-blue-600 flex-shrink-0 mt-0.5" />
+                    <div>
+                      <div className="font-bold text-gray-900 text-base">Professionnels certifiés à chaque étape</div>
+                      <p className="text-sm text-gray-700 mt-2">
+                        Notaires, géomètres agréés et experts juridiques garantissent la légalité et la sécurité de votre transaction immobilière du début à la fin.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
             </Card>
           </div>
 
@@ -1256,7 +1812,7 @@ const ParcelleDetailPage = () => {
                 <div className="space-y-4">
                   <Button onClick={handleInitiatePurchase} className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold py-3 rounded-lg shadow-lg">
                     <Zap className="w-4 h-4 mr-2" />
-                    Acheter maintenant - {getPaymentInfo()?.method}
+                    Faire une offre
                   </Button>
                   
                   <div className="text-center text-sm text-gray-600 bg-gradient-to-r from-blue-50 to-purple-50 p-3 rounded-lg">
@@ -1330,6 +1886,22 @@ const ParcelleDetailPage = () => {
                     <span className="font-medium">{parcelle.seller.properties_sold}</span>
                   </div>
 
+                  {parcelle.seller.coordinates && (
+                    <div>
+                      <div className="text-sm text-gray-600 mb-2">Coordonnées GPS du terrain:</div>
+                      <div className="space-y-1">
+                        <div className="text-xs text-gray-700 bg-blue-50 p-2 rounded flex items-center justify-between">
+                          <span>Lat:</span>
+                          <span className="font-mono font-medium">{parcelle.seller.coordinates.lat.toFixed(4)}</span>
+                        </div>
+                        <div className="text-xs text-gray-700 bg-blue-50 p-2 rounded flex items-center justify-between">
+                          <span>Lng:</span>
+                          <span className="font-mono font-medium">{parcelle.seller.coordinates.lng.toFixed(4)}</span>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
                   {parcelle.seller.verified && (
                     <div className="flex items-center text-sm text-green-600">
                       <Shield className="w-4 h-4 mr-1" />
@@ -1349,107 +1921,7 @@ const ParcelleDetailPage = () => {
                   </div>
                 </div>
               </CardContent>
-            </Card>
-
-            {/* Localisation */}
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg flex items-center">
-                  <MapPin className="w-5 h-5 mr-2 text-blue-600" />
-                  Localisation
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
-                  <div>
-                    <div className="font-medium text-sm text-gray-700 mb-2">Adresse exacte</div>
-                    <div className="text-sm text-gray-600 bg-gray-50 p-3 rounded-lg">
-                      {parcelle.address.full}
-                    </div>
-                  </div>
-
-                  <div>
-                    <div className="font-medium text-sm text-gray-700 mb-2">Points de repère</div>
-                    <div className="space-y-2">
-                      {parcelle.address.nearby_landmarks.map((landmark, index) => (
-                        <div key={index} className="flex items-center text-sm text-gray-600">
-                          <Navigation className="w-3 h-3 mr-2 text-gray-400" />
-                          {landmark}
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  {/* Carte interactive intégrée */}
-                  <div>
-                    <div className="font-medium text-sm text-gray-700 mb-2">Carte du terrain</div>
-                    <div className="relative h-48 bg-gray-100 rounded-lg overflow-hidden border">
-                      <div className="absolute inset-0 bg-gradient-to-br from-green-100 to-blue-100">
-                        {/* Simulation de carte interactive */}
-                        <div className="relative w-full h-full">
-                          {/* Zone de terrain simulée */}
-                          <div 
-                            className="absolute bg-red-500 border-2 border-red-600 opacity-80"
-                            style={{
-                              left: '45%',
-                              top: '40%',
-                              width: '10%',
-                              height: '20%',
-                              borderRadius: '2px'
-                            }}
-                          ></div>
-                          
-                          {/* Points de repère simulés */}
-                          <div className="absolute top-2 left-2 bg-white px-2 py-1 rounded text-xs font-medium shadow">
-                            Terrain: {parcelle.surface} m²
-                          </div>
-                          
-                          {/* Coordonnées GPS */}
-                          <div className="absolute bottom-2 left-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-xs">
-                            GPS: {parcelle.coordinates.lat}, {parcelle.coordinates.lng}
-                          </div>
-                          
-                          {/* Contrôles de zoom simulés */}
-                          <div className="absolute top-2 right-2 bg-white rounded shadow-lg">
-                            <button className="w-8 h-8 text-gray-600 hover:text-gray-800 hover:bg-gray-50 flex items-center justify-center border-b">
-                              +
-                            </button>
-                            <button className="w-8 h-8 text-gray-600 hover:text-gray-800 hover:bg-gray-50 flex items-center justify-center">
-                              -
-                            </button>
-                          </div>
-
-                          {/* Échelle */}
-                          <div className="absolute bottom-2 right-2 bg-white px-2 py-1 rounded text-xs">
-                            100m
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-2 pt-2">
-                    <Button 
-                      onClick={handleShowMap} 
-                      variant="outline" 
-                      className="w-full text-sm"
-                    >
-                      <Map className="w-4 h-4 mr-2" />
-                      Carte plein écran
-                    </Button>
-                    <Button 
-                      onClick={openGoogleMaps} 
-                      variant="outline" 
-                      className="w-full text-sm"
-                    >
-                      <Navigation className="w-4 h-4 mr-2" />
-                      Ouvrir dans Google Maps
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
+            </Card>          </div>
         </div>
       </div>
 

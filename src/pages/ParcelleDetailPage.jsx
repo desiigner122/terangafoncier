@@ -265,6 +265,21 @@ const ParcelleDetailPage = () => {
     }
   }, [id, navigate, user?.id]);
 
+  // 🔍 DIAGNOSTIC: Suivi du bouton Éditer
+  useEffect(() => {
+    if (parcelle && user) {
+      const isOwner = user.id === parcelle.owner_id;
+      console.log('🔍 DEBUG BOUTON ÉDITER:', {
+        user_id: user.id,
+        parcelle_owner_id: parcelle.owner_id,
+        is_owner: isOwner,
+        should_show_edit_button: isOwner,
+        parcelle_loaded: !!parcelle,
+        user_logged_in: !!user
+      });
+    }
+  }, [user, parcelle]);
+
   const formatPrice = (price) => {
     return parseInt(price).toLocaleString() + ' FCFA';
   };
@@ -540,16 +555,24 @@ const ParcelleDetailPage = () => {
             
             <div className="flex items-center gap-2">
               {/* Bouton Éditer pour le propriétaire */}
-              {user?.id === parcelle?.owner_id && (
-                <Button 
-                  variant="default" 
-                  size="sm"
-                  onClick={() => navigate(`/parcelles/${id}/edit`)}
-                  className="bg-blue-600 hover:bg-blue-700"
+              {/* Vérification: parcelle chargée + user authentifié + user est propriétaire */}
+              {!loading && parcelle && user && user.id === parcelle.owner_id && (
+                <motion.div
+                  initial={{ opacity: 0, x: -10 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: 0.2 }}
                 >
-                  <Edit className="w-4 h-4 mr-1" />
-                  Éditer
-                </Button>
+                  <Button 
+                    variant="default" 
+                    size="sm"
+                    onClick={() => navigate(`/parcelles/${id}/edit`)}
+                    className="bg-blue-600 hover:bg-blue-700"
+                    title="Vous êtes propriétaire de cette parcelle"
+                  >
+                    <Edit className="w-4 h-4 mr-1" />
+                    Éditer cette parcelle
+                  </Button>
+                </motion.div>
               )}
               
               <Button variant="outline" size="sm" onClick={toggleFavorite}>

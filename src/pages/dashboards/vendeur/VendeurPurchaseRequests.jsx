@@ -102,53 +102,78 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       console.log('🎯 [ACCEPT] Début acceptation:', requestId);
       setActionLoading(requestId);
       
-      // 1. Récupérer la transaction COMPLÈTE depuis la DB
-      const { data: transaction, error: txError } = await supabase
-        .from('transactions')
+      // 1. Récupérer la REQUEST (pas la transaction!)
+      const { data: request, error: reqError } = await supabase
+        .from('requests')
         .select('*')
         .eq('id', requestId)
         .single();
       
-      if (txError) {
-        console.error('❌ Erreur récupération transaction:', txError);
-        throw new Error('Impossible de récupérer la transaction: ' + txError.message);
+      if (reqError) {
+        console.error('❌ Erreur récupération request:', reqError);
+        throw new Error('Impossible de récupérer la request: ' + reqError.message);
       }
       
-      console.log('📊 [ACCEPT] Transaction récupérée:', transaction);
+      console.log('📊 [ACCEPT] Request récupérée:', request);
       
-      // 2. Récupérer les relations séparément pour éviter les problèmes RLS
+      // 1b. Récupérer la transaction liée via request_id
+      const { data: transactions, error: txError } = await supabase
+        .from('transactions')
+        .select('*')
+        .eq('request_id', requestId);
+      
+      if (txError) {
+        console.error('❌ Erreur récupération transactions:', txError);
+        throw new Error('Impossible de récupérer les transactions: ' + txError.message);
+      }
+      
+      const transaction = transactions?.[0]; // Prendre la première transaction
+      if (!transaction) {
+        console.warn('⚠️ Aucune transaction trouvée pour cette request');
+      }
+      
+      console.log('📊 [ACCEPT] Transaction liée récupérée:', transaction);
+      
+      // 2. Récupérer les relations (buyer, seller, parcel)
+      // Les données doivent venir de request ET transaction pour avoir toutes les infos
       let buyer = null, seller = null, parcel = null;
       
-      if (transaction.buyer_id) {
+      // Buyer ID vient de request.user_id
+      if (request.user_id) {
         const { data: buyerData } = await supabase
           .from('profiles')
           .select('id, email, first_name, last_name')
-          .eq('id', transaction.buyer_id)
+          .eq('id', request.user_id)
           .single();
         buyer = buyerData;
+        console.log('👤 [ACCEPT] Buyer trouvé:', buyer?.email);
       }
       
-      if (transaction.seller_id) {
+      // Seller ID vient du user actuel (vendeur qui accepte)
+      if (user.id) {
         const { data: sellerData } = await supabase
           .from('profiles')
           .select('id, email, first_name, last_name')
-          .eq('id', transaction.seller_id)
+          .eq('id', user.id)
           .single();
         seller = sellerData;
+        console.log('🏪 [ACCEPT] Seller trouvé:', seller?.email);
       }
       
-      if (transaction.parcel_id) {
+      // Parcel ID vient de request.parcel_id
+      if (request.parcel_id) {
         const { data: parcelData } = await supabase
           .from('parcels')
           .select('id, title, location, surface, price, seller_id')
-          .eq('id', transaction.parcel_id)
+          .eq('id', request.parcel_id)
           .single();
         parcel = parcelData;
+        console.log('🏠 [ACCEPT] Parcel trouvé:', parcel?.title);
       }
       
       // 3. Vérifier que toutes les données essentielles existent
-      if (!transaction.buyer_id || !transaction.seller_id || !transaction.parcel_id) {
-        throw new Error('Transaction incomplète - données manquantes');
+      if (!request.user_id || !user.id || !request.parcel_id) {
+        throw new Error('Request incomplète - données manquantes (user_id, parcel_id)');
       }
       
       // 4. Vérifier s'il existe déjà un dossier
@@ -166,11 +191,11 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         // Créer le dossier avec le workflow service
         const result = await PurchaseWorkflowService.createPurchaseCase({
           request_id: requestId,
-          buyer_id: transaction.buyer_id,
-          seller_id: transaction.seller_id,
-          parcelle_id: transaction.parcel_id,
-          purchase_price: transaction.amount,
-          payment_method: transaction.payment_method || 'unknown',
+          buyer_id: request.user_id,
+          seller_id: user.id,
+          parcelle_id: request.parcel_id,
+          purchase_price: transaction?.amount || 0,
+          payment_method: transaction?.payment_method || 'unknown',
           initiation_method: 'seller_acceptance',
           property_details: {
             title: parcel?.title,
@@ -182,7 +207,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
               ? `${buyer.first_name} ${buyer.last_name}` 
               : 'Acheteur',
             email: buyer?.email,
-            phone: transaction.metadata?.buyer_phone || 'Non fourni'
+            phone: transaction?.metadata?.buyer_phone || 'Non fourni'
           },
           payment_details: transaction.metadata?.payment_details || {}
         });
@@ -233,18 +258,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         }
       }
 
-      // 4. Mettre à jour le statut de la transaction ET de la request
-      const { error: updateError } = await supabase
-        .from('transactions')
-        .update({ 
-          status: 'accepted',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', requestId);
-
-      if (updateError) throw updateError;
-      
-      // ✅ CRITICAL FIX: Also update the request status so buyer sees it immediately
+      // 4. Mettre à jour le statut de la REQUEST (la source de vérité)
       const { error: requestUpdateError } = await supabase
         .from('requests')
         .update({
@@ -254,20 +268,38 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         .eq('id', requestId);
 
       if (requestUpdateError) {
-        console.error('⚠️ [ACCEPT] Erreur mise à jour request (non bloquante):', requestUpdateError);
-      } else {
-        console.log('✅ [ACCEPT] Request status updated to accepted');
+        console.error('❌ [ACCEPT] Erreur mise à jour request:', requestUpdateError);
+        throw requestUpdateError;
+      }
+      
+      console.log('✅ [ACCEPT] Request status updated to accepted');
+      
+      // 4b. Mettre à jour la transaction si elle existe
+      if (transaction) {
+        const { error: txUpdateError } = await supabase
+          .from('transactions')
+          .update({ 
+            status: 'accepted',
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', transaction.id);
+
+        if (txUpdateError) {
+          console.warn('⚠️ [ACCEPT] Erreur mise à jour transaction (non bloquante):', txUpdateError);
+        } else {
+          console.log('✅ [ACCEPT] Transaction status updated to accepted');
+        }
       }
 
       // 5. Envoyer notification à l'acheteur
       try {
         await NotificationService.sendPurchaseRequestAccepted({
-          buyerId: transaction.buyer_id,
+          buyerId: request.user_id,
           buyerEmail: buyer?.email,
           sellerName: user.email,
           caseNumber: purchaseCase.case_number,
           parcelTitle: parcel?.title,
-          purchasePrice: transaction.amount
+          purchasePrice: transaction?.amount || 0
         });
         console.log('✅ [ACCEPT] Notification envoyée à l\'acheteur');
       } catch (notifError) {

@@ -212,6 +212,13 @@ CREATE POLICY "Users can upload documents in their cases" ON purchase_case_docum
 -- ÉTAPE 7: Créer les TRIGGERS
 -- ============================================================
 
+-- Dropper les anciens triggers et fonctions s'ils existent
+DROP TRIGGER IF EXISTS purchase_case_messages_updated_at_trigger ON purchase_case_messages CASCADE;
+DROP TRIGGER IF EXISTS case_updated_on_new_message_trigger ON purchase_case_messages CASCADE;
+DROP FUNCTION IF EXISTS update_purchase_case_messages_updated_at() CASCADE;
+DROP FUNCTION IF EXISTS update_case_on_new_message() CASCADE;
+
+-- Créer la fonction et le trigger pour updated_at
 CREATE OR REPLACE FUNCTION update_purchase_case_messages_updated_at()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -227,7 +234,7 @@ CREATE TRIGGER purchase_case_messages_updated_at_trigger
 
 -- ✅ Trigger pour updated_at créé
 
--- Trigger pour cascader la mise à jour à purchase_cases
+-- Créer la fonction et le trigger pour cascader la mise à jour à purchase_cases
 CREATE OR REPLACE FUNCTION update_case_on_new_message()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -248,6 +255,8 @@ CREATE TRIGGER case_updated_on_new_message_trigger
 -- ============================================================
 -- ÉTAPE 8: Créer la VIEW avec infos sender
 -- ============================================================
+
+DROP VIEW IF EXISTS purchase_case_messages_detailed CASCADE;
 
 CREATE OR REPLACE VIEW purchase_case_messages_detailed AS
 SELECT 
@@ -272,6 +281,8 @@ LEFT JOIN profiles p ON p.id = pcm.sent_by;
 -- ============================================================
 -- ÉTAPE 9: Créer la FUNCTION pour compter non-lus
 -- ============================================================
+
+DROP FUNCTION IF EXISTS get_unread_messages_count(UUID) CASCADE;
 
 CREATE OR REPLACE FUNCTION get_unread_messages_count(user_id UUID)
 RETURNS TABLE(case_id UUID, unread_count BIGINT) AS $$

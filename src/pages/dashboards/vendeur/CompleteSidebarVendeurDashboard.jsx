@@ -25,6 +25,7 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
+  AlertCircle,
   Star,
   Share2,
   Download,
@@ -514,14 +515,15 @@ const CompleteSidebarVendeurDashboard = () => {
     console.log('📍 [RENDER] ActiveComponent trouvé:', ActiveComponent ? '✅' : '❌', 'pour tab:', activeTab);
     
     if (!ActiveComponent) {
+      console.error('❌ [ERROR] ActiveComponent is undefined for tab:', activeTab);
       return (
         <div className="text-center py-12">
-          <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Page en développement
+            Erreur: Page non trouvée
           </h3>
           <p className="text-gray-600">
-            Cette fonctionnalité sera bientôt disponible.
+            La page demandée n'existe pas.
           </p>
         </div>
       );

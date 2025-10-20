@@ -524,31 +524,50 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         .select('id, title, name, price, location, surface, status')
         .in('id', parcelIds);
 
-      // Charger les profils acheteurs avec informations complètes
+      // Charger les profils acheteurs avec informations complètes (email inclus)
       const buyerIds = [...new Set(transactionsData.map(t => t.buyer_id).filter(Boolean))];
-      const { data: profilesData } = await supabase
+      const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, phone, full_name')
         .in('id', buyerIds);
+      
+      if (profilesError) {
+        console.warn('⚠️ [VENDEUR] Erreur chargement profiles:', profilesError);
+      } else {
+        console.log('✅ [VENDEUR] Profiles chargés:', profilesData?.length, 'records');
+        profilesData?.slice(0, 3).forEach(p => {
+          console.log(`   - ${p.id}: ${p.first_name} ${p.last_name} (${p.email})`);
+        });
+      }
 
       // FIX #1: Charger les purchase_cases pour savoir lesquels sont acceptés
+      // Les purchase_cases sont liés aux transactions par request_id
       console.log('📋 [VENDEUR] Chargement des purchase_cases...');
-      const { data: purchaseCases } = await supabase
+      const transactionIds = transactionsData.map(t => t.id);
+      const { data: purchaseCases, error: caseError } = await supabase
         .from('purchase_cases')
         .select('id, request_id, case_number, status')
-        .in('request_id', transactionsData.map(t => t.id));
+        .in('request_id', transactionIds);
 
-      // Créer une map request_id -> case_number
+      if (caseError) {
+        console.warn('⚠️ [VENDEUR] Erreur chargement purchase_cases:', caseError);
+      } else {
+        console.log('✅ [VENDEUR] Purchase cases trouvées:', purchaseCases?.length);
+      }
+
+      // Créer une map: transaction.id -> case_info
+      // Key: transaction ID, Value: case info
       const requestCaseMap = {};
       if (purchaseCases && purchaseCases.length > 0) {
         purchaseCases.forEach(pc => {
+          // Map by request_id (which is transaction.id in the transactions table)
           requestCaseMap[pc.request_id] = {
             caseNumber: pc.case_number,
             caseId: pc.id,
             caseStatus: pc.status
           };
         });
-        console.log('✅ [VENDEUR] Purchase cases trouvées:', Object.keys(requestCaseMap).length);
+        console.log('✅ [VENDEUR] Case map created with', Object.keys(requestCaseMap).length, 'entries');
       }
 
       // Transformer les transactions

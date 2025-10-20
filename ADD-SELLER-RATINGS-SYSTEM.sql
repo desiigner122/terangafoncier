@@ -102,7 +102,8 @@ FOR EACH ROW
 EXECUTE FUNCTION update_favorites_count();
 
 -- 9. Create function to increment views_count
-CREATE OR REPLACE FUNCTION increment_property_views(property_id UUID)
+DROP FUNCTION IF EXISTS increment_property_views(UUID) CASCADE;
+CREATE FUNCTION increment_property_views(property_id UUID)
 RETURNS void AS $$
 BEGIN
   UPDATE properties
@@ -169,4 +170,4 @@ GRANT ALL ON reviews TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION update_seller_rating TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION update_properties_sold TO anon, authenticated, service_role;
 GRANT EXECUTE ON FUNCTION update_favorites_count TO anon, authenticated, service_role;
-GRANT EXECUTE ON FUNCTION increment_property_views TO anon, authenticated, service_role;
+GRANT EXECUTE ON FUNCTION increment_property_views(UUID) TO anon, authenticated, service_role;

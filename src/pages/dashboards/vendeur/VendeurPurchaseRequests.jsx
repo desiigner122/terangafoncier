@@ -543,11 +543,16 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       // FIX #1: Charger les purchase_cases pour savoir lesquels sont acceptés
       // Les purchase_cases sont liés aux transactions par request_id
       console.log('📋 [VENDEUR] Chargement des purchase_cases...');
-      const transactionIds = transactionsData.map(t => t.id);
+      const transactionRequestIds = transactionsData
+        .map(t => t.request_id)
+        .filter(Boolean);
+      
+      console.log('   Transaction request_ids:', transactionRequestIds);
+      
       const { data: purchaseCases, error: caseError } = await supabase
         .from('purchase_cases')
         .select('id, request_id, case_number, status')
-        .in('request_id', transactionIds);
+        .in('request_id', transactionRequestIds);
 
       if (caseError) {
         console.warn('⚠️ [VENDEUR] Erreur chargement purchase_cases:', caseError);
@@ -577,7 +582,8 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         const buyerInfo = transaction.buyer_info || {};
         
         // FIX #1: Vérifier si un case existe pour cette transaction
-        const caseInfo = requestCaseMap[transaction.id];
+        // IMPORTANT: purchase_cases.request_id points to transactions.request_id, not transactions.id
+        const caseInfo = requestCaseMap[transaction.request_id];
         const hasCase = !!caseInfo;
         const caseNumber = caseInfo?.caseNumber;
         const caseStatus = caseInfo?.caseStatus;

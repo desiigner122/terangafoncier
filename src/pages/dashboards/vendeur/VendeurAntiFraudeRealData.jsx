@@ -61,32 +61,51 @@ const VendeurAntiFraudeRealData = () => {
   const loadFraudChecks = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      // Fetch fraud checks first, then fetch related properties separately
+      const { data: checksData, error } = await supabase
         .from('fraud_checks')
-        .select(`
-          *,
-          properties (
-            id,
-            title,
-            location,
-            price,
-            surface,
-            images
-          )
-        `)
+        .select('*')
         .eq('vendor_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      setFraudChecks(data || []);
+      const checks = checksData || [];
+
+      // Batch load related properties to avoid PostgREST FK embed errors
+      const propertyIds = Array.from(new Set(checks
+        .map(c => c.property_id)
+        .filter(Boolean)));
+
+      let propertiesMap = {};
+      if (propertyIds.length > 0) {
+        const { data: propsData, error: propsError } = await supabase
+          .from('properties')
+          .select('id, title, location, price, surface, images')
+          .in('id', propertyIds);
+
+        if (propsError) {
+          console.error('Erreur chargement propriétés liées:', propsError);
+        } else if (propsData) {
+          propertiesMap = propsData.reduce((acc, p) => {
+            acc[p.id] = p; return acc;
+          }, {});
+        }
+      }
+
+      const enrichedChecks = checks.map(c => ({
+        ...c,
+        properties: propertiesMap[c.property_id] || null
+      }));
+
+      setFraudChecks(enrichedChecks);
       
       // Calculer stats
-      const verified = data?.filter(c => c.status === 'verified').length || 0;
-      const suspicious = data?.filter(c => c.status === 'suspicious').length || 0;
-      const pending = data?.filter(c => c.status === 'pending').length || 0;
-      const totalScore = data?.reduce((sum, c) => sum + (c.fraud_score || 0), 0) || 0;
-      const averageScore = data?.length ? Math.round(totalScore / data.length) : 0;
+  const verified = enrichedChecks?.filter(c => c.status === 'verified').length || 0;
+  const suspicious = enrichedChecks?.filter(c => c.status === 'suspicious').length || 0;
+  const pending = enrichedChecks?.filter(c => c.status === 'pending').length || 0;
+  const totalScore = enrichedChecks?.reduce((sum, c) => sum + (c.fraud_score || 0), 0) || 0;
+  const averageScore = enrichedChecks?.length ? Math.round(totalScore / enrichedChecks.length) : 0;
 
       setStats({
         totalScans: data?.length || 0,

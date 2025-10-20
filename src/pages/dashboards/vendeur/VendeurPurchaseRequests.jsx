@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate, useOutletContext } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, 
@@ -48,10 +48,10 @@ import RealtimeSyncService from '@/services/RealtimeSyncService';
 import NegotiationModal from '@/components/modals/NegotiationModal';
 import RequestDetailsModal from '@/components/modals/RequestDetailsModal';
 
-const VendeurPurchaseRequests = () => {
+const VendeurPurchaseRequests = ({ user: propsUser }) => {
   const navigate = useNavigate();
-  const outletContext = useOutletContext();
-  const { user } = outletContext || {};
+  // FIX: Accepter user via props (passé par le sidebar) au lieu de outletContext
+  const user = propsUser;
 
   const [requests, setRequests] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -69,8 +69,7 @@ const VendeurPurchaseRequests = () => {
   const [acceptedRequests, setAcceptedRequests] = useState(new Set());
   const [caseNumbers, setCaseNumbers] = useState({});
 
-  console.log('🎯 [VENDEUR REQUESTS] Context:', outletContext);
-  console.log('🎯 [VENDEUR REQUESTS] User reçu:', user);
+  console.log('🎯 [VENDEUR REQUESTS] User reçu via props:', user);
 
   useEffect(() => {
     if (user) {

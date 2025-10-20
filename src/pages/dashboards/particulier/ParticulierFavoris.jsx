@@ -169,8 +169,8 @@ const ParticulierFavoris = () => {
           communal_zone_id,
           developer_project_id,
           property:properties (
-            id, title, city, price, address, images, status,
-            owner:profiles!owner_id (id, full_name)
+            id, title, city, price, surface_area, address, images, status,
+            owner:profiles!owner_id (id, full_name, email, avatar_url, rating, review_count, properties_sold)
           ),
           zone:communal_zones (
             id, name, commune, zone_type, lot_size, price_per_lot, 
@@ -196,6 +196,12 @@ const ParticulierFavoris = () => {
             type: 'terrain_prive',
             libelle: fav.property.title,
             proprietaire: fav.property.owner?.full_name || 'Propriétaire',
+            proprietaireId: fav.property.owner?.id,
+            proprietaireEmail: fav.property.owner?.email,
+            proprietaireAvatar: fav.property.owner?.avatar_url,
+            proprietaireRating: fav.property.owner?.rating,
+            proprietaireReviewCount: fav.property.owner?.review_count,
+            proprietairePropertiesSold: fav.property.owner?.properties_sold,
             superficie: fav.property.surface_area ? `${fav.property.surface_area}m²` : 'N/A',
             prix: fav.property.price,
             localisation: `${fav.property.city}${fav.property.address ? ', ' + fav.property.address : ''}`,
@@ -280,12 +286,12 @@ const ParticulierFavoris = () => {
   };
 
   const handleNavigateToItem = (favorite) => {
-    if (favorite.type === 'terrain_prive') {
-      navigate(`/proprietes/${favorite.itemId}`);
-    } else if (favorite.type === 'zone_communale') {
-      navigate('/acheteur/zones-communales');
-    } else if (favorite.type === 'projet_promoteur') {
-      navigate('/acheteur/promoteurs');
+    if (favorite.type === 'terrain_prive' && favorite.itemId) {
+      navigate(`/parcelles/${favorite.itemId}`);
+    } else if (favorite.type === 'zone_communale' && favorite.itemId) {
+      navigate(`/zones-communales/${favorite.itemId}`);
+    } else if (favorite.type === 'projet_promoteur' && favorite.itemId) {
+      navigate(`/promoteurs/${favorite.itemId}`);
     }
   };
 

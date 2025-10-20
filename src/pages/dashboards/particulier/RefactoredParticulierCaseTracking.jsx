@@ -66,16 +66,34 @@ const RefactoredParticulierCaseTracking = () => {
 
   // LOAD DATA
   useEffect(() => {
+    let unsubscribe;
+    
     if (user && caseNumber) {
-      loadAllData();
-      subscribeToUpdates();
+      // Load data first, then subscribe
+      loadAllData().then((caseId) => {
+        // Subscribe AFTER data is loaded and we have the caseId
+        if (caseId) {
+          unsubscribe = RealtimeSyncService.subscribeToCaseUpdates(
+            caseNumber,
+            () => {
+              console.log('🔄 [BUYER] Case updated, reloading...');
+              loadAllData();
+            }
+          );
+        }
+      });
     }
+    
+    // Cleanup subscription on unmount
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, [user, caseNumber]);
 
   const loadAllData = async () => {
     try {
       setLoading(true);
-      console.log('📁 Loading case:', caseNumber);
+      console.log('📁 [BUYER] Loading case:', caseNumber);
 
       // Get case
       const { data: cData } = await supabase
@@ -86,6 +104,7 @@ const RefactoredParticulierCaseTracking = () => {
         .single();
 
       if (!cData) throw new Error('Case not found');
+      console.log('✅ [BUYER] Case data retrieved:', cData.status);
       setCaseData(cData);
 
       // Load all related data
@@ -98,28 +117,16 @@ const RefactoredParticulierCaseTracking = () => {
       setTimeline(summary.timeline || []);
       setTotalFees(summary.total_fees || 0);
 
-      console.log('✅ Case data loaded successfully');
+      console.log('✅ [BUYER] Case data loaded successfully');
+      return cData.id; // Return caseId for Realtime subscription
     } catch (error) {
-      console.error('❌ Error loading case:', error);
+      console.error('❌ [BUYER] Error loading case:', error);
       toast.error('Impossible de charger le dossier');
       navigate(-1);
+      return null;
     } finally {
       setLoading(false);
     }
-  };
-
-  const subscribeToUpdates = () => {
-    if (!caseData?.id) return;
-    
-    const unsub = RealtimeSyncService.subscribeToCaseUpdates(
-      caseNumber,
-      () => {
-        console.log('🔄 Case updated, reloading...');
-        loadAllData();
-      }
-    );
-
-    return unsub;
   };
 
   // WORKFLOW PROGRESS

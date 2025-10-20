@@ -233,7 +233,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         }
       }
 
-      // 4. Mettre à jour le statut de la transaction
+      // 4. Mettre à jour le statut de la transaction ET de la request
       const { error: updateError } = await supabase
         .from('transactions')
         .update({ 
@@ -243,6 +243,21 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         .eq('id', requestId);
 
       if (updateError) throw updateError;
+      
+      // ✅ CRITICAL FIX: Also update the request status so buyer sees it immediately
+      const { error: requestUpdateError } = await supabase
+        .from('requests')
+        .update({
+          status: 'accepted',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', requestId);
+
+      if (requestUpdateError) {
+        console.error('⚠️ [ACCEPT] Erreur mise à jour request (non bloquante):', requestUpdateError);
+      } else {
+        console.log('✅ [ACCEPT] Request status updated to accepted');
+      }
 
       // 5. Envoyer notification à l'acheteur
       try {
@@ -564,7 +579,13 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
           request_type: transaction.payment_method || 'general',
           message: transaction.description || '',
           buyer_info: buyerInfo,
-          buyer_name: buyerInfo.full_name || `${buyer?.first_name || ''} ${buyer?.last_name || ''}`.trim() || 'Acheteur',
+          // ✅ IMPROVED: Try multiple sources for buyer name
+          buyer_name: 
+            buyerInfo?.full_name ||
+            (buyer?.first_name && buyer?.last_name ? `${buyer.first_name} ${buyer.last_name}` : null) ||
+            (buyer?.full_name) ||
+            (buyerInfo?.name) ||
+            'Acheteur',
           buyer_email: buyerInfo.email || buyer?.email || '',
           buyer_phone: buyerInfo.phone || buyer?.phone || '',
           parcels: parcel,

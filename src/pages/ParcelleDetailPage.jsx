@@ -22,6 +22,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import ProfileLink from '@/components/common/ProfileLink';
 import { supabase, fetchDirect } from '@/lib/supabaseClient';
+import { supabaseService } from '@/lib/supabaseServiceClient';
 import { generatePropertySlug, extractIdFromPropertySlug, isUUID as isUUIDValue } from '@/utils/propertySlug';
 import { toast } from 'sonner';
 
@@ -39,6 +40,7 @@ const ParcelleDetailPage = () => {
   const [showContactModal, setShowContactModal] = useState(false);
   const [showMapModal, setShowMapModal] = useState(false);
   const [isFavorite, setIsFavorite] = useState(false);
+  const [viewsIncremented, setViewsIncremented] = useState(false); // Track if view count has been incremented
   const [paymentMethod, setPaymentMethod] = useState('direct'); // direct, installment, bank, crypto
   // Nouvelle logique : slug = titre uniquement (pas d'id)
   const { slug: slugFromParam } = extractIdFromPropertySlug(rawParam);
@@ -163,9 +165,9 @@ const ParcelleDetailPage = () => {
               lat: propertyData.latitude || 14.7167,
               lng: propertyData.longitude || -17.4677
             },
-            verified: propertyData.verification_status === 'verified',
-            rating: 4.5,
-            properties_sold: 0
+            verified: propertyData.profiles.is_verified || propertyData.verification_status === 'verified',
+            rating: propertyData.profiles.rating || 4.5, // Real rating from profiles table
+            properties_sold: propertyData.profiles.properties_sold || 0 // Real count from profiles table
           } : {
             id: propertyData.owner_id,
             name: 'Vendeur inconnu',
@@ -176,8 +178,8 @@ const ParcelleDetailPage = () => {
               lng: propertyData.longitude || -17.4677
             },
             verified: propertyData.verification_status === 'verified',
-            rating: 4.5,
-            properties_sold: 0
+            rating: 4.5, // Default fallback
+            properties_sold: 0 // Default fallback
           },
 
           address: {
@@ -302,6 +304,28 @@ const ParcelleDetailPage = () => {
             .maybeSingle();
           
           setIsFavorite(!!favorite);
+        }
+
+        // Incrémenter les vues de la propriété (une seule fois par session)
+        if (!viewsIncremented && propertyData?.id) {
+          try {
+            // Utiliser la fonction PostgreSQL pour incrémenter les vues atomiquement
+            const { error } = await supabaseService
+              .rpc('increment_property_views', { property_id: propertyData.id });
+            
+            if (error) {
+              console.error('❌ Erreur incrémentation des vues:', error);
+            } else {
+              console.log('✅ Vue incrémentée pour la propriété:', propertyData.id);
+              setViewsIncremented(true);
+              
+              // Mettre à jour les vues locales
+              mappedData.stats.views = (mappedData.stats.views || 0) + 1;
+              setParcelle(mappedData);
+            }
+          } catch (error) {
+            console.error('❌ Erreur lors de l\'incrémentation des vues:', error);
+          }
         }
 
         setLoading(false);
@@ -453,7 +477,17 @@ const ParcelleDetailPage = () => {
           .eq('property_id', parcelle.id);
 
         if (error) throw error;
+        
+        // Mettre à jour l'état local et le compteur de favoris
         setIsFavorite(false);
+        setParcelle(prev => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            favorites: Math.max(0, (prev.stats.favorites || 0) - 1)
+          }
+        }));
+        
         toast.success('Retiré de vos favoris');
       } else {
         // Ajouter aux favoris
@@ -468,7 +502,17 @@ const ParcelleDetailPage = () => {
           ]);
 
         if (error) throw error;
+        
+        // Mettre à jour l'état local et le compteur de favoris
         setIsFavorite(true);
+        setParcelle(prev => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            favorites: (prev.stats.favorites || 0) + 1
+          }
+        }));
+        
         toast.success('Ajouté à vos favoris');
       }
     } catch (error) {

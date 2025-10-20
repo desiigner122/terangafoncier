@@ -104,18 +104,33 @@ const ParcelleDetailPage = () => {
         }
 
         // Charger le profil du propriétaire séparément (comme ParcellesVendeursPage)
-        // Cela fonctionne même si le profil n'existe pas via le JOIN
+        // Utiliser les champs existants dans la table profiles (telephone => telephone)
         if (propertyData.owner_id) {
           try {
-            const ownerProfiles = await fetchDirect(`profiles?select=id,full_name,email,role,phone,avatar_url,is_verified,rating,review_count,properties_sold&id=eq.${propertyData.owner_id}`);
-            if (Array.isArray(ownerProfiles) && ownerProfiles.length > 0) {
-              propertyData = { ...propertyData, profiles: ownerProfiles[0] };
-              console.log('✅ Profil vendeur chargé:', ownerProfiles[0].full_name);
+            // Use service role client to bypass RLS and fetch full profile when available
+            const { data: ownerProfile, error: ownerError } = await supabaseService
+              .from('profiles')
+              .select('id, full_name, email, role, telephone, avatar_url, is_verified, rating, review_count, properties_sold')
+              .eq('id', propertyData.owner_id)
+              .maybeSingle();
+
+            if (ownerError) {
+              console.error('❌ Erreur supabaseService récupération profil:', ownerError);
+            }
+
+            if (ownerProfile) {
+              propertyData = { ...propertyData, profiles: ownerProfile };
+              console.log('✅ Profil vendeur (service) chargé:', ownerProfile.full_name || ownerProfile.id);
             } else {
-              console.warn('⚠️  Aucun profil trouvé pour vendeur:', propertyData.owner_id);
+              // Fallback: use any seller name stored on property (owner_name, seller_name, created_by)
+              const fallbackName = propertyData.owner_name || propertyData.seller_name || propertyData.created_by || 'Vendeur';
+              propertyData = { ...propertyData, profiles: { id: propertyData.owner_id, full_name: fallbackName, email: propertyData.owner_email || '' } };
+              console.log('ℹ️  Aucun profil dans profiles table, fallback seller name utilisé:', fallbackName);
             }
           } catch (profileError) {
-            console.error('❌ Erreur récupération profil propriétaire:', profileError);
+            console.error('❌ Erreur récupération profil propriétaire (unexpected):', profileError);
+            const fallbackName = propertyData.owner_name || propertyData.seller_name || propertyData.created_by || 'Vendeur';
+            propertyData = { ...propertyData, profiles: { id: propertyData.owner_id, full_name: fallbackName, email: propertyData.owner_email || '' } };
           }
         }
 

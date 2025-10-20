@@ -4,14 +4,14 @@
 -- ============================================================
 
 -- ÉTAPE 1: Vérifier les dépendances
+DO $$
 BEGIN
-  SELECT 'Vérification des tables dépendantes...' as step;
-  SELECT COUNT(*) as purchase_cases_exists FROM purchase_cases LIMIT 1;
-  SELECT COUNT(*) as users_exists FROM auth.users LIMIT 1;
+  RAISE NOTICE 'Vérification des tables dépendantes...';
 END;
 $$;
 
 -- ÉTAPE 2: Créer la table des messages
+DO $$
 BEGIN
   CREATE TABLE IF NOT EXISTS purchase_case_messages (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -23,13 +23,14 @@ BEGIN
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
   );
-  SELECT 'Table purchase_case_messages créée' as status;
+  RAISE NOTICE 'Table purchase_case_messages créée';
 EXCEPTION WHEN duplicate_table THEN
-  SELECT 'Table purchase_case_messages existe déjà' as status;
+  RAISE NOTICE 'Table purchase_case_messages existe déjà';
 END;
 $$;
 
 -- ÉTAPE 3: Créer la table des documents
+DO $$
 BEGIN
   CREATE TABLE IF NOT EXISTS purchase_case_documents (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -45,13 +46,14 @@ BEGIN
     created_at TIMESTAMP WITH TIME ZONE DEFAULT now(),
     updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
   );
-  SELECT 'Table purchase_case_documents créée' as status;
+  RAISE NOTICE 'Table purchase_case_documents créée';
 EXCEPTION WHEN duplicate_table THEN
-  SELECT 'Table purchase_case_documents existe déjà' as status;
+  RAISE NOTICE 'Table purchase_case_documents existe déjà';
 END;
 $$;
 
 -- ÉTAPE 4: Créer les indexes
+DO $$
 BEGIN
   CREATE INDEX IF NOT EXISTS idx_case_messages_case_id ON purchase_case_messages(case_id);
   CREATE INDEX IF NOT EXISTS idx_case_messages_sent_by ON purchase_case_messages(sent_by);
@@ -62,19 +64,21 @@ BEGIN
   CREATE INDEX IF NOT EXISTS idx_case_documents_status ON purchase_case_documents(status);
   CREATE INDEX IF NOT EXISTS idx_purchase_case_messages_case_created ON purchase_case_messages(case_id, created_at DESC);
   CREATE INDEX IF NOT EXISTS idx_purchase_case_documents_case_type ON purchase_case_documents(case_id, document_type);
-  SELECT 'Indexes créés' as status;
+  RAISE NOTICE 'Indexes créés';
 END;
 $$;
 
 -- ÉTAPE 5: Activer RLS
+DO $$
 BEGIN
   ALTER TABLE purchase_case_messages ENABLE ROW LEVEL SECURITY;
   ALTER TABLE purchase_case_documents ENABLE ROW LEVEL SECURITY;
-  SELECT 'RLS activé' as status;
+  RAISE NOTICE 'RLS activé';
 END;
 $$;
 
 -- ÉTAPE 6: Créer les RLS policies pour messages
+DO $$
 BEGIN
   CREATE POLICY "Users can view messages in their cases" ON purchase_case_messages
     FOR SELECT USING (
@@ -84,12 +88,13 @@ BEGIN
         AND (pc.buyer_id = auth.uid() OR pc.seller_id = auth.uid())
       )
     );
-  SELECT 'Policy SELECT pour messages créée' as status;
+  RAISE NOTICE 'Policy SELECT pour messages créée';
 EXCEPTION WHEN duplicate_object THEN
-  SELECT 'Policy SELECT pour messages existe déjà' as status;
+  RAISE NOTICE 'Policy SELECT pour messages existe déjà';
 END;
 $$;
 
+DO $$
 BEGIN
   CREATE POLICY "Users can create messages in their cases" ON purchase_case_messages
     FOR INSERT WITH CHECK (
@@ -100,12 +105,13 @@ BEGIN
         AND (pc.buyer_id = auth.uid() OR pc.seller_id = auth.uid())
       )
     );
-  SELECT 'Policy INSERT pour messages créée' as status;
+  RAISE NOTICE 'Policy INSERT pour messages créée';
 EXCEPTION WHEN duplicate_object THEN
-  SELECT 'Policy INSERT pour messages existe déjà' as status;
+  RAISE NOTICE 'Policy INSERT pour messages existe déjà';
 END;
 $$;
 
+DO $$
 BEGIN
   CREATE POLICY "Users can update their message read status" ON purchase_case_messages
     FOR UPDATE USING (
@@ -122,13 +128,14 @@ BEGIN
         AND (pc.buyer_id = auth.uid() OR pc.seller_id = auth.uid())
       )
     );
-  SELECT 'Policy UPDATE pour messages créée' as status;
+  RAISE NOTICE 'Policy UPDATE pour messages créée';
 EXCEPTION WHEN duplicate_object THEN
-  SELECT 'Policy UPDATE pour messages existe déjà' as status;
+  RAISE NOTICE 'Policy UPDATE pour messages existe déjà';
 END;
 $$;
 
 -- ÉTAPE 7: Créer les RLS policies pour documents
+DO $$
 BEGIN
   CREATE POLICY "Users can view documents in their cases" ON purchase_case_documents
     FOR SELECT USING (
@@ -138,12 +145,13 @@ BEGIN
         AND (pc.buyer_id = auth.uid() OR pc.seller_id = auth.uid())
       )
     );
-  SELECT 'Policy SELECT pour documents créée' as status;
+  RAISE NOTICE 'Policy SELECT pour documents créée';
 EXCEPTION WHEN duplicate_object THEN
-  SELECT 'Policy SELECT pour documents existe déjà' as status;
+  RAISE NOTICE 'Policy SELECT pour documents existe déjà';
 END;
 $$;
 
+DO $$
 BEGIN
   CREATE POLICY "Users can upload documents in their cases" ON purchase_case_documents
     FOR INSERT WITH CHECK (
@@ -154,56 +162,59 @@ BEGIN
         AND (pc.buyer_id = auth.uid() OR pc.seller_id = auth.uid())
       )
     );
-  SELECT 'Policy INSERT pour documents créée' as status;
+  RAISE NOTICE 'Policy INSERT pour documents créée';
 EXCEPTION WHEN duplicate_object THEN
-  SELECT 'Policy INSERT pour documents existe déjà' as status;
+  RAISE NOTICE 'Policy INSERT pour documents existe déjà';
 END;
 $$;
 
 -- ÉTAPE 8: Créer les triggers
+DO $$
 BEGIN
   CREATE OR REPLACE FUNCTION update_purchase_case_messages_updated_at()
-  RETURNS TRIGGER AS $$
+  RETURNS TRIGGER AS $func$
   BEGIN
     NEW.updated_at = now();
     RETURN NEW;
   END;
-  $$ LANGUAGE plpgsql;
+  $func$ LANGUAGE plpgsql;
 
   CREATE TRIGGER purchase_case_messages_updated_at_trigger
     BEFORE UPDATE ON purchase_case_messages
     FOR EACH ROW
     EXECUTE FUNCTION update_purchase_case_messages_updated_at();
   
-  SELECT 'Trigger updated_at créé' as status;
+  RAISE NOTICE 'Trigger updated_at créé';
 EXCEPTION WHEN duplicate_object THEN
-  SELECT 'Trigger updated_at existe déjà' as status;
+  RAISE NOTICE 'Trigger updated_at existe déjà';
 END;
 $$;
 
+DO $$
 BEGIN
   CREATE OR REPLACE FUNCTION update_case_on_new_message()
-  RETURNS TRIGGER AS $$
+  RETURNS TRIGGER AS $func$
   BEGIN
     UPDATE purchase_cases
     SET updated_at = now()
     WHERE id = NEW.case_id;
     RETURN NEW;
   END;
-  $$ LANGUAGE plpgsql;
+  $func$ LANGUAGE plpgsql;
 
   CREATE TRIGGER case_updated_on_new_message_trigger
     AFTER INSERT ON purchase_case_messages
     FOR EACH ROW
     EXECUTE FUNCTION update_case_on_new_message();
   
-  SELECT 'Trigger case cascade créé' as status;
+  RAISE NOTICE 'Trigger case cascade créé';
 EXCEPTION WHEN duplicate_object THEN
-  SELECT 'Trigger case cascade existe déjà' as status;
+  RAISE NOTICE 'Trigger case cascade existe déjà';
 END;
 $$;
 
 -- ÉTAPE 9: Créer la view
+DO $$
 BEGIN
   CREATE OR REPLACE VIEW purchase_case_messages_detailed AS
   SELECT 
@@ -223,14 +234,15 @@ BEGIN
   FROM purchase_case_messages pcm
   LEFT JOIN profiles p ON p.id = pcm.sent_by;
   
-  SELECT 'View purchase_case_messages_detailed créée' as status;
+  RAISE NOTICE 'View purchase_case_messages_detailed créée';
 END;
 $$;
 
 -- ÉTAPE 10: Créer la fonction d'unread count
+DO $$
 BEGIN
   CREATE OR REPLACE FUNCTION get_unread_messages_count(user_id UUID)
-  RETURNS TABLE(case_id UUID, unread_count BIGINT) AS $$
+  RETURNS TABLE(case_id UUID, unread_count BIGINT) AS $func$
   BEGIN
     RETURN QUERY
     SELECT 
@@ -246,18 +258,19 @@ BEGIN
       )
     GROUP BY pcm.case_id;
   END;
-  $$ LANGUAGE plpgsql;
+  $func$ LANGUAGE plpgsql;
   
-  SELECT 'Function get_unread_messages_count créée' as status;
+  RAISE NOTICE 'Function get_unread_messages_count créée';
 END;
 $$;
 
 -- ÉTAPE 11: Ajouter les colonnes manquantes
+DO $$
 BEGIN
   ALTER TABLE purchase_cases ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMP WITH TIME ZONE;
   ALTER TABLE purchase_cases ADD COLUMN IF NOT EXISTS buyer_unread_count INTEGER DEFAULT 0;
   ALTER TABLE purchase_cases ADD COLUMN IF NOT EXISTS seller_unread_count INTEGER DEFAULT 0;
-  SELECT 'Colonnes ajoutées à purchase_cases' as status;
+  RAISE NOTICE 'Colonnes ajoutées à purchase_cases';
 END;
 $$;
 

@@ -28,6 +28,110 @@ import { Progress } from '@/components/ui/progress';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 
+// Static mock data previously declared inside the component (moved out to avoid hooks being
+// conditionally rendered after an early return). Kept as a const since it's not mutated.
+const FAVORIS_MOCK_REMOVED = [
+  // Terrains privés favoris
+  {
+    id: 'TP-2024-001',
+    type: 'terrain_prive',
+    libelle: 'Terrain Résidentiel - Almadies',
+    proprietaire: 'Société SÉNÉGAL IMMOBILIER',
+    superficie: '500m²',
+    prix: 75000000,
+    localisation: 'Almadies, Dakar',
+    statut: 'Disponible',
+    dateAjoutFavori: '2024-01-20',
+    description: 'Terrain viabilisé avec vue sur mer, idéal pour villa de standing',
+    caracteristiques: ['Viabilisé', 'Vue mer', 'Titre foncier', 'Accès bitumé'],
+    icon: Building2,
+    color: 'blue'
+  },
+  {
+    id: 'TP-2024-002',
+    type: 'terrain_prive',
+    libelle: 'Terrain Commercial - Plateau',
+    proprietaire: 'IMMOBILIER DU PLATEAU SARL',
+    superficie: '300m²',
+    prix: 120000000,
+    localisation: 'Plateau, Dakar',
+    statut: 'Disponible',
+    dateAjoutFavori: '2024-02-05',
+    description: 'Terrain commercial en plein centre-ville, très bien situé',
+    caracteristiques: ['Commercial', 'Centre-ville', 'Fort passage', 'Transport'],
+    icon: Building2,
+    color: 'blue'
+  },
+  
+  // Zones communales favorites
+  {
+    id: 'ZC-2024-001',
+    type: 'zone_communale',
+    libelle: 'Zone d\'Extension Urbaine - Rufisque',
+    commune: 'Rufisque',
+    superficie: '400m²',
+    prix: 8000000,
+    statut: 'Lots disponibles',
+    dateAjoutFavori: '2024-01-18',
+    description: 'Zone résidentielle en développement avec toutes commodités',
+    caracteristiques: ['Résidentielle', 'Proche commodités', 'Transport', 'École'],
+    lotsDisponibles: 15,
+    icon: MapPin,
+    color: 'green'
+  },
+  {
+    id: 'ZC-2024-002',
+    type: 'zone_communale',
+    libelle: 'Zone Mixte - Pikine Nord',
+    commune: 'Pikine',
+    superficie: '350m²',
+    prix: 6500000,
+    statut: 'En attribution',
+    dateAjoutFavori: '2024-02-10',
+    description: 'Zone mixte permettant habitation et commerce de proximité',
+    caracteristiques: ['Mixte', 'Commerce autorisé', 'Desserte', 'Marché proche'],
+    lotsDisponibles: 8,
+    icon: MapPin,
+    color: 'green'
+  },
+  
+  // Projets promoteurs favoris
+  {
+    id: 'PP-2024-001',
+    type: 'projet_promoteur',
+    libelle: 'Villa Moderne - Cité Keur Gorgui',
+    promoteur: 'TERANGA DEVELOPMENT',
+    superficie: '250m²',
+    prix: 45000000,
+    localisation: 'Cité Keur Gorgui, Dakar',
+    statut: 'En construction',
+    dateAjoutFavori: '2024-01-22',
+    description: 'Villa R+1 moderne avec finitions haut de gamme',
+    caracteristiques: ['3 chambres', 'Salon', 'Cuisine équipée', 'Jardin', 'Garage'],
+    progression: 65,
+    dateLivraison: '2024-06-30',
+    icon: Award,
+    color: 'purple'
+  },
+  {
+    id: 'PP-2024-002',
+    type: 'projet_promoteur',
+    libelle: 'Résidence Les Palmiers - Almadies',
+    promoteur: 'SÉNÉGAL HABITAT',
+    superficie: '180m²',
+    prix: 38000000,
+    localisation: 'Almadies, Dakar',
+    statut: 'Pré-commercialisation',
+    dateAjoutFavori: '2024-02-15',
+    description: 'Appartement F4 dans résidence sécurisée avec piscine',
+    caracteristiques: ['F4', '2 salles de bain', 'Balcon', 'Piscine', 'Sécurité 24h'],
+    progression: 20,
+    dateLivraison: '2024-12-31',
+    icon: Award,
+    color: 'purple'
+  }
+];
+
 const ParticulierFavoris = () => {
   const outletContext = useOutletContext();
   const { user } = outletContext || {};
@@ -65,7 +169,7 @@ const ParticulierFavoris = () => {
           communal_zone_id,
           developer_project_id,
           property:properties (
-            id, title, city, price, surface_area, address, images, status,
+            id, title, city, price, address, images, status,
             owner:profiles!owner_id (id, full_name)
           ),
           zone:communal_zones (
@@ -193,107 +297,7 @@ const ParticulierFavoris = () => {
     );
   }
 
-  const [favoris_mock_removed] = useState([
-    // Terrains privés favoris
-    {
-      id: 'TP-2024-001',
-      type: 'terrain_prive',
-      libelle: 'Terrain Résidentiel - Almadies',
-      proprietaire: 'Société SÉNÉGAL IMMOBILIER',
-      superficie: '500m²',
-      prix: 75000000,
-      localisation: 'Almadies, Dakar',
-      statut: 'Disponible',
-      dateAjoutFavori: '2024-01-20',
-      description: 'Terrain viabilisé avec vue sur mer, idéal pour villa de standing',
-      caracteristiques: ['Viabilisé', 'Vue mer', 'Titre foncier', 'Accès bitumé'],
-      icon: Building2,
-      color: 'blue'
-    },
-    {
-      id: 'TP-2024-002',
-      type: 'terrain_prive',
-      libelle: 'Terrain Commercial - Plateau',
-      proprietaire: 'IMMOBILIER DU PLATEAU SARL',
-      superficie: '300m²',
-      prix: 120000000,
-      localisation: 'Plateau, Dakar',
-      statut: 'Disponible',
-      dateAjoutFavori: '2024-02-05',
-      description: 'Terrain commercial en plein centre-ville, très bien situé',
-      caracteristiques: ['Commercial', 'Centre-ville', 'Fort passage', 'Transport'],
-      icon: Building2,
-      color: 'blue'
-    },
-    
-    // Zones communales favorites
-    {
-      id: 'ZC-2024-001',
-      type: 'zone_communale',
-      libelle: 'Zone d\'Extension Urbaine - Rufisque',
-      commune: 'Rufisque',
-      superficie: '400m²',
-      prix: 8000000,
-      statut: 'Lots disponibles',
-      dateAjoutFavori: '2024-01-18',
-      description: 'Zone résidentielle en développement avec toutes commodités',
-      caracteristiques: ['Résidentielle', 'Proche commodités', 'Transport', 'École'],
-      lotsDisponibles: 15,
-      icon: MapPin,
-      color: 'green'
-    },
-    {
-      id: 'ZC-2024-002',
-      type: 'zone_communale',
-      libelle: 'Zone Mixte - Pikine Nord',
-      commune: 'Pikine',
-      superficie: '350m²',
-      prix: 6500000,
-      statut: 'En attribution',
-      dateAjoutFavori: '2024-02-10',
-      description: 'Zone mixte permettant habitation et commerce de proximité',
-      caracteristiques: ['Mixte', 'Commerce autorisé', 'Desserte', 'Marché proche'],
-      lotsDisponibles: 8,
-      icon: MapPin,
-      color: 'green'
-    },
-    
-    // Projets promoteurs favoris
-    {
-      id: 'PP-2024-001',
-      type: 'projet_promoteur',
-      libelle: 'Villa Moderne - Cité Keur Gorgui',
-      promoteur: 'TERANGA DEVELOPMENT',
-      superficie: '250m²',
-      prix: 45000000,
-      localisation: 'Cité Keur Gorgui, Dakar',
-      statut: 'En construction',
-      dateAjoutFavori: '2024-01-22',
-      description: 'Villa R+1 moderne avec finitions haut de gamme',
-      caracteristiques: ['3 chambres', 'Salon', 'Cuisine équipée', 'Jardin', 'Garage'],
-      progression: 65,
-      dateLivraison: '2024-06-30',
-      icon: Award,
-      color: 'purple'
-    },
-    {
-      id: 'PP-2024-002',
-      type: 'projet_promoteur',
-      libelle: 'Résidence Les Palmiers - Almadies',
-      promoteur: 'SÉNÉGAL HABITAT',
-      superficie: '180m²',
-      prix: 38000000,
-      localisation: 'Almadies, Dakar',
-      statut: 'Pré-commercialisation',
-      dateAjoutFavori: '2024-02-15',
-      description: 'Appartement F4 dans résidence sécurisée avec piscine',
-      caracteristiques: ['F4', '2 salles de bain', 'Balcon', 'Piscine', 'Sécurité 24h'],
-      progression: 20,
-      dateLivraison: '2024-12-31',
-      icon: Award,
-      color: 'purple'
-    }
-  ]);
+  // Removed the inline hook-based mock data; use FAVORIS_MOCK_REMOVED if needed elsewhere.
 
   const getStatusColor = (statut) => {
     const colors = {

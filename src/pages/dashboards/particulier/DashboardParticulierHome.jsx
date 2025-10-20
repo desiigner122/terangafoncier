@@ -123,7 +123,9 @@ const DashboardParticulierHome = () => {
   supabase.from('support_tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
   supabase.from('demandes_terrains_communaux').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
   supabase.from('user_documents').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  supabase.from('favoris_properties').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
+  // use the 'favorites' table (English) which is the correct table used across the app
+  // wrap in try/catch via Promise.allSettled in the caller; this just ensures the table name is correct
+  supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
       ]);
 
       setStats({

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { fetchDirect } from '@/lib/supabaseClient';
+import { supabaseService } from '@/lib/supabaseServiceClient';
 import { 
   Star, 
   MapPin, 
@@ -45,36 +45,44 @@ const SellerProfilePage = () => {
   const loadSellerProfile = async () => {
     setLoading(true);
     try {
-      const sellerData = await fetchDirect(`profiles?select=*&id=eq.${sellerId}`);
-      if (sellerData && sellerData.length > 0) {
-        const profile = sellerData[0];
-        setSeller({
-          id: profile.id,
-          name: profile.full_name || 'Vendeur',
-          type: profile.role || 'Vendeur Particulier',
-          avatar: profile.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
-          coverImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=300&fit=crop',
-          location: profile.address || 'Adresse non spécifiée',
-          joinedDate: profile.created_at,
-          isVerified: profile.is_verified || false,
-          rating: profile.rating || 4.8,
-          reviewCount: profile.review_count || 0,
-          description: profile.bio || 'Aucune description.',
-          phone: profile.phone || 'Non spécifié',
-          email: profile.email || 'Non spécifié',
-          specialties: ['Terrains Résidentiels', 'Titres Fonciers'],
-          stats: {
-            totalProperties: 15,
-            propertiesSold: 8,
-            activeListings: 7,
-          },
-          certifications: ['Vendeur Certifié Teranga Foncier'],
-          languages: ['Français', 'Wolof'],
-          serviceAreas: ['Dakar', 'Thiès']
-        });
-      } else {
+      const { data: sellerData, error } = await supabaseService
+        .from('profiles')
+        .select('*')
+        .eq('id', sellerId)
+        .single();
+
+      if (error || !sellerData) {
+        console.error("Erreur lors du chargement du profil vendeur:", error);
         setSeller(null);
+        setLoading(false);
+        return;
       }
+
+      const profile = sellerData;
+      setSeller({
+        id: profile.id,
+        name: profile.full_name || 'Vendeur',
+        type: profile.role || 'Vendeur Particulier',
+        avatar: profile.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
+        coverImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=300&fit=crop',
+        location: profile.address || 'Adresse non spécifiée',
+        joinedDate: profile.created_at,
+        isVerified: profile.is_verified || false,
+        rating: profile.rating || 4.8,
+        reviewCount: profile.review_count || 0,
+        description: profile.bio || 'Aucune description.',
+        phone: profile.phone || 'Non spécifié',
+        email: profile.email || 'Non spécifié',
+        specialties: ['Terrains Résidentiels', 'Titres Fonciers'],
+        stats: {
+          totalProperties: 15,
+          propertiesSold: 8,
+          activeListings: 7,
+        },
+        certifications: ['Vendeur Certifié Teranga Foncier'],
+        languages: ['Français', 'Wolof'],
+        serviceAreas: ['Dakar', 'Thiès']
+      });
     } catch (error) {
       console.error("Erreur lors du chargement du profil vendeur:", error);
       setSeller(null);

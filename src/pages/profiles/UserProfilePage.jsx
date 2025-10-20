@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { fetchDirect } from '@/lib/supabaseClient';
+import { supabaseService } from '@/lib/supabaseServiceClient';
 import { 
   Star, 
   MapPin, 
@@ -50,38 +51,43 @@ const UserProfilePage = () => {
     }
     setLoading(true);
     try {
-      // Correction: The user ID from the URL corresponds to the 'id' column in the 'profiles' table.
-      const data = await fetchDirect(`profiles?select=*&id=eq.${userId}`);
+      // Correction: Utiliser supabaseService pour contourner RLS sur les profils publics
+      const { data, error } = await supabaseService
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
       
-      if (data && data.length > 0) {
-        const userProfile = data[0];
-        const mappedProfile = {
-          id: userProfile.id,
-          name: userProfile.full_name || 'Utilisateur',
-          email: userProfile.email || '',
-          phone: userProfile.phone || '',
-          avatar: userProfile.avatar_url || `https://i.pravatar.cc/150?u=${userProfile.id}`,
-          location: userProfile.address || 'Non spécifié',
-          website: userProfile.website || '',
-          role: userProfile.role || 'particulier',
-          description: userProfile.bio || 'Aucune description disponible.',
-          isVerified: userProfile.is_verified || false,
-          createdAt: new Date(userProfile.created_at),
-          rating: parseFloat(userProfile.rating || 4.5),
-          reviewCount: userProfile.review_count || 0,
-          followers: userProfile.followers_count || 0,
-          views: userProfile.views_count || 0,
-          stats: await loadUserStats(userProfile.id, userProfile.role),
-          achievements: generateAchievements(userProfile)
-        };
-        setProfile(mappedProfile);
-      } else {
-        // If no profile is found, display a 'not found' state.
+      if (error || !data) {
+        console.warn(`⚠️ Profil non trouvé pour ID ${userId}`);
         setProfile(null);
+        return;
       }
+      
+      const userProfile = data;
+      const mappedProfile = {
+        id: userProfile.id,
+        name: userProfile.full_name || 'Utilisateur',
+        email: userProfile.email || '',
+        phone: userProfile.phone || '',
+        avatar: userProfile.avatar_url || `https://i.pravatar.cc/150?u=${userProfile.id}`,
+        location: userProfile.address || 'Non spécifié',
+        website: userProfile.website || '',
+        role: userProfile.role || 'particulier',
+        description: userProfile.bio || 'Aucune description disponible.',
+        isVerified: userProfile.is_verified || false,
+        createdAt: new Date(userProfile.created_at),
+        rating: parseFloat(userProfile.rating || 4.5),
+        reviewCount: userProfile.review_count || 0,
+        followers: userProfile.followers_count || 0,
+        views: userProfile.views_count || 0,
+        stats: await loadUserStats(userProfile.id, userProfile.role),
+        achievements: generateAchievements(userProfile)
+      };
+      setProfile(mappedProfile);
     } catch (error) {
       console.error('❌ Erreur lors du chargement du profil:', error);
-      setProfile(null); // Fallback to null on any error.
+      setProfile(null);
     } finally {
       setLoading(false);
     }

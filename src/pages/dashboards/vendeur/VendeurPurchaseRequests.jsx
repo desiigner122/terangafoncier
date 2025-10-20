@@ -284,7 +284,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
           })
           .eq('id', transaction.id);
 
-        if (txUpdateError) {
+        if (!existingCase) {
           console.warn('⚠️ [ACCEPT] Erreur mise à jour transaction (non bloquante):', txUpdateError);
         } else {
           console.log('✅ [ACCEPT] Transaction status updated to accepted');
@@ -311,7 +311,19 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       setAcceptedRequests(prev => new Set(prev).add(requestId));
       setCaseNumbers(prev => ({
         ...prev,
-        [requestId]: purchaseCase.case_number
+          purchaseCase = result.case;
+          // ✅ Important: marquer immédiatement le dossier comme "preliminary_agreement"
+          try {
+            await PurchaseWorkflowService.updateCaseStatus(
+              purchaseCase.id,
+              'preliminary_agreement',
+              user.id,
+              "Vendeur a accepté l'offre d'achat"
+            );
+            purchaseCase.status = 'preliminary_agreement';
+          } catch (e) {
+            console.warn('⚠️ [ACCEPT] Impossible de mettre à jour le statut du dossier juste après création:', e?.message);
+          }
       }));
 
       // 7. Mettre à jour l'état local directement
@@ -486,10 +498,16 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   };
 
   const handleContact = (request) => {
-    if (request.buyer_email) {
-      window.location.href = `mailto:${request.buyer_email}`;
+    const email = request.buyer_email?.trim();
+    if (email) {
+      const subject = encodeURIComponent('Suite à votre demande d\'achat');
+      const body = encodeURIComponent(
+        `Bonjour,\n\nJe vous contacte au sujet de votre demande d'achat concernant la parcelle ${request.parcels?.title || ''}.\n\nCordialement,\n`
+      );
+      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
     } else {
       toast.error('Email de l\'acheteur non disponible');
+      console.warn('⚠️ handleContact: buyer_email manquant pour la demande', request?.id);
     }
   };
 
@@ -625,6 +643,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         
         return {
           id: transaction.id,
+          request_id: transaction.request_id,
           user_id: transaction.buyer_id,
           parcel_id: transaction.parcel_id,
           status: effectiveStatus,

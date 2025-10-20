@@ -35,8 +35,7 @@ WHERE t.request_id IS NULL
   AND r.type IN ('one_time', 'installments', 'bank_financing')
   AND t.status IN ('pending', 'completed', 'failed', 'cancelled')
   AND t.created_at >= r.created_at - INTERVAL '1 hour'
-  AND t.created_at <= r.created_at + INTERVAL '1 hour'
-LIMIT 1000;  -- Safety limit to avoid massive updates
+  AND t.created_at <= r.created_at + INTERVAL '1 hour';
 
 -- Verify the fix
 SELECT 
@@ -44,6 +43,3 @@ SELECT
   COUNT(CASE WHEN request_id IS NOT NULL THEN 1 END) as with_request_id,
   COUNT(CASE WHEN request_id IS NULL THEN 1 END) as without_request_id
 FROM public.transactions;
-
--- Summary
-RAISE NOTICE '✅ request_id column added to transactions table - vendor dashboard should now work!';

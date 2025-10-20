@@ -14,12 +14,13 @@ import { supabase } from '@/lib/supabaseClient';
 import AdvancedCaseTrackingService from '@/services/AdvancedCaseTrackingService';
 import SellerAcceptanceService from '@/services/SellerAcceptanceService';
 import CaseTrackingStatus from './CaseTrackingStatus';
+import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging';
 import { toast } from 'sonner';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { AlertCircle, ArrowLeft, Check, X, FileText, Users, DollarSign, Eye, CheckCircle2 } from 'lucide-react';
+import { AlertCircle, ArrowLeft, Check, X, FileText, Users, DollarSign, Eye, CheckCircle2, MessageSquare } from 'lucide-react';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -37,6 +38,8 @@ const RefactoredVendeurCaseTracking = () => {
 
   const [caseData, setCaseData] = useState(null);
   const [summary, setSummary] = useState(null);
+  const [buyerInfo, setBuyerInfo] = useState(null);
+  const [sellerInfo, setSellerInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
@@ -62,6 +65,26 @@ const RefactoredVendeurCaseTracking = () => {
 
       if (!cData) throw new Error('Dossier non trouvé');
       setCaseData(cData);
+
+      // Get buyer info
+      if (cData.buyer_id) {
+        const { data: buyer } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', cData.buyer_id)
+          .single();
+        setBuyerInfo(buyer);
+      }
+
+      // Get seller info
+      if (cData.seller_id) {
+        const { data: seller } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', cData.seller_id)
+          .single();
+        setSellerInfo(seller);
+      }
 
       // Get summary
       const sum = await AdvancedCaseTrackingService.getCompleteCaseSummary(cData.id);
@@ -223,9 +246,13 @@ const RefactoredVendeurCaseTracking = () => {
 
       {/* TABS */}
       <Tabs defaultValue="overview" className="w-full">
-        <TabsList className="grid w-full grid-cols-4 bg-white border-b">
+        <TabsList className="grid w-full grid-cols-5 bg-white border-b">
           <TabsTrigger value="overview">Vue Générale</TabsTrigger>
           <TabsTrigger value="participants">Intervenants</TabsTrigger>
+          <TabsTrigger value="messages" className="flex items-center gap-2">
+            <MessageSquare className="w-4 h-4" />
+            Messages
+          </TabsTrigger>
           <TabsTrigger value="documents">Documents</TabsTrigger>
           <TabsTrigger value="fees">Frais</TabsTrigger>
         </TabsList>
@@ -318,6 +345,18 @@ const RefactoredVendeurCaseTracking = () => {
                 </div>
               </CardContent>
             </Card>
+          )}
+        </TabsContent>
+
+        {/* MESSAGES */}
+        <TabsContent value="messages" className="flex-1">
+          {caseData && (
+            <PurchaseCaseMessaging 
+              caseId={caseData.id}
+              caseNumber={caseNumber}
+              buyerInfo={buyerInfo}
+              sellerInfo={sellerInfo}
+            />
           )}
         </TabsContent>
 

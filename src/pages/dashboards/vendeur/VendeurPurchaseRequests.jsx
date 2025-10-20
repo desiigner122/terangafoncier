@@ -191,7 +191,17 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         purchaseCase = result.case;
         
         console.log('✅ [ACCEPT] Dossier créé:', purchaseCase.case_number);
-        toast.success(`🎉 Offre acceptée ! Dossier créé: ${purchaseCase.case_number}`);
+        toast.success(
+          `🎉 Offre acceptée! Dossier créé: ${purchaseCase.case_number}`,
+          { 
+            duration: 5000,
+            description: `L'acheteur a été notifié de votre acceptation`,
+            action: {
+              label: 'Voir le dossier',
+              onClick: () => navigate(`/vendeur/cases/${purchaseCase.case_number}`)
+            }
+          }
+        );
       } else {
         console.log('📋 [ACCEPT] Dossier existant, vérification du statut...');
         
@@ -499,11 +509,11 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         .select('id, title, name, price, location, surface, status')
         .in('id', parcelIds);
 
-      // Charger les profils acheteurs
+      // Charger les profils acheteurs avec informations complètes
       const buyerIds = [...new Set(transactionsData.map(t => t.buyer_id).filter(Boolean))];
       const { data: profilesData } = await supabase
         .from('profiles')
-        .select('id, first_name, last_name, email')
+        .select('id, first_name, last_name, email, phone, full_name')
         .in('id', buyerIds);
 
       // FIX #1: Charger les purchase_cases pour savoir lesquels sont acceptés
@@ -871,7 +881,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                           <div>
                             <div className="flex items-center gap-3 mb-2">
                               <h3 className="text-xl font-bold text-slate-900">
-                                {request.buyer_name}
+                                {request.buyer_name || 'Acheteur'}
                               </h3>
                               {/* Afficher le case number si accepté */}
                               {request.hasCase && (
@@ -886,7 +896,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                                 <span className="ml-1">{getPaymentMethodLabel(request.payment_method)}</span>
                               </Badge>
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-slate-600">
+                            <div className="flex items-center gap-4 text-sm text-slate-600 flex-wrap">
                               {request.buyer_email && (
                                 <span className="flex items-center gap-1">
                                   <Mail className="w-4 h-4" />

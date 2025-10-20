@@ -789,36 +789,38 @@ const CompleteSidebarVendeurDashboard = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
                     <Bell className="h-5 w-5" />
-                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      {dashboardStats.pendingInquiries}
-                    </Badge>
+                    {unreadNotificationsCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                        {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80">
-                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuLabel>Notifications ({notifications.length})</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Eye className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Nouvelle vue</p>
-                        <p className="text-sm text-gray-600">Villa Almadies - 15 vues aujourd'hui</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-orange-100 p-2 rounded-full">
-                        <TrendingUp className="h-4 w-4 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Performance IA</p>
-                        <p className="text-sm text-gray-600">6 propriétés optimisées cette semaine</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
+                  {notifications && notifications.length > 0 ? (
+                    notifications.slice(0, 5).map((notif, idx) => (
+                      <DropdownMenuItem key={idx}>
+                        <div className="flex items-center space-x-3 w-full">
+                          <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                            <Bell className="h-4 w-4 text-blue-600" />
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium truncate">{notif.title || 'Notification'}</p>
+                            <p className="text-sm text-gray-600 truncate">{notif.message || 'Aucun message'}</p>
+                            <p className="text-xs text-gray-400 mt-1">
+                              {new Date(notif.created_at).toLocaleDateString('fr-FR')}
+                            </p>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <p className="text-sm text-gray-600">Aucune notification</p>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 

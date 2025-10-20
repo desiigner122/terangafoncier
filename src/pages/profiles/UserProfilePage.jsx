@@ -65,7 +65,7 @@ const UserProfilePage = () => {
           website: userProfile.website || '',
           role: userProfile.role || 'particulier',
           description: userProfile.bio || 'Aucune description disponible.',
-          isVerified: userProfile.verification_status === 'verified',
+          isVerified: userProfile.is_verified || false,
           createdAt: new Date(userProfile.created_at),
           rating: parseFloat(userProfile.rating || 4.5),
           reviewCount: userProfile.review_count || 0,
@@ -121,7 +121,7 @@ const UserProfilePage = () => {
   const generateAchievements = (profile) => {
     const achievements = [];
     
-    if (profile.verification_status === 'verified') {
+    if (profile.is_verified) {
       achievements.push('Vendeur Vérifiés');
     }
     if (profile.email_verified) {

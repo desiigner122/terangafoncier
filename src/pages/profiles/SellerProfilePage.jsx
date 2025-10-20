@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { fetchDirect } from '@/lib/supabaseClient';
 import { 
   Star, 
   MapPin, 
@@ -55,21 +56,21 @@ const SellerProfilePage = () => {
           coverImage: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=300&fit=crop',
           location: profile.address || 'Adresse non spécifiée',
           joinedDate: profile.created_at,
-          isVerified: profile.verification_status === 'verified',
-          rating: 4.8, // Mocked
-          reviewCount: 47, // Mocked
+          isVerified: profile.is_verified || false,
+          rating: profile.rating || 4.8,
+          reviewCount: profile.review_count || 0,
           description: profile.bio || 'Aucune description.',
           phone: profile.phone || 'Non spécifié',
           email: profile.email || 'Non spécifié',
-          specialties: ['Terrains Résidentiels', 'Titres Fonciers'], // Mocked
+          specialties: ['Terrains Résidentiels', 'Titres Fonciers'],
           stats: {
-            totalProperties: 15, // Mocked
-            propertiesSold: 8, // Mocked
-            activeListings: 7, // Mocked
+            totalProperties: 15,
+            propertiesSold: 8,
+            activeListings: 7,
           },
-          certifications: ['Vendeur Certifié Teranga Foncier'], // Mocked
-          languages: ['Français', 'Wolof'], // Mocked
-          serviceAreas: ['Dakar', 'Thiès'] // Mocked
+          certifications: ['Vendeur Certifié Teranga Foncier'],
+          languages: ['Français', 'Wolof'],
+          serviceAreas: ['Dakar', 'Thiès']
         });
       } else {
         setSeller(null);

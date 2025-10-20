@@ -63,17 +63,12 @@ const ParcelleDetailPage = () => {
 
         // Recherche par slug uniquement (titre)
         console.log('🔍 Using slug lookup (titre seul):', effectiveSlug);
+        
+        // Charger TOUTES les propriétés avec filtre sur le slug
         const { data: properties, error: slugError } = await supabase
           .from('properties')
-          .select(`
-            *,
-            profiles:owner_id (
-              id,
-              full_name,
-              email,
-              role
-            )
-          `);
+          .select('*');
+          
         if (slugError) {
           error = slugError;
         } else {
@@ -97,9 +92,6 @@ const ParcelleDetailPage = () => {
 
         let propertyData = property;
 
-        // Fallback: utiliser fetchDirect si Supabase client échoue (problèmes RLS)
-        // (Supabase RLS fallback désactivé, slug only)
-
         if (error && !propertyData) {
           console.error('❌ Erreur chargement:', error);
           navigate('/404');
@@ -111,12 +103,16 @@ const ParcelleDetailPage = () => {
           return;
         }
 
-        // Fetch owner profile if missing (fallback for fetchDirect)
-        if (propertyData && (!propertyData.profiles || !propertyData.profiles.full_name) && propertyData.owner_id) {
+        // Charger le profil du propriétaire séparément (comme ParcellesVendeursPage)
+        // Cela fonctionne même si le profil n'existe pas via le JOIN
+        if (propertyData.owner_id) {
           try {
-            const ownerProfiles = await fetchDirect(`profiles?select=id,full_name,email,role,phone,avatar_url&id=eq.${propertyData.owner_id}`);
+            const ownerProfiles = await fetchDirect(`profiles?select=id,full_name,email,role,phone,avatar_url,is_verified,rating,review_count,properties_sold&id=eq.${propertyData.owner_id}`);
             if (Array.isArray(ownerProfiles) && ownerProfiles.length > 0) {
               propertyData = { ...propertyData, profiles: ownerProfiles[0] };
+              console.log('✅ Profil vendeur chargé:', ownerProfiles[0].full_name);
+            } else {
+              console.warn('⚠️  Aucun profil trouvé pour vendeur:', propertyData.owner_id);
             }
           } catch (profileError) {
             console.error('❌ Erreur récupération profil propriétaire:', profileError);

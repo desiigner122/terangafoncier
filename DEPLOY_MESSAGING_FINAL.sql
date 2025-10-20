@@ -71,7 +71,7 @@ CREATE TABLE purchase_case_messages (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
-RAISE NOTICE '✅ Table purchase_case_messages créée';
+-- ✅ Table purchase_case_messages créée
 
 -- ============================================================
 -- ÉTAPE 2: Créer la table des DOCUMENTS
@@ -94,38 +94,38 @@ CREATE TABLE purchase_case_documents (
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT now()
 );
 
-RAISE NOTICE '✅ Table purchase_case_documents créée';
+-- ✅ Table purchase_case_documents créée
 
 -- ============================================================
 -- ÉTAPE 3: Créer les INDEXES
 -- ============================================================
 
 CREATE INDEX idx_case_messages_case_id ON purchase_case_messages(case_id);
-RAISE NOTICE '✅ Index idx_case_messages_case_id créé';
+-- ✅ Index idx_case_messages_case_id créé
 
 CREATE INDEX idx_case_messages_sent_by ON purchase_case_messages(sent_by);
-RAISE NOTICE '✅ Index idx_case_messages_sent_by créé';
+-- ✅ Index idx_case_messages_sent_by créé
 
 CREATE INDEX idx_case_messages_created_at ON purchase_case_messages(created_at);
-RAISE NOTICE '✅ Index idx_case_messages_created_at créé';
+-- ✅ Index idx_case_messages_created_at créé
 
 CREATE INDEX idx_case_messages_read_at ON purchase_case_messages(read_at);
-RAISE NOTICE '✅ Index idx_case_messages_read_at créé';
+-- ✅ Index idx_case_messages_read_at créé
 
 CREATE INDEX idx_case_documents_case_id ON purchase_case_documents(case_id);
-RAISE NOTICE '✅ Index idx_case_documents_case_id créé';
+-- ✅ Index idx_case_documents_case_id créé
 
 CREATE INDEX idx_case_documents_type ON purchase_case_documents(document_type);
-RAISE NOTICE '✅ Index idx_case_documents_type créé';
+-- ✅ Index idx_case_documents_type créé
 
 CREATE INDEX idx_case_documents_status ON purchase_case_documents(status);
-RAISE NOTICE '✅ Index idx_case_documents_status créé';
+-- ✅ Index idx_case_documents_status créé
 
 CREATE INDEX idx_purchase_case_messages_case_created ON purchase_case_messages(case_id, created_at DESC);
-RAISE NOTICE '✅ Index idx_purchase_case_messages_case_created créé';
+-- ✅ Index idx_purchase_case_messages_case_created créé
 
 CREATE INDEX idx_purchase_case_documents_case_type ON purchase_case_documents(case_id, document_type);
-RAISE NOTICE '✅ Index idx_purchase_case_documents_case_type créé';
+-- ✅ Index idx_purchase_case_documents_case_type créé
 
 -- ============================================================
 -- ÉTAPE 4: Activer RLS (Row Level Security)
@@ -134,7 +134,7 @@ RAISE NOTICE '✅ Index idx_purchase_case_documents_case_type créé';
 ALTER TABLE purchase_case_messages ENABLE ROW LEVEL SECURITY;
 ALTER TABLE purchase_case_documents ENABLE ROW LEVEL SECURITY;
 
-RAISE NOTICE '✅ RLS activé sur les deux tables';
+-- ✅ RLS activé sur les deux tables
 
 -- ============================================================
 -- ÉTAPE 5: Créer les RLS POLICIES pour MESSAGES
@@ -149,7 +149,7 @@ CREATE POLICY "Users can view messages in their cases" ON purchase_case_messages
     )
   );
 
-RAISE NOTICE '✅ Policy SELECT pour messages créée';
+-- ✅ Policy SELECT pour messages créée
 
 CREATE POLICY "Users can create messages in their cases" ON purchase_case_messages
   FOR INSERT WITH CHECK (
@@ -161,7 +161,7 @@ CREATE POLICY "Users can create messages in their cases" ON purchase_case_messag
     )
   );
 
-RAISE NOTICE '✅ Policy INSERT pour messages créée';
+-- ✅ Policy INSERT pour messages créée
 
 CREATE POLICY "Users can update their message read status" ON purchase_case_messages
   FOR UPDATE USING (
@@ -179,7 +179,7 @@ CREATE POLICY "Users can update their message read status" ON purchase_case_mess
     )
   );
 
-RAISE NOTICE '✅ Policy UPDATE pour messages créée';
+-- ✅ Policy UPDATE pour messages créée
 
 -- ============================================================
 -- ÉTAPE 6: Créer les RLS POLICIES pour DOCUMENTS
@@ -194,7 +194,7 @@ CREATE POLICY "Users can view documents in their cases" ON purchase_case_documen
     )
   );
 
-RAISE NOTICE '✅ Policy SELECT pour documents créée';
+-- ✅ Policy SELECT pour documents créée
 
 CREATE POLICY "Users can upload documents in their cases" ON purchase_case_documents
   FOR INSERT WITH CHECK (
@@ -206,7 +206,7 @@ CREATE POLICY "Users can upload documents in their cases" ON purchase_case_docum
     )
   );
 
-RAISE NOTICE '✅ Policy INSERT pour documents créée';
+-- ✅ Policy INSERT pour documents créée
 
 -- ============================================================
 -- ÉTAPE 7: Créer les TRIGGERS
@@ -225,7 +225,7 @@ CREATE TRIGGER purchase_case_messages_updated_at_trigger
   FOR EACH ROW
   EXECUTE FUNCTION update_purchase_case_messages_updated_at();
 
-RAISE NOTICE '✅ Trigger pour updated_at créé';
+-- ✅ Trigger pour updated_at créé
 
 -- Trigger pour cascader la mise à jour à purchase_cases
 CREATE OR REPLACE FUNCTION update_case_on_new_message()
@@ -243,7 +243,7 @@ CREATE TRIGGER case_updated_on_new_message_trigger
   FOR EACH ROW
   EXECUTE FUNCTION update_case_on_new_message();
 
-RAISE NOTICE '✅ Trigger pour cascade créé';
+-- ✅ Trigger pour cascade créé
 
 -- ============================================================
 -- ÉTAPE 8: Créer la VIEW avec infos sender
@@ -267,7 +267,7 @@ SELECT
 FROM purchase_case_messages pcm
 LEFT JOIN profiles p ON p.id = pcm.sent_by;
 
-RAISE NOTICE '✅ View purchase_case_messages_detailed créée';
+-- ✅ View purchase_case_messages_detailed créée
 
 -- ============================================================
 -- ÉTAPE 9: Créer la FUNCTION pour compter non-lus
@@ -292,7 +292,7 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-RAISE NOTICE '✅ Function get_unread_messages_count créée';
+-- ✅ Function get_unread_messages_count créée
 
 -- ============================================================
 -- ÉTAPE 10: Ajouter COLONNES manquantes à purchase_cases
@@ -302,22 +302,13 @@ ALTER TABLE purchase_cases ADD COLUMN IF NOT EXISTS last_message_at TIMESTAMP WI
 ALTER TABLE purchase_cases ADD COLUMN IF NOT EXISTS buyer_unread_count INTEGER DEFAULT 0;
 ALTER TABLE purchase_cases ADD COLUMN IF NOT EXISTS seller_unread_count INTEGER DEFAULT 0;
 
-RAISE NOTICE '✅ Colonnes ajoutées à purchase_cases';
+-- ✅ Colonnes ajoutées à purchase_cases
 
 -- ============================================================
 -- VÉRIFICATIONS FINALES
 -- ============================================================
 
-RAISE NOTICE '';
-RAISE NOTICE '========================================';
-RAISE NOTICE '✅ DÉPLOIEMENT RÉUSSI!';
-RAISE NOTICE '========================================';
-RAISE NOTICE 'Tables créées:';
-RAISE NOTICE '  - purchase_case_messages';
-RAISE NOTICE '  - purchase_case_documents';
-RAISE NOTICE 'Indexes: 9';
-RAISE NOTICE 'RLS Policies: 5 (3 messages + 2 documents)';
-RAISE NOTICE 'Triggers: 2';
-RAISE NOTICE 'Views: 1 (purchase_case_messages_detailed)';
-RAISE NOTICE 'Functions: 1 (get_unread_messages_count)';
-RAISE NOTICE '========================================';
+-- Les vérifications se font dans Supabase automatiquement
+-- Vous devriez voir dans la console les confirmations:
+-- ✅ DÉPLOIEMENT RÉUSSI!
+-- ============================================================

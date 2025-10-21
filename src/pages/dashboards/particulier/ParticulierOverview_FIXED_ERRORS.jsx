@@ -21,7 +21,7 @@ import {
   DollarSign,
   AlertTriangle
 } from 'lucide-react';
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const ParticulierOverview = () => {
   // Gestion sécurisée du contexte Outlet

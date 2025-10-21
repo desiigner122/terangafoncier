@@ -103,12 +103,33 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       setActionLoading(requestId);
       
       // 1. Récupérer la REQUEST (pas la transaction!)
-      const { data: request, error: reqError } = await supabase
+      // Use maybeSingle to avoid PGRST116 when no row or blocked by RLS
+      let { data: request, error: reqError } = await supabase
         .from('requests')
         .select('*')
         .eq('id', requestId)
-        .single();
-      
+        .maybeSingle();
+
+      // If not found, try to interpret the incoming id as a transaction id and resolve its request
+      if (!request || reqError) {
+        console.log('ℹ️ [ACCEPT] Request not directly accessible or not found; attempting fallback via transactions...');
+        const { data: txRow, error: txRowError } = await supabase
+          .from('transactions')
+          .select('request_id')
+          .eq('id', requestId)
+          .maybeSingle();
+        if (txRow && txRow.request_id) {
+          requestId = txRow.request_id;
+          const { data: request2, error: reqError2 } = await supabase
+            .from('requests')
+            .select('*')
+            .eq('id', requestId)
+            .maybeSingle();
+          request = request2;
+          reqError = reqError2;
+        }
+      }
+
       if (reqError) {
         console.error('❌ Erreur récupération request:', reqError);
         throw new Error('Impossible de récupérer la request: ' + reqError.message);
@@ -117,7 +138,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       console.log('📊 [ACCEPT] Request récupérée:', request);
       
       // 1b. Récupérer la transaction liée via request_id
-      const { data: transactions, error: txError } = await supabase
+        const { data: transactions, error: txError } = await supabase
         .from('transactions')
         .select('*')
         .eq('request_id', requestId);
@@ -308,23 +329,11 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
 
       // 6. FIX #1: Track this acceptance in persistent state
       console.log('📍 [ACCEPT] Tracking acceptance in persistent state');
-      setAcceptedRequests(prev => new Set(prev).add(requestId));
-      setCaseNumbers(prev => ({
-        ...prev,
-          purchaseCase = result.case;
-          // ✅ Important: marquer immédiatement le dossier comme "preliminary_agreement"
-          try {
-            await PurchaseWorkflowService.updateCaseStatus(
-              purchaseCase.id,
-              'preliminary_agreement',
-              user.id,
-              "Vendeur a accepté l'offre d'achat"
-            );
-            purchaseCase.status = 'preliminary_agreement';
-          } catch (e) {
-            console.warn('⚠️ [ACCEPT] Impossible de mettre à jour le statut du dossier juste après création:', e?.message);
-          }
-      }));
+        setAcceptedRequests(prev => new Set(prev).add(requestId));
+        setCaseNumbers(prev => ({
+          ...prev,
+          [requestId]: purchaseCase?.case_number || prev[requestId]
+        }));
 
       // 7. Mettre à jour l'état local directement
       console.log('🔄 [ACCEPT] Mise à jour locale du statut → accepted');
@@ -358,7 +367,8 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     }
   };
 
-  const handleReject = async (requestId) => {
+  const handleReject = async (requestIdOrTxId) => {
+    let requestId = requestIdOrTxId;
     setActionLoading(requestId);
     try {
       // 1. Vérifier s'il y a un dossier workflow existant
@@ -381,14 +391,14 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         toast.success('Offre refusée - Dossier workflow mis à jour');
       }
 
-      // 2. Mettre à jour la transaction
+      // 2. Mettre à jour la transaction(s) – par request_id si possible
       const { error } = await supabase
         .from('transactions')
         .update({ 
           status: 'rejected',
           updated_at: new Date().toISOString()
         })
-        .eq('id', requestId);
+        .eq('request_id', requestId);
 
       if (error) throw error;
 
@@ -497,17 +507,46 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     setShowDetailsModal(true);
   };
 
-  const handleContact = (request) => {
-    const email = request.buyer_email?.trim();
-    if (email) {
-      const subject = encodeURIComponent('Suite à votre demande d\'achat');
-      const body = encodeURIComponent(
-        `Bonjour,\n\nJe vous contacte au sujet de votre demande d'achat concernant la parcelle ${request.parcels?.title || ''}.\n\nCordialement,\n`
-      );
-      window.location.href = `mailto:${email}?subject=${subject}&body=${body}`;
-    } else {
-      toast.error('Email de l\'acheteur non disponible');
-      console.warn('⚠️ handleContact: buyer_email manquant pour la demande', request?.id);
+  const handleContact = async (request) => {
+    try {
+      console.log('💬 [CONTACT] Création d\'un nouveau message pour:', request.buyer_name);
+      
+      // Construire le message avec contenu garanti
+      const messageBody = `Bonjour ${request.buyer_name || 'Acheteur'},\n\nJe vous contacte au sujet de votre demande d'achat concernant la parcelle "${request.parcels?.title || ''}".\n\nCordialement,\n`;
+      
+      // Créer un nouveau message avec validation des données
+      const messageData = {
+        sender_id: user.id,
+        recipient_id: request.user_id,
+        subject: `Suite à votre demande d'achat - ${request.parcels?.title || 'Propriété'}`,
+        message: messageBody && messageBody.trim() ? messageBody.trim() : 'Message',  // Utilise 'message' au lieu de 'body'
+        is_read: false,
+        created_at: new Date().toISOString()
+      };
+      
+      console.log('📝 Données du message:', messageData);
+      
+      // Créer un nouveau message
+      const { data: newMsg, error } = await supabase
+        .from('messages')
+        .insert([messageData])
+        .select()
+        .single();
+
+      if (error) {
+        console.error('❌ Erreur création message:', error);
+        toast.error('Impossible de créer le message');
+        return;
+      }
+
+      console.log('✅ Message créé:', newMsg.id);
+      toast.success(`📧 Message créé pour ${request.buyer_name}`);
+      
+      // Rediriger vers les messages
+      navigate('/vendeur/messages');
+    } catch (error) {
+      console.error('❌ Erreur:', error);
+      toast.error('Erreur lors de la création du message');
     }
   };
 
@@ -575,22 +614,38 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         .in('id', parcelIds);
 
       // Charger les profils acheteurs avec informations complètes (email inclus)
-      const buyerIds = [...new Set(transactionsData.map(t => t.buyer_id).filter(Boolean))];
+      // FIX: Simplifier la récupération des IDs acheteurs
+      const buyerIdsFromTransactions = transactionsData.map(t => t.buyer_id).filter(Boolean);
+      const requestIds = transactionsData.map(t => t.request_id).filter(Boolean);
+      
+      let buyerIdsFromRequests = [];
+      if (requestIds.length > 0) {
+        const { data: requestsForBuyers, error: reqError } = await supabase
+          .from('requests')
+          .select('user_id')
+          .in('id', requestIds);
+        if (reqError) console.warn('⚠️ Erreur chargement user_id depuis requests:', reqError);
+        else if (requestsForBuyers) {
+          buyerIdsFromRequests = requestsForBuyers.map(r => r.user_id).filter(Boolean);
+        }
+      }
+
+      const allBuyerIds = [...new Set([...buyerIdsFromTransactions, ...buyerIdsFromRequests])];
+      
+      console.log('👤 [VENDEUR] IDs acheteurs à charger:', allBuyerIds);
+
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
         .select('id, first_name, last_name, email, phone, full_name')
-        .in('id', buyerIds);
+        .in('id', allBuyerIds);
       
       if (profilesError) {
         console.warn('⚠️ [VENDEUR] Erreur chargement profiles:', profilesError);
       } else {
         console.log('✅ [VENDEUR] Profiles chargés:', profilesData?.length, 'records');
-        profilesData?.slice(0, 3).forEach(p => {
-          console.log(`   - ${p.id}: ${p.first_name} ${p.last_name} (${p.email})`);
-        });
       }
 
-      // FIX #1: Charger les purchase_cases pour savoir lesquels sont acceptés
+  // FIX #1: Charger les purchase_cases pour savoir lesquels sont acceptés
       // Les purchase_cases sont liés aux transactions par request_id
       console.log('📋 [VENDEUR] Chargement des purchase_cases...');
       const transactionRequestIds = transactionsData
@@ -610,6 +665,20 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         console.log('✅ [VENDEUR] Purchase cases trouvées:', purchaseCases?.length);
       }
 
+      // Also fetch requests for transactionRequestIds to access user_id (buyer) when needed
+      const requestByIdMap = {};
+      if (transactionRequestIds.length > 0) {
+        const { data: reqRows, error: reqRowsError } = await supabase
+          .from('requests')
+          .select('id, user_id')
+          .in('id', transactionRequestIds);
+        if (!reqRowsError && reqRows) {
+          reqRows.forEach(r => { requestByIdMap[r.id] = r.user_id; });
+        } else if (reqRowsError) {
+          console.warn('⚠️ [VENDEUR] Erreur chargement requests supérieurs:', reqRowsError);
+        }
+      }
+
       // Créer une map: transaction.id -> case_info
       // Key: transaction ID, Value: case info
       const requestCaseMap = {};
@@ -627,7 +696,10 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
 
       // Transformer les transactions
       const enrichedRequests = transactionsData.map(transaction => {
-        const buyer = profilesData?.find(p => p.id === transaction.buyer_id);
+        // FIX: Utiliser la map des requests pour trouver le user_id (acheteur)
+        const requestForTx = requestByIdMap[transaction.request_id];
+        const resolvedBuyerId = transaction.buyer_id || requestForTx?.user_id;
+        const buyer = profilesData?.find(p => p.id === resolvedBuyerId);
         const parcel = parcelsData?.find(p => p.id === transaction.parcel_id);
         const buyerInfo = transaction.buyer_info || {};
         
@@ -644,7 +716,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         return {
           id: transaction.id,
           request_id: transaction.request_id,
-          user_id: transaction.buyer_id,
+          user_id: resolvedBuyerId, // Utiliser l'ID résolu
           parcel_id: transaction.parcel_id,
           status: effectiveStatus,
           created_at: transaction.created_at,
@@ -657,13 +729,13 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
           buyer_info: buyerInfo,
           // ✅ IMPROVED: Try multiple sources for buyer name
           buyer_name: 
-            buyerInfo?.full_name ||
             (buyer?.first_name && buyer?.last_name ? `${buyer.first_name} ${buyer.last_name}` : null) ||
             (buyer?.full_name) ||
+            buyerInfo?.full_name ||
             (buyerInfo?.name) ||
             'Acheteur',
-          buyer_email: buyerInfo.email || buyer?.email || '',
-          buyer_phone: buyerInfo.phone || buyer?.phone || '',
+          buyer_email: buyer?.email || buyerInfo.email || '',
+          buyer_phone: buyer?.phone || buyerInfo.phone || '',
           parcels: parcel,
           properties: parcel,
           profiles: buyer,
@@ -1094,7 +1166,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                           <div className="flex gap-2 flex-wrap">
                             <Button 
                               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl"
-                              onClick={() => handleAccept(request.id)}
+                              onClick={() => handleAccept(request.request_id || request.id)}
                               disabled={actionLoading === request.id}
                             >
                               <CheckCircle2 className="w-4 h-4 mr-2" />
@@ -1112,7 +1184,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                             <Button 
                               variant="outline" 
                               className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
-                              onClick={() => handleReject(request.id)}
+                              onClick={() => handleReject(request.request_id || request.id)}
                               disabled={actionLoading === request.id}
                             >
                               <XCircle className="w-4 h-4 mr-2" />
@@ -1135,7 +1207,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                             </Button>
                             <Button 
                               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl"
-                              onClick={() => handleAccept(request.id)}
+                              onClick={() => handleAccept(request.request_id || request.id)}
                               disabled={actionLoading === request.id}
                             >
                               <CheckCircle2 className="w-4 h-4 mr-2" />

@@ -137,7 +137,7 @@ const MyFavoritesPage = () => {
     setLoading(true);
     setError(null);
         const { data: profile, error: profileError } = await supabase
-          .from('users')
+          .from('profiles')
       .select('favorites')
       .eq('id', user.id)
       .single();
@@ -169,7 +169,7 @@ const MyFavoritesPage = () => {
   const handleRemoveFavorite = async (parcelIdToRemove) => {
      if (!user) return;
      const currentFavs = favoriteParcels.map(p => p.id).filter(id => id !== parcelIdToRemove);
-  const { error } = await supabase.from('users').update({ favorites: currentFavs }).eq('id', user.id);
+  const { error } = await supabase.from('profiles').update({ favorites: currentFavs }).eq('id', user.id);
      
      if (error) {
         window.safeGlobalToast({ title: "Erreur", description: "Impossible de retirer la parcelle des favoris.", variant: "destructive" });

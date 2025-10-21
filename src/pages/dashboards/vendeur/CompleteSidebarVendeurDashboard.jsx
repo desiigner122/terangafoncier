@@ -486,8 +486,8 @@ const CompleteSidebarVendeurDashboard = () => {
     console.log('📍 [RENDER] User disponible:', user ? `✅ ID: ${user.id}` : '❌ undefined');
     
     // Vérifier si c'est une route dynamique avec paramètres
-    if (activeTab.includes('edit-property')) {
-      console.log('📍 [RENDER] Route dynamique détectée (edit-property), rendu via <Outlet />');
+    if (activeTab.includes('edit-property') || activeTab.includes('cases')) {
+      console.log('📍 [RENDER] Route dynamique détectée (edit-property ou cases), rendu via <Outlet />');
       return <Outlet />;
     }
     

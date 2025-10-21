@@ -61,39 +61,56 @@ const VendeurMessagesRealData = () => {
       
       // Charger vraies conversations vendeur depuis Supabase
       // Note: conversations utilise participant1_id et participant2_id, pas buyer_id
+      // Query without foreign key relationships to avoid PGRST200 error
       const { data: conversationsData, error } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          profiles!participant1_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            avatar_url
-          ),
-          properties!property_id(
-            id,
-            title,
-            reference
-          )
-        `)
+        .select('*')
         .eq('participant2_id', user.id)
         .eq('is_archived_by_p2', false)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
+      // Fetch participant profiles separately
+      const participantIds = conversationsData?.map(c => c.participant1_id).filter(Boolean) || [];
+      const propertyIds = conversationsData?.map(c => c.property_id).filter(Boolean) || [];
+
+      let profilesMap = {};
+      let propertiesMap = {};
+
+      if (participantIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email, avatar_url')
+          .in('id', participantIds);
+        
+        profiles?.forEach(p => {
+          profilesMap[p.id] = p;
+        });
+      }
+
+      if (propertyIds.length > 0) {
+        const { data: properties } = await supabase
+          .from('properties')
+          .select('id, title, reference')
+          .in('id', propertyIds);
+        
+        properties?.forEach(p => {
+          propertiesMap[p.id] = p;
+        });
+      }
+
       // Mapper les données: participant1_id devient 'profiles' (le participant1)
       const formattedConversations = (conversationsData || []).map(conv => {
-        const participant = conv.profiles || {};
+        const participant = profilesMap[conv.participant1_id] || {};
+        const property = propertiesMap[conv.property_id] || {};
         return {
           id: conv.id,
           buyer_name: `${participant?.first_name || ''} ${participant?.last_name || ''}`.trim() || 'Utilisateur',
           buyer_email: participant?.email || '',
           buyer_avatar: participant?.avatar_url,
-          property_title: conv.properties?.title || 'Propriété',
-          property_id: conv.properties?.reference || '',
+          property_title: property?.title || 'Propriété',
+          property_id: property?.reference || '',
           last_message: conv.last_message_preview || '',
           last_message_time: conv.updated_at,
           unread_count: conv.unread_count_p2 || 0,

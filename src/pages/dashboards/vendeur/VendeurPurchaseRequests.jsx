@@ -509,43 +509,184 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
 
   const handleContact = async (request) => {
     try {
-      console.log('💬 [CONTACT] Création d\'un nouveau message pour:', request.buyer_name);
-      
-      // Construire le message avec contenu garanti
-      const messageBody = `Bonjour ${request.buyer_name || 'Acheteur'},\n\nJe vous contacte au sujet de votre demande d'achat concernant la parcelle "${request.parcels?.title || ''}".\n\nCordialement,\n`;
-      
-      // Créer un nouveau message avec validation des données
-      const messageData = {
-        sender_id: user.id,
-        recipient_id: request.user_id,
-        subject: `Suite à votre demande d'achat - ${request.parcels?.title || 'Propriété'}`,
-        message: messageBody && messageBody.trim() ? messageBody.trim() : 'Message',  // Utilise 'message' au lieu de 'body'
-        is_read: false,
-        created_at: new Date().toISOString()
-      };
-      
-      console.log('📝 Données du message:', messageData);
-      
-      // Créer un nouveau message
-      const { data: newMsg, error } = await supabase
-        .from('messages')
-        .insert([messageData])
-        .select()
-        .single();
+      console.log('💬 [CONTACT] Initialisation conversation avec:', request.buyer_name, request.id);
 
-      if (error) {
-        console.error('❌ Erreur création message:', error);
-        toast.error('Impossible de créer le message');
+      if (!user?.id || !request?.user_id) {
+        toast.error('Informations utilisateur manquantes pour créer la conversation');
         return;
       }
 
-      console.log('✅ Message créé:', newMsg.id);
-      toast.success(`📧 Message créé pour ${request.buyer_name}`);
-      
-      // Rediriger vers les messages
-      navigate('/vendeur/messages');
+      const buyerId = request.user_id;
+      const sellerId = user.id;
+      const propertyId = request.parcel_id || request.parcels?.id || null;
+      const propertyTitle = request.parcels?.title || request.parcels?.name || 'Propriété';
+      const subject = `Demande d'achat - ${propertyTitle}`;
+      const messageBody = `Bonjour ${request.buyer_name || 'Acheteur'},\n\nJe vous contacte au sujet de votre demande d'achat concernant la parcelle "${propertyTitle}".\n\nCordialement,\n`;
+
+      const isSchemaMismatch = (error) => {
+        if (!error) return false;
+        const code = error.code || error?.details?.code;
+        const message = error.message || '';
+        return code === '42703' || code === '42P01' || message.includes('does not exist') || message.includes('relation') || message.includes('column');
+      };
+
+      const startConversationFlow = async () => {
+        let conversation = null;
+
+        let baseQuery = supabase
+          .from('conversations')
+          .select('*')
+          .eq('vendor_id', sellerId)
+          .eq('buyer_id', buyerId);
+
+        if (propertyId) {
+          baseQuery = baseQuery.eq('property_id', propertyId);
+        } else {
+          baseQuery = baseQuery.is('property_id', null);
+        }
+
+        const { data: existingConversation, error: fetchError } = await baseQuery.maybeSingle();
+
+        if (fetchError) {
+          if (isSchemaMismatch(fetchError)) {
+            return { status: 'schema_mismatch' };
+          }
+          return { status: 'error', error: fetchError };
+        }
+
+        conversation = existingConversation;
+
+        if (!conversation) {
+          const newConversationPayload = {
+            vendor_id: sellerId,
+            buyer_id: buyerId,
+            subject,
+            status: 'active'
+          };
+
+          if (propertyId) {
+            newConversationPayload.property_id = propertyId;
+          }
+
+          const { data: newConversation, error: insertError } = await supabase
+            .from('conversations')
+            .insert(newConversationPayload)
+            .select()
+            .single();
+
+          if (insertError) {
+            if (!isSchemaMismatch(insertError)) {
+              return { status: 'error', error: insertError };
+            }
+
+            const fallbackPayload = {
+              subject,
+              participant_ids: [sellerId, buyerId],
+              metadata: {
+                request_id: request.id,
+                case_number: request.caseNumber || null,
+                initiated_by: 'seller'
+              }
+            };
+
+            if (propertyId) {
+              fallbackPayload.property_id = propertyId;
+            }
+
+            const { data: fallbackConversation, error: fallbackError } = await supabase
+              .from('conversations')
+              .insert(fallbackPayload)
+              .select()
+              .single();
+
+            if (fallbackError) {
+              if (isSchemaMismatch(fallbackError)) {
+                return { status: 'schema_mismatch' };
+              }
+              return { status: 'error', error: fallbackError };
+            }
+
+            conversation = fallbackConversation;
+          } else {
+            conversation = newConversation;
+          }
+        }
+
+        if (!conversation) {
+          return { status: 'error', error: new Error('Conversation non disponible') };
+        }
+
+        const { error: messageError } = await supabase
+          .from('conversation_messages')
+          .insert({
+            conversation_id: conversation.id,
+            sender_id: sellerId,
+            content: messageBody.trim(),
+            metadata: {
+              auto_generated: true,
+              request_id: request.id
+            }
+          });
+
+        if (messageError) {
+          if (isSchemaMismatch(messageError)) {
+            return { status: 'schema_mismatch', conversation };
+          }
+          return { status: 'error', error: messageError };
+        }
+
+        return { status: 'success', conversation };
+      };
+
+      const sendLegacyMessage = async () => {
+        console.warn('ℹ️ [CONTACT] Bascule vers la messagerie legacy (table messages)');
+        const legacyData = {
+          sender_id: sellerId,
+          recipient_id: buyerId,
+          subject,
+          message: messageBody.trim() || 'Message',
+          is_read: false,
+          created_at: new Date().toISOString()
+        };
+
+        const { data: newMsg, error: legacyError } = await supabase
+          .from('messages')
+          .insert([legacyData])
+          .select()
+          .single();
+
+        if (legacyError) {
+          console.error('❌ [CONTACT] Erreur messagerie legacy:', legacyError);
+          toast.error('Impossible de créer le message');
+          return;
+        }
+
+        console.log('✅ [CONTACT] Message legacy créé:', newMsg?.id);
+        toast.success(`📧 Message créé pour ${request.buyer_name || 'l\'acheteur'}`);
+        navigate('/vendeur/messages');
+      };
+
+      const result = await startConversationFlow();
+
+      if (result.status === 'success' && result.conversation) {
+        console.log('✅ [CONTACT] Conversation prête:', result.conversation.id);
+        toast.success(`💬 Conversation prête avec ${request.buyer_name || 'l\'acheteur'}`);
+        navigate(`/vendeur/messages?conversation=${result.conversation.id}`);
+        return;
+      }
+
+      if (result.status === 'schema_mismatch') {
+        await sendLegacyMessage();
+        return;
+      }
+
+      if (result.status === 'error') {
+        console.error('❌ [CONTACT] Erreur conversation:', result.error);
+        toast.error('Impossible de créer la conversation');
+        return;
+      }
     } catch (error) {
-      console.error('❌ Erreur:', error);
+      console.error('❌ [CONTACT] Erreur inattendue:', error);
       toast.error('Erreur lors de la création du message');
     }
   };

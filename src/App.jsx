@@ -297,6 +297,8 @@ import VendeurCaseTracking from '@/pages/dashboards/vendeur/VendeurCaseTracking'
 import ParticulierCaseTracking from '@/pages/dashboards/particulier/ParticulierCaseTracking';
 import RefactoredParticulierCaseTracking from '@/pages/dashboards/particulier/RefactoredParticulierCaseTracking';
 import ModernBuyerCaseTracking from '@/pages/dashboards/particulier/ModernBuyerCaseTracking';
+import ModernBuyerCaseTrackingV2 from '@/pages/dashboards/particulier/ModernBuyerCaseTrackingV2';
+import ParticulierMesAchatsRefactored from '@/pages/dashboards/particulier/ParticulierMesAchatsRefactored';
 import RefactoredVendeurCaseTracking from '@/pages/dashboards/vendeur/RefactoredVendeurCaseTracking';
 import VendeurAntiFraudeRealData from '@/pages/dashboards/vendeur/VendeurAntiFraudeRealData';
 import VendeurGPSRealData from '@/pages/dashboards/vendeur/VendeurGPSRealData';
@@ -543,8 +545,8 @@ function App() {
                   <Route path="recherche" element={<ParticulierRechercheTerrain />} />
                   <Route path="favoris" element={<ParticulierFavoris />} />
                   <Route path="offres" element={<ParticulierMesOffres />} />
-                  <Route path="mes-achats" element={<ParticulierMesAchats />} />
-                  <Route path="cases/:caseNumber" element={<ModernBuyerCaseTracking />} />
+                  <Route path="mes-achats" element={<ParticulierMesAchatsRefactored />} />
+                  <Route path="cases/:caseNumber" element={<ModernBuyerCaseTrackingV2 />} />
                   <Route path="visites" element={<ParticulierVisites />} />
                   <Route path="financement" element={<ParticulierFinancement />} />
                   <Route path="zones-communales" element={<ParticulierZonesCommunales />} />

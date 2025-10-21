@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, Send, Search, Filter, MoreVertical,
@@ -19,6 +20,7 @@ import { toast } from 'sonner';
 
 const VendeurMessagesRealData = () => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   
@@ -43,6 +45,17 @@ const VendeurMessagesRealData = () => {
     }
   }, [user]);
 
+  // Sélectionner conversation si paramètre query présent
+  useEffect(() => {
+    const conversationId = searchParams.get('conversation');
+    if (conversationId && conversations.length > 0) {
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        setSelectedConversation(conversation);
+      }
+    }
+  }, [searchParams, conversations]);
+
   // Charger messages quand conversation sélectionnée
   useEffect(() => {
     if (selectedConversation) {
@@ -60,29 +73,28 @@ const VendeurMessagesRealData = () => {
       setLoading(true);
       
       // Charger vraies conversations vendeur depuis Supabase
-      // Note: conversations utilise participant1_id et participant2_id, pas buyer_id
-      // Query without foreign key relationships to avoid PGRST200 error
+      // Conversations utilise vendor_id et buyer_id (vendeur = participant2, acheteur = participant1)
       const { data: conversationsData, error } = await supabase
         .from('conversations')
         .select('*')
-        .eq('participant2_id', user.id)
-        .eq('is_archived_by_p2', false)
+        .eq('vendor_id', user.id)
+        .eq('is_archived_vendor', false)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
-      // Fetch participant profiles separately
-      const participantIds = conversationsData?.map(c => c.participant1_id).filter(Boolean) || [];
+      // Fetch buyer profiles separately
+      const buyerIds = conversationsData?.map(c => c.buyer_id).filter(Boolean) || [];
       const propertyIds = conversationsData?.map(c => c.property_id).filter(Boolean) || [];
 
       let profilesMap = {};
       let propertiesMap = {};
 
-      if (participantIds.length > 0) {
+      if (buyerIds.length > 0) {
         const { data: profiles } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, email, avatar_url')
-          .in('id', participantIds);
+          .in('id', buyerIds);
         
         profiles?.forEach(p => {
           profilesMap[p.id] = p;
@@ -100,22 +112,22 @@ const VendeurMessagesRealData = () => {
         });
       }
 
-      // Mapper les données: participant1_id devient 'profiles' (le participant1)
+      // Mapper les données: buyer_id est l'acheteur
       const formattedConversations = (conversationsData || []).map(conv => {
-        const participant = profilesMap[conv.participant1_id] || {};
+        const buyer = profilesMap[conv.buyer_id] || {};
         const property = propertiesMap[conv.property_id] || {};
         return {
           id: conv.id,
-          buyer_name: `${participant?.first_name || ''} ${participant?.last_name || ''}`.trim() || 'Utilisateur',
-          buyer_email: participant?.email || '',
-          buyer_avatar: participant?.avatar_url,
+          buyer_name: `${buyer?.first_name || ''} ${buyer?.last_name || ''}`.trim() || 'Utilisateur',
+          buyer_email: buyer?.email || '',
+          buyer_avatar: buyer?.avatar_url,
           property_title: property?.title || 'Propriété',
           property_id: property?.reference || '',
           last_message: conv.last_message_preview || '',
           last_message_time: conv.updated_at,
-          unread_count: conv.unread_count_p2 || 0,
-          is_pinned: conv.is_pinned_by_p2 || false,
-          is_archived: conv.is_archived_by_p2 || false,
+          unread_count: conv.unread_count_vendor || 0,
+          is_pinned: conv.is_pinned_vendor || false,
+          is_archived: conv.is_archived_vendor || false,
           status: 'active'
         };
       });

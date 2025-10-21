@@ -45,6 +45,7 @@ import {
   Mail,
   User,
   Briefcase,
+  Scale,
   Zap,
 } from 'lucide-react';
 

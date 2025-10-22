@@ -30,6 +30,7 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { WorkflowActionButton } from '@/components/workflow/WorkflowActionButton';
 import {
   AlertCircle,
   ArrowLeft,
@@ -543,6 +544,13 @@ const ModernBuyerCaseTrackingV2 = () => {
             </div>
           </CardContent>
         </Card>
+
+        {/* WORKFLOW ACTION BUTTON */}
+        <WorkflowActionButton 
+          caseData={caseData} 
+          userRole="buyer" 
+          onActionComplete={() => loadCaseData()}
+        />
 
         {/* TABS */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">

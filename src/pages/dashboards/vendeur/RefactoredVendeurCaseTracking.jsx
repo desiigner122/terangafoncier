@@ -24,6 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Textarea } from '@/components/ui/textarea';
+import { WorkflowActionButton } from '@/components/workflow/WorkflowActionButton';
 import {
   AlertCircle,
   ArrowLeft,
@@ -340,11 +341,19 @@ const RefactoredVendeurCaseTracking = () => {
       </motion.div>
 
       <div className="max-w-7xl mx-auto px-6 py-10 space-y-8">
-        {isDecisionPending && (
+        {/* WORKFLOW ACTION BUTTON */}
+        <WorkflowActionButton 
+          caseData={caseData} 
+          userRole="seller" 
+          onActionComplete={() => loadCaseData()}
+        />
+
+        {/* OLD ACCEPT/DECLINE BUTTON - Keeping for backward compatibility if seller_status is pending */}
+        {isDecisionPending && caseData.status === 'seller_notification' && (
           <Card className="border-yellow-200 bg-yellow-50">
             <CardContent className="py-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
               <div>
-                <h3 className="text-lg font-semibold text-yellow-900">Décision requise</h3>
+                <h3 className="text-lg font-semibold text-yellow-900">Décision requise (seller_status)</h3>
                 <p className="text-sm text-yellow-800">Confirmez ou refusez cette demande</p>
               </div>
               <div className="flex gap-3">

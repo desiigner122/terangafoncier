@@ -142,11 +142,13 @@ const ModernBuyerCaseTrackingV2 = () => {
       setLoading(true);
 
       // Load case
-      const { data: purchaseCase } = await supabase
+      const { data: purchaseCase, error: caseError } = await supabase
         .from('purchase_cases')
         .select('*')
         .eq('case_number', caseNumber)
         .maybeSingle();
+
+      if (caseError) throw caseError;
 
       if (!purchaseCase) {
         toast.error('Dossier non trouvé');
@@ -162,63 +164,203 @@ const ModernBuyerCaseTrackingV2 = () => {
           .from('parcels')
           .select('*')
           .eq('id', purchaseCase.parcelle_id)
-          .single();
+          .maybeSingle();
         setPropertyData(property);
       }
 
-      // Load participants
-      const participantIds = {
-        buyer: purchaseCase.buyer_id,
-        seller: purchaseCase.seller_id,
-        notary: purchaseCase.notary_id,
-        geometre: purchaseCase.geometre_id,
-        agent: purchaseCase.agent_foncier_id,
+      // Base participants map
+      const participantMap = {
+        buyer: null,
+        seller: null,
+        notary: null,
+        geometre: null,
+        agent: null,
       };
 
-      const newParticipants = {};
-      for (const [role, profileId] of Object.entries(participantIds)) {
-        if (profileId) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('id', profileId)
-            .single();
-          newParticipants[role] = profile;
+      // Buyer profile
+      if (purchaseCase.buyer_id) {
+        const { data: buyerProfile } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email, phone, avatar_url')
+          .eq('id', purchaseCase.buyer_id)
+          .maybeSingle();
+        participantMap.buyer = buyerProfile || null;
+      }
+
+      // Seller profile
+      if (purchaseCase.seller_id) {
+        const { data: sellerProfile } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email, phone, avatar_url')
+          .eq('id', purchaseCase.seller_id)
+          .maybeSingle();
+        participantMap.seller = sellerProfile || null;
+      }
+
+      // Additional participants via dedicated table(s)
+      const participantSources = [
+        {
+          table: 'purchase_case_participants',
+          select:
+            'role, user_id, profiles:user_id(id, first_name, last_name, email, phone, avatar_url)',
+        },
+        {
+          table: 'case_participants',
+          select:
+            'role, profile_id, profiles:profile_id(id, first_name, last_name, email, phone, avatar_url)',
+        },
+      ];
+
+      let participantRows = [];
+      for (const source of participantSources) {
+        const { data, error } = await supabase
+          .from(source.table)
+          .select(source.select)
+          .eq('case_id', purchaseCase.id);
+
+        if (!error) {
+          participantRows = data || [];
+          break;
         }
       }
-      setParticipants(newParticipants);
 
-      // Load documents
-      const { data: docs } = await supabase
-        .from('documents')
-        .select('*')
-        .eq('case_id', purchaseCase.id)
-        .order('created_at', { ascending: false });
-      setDocuments(docs || []);
+      const roleMap = {
+        buyer: 'buyer',
+        acheteur: 'buyer',
+        seller: 'seller',
+        vendeur: 'seller',
+        notary: 'notary',
+        notaire: 'notary',
+        geometre: 'geometre',
+        surveyor: 'geometre',
+        agent: 'agent',
+        agent_foncier: 'agent',
+        'agent foncier': 'agent',
+      };
 
-      // Load messages
-      const { data: msgs } = await supabase
-        .from('conversation_messages')
-        .select('*, sender:sender_id(first_name, last_name, avatar_url)')
-        .eq('case_id', purchaseCase.id)
-        .order('created_at', { ascending: true });
-      setMessages(msgs || []);
+      participantRows.forEach((row) => {
+        const normalizedRole = roleMap[(row.role || '').toLowerCase()];
+        if (!normalizedRole) return;
+        const profile = row.profiles || null;
+        if (profile) {
+          participantMap[normalizedRole] = profile;
+        }
+      });
 
-      // Load tasks
-      const { data: tasksList } = await supabase
-        .from('case_tasks')
-        .select('*')
-        .eq('case_id', purchaseCase.id)
-        .order('due_date', { ascending: true });
-      setTasks(tasksList || []);
+      setParticipants(participantMap);
 
-      // Load payments
-      const { data: paymentsList } = await supabase
-        .from('case_payments')
-        .select('*')
-        .eq('case_id', purchaseCase.id)
-        .order('created_at', { ascending: false });
-      setPayments(paymentsList || []);
+      // Load documents with fallback
+      let documentsData = [];
+      const documentQueries = [
+        () =>
+          supabase
+            .from('purchase_case_documents')
+            .select('*')
+            .eq('case_id', purchaseCase.id)
+            .order('created_at', { ascending: false }),
+        () =>
+          supabase
+            .from('case_documents')
+            .select('*')
+            .eq('case_id', purchaseCase.id)
+            .order('created_at', { ascending: false }),
+      ];
+
+      for (const query of documentQueries) {
+        const { data, error } = await query();
+        if (!error) {
+          documentsData = data || [];
+          break;
+        }
+      }
+      setDocuments(documentsData);
+
+      // Load messages with fallback
+      let messagesData = [];
+      const messageQueries = [
+        () =>
+          supabase
+            .from('purchase_case_messages')
+            .select('*')
+            .eq('case_id', purchaseCase.id)
+            .order('created_at', { ascending: true }),
+        () =>
+          supabase
+            .from('case_messages')
+            .select('*')
+            .eq('case_id', purchaseCase.id)
+            .order('created_at', { ascending: true }),
+        () =>
+          supabase
+            .from('conversation_messages')
+            .select('*')
+            .eq('case_id', purchaseCase.id)
+            .order('created_at', { ascending: true }),
+      ];
+
+      for (const query of messageQueries) {
+        const { data, error } = await query();
+        if (!error) {
+          messagesData = data || [];
+          break;
+        }
+      }
+
+      if (messagesData.length > 0) {
+        const senderField = messagesData[0].sent_by
+          ? 'sent_by'
+          : messagesData[0].sender_id
+          ? 'sender_id'
+          : null;
+
+        if (senderField) {
+          const senderIds = Array.from(
+            new Set(messagesData.map((msg) => msg[senderField]).filter(Boolean))
+          );
+
+          if (senderIds.length > 0) {
+            const { data: senderProfiles } = await supabase
+              .from('profiles')
+              .select('id, first_name, last_name, email, avatar_url')
+              .in('id', senderIds);
+
+            const senderMap = {};
+            senderProfiles?.forEach((profile) => {
+              senderMap[profile.id] = profile;
+            });
+
+            messagesData = messagesData.map((msg) => {
+              const senderId = senderField === 'sent_by' ? msg.sent_by : msg.sender_id;
+              return {
+                ...msg,
+                sender_id: senderId,
+                sender: senderMap[senderId] || null,
+                content: msg.content || msg.message || msg.text || msg.body || '',
+              };
+            });
+          } else {
+            messagesData = messagesData.map((msg) => ({
+              ...msg,
+              sender_id: senderField === 'sent_by' ? msg.sent_by : msg.sender_id,
+              sender: null,
+              content: msg.content || msg.message || msg.text || msg.body || '',
+            }));
+          }
+        } else {
+          messagesData = messagesData.map((msg) => ({
+            ...msg,
+            sender_id: msg.sender_id || msg.sent_by || null,
+            sender: null,
+            content: msg.content || msg.message || msg.text || msg.body || '',
+          }));
+        }
+      }
+
+      setMessages(messagesData);
+
+      // Tasks & payments (not yet available on current schema)
+      setTasks([]);
+      setPayments([]);
 
       console.log('✅ Case data loaded');
     } catch (error) {
@@ -230,24 +372,61 @@ const ModernBuyerCaseTrackingV2 = () => {
   };
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim()) return;
+    if (!newMessage.trim() || !caseData?.id || !user?.id) return;
 
     try {
       setSendingMessage(true);
-      const { error } = await supabase
-        .from('conversation_messages')
-        .insert({
-          case_id: caseData.id,
-          sender_id: user.id,
-          sender_type: 'buyer',
-          content: newMessage.trim(),
-          created_at: new Date().toISOString(),
-        });
 
-      if (error) throw error;
+      const messageAttempts = [
+        {
+          table: 'purchase_case_messages',
+          payload: {
+            case_id: caseData.id,
+            sent_by: user.id,
+            message: newMessage.trim(),
+            created_at: new Date().toISOString(),
+          },
+        },
+        {
+          table: 'case_messages',
+          payload: {
+            case_id: caseData.id,
+            sender_id: user.id,
+            content: newMessage.trim(),
+            created_at: new Date().toISOString(),
+          },
+        },
+        {
+          table: 'conversation_messages',
+          payload: {
+            case_id: caseData.id,
+            sender_id: user.id,
+            content: newMessage.trim(),
+            created_at: new Date().toISOString(),
+          },
+        },
+      ];
+
+      let sent = false;
+      let lastError = null;
+
+      for (const attempt of messageAttempts) {
+        const { error } = await supabase.from(attempt.table).insert(attempt.payload);
+        if (!error) {
+          sent = true;
+          break;
+        }
+        lastError = error;
+        console.warn(`[BUYER CASE] Impossible d\'insérer le message dans ${attempt.table}`, error);
+      }
+
+      if (!sent) {
+        throw lastError || new Error('Impossible d\'enregistrer le message');
+      }
+
       setNewMessage('');
       toast.success('Message envoyé');
-      loadCaseData(); // Reload to get new message
+      loadCaseData();
     } catch (error) {
       console.error('Error sending message:', error);
       toast.error('Erreur lors de l\'envoi du message');
@@ -608,12 +787,20 @@ const ModernBuyerCaseTrackingV2 = () => {
                       <Avatar className="w-8 h-8 flex-shrink-0">
                         <AvatarImage src={msg.sender?.avatar_url} />
                         <AvatarFallback>
-                          {msg.sender?.first_name?.charAt(0)}{msg.sender?.last_name?.charAt(0)}
+                          {msg.sender
+                            ? `${msg.sender.first_name?.charAt(0) || ''}${msg.sender.last_name?.charAt(0) || ''}` || 'M'
+                            : msg.sender_id === user.id
+                            ? 'MOI'
+                            : 'TF'}
                         </AvatarFallback>
                       </Avatar>
                       <div className={msg.sender_id === user.id ? 'text-right' : ''}>
                         <p className="text-xs text-slate-600 mb-1">
-                          {msg.sender?.first_name} {msg.sender?.last_name}
+                          {msg.sender
+                            ? `${msg.sender.first_name || ''} ${msg.sender.last_name || ''}`.trim()
+                            : msg.sender_id === user.id
+                            ? 'Vous'
+                            : 'Collaborateur'}
                         </p>
                         <p
                           className={`px-3 py-2 rounded-lg text-sm ${

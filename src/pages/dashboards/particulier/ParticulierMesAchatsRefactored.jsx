@@ -126,10 +126,8 @@ const ParticulierMesAchatsRefactored = () => {
           seller_id,
           buyer_id,
           parcelle_id,
-          purchase_price,
-          notary_id,
-          geometre_id,
-          agent_foncier_id
+          request_id,
+          purchase_price
         `)
         .eq('buyer_id', user.id)
         .order('updated_at', { ascending: false });
@@ -139,11 +137,7 @@ const ParticulierMesAchatsRefactored = () => {
       // Load related data
       const propertyIds = purchaseCases?.map(c => c.parcelle_id).filter(Boolean) || [];
       const sellerIds = purchaseCases?.map(c => c.seller_id).filter(Boolean) || [];
-      const notaryIds = purchaseCases?.map(c => c.notary_id).filter(Boolean) || [];
-      const geometreIds = purchaseCases?.map(c => c.geometre_id).filter(Boolean) || [];
-      const agentIds = purchaseCases?.map(c => c.agent_foncier_id).filter(Boolean) || [];
-
-      let properties = {}, sellers = {}, notaries = {}, geometres = {}, agents = {};
+  let properties = {}, sellers = {};
 
       // Fetch all related data in parallel
       if (propertyIds.length > 0) {
@@ -162,38 +156,11 @@ const ParticulierMesAchatsRefactored = () => {
         data?.forEach(p => sellers[p.id] = p);
       }
 
-      if (notaryIds.length > 0) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name, email, phone, avatar_url')
-          .in('id', notaryIds);
-        data?.forEach(p => notaries[p.id] = p);
-      }
-
-      if (geometreIds.length > 0) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name, email, phone, avatar_url')
-          .in('id', geometreIds);
-        data?.forEach(p => geometres[p.id] = p);
-      }
-
-      if (agentIds.length > 0) {
-        const { data } = await supabase
-          .from('profiles')
-          .select('id, first_name, last_name, email, phone, avatar_url')
-          .in('id', agentIds);
-        data?.forEach(p => agents[p.id] = p);
-      }
-
       // Enrich cases with related data
       const enrichedCases = purchaseCases.map(c => ({
         ...c,
         property: properties[c.parcelle_id],
         seller: sellers[c.seller_id],
-        notary: notaries[c.notary_id],
-        geometre: geometres[c.geometre_id],
-        agent: agents[c.agent_foncier_id],
       }));
 
       setCases(enrichedCases);
@@ -211,18 +178,18 @@ const ParticulierMesAchatsRefactored = () => {
       // Count documents per case
       const caseIds = purchaseCases.map(c => c.id);
       if (caseIds.length > 0) {
-        const { data: docs } = await supabase
-          .from('purchase_case_documents')
-          .select('case_id', { count: 'exact' })
-          .in('case_id', caseIds);
-        newStats.documents = docs?.length || 0;
+          const { count: docsCount } = await supabase
+            .from('purchase_case_documents')
+            .select('id', { count: 'exact', head: true })
+            .in('case_id', caseIds);
+          newStats.documents = docsCount || 0;
 
         // Count messages per case
-        const { data: msgs } = await supabase
-          .from('purchase_case_messages')
-          .select('case_id', { count: 'exact' })
-          .in('case_id', caseIds);
-        newStats.messages = msgs?.length || 0;
+          const { count: messagesCount } = await supabase
+            .from('purchase_case_messages')
+            .select('id', { count: 'exact', head: true })
+            .in('case_id', caseIds);
+          newStats.messages = messagesCount || 0;
       }
 
       setStats(newStats);

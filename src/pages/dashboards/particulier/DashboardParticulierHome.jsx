@@ -110,31 +110,28 @@ const DashboardParticulierHome = () => {
       }
 
       // Charger les vraies données
-      const [
-        messagesResult,
-        notificationsResult,
-        ticketsResult,
-        demandesResult,
-        documentsResult,
-        favorisResult
-      ] = await Promise.allSettled([
-  supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
-  supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0),
-  supabase.from('support_tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
-  supabase.from('demandes_terrains_communaux').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  supabase.from('user_documents').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  // use the 'favorites' table (English) which is the correct table used across the app
-  // wrap in try/catch via Promise.allSettled in the caller; this just ensures the table name is correct
-  supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
+      const settledResults = await Promise.allSettled([
+        supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
+        supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0),
+        supabase.from('support_tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
+        supabase.from('requests').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
+        supabase.from('purchase_case_documents').select('id', { count: 'exact' }).eq('uploaded_by', user.id).limit(0),
+        supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
       ]);
 
+      const [messagesResult, notificationsResult, ticketsResult, demandesResult, documentsResult, favorisResult] = settledResults.map(result => (
+        result.status === 'fulfilled' ? result.value : { count: 0 }
+      ));
+
+      const getCount = (result) => result?.count ?? result?.data?.length ?? 0;
+
       setStats({
-        messages: messagesResult.value?.count || 0,
-        notifications: notificationsResult.value?.count || 0,
-        tickets: ticketsResult.value?.count || 0,
-        demandes: demandesResult.value?.count || 0,
-        documents: documentsResult.value?.count || 0,
-        favoris: favorisResult.value?.count || 0
+        messages: getCount(messagesResult),
+        notifications: getCount(notificationsResult),
+        tickets: getCount(ticketsResult),
+        demandes: getCount(demandesResult),
+        documents: getCount(documentsResult),
+        favoris: getCount(favorisResult)
       });
 
       // Charger activité récente

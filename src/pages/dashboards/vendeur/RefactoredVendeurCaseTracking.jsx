@@ -134,11 +134,17 @@ const RefactoredVendeurCaseTracking = () => {
       }
 
       if (purchaseCase.buyer_id) {
-        const { data: buyerProfile } = await supabase
+        console.log('🔍 Loading buyer profile for:', purchaseCase.buyer_id);
+        const { data: buyerProfile, error: buyerError } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, email, phone, avatar_url')
           .eq('id', purchaseCase.buyer_id)
           .maybeSingle();
+        if (buyerError) {
+          console.warn('❌ Buyer profile error:', buyerError);
+        } else {
+          console.log('✅ Buyer profile loaded:', buyerProfile);
+        }
         participantMap.buyer = buyerProfile;
       }
 
@@ -157,6 +163,13 @@ const RefactoredVendeurCaseTracking = () => {
         });
       }
       setParticipants(participantMap);
+      console.log('📊 Vendor participants map set:', {
+        seller: participantMap.seller?.first_name,
+        buyer: participantMap.buyer?.first_name,
+        notary: participantMap.notary?.first_name,
+        geometre: participantMap.geometre?.first_name,
+        agent: participantMap.agent?.first_name,
+      });
 
       const { data: docsData } = await supabase
         .from('purchase_case_documents')
@@ -255,7 +268,8 @@ const RefactoredVendeurCaseTracking = () => {
     if (!caseData?.id) return;
     const channel = supabase
       .channel(`seller_case_${caseData.id}`)
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'purchase_cases', filter: `id=eq.${caseData.id}` }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'purchase_cases', filter: `id=eq.${caseData.id}` }, (payload) => {
+        console.log('🔔 Real-time update received:', payload);
         loadCaseData();
       })
       .subscribe();
@@ -291,6 +305,14 @@ const RefactoredVendeurCaseTracking = () => {
   const isDecisionPending = ['pending', '', null, undefined].includes(normalizedSellerStatus);
   const isDecisionAccepted = normalizedSellerStatus === 'accepted';
   const isDecisionDeclined = normalizedSellerStatus === 'declined';
+
+  console.log('🔔 Seller Decision Status:', {
+    raw: caseData.seller_status,
+    normalized: normalizedSellerStatus,
+    isPending: isDecisionPending,
+    isAccepted: isDecisionAccepted,
+    isDeclined: isDecisionDeclined,
+  });
 
   const formattedPrice = formatCurrency(caseData.purchase_price ?? propertyData?.price);
   const createdAt = caseData.created_at ? format(new Date(caseData.created_at), 'dd MMMM yyyy', { locale: fr }) : '—';

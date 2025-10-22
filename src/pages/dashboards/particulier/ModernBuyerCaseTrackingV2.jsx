@@ -125,8 +125,8 @@ const ModernBuyerCaseTrackingV2 = () => {
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'purchase_cases', filter: `id=eq.${caseData.id}` },
-        () => {
-          console.log('🔄 Case update detected');
+        (payload) => {
+          console.log('🔄 Case update detected:', payload);
           loadCaseData();
         }
       )
@@ -189,11 +189,17 @@ const ModernBuyerCaseTrackingV2 = () => {
 
       // Seller profile
       if (purchaseCase.seller_id) {
-        const { data: sellerProfile } = await supabase
+        console.log('🔍 Loading seller profile for:', purchaseCase.seller_id);
+        const { data: sellerProfile, error: sellerError } = await supabase
           .from('profiles')
           .select('id, first_name, last_name, email, phone, avatar_url')
           .eq('id', purchaseCase.seller_id)
           .maybeSingle();
+        if (sellerError) {
+          console.warn('❌ Seller profile error:', sellerError);
+        } else {
+          console.log('✅ Seller profile loaded:', sellerProfile);
+        }
         participantMap.seller = sellerProfile || null;
       }
 
@@ -248,6 +254,13 @@ const ModernBuyerCaseTrackingV2 = () => {
       });
 
       setParticipants(participantMap);
+      console.log('📊 Participants map set:', {
+        buyer: participantMap.buyer?.first_name,
+        seller: participantMap.seller?.first_name,
+        notary: participantMap.notary?.first_name,
+        geometre: participantMap.geometre?.first_name,
+        agent: participantMap.agent?.first_name,
+      });
 
       // Load documents with fallback
       let documentsData = [];
@@ -641,6 +654,7 @@ const ModernBuyerCaseTrackingV2 = () => {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               {participantRoles.map((role) => {
                 const participant = participants[role.key];
+                console.log(`🧑 Rendering ${role.key}:`, participant ? `${participant.first_name} ${participant.last_name}` : 'NOT LOADED');
                 return (
                   <Card key={role.key}>
                     <CardHeader>

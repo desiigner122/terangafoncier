@@ -22,40 +22,31 @@ export const useUnreadCounts = () => {
 
     try {
       // Messages non lus depuis purchase_case_messages
-      // Try both recipient_id and sender_id patterns
+      // La table a: case_id, sent_by, message, read_at
+      // Pour compter les messages NON LUS pour l'utilisateur:
+      // 1. Trouver tous les cas où l'utilisateur participe (buyer_id ou seller_id)
+      // 2. Compter les messages dans ces cas où sent_by != user.id ET read_at IS NULL
+      
       let messagesCount = 0;
       
-      // Try with recipient_id first (if column exists)
-      const { count: count1, error: error1 } = await supabase
-        .from('purchase_case_messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .is('read_at', null);
-
-      if (!error1) {
-        messagesCount = count1 || 0;
-      } else if (error1.code !== '42703') { // 42703 = column does not exist
-        console.warn('Error loading messages count (recipient_id):', error1);
-      }
+      // Get user's cases first
+      const { data: userCases, error: casesError } = await supabase
+        .from('purchase_cases')
+        .select('id')
+        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
       
-      // If recipient_id doesn't exist, count all messages in user's cases
-      if (error1?.code === '42703') {
-        // Get user's cases first
-        const { data: userCases } = await supabase
-          .from('purchase_cases')
-          .select('id')
-          .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+      if (!casesError && userCases && userCases.length > 0) {
+        const caseIds = userCases.map(c => c.id);
         
-        if (userCases && userCases.length > 0) {
-          const caseIds = userCases.map(c => c.id);
-          const { count: caseMessagesCount } = await supabase
-            .from('purchase_case_messages')
-            .select('*', { count: 'exact', head: true })
-            .in('case_id', caseIds)
-            .is('read_at', null);
-          
-          messagesCount = caseMessagesCount || 0;
-        }
+        // Count unread messages in these cases that were NOT sent by current user
+        const { count: caseMessagesCount } = await supabase
+          .from('purchase_case_messages')
+          .select('*', { count: 'exact', head: true })
+          .in('case_id', caseIds)
+          .neq('sent_by', user.id)
+          .is('read_at', null);
+        
+        messagesCount = caseMessagesCount || 0;
       }
 
       setUnreadMessagesCount(messagesCount);

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   Settings,
@@ -42,55 +43,181 @@ import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { toast } from 'react-hot-toast';
 
 const ParticulierSettings = () => {
+  const { user, profile } = useAuth();
+  const outletContext = useOutletContext();
+  
   const [theme, setTheme] = useState('light');
   const [language, setLanguage] = useState('fr');
   const [showPassword, setShowPassword] = useState(false);
-  const [twoFactorEnabled, setTwoFactorEnabled] = useState(true);
+  const [twoFactorEnabled, setTwoFactorEnabled] = useState(false);
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [pushNotifications, setPushNotifications] = useState(true);
   const [marketingEmails, setMarketingEmails] = useState(false);
-  const [profileCompletion, setProfileCompletion] = useState(85);
+  const [profileCompletion, setProfileCompletion] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [userProfile, setUserProfile] = useState(null);
+  const [securityLogs, setSecurityLogs] = useState([]);
 
-  // Données utilisateur
-  const userProfile = {
-    name: "Amadou Diallo",
-    email: "amadou.diallo@email.com",
-    phone: "+221 77 123 45 67",
-    avatar: "/api/placeholder/100/100",
-    joinDate: "2024-01-15",
-    lastLogin: "2024-03-20 10:30",
-    accountType: "Particulier Premium",
-    propertiesViewed: 127,
-    favoritesSaved: 23,
-    messagesExchanged: 156
+  useEffect(() => {
+    if (user?.id) {
+      loadUserSettings();
+      loadSecurityLogs();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const loadUserSettings = async () => {
+    try {
+      setLoading(true);
+
+      // Charger le profil utilisateur depuis Supabase
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', user.id)
+        .single();
+
+      if (profileError && profileError.code !== 'PGRST116') {
+        throw profileError;
+      }
+
+      // Construire le profil avec les données disponibles
+      const loadedProfile = {
+        name: profileData?.full_name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Utilisateur',
+        email: user?.email || '',
+        phone: profileData?.phone || profile?.phone || '',
+        avatar: profileData?.avatar_url || user?.user_metadata?.avatar_url || null,
+        joinDate: user?.created_at ? new Date(user.created_at).toLocaleDateString('fr-FR') : '',
+        lastLogin: profileData?.last_sign_in_at ? new Date(profileData.last_sign_in_at).toLocaleDateString('fr-FR') : 'Aujourd\'hui',
+        accountType: profileData?.account_type || profile?.role || 'Particulier',
+        propertiesViewed: profileData?.properties_viewed || 0,
+        favoritesSaved: profileData?.favorites_count || 0,
+        messagesExchanged: profileData?.messages_count || 0
+      };
+
+      setUserProfile(loadedProfile);
+
+      // Charger les préférences
+      const preferences = profileData?.preferences || {};
+      setTheme(preferences.theme || 'light');
+      setLanguage(preferences.language || 'fr');
+      setEmailNotifications(preferences.email_notifications !== false);
+      setPushNotifications(preferences.push_notifications !== false);
+      setMarketingEmails(preferences.marketing_emails || false);
+      setTwoFactorEnabled(profileData?.two_factor_enabled || false);
+
+      // Calculer la complétion du profil
+      const completion = calculateProfileCompletion(profileData);
+      setProfileCompletion(completion);
+
+      console.log('✅ Paramètres utilisateur chargés');
+    } catch (error) {
+      console.error('❌ Erreur chargement paramètres:', error);
+      toast.error('Erreur lors du chargement des paramètres');
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const securityLogs = [
+  const loadSecurityLogs = async () => {
+    try {
+      // Charger les logs de sécurité depuis Supabase
+      const { data, error } = await supabase
+        .from('security_logs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error && error.code !== 'PGRST116') {
+        console.warn('Table security_logs non disponible:', error.message);
+        setSecurityLogs([]);
+        return;
+      }
+
+      const logs = data?.map(log => ({
+        id: log.id,
+        action: log.action || 'Activité',
+        device: log.device || 'Navigateur',
+        location: log.location || 'Non spécifié',
+        timestamp: new Date(log.created_at).toLocaleString('fr-FR'),
+        status: log.status || 'success'
+      })) || [];
+
+      setSecurityLogs(logs);
+    } catch (error) {
+      console.error('❌ Erreur chargement logs:', error);
+      setSecurityLogs([]);
+    }
+  };
+
+  const calculateProfileCompletion = (profileData) => {
+    if (!profileData) return 30;
+    
+    let completion = 30; // Base
+    if (profileData.full_name) completion += 15;
+    if (profileData.phone) completion += 15;
+    if (profileData.avatar_url) completion += 10;
+    if (profileData.address) completion += 10;
+    if (profileData.birth_date) completion += 10;
+    if (profileData.bio) completion += 10;
+    
+    return Math.min(completion, 100);
+  };
+
+  const saveSettings = async () => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          preferences: {
+            theme,
+            language,
+            email_notifications: emailNotifications,
+            push_notifications: pushNotifications,
+            marketing_emails: marketingEmails
+          },
+          two_factor_enabled: twoFactorEnabled
+        })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      toast.success('Paramètres sauvegardés avec succès');
+    } catch (error) {
+      console.error('❌ Erreur sauvegarde paramètres:', error);
+      toast.error('Erreur lors de la sauvegarde');
+    }
+  };
+
+  // Données mockées pour fallback
+  const mockUserProfile = {
+    name: user?.email?.split('@')[0] || "Utilisateur",
+    email: user?.email || "user@email.com",
+    phone: "+221 77 000 00 00",
+    avatar: null,
+    joinDate: "2024-01-15",
+    lastLogin: "Aujourd'hui",
+    accountType: "Particulier",
+    propertiesViewed: 0,
+    favoritesSaved: 0,
+    messagesExchanged: 0
+  };
+
+  const mockSecurityLogs = [
     {
       id: 1,
       action: "Connexion réussie",
       device: "Chrome sur Windows",
       location: "Dakar, Sénégal",
-      timestamp: "2024-03-20 10:30",
+      timestamp: new Date().toLocaleString('fr-FR'),
       status: "success"
-    },
-    {
-      id: 2,
-      action: "Modification du profil",
-      device: "Mobile App",
-      location: "Dakar, Sénégal",
-      timestamp: "2024-03-19 15:22",
-      status: "success"
-    },
-    {
-      id: 3,
-      action: "Tentative de connexion",
-      device: "Firefox sur Mac",
-      location: "Thiès, Sénégal",
-      timestamp: "2024-03-18 08:45",
-      status: "failed"
     }
   ];
 
@@ -109,6 +236,10 @@ const ParticulierSettings = () => {
     ]
   };
 
+  // Utiliser les données réelles ou le fallback
+  const displayProfile = userProfile || mockUserProfile;
+  const displayLogs = securityLogs.length > 0 ? securityLogs : mockSecurityLogs;
+
   const ProfileSection = () => (
     <Card>
       <CardHeader>
@@ -125,8 +256,8 @@ const ParticulierSettings = () => {
         <div className="flex items-center gap-6">
           <div className="relative">
             <Avatar className="w-24 h-24">
-              <AvatarImage src={userProfile.avatar} />
-              <AvatarFallback className="text-xl">{userProfile.name.charAt(0)}</AvatarFallback>
+              <AvatarImage src={displayProfile.avatar} />
+              <AvatarFallback className="text-xl">{displayProfile.name.charAt(0)}</AvatarFallback>
             </Avatar>
             <Button 
               size="sm" 
@@ -137,10 +268,10 @@ const ParticulierSettings = () => {
             </Button>
           </div>
           <div className="flex-1">
-            <h3 className="font-semibold text-lg">{userProfile.name}</h3>
-            <p className="text-sm text-slate-600 mb-2">{userProfile.accountType}</p>
+            <h3 className="font-semibold text-lg">{displayProfile.name}</h3>
+            <p className="text-sm text-slate-600 mb-2">{displayProfile.accountType}</p>
             <Badge variant="secondary">
-              Membre depuis {new Date(userProfile.joinDate).toLocaleDateString('fr-FR')}
+              Membre depuis {displayProfile.joinDate}
             </Badge>
           </div>
         </div>
@@ -161,15 +292,15 @@ const ParticulierSettings = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <Label htmlFor="name">Nom complet</Label>
-            <Input id="name" defaultValue={userProfile.name} />
+            <Input id="name" defaultValue={displayProfile.name} />
           </div>
           <div>
             <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" defaultValue={userProfile.email} />
+            <Input id="email" type="email" defaultValue={displayProfile.email} />
           </div>
           <div>
             <Label htmlFor="phone">Téléphone</Label>
-            <Input id="phone" defaultValue={userProfile.phone} />
+            <Input id="phone" defaultValue={displayProfile.phone} />
           </div>
           <div>
             <Label htmlFor="location">Localisation</Label>
@@ -280,7 +411,7 @@ const ParticulierSettings = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {securityLogs.map((log) => (
+            {displayLogs.map((log) => (
               <div key={log.id} className="flex items-center justify-between p-3 border rounded-lg">
                 <div className="flex items-center gap-3">
                   <div className={`p-2 rounded-lg ${
@@ -528,9 +659,9 @@ const ParticulierSettings = () => {
           <div className="p-4 border rounded-lg">
             <h4 className="font-medium mb-2">Données d'activité</h4>
             <div className="space-y-2 text-sm text-slate-600">
-              <p>Propriétés vues: {userProfile.propertiesViewed}</p>
-              <p>Favoris sauvegardés: {userProfile.favoritesSaved}</p>
-              <p>Messages échangés: {userProfile.messagesExchanged}</p>
+              <p>Propriétés vues: {displayProfile.propertiesViewed}</p>
+              <p>Favoris sauvegardés: {displayProfile.favoritesSaved}</p>
+              <p>Messages échangés: {displayProfile.messagesExchanged}</p>
             </div>
             <Button variant="outline" size="sm" className="mt-3">
               <Download className="w-4 h-4 mr-1" />
@@ -579,6 +710,14 @@ const ParticulierSettings = () => {
     </Card>
   );
 
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Header */}
@@ -589,6 +728,10 @@ const ParticulierSettings = () => {
         </div>
         
         <div className="flex items-center gap-2">
+          <Button onClick={saveSettings} variant="outline">
+            <Save className="w-4 h-4 mr-2" />
+            Sauvegarder
+          </Button>
           <Button variant="outline">
             <HelpCircle className="w-4 h-4 mr-2" />
             Aide

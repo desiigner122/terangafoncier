@@ -198,6 +198,7 @@ const ParticulierNotifications = () => {
     unread: notifications.filter(n => !n.read).length,
     urgent: notifications.filter(n => n.priority === 'urgent' || n.priority === 'high').length,
     dossiers: notifications.filter(n => n.dossierRef !== 'General').length
+  };
 
   const markNotificationAsRead = async (notificationId) => {
     try {
@@ -209,7 +210,6 @@ const ParticulierNotifications = () => {
     } catch (err) {
       console.error('Erreur marquage notification lu:', err);
     }
-  };
   };
 
   const toggleNotificationSelection = (id) => {

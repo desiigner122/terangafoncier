@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, 
+  Bell,
   X, 
   Brain, 
   TrendingUp, 
@@ -74,7 +75,7 @@ const AISmartNotifications = () => {
       'system': Info
     };
     
-    return iconMap[type] || Bell;
+  return iconMap[type] || Bell;
   };
 
   const getNotificationColor = (type, priority) => {

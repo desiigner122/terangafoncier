@@ -46,6 +46,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import TerangaLogo from '@/components/ui/TerangaLogo';
@@ -59,59 +60,9 @@ const CompleteSidebarParticulierDashboard = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
-
-  // Charger les compteurs au chargement
-  React.useEffect(() => {
-    if (user) {
-      loadUnreadCounts();
-      
-      // Souscription aux changements en temps réel
-      const messagesSubscription = supabase
-        .channel('messages_changes')
-        .on('postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${user.id}` },
-          () => loadUnreadCounts()
-        )
-        .subscribe();
-
-      const notificationsSubscription = supabase
-        .channel('notifications_changes')
-        .on('postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-          () => loadUnreadCounts()
-        )
-        .subscribe();
-
-      return () => {
-        messagesSubscription.unsubscribe();
-        notificationsSubscription.unsubscribe();
-      };
-    }
-  }, [user]);
-
-  const loadUnreadCounts = async () => {
-    try {
-      const { count: messagesCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .is('read_at', null);
-      
-      setUnreadMessagesCount(messagesCount || 0);
-
-      const { count: notificationsCount } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-      
-      setUnreadNotificationsCount(notificationsCount || 0);
-    } catch (error) {
-      console.error('Erreur chargement compteurs:', error);
-    }
-  };
+  
+  // Use the real-time unread counts hook
+  const { unreadMessagesCount, unreadNotificationsCount } = useUnreadCounts();
 
   // Fonction de déconnexion
   const handleLogout = async () => {

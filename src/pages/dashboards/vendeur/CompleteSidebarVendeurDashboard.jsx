@@ -69,6 +69,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -136,11 +137,12 @@ const CompleteSidebarVendeurDashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   
+  // Real-time unread counts
+  const { unreadMessagesCount, unreadNotificationsCount } = useUnreadCounts();
+  
   // États pour données réelles
   const [notifications, setNotifications] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [dashboardStats, setDashboardStats] = useState({
     totalProperties: 0,
     activeListings: 0,
@@ -301,7 +303,7 @@ const CompleteSidebarVendeurDashboard = () => {
 
       if (!error && data) {
         setNotifications(data);
-        setUnreadNotificationsCount(data.length);
+        // unreadNotificationsCount now comes from useUnreadCounts hook
       }
     } catch (error) {
       console.error('Erreur chargement notifications:', error);

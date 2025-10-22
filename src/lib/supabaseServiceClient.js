@@ -6,14 +6,18 @@
  * import { supabaseService } from '@/lib/supabaseServiceClient';
  */
 
+// Ce module fournit un client service_role pour les scripts backend/tests.
+// Il ne doit PAS être importé par des fichiers destinés au navigateur.
+// Laisser en place pour les scripts Node (CI/local) qui ont besoin d'un accès privilégié.
+
 import { createClient } from '@supabase/supabase-js';
 
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
+const SERVICE_ROLE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY || '';
 
-// IMPORTANT: Cette clé ne doit JAMAIS être exposée dans le navigateur en production!
-// Pour la dev/test, on l'utilise pour contourner RLS
-// En production, créer un backend API qui utilise cette clé
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im5kZW5xaWtjb2d6cmtyam5sdm5zIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NjY2MzMwNCwiZXhwIjoyMDcyMjM5MzA0fQ._mFhSg4VDhnUE8ctKLEHpYkafpBqsbnZCzvX9JwtP0c';
+if (!supabaseUrl || !SERVICE_ROLE_KEY) {
+  console.warn('⚠️ supabaseService unavailable - set VITE_SUPABASE_SERVICE_ROLE_KEY for backend scripts');
+}
 
 export const supabaseService = createClient(supabaseUrl, SERVICE_ROLE_KEY, {
   auth: {

@@ -126,10 +126,7 @@ const ParticulierMesAchatsRefactored = () => {
           seller_id,
           buyer_id,
           parcelle_id,
-          total_price,
-          fees,
-          documents_count,
-          messages_count,
+          purchase_price,
           notary_id,
           geometre_id,
           agent_foncier_id
@@ -207,9 +204,27 @@ const ParticulierMesAchatsRefactored = () => {
         active: purchaseCases.filter(c => !['completed', 'cancelled'].includes(c.status)).length,
         completed: purchaseCases.filter(c => c.status === 'completed').length,
         pending: purchaseCases.filter(c => c.status === 'initiated').length,
-        documents: purchaseCases.reduce((sum, c) => sum + (c.documents_count || 0), 0),
-        messages: purchaseCases.reduce((sum, c) => sum + (c.messages_count || 0), 0),
+        documents: 0, // Will be counted from documents table
+        messages: 0, // Will be counted from messages table
       };
+
+      // Count documents per case
+      const caseIds = purchaseCases.map(c => c.id);
+      if (caseIds.length > 0) {
+        const { data: docs } = await supabase
+          .from('purchase_case_documents')
+          .select('case_id', { count: 'exact' })
+          .in('case_id', caseIds);
+        newStats.documents = docs?.length || 0;
+
+        // Count messages per case
+        const { data: msgs } = await supabase
+          .from('purchase_case_messages')
+          .select('case_id', { count: 'exact' })
+          .in('case_id', caseIds);
+        newStats.messages = msgs?.length || 0;
+      }
+
       setStats(newStats);
       console.log('✅ Cases loaded:', newStats);
     } catch (error) {
@@ -237,7 +252,7 @@ const ParticulierMesAchatsRefactored = () => {
   const sorted = [...filtered].sort((a, b) => {
     if (sortBy === 'updated') return new Date(b.updated_at) - new Date(a.updated_at);
     if (sortBy === 'created') return new Date(b.created_at) - new Date(a.created_at);
-    if (sortBy === 'price') return (b.total_price || 0) - (a.total_price || 0);
+    if (sortBy === 'price') return (b.purchase_price || 0) - (a.purchase_price || 0);
     return 0;
   });
 
@@ -255,14 +270,6 @@ const ParticulierMesAchatsRefactored = () => {
               <h1 className="text-4xl font-bold text-slate-900 mb-2">Mes Achats</h1>
               <p className="text-slate-600">Suivi de vos dossiers d'acquisition immobilière</p>
             </div>
-            <Button
-              onClick={() => navigate('/acheteur/creer-demande')}
-              className="flex items-center gap-2"
-              size="lg"
-            >
-              <Plus className="w-5 h-5" />
-              Nouvelle demande
-            </Button>
           </div>
 
           {/* KPIs */}
@@ -346,10 +353,7 @@ const ParticulierMesAchatsRefactored = () => {
           <Card className="text-center py-12">
             <Home className="w-16 h-16 text-slate-300 mx-auto mb-4" />
             <h3 className="text-lg font-semibold text-slate-900">Aucun dossier</h3>
-            <p className="text-slate-600 mb-6">Créez votre première demande d'achat</p>
-            <Button onClick={() => navigate('/acheteur/creer-demande')}>
-              Démarrer
-            </Button>
+            <p className="text-slate-600 mb-6">Faites une offre sur un terrain pour créer un dossier d'achat</p>
           </Card>
         ) : (
           <div className="space-y-4">
@@ -383,7 +387,7 @@ const ParticulierMesAchatsRefactored = () => {
                                 {caseItem.property?.location || 'Localisation'}
                               </p>
                               <p className="text-sm font-medium text-slate-900 mt-2">
-                                {caseItem.total_price?.toLocaleString('fr-FR')} CFA
+                                {(caseItem.purchase_price || 0)?.toLocaleString('fr-FR')} CFA
                               </p>
                             </div>
                           </div>

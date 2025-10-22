@@ -22,17 +22,43 @@ export const useUnreadCounts = () => {
 
     try {
       // Messages non lus depuis purchase_case_messages
-      const { count: messagesCount, error: messagesError } = await supabase
+      // Try both recipient_id and sender_id patterns
+      let messagesCount = 0;
+      
+      // Try with recipient_id first (if column exists)
+      const { count: count1, error: error1 } = await supabase
         .from('purchase_case_messages')
         .select('*', { count: 'exact', head: true })
         .eq('recipient_id', user.id)
         .is('read_at', null);
 
-      if (messagesError) {
-        console.warn('Error loading messages count:', messagesError);
-      } else {
-        setUnreadMessagesCount(messagesCount || 0);
+      if (!error1) {
+        messagesCount = count1 || 0;
+      } else if (error1.code !== '42703') { // 42703 = column does not exist
+        console.warn('Error loading messages count (recipient_id):', error1);
       }
+      
+      // If recipient_id doesn't exist, count all messages in user's cases
+      if (error1?.code === '42703') {
+        // Get user's cases first
+        const { data: userCases } = await supabase
+          .from('purchase_cases')
+          .select('id')
+          .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
+        
+        if (userCases && userCases.length > 0) {
+          const caseIds = userCases.map(c => c.id);
+          const { count: caseMessagesCount } = await supabase
+            .from('purchase_case_messages')
+            .select('*', { count: 'exact', head: true })
+            .in('case_id', caseIds)
+            .is('read_at', null);
+          
+          messagesCount = caseMessagesCount || 0;
+        }
+      }
+
+      setUnreadMessagesCount(messagesCount);
 
       // Messages administratifs non lus
       const { count: adminMessagesCount, error: adminError } = await supabase
@@ -83,32 +109,18 @@ export const useUnreadCounts = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    // Messages en temps réel
+    // Messages en temps réel (watch all messages, filter in loadUnreadCounts)
     const messagesChannel = supabase
       .channel('messages_realtime')
       .on(
         'postgres_changes',
         {
-          event: 'INSERT',
+          event: '*',
           schema: 'public',
           table: 'purchase_case_messages',
-          filter: `recipient_id=eq.${user.id}`,
         },
         () => {
-          console.log('📩 New message received');
-          loadUnreadCounts();
-        }
-      )
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'purchase_case_messages',
-          filter: `recipient_id=eq.${user.id}`,
-        },
-        () => {
-          console.log('📩 Message updated');
+          console.log('📩 Message changed');
           loadUnreadCounts();
         }
       )

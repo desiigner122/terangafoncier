@@ -182,9 +182,17 @@ const ModernBuyerCaseTrackingV2 = () => {
       if (purchaseCase.buyer_id) {
         const { data: buyerProfile } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, email, phone, avatar_url')
+          .select('id, first_name, last_name, full_name, email, phone, avatar_url')
           .eq('id', purchaseCase.buyer_id)
           .maybeSingle();
+        
+        // Normalize profile data to have first_name/last_name
+        if (buyerProfile && !buyerProfile.first_name && buyerProfile.full_name) {
+          const nameParts = (buyerProfile.full_name || '').split(' ');
+          buyerProfile.first_name = nameParts[0] || '';
+          buyerProfile.last_name = nameParts.slice(1).join(' ') || '';
+        }
+        
         participantMap.buyer = buyerProfile || null;
       }
 
@@ -193,7 +201,7 @@ const ModernBuyerCaseTrackingV2 = () => {
         console.log('🔍 Loading seller profile for:', purchaseCase.seller_id);
         const { data: sellerProfile, error: sellerError } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, email, phone, avatar_url')
+          .select('id, first_name, last_name, full_name, email, phone, avatar_url')
           .eq('id', purchaseCase.seller_id)
           .maybeSingle();
         if (sellerError) {
@@ -201,6 +209,14 @@ const ModernBuyerCaseTrackingV2 = () => {
         } else {
           console.log('✅ Seller profile loaded:', sellerProfile);
         }
+        
+        // Normalize profile data
+        if (sellerProfile && !sellerProfile.first_name && sellerProfile.full_name) {
+          const nameParts = (sellerProfile.full_name || '').split(' ');
+          sellerProfile.first_name = nameParts[0] || '';
+          sellerProfile.last_name = nameParts.slice(1).join(' ') || '';
+        }
+        
         participantMap.seller = sellerProfile || null;
       }
 

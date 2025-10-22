@@ -128,9 +128,17 @@ const RefactoredVendeurCaseTracking = () => {
       if (purchaseCase.seller_id) {
         const { data: sellerProfile } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, email, phone, avatar_url')
+          .select('id, first_name, last_name, full_name, email, phone, avatar_url')
           .eq('id', purchaseCase.seller_id)
           .maybeSingle();
+        
+        // Normalize profile data
+        if (sellerProfile && !sellerProfile.first_name && sellerProfile.full_name) {
+          const nameParts = (sellerProfile.full_name || '').split(' ');
+          sellerProfile.first_name = nameParts[0] || '';
+          sellerProfile.last_name = nameParts.slice(1).join(' ') || '';
+        }
+        
         participantMap.seller = sellerProfile;
       }
 
@@ -138,7 +146,7 @@ const RefactoredVendeurCaseTracking = () => {
         console.log('🔍 Loading buyer profile for:', purchaseCase.buyer_id);
         const { data: buyerProfile, error: buyerError } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, email, phone, avatar_url')
+          .select('id, first_name, last_name, full_name, email, phone, avatar_url')
           .eq('id', purchaseCase.buyer_id)
           .maybeSingle();
         if (buyerError) {
@@ -146,12 +154,20 @@ const RefactoredVendeurCaseTracking = () => {
         } else {
           console.log('✅ Buyer profile loaded:', buyerProfile);
         }
+        
+        // Normalize profile data
+        if (buyerProfile && !buyerProfile.first_name && buyerProfile.full_name) {
+          const nameParts = (buyerProfile.full_name || '').split(' ');
+          buyerProfile.first_name = nameParts[0] || '';
+          buyerProfile.last_name = nameParts.slice(1).join(' ') || '';
+        }
+        
         participantMap.buyer = buyerProfile;
       }
 
       const { data: participantRows } = await supabase
         .from('purchase_case_participants')
-        .select('role, user_id, profiles:user_id(id, first_name, last_name, email, phone, avatar_url)')
+        .select('role, user_id, profiles:user_id(id, first_name, last_name, full_name, email, phone, avatar_url)')
         .eq('case_id', purchaseCase.id);
 
       if (participantRows) {
@@ -159,7 +175,14 @@ const RefactoredVendeurCaseTracking = () => {
         participantRows.forEach(row => {
           const normalized = roleMap[(row.role || '').toLowerCase()];
           if (normalized && row.profiles) {
-            participantMap[normalized] = row.profiles;
+            // Normalize nested profile too
+            const profile = row.profiles;
+            if (profile && !profile.first_name && profile.full_name) {
+              const nameParts = (profile.full_name || '').split(' ');
+              profile.first_name = nameParts[0] || '';
+              profile.last_name = nameParts.slice(1).join(' ') || '';
+            }
+            participantMap[normalized] = profile;
           }
         });
       }

@@ -337,8 +337,7 @@ const CompleteSidebarVendeurDashboard = () => {
 
       if (!error && data) {
         setMessages(data);
-        // Compter non lus où recipient_id = user.id
-        setUnreadMessagesCount(data.filter(m => !m.read_at && m.recipient_id === user.id).length);
+        // unreadMessagesCount now comes from useUnreadCounts hook
       }
     } catch (error) {
       console.error('Erreur chargement messages:', error);

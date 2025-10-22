@@ -41,19 +41,24 @@ export const WorkflowActionButton = ({
       if (updateError) throw updateError;
 
       // Créer une entrée dans l'historique (si la table existe)
-      await supabase
-        .from('case_history')
-        .insert({
-          case_id: caseData.id,
-          action: `${userRole}_validated_${caseData.status}`,
-          stage: targetStage,
-          performed_by: (await supabase.auth.getUser()).data.user.id,
-          metadata: {
-            previous_stage: caseData.status,
-            new_stage: targetStage,
-          },
-        })
-        .maybeSingle();
+      const { data: userData } = await supabase.auth.getUser();
+      const userId = userData?.user?.id;
+      
+      if (userId) {
+        await supabase
+          .from('case_history')
+          .insert({
+            case_id: caseData.id,
+            action: `${userRole}_validated_${caseData.status}`,
+            stage: targetStage,
+            performed_by: userId,
+            metadata: {
+              previous_stage: caseData.status,
+              new_stage: targetStage,
+            },
+          })
+          .maybeSingle();
+      }
 
       // Callback de succès
       if (onActionComplete) {

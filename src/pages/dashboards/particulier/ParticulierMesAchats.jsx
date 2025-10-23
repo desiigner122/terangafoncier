@@ -94,78 +94,99 @@ const ParticulierMesAchats = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (requestsError) throw requestsError;
-      console.log('✅ [LOAD] Requests loaded:', requestsData?.length);
+      if (requestsError) {
+        console.error('❌ [LOAD] Erreur chargement requests:', requestsError);
+        throw requestsError;
+      }
+      
+      console.log('✅ [LOAD] Requests loaded:', requestsData?.length || 0);
+      
+      if (!requestsData || requestsData.length === 0) {
+        console.log('ℹ️ [LOAD] Aucune demande d\'achat trouvée pour cet utilisateur');
+        setRequests([]);
+        setLoading(false);
+        return;
+      }
+
+      // Log details of each request
+      requestsData.forEach((req, idx) => {
+        console.log(`   ${idx + 1}. ID: ${req.id}, Status: ${req.status}, Parcel: ${req.parcels?.title || req.parcels?.name || 'N/A'}`);
+      });
 
       // Charger les transactions pour chaque request
-      if (requestsData && requestsData.length > 0) {
-        const requestIds = requestsData.map(r => r.id);
-        console.log('   Request IDs:', requestIds);
-        
-        // 🔥 FIX: Charger aussi les purchase_cases
-        const { data: transactionsData } = await supabase
-          .from('transactions')
-          .select('*')
-          .in('request_id', requestIds);
+      const requestIds = requestsData.map(r => r.id);
+      console.log('   Request IDs:', requestIds);
+      
+      // 🔥 FIX: Charger aussi les purchase_cases
+      const { data: transactionsData, error: transError } = await supabase
+        .from('transactions')
+        .select('*')
+        .in('request_id', requestIds);
 
-        console.log('✅ [LOAD] Transactions loaded:', transactionsData?.length);
-        transactionsData?.forEach(t => {
-          console.log(`   - TX: ${t.id}, Status: ${t.status}, Request: ${t.request_id}`);
-        });
-
-        const { data: purchaseCasesData } = await supabase
-          .from('purchase_cases')
-          .select('id, request_id, case_number, status, created_at, updated_at')
-          .in('request_id', requestIds);
-
-        console.log('✅ [LOAD] Purchase cases loaded:', purchaseCasesData?.length);
-        purchaseCasesData?.forEach(pc => {
-          console.log(`   - PC: ${pc.id}, Case#: ${pc.case_number}, Status: ${pc.status}, RequestID: ${pc.request_id}`);
-        });
-
-        // Créer une map des purchase_cases par request_id
-        const purchaseCaseMap = {};
-        purchaseCasesData?.forEach(pc => {
-          purchaseCaseMap[pc.request_id] = {
-            caseId: pc.id,
-            caseNumber: pc.case_number,
-            caseStatus: pc.status,
-            caseCreatedAt: pc.created_at,
-            caseUpdatedAt: pc.updated_at
-          };
-        });
-
-        console.log('📊 [LOAD] Purchase case map:', purchaseCaseMap);
-
-        // Associer les transactions et purchase_cases aux requests
-        const requestsWithData = requestsData.map(request => {
-          const caseMeta = purchaseCaseMap[request.id];
-          const hasCase = !!caseMeta;
-          const caseStatus = caseMeta?.caseStatus;
-          console.log(`   🔗 Request ${request.id}: hasCase=${hasCase}, caseStatus=${caseStatus}`);
-          
-          return {
-            ...request,
-            transactions: transactionsData?.filter(t => t.request_id === request.id) || [],
-            purchaseCase: caseMeta || null,
-            hasCase,
-            caseNumber: caseMeta?.caseNumber,
-            caseStatus: caseMeta?.caseStatus,
-            // Pour l'affichage: utiliser le status du purchase_case si existe, sinon du request
-            displayStatus: caseStatus || request.status
-          };
-        });
-
-        setRequests(requestsWithData);
-        console.log('✅ [LOAD] FINAL requests set:', requestsWithData.length);
-        console.log('   Stats:');
-        requestsWithData.forEach(r => {
-          console.log(`     - ID: ${r.id}, Status: ${r.status}, HasCase: ${!!r.purchaseCase}, CaseStatus: ${r.purchaseCase?.caseStatus}`);
-        });
-      } else {
-        setRequests([]);
-        console.log('✅ [LOAD] Aucune demande d\'achat trouvée');
+      if (transError) {
+        console.warn('⚠️ [LOAD] Erreur chargement transactions:', transError);
+        // Continue sans transactions
       }
+
+      console.log('✅ [LOAD] Transactions loaded:', transactionsData?.length || 0);
+      transactionsData?.forEach(t => {
+        console.log(`   - TX: ${t.id}, Status: ${t.status}, Request: ${t.request_id}`);
+      });
+
+      const { data: purchaseCasesData, error: casesError } = await supabase
+        .from('purchase_cases')
+        .select('id, request_id, case_number, status, created_at, updated_at')
+        .in('request_id', requestIds);
+
+      if (casesError) {
+        console.warn('⚠️ [LOAD] Erreur chargement purchase_cases:', casesError);
+        // Continue sans purchase cases
+      }
+
+      console.log('✅ [LOAD] Purchase cases loaded:', purchaseCasesData?.length || 0);
+      purchaseCasesData?.forEach(pc => {
+        console.log(`   - PC: ${pc.id}, Case#: ${pc.case_number}, Status: ${pc.status}, RequestID: ${pc.request_id}`);
+      });
+
+      // Créer une map des purchase_cases par request_id
+      const purchaseCaseMap = {};
+      purchaseCasesData?.forEach(pc => {
+        purchaseCaseMap[pc.request_id] = {
+          caseId: pc.id,
+          caseNumber: pc.case_number,
+          caseStatus: pc.status,
+          caseCreatedAt: pc.created_at,
+          caseUpdatedAt: pc.updated_at
+        };
+      });
+
+      console.log('📊 [LOAD] Purchase case map:', purchaseCaseMap);
+
+      // Associer les transactions et purchase_cases aux requests
+      const requestsWithData = requestsData.map(request => {
+        const caseMeta = purchaseCaseMap[request.id];
+        const hasCase = !!caseMeta;
+        const caseStatus = caseMeta?.caseStatus;
+        console.log(`   🔗 Request ${request.id}: hasCase=${hasCase}, caseStatus=${caseStatus}`);
+        
+        return {
+          ...request,
+          transactions: transactionsData?.filter(t => t.request_id === request.id) || [],
+          purchaseCase: caseMeta || null,
+          hasCase,
+          caseNumber: caseMeta?.caseNumber,
+          caseStatus: caseMeta?.caseStatus,
+          // Pour l'affichage: utiliser le status du purchase_case si existe, sinon du request
+          displayStatus: caseStatus || request.status
+        };
+      });
+
+      setRequests(requestsWithData);
+      console.log('✅ [LOAD] FINAL requests set:', requestsWithData.length);
+      console.log('   Stats:');
+      requestsWithData.forEach(r => {
+        console.log(`     - ID: ${r.id}, Status: ${r.status}, HasCase: ${!!r.purchaseCase}, CaseStatus: ${r.purchaseCase?.caseStatus}`);
+      });
     } catch (error) {
       console.error('🔴 [LOAD] Error:', error);
       window.safeGlobalToast({

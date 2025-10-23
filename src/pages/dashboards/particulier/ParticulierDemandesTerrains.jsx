@@ -77,12 +77,20 @@ const ParticulierDemandesTerrains = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
-
-      setDemandes(data || []);
-      console.log(`✅ ${data?.length || 0} demandes chargées`);
+      if (error) {
+        if (['PGRST205', '42P01'].includes(error.code)) {
+          console.warn('⚠️ Table demandes_terrains_communaux manquante - affichage vide');
+          setDemandes([]);
+        } else {
+          throw error;
+        }
+      } else {
+        setDemandes(data || []);
+        console.log(`✅ ${data?.length || 0} demandes chargées`);
+      }
     } catch (error) {
       console.error('❌ Erreur lors du chargement des demandes:', error);
+      setDemandes([]);
     } finally {
       setLoading(false);
     }
@@ -103,7 +111,15 @@ const ParticulierDemandesTerrains = () => {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (['PGRST205', '42P01'].includes(error.code)) {
+          console.warn('⚠️ Impossible de créer: table manquante');
+          toast.error('Cette fonctionnalité n\'est pas disponible pour le moment');
+        } else {
+          throw error;
+        }
+        return;
+      }
 
       setDemandes(prev => [data, ...prev]);
       setIsCreateModalOpen(false);
@@ -120,6 +136,7 @@ const ParticulierDemandesTerrains = () => {
       console.log('✅ Demande créée avec succès');
     } catch (error) {
       console.error('❌ Erreur lors de la création:', error);
+      toast.error('Erreur lors de la création de la demande');
     }
   };
 

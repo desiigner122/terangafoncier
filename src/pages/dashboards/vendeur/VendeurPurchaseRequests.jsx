@@ -725,7 +725,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       // Récupérer les parcelles du vendeur
       const { data: sellerParcels, error: parcelsError } = await supabase
         .from('parcels')
-        .select('id')
+        .select('id, title, name, price, location, surface, status')
         .eq('seller_id', user.id);
 
       if (parcelsError) throw parcelsError;
@@ -734,66 +734,92 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       console.log('🏠 [VENDEUR] Parcelles trouvées:', parcelIds.length, parcelIds);
 
       if (parcelIds.length === 0) {
+        console.log('⚠️ [VENDEUR] Aucune parcelle trouvée pour ce vendeur');
         setRequests([]);
         setLoading(false);
         return;
       }
 
-      // Charger depuis transactions au lieu de requests
-      // ✅ CORRECTION: Charger TOUTES les transactions (purchase + request)
-      const { data: transactionsData, error } = await supabase
+      // ✅ CORRECTION 1: Charger d'abord depuis 'requests' (source principale des demandes)
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('requests')
+        .select('*')
+        .in('parcel_id', parcelIds)
+        .order('created_at', { ascending: false });
+
+      if (requestsError) {
+        console.error('❌ [VENDEUR] Erreur chargement requests:', requestsError);
+        // Continue quand même pour charger les transactions
+      }
+
+      console.log('📋 [VENDEUR] Requests trouvées:', requestsData?.length || 0);
+      
+      // ✅ CORRECTION 2: Charger aussi depuis transactions comme fallback
+      const { data: transactionsData, error: transError } = await supabase
         .from('transactions')
         .select('*')
         .in('parcel_id', parcelIds)
-        .in('transaction_type', ['purchase', 'request', 'offer']) // Accepter plusieurs types
+        .in('transaction_type', ['purchase', 'request', 'offer'])
         .order('created_at', { ascending: false });
 
-      if (error) {
-        // Si NetworkError et retries disponibles, réessayer
-        if (error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
-          if (retryCount < MAX_RETRIES) {
-            console.warn(`⚠️ NetworkError détecté. Retry ${retryCount + 1}/${MAX_RETRIES}`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Délai croissant
-            return loadRequests(retryCount + 1);
-          }
-        }
-        throw error;
+      if (transError) {
+        console.error('❌ [VENDEUR] Erreur chargement transactions:', transError);
+        // Continue avec les requests seulement
       }
 
-      console.log('📊 [VENDEUR] Transactions brutes:', transactionsData);
+      console.log('💳 [VENDEUR] Transactions trouvées:', transactionsData?.length || 0);
 
-      if (!transactionsData || transactionsData.length === 0) {
+      // ✅ CORRECTION 3: Combiner requests et transactions
+      const allDemandes = [];
+      
+      // Ajouter les requests
+      if (requestsData && requestsData.length > 0) {
+        allDemandes.push(...requestsData.map(r => ({ ...r, source: 'requests' })));
+      }
+      
+      // Ajouter les transactions (éviter les doublons par request_id)
+      if (transactionsData && transactionsData.length > 0) {
+        const existingRequestIds = new Set(requestsData?.map(r => r.id) || []);
+        transactionsData.forEach(t => {
+          if (!existingRequestIds.has(t.request_id)) {
+            allDemandes.push({ ...t, source: 'transactions' });
+          }
+        });
+      }
+
+      console.log('📊 [VENDEUR] Total demandes combinées:', allDemandes.length);
+
+      if (allDemandes.length === 0) {
+        console.log('⚠️ [VENDEUR] Aucune demande trouvée (ni requests ni transactions)');
         setRequests([]);
         setLoading(false);
         return;
       }
 
-      // Charger les parcelles
-      const { data: parcelsData } = await supabase
-        .from('parcels')
-        .select('id, title, name, price, location, surface, status')
-        .in('id', parcelIds);
+      // Utiliser les parcelles déjà chargées
+      const parcelsData = sellerParcels;
 
-      // Charger les profils acheteurs avec informations complètes (email inclus)
-      // FIX: Simplifier la récupération des IDs acheteurs
-      const buyerIdsFromTransactions = transactionsData.map(t => t.buyer_id).filter(Boolean);
-      const requestIds = transactionsData.map(t => t.request_id).filter(Boolean);
+      // ✅ CORRECTION 4: Collecter tous les IDs utilisateurs (acheteurs)
+      const buyerIdsFromRequests = requestsData?.map(r => r.user_id).filter(Boolean) || [];
+      const buyerIdsFromTransactions = transactionsData?.map(t => t.buyer_id).filter(Boolean) || [];
       
-      let buyerIdsFromRequests = [];
-      if (requestIds.length > 0) {
-        const { data: requestsForBuyers, error: reqError } = await supabase
+      // Aussi collecter les request IDs des transactions pour charger les requests associées
+      const transactionRequestIds = transactionsData?.map(t => t.request_id).filter(Boolean) || [];
+      
+      let buyerIdsFromTxRequests = [];
+      if (transactionRequestIds.length > 0) {
+        const { data: requestsForTx, error: reqError } = await supabase
           .from('requests')
-          .select('user_id')
-          .in('id', requestIds);
-        if (reqError) console.warn('⚠️ Erreur chargement user_id depuis requests:', reqError);
-        else if (requestsForBuyers) {
-          buyerIdsFromRequests = requestsForBuyers.map(r => r.user_id).filter(Boolean);
+          .select('id, user_id')
+          .in('id', transactionRequestIds);
+        if (!reqError && requestsForTx) {
+          buyerIdsFromTxRequests = requestsForTx.map(r => r.user_id).filter(Boolean);
         }
       }
 
-      const allBuyerIds = [...new Set([...buyerIdsFromTransactions, ...buyerIdsFromRequests])];
+      const allBuyerIds = [...new Set([...buyerIdsFromRequests, ...buyerIdsFromTransactions, ...buyerIdsFromTxRequests])];
       
-      console.log('👤 [VENDEUR] IDs acheteurs à charger:', allBuyerIds);
+      console.log('👤 [VENDEUR] IDs acheteurs à charger:', allBuyerIds.length, allBuyerIds);
 
       const { data: profilesData, error: profilesError } = await supabase
         .from('profiles')
@@ -806,19 +832,18 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         console.log('✅ [VENDEUR] Profiles chargés:', profilesData?.length, 'records');
       }
 
-  // FIX #1: Charger les purchase_cases pour savoir lesquels sont acceptés
-      // Les purchase_cases sont liés aux transactions par request_id
-      console.log('📋 [VENDEUR] Chargement des purchase_cases...');
-      const transactionRequestIds = transactionsData
-        .map(t => t.request_id)
-        .filter(Boolean);
+      // ✅ CORRECTION 5: Charger les purchase_cases pour toutes les demandes
+      const allRequestIds = [
+        ...(requestsData?.map(r => r.id) || []),
+        ...(transactionsData?.map(t => t.request_id).filter(Boolean) || [])
+      ];
       
-      console.log('   Transaction request_ids:', transactionRequestIds);
+      console.log('📋 [VENDEUR] Chargement des purchase_cases pour', allRequestIds.length, 'requests...');
       
       const { data: purchaseCases, error: caseError } = await supabase
         .from('purchase_cases')
         .select('id, request_id, case_number, status')
-        .in('request_id', transactionRequestIds);
+        .in('request_id', allRequestIds);
 
       if (caseError) {
         console.warn('⚠️ [VENDEUR] Erreur chargement purchase_cases:', caseError);
@@ -826,26 +851,10 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         console.log('✅ [VENDEUR] Purchase cases trouvées:', purchaseCases?.length);
       }
 
-      // Also fetch requests for transactionRequestIds to access user_id (buyer) when needed
-      const requestByIdMap = {};
-      if (transactionRequestIds.length > 0) {
-        const { data: reqRows, error: reqRowsError } = await supabase
-          .from('requests')
-          .select('id, user_id')
-          .in('id', transactionRequestIds);
-        if (!reqRowsError && reqRows) {
-          reqRows.forEach(r => { requestByIdMap[r.id] = r.user_id; });
-        } else if (reqRowsError) {
-          console.warn('⚠️ [VENDEUR] Erreur chargement requests supérieurs:', reqRowsError);
-        }
-      }
-
-      // Créer une map: transaction.id -> case_info
-      // Key: transaction ID, Value: case info
+      // Créer une map request_id -> case info
       const requestCaseMap = {};
       if (purchaseCases && purchaseCases.length > 0) {
         purchaseCases.forEach(pc => {
-          // Map by request_id (which is transaction.id in the transactions table)
           requestCaseMap[pc.request_id] = {
             caseNumber: pc.case_number,
             caseId: pc.id,
@@ -855,45 +864,55 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         console.log('✅ [VENDEUR] Case map created with', Object.keys(requestCaseMap).length, 'entries');
       }
 
-      // Transformer les transactions
-      const enrichedRequests = transactionsData.map(transaction => {
-        // FIX: Utiliser la map des requests pour trouver le user_id (acheteur)
-        const requestForTx = requestByIdMap[transaction.request_id];
-        const resolvedBuyerId = transaction.buyer_id || requestForTx?.user_id;
-        const buyer = profilesData?.find(p => p.id === resolvedBuyerId);
-        const parcel = parcelsData?.find(p => p.id === transaction.parcel_id);
-        const buyerInfo = transaction.buyer_info || {};
+      // ✅ CORRECTION 6: Transformer et enrichir toutes les demandes
+      const enrichedRequests = allDemandes.map(demande => {
+        const isFromRequests = demande.source === 'requests';
+        const isFromTransactions = demande.source === 'transactions';
         
-        // FIX #1: Vérifier si un case existe pour cette transaction
-        // IMPORTANT: purchase_cases.request_id points to transactions.request_id, not transactions.id
-        const caseInfo = requestCaseMap[transaction.request_id];
+        // Pour les requests: user_id est l'acheteur, parcel_id est la parcelle
+        // Pour les transactions: buyer_id est l'acheteur, parcel_id est la parcelle
+        const buyerId = isFromRequests ? demande.user_id : demande.buyer_id;
+        const parcelId = demande.parcel_id;
+        const requestId = isFromRequests ? demande.id : demande.request_id;
+        
+        const buyer = profilesData?.find(p => p.id === buyerId);
+        const parcel = parcelsData?.find(p => p.id === parcelId);
+        const buyerInfo = demande.buyer_info || {};
+        
+        // Vérifier si un purchase_case existe
+        const caseInfo = requestCaseMap[requestId];
         const hasCase = !!caseInfo;
         const caseNumber = caseInfo?.caseNumber;
         const caseStatus = caseInfo?.caseStatus;
 
-        // ✅ Prioriser le statut workflow lorsqu'il existe pour refléter l'acceptation vendeur
-        const effectiveStatus = caseStatus || transaction.status;
+        // Le statut effectif: priorité au case status si existe
+        const rawStatus = isFromRequests ? demande.status : demande.status;
+        const effectiveStatus = caseStatus || rawStatus;
+        
+        // Prix de l'offre
+        const offeredPrice = isFromRequests 
+          ? (demande.offered_price || demande.offer_price)
+          : demande.amount;
         
         return {
-          id: transaction.id,
-          request_id: transaction.request_id,
-          user_id: resolvedBuyerId, // Utiliser l'ID résolu
-          parcel_id: transaction.parcel_id,
+          id: isFromRequests ? demande.id : demande.id,
+          request_id: requestId,
+          user_id: buyerId,
+          parcel_id: parcelId,
           status: effectiveStatus,
-          created_at: transaction.created_at,
-          updated_at: transaction.updated_at,
-          payment_method: transaction.payment_method,
-          offered_price: transaction.amount,
-          offer_price: transaction.amount,
-          request_type: transaction.payment_method || 'general',
-          message: transaction.description || '',
+          created_at: demande.created_at,
+          updated_at: demande.updated_at,
+          payment_method: isFromRequests ? demande.payment_type : demande.payment_method,
+          offered_price: offeredPrice,
+          offer_price: offeredPrice,
+          request_type: isFromRequests ? 'request' : (demande.payment_method || 'general'),
+          message: isFromRequests ? (demande.message || demande.description) : (demande.description || ''),
           buyer_info: buyerInfo,
-          // ✅ IMPROVED: Try multiple sources for buyer name
           buyer_name: 
             (buyer?.first_name && buyer?.last_name ? `${buyer.first_name} ${buyer.last_name}` : null) ||
-            (buyer?.full_name) ||
+            buyer?.full_name ||
             buyerInfo?.full_name ||
-            (buyerInfo?.name) ||
+            buyerInfo?.name ||
             'Acheteur',
           buyer_email: buyer?.email || buyerInfo.email || '',
           buyer_phone: buyer?.phone || buyerInfo.phone || '',
@@ -901,17 +920,21 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
           properties: parcel,
           profiles: buyer,
           buyer: buyer,
-          transactions: [transaction],
-          // FIX #1: Add case info
+          transactions: isFromTransactions ? [demande] : [],
           hasCase,
           caseNumber,
           caseStatus,
-          rawStatus: transaction.status,
-          effectiveStatus
+          rawStatus,
+          effectiveStatus,
+          source: demande.source
         };
       });
 
-      console.log('✅ [VENDEUR] Transactions chargées:', enrichedRequests.length, enrichedRequests);
+      console.log('✅ [VENDEUR] Demandes enrichies:', enrichedRequests.length);
+      enrichedRequests.forEach((r, idx) => {
+        console.log(`   ${idx + 1}. ID: ${r.id}, Status: ${r.status}, HasCase: ${r.hasCase}, Source: ${r.source}, Buyer: ${r.buyer_name}`);
+      });
+      
       setRequests(enrichedRequests);
     } catch (error) {
       console.error('❌ Erreur chargement demandes:', error);

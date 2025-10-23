@@ -190,42 +190,101 @@ const ModernAcheteurSidebar = () => {
     try {
       setLoading(true);
       
-      // Charger demandes de terrains
-      const { data: demandesTerrains, error: errorTerrains } = await supabase
-        .from('demandes_terrains_communaux')
-        .select('id, statut')
-        .eq('user_id', user.id);
+      // ✅ Charger demandes de terrains (avec gestion erreur)
+      let demandesTerrains = [];
+      try {
+        const { data, error } = await supabase
+          .from('demandes_terrains_communaux')
+          .select('id, statut')
+          .eq('user_id', user.id);
+        
+        if (error && ['PGRST205', '42P01'].includes(error.code)) {
+          console.warn('⚠️ Table demandes_terrains_communaux manquante');
+        } else if (error) {
+          console.error('Erreur demandes terrains:', error);
+        } else {
+          demandesTerrains = data || [];
+        }
+      } catch (err) {
+        console.warn('⚠️ Erreur chargement terrains:', err);
+      }
       
-      // Charger demandes de construction
-      const { data: demandesConstruction, error: errorConstruction } = await supabase
-        .from('demandes_construction')
-        .select('id, statut')
-        .eq('user_id', user.id);
+      // ✅ Charger demandes de construction (avec gestion erreur)
+      let demandesConstruction = [];
+      try {
+        const { data, error } = await supabase
+          .from('demandes_construction')
+          .select('id, statut')
+          .eq('user_id', user.id);
+        
+        if (error && ['PGRST205', '42P01'].includes(error.code)) {
+          console.warn('⚠️ Table demandes_construction manquante');
+        } else if (error) {
+          console.error('Erreur demandes construction:', error);
+        } else {
+          demandesConstruction = data || [];
+        }
+      } catch (err) {
+        console.warn('⚠️ Erreur chargement construction:', err);
+      }
       
-      // Charger demandes d'achat (purchase requests)
-      const { data: purchaseRequests, error: errorPurchases } = await supabase
-        .from('purchase_requests')
-        .select('id, status')
-        .eq('buyer_id', user.id)
-        .in('status', ['pending', 'in_progress', 'seller_reviewing']);
+      // ✅ Charger demandes d'achat (purchase requests) - avec fallback
+      let purchaseRequests = [];
+      try {
+        const { data, error } = await supabase
+          .from('purchase_requests')
+          .select('id, status')
+          .eq('buyer_id', user.id)
+          .in('status', ['pending', 'in_progress', 'seller_reviewing']);
+        
+        if (error && ['PGRST200', 'PGRST205', '42P01'].includes(error.code)) {
+          console.warn('⚠️ Erreur schema purchase_requests, utilisant requests...');
+          // Fallback: charger depuis requests
+          const { data: reqData } = await supabase
+            .from('requests')
+            .select('id, status')
+            .eq('user_id', user.id)
+            .in('status', ['pending', 'initiated', 'in_progress']);
+          purchaseRequests = reqData || [];
+        } else if (error) {
+          console.error('Erreur purchase requests:', error);
+        } else {
+          purchaseRequests = data || [];
+        }
+      } catch (err) {
+        console.warn('⚠️ Erreur chargement purchase requests:', err);
+      }
       
-      // Charger documents en attente
-      const { data: documents, error: errorDocs } = await supabase
-        .from('documents_administratifs')
-        .select('id, status')
-        .eq('user_id', user.id)
-        .eq('status', 'En attente');
+      // ✅ Charger documents en attente (avec gestion erreur)
+      let documents = [];
+      try {
+        const { data, error } = await supabase
+          .from('documents_administratifs')
+          .select('id, status')
+          .eq('user_id', user.id)
+          .eq('status', 'En attente');
+        
+        if (error && ['PGRST205', '42P01'].includes(error.code)) {
+          console.warn('⚠️ Table documents_administratifs manquante');
+        } else if (error) {
+          console.error('Erreur documents:', error);
+        } else {
+          documents = data || [];
+        }
+      } catch (err) {
+        console.warn('⚠️ Erreur chargement documents:', err);
+      }
 
       // Mettre à jour les stats
       setDashboardStats({
-        demandesTerrains: demandesTerrains?.filter(d => 
+        demandesTerrains: demandesTerrains.filter(d => 
           ['en_attente', 'en_cours', 'en_instruction'].includes(d.statut)
-        ).length || 0,
-        demandesConstruction: demandesConstruction?.filter(d => 
+        ).length,
+        demandesConstruction: demandesConstruction.filter(d => 
           ['en_attente', 'en_cours', 'en_instruction'].includes(d.statut)
-        ).length || 0,
-        purchaseRequests: purchaseRequests?.length || 0,
-        documentsEnAttente: documents?.length || 0
+        ).length,
+        purchaseRequests: purchaseRequests.length,
+        documentsEnAttente: documents.length
       });
       
     } catch (error) {

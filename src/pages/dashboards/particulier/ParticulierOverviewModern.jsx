@@ -65,16 +65,28 @@ const ParticulierOverviewModern = () => {
         .eq('statut', 'disponible');
 
       // Charger demandes terrains
-      const { data: demandesTerrains } = await supabase
-        .from('demandes_terrains_communaux')
-        .select('id, statut')
-        .eq('user_id', user.id);
+      let demandesTerrains = [];
+      try {
+        const { data } = await supabase
+          .from('demandes_terrains_communaux')
+          .select('id, statut')
+          .eq('user_id', user.id);
+        demandesTerrains = data || [];
+      } catch (err) {
+        console.warn('⚠️ Table demandes_terrains_communaux manquante');
+      }
 
       // Charger demandes construction
-      const { data: demandesConstruction } = await supabase
-        .from('demandes_construction')
-        .select('id, statut')
-        .eq('user_id', user.id);
+      let demandesConstruction = [];
+      try {
+        const { data } = await supabase
+          .from('demandes_construction')
+          .select('id, statut')
+          .eq('user_id', user.id);
+        demandesConstruction = data || [];
+      } catch (err) {
+        console.warn('⚠️ Table demandes_construction manquante');
+      }
 
       // Charger purchase requests
       const { data: purchases } = await supabase

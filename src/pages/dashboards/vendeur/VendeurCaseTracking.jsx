@@ -95,22 +95,38 @@ const VendeurCaseTracking = () => {
         setTransaction(txData);
       }
 
-      // 3. Charger les données de l'acheteur
-      const { data: buyerData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', caseData.buyer_id)
-        .single();
+      // 2. Charger la demande d'achat (request) si disponible
+      let requestData = null;
+      if (caseData?.request_id) {
+        const { data: rData } = await supabase
+          .from('requests')
+          .select('*')
+          .eq('id', caseData.request_id)
+          .single();
 
-      if (buyerData) {
-        setBuyer(buyerData);
+        if (rData) {
+          requestData = rData;
+        }
+      }
+
+      // 3. Charger les données de l'acheteur
+      if (requestData?.user_id) {
+        const { data: buyerData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', requestData.user_id)
+          .single();
+
+        if (buyerData) {
+          setBuyer(buyerData);
+        }
       }
 
       // 4. Charger la parcelle
       const { data: parcelData } = await supabase
         .from('parcels')
         .select('*')
-        .eq('id', caseData.parcelle_id)
+        .eq('id', caseData.parcel_id)
         .single();
 
       if (parcelData) {

@@ -86,37 +86,41 @@ const VendeurCaseTrackingModernFixed = () => {
       setPurchaseCase(caseData);
 
       // 2. Charger la demande d'achat (request) si disponible
+      let requestData = null;
       if (caseData?.request_id) {
-        const { data: requestData, error: requestError } = await supabase
+        const { data: rData, error: requestError } = await supabase
           .from('requests')
           .select('*')
           .eq('id', caseData.request_id)
           .single();
 
-        if (!requestError && requestData) {
-          setPurchaseRequest(requestData);
+        if (!requestError && rData) {
+          requestData = rData;
+          setPurchaseRequest(rData);
         }
       }
 
       // 3. Charger la parcelle (property)
+      let propertyData = null;
       if (caseData?.parcel_id) {
-        const { data: propertyData, error: propertyError } = await supabase
+        const { data: pData, error: propertyError } = await supabase
           .from('parcels')
           .select('*')
           .eq('id', caseData.parcel_id)
           .single();
 
-        if (!propertyError && propertyData) {
-          setProperty(propertyData);
+        if (!propertyError && pData) {
+          propertyData = pData;
+          setProperty(pData);
         }
       }
 
       // 4. Charger le profil de l'acheteur
-      if (purchaseRequest?.user_id) {
+      if (requestData?.user_id) {
         const { data: buyerData, error: buyerError } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', purchaseRequest.user_id)
+          .eq('id', requestData.user_id)
           .single();
 
         if (!buyerError && buyerData) {
@@ -169,19 +173,21 @@ const VendeurCaseTrackingModernFixed = () => {
         console.warn('⚠️ Erreur historique:', error);
       }
 
-      // 8. Charger les paiements
-      try {
-        const { data: paymentsData, error: paymentsError } = await supabase
-          .from('payments')
-          .select('*')
-          .eq('user_id', purchaseRequest?.user_id)
-          .order('created_at', { ascending: false });
+      // 8. Charger les paiements (si user_id disponible)
+      if (requestData?.user_id) {
+        try {
+          const { data: paymentsData, error: paymentsError } = await supabase
+            .from('payments')
+            .select('*')
+            .eq('user_id', requestData.user_id)
+            .order('created_at', { ascending: false });
 
-        if (!paymentsError) {
-          setPayments(paymentsData || []);
+          if (!paymentsError) {
+            setPayments(paymentsData || []);
+          }
+        } catch (error) {
+          console.warn('⚠️ Erreur paiements:', error);
         }
-      } catch (error) {
-        console.warn('⚠️ Erreur paiements:', error);
       }
 
     } catch (error) {
@@ -250,7 +256,7 @@ const VendeurCaseTrackingModernFixed = () => {
         .from('documents_administratifs')
         .insert([{
           user_id: user.id,
-          case_id: purchaseCase.id,
+          purchase_request_id: purchaseCase.request_id,
           file_name: file.name,
           title: file.name,
           document_type: documentType,

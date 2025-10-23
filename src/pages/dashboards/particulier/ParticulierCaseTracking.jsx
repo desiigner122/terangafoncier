@@ -137,7 +137,7 @@ const ParticulierCaseTracking = () => {
       const { data: parcelData } = await supabase
         .from('parcels')
         .select('*')
-        .eq('id', caseData.parcelle_id)
+        .eq('id', caseData.parcel_id)
         .single();
 
       if (parcelData) {

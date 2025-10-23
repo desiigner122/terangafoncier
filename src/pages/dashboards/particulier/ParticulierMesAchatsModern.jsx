@@ -327,6 +327,24 @@ const ParticulierMesAchatsModern = () => {
   useEffect(() => {
     if (!user?.id) return;
 
+    // Subscription à purchase_cases (NOUVELLE TABLE - PRIORITAIRE)
+    const purchaseCasesChannel = supabase
+      .channel(`purchase-cases-buyer-${user.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'purchase_cases',
+          filter: `buyer_id=eq.${user.id}`,
+        },
+        () => {
+          console.log('🔔 [REALTIME] Changement purchase_cases détecté');
+          loadPurchaseRequests();
+        }
+      )
+      .subscribe();
+
     const purchaseRequestsChannel = supabase
       .channel(`purchase-requests-buyer-${user.id}`)
       .on(
@@ -338,6 +356,7 @@ const ParticulierMesAchatsModern = () => {
           filter: `buyer_id=eq.${user.id}`,
         },
         () => {
+          console.log('🔔 [REALTIME] Changement purchase_requests détecté');
           loadPurchaseRequests();
         }
       )
@@ -354,12 +373,14 @@ const ParticulierMesAchatsModern = () => {
           filter: `user_id=eq.${user.id}`,
         },
         () => {
+          console.log('🔔 [REALTIME] Changement requests (legacy) détecté');
           loadPurchaseRequests();
         }
       )
       .subscribe();
 
     return () => {
+      purchaseCasesChannel.unsubscribe();
       purchaseRequestsChannel.unsubscribe();
       legacyRequestsChannel.unsubscribe();
     };
@@ -377,68 +398,116 @@ const ParticulierMesAchatsModern = () => {
 
       let aggregatedRequests = [];
 
-      // ✅ Essayer charger depuis purchase_requests en premier
+      // ✅ ÉTAPE 1: Charger depuis purchase_cases (NOUVELLE TABLE - PRIORITAIRE)
       try {
-        const { data: modernData, error: modernError } = await supabase
-          .from('purchase_requests')
-          .select(`
-            *,
-            property:properties (
-              id,
-              title,
-              location,
-              price,
-              surface,
-              status,
-              images,
-              owner_id,
-              seller:profiles!properties_seller_id_fkey (
+        const { data: caseData, error: caseError } = await supabase
+          .from('purchase_cases')
+          .select('*')
+          .eq('buyer_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (!caseError && caseData?.length) {
+          console.log('✅ [LOAD] Purchase cases trouvées:', caseData.length);
+          
+          // Transformer purchase_cases en format compatible avec liste
+          aggregatedRequests = caseData.map((caseItem) => ({
+            id: caseItem.id,
+            case_id: caseItem.id,
+            case_number: caseItem.case_number,
+            status: caseItem.status,
+            workflow_stage: caseItem.status,
+            payment_method: caseItem.payment_method,
+            financing_approved: caseItem.financing_approved,
+            created_at: caseItem.created_at,
+            updated_at: caseItem.updated_at,
+            completed_stages: [],
+            source: 'purchase_cases',
+            property: {
+              title: `Dossier ${caseItem.case_number}`,
+              location: '',
+              price: caseItem.purchase_price,
+              images: []
+            },
+            seller: {
+              id: caseItem.seller_id,
+              first_name: 'Vendeur',
+              last_name: 'Professionnel'
+            },
+            appointments: [],
+            documents: [],
+            unread_messages: 0
+          }));
+        } else if (caseError && !['PGRST204', '42P01'].includes(caseError.code)) {
+          console.warn('⚠️ [LOAD] Erreur purchase_cases:', caseError.code);
+        }
+      } catch (err) {
+        console.warn('⚠️ [LOAD] Erreur chargement purchase_cases:', err.message);
+      }
+
+      // ✅ ÉTAPE 2: Essayer charger depuis purchase_requests (FALLBACK)
+      if (aggregatedRequests.length === 0) {
+        try {
+          const { data: modernData, error: modernError } = await supabase
+            .from('purchase_requests')
+            .select(`
+              *,
+              property:properties (
+                id,
+                title,
+                location,
+                price,
+                surface,
+                status,
+                images,
+                owner_id,
+                seller:profiles!properties_seller_id_fkey (
+                  id,
+                  first_name,
+                  last_name,
+                  email,
+                  phone,
+                  avatar_url
+                )
+              ),
+              buyer:profiles!purchase_requests_buyer_id_fkey (
                 id,
                 first_name,
                 last_name,
                 email,
-                phone,
-                avatar_url
+                phone
+              ),
+              appointments:calendar_appointments (
+                id,
+                title,
+                start_time,
+                status
+              ),
+              documents:documents_administratifs (
+                id,
+                document_type,
+                status
               )
-            ),
-            buyer:profiles!purchase_requests_buyer_id_fkey (
-              id,
-              first_name,
-              last_name,
-              email,
-              phone
-            ),
-            appointments:calendar_appointments (
-              id,
-              title,
-              start_time,
-              status
-            ),
-            documents:documents_administratifs (
-              id,
-              document_type,
-              status
-            )
-          `)
-          .eq('buyer_id', user.id)
-          .order('created_at', { ascending: false });
+            `)
+            .eq('buyer_id', user.id)
+            .order('created_at', { ascending: false });
 
-        // ⚠️ Si erreur de relation, on ignore silencieusement
-        if (modernError && ['PGRST200', 'PGRST204', '42P01'].includes(modernError.code)) {
-          console.warn('⚠️ [LOAD] Purchase requests schema error (expected fallback):', modernError.code);
-        } else if (modernError) {
-          console.error('❌ [LOAD] Erreur achat moderne:', modernError);
-        }
+          // ⚠️ Si erreur de relation, on ignore silencieusement
+          if (modernError && ['PGRST200', 'PGRST204', '42P01'].includes(modernError.code)) {
+            console.warn('⚠️ [LOAD] Purchase requests schema error (expected fallback):', modernError.code);
+          } else if (modernError) {
+            console.error('❌ [LOAD] Erreur achat moderne:', modernError);
+          }
 
-        if (modernData?.length) {
-          aggregatedRequests = modernData.map((item) => normalizeModernRequest(item));
-          console.log('✅ [LOAD] Requests modernes trouvées:', aggregatedRequests.length);
+          if (modernData?.length) {
+            aggregatedRequests = modernData.map((item) => normalizeModernRequest(item));
+            console.log('✅ [LOAD] Requests modernes trouvées:', aggregatedRequests.length);
+          }
+        } catch (modernErr) {
+          console.warn('⚠️ [LOAD] Fallback sur requests legacy...');
         }
-      } catch (modernErr) {
-        console.warn('⚠️ [LOAD] Fallback sur requests legacy...');
       }
 
-      // ✅ Si aucun résultat moderne, charger depuis requests (legacy)
+      // ✅ ÉTAPE 3: Si toujours aucun résultat, charger depuis requests (legacy)
       if (aggregatedRequests.length === 0) {
         console.log('🔄 [LOAD] Chargement depuis requests (legacy)...');
         const legacyRequests = await fetchLegacyRequests();

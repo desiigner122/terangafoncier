@@ -90,7 +90,7 @@ const VendeurPhotos = React.lazy(() => import('./VendeurPhotosRealData'));
 const VendeurAnalytics = React.lazy(() => import('./VendeurAnalyticsRealData'));
 const VendeurAI = React.lazy(() => import('./VendeurAIRealData'));
 const VendeurBlockchain = React.lazy(() => import('./VendeurBlockchainRealData'));
-const VendeurMessages = React.lazy(() => import('./VendeurMessagesRealData'));
+const VendeurMessages = React.lazy(() => import('./VendeurMessagesModern'));
 const VendeurSupport = React.lazy(() => import('./VendeurSupport'));
 const VendeurSettings = React.lazy(() => import('./VendeurSettingsRealData'));
 
@@ -157,6 +157,81 @@ const CompleteSidebarVendeurDashboard = () => {
     aiOptimized: 0,
     blockchainVerified: 0,
   });
+
+  const formatStatusLabel = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    const mapping = {
+      pending: 'en attente',
+      waiting_response: 'en attente',
+      negotiation: 'en négociation',
+      in_progress: 'en cours',
+      accepted: 'acceptée',
+      approved: 'acceptée',
+      rejected: 'refusée',
+      declined: 'refusée',
+      cancelled: 'annulée',
+      canceled: 'annulée',
+      completed: 'finalisée',
+      finalized: 'finalisée',
+    };
+
+    return mapping[normalized] || normalized || 'mise à jour';
+  };
+
+  const buildFallbackNotifications = async () => {
+    try {
+      // ✅ CORRECTION: Charger depuis requests (source stable) au lieu de purchase_requests
+      // purchase_requests a des problèmes de relation avec properties
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('requests')
+        .select(`
+          id,
+          status,
+          created_at,
+          updated_at,
+          parcel:parcel_id (
+            id,
+            title,
+            location,
+            seller_id
+          ),
+          buyer:user_id (
+            id,
+            first_name,
+            last_name
+          )
+        `)
+        .order('updated_at', { ascending: false })
+        .limit(25);
+
+      if (requestsError) {
+        if (!['PGRST204', '42P01', 'PGRST200'].includes(requestsError.code)) {
+          console.warn('⚠️ Erreur fallback notifications (requests):', requestsError.code);
+        }
+        // Continue quand même
+      }
+
+      // Filtrer les demandes du vendeur et les transformer
+      const notifications = (requestsData || [])
+        .filter((item) => item.parcel?.seller_id === user?.id)
+        .map((item) => ({
+          id: `fallback-${item.id}`,
+          title: `Demande ${formatStatusLabel(item.status)}`,
+          message: `${item.buyer?.first_name || 'Acheteur'} ${item.buyer?.last_name || ''} — ${
+            item.parcel?.title || 'Propriété'
+          } (${formatStatusLabel(item.status)})`,
+          created_at: item.updated_at || item.created_at,
+          status: item.status,
+          type: 'purchase_request',
+        }))
+        .slice(0, 10);
+
+      return notifications;
+    } catch (error) {
+      console.warn('⚠️ Erreur construction fallback notifications:', error);
+      return [];
+    }
+  };
 
   // Navigation Items Configuration pour Vendeur - CRM + Anti-Fraude
   const navigationItems = [
@@ -292,6 +367,8 @@ const CompleteSidebarVendeurDashboard = () => {
 
   // Charger les notifications depuis Supabase
   const loadNotifications = async () => {
+    let fetchedNotifications = [];
+
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -301,13 +378,23 @@ const CompleteSidebarVendeurDashboard = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (!error && data) {
-        setNotifications(data);
-        // unreadNotificationsCount now comes from useUnreadCounts hook
+      if (error) {
+        if (!['PGRST204', '42P01'].includes(error.code)) {
+          console.error('Erreur chargement notifications:', error);
+        }
+      } else if (data?.length) {
+        fetchedNotifications = data;
       }
     } catch (error) {
       console.error('Erreur chargement notifications:', error);
     }
+
+    if (!fetchedNotifications.length) {
+      const fallback = await buildFallbackNotifications();
+      fetchedNotifications = fallback;
+    }
+
+    setNotifications(fetchedNotifications);
   };
 
   // Charger les messages depuis Supabase

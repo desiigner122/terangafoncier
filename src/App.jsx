@@ -310,6 +310,10 @@ import VendeurAnalyticsRealData from '@/pages/dashboards/vendeur/VendeurAnalytic
 import VendeurAIRealData from '@/pages/dashboards/vendeur/VendeurAIRealData';
 import VendeurBlockchainRealData from '@/pages/dashboards/vendeur/VendeurBlockchainRealData';
 import VendeurMessagesRealData from '@/pages/dashboards/vendeur/VendeurMessagesRealData';
+import VendeurMessagesModern from '@/pages/dashboards/vendeur/VendeurMessagesModern';
+import VendeurCaseTrackingModernFixed from '@/pages/dashboards/vendeur/VendeurCaseTrackingModernFixed';
+import ParticulierMesAchatsModern from '@/pages/dashboards/particulier/ParticulierMesAchatsModern';
+import ParticulierCaseTrackingModern from '@/pages/dashboards/particulier/ParticulierCaseTrackingModern';
 import VendeurSettingsRealData from '@/pages/dashboards/vendeur/VendeurSettingsRealData';
 import VendeurSupport from '@/pages/dashboards/vendeur/VendeurSupport';
 import CompleteSidebarInvestisseurDashboard from '@/pages/dashboards/investisseur/CompleteSidebarInvestisseurDashboard';
@@ -545,8 +549,9 @@ function App() {
                   <Route path="overview" element={<ParticulierOverview />} />
                   <Route path="recherche" element={<ParticulierRechercheTerrain />} />
                   <Route path="favoris" element={<ParticulierFavoris />} />
-                  <Route path="mes-achats" element={<ParticulierMesAchatsRefactored />} />
-                  <Route path="cases/:caseNumber" element={<ModernBuyerCaseTrackingV2 />} />
+                  <Route path="mes-achats" element={<ParticulierMesAchatsModern />} />
+                  <Route path="dossier/:caseId" element={<ParticulierCaseTrackingModern />} />
+                  <Route path="cases/:caseNumber" element={<ParticulierCaseTrackingModern />} />
                   <Route path="visites" element={<ParticulierVisites />} />
                   <Route path="financement" element={<ParticulierFinancement />} />
                   <Route path="zones-communales" element={<ParticulierZonesCommunales />} />
@@ -554,8 +559,6 @@ function App() {
                   <Route path="terrains-prives" element={<ParticulierTerrainsPrive />} />
                   <Route path="construction" element={<ParticulierConstructions />} />
                   <Route path="promoteurs" element={<ParticulierPromoteurs />} />
-                  <Route path="mes-achats" element={<PurchaseRequestsListWrapper />} />
-                  <Route path="cases/:caseNumber" element={<ModernBuyerCaseTrackingV2 />} />
                   <Route path="suivi-dossiers" element={<ParticulierOverview />} />
                   <Route path="mes-demandes" element={<ParticulierDemandesTerrains />} />
                   <Route path="candidatures" element={<ParticulierZonesCommunales />} />
@@ -585,7 +588,8 @@ function App() {
                   <Route path="properties" element={<VendeurPropertiesRealData />} />
                   <Route path="edit-property/:id" element={<EditPropertyComplete />} />
                   <Route path="purchase-requests" element={<VendeurPurchaseRequests />} />
-                  <Route path="cases/:caseNumber" element={<RefactoredVendeurCaseTracking />} />
+                  <Route path="dossier/:caseId" element={<VendeurCaseTrackingModernFixed />} />
+                  <Route path="cases/:caseNumber" element={<VendeurCaseTrackingModernFixed />} />
                   <Route path="anti-fraud" element={<VendeurAntiFraudeRealData />} />
                   <Route path="gps-verification" element={<VendeurGPSRealData />} />
                   <Route path="digital-services" element={<VendeurServicesDigitauxRealData />} />
@@ -596,7 +600,7 @@ function App() {
                   <Route path="blockchain" element={<VendeurBlockchainRealData />} />
                   <Route path="transactions" element={<div />} /> {/* 🆕 SEMAINE 3 - Géré par CompleteSidebarVendeurDashboard */}
                   <Route path="market-analytics" element={<div />} /> {/* 🆕 SEMAINE 3 - Géré par CompleteSidebarVendeurDashboard */}
-                  <Route path="messages" element={<VendeurMessagesRealData />} />
+                  <Route path="messages" element={<VendeurMessagesModern />} />
                   <Route path="support" element={<VendeurSupport />} />
                   <Route path="settings" element={<VendeurSettingsRealData />} />
                 </Route>

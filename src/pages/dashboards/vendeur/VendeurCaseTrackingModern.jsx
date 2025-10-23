@@ -637,7 +637,7 @@ const VendeurCaseTrackingModern = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <AppointmentScheduler
-                  purchaseRequestId={caseId}
+                  purchaseRequestId={purchaseCase?.id}
                   userId={user.id}
                   onAppointmentCreated={loadCaseData}
                 />

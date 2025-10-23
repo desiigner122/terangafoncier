@@ -173,6 +173,7 @@ const ParticulierMesAchatsModern = () => {
             id: sellerPayload.id,
             first_name: sellerPayload.first_name || sellerPayload.prenom,
             last_name: sellerPayload.last_name || sellerPayload.nom,
+            full_name: sellerPayload.full_name || `${sellerPayload.first_name || sellerPayload.prenom || ''} ${sellerPayload.last_name || sellerPayload.nom || ''}`.trim(),
             email: sellerPayload.email || null,
             phone: sellerPayload.phone || sellerPayload.telephone || null,
             avatar_url: sellerPayload.avatar_url || sellerPayload.photo_url || null,
@@ -362,7 +363,29 @@ const ParticulierMesAchatsModern = () => {
       try {
         const { data: caseData, error: caseError } = await supabase
           .from('purchase_cases')
-          .select('*')
+          .select(`
+            *,
+            seller:profiles!purchase_cases_seller_id_fkey (
+              id,
+              first_name,
+              last_name,
+              full_name,
+              email,
+              phone,
+              avatar_url
+            ),
+            property:parcelles (
+              id,
+              title,
+              location,
+              commune,
+              surface,
+              area,
+              price,
+              images,
+              photo_url
+            )
+          `)
           .eq('buyer_id', user.id)
           .order('created_at', { ascending: false });
 
@@ -382,16 +405,51 @@ const ParticulierMesAchatsModern = () => {
             updated_at: caseItem.updated_at,
             completed_stages: [],
             source: 'purchase_cases',
-            property: {
+            property: caseItem.property ? {
+              id: caseItem.property.id,
+              title: caseItem.property.title || `Dossier ${caseItem.case_number}`,
+              location: caseItem.property.location || caseItem.property.commune || '',
+              price: caseItem.property.price || caseItem.purchase_price,
+              surface: caseItem.property.surface || caseItem.property.area,
+              images: Array.isArray(caseItem.property.images) 
+                ? caseItem.property.images.filter(Boolean)
+                : (caseItem.property.photo_url ? [caseItem.property.photo_url] : []),
+              photo_url: caseItem.property.photo_url,
+              seller: {
+                id: caseItem.seller?.id || caseItem.seller_id,
+                first_name: caseItem.seller?.first_name || 'Vendeur',
+                last_name: caseItem.seller?.last_name || 'Professionnel',
+                full_name: caseItem.seller?.full_name || 
+                  `${caseItem.seller?.first_name || 'Vendeur'} ${caseItem.seller?.last_name || 'Professionnel'}`,
+                email: caseItem.seller?.email,
+                phone: caseItem.seller?.phone,
+                avatar_url: caseItem.seller?.avatar_url,
+              }
+            } : {
               title: `Dossier ${caseItem.case_number}`,
               location: '',
               price: caseItem.purchase_price,
-              images: []
+              images: [],
+              seller: {
+                id: caseItem.seller_id,
+                first_name: 'Vendeur',
+                last_name: 'Professionnel',
+                full_name: 'Vendeur Professionnel',
+              }
             },
-            seller: {
+            seller: caseItem.seller ? {
+              id: caseItem.seller.id,
+              first_name: caseItem.seller.first_name,
+              last_name: caseItem.seller.last_name,
+              full_name: caseItem.seller.full_name || `${caseItem.seller.first_name || ''} ${caseItem.seller.last_name || ''}`.trim(),
+              email: caseItem.seller.email,
+              phone: caseItem.seller.phone,
+              avatar_url: caseItem.seller.avatar_url,
+            } : {
               id: caseItem.seller_id,
               first_name: 'Vendeur',
-              last_name: 'Professionnel'
+              last_name: 'Professionnel',
+              full_name: 'Vendeur Professionnel',
             },
             appointments: [],
             documents: [],
@@ -552,9 +610,9 @@ const ParticulierMesAchatsModern = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-6">
       {/* Header */}
-      <div className="max-w-7xl mx-auto mb-8">
+      <div className="max-w-6xl mx-auto mb-8">
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Mes Achats</h1>
@@ -628,7 +686,7 @@ const ParticulierMesAchatsModern = () => {
       </div>
 
       {/* Filtres et recherche */}
-      <div className="max-w-7xl mx-auto mb-6">
+      <div className="max-w-6xl mx-auto mb-6">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -656,7 +714,7 @@ const ParticulierMesAchatsModern = () => {
       </div>
 
       {/* Liste des demandes */}
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         {filteredRequests.length === 0 ? (
           <Card>
             <CardContent className="py-12">
@@ -746,7 +804,10 @@ const ParticulierMesAchatsModern = () => {
                           </Avatar>
                           <div>
                             <p className="text-sm font-medium">
-                              {request.property?.seller?.full_name || 'Vendeur'}
+                              {request.property?.seller?.full_name || 
+                               (request.property?.seller?.first_name || request.property?.seller?.last_name 
+                                ? `${request.property?.seller?.first_name || ''} ${request.property?.seller?.last_name || ''}`.trim()
+                                : 'Vendeur')}
                             </p>
                             <p className="text-xs text-gray-500">Vendeur</p>
                           </div>

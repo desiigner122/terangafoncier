@@ -45,6 +45,7 @@ const ParticulierCaseTrackingModern = () => {
   const [loading, setLoading] = useState(true);
   const [purchaseCase, setPurchaseCase] = useState(null);
   const [seller, setSeller] = useState(null);
+  const [property, setProperty] = useState(null);
   const [messages, setMessages] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -86,6 +87,16 @@ const ParticulierCaseTrackingModern = () => {
           .eq('id', caseData.seller_id)
           .single();
         setSeller(sellerData);
+      }
+
+      // 2b. Charger les infos de la propriété
+      if (caseData?.parcelle_id) {
+        const { data: propertyData } = await supabase
+          .from('parcelles')
+          .select('*')
+          .eq('id', caseData.parcelle_id)
+          .single();
+        setProperty(propertyData);
       }
 
       // 3. Charger les messages
@@ -261,8 +272,8 @@ const ParticulierCaseTrackingModern = () => {
   const paymentsProgress = calculatePaymentsProgress();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
-      <div className="max-w-7xl mx-auto">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-6">
+      <div className="max-w-6xl mx-auto">
         {/* Header */}
         <div className="mb-6">
           <Button
@@ -310,6 +321,58 @@ const ParticulierCaseTrackingModern = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Colonne gauche - Infos principales */}
           <div className="lg:col-span-2 space-y-6">
+            {/* Image de la propriété */}
+            <Card className="overflow-hidden">
+              <div className="w-full h-64 md:h-80 relative bg-gray-100 flex items-center justify-center">
+                {property?.images?.[0] ? (
+                  <img
+                    src={property.images[0]}
+                    alt={property?.title || purchaseCase?.case_number}
+                    className="w-full h-full object-cover"
+                  />
+                ) : property?.photo_url ? (
+                  <img
+                    src={property.photo_url}
+                    alt={property?.title || purchaseCase?.case_number}
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <div className="flex flex-col items-center justify-center">
+                    <Building2 className="w-16 h-16 text-gray-300 mb-2" />
+                    <span className="text-gray-400 text-sm">Aucune image disponible</span>
+                  </div>
+                )}
+              </div>
+            </Card>
+
+            {/* Infos de la propriété */}
+            {property && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <MapPin className="w-5 h-5" />
+                    Propriété
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div>
+                    <p className="text-sm text-gray-600">Titre</p>
+                    <p className="text-lg font-semibold">{property.title || 'Propriété'}</p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Localisation</p>
+                      <p className="font-medium">{property.location || property.commune || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Surface</p>
+                      <p className="font-medium">{property.surface || property.area || 'N/A'} m²</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Timeline */}
             <Card>
               <CardHeader>
@@ -585,7 +648,9 @@ const ParticulierCaseTrackingModern = () => {
                   </Avatar>
                   <div>
                     <p className="font-semibold">
-                      {seller?.full_name || 'Vendeur'}
+                      {seller?.full_name || seller?.first_name && seller?.last_name 
+                        ? `${seller.first_name} ${seller.last_name}` 
+                        : 'Vendeur'}
                     </p>
                     <p className="text-sm text-gray-500">Propriétaire</p>
                   </div>
@@ -594,7 +659,7 @@ const ParticulierCaseTrackingModern = () => {
                 <div className="space-y-2 text-sm">
                   <div className="flex items-center gap-2 text-gray-600">
                     <Mail className="w-4 h-4" />
-                    {seller?.email}
+                    {seller?.email || 'N/A'}
                   </div>
                   {seller?.phone && (
                     <div className="flex items-center gap-2 text-gray-600">

@@ -370,7 +370,7 @@ const VendeurCaseTracking = () => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className={`p-3 rounded-lg ${
-                              msg.sender_id === user.id
+                              msg.sent_by === user.id
                                 ? 'bg-blue-100 ml-8'
                                 : 'bg-white border border-slate-200 mr-8'
                             }`}

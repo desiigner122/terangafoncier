@@ -114,12 +114,12 @@ const ModernBuyerCaseTracking = () => {
 
       setCaseData(purchaseCase);
 
-      // 2. Load property
-      if (purchaseCase.parcelle_id) {
+      // 2. Load property (updated column/table)
+      if (purchaseCase.parcel_id) {
         const { data: property } = await supabase
           .from('parcels')
           .select('*')
-          .eq('id', purchaseCase.parcelle_id)
+          .eq('id', purchaseCase.parcel_id)
           .single();
         setPropertyData(property);
       }

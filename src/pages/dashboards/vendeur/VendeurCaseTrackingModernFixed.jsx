@@ -674,7 +674,7 @@ const VendeurCaseTrackingModernFixed = () => {
                 {purchaseCase && (
                   <>
                     <AppointmentScheduler
-                      purchaseRequestId={purchaseCase.id}
+                      purchaseRequestId={purchaseCase.request_id}
                       userId={user.id}
                       onAppointmentCreated={loadCaseData}
                     />

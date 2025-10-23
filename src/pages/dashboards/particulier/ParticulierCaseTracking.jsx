@@ -500,11 +500,11 @@ const ParticulierCaseTracking = () => {
                     key={index}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`flex gap-3 ${msg.sender_id === user.id ? 'flex-row-reverse' : ''}`}
+                    className={`flex gap-3 ${msg.sent_by === user.id ? 'flex-row-reverse' : ''}`}
                   >
                     <div
                       className={`flex-1 rounded-lg px-4 py-2 ${
-                        msg.sender_id === user.id
+                        msg.sent_by === user.id
                           ? 'bg-blue-100 text-blue-900'
                           : 'bg-slate-200 text-slate-900'
                       }`}

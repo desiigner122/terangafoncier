@@ -44,7 +44,9 @@ const ParticulierCaseTrackingModern = () => {
 
   const [loading, setLoading] = useState(true);
   const [purchaseCase, setPurchaseCase] = useState(null);
+  const [purchaseRequest, setPurchaseRequest] = useState(null);
   const [seller, setSeller] = useState(null);
+  const [buyerProfile, setBuyerProfile] = useState(null);
   const [property, setProperty] = useState(null);
   const [messages, setMessages] = useState([]);
   const [documents, setDocuments] = useState([]);
@@ -89,14 +91,43 @@ const ParticulierCaseTrackingModern = () => {
         setSeller(sellerData);
       }
 
-      // 2b. Charger les infos de la propriété
-      if (caseData?.parcelle_id) {
+      // 2b. Charger les infos de la propriété (nouvelle table/colonne)
+      if (caseData?.parcel_id) {
         const { data: propertyData } = await supabase
-          .from('parcelles')
+          .from('parcels')
           .select('*')
-          .eq('id', caseData.parcelle_id)
+          .eq('id', caseData.parcel_id)
           .single();
         setProperty(propertyData);
+      }
+
+      // 2c. Charger la demande d'achat liée et le profil acheteur
+      if (caseData?.request_id) {
+        const { data: requestData } = await supabase
+          .from('requests')
+          .select('*')
+          .eq('id', caseData.request_id)
+          .single();
+        setPurchaseRequest(requestData || null);
+
+        if (requestData?.user_id) {
+          const { data: buyerData } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', requestData.user_id)
+            .single();
+          setBuyerProfile(buyerData || null);
+        }
+
+        // Charger les paiements directement avec l'ID utilisateur de la demande
+        if (requestData?.user_id) {
+          const { data: paymentsData } = await supabase
+            .from('payments')
+            .select('*')
+            .eq('user_id', requestData.user_id)
+            .order('created_at', { ascending: false });
+          setPayments(paymentsData || []);
+        }
       }
 
       // 3. Charger les messages
@@ -131,13 +162,15 @@ const ParticulierCaseTrackingModern = () => {
         .order('created_at', { ascending: false });
       setHistory(historyData || []);
 
-      // 7. Charger les paiements
-      const { data: paymentsData } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', purchaseCase?.user_id)
-        .order('created_at', { ascending: false });
-      setPayments(paymentsData || []);
+      // 7. Si pas de demande ou user_id indisponible, fallback sur l'utilisateur courant
+      if (!payments?.length && user?.id) {
+        const { data: paymentsData } = await supabase
+          .from('payments')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+        setPayments(paymentsData || []);
+      }
 
     } catch (error) {
       console.error('Erreur chargement dossier:', error);
@@ -199,18 +232,21 @@ const ParticulierCaseTrackingModern = () => {
 
       if (uploadError) throw uploadError;
 
+      // Enregistrer dans documents_administratifs (aligné au schéma actuel)
       const { data: docData, error: docError } = await supabase
-        .from('purchase_case_documents')
+        .from('documents_administratifs')
         .insert([{
-          case_id: caseId,
-          uploaded_by: user.id,
-          document_type: documentType,
+          user_id: user.id,
+          purchase_request_id: purchaseCase.request_id,
+          property_id: property?.id || null,
+          file_name: file.name,
           title: file.name,
-          file_url: filePath,
-          file_size: file.size,
-          file_type: file.type,
+          description: 'Document téléversé par l\'acheteur',
+          document_type: documentType || 'other',
+          file_format: file.type || 'application/octet-stream',
           storage_path: filePath,
           status: 'pending',
+          uploaded_by: user.id,
         }])
         .select()
         .single();
@@ -494,13 +530,13 @@ const ParticulierCaseTrackingModern = () => {
                               key={msg.id}
                               className={cn(
                                 'flex',
-                                msg.sender_id === user.id ? 'justify-end' : 'justify-start'
+                                msg.sent_by === user.id ? 'justify-end' : 'justify-start'
                               )}
                             >
                               <div
                                 className={cn(
                                   'max-w-md rounded-2xl px-4 py-2',
-                                  msg.sender_id === user.id
+                                  msg.sent_by === user.id
                                     ? 'bg-blue-500 text-white'
                                     : 'bg-gray-100 text-gray-900'
                                 )}
@@ -608,15 +644,16 @@ const ParticulierCaseTrackingModern = () => {
               </CardHeader>
               <CardContent className="space-y-3">
                 <AppointmentScheduler
-                  caseId={caseId}
+                  purchaseRequestId={purchaseRequest?.id || purchaseCase?.request_id}
                   userId={user.id}
                   onAppointmentCreated={loadCaseData}
                 />
 
                 <ContractGenerator
-                  purchaseCase={purchaseCase}
-                  buyer={user}
+                  purchaseRequest={purchaseRequest}
+                  buyer={buyerProfile || user}
                   seller={seller}
+                  property={property}
                   onContractGenerated={loadCaseData}
                 />
 

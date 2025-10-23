@@ -114,11 +114,11 @@ const RefactoredVendeurCaseTracking = () => {
       }
       setCaseData(purchaseCase);
 
-      if (purchaseCase.parcelle_id) {
+      if (purchaseCase.parcel_id) {
         const { data: property } = await supabase
           .from('parcels')
           .select('*')
-          .eq('id', purchaseCase.parcelle_id)
+          .eq('id', purchaseCase.parcel_id)
           .maybeSingle();
         setPropertyData(property || null);
       }

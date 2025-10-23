@@ -28,6 +28,7 @@ import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import ContractGenerator from '@/components/purchase/ContractGenerator';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
+import RealtimeNotificationService from '@/services/RealtimeNotificationService';
 
 const STATUS_CONFIG = {
   pending: {
@@ -327,62 +328,21 @@ const ParticulierMesAchatsModern = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    // Subscription à purchase_cases (NOUVELLE TABLE - PRIORITAIRE)
-    const purchaseCasesChannel = supabase
-      .channel(`purchase-cases-buyer-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'purchase_cases',
-          filter: `buyer_id=eq.${user.id}`,
-        },
-        () => {
-          console.log('🔔 [REALTIME] Changement purchase_cases détecté');
-          loadPurchaseRequests();
-        }
-      )
-      .subscribe();
-
-    const purchaseRequestsChannel = supabase
-      .channel(`purchase-requests-buyer-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'purchase_requests',
-          filter: `buyer_id=eq.${user.id}`,
-        },
-        () => {
-          console.log('🔔 [REALTIME] Changement purchase_requests détecté');
-          loadPurchaseRequests();
-        }
-      )
-      .subscribe();
-
-    const legacyRequestsChannel = supabase
-      .channel(`legacy-requests-buyer-${user.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: '*',
-          schema: 'public',
-          table: 'requests',
-          filter: `user_id=eq.${user.id}`,
-        },
-        () => {
-          console.log('🔔 [REALTIME] Changement requests (legacy) détecté');
-          loadPurchaseRequests();
-        }
-      )
-      .subscribe();
+    // Setup Realtime notifications for buyer cases
+    try {
+      RealtimeNotificationService.setupBuyerTracking(user.id, (payload) => {
+        console.log('� [REALTIME] Mise à jour détectée pour acheteur:', payload);
+        toast.info('Mise à jour de vos achats détectée');
+        loadPurchaseRequests();
+      });
+      console.log('✅ Realtime subscriptions pour acheteur initialisées');
+    } catch (error) {
+      console.warn('⚠️ Erreur setup Realtime:', error);
+    }
 
     return () => {
-      purchaseCasesChannel.unsubscribe();
-      purchaseRequestsChannel.unsubscribe();
-      legacyRequestsChannel.unsubscribe();
+      // Cleanup subscriptions
+      RealtimeNotificationService.unsubscribeAll();
     };
   }, [user?.id]);
 

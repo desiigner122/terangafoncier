@@ -610,23 +610,24 @@ const ParticulierMesAchatsModern = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-4 md:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
       {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Mes Achats</h1>
-            <p className="text-gray-600 mt-1">Suivez toutes vos demandes d'achat de propriétés</p>
+      <div className="border-b border-slate-200/50 bg-white/50 backdrop-blur-sm">
+        <div className="px-4 md:px-8 py-8">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900">Mes Achats</h1>
+              <p className="text-gray-600 mt-1">Suivez toutes vos demandes d'achat de propriétés</p>
+            </div>
+
+            <Button onClick={() => navigate('/acheteur/parcelles')} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Nouvelle demande
+            </Button>
           </div>
 
-          <Button onClick={() => navigate('/acheteur/parcelles')} className="gap-2">
-            <Plus className="w-4 h-4" />
-            Nouvelle demande
-          </Button>
-        </div>
-
-        {/* Statistiques */}
-        <div className="grid grid-cols-4 gap-4 mt-6">
+          {/* Statistiques */}
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center justify-between">
@@ -683,10 +684,11 @@ const ParticulierMesAchatsModern = () => {
             </CardContent>
           </Card>
         </div>
+        </div>
       </div>
 
       {/* Filtres et recherche */}
-      <div className="max-w-6xl mx-auto mb-6">
+      <div className="px-4 md:px-8 py-6 border-b border-slate-200/50">
         <Card>
           <CardContent className="pt-6">
             <div className="flex items-center gap-4">
@@ -714,7 +716,7 @@ const ParticulierMesAchatsModern = () => {
       </div>
 
       {/* Liste des demandes */}
-      <div className="max-w-6xl mx-auto">
+      <div className="px-4 md:px-8 py-6">
         {filteredRequests.length === 0 ? (
           <Card>
             <CardContent className="py-12">

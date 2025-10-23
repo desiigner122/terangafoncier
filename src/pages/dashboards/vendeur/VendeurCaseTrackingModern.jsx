@@ -124,7 +124,7 @@ const VendeurCaseTrackingModern = () => {
         const { data: docsData, error: docsError } = await supabase
           .from('documents_administratifs')
           .select('*')
-          .eq('case_id', caseData.id)
+          .eq('purchase_request_id', caseData.request_id)
           .order('created_at', { ascending: false });
 
         if (docsError && !['PGRST205', '42P01'].includes(docsError.code)) {
@@ -141,7 +141,7 @@ const VendeurCaseTrackingModern = () => {
         const { data: aptsData, error: aptsError } = await supabase
           .from('calendar_appointments')
           .select('*')
-          .eq('case_id', caseData.id)
+          .eq('purchase_request_id', caseData.request_id)
           .order('start_time', { ascending: true });
 
         if (aptsError && !['PGRST205', '42P01'].includes(aptsError.code)) {
@@ -175,7 +175,7 @@ const VendeurCaseTrackingModern = () => {
         const { data: paymentsData, error: paymentsError } = await supabase
           .from('payments')
           .select('*')
-          .eq('case_id', caseData.id)
+          .eq('user_id', purchaseRequest?.user_id)
           .order('created_at', { ascending: false });
 
         if (paymentsError && !['PGRST205', '42P01'].includes(paymentsError.code)) {

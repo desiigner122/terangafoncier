@@ -34,6 +34,7 @@ import ContractGenerator from '@/components/purchase/ContractGenerator';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
+import RealtimeNotificationService from '@/services/RealtimeNotificationService';
 
 const VendeurCaseTrackingModernFixed = () => {
   const { caseNumber } = useParams();
@@ -55,7 +56,13 @@ const VendeurCaseTrackingModernFixed = () => {
   useEffect(() => {
     if (user && caseNumber) {
       loadCaseData();
+      setupRealtimeSubscriptions();
     }
+
+    return () => {
+      // Cleanup subscriptions
+      RealtimeNotificationService.unsubscribeAll();
+    };
   }, [user, caseNumber]);
 
   const loadCaseData = async () => {
@@ -182,6 +189,22 @@ const VendeurCaseTrackingModernFixed = () => {
       toast.error('Erreur lors du chargement du dossier');
     } finally {
       setLoading(false);
+    }
+  };
+
+  const setupRealtimeSubscriptions = () => {
+    try {
+      // Setup Realtime pour le dossier spécifique
+      RealtimeNotificationService.setupCaseTracking(purchaseCase?.id, (payload) => {
+        console.log('📡 [REALTIME] Mise à jour dossier vendeur:', payload);
+        toast.info('Mise à jour du dossier détectée');
+        // Rechargement optionnel des données
+        // loadCaseData();
+      });
+
+      console.log('✅ Realtime subscriptions initialisées pour le vendeur');
+    } catch (error) {
+      console.error('Erreur setup Realtime:', error);
     }
   };
 

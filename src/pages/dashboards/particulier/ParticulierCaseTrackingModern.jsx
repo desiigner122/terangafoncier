@@ -35,6 +35,7 @@ import ContractGenerator from '@/components/purchase/ContractGenerator';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
+import RealtimeNotificationService from '@/services/RealtimeNotificationService';
 
 const ParticulierCaseTrackingModern = () => {
   const { caseId } = useParams();
@@ -54,7 +55,13 @@ const ParticulierCaseTrackingModern = () => {
   useEffect(() => {
     if (user && caseId) {
       loadCaseData();
+      setupRealtimeSubscriptions();
     }
+
+    return () => {
+      // Cleanup subscriptions
+      RealtimeNotificationService.unsubscribeAll();
+    };
   }, [user, caseId]);
 
   const loadCaseData = async () => {
@@ -152,6 +159,22 @@ const ParticulierCaseTrackingModern = () => {
     } catch (error) {
       console.error('Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi du message');
+    }
+  };
+
+  const setupRealtimeSubscriptions = () => {
+    try {
+      // Setup Realtime pour le dossier spécifique
+      RealtimeNotificationService.setupCaseTracking(caseId, (payload) => {
+        console.log('📡 [REALTIME] Mise à jour dossier acheteur:', payload);
+        toast.info('Mise à jour du dossier détectée');
+        // Rechargement optionnel des données (peut être commenté pour éviter trop de reloads)
+        // loadCaseData();
+      });
+
+      console.log('✅ Realtime subscriptions initialisées pour l\'acheteur');
+    } catch (error) {
+      console.error('Erreur setup Realtime:', error);
     }
   };
 

@@ -1,7 +1,6 @@
 /**
  * Page de suivi de dossier d'achat - Vendeur (Version Refondée)
- * Avec: Timeline, RDV, Génération contrats, Documents, Messagerie, Paiements
- * Calquée sur ParticulierCaseTrackingModern mais pour le vendeur
+ * Utilise les vrais statuts du workflow et supporte financement bancaire
  * @author Teranga Foncier Team
  */
 import React, { useState, useEffect } from 'react';
@@ -32,7 +31,9 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import ContractGenerator from '@/components/purchase/ContractGenerator';
-import TimelineTracker from '@/components/purchase/TimelineTracker';
+import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
+import BankFinancingSection from '@/components/purchase/BankFinancingSection';
+import WorkflowStatusService from '@/services/WorkflowStatusService';
 
 const VendeurCaseTrackingModernFixed = () => {
   const { caseNumber } = useParams();
@@ -249,16 +250,19 @@ const VendeurCaseTrackingModernFixed = () => {
     }
   };
 
+  // ✅ CORRECTION: Utiliser le vrai progress_percentage du dossier
   const calculateProgress = () => {
-    const stages = ['offer_submitted', 'offer_accepted', 'documents_pending', 'financing_approval', 'compromis_signed', 'final_payment', 'title_transfer', 'completed'];
-    const currentIndex = stages.indexOf(purchaseCase?.workflow_stage || purchaseRequest?.workflow_stage || 'offer_submitted');
-    return ((currentIndex + 1) / stages.length) * 100;
+    if (purchaseCase?.progress_percentage !== undefined && purchaseCase?.progress_percentage !== null) {
+      return purchaseCase.progress_percentage;
+    }
+    // Fallback: calculer à partir du statut
+    return WorkflowStatusService.calculateProgressFromStatus(purchaseCase?.status || 'initiated');
   };
 
   const calculatePaymentsProgress = () => {
     if (!payments || payments.length === 0) return 0;
     const paid = payments.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.amount, 0);
-    const total = purchaseCase?.amount || purchaseRequest?.offered_price || 1;
+    const total = purchaseCase?.purchase_price || purchaseCase?.negotiated_price || purchaseCase?.amount || 1;
     return (paid / total) * 100;
   };
 
@@ -267,14 +271,7 @@ const VendeurCaseTrackingModernFixed = () => {
   };
 
   const getStatusColor = (status) => {
-    const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      approved: 'bg-green-100 text-green-800',
-      rejected: 'bg-red-100 text-red-800',
-      under_review: 'bg-blue-100 text-blue-800',
-      completed: 'bg-emerald-100 text-emerald-800',
-    };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return WorkflowStatusService.getColor(status);
   };
 
   if (loading) {
@@ -325,18 +322,20 @@ const VendeurCaseTrackingModernFixed = () => {
 
             <div className="text-right">
               <div className="text-3xl font-bold text-purple-600">
-                {formatPrice(purchaseCase?.amount || 0)}
+                {formatPrice(purchaseCase?.negotiated_price || purchaseCase?.purchase_price || purchaseCase?.amount || 0)}
               </div>
               <p className="text-sm text-gray-500">Montant du dossier</p>
-              <Badge className="mt-2">{purchaseCase?.status || 'N/A'}</Badge>
+              <Badge className={cn('mt-2', getStatusColor(purchaseCase?.status))}>
+                {WorkflowStatusService.getLabel(purchaseCase?.status || 'initiated')}
+              </Badge>
             </div>
           </div>
 
-          {/* Barre de progression */}
+          {/* Barre de progression - Utilise le vrai progress_percentage */}
           <Card className="mt-6">
             <CardContent className="pt-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Progression du dossier</span>
+                <span className="text-sm font-medium">Progression du dossier (Phase {purchaseCase?.phase || 1})</span>
                 <span className="text-sm font-bold text-purple-600">{Math.round(progress)}%</span>
               </div>
               <Progress value={progress} className="h-3" />
@@ -357,13 +356,26 @@ const VendeurCaseTrackingModernFixed = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <TimelineTracker
-                  currentStage={purchaseCase?.workflow_stage || purchaseRequest?.workflow_stage}
-                  completedStages={purchaseCase?.completed_stages || []}
+                <TimelineTrackerModern
+                  currentStatus={purchaseCase?.status || 'initiated'}
+                  paymentMethod={purchaseCase?.payment_method || 'one_time'}
+                  financingApproved={purchaseCase?.financing_approved || false}
+                  completedStages={WorkflowStatusService.getCompletedStages(purchaseCase?.status || 'initiated')}
                   history={history}
                 />
               </CardContent>
             </Card>
+
+            {/* Section Financement Bancaire - Affichée si payment_method='bank_financing' */}
+            <BankFinancingSection
+              paymentMethod={purchaseCase?.payment_method}
+              financingApproved={purchaseCase?.financing_approved}
+              bankName={purchaseCase?.metadata?.bank_name || null}
+              loanAmount={purchaseCase?.metadata?.loan_amount || null}
+              approvedAmount={purchaseCase?.metadata?.approved_amount || null}
+              estimatedDisbursementDate={purchaseCase?.metadata?.estimated_disbursement_date || null}
+              conditions={purchaseCase?.metadata?.financing_conditions || []}
+            />
 
             {/* Tabs */}
             <Card>

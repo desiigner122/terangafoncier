@@ -778,16 +778,15 @@ const ParticulierMesAchatsModern = () => {
 
                         {/* Infos vendeur */}
                         <div className="flex items-center gap-3 mb-4 p-3 bg-gray-50 rounded-lg">
-                          <Avatar>
-                            <AvatarImage src={request.property?.seller?.avatar_url} />
+                          <Avatar className="w-10 h-10">
+                            <AvatarImage src={request.property?.seller?.avatar_url} alt={request.property?.seller?.full_name} />
                             <AvatarFallback>
-                              {request.property?.seller?.first_name?.[0]}
-                              {request.property?.seller?.last_name?.[0]}
+                              {request.property?.seller?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'V'}
                             </AvatarFallback>
                           </Avatar>
                           <div>
                             <p className="text-sm font-medium">
-                              {request.property?.seller?.first_name} {request.property?.seller?.last_name}
+                              {request.property?.seller?.full_name || 'Vendeur'}
                             </p>
                             <p className="text-xs text-gray-500">Vendeur</p>
                           </div>

@@ -26,7 +26,8 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import ContractGenerator from '@/components/purchase/ContractGenerator';
-import TimelineTracker from '@/components/purchase/TimelineTracker';
+import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
+import WorkflowStatusService from '@/services/WorkflowStatusService';
 
 const STATUS_CONFIG = {
   pending: {
@@ -767,9 +768,11 @@ const ParticulierMesAchatsModern = () => {
 
                         {/* Timeline compacte */}
                         <div className="mb-4">
-                          <TimelineTracker
-                            currentStage={normalizeStatus(request.workflow_stage || request.status)}
-                            completedStages={ensureArray(request.completed_stages)}
+                          <TimelineTrackerModern
+                            currentStatus={normalizeStatus(request.workflow_stage || request.status)}
+                            paymentMethod={request.payment_method || 'one_time'}
+                            financingApproved={request.financing_approved || false}
+                            completedStages={WorkflowStatusService.getCompletedStages(normalizeStatus(request.workflow_stage || request.status))}
                             compact={true}
                           />
                         </div>
@@ -786,7 +789,7 @@ const ParticulierMesAchatsModern = () => {
 
                           {request.source === 'modern' ? (
                             <AppointmentScheduler
-                              purchaseRequestId={request.id}
+                              caseId={request.id}
                               userId={user.id}
                               onAppointmentCreated={() => loadPurchaseRequests()}
                             />
@@ -804,10 +807,9 @@ const ParticulierMesAchatsModern = () => {
 
                           {request.source === 'modern' ? (
                             <ContractGenerator
-                              purchaseRequest={request}
+                              purchaseCase={request}
                               buyer={user}
-                              seller={request.property?.seller}
-                              property={request.property}
+                              seller={request.seller}
                               onContractGenerated={() => loadPurchaseRequests()}
                             />
                           ) : (

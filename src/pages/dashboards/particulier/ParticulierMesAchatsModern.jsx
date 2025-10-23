@@ -361,100 +361,122 @@ const ParticulierMesAchatsModern = () => {
 
       // ✅ ÉTAPE 1: Charger depuis purchase_cases (NOUVELLE TABLE - PRIORITAIRE)
       try {
+        // Charger d'abord les purchase_cases sans relation
         const { data: caseData, error: caseError } = await supabase
           .from('purchase_cases')
-          .select(`
-            *,
-            seller:profiles!purchase_cases_seller_id_fkey (
-              id,
-              first_name,
-              last_name,
-              full_name,
-              email,
-              phone,
-              avatar_url
-            ),
-            property:parcelles (
-              id,
-              title,
-              location,
-              commune,
-              surface,
-              area,
-              price,
-              images,
-              photo_url
-            )
-          `)
+          .select('*')
           .eq('buyer_id', user.id)
           .order('created_at', { ascending: false });
 
         if (!caseError && caseData?.length) {
           console.log('✅ [LOAD] Purchase cases trouvées:', caseData.length);
           
+          // Charger les profils des vendeurs
+          const sellerIds = [...new Set(caseData.map(c => c.seller_id).filter(Boolean))];
+          let sellerMap = {};
+          if (sellerIds.length > 0) {
+            const { data: sellerData } = await supabase
+              .from('profiles')
+              .select('*')
+              .in('id', sellerIds);
+            sellerData?.forEach(s => {
+              sellerMap[s.id] = s;
+            });
+          }
+          
+          // Charger les propriétés
+          const propertyIds = [...new Set(caseData.map(c => c.parcelle_id).filter(Boolean))];
+          let propertyMap = {};
+          if (propertyIds.length > 0) {
+            const { data: propertyData } = await supabase
+              .from('parcelles')
+              .select('*')
+              .in('id', propertyIds);
+            propertyData?.forEach(p => {
+              propertyMap[p.id] = p;
+            });
+          }
+          
           // Transformer purchase_cases en format compatible avec liste
-          aggregatedRequests = caseData.map((caseItem) => ({
-            id: caseItem.id,
-            case_id: caseItem.id,
-            case_number: caseItem.case_number,
-            status: caseItem.status,
-            workflow_stage: caseItem.status,
-            payment_method: caseItem.payment_method,
-            financing_approved: caseItem.financing_approved,
-            created_at: caseItem.created_at,
-            updated_at: caseItem.updated_at,
-            completed_stages: [],
-            source: 'purchase_cases',
-            property: caseItem.property ? {
-              id: caseItem.property.id,
-              title: caseItem.property.title || `Dossier ${caseItem.case_number}`,
-              location: caseItem.property.location || caseItem.property.commune || '',
-              price: caseItem.property.price || caseItem.purchase_price,
-              surface: caseItem.property.surface || caseItem.property.area,
-              images: Array.isArray(caseItem.property.images) 
-                ? caseItem.property.images.filter(Boolean)
-                : (caseItem.property.photo_url ? [caseItem.property.photo_url] : []),
-              photo_url: caseItem.property.photo_url,
-              seller: {
-                id: caseItem.seller?.id || caseItem.seller_id,
-                first_name: caseItem.seller?.first_name || 'Vendeur',
-                last_name: caseItem.seller?.last_name || 'Professionnel',
-                full_name: caseItem.seller?.full_name || 
-                  `${caseItem.seller?.first_name || 'Vendeur'} ${caseItem.seller?.last_name || 'Professionnel'}`,
-                email: caseItem.seller?.email,
-                phone: caseItem.seller?.phone,
-                avatar_url: caseItem.seller?.avatar_url,
-              }
-            } : {
-              title: `Dossier ${caseItem.case_number}`,
-              location: '',
-              price: caseItem.purchase_price,
-              images: [],
-              seller: {
+          aggregatedRequests = caseData.map((caseItem) => {
+            const seller = sellerMap[caseItem.seller_id];
+            const property = propertyMap[caseItem.parcelle_id];
+            
+            return {
+              id: caseItem.id,
+              case_id: caseItem.id,
+              case_number: caseItem.case_number,
+              status: caseItem.status,
+              workflow_stage: caseItem.status,
+              payment_method: caseItem.payment_method,
+              financing_approved: caseItem.financing_approved,
+              created_at: caseItem.created_at,
+              updated_at: caseItem.updated_at,
+              completed_stages: [],
+              source: 'purchase_cases',
+              property: property ? {
+                id: property.id,
+                title: property.title || `Dossier ${caseItem.case_number}`,
+                location: property.location || property.commune || '',
+                price: property.price || caseItem.purchase_price,
+                surface: property.surface || property.area,
+                images: Array.isArray(property.images) 
+                  ? property.images.filter(Boolean)
+                  : (property.photo_url ? [property.photo_url] : []),
+                photo_url: property.photo_url,
+                seller: seller ? {
+                  id: seller.id,
+                  first_name: seller.first_name || 'Vendeur',
+                  last_name: seller.last_name || 'Professionnel',
+                  full_name: seller.full_name || `${seller.first_name || ''} ${seller.last_name || ''}`.trim(),
+                  email: seller.email,
+                  phone: seller.phone,
+                  avatar_url: seller.avatar_url,
+                } : {
+                  id: caseItem.seller_id,
+                  first_name: 'Vendeur',
+                  last_name: 'Professionnel',
+                  full_name: 'Vendeur Professionnel',
+                }
+              } : {
+                title: `Dossier ${caseItem.case_number}`,
+                location: '',
+                price: caseItem.purchase_price,
+                images: [],
+                seller: seller ? {
+                  id: seller.id,
+                  first_name: seller.first_name || 'Vendeur',
+                  last_name: seller.last_name || 'Professionnel',
+                  full_name: seller.full_name || `${seller.first_name || ''} ${seller.last_name || ''}`.trim(),
+                  email: seller.email,
+                  phone: seller.phone,
+                  avatar_url: seller.avatar_url,
+                } : {
+                  id: caseItem.seller_id,
+                  first_name: 'Vendeur',
+                  last_name: 'Professionnel',
+                  full_name: 'Vendeur Professionnel',
+                }
+              },
+              seller: seller ? {
+                id: seller.id,
+                first_name: seller.first_name || '',
+                last_name: seller.last_name || '',
+                full_name: seller.full_name || `${seller.first_name || ''} ${seller.last_name || ''}`.trim(),
+                email: seller.email,
+                phone: seller.phone,
+                avatar_url: seller.avatar_url,
+              } : {
                 id: caseItem.seller_id,
                 first_name: 'Vendeur',
                 last_name: 'Professionnel',
                 full_name: 'Vendeur Professionnel',
-              }
-            },
-            seller: caseItem.seller ? {
-              id: caseItem.seller.id,
-              first_name: caseItem.seller.first_name,
-              last_name: caseItem.seller.last_name,
-              full_name: caseItem.seller.full_name || `${caseItem.seller.first_name || ''} ${caseItem.seller.last_name || ''}`.trim(),
-              email: caseItem.seller.email,
-              phone: caseItem.seller.phone,
-              avatar_url: caseItem.seller.avatar_url,
-            } : {
-              id: caseItem.seller_id,
-              first_name: 'Vendeur',
-              last_name: 'Professionnel',
-              full_name: 'Vendeur Professionnel',
-            },
-            appointments: [],
-            documents: [],
-            unread_messages: 0
-          }));
+              },
+              appointments: [],
+              documents: [],
+              unread_messages: 0
+            };
+          });
         } else if (caseError && !['PGRST204', '42P01'].includes(caseError.code)) {
           console.warn('⚠️ [LOAD] Erreur purchase_cases:', caseError.code);
         }

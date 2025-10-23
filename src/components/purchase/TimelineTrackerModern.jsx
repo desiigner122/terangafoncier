@@ -4,6 +4,7 @@
  * Supporte financement bancaire et tous les statuts réels
  */
 import React, { useMemo } from 'react';
+import { motion } from 'framer-motion';
 import { Check, Circle, Clock, AlertCircle, ChevronRight, Building2, DollarSign } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -119,23 +120,49 @@ export const TimelineTracker = ({
 
           return (
             <React.Fragment key={stage.id}>
-              <div className="flex flex-col items-center min-w-[100px]">
-                <div
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.08, duration: 0.3 }}
+                className="flex flex-col items-center min-w-[100px]"
+              >
+                <motion.div
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  transition={{ delay: index * 0.08 + 0.1, duration: 0.3 }}
+                  whileHover={{ scale: 1.1, transition: { duration: 0.2 } }}
                   className={cn(
-                    'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all',
+                    'w-10 h-10 rounded-full flex items-center justify-center border-2 transition-all cursor-pointer',
                     config.bgColor,
                     config.borderColor,
                     stage.isSpecial && 'ring-2 ring-purple-300'
                   )}
                 >
-                  <Icon className={cn('w-5 h-5', config.color)} />
-                </div>
-                <span className="text-xs mt-1 text-center text-gray-600 line-clamp-2">
+                  <motion.div
+                    animate={status === 'in_progress' ? { rotate: 360 } : {}}
+                    transition={status === 'in_progress' ? { duration: 2, repeat: Infinity, ease: 'linear' } : {}}
+                  >
+                    <Icon className={cn('w-5 h-5', config.color)} />
+                  </motion.div>
+                </motion.div>
+                <motion.span
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: index * 0.08 + 0.15, duration: 0.3 }}
+                  className="text-xs mt-1 text-center text-gray-600 line-clamp-2"
+                >
                   {stage.label}
-                </span>
-              </div>
+                </motion.span>
+              </motion.div>
               {index < timelineStages.length - 1 && (
-                <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                <motion.div
+                  initial={{ opacity: 0, scaleX: 0 }}
+                  animate={{ opacity: 1, scaleX: 1 }}
+                  transition={{ delay: index * 0.08 + 0.12, duration: 0.3 }}
+                  className="origin-left"
+                >
+                  <ChevronRight className="w-4 h-4 text-gray-300 flex-shrink-0" />
+                </motion.div>
               )}
             </React.Fragment>
           );
@@ -155,11 +182,20 @@ export const TimelineTracker = ({
         const isLast = index === timelineStages.length - 1;
 
         return (
-          <div key={stage.id}>
+          <motion.div
+            key={stage.id}
+            initial={{ opacity: 0, x: -20 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: index * 0.1, duration: 0.3 }}
+          >
             <div className="flex gap-4">
               {/* Timeline line & icon */}
               <div className="flex flex-col items-center">
-                <div
+                <motion.div
+                  initial={{ scale: 0, opacity: 0 }}
+                  animate={{ scale: 1, opacity: 1 }}
+                  transition={{ delay: index * 0.1 + 0.1, duration: 0.3 }}
+                  whileHover={status === 'in_progress' ? { scale: 1.1 } : {}}
                   className={cn(
                     'w-12 h-12 rounded-full flex items-center justify-center border-2 transition-all',
                     config.bgColor,
@@ -168,20 +204,37 @@ export const TimelineTracker = ({
                     stage.isSpecial && 'ring-4 ring-purple-100'
                   )}
                 >
-                  <Icon className={cn('w-6 h-6', config.color)} />
-                </div>
+                  <motion.div
+                    animate={status === 'in_progress' ? { rotate: 360 } : {}}
+                    transition={status === 'in_progress' ? { duration: 2, repeat: Infinity, ease: 'linear' } : {}}
+                  >
+                    <Icon className={cn('w-6 h-6', config.color)} />
+                  </motion.div>
+                </motion.div>
                 {!isLast && (
-                  <div
-                    className={cn(
-                      'w-1 h-12 my-1',
-                      status === 'completed' ? 'bg-green-500' : 'bg-gray-200'
-                    )}
-                  />
+                  <motion.div
+                    initial={{ scaleY: 0 }}
+                    animate={{ scaleY: 1 }}
+                    transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
+                    className="origin-top"
+                  >
+                    <div
+                      className={cn(
+                        'w-1 h-12 my-1',
+                        status === 'completed' ? 'bg-green-500' : 'bg-gray-200'
+                      )}
+                    />
+                  </motion.div>
                 )}
               </div>
 
               {/* Content */}
-              <div className="flex-1 py-2">
+              <motion.div
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 + 0.15, duration: 0.3 }}
+                className="flex-1 py-2"
+              >
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className={cn(
@@ -197,51 +250,67 @@ export const TimelineTracker = ({
                   </div>
 
                   {/* Status Badge */}
-                  <Badge
-                    variant={
-                      status === 'completed'
-                        ? 'default'
-                        : status === 'in_progress'
-                        ? 'secondary'
-                        : 'outline'
-                    }
-                    className={cn(
-                      'ml-2 flex-shrink-0',
-                      status === 'completed' && 'bg-green-100 text-green-800',
-                      status === 'in_progress' && 'bg-blue-100 text-blue-800 animate-pulse',
-                      status === 'blocked' && 'bg-red-100 text-red-800'
-                    )}
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ delay: index * 0.1 + 0.2, duration: 0.3 }}
                   >
-                    {status === 'completed' && 'Complété'}
-                    {status === 'in_progress' && 'En cours'}
-                    {status === 'pending' && 'En attente'}
-                    {status === 'blocked' && 'Bloqué'}
-                  </Badge>
+                    <Badge
+                      variant={
+                        status === 'completed'
+                          ? 'default'
+                          : status === 'in_progress'
+                          ? 'secondary'
+                          : 'outline'
+                      }
+                      className={cn(
+                        'ml-2 flex-shrink-0',
+                        status === 'completed' && 'bg-green-100 text-green-800',
+                        status === 'in_progress' && 'bg-blue-100 text-blue-800 animate-pulse',
+                        status === 'blocked' && 'bg-red-100 text-red-800'
+                      )}
+                    >
+                      {status === 'completed' && 'Complété'}
+                      {status === 'in_progress' && 'En cours'}
+                      {status === 'pending' && 'En attente'}
+                      {status === 'blocked' && 'Bloqué'}
+                    </Badge>
+                  </motion.div>
                 </div>
 
                 {/* Date si disponible */}
                 {date && (
-                  <p className="text-xs text-gray-400 mt-2">
+                  <motion.p
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ delay: index * 0.1 + 0.25, duration: 0.3 }}
+                    className="text-xs text-gray-400 mt-2"
+                  >
                     {date}
-                  </p>
+                  </motion.p>
                 )}
 
                 {/* Note spéciale pour étape bancaire */}
                 {stage.isSpecial && stage.id === 'bank_approval_check' && (
-                  <div className={cn(
-                    'mt-3 p-2 rounded text-sm',
-                    financingApproved
-                      ? 'bg-green-50 text-green-700 border border-green-200'
-                      : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
-                  )}>
+                  <motion.div
+                    initial={{ opacity: 0, y: -10 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ delay: index * 0.1 + 0.25, duration: 0.3 }}
+                    className={cn(
+                      'mt-3 p-2 rounded text-sm',
+                      financingApproved
+                        ? 'bg-green-50 text-green-700 border border-green-200'
+                        : 'bg-yellow-50 text-yellow-700 border border-yellow-200'
+                    )}
+                  >
                     {financingApproved
                       ? '✅ Financement approuvé par la banque'
                       : '⏳ En attente de l\'approbation bancaire'}
-                  </div>
+                  </motion.div>
                 )}
-              </div>
+              </motion.div>
             </div>
-          </div>
+          </motion.div>
         );
       })}
     </div>

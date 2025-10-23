@@ -176,9 +176,8 @@ const VendeurCaseTracking = () => {
         .from('purchase_case_messages')
         .insert({
           case_id: purchaseCase.id,
-          sender_id: user.id,
+          sent_by: user.id,
           message: newMessage,
-          created_at: new Date().toISOString(),
         });
 
       if (error) throw error;

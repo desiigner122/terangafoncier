@@ -153,9 +153,8 @@ const ParticulierCaseTrackingModern = () => {
     try {
       const messageData = {
         case_id: caseId,
-        sender_id: user.id,
+        sent_by: user.id,
         message: newMessage.trim(),
-        message_type: 'text',
       };
 
       const { error } = await supabase

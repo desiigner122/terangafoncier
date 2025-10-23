@@ -220,14 +220,12 @@ const VendeurCaseTrackingModernFixed = () => {
     try {
       const messageData = {
         case_id: purchaseCase?.id,
-        sender_id: user.id,
-        receiver_id: buyer?.id,
-        content: newMessage.trim(),
-        status: 'sent',
+        sent_by: user.id,
+        message: newMessage.trim(),
       };
 
       const { error } = await supabase
-        .from('messages')
+        .from('purchase_case_messages')
         .insert([messageData]);
 
       if (error) throw error;

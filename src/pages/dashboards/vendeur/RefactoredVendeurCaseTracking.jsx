@@ -196,9 +196,9 @@ const RefactoredVendeurCaseTracking = () => {
       });
 
       const { data: docsData } = await supabase
-        .from('purchase_case_documents')
+        .from('documents_administratifs')
         .select('*')
-        .eq('case_id', purchaseCase.id)
+        .eq('purchase_request_id', purchaseCase.request_id)
         .order('created_at', { ascending: false });
       setDocuments(docsData || []);
 

@@ -166,9 +166,9 @@ const ParticulierCaseTracking = () => {
 
       // 7. Charger les documents
       const { data: docsData } = await supabase
-        .from('purchase_case_documents')
+        .from('documents_administratifs')
         .select('*')
-        .eq('case_id', caseData.id)
+        .eq('purchase_request_id', caseData.request_id)
         .order('created_at', { ascending: false });
 
       setDocuments(docsData || []);

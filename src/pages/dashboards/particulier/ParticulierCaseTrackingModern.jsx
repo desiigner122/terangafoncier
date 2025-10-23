@@ -109,9 +109,9 @@ const ParticulierCaseTrackingModern = () => {
 
       // 4. Charger les documents
       const { data: docsData } = await supabase
-        .from('purchase_case_documents')
+        .from('documents_administratifs')
         .select('*')
-        .eq('case_id', caseId)
+        .eq('purchase_request_id', caseData.request_id)
         .order('created_at', { ascending: false });
       setDocuments(docsData || []);
 
@@ -119,7 +119,7 @@ const ParticulierCaseTrackingModern = () => {
       const { data: aptsData } = await supabase
         .from('calendar_appointments')
         .select('*')
-        .eq('case_id', caseId)
+        .eq('purchase_request_id', caseData.request_id)
         .order('start_time', { ascending: true });
       setAppointments(aptsData || []);
 
@@ -135,7 +135,7 @@ const ParticulierCaseTrackingModern = () => {
       const { data: paymentsData } = await supabase
         .from('payments')
         .select('*')
-        .eq('case_id', caseId)
+        .eq('user_id', purchaseCase?.user_id)
         .order('created_at', { ascending: false });
       setPayments(paymentsData || []);
 

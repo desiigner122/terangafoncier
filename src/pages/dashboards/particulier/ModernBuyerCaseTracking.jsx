@@ -144,11 +144,11 @@ const ModernBuyerCaseTracking = () => {
       }
 
       // 5. Load documents
-      if (purchaseCase.id) {
+      if (purchaseCase.id && purchaseCase.request_id) {
         const { data: docs } = await supabase
-          .from('case_documents')
+          .from('documents_administratifs')
           .select('*')
-          .eq('case_id', purchaseCase.id)
+          .eq('purchase_request_id', purchaseCase.request_id)
           .order('created_at', { ascending: false });
         setDocuments(docs || []);
       }
@@ -156,7 +156,7 @@ const ModernBuyerCaseTracking = () => {
       // 6. Load messages
       if (purchaseCase.id) {
         const { data: msgs } = await supabase
-          .from('case_messages')
+          .from('purchase_case_messages')
           .select('*')
           .eq('case_id', purchaseCase.id)
           .order('created_at', { ascending: false })

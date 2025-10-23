@@ -344,9 +344,9 @@ const VendeurCaseTrackingModernFixed = () => {
         </div>
 
         {/* Contenu principal */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Colonne gauche */}
-          <div className="col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             {/* Timeline */}
             <Card>
               <CardHeader>
@@ -468,10 +468,13 @@ const VendeurCaseTrackingModernFixed = () => {
                           messages.map((msg) => (
                             <div key={msg.id} className="flex gap-3">
                               <Avatar className="h-8 w-8">
-                                <AvatarFallback>A</AvatarFallback>
+                                <AvatarImage src={buyer?.avatar_url} alt={buyer?.full_name} />
+                                <AvatarFallback>
+                                  {buyer?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'A'}
+                                </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
-                                <p className="text-sm font-medium">Acheteur</p>
+                                <p className="text-sm font-medium">{buyer?.full_name || 'Acheteur'}</p>
                                 <p className="text-sm text-gray-700">{msg.content}</p>
                                 <p className="text-xs text-gray-400 mt-1">
                                   {msg.created_at && format(new Date(msg.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
@@ -580,22 +583,23 @@ const VendeurCaseTrackingModernFixed = () => {
                 {buyer ? (
                   <>
                     <div className="flex items-center gap-3">
-                      <Avatar>
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={buyer?.avatar_url} alt={buyer?.full_name} />
                         <AvatarFallback>
-                          {buyer.first_name?.[0]}{buyer.last_name?.[0]}
+                          {buyer?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'A'}
                         </AvatarFallback>
                       </Avatar>
                       <div>
                         <p className="font-semibold">
-                          {buyer.first_name} {buyer.last_name}
+                          {buyer?.full_name || 'Acheteur'}
                         </p>
-                        <p className="text-sm text-gray-500">{buyer.email}</p>
+                        <p className="text-sm text-gray-500">{buyer?.email}</p>
                       </div>
                     </div>
-                    {buyer.phone && (
+                    {buyer?.phone && (
                       <Button variant="outline" className="w-full" size="sm">
                         <Phone className="w-4 h-4 mr-2" />
-                        {buyer.phone}
+                        {buyer?.phone}
                       </Button>
                     )}
                   </>

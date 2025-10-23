@@ -284,9 +284,9 @@ const ParticulierCaseTrackingModern = () => {
         </div>
 
         {/* Contenu principal */}
-        <div className="grid grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Colonne gauche - Infos principales */}
-          <div className="col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-6">
             {/* Timeline */}
             <Card>
               <CardHeader>
@@ -555,14 +555,14 @@ const ParticulierCaseTrackingModern = () => {
               <CardContent>
                 <div className="flex items-center gap-3 mb-4">
                   <Avatar className="w-12 h-12">
-                    <AvatarImage src={seller?.avatar_url} />
+                    <AvatarImage src={seller?.avatar_url} alt={seller?.full_name} />
                     <AvatarFallback>
-                      {seller?.first_name?.[0]}{seller?.last_name?.[0]}
+                      {seller?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'V'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
                     <p className="font-semibold">
-                      {seller?.first_name} {seller?.last_name}
+                      {seller?.full_name || 'Vendeur'}
                     </p>
                     <p className="text-sm text-gray-500">Propriétaire</p>
                   </div>

@@ -181,7 +181,7 @@ const CompleteSidebarVendeurDashboard = () => {
   const buildFallbackNotifications = async () => {
     try {
       // ✅ CORRECTION: Charger depuis requests (source stable) au lieu de purchase_requests
-      // purchase_requests a des problèmes de relation avec properties
+      // Les noms sont dans la table 'profiles', pas 'users'
       const { data: requestsData, error: requestsError } = await supabase
         .from('requests')
         .select(`
@@ -189,17 +189,8 @@ const CompleteSidebarVendeurDashboard = () => {
           status,
           created_at,
           updated_at,
-          parcel:parcel_id (
-            id,
-            title,
-            location,
-            seller_id
-          ),
-          buyer:user_id (
-            id,
-            first_name,
-            last_name
-          )
+          user_id,
+          parcel_id
         `)
         .order('updated_at', { ascending: false })
         .limit(25);
@@ -208,22 +199,68 @@ const CompleteSidebarVendeurDashboard = () => {
         if (!['PGRST204', '42P01', 'PGRST200'].includes(requestsError.code)) {
           console.warn('⚠️ Erreur fallback notifications (requests):', requestsError.code);
         }
-        // Continue quand même
+        return [];
+      }
+
+      if (!requestsData || requestsData.length === 0) {
+        return [];
+      }
+
+      // Charger les parcelles (properties) pour les requests
+      const parcelIds = [...new Set(requestsData.map(r => r.parcel_id).filter(Boolean))];
+      let parcelMap = {};
+      
+      if (parcelIds.length > 0) {
+        const { data: parcelsData, error: parcelsError } = await supabase
+          .from('parcels')
+          .select('id, title, location, seller_id')
+          .in('id', parcelIds);
+        
+        if (!parcelsError && parcelsData) {
+          parcelsData.forEach(p => {
+            parcelMap[p.id] = p;
+          });
+        }
+      }
+
+      // Charger les profiles des acheteurs
+      const buyerIds = [...new Set(requestsData.map(r => r.user_id).filter(Boolean))];
+      let buyerMap = {};
+      
+      if (buyerIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', buyerIds);
+        
+        if (!profilesError && profilesData) {
+          profilesData.forEach(p => {
+            buyerMap[p.id] = p;
+          });
+        }
       }
 
       // Filtrer les demandes du vendeur et les transformer
-      const notifications = (requestsData || [])
-        .filter((item) => item.parcel?.seller_id === user?.id)
-        .map((item) => ({
-          id: `fallback-${item.id}`,
-          title: `Demande ${formatStatusLabel(item.status)}`,
-          message: `${item.buyer?.first_name || 'Acheteur'} ${item.buyer?.last_name || ''} — ${
-            item.parcel?.title || 'Propriété'
-          } (${formatStatusLabel(item.status)})`,
-          created_at: item.updated_at || item.created_at,
-          status: item.status,
-          type: 'purchase_request',
-        }))
+      const notifications = requestsData
+        .filter((item) => {
+          const parcel = parcelMap[item.parcel_id];
+          return parcel && parcel.seller_id === user?.id;
+        })
+        .map((item) => {
+          const parcel = parcelMap[item.parcel_id];
+          const buyer = buyerMap[item.user_id];
+          
+          return {
+            id: `fallback-${item.id}`,
+            title: `Demande ${formatStatusLabel(item.status)}`,
+            message: `${buyer?.first_name || 'Acheteur'} ${buyer?.last_name || ''} — ${
+              parcel?.title || 'Propriété'
+            } (${formatStatusLabel(item.status)})`,
+            created_at: item.updated_at || item.created_at,
+            status: item.status,
+            type: 'purchase_request',
+          };
+        })
         .slice(0, 10);
 
       return notifications;

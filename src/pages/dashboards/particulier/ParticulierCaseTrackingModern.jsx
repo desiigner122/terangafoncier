@@ -92,13 +92,16 @@ const ParticulierCaseTrackingModern = () => {
       }
 
       // 2b. Charger les infos de la propriété (nouvelle table/colonne)
+      console.log('🏠 Tentative chargement propriété - parcelle_id:', caseData?.parcelle_id);
       console.log('🏠 Tentative chargement propriété - parcel_id:', caseData?.parcel_id);
       
-      if (caseData?.parcel_id) {
+      const parcelIdToUse = caseData?.parcelle_id || caseData?.parcel_id;
+      
+      if (parcelIdToUse) {
         const { data: propertyData, error: propertyError } = await supabase
           .from('parcels')
           .select('*')
-          .eq('id', caseData.parcel_id)
+          .eq('id', parcelIdToUse)
           .single();
 
         if (!propertyError && propertyData) {
@@ -219,8 +222,8 @@ const ParticulierCaseTrackingModern = () => {
       RealtimeNotificationService.setupCaseTracking(caseId, (payload) => {
         console.log('📡 [REALTIME] Mise à jour dossier acheteur:', payload);
         toast.info('Mise à jour du dossier détectée');
-        // Rechargement optionnel des données (peut être commenté pour éviter trop de reloads)
-        // loadCaseData();
+        // Recharger les données pour mettre à jour l'interface
+        loadCaseData();
       });
 
       console.log('✅ Realtime subscriptions initialisées pour l\'acheteur');

@@ -312,7 +312,7 @@ import VendeurBlockchainRealData from '@/pages/dashboards/vendeur/VendeurBlockch
 import VendeurMessagesRealData from '@/pages/dashboards/vendeur/VendeurMessagesRealData';
 import VendeurMessagesModern from '@/pages/dashboards/vendeur/VendeurMessagesModern';
 import VendeurCaseTrackingModernFixed from '@/pages/dashboards/vendeur/VendeurCaseTrackingModernFixed';
-import ParticulierMesAchatsModern from '@/pages/dashboards/particulier/ParticulierMesAchatsModern';
+import ParticulierMesAchatsRefonte from '@/pages/dashboards/particulier/ParticulierMesAchatsRefonte';
 import ParticulierCaseTrackingModernRefonte from '@/pages/dashboards/particulier/ParticulierCaseTrackingModernRefonte';
 import VendeurSettingsRealData from '@/pages/dashboards/vendeur/VendeurSettingsRealData';
 import VendeurSupport from '@/pages/dashboards/vendeur/VendeurSupport';
@@ -549,7 +549,7 @@ function App() {
                   <Route path="overview" element={<ParticulierOverview />} />
                   <Route path="recherche" element={<ParticulierRechercheTerrain />} />
                   <Route path="favoris" element={<ParticulierFavoris />} />
-                  <Route path="mes-achats" element={<ParticulierMesAchatsModern />} />
+                  <Route path="mes-achats" element={<ParticulierMesAchatsRefonte />} />
                   <Route path="dossier/:caseId" element={<ParticulierCaseTrackingModernRefonte />} />
                   <Route path="cases/:caseNumber" element={<ParticulierCaseTrackingModernRefonte />} />
                   <Route path="visites" element={<ParticulierVisites />} />

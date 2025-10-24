@@ -39,7 +39,8 @@ import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
 
 const ParticulierCaseTrackingModernRefonte = () => {
-  const { caseNumber } = useParams(); // Utilise caseNumber comme vendeur pour cohérence
+  const { caseNumber, caseId } = useParams(); // Support des deux formats de route
+  const caseIdentifier = caseNumber || caseId; // Utilise le paramètre disponible
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -58,7 +59,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
   const [uploadingDoc, setUploadingDoc] = useState(false);
 
   useEffect(() => {
-    if (user && caseNumber) {
+    if (user && caseIdentifier) {
       loadCaseData();
       setupRealtimeSubscriptions();
     }
@@ -66,20 +67,37 @@ const ParticulierCaseTrackingModernRefonte = () => {
     return () => {
       RealtimeNotificationService.unsubscribeAll();
     };
-  }, [user, caseNumber]);
+  }, [user, caseIdentifier]);
 
   const loadCaseData = async () => {
     try {
       setLoading(true);
 
-      // 1. Charger le dossier d'achat par case_number (comme vendeur)
-      const { data: caseData, error: caseError } = await supabase
-        .from('purchase_cases')
-        .select('*')
-        .eq('case_number', caseNumber)
-        .single();
+      // 1. Charger le dossier d'achat - gérer caseId (UUID) ou caseNumber
+      let caseData = null;
+      let caseError = null;
 
-      if (caseError) {
+      // Essayer d'abord avec case_number (si c'est un format CASE-2025-XXX)
+      if (caseIdentifier.startsWith('CASE-')) {
+        const { data, error } = await supabase
+          .from('purchase_cases')
+          .select('*')
+          .eq('case_number', caseIdentifier)
+          .single();
+        caseData = data;
+        caseError = error;
+      } else {
+        // Sinon c'est un UUID, rechercher par id
+        const { data, error } = await supabase
+          .from('purchase_cases')
+          .select('*')
+          .eq('id', caseIdentifier)
+          .single();
+        caseData = data;
+        caseError = error;
+      }
+
+      if (caseError || !caseData) {
         console.error('❌ Erreur chargement dossier:', caseError);
         toast.error('Dossier introuvable');
         setLoading(false);
@@ -359,7 +377,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
           </CardHeader>
           <CardContent>
             <p className="text-gray-600 mb-4">
-              Le dossier #{caseNumber} n'existe pas ou vous n'y avez pas accès.
+              Le dossier #{caseIdentifier} n'existe pas ou vous n'y avez pas accès.
             </p>
             <Button onClick={() => navigate('/dashboard/particulier')} className="w-full">
               <ArrowLeft className="w-4 h-4 mr-2" />

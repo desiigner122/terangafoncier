@@ -83,7 +83,6 @@ const ParticulierMesAchatsRefonte = () => {
             name,
             location,
             price,
-            size,
             surface,
             image_url,
             photo_url,

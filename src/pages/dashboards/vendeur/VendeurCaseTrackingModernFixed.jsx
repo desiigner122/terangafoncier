@@ -644,6 +644,16 @@ const VendeurCaseTrackingModernFixed = () => {
               <CardContent className="space-y-4">
                 {property ? (
                   <>
+                    {/* Image de la propriété */}
+                    {(property.image_url || property.photo_url || (property.images && property.images[0])) && (
+                      <div className="w-full h-40 rounded-lg overflow-hidden">
+                        <img 
+                          src={property.image_url || property.photo_url || property.images[0]} 
+                          alt={property.title}
+                          className="w-full h-full object-cover"
+                        />
+                      </div>
+                    )}
                     <div>
                       <p className="text-sm text-gray-500">Titre</p>
                       <p className="font-semibold">{property.title}</p>
@@ -664,6 +674,35 @@ const VendeurCaseTrackingModernFixed = () => {
                 )}
               </CardContent>
             </Card>
+
+            {/* Prochains rendez-vous */}
+            {appointments.length > 0 && (
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-lg flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Rendez-vous planifiés
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-3">
+                  {appointments.slice(0, 3).map((apt) => (
+                    <div key={apt.id} className="p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <p className="font-medium text-sm">{apt.title}</p>
+                      <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                        <Clock className="w-3 h-3" />
+                        {format(new Date(apt.start_time), 'dd MMM yyyy à HH:mm', { locale: fr })}
+                      </p>
+                      {apt.location && (
+                        <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                          <MapPin className="w-3 h-3" />
+                          {apt.location}
+                        </p>
+                      )}
+                    </div>
+                  ))}
+                </CardContent>
+              </Card>
+            )}
 
             {/* Actions */}
             <Card>

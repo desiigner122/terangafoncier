@@ -673,11 +673,18 @@ const VendeurCaseTrackingModernFixed = () => {
               <CardContent className="space-y-3">
                 {purchaseCase && (
                   <>
-                    <AppointmentScheduler
-                      purchaseRequestId={purchaseCase.request_id}
-                      userId={user.id}
-                      onAppointmentCreated={loadCaseData}
-                    />
+                    {purchaseRequest?.id ? (
+                      <AppointmentScheduler
+                        purchaseRequestId={purchaseRequest.id}
+                        userId={user.id}
+                        onAppointmentCreated={loadCaseData}
+                      />
+                    ) : (
+                      <Button disabled className="w-full gap-2">
+                        <Calendar className="w-4 h-4" />
+                        Rendez-vous indisponible
+                      </Button>
+                    )}
 
                     <ContractGenerator
                       purchaseRequest={purchaseRequest}

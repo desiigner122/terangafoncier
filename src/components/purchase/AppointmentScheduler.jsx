@@ -87,6 +87,16 @@ export const AppointmentScheduler = ({ purchaseRequestId, userId, onAppointmentC
     setLoading(true);
 
     try {
+      // Validate that we have a valid purchase_request_id
+      if (!purchaseRequestId || purchaseRequestId === 'undefined') {
+        toast.error('Demande d\'achat introuvable. Impossible de créer le rendez-vous.');
+        setLoading(false);
+        return;
+      }
+
+      // Log for debugging
+      console.log('📋 Creating appointment with purchase_request_id:', purchaseRequestId);
+
       const appointmentData = {
         user_id: userId,
         title: formData.title,
@@ -100,12 +110,8 @@ export const AppointmentScheduler = ({ purchaseRequestId, userId, onAppointmentC
         notes: formData.notes,
         status: 'scheduled',
         created_by: userId,
+        purchase_request_id: purchaseRequestId,
       };
-      
-      // Only add purchase_request_id if it's provided and not undefined
-      if (purchaseRequestId && purchaseRequestId !== 'undefined') {
-        appointmentData.purchase_request_id = purchaseRequestId;
-      }
 
       const { data, error } = await supabase
         .from('calendar_appointments')

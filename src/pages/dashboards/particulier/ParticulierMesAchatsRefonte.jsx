@@ -196,26 +196,26 @@ const ParticulierMesAchatsRefonte = () => {
   };
 
   const getStatusInfo = (status) => {
-    const config = WorkflowStatusService.STATUS_CONFIG[status];
-    if (config) {
-      return {
-        label: config.label,
-        color: config.color,
-        icon: config.icon
-      };
-    }
+    const label = WorkflowStatusService.getLabel(status) || status || 'Inconnu';
+    const colorClass = WorkflowStatusService.getColor(status) || 'bg-gray-100 text-gray-800';
+    
+    // Map color class to simple color name for backward compatibility
+    let color = 'gray';
+    if (colorClass.includes('blue')) color = 'blue';
+    else if (colorClass.includes('green')) color = 'green';
+    else if (colorClass.includes('red')) color = 'red';
+    else if (colorClass.includes('purple')) color = 'purple';
+    else if (colorClass.includes('yellow')) color = 'yellow';
+    
     return {
-      label: status || 'Inconnu',
-      color: 'gray',
+      label,
+      color,
       icon: AlertCircle
     };
   };
 
   const getProgressPercentage = (status) => {
-    const allStatuses = Object.keys(WorkflowStatusService.STATUS_CONFIG);
-    const currentIndex = allStatuses.indexOf(status);
-    if (currentIndex === -1) return 0;
-    return ((currentIndex + 1) / allStatuses.length) * 100;
+    return WorkflowStatusService.calculateProgressFromStatus(status) || 0;
   };
 
   const formatPrice = (price) => {
@@ -226,7 +226,7 @@ const ParticulierMesAchatsRefonte = () => {
   const navigateToCaseDetail = (caseItem) => {
     // Utiliser case_number si disponible, sinon l'id
     const identifier = caseItem.case_number || caseItem.id;
-    navigate(`/dashboard/acheteur/cases/${identifier}`);
+    navigate(`/acheteur/dossier/${identifier}`);
   };
 
   if (loading) {
@@ -256,7 +256,7 @@ const ParticulierMesAchatsRefonte = () => {
               </p>
             </div>
             <Button
-              onClick={() => navigate('/dashboard/acheteur/recherche')}
+              onClick={() => navigate('/acheteur/recherche')}
               size="lg"
               className="bg-white text-blue-600 hover:bg-blue-50"
             >
@@ -396,7 +396,7 @@ const ParticulierMesAchatsRefonte = () => {
                 }
               </p>
               {!searchTerm && activeFilter === 'all' && (
-                <Button onClick={() => navigate('/dashboard/acheteur/recherche')}>
+                <Button onClick={() => navigate('/acheteur/recherche')}>
                   <Search className="w-4 h-4 mr-2" />
                   Rechercher une propriété
                 </Button>

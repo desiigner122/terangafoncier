@@ -74,7 +74,6 @@ const ParticulierMesAchatsRefonte = () => {
             id,
             user_id,
             property_id,
-            financing_type,
             offered_price,
             created_at
           ),
@@ -84,7 +83,6 @@ const ParticulierMesAchatsRefonte = () => {
             name,
             location,
             price,
-            area,
             size,
             surface,
             image_url,

@@ -102,6 +102,10 @@ const VendeurCaseTrackingModernFixed = () => {
 
       // 3. Charger la parcelle (property)
       let propertyData = null;
+      console.log('🏠 Tentative chargement propriété - parcel_id:', caseData?.parcel_id);
+      console.log('🏠 Tentative chargement propriété - property_id:', requestData?.property_id);
+      
+      // Essayer avec parcel_id du case
       if (caseData?.parcel_id) {
         const { data: pData, error: propertyError } = await supabase
           .from('parcels')
@@ -110,9 +114,33 @@ const VendeurCaseTrackingModernFixed = () => {
           .single();
 
         if (!propertyError && pData) {
+          console.log('✅ Propriété chargée depuis parcel_id:', pData);
           propertyData = pData;
           setProperty(pData);
+        } else {
+          console.warn('⚠️ Erreur chargement propriété par parcel_id:', propertyError);
         }
+      }
+      
+      // Si pas trouvée, essayer avec property_id de la request
+      if (!propertyData && requestData?.property_id) {
+        const { data: pData, error: propertyError } = await supabase
+          .from('parcels')
+          .select('*')
+          .eq('id', requestData.property_id)
+          .single();
+
+        if (!propertyError && pData) {
+          console.log('✅ Propriété chargée depuis property_id:', pData);
+          propertyData = pData;
+          setProperty(pData);
+        } else {
+          console.warn('⚠️ Erreur chargement propriété par property_id:', propertyError);
+        }
+      }
+      
+      if (!propertyData) {
+        console.error('❌ Aucune propriété trouvée pour ce dossier');
       }
 
       // 4. Charger le profil de l'acheteur
@@ -645,27 +673,35 @@ const VendeurCaseTrackingModernFixed = () => {
                 {property ? (
                   <>
                     {/* Image de la propriété */}
-                    {(property.image_url || property.photo_url || (property.images && property.images[0])) && (
-                      <div className="w-full h-40 rounded-lg overflow-hidden">
+                    {(property.image_url || property.photo_url || property.image || property.photo || (property.images && property.images[0])) && (
+                      <div className="w-full h-40 rounded-lg overflow-hidden bg-gray-100">
                         <img 
-                          src={property.image_url || property.photo_url || property.images[0]} 
-                          alt={property.title}
+                          src={property.image_url || property.photo_url || property.image || property.photo || property.images[0]} 
+                          alt={property.title || property.name}
                           className="w-full h-full object-cover"
+                          onError={(e) => {
+                            console.error('❌ Erreur chargement image:', e.target.src);
+                            e.target.style.display = 'none';
+                          }}
                         />
                       </div>
                     )}
                     <div>
                       <p className="text-sm text-gray-500">Titre</p>
-                      <p className="font-semibold">{property.title}</p>
+                      <p className="font-semibold">{property.title || property.name || 'Sans titre'}</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Localisation</p>
-                      <p className="font-semibold">{property.location}</p>
+                      <p className="font-semibold">{property.location || property.address || property.commune || 'N/A'}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-500">Surface</p>
+                      <p className="font-semibold">{property.surface || property.area || 'N/A'} m²</p>
                     </div>
                     <div>
                       <p className="text-sm text-gray-500">Prix initial</p>
                       <p className="font-semibold text-lg">
-                        {formatPrice(property.price)}
+                        {formatPrice(property.price || 0)}
                       </p>
                     </div>
                   </>

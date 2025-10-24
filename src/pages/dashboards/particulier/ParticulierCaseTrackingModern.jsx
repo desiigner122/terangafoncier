@@ -92,13 +92,21 @@ const ParticulierCaseTrackingModern = () => {
       }
 
       // 2b. Charger les infos de la propriété (nouvelle table/colonne)
+      console.log('🏠 Tentative chargement propriété - parcel_id:', caseData?.parcel_id);
+      
       if (caseData?.parcel_id) {
-        const { data: propertyData } = await supabase
+        const { data: propertyData, error: propertyError } = await supabase
           .from('parcels')
           .select('*')
           .eq('id', caseData.parcel_id)
           .single();
-        setProperty(propertyData);
+
+        if (!propertyError && propertyData) {
+          console.log('✅ Propriété chargée:', propertyData);
+          setProperty(propertyData);
+        } else {
+          console.warn('⚠️ Erreur chargement propriété:', propertyError);
+        }
       }
 
       // 2c. Charger la demande d'achat liée et le profil acheteur
@@ -362,14 +370,52 @@ const ParticulierCaseTrackingModern = () => {
                 {property?.images?.[0] ? (
                   <img
                     src={property.images[0]}
-                    alt={property?.title || purchaseCase?.case_number}
+                    alt={property?.title || property?.name || purchaseCase?.case_number}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('❌ Erreur chargement image:', e.target.src);
+                      e.target.style.display = 'none';
+                    }}
                   />
                 ) : property?.photo_url ? (
                   <img
                     src={property.photo_url}
-                    alt={property?.title || purchaseCase?.case_number}
+                    alt={property?.title || property?.name || purchaseCase?.case_number}
                     className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('❌ Erreur chargement image:', e.target.src);
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : property?.image_url ? (
+                  <img
+                    src={property.image_url}
+                    alt={property?.title || property?.name || purchaseCase?.case_number}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('❌ Erreur chargement image:', e.target.src);
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : property?.image ? (
+                  <img
+                    src={property.image}
+                    alt={property?.title || property?.name || purchaseCase?.case_number}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('❌ Erreur chargement image:', e.target.src);
+                      e.target.style.display = 'none';
+                    }}
+                  />
+                ) : property?.photo ? (
+                  <img
+                    src={property.photo}
+                    alt={property?.title || property?.name || purchaseCase?.case_number}
+                    className="w-full h-full object-cover"
+                    onError={(e) => {
+                      console.error('❌ Erreur chargement image:', e.target.src);
+                      e.target.style.display = 'none';
+                    }}
                   />
                 ) : (
                   <div className="flex flex-col items-center justify-center">

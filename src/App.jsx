@@ -313,7 +313,7 @@ import VendeurMessagesRealData from '@/pages/dashboards/vendeur/VendeurMessagesR
 import VendeurMessagesModern from '@/pages/dashboards/vendeur/VendeurMessagesModern';
 import VendeurCaseTrackingModernFixed from '@/pages/dashboards/vendeur/VendeurCaseTrackingModernFixed';
 import ParticulierMesAchatsModern from '@/pages/dashboards/particulier/ParticulierMesAchatsModern';
-import ParticulierCaseTrackingModern from '@/pages/dashboards/particulier/ParticulierCaseTrackingModern';
+import ParticulierCaseTrackingModernRefonte from '@/pages/dashboards/particulier/ParticulierCaseTrackingModernRefonte';
 import VendeurSettingsRealData from '@/pages/dashboards/vendeur/VendeurSettingsRealData';
 import VendeurSupport from '@/pages/dashboards/vendeur/VendeurSupport';
 import CompleteSidebarInvestisseurDashboard from '@/pages/dashboards/investisseur/CompleteSidebarInvestisseurDashboard';
@@ -550,8 +550,8 @@ function App() {
                   <Route path="recherche" element={<ParticulierRechercheTerrain />} />
                   <Route path="favoris" element={<ParticulierFavoris />} />
                   <Route path="mes-achats" element={<ParticulierMesAchatsModern />} />
-                  <Route path="dossier/:caseId" element={<ParticulierCaseTrackingModern />} />
-                  <Route path="cases/:caseNumber" element={<ParticulierCaseTrackingModern />} />
+                  <Route path="dossier/:caseId" element={<ParticulierCaseTrackingModernRefonte />} />
+                  <Route path="cases/:caseNumber" element={<ParticulierCaseTrackingModernRefonte />} />
                   <Route path="visites" element={<ParticulierVisites />} />
                   <Route path="financement" element={<ParticulierFinancement />} />
                   <Route path="zones-communales" element={<ParticulierZonesCommunales />} />

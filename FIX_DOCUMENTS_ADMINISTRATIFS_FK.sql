@@ -5,10 +5,17 @@
 ALTER TABLE documents_administratifs 
 DROP CONSTRAINT IF EXISTS fk_documents_administratifs_purchase_request;
 
--- 2. Add correct FK pointing to 'requests' table (if it exists)
+-- 2. Add correct FK pointing to 'requests' table (if it exists and constraint doesn't exist)
 DO $$ 
 BEGIN
-  IF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'requests') THEN
+  -- Check if the constraint already exists
+  IF EXISTS (
+    SELECT 1 FROM information_schema.table_constraints 
+    WHERE constraint_name = 'fk_documents_administratifs_request'
+    AND table_name = 'documents_administratifs'
+  ) THEN
+    RAISE NOTICE 'FK constraint fk_documents_administratifs_request already exists - skipping creation';
+  ELSIF EXISTS (SELECT FROM pg_tables WHERE schemaname = 'public' AND tablename = 'requests') THEN
     ALTER TABLE documents_administratifs 
     ADD CONSTRAINT fk_documents_administratifs_request 
     FOREIGN KEY (purchase_request_id) REFERENCES requests(id) ON DELETE SET NULL;

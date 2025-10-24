@@ -31,6 +31,114 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'sonner';
+
+const TERRAIN_REQUEST_TYPES = new Set([
+  'municipal_land',
+  'terrain_request',
+  'land_request',
+  'public_land',
+  'public_land_request',
+  'communal_land'
+]);
+
+const STATUS_TRANSLATIONS = {
+  new: 'en_attente',
+  pending: 'en_attente',
+  initiated: 'en_attente',
+  waiting_response: 'en_cours',
+  in_progress: 'en_cours',
+  seller_reviewing: 'en_cours',
+  approved: 'acceptee',
+  completed: 'acceptee',
+  validated: 'acceptee',
+  rejected: 'refusee',
+  cancelled: 'refusee',
+  archived: 'refusee'
+};
+
+const TYPE_LABELS = {
+  municipal_land: 'Demande terrain communal',
+  terrain_request: 'Demande de terrain',
+  land_request: 'Demande terrain',
+  public_land: 'Terrain public',
+  public_land_request: 'Terrains publics',
+  communal_land: 'Terrain communal',
+  construction_request: 'Demande construction',
+  offer: 'Offre d\'achat',
+  purchase: 'Achat',
+  negotiation: 'Négociation',
+  general: 'Demande'
+};
+
+const parseMetadata = (data) => {
+  if (!data) return {};
+  if (typeof data === 'string') {
+    try {
+      return JSON.parse(data);
+    } catch (error) {
+      console.warn('⚠️ Impossible de parser data JSON demande:', error);
+      return {};
+    }
+  }
+  return data;
+};
+
+const toFrenchStatus = (status) => STATUS_TRANSLATIONS[status] || status || 'en_attente';
+
+const parseNumberField = (value) => {
+  if (value === null || value === undefined || value === '') return null;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+const isTerrainRequest = (request) => {
+  if (!request) return false;
+  const type = request.type || request.request_type || request.category;
+  const metadata = parseMetadata(request.data);
+  const metadataType = metadata.type || metadata.request_type || metadata.category;
+  return (
+    (type && TERRAIN_REQUEST_TYPES.has(type)) ||
+    (metadataType && TERRAIN_REQUEST_TYPES.has(metadataType)) ||
+    metadata.is_terrain_request === true ||
+    metadata.demande_type === 'terrain'
+  );
+};
+
+const normalizeDemande = (request) => {
+  const metadata = parseMetadata(request?.data);
+  const requestId = request?.id;
+  const numeroDemande = metadata.numero_demande || request?.request_number || request?.numero_demande || (requestId ? `REQ-${String(requestId).slice(0, 8).toUpperCase()}` : 'Demande');
+  const property = request?.parcel || request?.property || metadata.property || {};
+
+  const commune = metadata.commune || metadata.city || metadata.commune_cible || property.location || metadata.location || 'Localisation non spécifiée';
+  const quartier = metadata.quartier || metadata.neighborhood || metadata.zone || property.quartier || 'N/A';
+  const superficie = metadata.superficie_souhaitee || metadata.surface_souhaitee || metadata.surface || property.surface || property.area || property.size;
+  const rawBudget = metadata.budget_max ?? metadata.budget ?? metadata.offre_max ?? request?.offered_price ?? metadata.amount;
+  const budget = parseNumberField(rawBudget) ?? rawBudget;
+  const usage = metadata.usage_prevu || metadata.project_type || metadata.destination || TYPE_LABELS[request?.type] || request?.type || 'Usage non spécifié';
+  const commentaireAdmin = metadata.commentaire_admin || metadata.admin_comment || null;
+
+  return {
+    id: requestId,
+    raw_request: request,
+    numero_demande: numeroDemande,
+    commune,
+    quartier,
+    superficie_souhaitee: superficie,
+    budget_max: budget,
+    usage_prevu: usage,
+    description: request?.description || metadata.description || metadata.message || '',
+    priorite: metadata.priorite || metadata.priority || 'normale',
+    statut: toFrenchStatus(request?.status),
+    status_original: request?.status,
+    type: request?.type,
+    commentaire_admin: commentaireAdmin,
+    created_at: request?.created_at || metadata.created_at || new Date().toISOString()
+  };
+};
+
+const ENABLE_LEGACY_PUBLIC_REQUESTS = false;
 
 const ParticulierDemandesTerrains = () => {
   const outletContext = useOutletContext();
@@ -69,25 +177,82 @@ const ParticulierDemandesTerrains = () => {
 
     try {
       setLoading(true);
-      console.log('📊 Chargement des demandes de terrains communaux...');
+      console.log('📊 Chargement des demandes de terrains (table requests)...');
 
-      const { data, error } = await supabase
-        .from('demandes_terrains_communaux')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      let requestsData = [];
+      try {
+        const { data, error } = await supabase
+          .from('requests')
+          .select(`
+            *,
+            parcel:parcels!requests_parcelle_id_fkey (
+              id,
+              title,
+              name,
+              location,
+              surface,
+              area,
+              size,
+              price
+            )
+          `)
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
 
-      if (error) {
-        if (['PGRST205', '42P01'].includes(error.code)) {
-          console.warn('⚠️ Table demandes_terrains_communaux manquante - affichage vide');
-          setDemandes([]);
-        } else {
+        if (error && ['PGRST200', 'PGRST201', 'PGRST204', 'PGRST205', '42P01'].includes(error.code)) {
+          console.warn('⚠️ Relation parcels indisponible, fallback select simple');
+          const { data: fallbackData, error: fallbackError } = await supabase
+            .from('requests')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (fallbackError) {
+            throw fallbackError;
+          }
+          requestsData = fallbackData || [];
+        } else if (error) {
           throw error;
+        } else {
+          requestsData = data || [];
         }
-      } else {
-        setDemandes(data || []);
-        console.log(`✅ ${data?.length || 0} demandes chargées`);
+      } catch (err) {
+        console.error('❌ Erreur lors du chargement de requests:', err);
+        requestsData = [];
       }
+
+      let terrainRequests = (requestsData || []).filter(isTerrainRequest);
+
+      if (terrainRequests.length === 0 && ENABLE_LEGACY_PUBLIC_REQUESTS) {
+        try {
+          const { data: legacyData, error: legacyError } = await supabase
+            .from('demandes_terrains_communaux')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false });
+
+          if (legacyError) {
+            if (['PGRST205', '42P01'].includes(legacyError.code)) {
+              console.warn('⚠️ Table demandes_terrains_communaux manquante - aucun fallback');
+            } else {
+              throw legacyError;
+            }
+          } else if (legacyData?.length) {
+            terrainRequests = legacyData.map((legacy) => ({
+              ...legacy,
+              type: legacy.type || 'municipal_land',
+              status: legacy.statut
+            }));
+          }
+        } catch (err) {
+          console.warn('⚠️ Erreur chargement legacy demandes terrains:', err);
+        }
+      }
+
+      const formattedDemandes = terrainRequests.map(normalizeDemande);
+      setDemandes(formattedDemandes);
+      console.log(`✅ ${formattedDemandes.length} demandes terrain chargées`);
+
     } catch (error) {
       console.error('❌ Erreur lors du chargement des demandes:', error);
       setDemandes([]);
@@ -98,30 +263,60 @@ const ParticulierDemandesTerrains = () => {
 
   const createDemande = async () => {
     try {
-      console.log('🆕 Création nouvelle demande terrain communal...');
-
-      const { data, error } = await supabase
-        .from('demandes_terrains_communaux')
-        .insert([{
-          ...newDemande,
-          user_id: user.id,
-          statut: 'en_attente',
-          numero_demande: `DTC-${Date.now()}`
-        }])
-        .select()
-        .single();
-
-      if (error) {
-        if (['PGRST205', '42P01'].includes(error.code)) {
-          console.warn('⚠️ Impossible de créer: table manquante');
-          toast.error('Cette fonctionnalité n\'est pas disponible pour le moment');
-        } else {
-          throw error;
-        }
+      if (!user?.id) {
+        toast.error('Utilisateur non identifié');
         return;
       }
 
-      setDemandes(prev => [data, ...prev]);
+      console.log('🆕 Création nouvelle demande terrain communal (table requests)...');
+
+      const reference = `DTC-${Date.now()}`;
+      const payload = {
+        user_id: user.id,
+        type: 'municipal_land',
+        status: 'new',
+        title: newDemande.commune
+          ? `Demande terrain communal - ${newDemande.commune}`
+          : 'Demande terrain communal',
+        description: newDemande.description,
+        offered_price: parseNumberField(newDemande.budget_max),
+        data: {
+          ...newDemande,
+          budget_max: parseNumberField(newDemande.budget_max) ?? newDemande.budget_max,
+          superficie_souhaitee: parseNumberField(newDemande.superficie_souhaitee) ?? newDemande.superficie_souhaitee,
+          numero_demande: reference,
+          is_terrain_request: true,
+          source: 'ParticulierDemandesTerrains',
+          created_via: 'buyer_portal'
+        }
+      };
+
+      const { data, error } = await supabase
+        .from('requests')
+        .insert([payload])
+        .select(`
+          *,
+          parcel:parcels!requests_parcelle_id_fkey (
+            id,
+            title,
+            name,
+            location,
+            surface,
+            area,
+            size,
+            price
+          )
+        `)
+        .single();
+
+      if (error) {
+        console.error('❌ Erreur création demande terrain:', error);
+        toast.error('Impossible de créer la demande');
+        return;
+      }
+
+      const formatted = normalizeDemande(data);
+      setDemandes(prev => [formatted, ...prev]);
       setIsCreateModalOpen(false);
       setNewDemande({
         commune: '',
@@ -133,7 +328,8 @@ const ParticulierDemandesTerrains = () => {
         priorite: 'normale'
       });
 
-      console.log('✅ Demande créée avec succès');
+      toast.success('Demande créée avec succès');
+      console.log('✅ Demande terrain créée via requests');
     } catch (error) {
       console.error('❌ Erreur lors de la création:', error);
       toast.error('Erreur lors de la création de la demande');
@@ -161,7 +357,10 @@ const ParticulierDemandesTerrains = () => {
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
+    if (!dateString) return 'Non défini';
+    const parsed = new Date(dateString);
+    if (Number.isNaN(parsed.getTime())) return 'Non défini';
+    return parsed.toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: '2-digit',
       year: 'numeric'
@@ -169,7 +368,11 @@ const ParticulierDemandesTerrains = () => {
   };
 
   const formatPrice = (price) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
+    const numeric = parseNumberField(price);
+    if (numeric === null) {
+      return price ? `${price}` : 'Non spécifié';
+    }
+    return new Intl.NumberFormat('fr-FR').format(numeric) + ' FCFA';
   };
 
   const filteredDemandes = demandes.filter(demande =>
@@ -437,7 +640,7 @@ const ParticulierDemandesTerrains = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-slate-400" />
-                      <span>{demande.superficie_souhaitee} m²</span>
+                      <span>{demande.superficie_souhaitee ? `${demande.superficie_souhaitee} m²` : 'Superficie non renseignée'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-slate-400" />
@@ -543,7 +746,7 @@ const ParticulierDemandesTerrains = () => {
                   <div>
                     <Label className="text-sm font-medium">Superficie</Label>
                     <p className="text-sm text-slate-600">
-                      {selectedDemande.superficie_souhaitee} m²
+                      {selectedDemande.superficie_souhaitee ? `${selectedDemande.superficie_souhaitee} m²` : 'Non spécifié'}
                     </p>
                   </div>
                   <div>

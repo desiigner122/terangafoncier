@@ -41,6 +41,54 @@ import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import { supabase } from '@/lib/supabaseClient';
 import TerangaLogo from '@/components/ui/TerangaLogo';
 
+// Feature flags
+const ENABLE_LEGACY_PUBLIC_REQUESTS = false; // désactive les anciennes tables manquantes pour éviter le bruit console
+
+// Typologies utilisées pour cartographier les demandes selon leur type réel en base
+const TERRAIN_REQUEST_TYPES = new Set([
+  'municipal_land',
+  'terrain_request',
+  'land_request',
+  'public_land',
+  'public_land_request',
+  'communal_land'
+]);
+
+const CONSTRUCTION_REQUEST_TYPES = new Set([
+  'construction_request',
+  'construction',
+  'building_permit',
+  'promoter_project'
+]);
+
+const PURCHASE_REQUEST_TYPES = new Set([
+  'offer',
+  'purchase',
+  'negotiation',
+  'installments',
+  'bank_financing',
+  'general'
+]);
+
+const INACTIVE_REQUEST_STATUSES = new Set([
+  'rejected',
+  'cancelled',
+  'archived',
+  'closed',
+  'terminated'
+]);
+
+const ACTIVE_PURCHASE_STATUSES = new Set([
+  'new',
+  'pending',
+  'initiated',
+  'waiting_response',
+  'seller_reviewing',
+  'in_progress'
+]);
+
+const isMissingTableError = (error) => error && ['PGRST205', '42P01'].includes(error.code);
+
 const ModernAcheteurSidebar = () => {
   const { user, profile, signOut } = useAuth();
   const location = useLocation();
@@ -189,46 +237,34 @@ const ModernAcheteurSidebar = () => {
   const loadDashboardStats = async () => {
     try {
       setLoading(true);
-      
-      // ✅ Charger demandes de terrains (avec gestion erreur)
-      let demandesTerrains = [];
+
+      // 🔄 Charger les demandes utilisateur depuis la table requests (source unique fiable)
+      let userRequests = [];
       try {
         const { data, error } = await supabase
-          .from('demandes_terrains_communaux')
-          .select('id, statut')
+          .from('requests')
+          .select('id, status, type')
           .eq('user_id', user.id);
-        
-        if (error && ['PGRST205', '42P01'].includes(error.code)) {
-          console.warn('⚠️ Table demandes_terrains_communaux manquante');
+
+        if (error && isMissingTableError(error)) {
+          console.warn('⚠️ Table requests manquante');
         } else if (error) {
-          console.error('Erreur demandes terrains:', error);
+          console.error('Erreur chargement requests:', error);
         } else {
-          demandesTerrains = data || [];
+          userRequests = data || [];
         }
       } catch (err) {
-        console.warn('⚠️ Erreur chargement terrains:', err);
+        console.warn('⚠️ Erreur chargement requests:', err);
       }
-      
-      // ✅ Charger demandes de construction (avec gestion erreur)
-      let demandesConstruction = [];
-      try {
-        const { data, error } = await supabase
-          .from('demandes_construction')
-          .select('id, statut')
-          .eq('user_id', user.id);
-        
-        if (error && ['PGRST205', '42P01'].includes(error.code)) {
-          console.warn('⚠️ Table demandes_construction manquante');
-        } else if (error) {
-          console.error('Erreur demandes construction:', error);
-        } else {
-          demandesConstruction = data || [];
-        }
-      } catch (err) {
-        console.warn('⚠️ Erreur chargement construction:', err);
-      }
-      
-      // ✅ Charger demandes d'achat (purchase requests) - avec fallback
+
+      // Catégoriser les demandes selon leur type réel
+      let demandesTerrains = userRequests.filter((req) => req?.type && TERRAIN_REQUEST_TYPES.has(req.type));
+      let demandesConstruction = userRequests.filter((req) => req?.type && CONSTRUCTION_REQUEST_TYPES.has(req.type));
+
+      // Legacy tables disabled - they don't exist in production
+      // Skip queries to demandes_terrains_communaux and demandes_construction entirely
+
+      // ✅ Charger demandes d'achat (purchase requests) avec fallback sur requests
       let purchaseRequests = [];
       try {
         const { data, error } = await supabase
@@ -236,25 +272,25 @@ const ModernAcheteurSidebar = () => {
           .select('id, status')
           .eq('buyer_id', user.id)
           .in('status', ['pending', 'in_progress', 'seller_reviewing']);
-        
+
         if (error && ['PGRST200', 'PGRST205', '42P01'].includes(error.code)) {
-          console.warn('⚠️ Erreur schema purchase_requests, utilisant requests...');
-          // Fallback: charger depuis requests
-          const { data: reqData } = await supabase
-            .from('requests')
-            .select('id, status')
-            .eq('user_id', user.id)
-            .in('status', ['pending', 'initiated', 'in_progress']);
-          purchaseRequests = reqData || [];
+          console.warn('⚠️ Erreur schema purchase_requests, fallback requests');
         } else if (error) {
           console.error('Erreur purchase requests:', error);
         } else {
           purchaseRequests = data || [];
         }
       } catch (err) {
-        console.warn('⚠️ Erreur chargement purchase requests:', err);
+        console.warn('⚠️ Erreur chargement purchase_requests:', err);
       }
-      
+
+      if (purchaseRequests.length === 0 && userRequests.length > 0) {
+        purchaseRequests = userRequests.filter((req) =>
+          (req?.type && PURCHASE_REQUEST_TYPES.has(req.type)) ||
+          (req?.status && ACTIVE_PURCHASE_STATUSES.has(req.status))
+        );
+      }
+
       // ✅ Charger documents en attente (avec gestion erreur)
       let documents = [];
       try {
@@ -263,8 +299,8 @@ const ModernAcheteurSidebar = () => {
           .select('id, status')
           .eq('user_id', user.id)
           .eq('status', 'En attente');
-        
-        if (error && ['PGRST205', '42P01'].includes(error.code)) {
+
+        if (isMissingTableError(error)) {
           console.warn('⚠️ Table documents_administratifs manquante');
         } else if (error) {
           console.error('Erreur documents:', error);
@@ -275,18 +311,17 @@ const ModernAcheteurSidebar = () => {
         console.warn('⚠️ Erreur chargement documents:', err);
       }
 
-      // Mettre à jour les stats
+      const terrainCount = demandesTerrains.filter((req) => !INACTIVE_REQUEST_STATUSES.has(req?.status)).length;
+      const constructionCount = demandesConstruction.filter((req) => !INACTIVE_REQUEST_STATUSES.has(req?.status)).length;
+      const purchaseCount = purchaseRequests.filter((req) => !req?.status || ACTIVE_PURCHASE_STATUSES.has(req.status)).length;
+
       setDashboardStats({
-        demandesTerrains: demandesTerrains.filter(d => 
-          ['en_attente', 'en_cours', 'en_instruction'].includes(d.statut)
-        ).length,
-        demandesConstruction: demandesConstruction.filter(d => 
-          ['en_attente', 'en_cours', 'en_instruction'].includes(d.statut)
-        ).length,
-        purchaseRequests: purchaseRequests.length,
+        demandesTerrains: terrainCount,
+        demandesConstruction: constructionCount,
+        purchaseRequests: purchaseCount,
         documentsEnAttente: documents.length
       });
-      
+
     } catch (error) {
       console.error('❌ Erreur chargement stats:', error);
     } finally {

@@ -83,7 +83,6 @@ const ParticulierMesAchatsRefonte = () => {
             title,
             name,
             location,
-            address,
             price,
             area,
             size,

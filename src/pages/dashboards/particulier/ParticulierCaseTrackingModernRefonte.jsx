@@ -11,7 +11,7 @@ import {
   MapPin, Phone, Mail, Download, Upload, Send, Clock, CheckCircle,
   AlertCircle, Package, Building2, Eye, Edit, Trash2, Plus, X,
   FileCheck, CreditCard, Receipt, Banknote, TrendingUp, ChevronRight,
-  Sparkles, Shield, BadgeCheck, Info
+  Sparkles, Shield, BadgeCheck, Info, Users, XCircle
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,6 +37,39 @@ import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
+
+const STATUS_META = {
+  initiated: { label: 'Dossier créé', color: 'blue', icon: Clock },
+  buyer_verification: { label: 'Vérification acheteur', color: 'blue', icon: Users },
+  seller_notification: { label: 'Notification vendeur', color: 'blue', icon: MessageSquare },
+  negotiation: { label: 'Négociation', color: 'purple', icon: MessageSquare },
+  preliminary_agreement: { label: 'Accord préalable', color: 'green', icon: FileCheck },
+  contract_preparation: { label: 'Préparation contrat', color: 'purple', icon: FileText },
+  legal_verification: { label: 'Analyse juridique', color: 'purple', icon: FileText },
+  document_audit: { label: 'Documents', color: 'purple', icon: FileText },
+  property_evaluation: { label: 'Évaluation', color: 'purple', icon: FileText },
+  notary_appointment: { label: 'RDV notaire', color: 'blue', icon: Calendar },
+  signing_process: { label: 'Signature', color: 'blue', icon: FileCheck },
+  payment_processing: { label: 'Paiement', color: 'green', icon: DollarSign },
+  property_transfer: { label: 'Transfert', color: 'green', icon: Home },
+  completed: { label: 'Terminé', color: 'green', icon: CheckCircle },
+  cancelled: { label: 'Annulé', color: 'red', icon: XCircle },
+  rejected: { label: 'Rejeté', color: 'red', icon: XCircle },
+  seller_declined: { label: 'Refus vendeur', color: 'red', icon: XCircle },
+  negotiation_failed: { label: 'Échec négociation', color: 'red', icon: XCircle },
+  legal_issues_found: { label: 'Blocage légal', color: 'red', icon: AlertCircle },
+  archived: { label: 'Archivé', color: 'gray', icon: FileText },
+};
+
+const STATUS_BADGE_CLASSES = {
+  blue: 'bg-blue-500 text-white',
+  purple: 'bg-purple-500 text-white',
+  green: 'bg-green-500 text-white',
+  red: 'bg-red-500 text-white',
+  yellow: 'bg-yellow-500 text-white',
+  orange: 'bg-orange-500 text-white',
+  gray: 'bg-gray-500 text-white',
+};
 
 const ParticulierCaseTrackingModernRefonte = () => {
   const { caseNumber, caseId } = useParams(); // Support des deux formats de route
@@ -105,29 +138,55 @@ const ParticulierCaseTrackingModernRefonte = () => {
       }
 
       console.log('📋 Dossier chargé (acheteur):', caseData);
-      setPurchaseCase(caseData);
+      const normalizedCaseStatus = WorkflowStatusService.normalizeStatus(
+        caseData.current_status || caseData.status
+      );
+      const enhancedCaseData = {
+        ...caseData,
+        current_status: normalizedCaseStatus,
+        status: normalizedCaseStatus,
+      };
+      setPurchaseCase(enhancedCaseData);
 
       // 2. Charger la demande d'achat (request) si disponible
       let requestData = null;
-      if (caseData?.request_id) {
+      if (enhancedCaseData?.request_id) {
         const { data: rData, error: requestError } = await supabase
           .from('requests')
           .select('*')
-          .eq('id', caseData.request_id)
+          .eq('id', enhancedCaseData.request_id)
           .single();
 
         if (!requestError && rData) {
-          requestData = rData;
-          setPurchaseRequest(rData);
-          console.log('📝 Request chargée:', rData);
+          let requestMetadata = {};
+          if (rData.data) {
+            try {
+              requestMetadata = typeof rData.data === 'string' ? JSON.parse(rData.data) : rData.data;
+            } catch (parseError) {
+              console.warn('⚠️ Impossible de parser requests.data:', parseError);
+            }
+          }
+
+          const normalizedRequestStatus = WorkflowStatusService.normalizeStatus(
+            rData.status || requestMetadata.status
+          );
+
+          requestData = {
+            ...rData,
+            normalized_status: normalizedRequestStatus,
+            metadata: requestMetadata,
+          };
+
+          setPurchaseRequest(requestData);
+          console.log('📝 Request chargée:', requestData);
         }
       }
 
       // 3. Charger la propriété (parcelle)
       let propertyData = null;
-      console.log('🏠 Tentative chargement propriété - parcelle_id:', caseData?.parcelle_id);
+  console.log('🏠 Tentative chargement propriété - parcelle_id:', enhancedCaseData?.parcelle_id);
       
-      const parcelIdToUse = caseData?.parcelle_id || caseData?.parcel_id;
+  const parcelIdToUse = enhancedCaseData?.parcelle_id || enhancedCaseData?.parcel_id;
       
       if (parcelIdToUse) {
         const { data: pData, error: propertyError } = await supabase
@@ -146,7 +205,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
       }
       
       // Fallback: essayer avec property_id de la request
-      if (!propertyData && requestData?.property_id) {
+  if (!propertyData && requestData?.property_id) {
         const { data: pData, error: propertyError } = await supabase
           .from('parcels')
           .select('*')
@@ -161,11 +220,11 @@ const ParticulierCaseTrackingModernRefonte = () => {
       }
 
       // 4. Charger le profil du vendeur
-      if (caseData?.seller_id) {
+      if (enhancedCaseData?.seller_id) {
         const { data: sellerData } = await supabase
           .from('profiles')
           .select('*')
-          .eq('id', caseData.seller_id)
+          .eq('id', enhancedCaseData.seller_id)
           .single();
         
         if (sellerData) {
@@ -191,7 +250,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
       const { data: messagesData } = await supabase
         .from('purchase_case_messages')
         .select('*')
-        .eq('case_id', caseData.id)
+        .eq('case_id', enhancedCaseData.id)
         .order('created_at', { ascending: false });
       setMessages(messagesData || []);
 
@@ -199,17 +258,28 @@ const ParticulierCaseTrackingModernRefonte = () => {
       const { data: documentsData } = await supabase
         .from('documents_administratifs')
         .select('*')
-        .eq('purchase_request_id', caseData.request_id)
+        .eq('purchase_request_id', enhancedCaseData.request_id)
         .order('created_at', { ascending: false });
       setDocuments(documentsData || []);
 
-      // 8. Charger les rendez-vous
-      const { data: appointmentsData } = await supabase
-        .from('calendar_appointments')
-        .select('*')
-        .eq('purchase_request_id', caseData.request_id)
-        .order('appointment_date', { ascending: true });
-      setAppointments(appointmentsData || []);
+      // 8. Charger les rendez-vous (avec gestion d'erreur si colonne manquante)
+      try {
+        const { data: appointmentsData, error: appointmentsError } = await supabase
+          .from('calendar_appointments')
+          .select('*')
+          .eq('purchase_request_id', enhancedCaseData.request_id)
+          .order('appointment_date', { ascending: true });
+        
+        if (!appointmentsError) {
+          setAppointments(appointmentsData || []);
+        } else {
+          console.warn('⚠️ Erreur chargement rendez-vous (colonne manquante?):', appointmentsError);
+          setAppointments([]);
+        }
+      } catch (err) {
+        console.warn('⚠️ Impossible de charger les rendez-vous:', err);
+        setAppointments([]);
+      }
 
       // 9. Charger les paiements (user_id de l'acheteur)
       if (user?.id) {
@@ -225,9 +295,14 @@ const ParticulierCaseTrackingModernRefonte = () => {
       const { data: historyData } = await supabase
         .from('purchase_case_history')
         .select('*')
-        .eq('case_id', caseData.id)
+        .eq('case_id', enhancedCaseData.id)
         .order('created_at', { ascending: false });
-      setHistory(historyData || []);
+      const normalizedHistory = (historyData || []).map((entry) => ({
+        ...entry,
+        status: WorkflowStatusService.normalizeStatus(entry.status),
+        new_status: WorkflowStatusService.normalizeStatus(entry.new_status || entry.status),
+      }));
+      setHistory(normalizedHistory);
 
       setLoading(false);
     } catch (error) {
@@ -343,15 +418,23 @@ const ParticulierCaseTrackingModernRefonte = () => {
   };
 
   const getStatusInfo = (status) => {
-    const statusMap = WorkflowStatusService.STATUS_CONFIG;
-    return statusMap[status] || { label: status, color: 'gray', icon: AlertCircle };
+    const info = WorkflowStatusService.getStatusInfo(status);
+    const meta = STATUS_META[info.key] || STATUS_META.initiated;
+    const badgeClass = STATUS_BADGE_CLASSES[meta.color] || STATUS_BADGE_CLASSES.blue;
+
+    return {
+      ...meta,
+      label: info.label || meta.label,
+      color: meta.color,
+      badgeClass,
+      key: info.key,
+      isTerminal: info.isTerminal,
+    };
   };
 
   const calculateProgress = () => {
     if (!purchaseCase?.current_status) return 0;
-    const allStatuses = Object.keys(WorkflowStatusService.STATUS_CONFIG);
-    const currentIndex = allStatuses.indexOf(purchaseCase.current_status);
-    return currentIndex >= 0 ? ((currentIndex + 1) / allStatuses.length) * 100 : 0;
+    return WorkflowStatusService.calculateProgressFromStatus(purchaseCase.current_status);
   };
 
   if (loading) {
@@ -414,10 +497,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
                     variant="secondary" 
                     className={cn(
                       "px-3 py-1 text-sm font-medium",
-                      statusInfo.color === 'green' && "bg-green-500 text-white",
-                      statusInfo.color === 'blue' && "bg-blue-500 text-white",
-                      statusInfo.color === 'yellow' && "bg-yellow-500 text-white",
-                      statusInfo.color === 'red' && "bg-red-500 text-white"
+                      statusInfo.badgeClass
                     )}
                   >
                     <statusInfo.icon className="w-4 h-4 mr-1 inline" />

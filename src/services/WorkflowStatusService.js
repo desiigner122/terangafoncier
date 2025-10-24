@@ -25,6 +25,7 @@ export class WorkflowStatusService {
     seller_declined: 'Vendeur décline',
     negotiation_failed: 'Négociation échouée',
     legal_issues_found: 'Problèmes légaux détectés',
+    archived: 'Archivé',
   };
 
   // Mapping des statuts aux couleurs
@@ -48,10 +49,65 @@ export class WorkflowStatusService {
     seller_declined: 'bg-orange-100 text-orange-800',
     negotiation_failed: 'bg-red-100 text-red-800',
     legal_issues_found: 'bg-red-100 text-red-800',
+    archived: 'bg-gray-100 text-gray-800',
   };
 
   // Statuts terminaux (processus ne continuera pas)
-  static terminalStatuses = ['completed', 'cancelled', 'rejected', 'seller_declined', 'negotiation_failed', 'legal_issues_found'];
+  static terminalStatuses = ['completed', 'cancelled', 'rejected', 'seller_declined', 'negotiation_failed', 'legal_issues_found', 'archived'];
+
+  // Alias pour normaliser les statuts provenant de sources hétérogènes
+  static statusAliases = {
+    new: 'initiated',
+    pending: 'initiated',
+    waiting_response: 'seller_notification',
+    seller_reviewing: 'seller_notification',
+    awaiting_seller: 'seller_notification',
+    in_progress: 'negotiation',
+    negotiating: 'negotiation',
+    discussion: 'negotiation',
+    accepted: 'preliminary_agreement',
+    approved: 'preliminary_agreement',
+    validation: 'legal_verification',
+    documents_pending: 'document_audit',
+    document_review: 'document_audit',
+    dossier_complement: 'document_audit',
+    financing: 'payment_processing',
+    payment: 'payment_processing',
+    payment_in_progress: 'payment_processing',
+    finished: 'completed',
+    done: 'completed',
+    canceled: 'cancelled',
+    declined: 'rejected',
+    refused: 'rejected',
+    legal_issue: 'legal_issues_found',
+  };
+
+  static normalizeStatus(status) {
+    if (!status) {
+      return 'initiated';
+    }
+
+    const stringified = String(status).trim();
+    const withSeparators = stringified.replace(/([a-z0-9])([A-Z])/g, '$1_$2');
+
+    const normalizedBase = withSeparators
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+
+    const canonical = normalizedBase.replace(/[\s-]+/g, '_');
+
+    if (this.statusLabels[canonical]) {
+      return canonical;
+    }
+
+    if (this.statusAliases[canonical]) {
+      return this.statusAliases[canonical];
+    }
+
+    return canonical;
+  }
 
   // Mapping statut → phase
   static statusToPhase = {
@@ -74,6 +130,7 @@ export class WorkflowStatusService {
     seller_declined: 4,
     negotiation_failed: 4,
     legal_issues_found: 4,
+    archived: 4,
   };
 
   // Ordre chronologique des statuts
@@ -98,21 +155,24 @@ export class WorkflowStatusService {
    * Obtenir le label français d'un statut
    */
   static getLabel(status) {
-    return this.statusLabels[status] || status;
+    const normalized = this.normalizeStatus(status);
+    return this.statusLabels[normalized] || normalized;
   }
 
   /**
    * Obtenir la couleur d'un statut
    */
   static getColor(status) {
-    return this.statusColors[status] || 'bg-gray-100 text-gray-800';
+    const normalized = this.normalizeStatus(status);
+    return this.statusColors[normalized] || 'bg-gray-100 text-gray-800';
   }
 
   /**
    * Vérifier si un statut est terminal
    */
   static isTerminal(status) {
-    return this.terminalStatuses.includes(status);
+    const normalized = this.normalizeStatus(status);
+    return this.terminalStatuses.includes(normalized);
   }
 
   /**
@@ -121,7 +181,8 @@ export class WorkflowStatusService {
    * @returns {number} Pourcentage 0-100
    */
   static calculateProgressFromStatus(status) {
-    const index = this.chronologicalOrder.indexOf(status);
+    const normalized = this.normalizeStatus(status);
+    const index = this.chronologicalOrder.indexOf(normalized);
     if (index === -1) return 0;
     return Math.round(((index + 1) / this.chronologicalOrder.length) * 100);
   }
@@ -130,7 +191,8 @@ export class WorkflowStatusService {
    * Obtenir les étapes complétées jusqu'au statut actuel
    */
   static getCompletedStages(currentStatus) {
-    const index = this.chronologicalOrder.indexOf(currentStatus);
+    const normalized = this.normalizeStatus(currentStatus);
+    const index = this.chronologicalOrder.indexOf(normalized);
     if (index === -1) return [];
     return this.chronologicalOrder.slice(0, index + 1);
   }
@@ -139,7 +201,8 @@ export class WorkflowStatusService {
    * Obtenir les étapes restantes
    */
   static getRemainingStages(currentStatus) {
-    const index = this.chronologicalOrder.indexOf(currentStatus);
+    const normalized = this.normalizeStatus(currentStatus);
+    const index = this.chronologicalOrder.indexOf(normalized);
     if (index === -1) return this.chronologicalOrder;
     return this.chronologicalOrder.slice(index + 1);
   }
@@ -180,13 +243,14 @@ export class WorkflowStatusService {
    * Obtenir l'étape suivante recommandée
    */
   static getNextStage(currentStatus, paymentMethod = null) {
-    const index = this.chronologicalOrder.indexOf(currentStatus);
+    const normalized = this.normalizeStatus(currentStatus);
+    const index = this.chronologicalOrder.indexOf(normalized);
     if (index === -1 || index >= this.chronologicalOrder.length - 1) {
       return null;
     }
 
     // Si financement bancaire et pas encore approuvé, l'étape spéciale est requise
-    if (paymentMethod === 'bank_financing' && !this.requiresBankApprovalPassed(currentStatus)) {
+    if (paymentMethod === 'bank_financing' && !this.requiresBankApprovalPassed(normalized)) {
       return 'bank_approval_check';
     }
 
@@ -199,7 +263,8 @@ export class WorkflowStatusService {
   static requiresBankApprovalPassed(currentStatus) {
     // Après signing_process, on assume que l'approbation est passée
     const signingIndex = this.chronologicalOrder.indexOf('signing_process');
-    const currentIndex = this.chronologicalOrder.indexOf(currentStatus);
+    const normalized = this.normalizeStatus(currentStatus);
+    const currentIndex = this.chronologicalOrder.indexOf(normalized);
     return currentIndex >= signingIndex;
   }
 
@@ -207,19 +272,34 @@ export class WorkflowStatusService {
    * Obtenir un résumé du dossier
    */
   static getSummary(purchaseCase) {
+    const normalizedStatus = this.normalizeStatus(purchaseCase.status || purchaseCase.current_status);
     return {
-      currentStatus: purchaseCase.status,
-      currentStatusLabel: this.getLabel(purchaseCase.status),
-      currentPhase: purchaseCase.phase || this.statusToPhase[purchaseCase.status],
-      progressPercentage: purchaseCase.progress_percentage || this.calculateProgressFromStatus(purchaseCase.status),
-      isTerminal: this.isTerminal(purchaseCase.status),
-      completedStages: this.getCompletedStages(purchaseCase.status),
-      remainingStages: this.getRemainingStages(purchaseCase.status),
-      nextStage: this.getNextStage(purchaseCase.status, purchaseCase.payment_method),
+      currentStatus: normalizedStatus,
+      currentStatusLabel: this.getLabel(normalizedStatus),
+      currentPhase: purchaseCase.phase || this.statusToPhase[normalizedStatus],
+      progressPercentage: purchaseCase.progress_percentage || this.calculateProgressFromStatus(normalizedStatus),
+      isTerminal: this.isTerminal(normalizedStatus),
+      completedStages: this.getCompletedStages(normalizedStatus),
+      remainingStages: this.getRemainingStages(normalizedStatus),
+      nextStage: this.getNextStage(normalizedStatus, purchaseCase.payment_method),
       requiresBankApproval: this.requiresBankApproval(purchaseCase.payment_method),
       bankApprovalStatus: purchaseCase.financing_approved,
       specialSteps: this.getSpecialSteps(purchaseCase.payment_method),
     };
+  }
+
+  static getStatusInfo(status) {
+    const normalized = this.normalizeStatus(status);
+    return {
+      key: normalized,
+      label: this.getLabel(normalized),
+      colorClass: this.getColor(normalized),
+      isTerminal: this.isTerminal(normalized),
+    };
+  }
+
+  static getKnownStatuses() {
+    return Object.keys(this.statusLabels);
   }
 }
 

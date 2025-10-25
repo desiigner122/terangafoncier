@@ -648,7 +648,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
                   </TabsList>
 
                   {/* Messages */}
-                  <TabsContent value="messages">
+                  <TabsContent value="messages" id="messages-section">
                     <ScrollArea className="h-[400px] pr-4">
                       <div className="space-y-4">
                         {messages.length > 0 ? (
@@ -908,7 +908,16 @@ const ParticulierCaseTrackingModernRefonte = () => {
                       </div>
                     )}
                   </div>
-                  <Button className="w-full mt-4" variant="outline">
+                  <Button 
+                    className="w-full mt-4" 
+                    variant="outline"
+                    onClick={() => {
+                      const messagesSection = document.getElementById('messages-section');
+                      if (messagesSection) {
+                        messagesSection.scrollIntoView({ behavior: 'smooth' });
+                      }
+                    }}
+                  >
                     <MessageSquare className="w-4 h-4 mr-2" />
                     Contacter
                   </Button>

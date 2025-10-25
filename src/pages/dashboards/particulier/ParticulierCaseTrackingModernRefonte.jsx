@@ -110,8 +110,11 @@ const ParticulierCaseTrackingModernRefonte = () => {
       let caseData = null;
       let caseError = null;
 
-      // Essayer d'abord avec case_number (si c'est un format CASE-2025-XXX)
-      if (caseIdentifier.startsWith('CASE-')) {
+      // Essayer d'abord avec case_number (si c'est un format CASE-XXXX ou TF-XXXXXXXX-XXXX)
+      const isCaseNumber = caseIdentifier.includes('-') && !caseIdentifier.match(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i);
+      
+      if (isCaseNumber) {
+        console.log('🔍 Recherche par case_number:', caseIdentifier);
         const { data, error } = await supabase
           .from('purchase_cases')
           .select('*')
@@ -120,7 +123,8 @@ const ParticulierCaseTrackingModernRefonte = () => {
         caseData = data;
         caseError = error;
       } else {
-        // Sinon c'est un UUID, rechercher par id
+        // C'est probablement un UUID, rechercher par id
+        console.log('🔍 Recherche par id (UUID):', caseIdentifier);
         const { data, error } = await supabase
           .from('purchase_cases')
           .select('*')

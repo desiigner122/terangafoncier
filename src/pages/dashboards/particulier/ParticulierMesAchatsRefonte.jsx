@@ -83,9 +83,57 @@ const ParticulierMesAchatsRefonte = () => {
         return;
       }
 
-      console.log('📋 Dossiers chargés pour user:', { userId: user.id, count: casesData?.length, data: casesData });
-      setPurchaseCases(casesData || []);
-      calculateStats(casesData || []);
+      // Maintenant charger les relations (requests, parcels, profiles) pour chaque dossier
+      let enrichedCases = casesData || [];
+      if (enrichedCases.length > 0) {
+        enrichedCases = await Promise.all(
+          enrichedCases.map(async (caseItem) => {
+            // Charger la request
+            let request = null;
+            if (caseItem.request_id) {
+              const { data: reqData } = await supabase
+                .from('requests')
+                .select('*')
+                .eq('id', caseItem.request_id)
+                .single();
+              request = reqData;
+            }
+
+            // Charger la propriété (parcels)
+            let property = null;
+            if (caseItem.parcelle_id) {
+              const { data: propData } = await supabase
+                .from('parcels')
+                .select('*')
+                .eq('id', caseItem.parcelle_id)
+                .single();
+              property = propData;
+            }
+
+            // Charger le vendeur (profiles)
+            let seller = null;
+            if (caseItem.seller_id) {
+              const { data: sellerData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', caseItem.seller_id)
+                .single();
+              seller = sellerData;
+            }
+
+            return {
+              ...caseItem,
+              request,
+              property,
+              seller
+            };
+          })
+        );
+      }
+
+      console.log('📋 Dossiers chargés avec relations:', { count: enrichedCases?.length, data: enrichedCases });
+      setPurchaseCases(enrichedCases || []);
+      calculateStats(enrichedCases || []);
       setLoading(false);
     } catch (error) {
       console.error('❌ Erreur globale:', error);
@@ -193,7 +241,9 @@ const ParticulierMesAchatsRefonte = () => {
 
   const formatPrice = (price) => {
     if (!price) return 'Prix non défini';
-    return `${price.toLocaleString('fr-FR')} FCFA`;
+    const numPrice = typeof price === 'string' ? parseInt(price) : price;
+    if (isNaN(numPrice)) return 'Prix non défini';
+    return `${numPrice.toLocaleString('fr-FR')} FCFA`;
   };
 
   const navigateToCaseDetail = (caseItem) => {
@@ -466,7 +516,7 @@ const ParticulierMesAchatsRefonte = () => {
 
                                 <div className="flex items-center gap-4 mb-3">
                                   <div className="text-2xl font-bold text-blue-600">
-                                    {formatPrice(caseItem.offered_price || property?.price)}
+                                    {formatPrice(caseItem.purchase_price || property?.price)}
                                   </div>
                                   {seller && (
                                     <div className="flex items-center gap-2">

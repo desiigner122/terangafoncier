@@ -42,12 +42,7 @@ CREATE INDEX IF NOT EXISTS idx_calendar_appointments_start_time
 CREATE INDEX IF NOT EXISTS idx_calendar_appointments_status 
   ON public.calendar_appointments(status);
 
--- 5. If appointment_date exists and start_time doesn't have data, copy it
-UPDATE public.calendar_appointments 
-SET start_time = appointment_date 
-WHERE start_time = NOW() AND appointment_date IS NOT NULL;
-
--- 6. Verify the structure
+-- 5. Verify the structure
 SELECT 
   column_name,
   data_type,

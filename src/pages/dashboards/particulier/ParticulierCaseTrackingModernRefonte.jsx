@@ -152,12 +152,12 @@ const ParticulierCaseTrackingModernRefonte = () => {
 
       console.log('📋 Dossier chargé (acheteur):', caseData);
       const normalizedCaseStatus = WorkflowStatusService.normalizeStatus(
-        caseData.current_status || caseData.status
+        caseData.status || caseData.current_status
       );
       const enhancedCaseData = {
         ...caseData,
-        current_status: normalizedCaseStatus,
         status: normalizedCaseStatus,
+        current_status: normalizedCaseStatus, // For backwards compatibility
       };
       setPurchaseCase(enhancedCaseData);
 
@@ -281,7 +281,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
           .from('calendar_appointments')
           .select('*')
           .eq('purchase_request_id', enhancedCaseData.request_id)
-          .order('appointment_date', { ascending: true });
+          .order('start_time', { ascending: true });
         
         if (!appointmentsError) {
           setAppointments(appointmentsData || []);
@@ -446,8 +446,8 @@ const ParticulierCaseTrackingModernRefonte = () => {
   };
 
   const calculateProgress = () => {
-    if (!purchaseCase?.current_status) return 0;
-    return WorkflowStatusService.calculateProgressFromStatus(purchaseCase.current_status);
+    if (!purchaseCase?.status) return 0;
+    return WorkflowStatusService.calculateProgressFromStatus(purchaseCase.status);
   };
 
   if (loading) {
@@ -485,7 +485,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
     );
   }
 
-  const statusInfo = getStatusInfo(purchaseCase.current_status);
+  const statusInfo = getStatusInfo(purchaseCase.status);
   const progress = calculateProgress();
 
   return (
@@ -805,7 +805,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
                                   <div>
                                     <p className="font-medium text-sm">{apt.title || 'Rendez-vous'}</p>
                                     <p className="text-xs text-gray-600">
-                                      {format(new Date(apt.appointment_date), 'dd MMMM yyyy à HH:mm', { locale: fr })}
+                                      {format(new Date(apt.start_time), 'dd MMMM yyyy à HH:mm', { locale: fr })}
                                     </p>
                                   </div>
                                 </div>

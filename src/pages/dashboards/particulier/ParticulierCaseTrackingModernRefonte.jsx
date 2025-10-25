@@ -369,7 +369,8 @@ const ParticulierCaseTrackingModernRefonte = () => {
     try {
       setUploadingDoc(true);
       const fileName = `${Date.now()}_${file.name}`;
-      const filePath = `documents/${purchaseCase.id}/${fileName}`;
+      // Important: filePath must NOT repeat the bucket name. Use userId/caseId/filename to satisfy common RLS policies
+      const filePath = `${user.id}/${purchaseCase.id}/${fileName}`;
 
       // Upload file to storage
       const { data: uploadData, error: uploadError } = await supabase.storage

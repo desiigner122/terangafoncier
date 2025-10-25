@@ -253,6 +253,7 @@ const VendeurCaseTrackingModernFixed = () => {
         case_id: purchaseCase?.id,
         sent_by: user.id,
         message: newMessage.trim(),
+        message_type: 'text',
       };
 
       const { error } = await supabase
@@ -273,13 +274,19 @@ const VendeurCaseTrackingModernFixed = () => {
   const uploadDocument = async (file, documentType) => {
     try {
       const fileName = `${Date.now()}_${file.name}`;
-      const filePath = `documents/${purchaseCase.id}/${fileName}`;
+      // Do not prefix with bucket name; use a path compatible with RLS like userId/caseId/filename
+      const filePath = `${user.id}/${purchaseCase.id}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
         .upload(filePath, file);
 
       if (uploadError) throw uploadError;
+
+      // Try to get a public URL (works only if bucket/object is public)
+      const { data: publicData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(filePath);
 
       const { data: docData, error: docError } = await supabase
         .from('documents_administratifs')
@@ -289,9 +296,10 @@ const VendeurCaseTrackingModernFixed = () => {
           file_name: file.name,
           title: file.name,
           document_type: documentType,
-          file_format: file.type.split('/')[1],
+          file_format: file.type.split('/')[1] || null,
           file_size: `${(file.size / 1024).toFixed(2)} KB`,
           storage_path: filePath,
+          document_url: publicData?.publicUrl || null,
           status: 'pending',
           uploaded_by: user.id,
         }])
@@ -346,6 +354,24 @@ const VendeurCaseTrackingModernFixed = () => {
         <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
         <h2 className="text-2xl font-bold mb-2">Dossier introuvable</h2>
         <Button onClick={() => navigate('/vendeur/purchase-requests')}>
+
+  // Charger les messages du dossier (côté vendeur)
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!purchaseCase?.id) return;
+      try {
+        const { data, error } = await supabase
+          .from('purchase_case_messages')
+          .select('*')
+          .eq('case_id', purchaseCase.id)
+          .order('created_at', { ascending: false });
+        if (!error) setMessages(data || []);
+      } catch (err) {
+        console.warn('⚠️ Erreur chargement messages (vendeur):', err);
+      }
+    };
+    fetchMessages();
+  }, [purchaseCase?.id]);
           Retour aux demandes d'achat
         </Button>
       </div>
@@ -533,7 +559,7 @@ const VendeurCaseTrackingModernFixed = () => {
                               </Avatar>
                               <div className="flex-1">
                                 <p className="text-sm font-medium">{buyer?.full_name || 'Acheteur'}</p>
-                                <p className="text-sm text-gray-700">{msg.content}</p>
+                                <p className="text-sm text-gray-700">{msg.message || msg.content}</p>
                                 <p className="text-xs text-gray-400 mt-1">
                                   {msg.created_at && format(new Date(msg.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
                                 </p>

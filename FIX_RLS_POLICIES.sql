@@ -4,40 +4,21 @@
 -- ============================================================
 
 -- ==================================================
--- 1. FIX STORAGE RLS POLICIES
+-- 1. FIX STORAGE RLS POLICIES (Via Supabase Dashboard)
 -- ==================================================
 
--- Enable RLS on storage.objects if not already enabled
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
-
--- Drop existing policies if they conflict
-DROP POLICY IF EXISTS "Users can upload documents" ON storage.objects;
-DROP POLICY IF EXISTS "Users can read their own documents" ON storage.objects;
-DROP POLICY IF EXISTS "Users can delete their own documents" ON storage.objects;
-
--- Allow authenticated users to upload to documents bucket
-CREATE POLICY "Users can upload to documents"
-ON storage.objects FOR INSERT
-WITH CHECK (
-  bucket_id = 'documents' 
-  AND auth.role() = 'authenticated'
-);
-
--- Allow users to read documents in their cases
-CREATE POLICY "Users can read documents in their cases"
-ON storage.objects FOR SELECT
-USING (
-  bucket_id = 'documents'
-  AND auth.role() = 'authenticated'
-);
-
--- Allow users to delete their own documents
-CREATE POLICY "Users can delete their own documents"
-ON storage.objects FOR DELETE
-USING (
-  bucket_id = 'documents'
-  AND owner = auth.uid()
-);
+-- NOTE: Storage.objects is managed by Supabase and cannot be modified via SQL
+-- 
+-- TO FIX STORAGE UPLOAD ERRORS:
+-- 1. Go to Supabase Dashboard → Storage → Buckets
+-- 2. Click on "documents" bucket
+-- 3. Go to Policies tab
+-- 4. Make sure you have this policy:
+--    - Authenticated users can INSERT objects in documents bucket
+--    - Path: documents/* (or just documents/)
+--
+-- ALTERNATIVE: Use service_role bucket with unrestricted access
+-- Contact Supabase support if needed to modify storage policies
 
 -- ==================================================
 -- 2. FIX RLS POLICIES FOR purchase_case_messages

@@ -28,10 +28,22 @@ import {
   Menu,
   X,
   ChevronRight,
-  RefreshCw
+  RefreshCw,
+  ChevronDown,
+  LogOut
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const INITIAL_VENDEUR_DATA = {
   profile: {
@@ -685,14 +697,75 @@ const VendeurDashboardModern = () => {
                       className="pl-10 pr-4 py-2 bg-white/60 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-orange-500"
                     />
                   </div>
-                  <button className="relative p-2 text-gray-600 hover:text-orange-600 hover:bg-orange-50 rounded-lg transition-colors">
-                    <Bell className="w-5 h-5" />
-                    {pendingNotifications > 0 ? (
-                      <span className="absolute -top-1 -right-1 min-w-[20px] h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center px-1">
-                        {pendingNotifications}
-                      </span>
-                    ) : null}
-                  </button>
+
+                  {/* Messages dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="relative">
+                        <MessageSquare className="w-5 h-5" />
+                        {unreadMessages > 0 && (
+                          <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                            {unreadMessages > 9 ? '9+' : unreadMessages}
+                          </Badge>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80">
+                      <div className="px-3 py-2 font-medium">Messages récents</div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem disabled>
+                        <span className="text-sm text-slate-600">Aucun message récent</span>
+                      </DropdownMenuItem>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem onClick={() => setActiveTab('communication')}>
+                        Voir tous les messages
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Notifications dropdown */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="relative">
+                        <Bell className="w-5 h-5" />
+                        {pendingNotifications > 0 && (
+                          <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                            {pendingNotifications > 9 ? '9+' : pendingNotifications}
+                          </Badge>
+                        )}
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-80">
+                      <div className="px-3 py-2 font-medium">Notifications</div>
+                      <DropdownMenuSeparator />
+                      <DropdownMenuItem disabled>
+                        <span className="text-sm text-slate-600">Aucune notification récente</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+
+                  {/* Profile menu */}
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="sm" className="flex items-center gap-2">
+                        <div className="w-7 h-7 bg-orange-600 rounded-full flex items-center justify-center">
+                          <span className="text-white font-medium text-xs">V</span>
+                        </div>
+                        <ChevronDown className="h-3 w-3" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end" className="w-48">
+                      <div className="px-3 py-2 border-b">
+                        <p className="text-sm font-medium">Vendeur</p>
+                      </div>
+                      <DropdownMenuItem 
+                        onClick={() => setActiveTab('settings')}
+                      >
+                        <Settings className="mr-2 h-4 w-4" />
+                        <span>Paramètres</span>
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
                 </div>
               </div>
             </div>

@@ -209,7 +209,7 @@ const ParticulierCaseTrackingModern = () => {
 
       setNewMessage('');
       toast.success('Message envoyé');
-      loadCaseData();
+      // Don't call loadCaseData() - Realtime subscription will update the message list
     } catch (error) {
       console.error('Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi du message');
@@ -218,15 +218,9 @@ const ParticulierCaseTrackingModern = () => {
 
   const setupRealtimeSubscriptions = () => {
     try {
-      // Setup Realtime pour le dossier spécifique
-      RealtimeNotificationService.setupCaseTracking(caseId, (payload) => {
-        console.log('📡 [REALTIME] Mise à jour dossier acheteur:', payload);
-        toast.info('Mise à jour du dossier détectée');
-        // Recharger les données pour mettre à jour l'interface
-        loadCaseData();
-      });
-
-      console.log('✅ Realtime subscriptions initialisées pour l\'acheteur');
+      // Don't use setupCaseTracking with auto-reload - causes page refresh on every message
+      // Instead, rely on granular subscriptions (messages, documents) that update state directly
+      console.log('✅ Realtime subscriptions configured (granular updates without full reload)');
     } catch (error) {
       console.error('Erreur setup Realtime:', error);
     }

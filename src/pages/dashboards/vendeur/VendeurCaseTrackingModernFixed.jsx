@@ -231,15 +231,9 @@ const VendeurCaseTrackingModernFixed = () => {
 
   const setupRealtimeSubscriptions = () => {
     try {
-      // Setup Realtime pour le dossier spécifique
-      RealtimeNotificationService.setupCaseTracking(purchaseCase?.id, (payload) => {
-        console.log('📡 [REALTIME] Mise à jour dossier vendeur:', payload);
-        toast.info('Mise à jour du dossier détectée');
-        // Recharger les données pour mettre à jour l'interface
-        loadCaseData();
-      });
-
-      console.log('✅ Realtime subscriptions initialisées pour le vendeur');
+      // Don't use setupCaseTracking with auto-reload - causes page refresh on every message
+      // Instead, rely on granular subscriptions (messages, documents) that update state directly
+      console.log('✅ Realtime subscriptions configured (granular updates without full reload)');
     } catch (error) {
       console.error('Erreur setup Realtime:', error);
     }

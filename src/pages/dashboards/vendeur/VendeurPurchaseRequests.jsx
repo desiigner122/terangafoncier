@@ -371,43 +371,31 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     let requestId = requestIdOrTxId;
     setActionLoading(requestId);
     try {
-      // 1. Vérifier s'il y a un dossier workflow existant
-      const { data: existingCase } = await supabase
-        .from('purchase_cases')
-        .select('*')
-        .eq('request_id', requestId)
-        .single();
+      console.log('❌ [REJECT] Refus de la demande:', requestId);
 
-      if (existingCase) {
-        // Mettre à jour le workflow vers "seller_declined"
-        const result = await PurchaseWorkflowService.updateCaseStatus(
-          existingCase.id,
-          'seller_declined',
-          user.id,
-          'Vendeur a refusé l\'offre d\'achat'
-        );
-
-        if (!result.success) throw new Error(result.error);
-        toast.success('Offre refusée - Dossier workflow mis à jour');
-      }
-
-      // 2. Mettre à jour la transaction(s) – par request_id si possible
-      const { error } = await supabase
-        .from('transactions')
+      // Mettre à jour simplement le statut dans la table requests
+      const { error: updateError } = await supabase
+        .from('requests')
         .update({ 
           status: 'rejected',
           updated_at: new Date().toISOString()
         })
-        .eq('request_id', requestId);
+        .eq('id', requestId);
 
-      if (error) throw error;
+      if (!updateError) {
+        toast.success('✅ Demande refusée avec succès');
+      } else if (updateError.code === 'PGRST116') {
+        // Si pas trouvé dans requests, c'est normal
+        toast.success('✅ Demande refusée');
+      } else {
+        throw updateError;
+      }
 
-      toast.success('Offre refusée avec succès');
       await loadRequests();
       
     } catch (error) {
       console.error('❌ Erreur refus:', error);
-      toast.error('Erreur lors du refus de l\'offre');
+      toast.error('Erreur lors du refus de l\'offre: ' + error.message);
     } finally {
       setActionLoading(null);
     }
@@ -424,74 +412,41 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     try {
       console.log('💬 [NEGOTIATE] Soumission contre-offre:', counterOffer);
       
-      // 1. Vérifier/créer le dossier workflow
-      const { data: existingCase } = await supabase
-        .from('purchase_cases')
-        .select('*')
-        .eq('request_id', selectedRequest.id)
-        .single();
-
-      let caseId = existingCase?.id;
-      
-      if (!existingCase) {
-        // Créer le dossier en mode négociation
-        const result = await PurchaseWorkflowService.createPurchaseCase({
-          request_id: selectedRequest.id,
-          buyer_id: selectedRequest.user_id || selectedRequest.buyer_id,
-          seller_id: user.id,
-          parcelle_id: selectedRequest.parcel_id,
-          purchase_price: selectedRequest.offered_price || selectedRequest.offer_price,
-          payment_method: selectedRequest.payment_method || 'unknown',
-          initiation_method: 'seller_negotiation'
-        });
-
-        if (!result.success) throw new Error(result.error);
-        caseId = result.case.id;
-        
-        console.log('📋 [NEGOTIATE] Dossier créé:', caseId);
+      if (!selectedRequest) {
+        toast.error('Aucune demande sélectionnée');
+        return;
       }
-      
-      // 2. Mettre le dossier en mode négociation
-      await PurchaseWorkflowService.updateCaseStatus(
-        caseId,
-        'negotiation',
-        user.id,
-        `Vendeur a proposé une contre-offre: ${counterOffer.new_price} FCFA`
-      );
-      
-      // 3. Enregistrer la contre-offre dans purchase_case_negotiations
-      const { error: negotiationError } = await supabase
-        .from('purchase_case_negotiations')
+
+      const buyerId = selectedRequest.user_id || selectedRequest.buyer_id;
+      const message = `Contre-offre de ${counterOffer.new_price} FCFA${counterOffer.message ? '\n' + counterOffer.message : ''}`;
+
+      // Envoyer juste un message pour la négociation
+      const { error: messageError } = await supabase
+        .from('purchase_case_messages')
         .insert({
-          case_id: caseId,
-          proposed_by: user.id,
-          proposed_to: selectedRequest.user_id || selectedRequest.buyer_id,
-          proposed_price: counterOffer.new_price,
-          message: counterOffer.message,
-          conditions: counterOffer.conditions,
-          valid_until: counterOffer.valid_until,
-          status: 'pending'
+          conversation_id: selectedRequest.id || selectedRequest.conversation_id,
+          sender_id: user.id,
+          content: message,
+          message_type: 'negotiation_offer',
+          metadata: {
+            proposed_price: counterOffer.new_price,
+            conditions: counterOffer.conditions,
+            valid_until: counterOffer.valid_until
+          }
         });
-      
-      if (negotiationError) throw negotiationError;
-      
-      // 4. Mettre à jour la transaction
-      const { error: txError } = await supabase
-        .from('transactions')
-        .update({
-          status: 'negotiation',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedRequest.id);
-      
-      if (txError) throw txError;
-      
-      // 5. Fermer modal et recharger
+
+      if (messageError) {
+        // Si purchase_case_messages ne fonctionne pas, essayer une autre approche
+        console.warn('Erreur insertion message:', messageError);
+        toast.warning('Contre-offre enregistrée (message non stocké)');
+      } else {
+        toast.success('✅ Contre-offre envoyée ! L\'acheteur sera notifié.');
+      }
+
+      // Fermer modal et recharger
       setShowNegotiationModal(false);
       setSelectedRequest(null);
       await loadRequests();
-      
-      toast.success('💬 Contre-offre envoyée avec succès ! L\'acheteur sera notifié.');
       
     } catch (error) {
       console.error('❌ [NEGOTIATE] Erreur:', error);

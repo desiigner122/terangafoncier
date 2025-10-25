@@ -443,7 +443,6 @@ const CompleteSidebarVendeurDashboard = () => {
         .select(`
           id,
           buyer_id,
-          last_message,
           updated_at
         `)
         .eq('vendor_id', user.id)
@@ -473,18 +472,29 @@ const CompleteSidebarVendeurDashboard = () => {
         }
       }
 
-      // Transformer les conversations en messages avec infos acheteur
-      const messagesList = conversations.map(conv => ({
-        id: conv.id,
-        conversation_id: conv.id,
-        buyer_id: conv.buyer_id,
-        buyer_name: buyerMap[conv.buyer_id] ? 
-          `${buyerMap[conv.buyer_id].first_name} ${buyerMap[conv.buyer_id].last_name}`.trim() : 
-          'Acheteur',
-        buyer_avatar: buyerMap[conv.buyer_id]?.avatar_url,
-        content: conv.last_message || 'Aucun message',
-        created_at: conv.updated_at,
-        timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
+      // Charger le dernier message de chaque conversation pour l'aperçu
+      const messagesList = await Promise.all(conversations.map(async (conv) => {
+        const { data: lastMsg } = await supabase
+          .from('purchase_case_messages')
+          .select('content')
+          .eq('conversation_id', conv.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+          .catch(() => ({ data: null }));
+
+        return {
+          id: conv.id,
+          conversation_id: conv.id,
+          buyer_id: conv.buyer_id,
+          buyer_name: buyerMap[conv.buyer_id] ? 
+            `${buyerMap[conv.buyer_id].first_name} ${buyerMap[conv.buyer_id].last_name}`.trim() : 
+            'Acheteur',
+          buyer_avatar: buyerMap[conv.buyer_id]?.avatar_url,
+          content: lastMsg?.content || 'Aucun message',
+          created_at: conv.updated_at,
+          timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
+        };
       }));
 
       setMessages(messagesList);

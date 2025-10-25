@@ -284,7 +284,6 @@ import ParticulierAI from '@/pages/dashboards/particulier/ParticulierAI';
 import ParticulierBlockchain from '@/pages/dashboards/particulier/ParticulierBlockchainRealData';
 import ParticulierSettings from '@/pages/dashboards/particulier/ParticulierSettings_FUNCTIONAL';
 
-import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
 import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard';
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
 
@@ -539,9 +538,6 @@ function App() {
                 {/* Route de redirection intelligente pour /dashboard */}
                 <Route path="dashboard" element={<ProtectedRoute><RoleBasedRedirect /></ProtectedRoute>} />
                 
-                {/* Route de test complètement indépendante pour debugging */}
-                <Route path="test-vendeur" element={<ModernVendeurDashboard />} />
-                
                 {/* Dashboard Particulier/Acheteur avec la nouvelle sidebar moderne */}
                 <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ModernAcheteurSidebar /></RoleProtectedRoute>}>
                   <Route index element={<ParticulierOverview />} />
@@ -681,10 +677,6 @@ function App() {
                   <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
                   <Route path="my-requests" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyRequestsPage /></RoleProtectedRoute>} />
                   
-                  {/* Route de test pour dashboard moderne direct */}
-                  <Route path="vendeur-moderne" element={<ModernVendeurDashboard />} />
-                  {/* Route de test temporaire pour debugging */}
-                  <Route path="vendeur-test" element={<VendeurDashboard />} />
                   
                   {/* Redirection géomètre supprimée pour éviter les conflits avec /geometre direct */}
                   {/* Agent Foncier route supprimée pour éviter le conflit avec la route directe */}

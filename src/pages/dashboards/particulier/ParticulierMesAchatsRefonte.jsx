@@ -67,52 +67,14 @@ const ParticulierMesAchatsRefonte = () => {
       console.log('🚀 [DEBUG] Exécution de loadPurchaseCases - Version 3');
       console.log('👤 User ID:', user.id);
 
-      // Charger TOUS les dossiers d'abord (sans filtre) pour diagnostiquer
-      const { data: allCases, error: allCasesError } = await supabase
-        .from('purchase_cases')
-        .select('id, buyer_id, case_number, created_at');
-      
-      console.log('📊 Tous les dossiers (sans filtre):', { count: allCases?.length, error: allCasesError });
-
-      // Maintenant charger les dossiers filtrés avec les relations
+      // Essayer d'abord une requête simple sans relations
       const { data: casesData, error: casesError } = await supabase
         .from('purchase_cases')
-        .select(`
-          id,
-          buyer_id,
-          seller_id,
-          case_number,
-          status,
-          offered_price,
-          created_at,
-          request:requests!purchase_cases_request_id_fkey (
-            id,
-            user_id,
-            property_id,
-            offered_price,
-            created_at
-          ),
-          property:parcels!purchase_cases_parcelle_id_fkey (
-            id,
-            title,
-            name,
-            location,
-            price,
-            surface,
-            status
-          ),
-          seller:profiles!purchase_cases_seller_id_fkey (
-            id,
-            full_name,
-            first_name,
-            last_name,
-            email,
-            phone,
-            avatar_url
-          )
-        `)
+        .select('*')
         .eq('buyer_id', user.id)
         .order('created_at', { ascending: false });
+      
+      console.log('📊 Données brutes purchase_cases:', { count: casesData?.length, data: casesData, error: casesError });
 
       if (casesError) {
         console.error('❌ Erreur chargement dossiers:', casesError);

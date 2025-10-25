@@ -50,3 +50,60 @@ SELECT
 FROM information_schema.columns
 WHERE table_name = 'calendar_appointments'
 ORDER BY ordinal_position;
+
+-- ============================================================
+-- FIXES FOR purchase_case_messages TABLE
+-- ============================================================
+
+-- 1. Ensure message_type column exists
+ALTER TABLE IF EXISTS public.purchase_case_messages
+ADD COLUMN IF NOT EXISTS message_type VARCHAR(50) DEFAULT 'text' 
+  CHECK (message_type IN ('text', 'system', 'announcement'));
+
+-- 2. Ensure all required columns exist
+ALTER TABLE IF EXISTS public.purchase_case_messages
+ADD COLUMN IF NOT EXISTS case_id UUID,
+ADD COLUMN IF NOT EXISTS sender_id UUID,
+ADD COLUMN IF NOT EXISTS message TEXT,
+ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT FALSE,
+ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW(),
+ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
+
+-- 3. Add FK constraints if not exists
+DO $$
+BEGIN
+  BEGIN
+    ALTER TABLE IF EXISTS public.purchase_case_messages
+    ADD CONSTRAINT fk_purchase_case_messages_case
+    FOREIGN KEY (case_id) REFERENCES public.purchase_cases(id) ON DELETE CASCADE;
+  EXCEPTION WHEN duplicate_object THEN
+    NULL;
+  END;
+  BEGIN
+    ALTER TABLE IF EXISTS public.purchase_case_messages
+    ADD CONSTRAINT fk_purchase_case_messages_sender
+    FOREIGN KEY (sender_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+  EXCEPTION WHEN duplicate_object THEN
+    NULL;
+  END;
+END;
+$$;
+
+-- 4. Create indexes for performance
+CREATE INDEX IF NOT EXISTS idx_purchase_case_messages_case_id 
+  ON public.purchase_case_messages(case_id);
+
+CREATE INDEX IF NOT EXISTS idx_purchase_case_messages_sender_id 
+  ON public.purchase_case_messages(sender_id);
+
+CREATE INDEX IF NOT EXISTS idx_purchase_case_messages_created_at 
+  ON public.purchase_case_messages(created_at DESC);
+
+-- 5. Verify the structure
+SELECT 
+  column_name,
+  data_type,
+  is_nullable
+FROM information_schema.columns
+WHERE table_name = 'purchase_case_messages'
+ORDER BY ordinal_position;

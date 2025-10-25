@@ -437,32 +437,57 @@ const CompleteSidebarVendeurDashboard = () => {
   // Charger les messages depuis Supabase
   const loadMessages = async () => {
     try {
-      // Charger les conversations du vendeur puis les messages récents
+      // Charger les conversations du vendeur avec les détails des acheteurs
       const { data: conversations, error: convError } = await supabase
         .from('conversations')
-        .select('id')
+        .select(`
+          id,
+          buyer_id,
+          last_message,
+          updated_at
+        `)
         .eq('vendor_id', user.id)
+        .order('updated_at', { ascending: false })
         .limit(20);
 
       if (convError || !conversations || conversations.length === 0) {
         console.log('Aucune conversation trouvée');
+        setMessages([]);
         return;
       }
 
-      const conversationIds = conversations.map(c => c.id);
-
-      // Charger les messages récents de ces conversations
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .in('thread_id', conversationIds)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (!error && data) {
-        setMessages(data);
-        // unreadMessagesCount now comes from useUnreadCounts hook
+      // Charger les profils des acheteurs
+      const buyerIds = conversations.map(c => c.buyer_id).filter(Boolean);
+      let buyerMap = {};
+      
+      if (buyerIds.length > 0) {
+        const { data: buyers } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url')
+          .in('id', buyerIds);
+        
+        if (buyers) {
+          buyers.forEach(b => {
+            buyerMap[b.id] = b;
+          });
+        }
       }
+
+      // Transformer les conversations en messages avec infos acheteur
+      const messagesList = conversations.map(conv => ({
+        id: conv.id,
+        conversation_id: conv.id,
+        buyer_id: conv.buyer_id,
+        buyer_name: buyerMap[conv.buyer_id] ? 
+          `${buyerMap[conv.buyer_id].first_name} ${buyerMap[conv.buyer_id].last_name}`.trim() : 
+          'Acheteur',
+        buyer_avatar: buyerMap[conv.buyer_id]?.avatar_url,
+        content: conv.last_message || 'Aucun message',
+        created_at: conv.updated_at,
+        timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
+      }));
+
+      setMessages(messagesList);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
     }
@@ -881,11 +906,40 @@ const CompleteSidebarVendeurDashboard = () => {
                 <DropdownMenuContent className="w-80">
                   <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled>
-                    <div className="text-sm text-gray-500">Aucun message récent</div>
-                  </DropdownMenuItem>
+                  {messages && messages.length > 0 ? (
+                    messages.slice(0, 5).map((msg, idx) => (
+                      <DropdownMenuItem 
+                        key={idx}
+                        onClick={() => {
+                          navigate(`/vendeur/messages?conversation=${msg.conversation_id}`);
+                          setShowMessages(false);
+                        }}
+                      >
+                        <div className="flex items-center space-x-3 w-full cursor-pointer">
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarImage src={msg.buyer_avatar} alt={msg.buyer_name} />
+                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                              {msg.buyer_name?.charAt(0) || 'A'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{msg.buyer_name}</p>
+                            <p className="text-xs text-gray-600 truncate">{msg.content}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{msg.timestamp}</p>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <div className="text-sm text-gray-500">Aucun message récent</div>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
+                  <DropdownMenuItem onClick={() => {
+                    navigate('/vendeur/messages');
+                    setShowMessages(false);
+                  }}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     <span>Voir tous les messages</span>
                   </DropdownMenuItem>
@@ -908,22 +962,59 @@ const CompleteSidebarVendeurDashboard = () => {
                   <DropdownMenuLabel>Notifications ({notifications.length})</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {notifications && notifications.length > 0 ? (
-                    notifications.slice(0, 5).map((notif, idx) => (
-                      <DropdownMenuItem key={idx}>
-                        <div className="flex items-center space-x-3 w-full">
-                          <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
-                            <Bell className="h-4 w-4 text-blue-600" />
+                    notifications.slice(0, 5).map((notif, idx) => {
+                      // Déterminer la route basée sur le type de notification
+                      const getNotificationRoute = (notification) => {
+                        if (!notification) return '/vendeur/overview';
+                        
+                        // Si c'est une demande d'achat
+                        if (notification.type === 'purchase_request' || notification.type === 'demand') {
+                          return '/vendeur/purchase-requests';
+                        }
+                        
+                        // Si c'est un message
+                        if (notification.type === 'message' || notification.type === 'chat') {
+                          return '/vendeur/messages';
+                        }
+                        
+                        // Si c'est lié à une propriété
+                        if (notification.type === 'property') {
+                          return '/vendeur/properties';
+                        }
+                        
+                        // Si c'est un dossier/case
+                        if (notification.type === 'case' && notification.case_id) {
+                          return `/vendeur/dossier/${notification.case_id}`;
+                        }
+                        
+                        // Par défaut à overview
+                        return '/vendeur/overview';
+                      };
+
+                      return (
+                        <DropdownMenuItem 
+                          key={idx}
+                          onClick={() => {
+                            navigate(getNotificationRoute(notif));
+                            setShowNotifications(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 w-full">
+                            <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                              <Bell className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate text-sm">{notif.title || 'Notification'}</p>
+                              <p className="text-xs text-gray-600 truncate">{notif.message || 'Aucun message'}</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {new Date(notif.created_at).toLocaleDateString('fr-FR')}
+                              </p>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{notif.title || 'Notification'}</p>
-                            <p className="text-sm text-gray-600 truncate">{notif.message || 'Aucun message'}</p>
-                            <p className="text-xs text-gray-400 mt-1">
-                              {new Date(notif.created_at).toLocaleDateString('fr-FR')}
-                            </p>
-                          </div>
-                        </div>
-                      </DropdownMenuItem>
-                    ))
+                        </DropdownMenuItem>
+                      );
+                    })
                   ) : (
                     <DropdownMenuItem disabled>
                       <p className="text-sm text-gray-600">Aucune notification</p>

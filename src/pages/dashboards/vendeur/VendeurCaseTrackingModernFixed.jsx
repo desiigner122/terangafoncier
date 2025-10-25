@@ -390,7 +390,7 @@ const VendeurCaseTrackingModernFixed = () => {
       if (docError) throw docError;
 
       toast.success('Document téléchargé avec succès');
-      loadCaseData();
+      // Don't call loadCaseData() - Realtime subscription will update documents
     } catch (error) {
       console.error('❌ Erreur upload document:', error);
       toast.error('Erreur lors du téléchargement du document');
@@ -895,7 +895,9 @@ const VendeurCaseTrackingModernFixed = () => {
                       <AppointmentScheduler
                         purchaseRequestId={purchaseRequest.id}
                         userId={user.id}
-                        onAppointmentCreated={loadCaseData}
+                        onAppointmentCreated={() => {
+                          // Appointment created - Realtime subscription will update
+                        }}
                       />
                     ) : (
                       <Button disabled className="w-full gap-2">
@@ -909,7 +911,9 @@ const VendeurCaseTrackingModernFixed = () => {
                       buyer={buyer}
                       seller={user}
                       property={property}
-                      onContractGenerated={loadCaseData}
+                      onContractGenerated={() => {
+                        // Contract generated - Realtime subscription will update
+                      }}
                     />
                   </>
                 )}

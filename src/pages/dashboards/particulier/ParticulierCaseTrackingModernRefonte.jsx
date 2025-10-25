@@ -463,7 +463,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
       if (insertError) throw insertError;
 
       toast.success('Document uploadé avec succès');
-      loadCaseData();
+      // Don't call loadCaseData() - Realtime subscription will update documents
     } catch (error) {
       console.error('Erreur upload document:', error);
       toast.error('Erreur lors de l\'upload du document');
@@ -489,7 +489,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
       if (error) throw error;
 
       toast.success('Paiement enregistré');
-      loadCaseData();
+      // Don't call loadCaseData() - Realtime subscription will update payments
     } catch (error) {
       console.error('Erreur enregistrement paiement:', error);
       toast.error('Erreur lors de l\'enregistrement du paiement');
@@ -673,7 +673,9 @@ const ParticulierCaseTrackingModernRefonte = () => {
               <CardContent className="pt-6">
                 <TimelineTrackerModern
                   caseData={purchaseCase}
-                  onStatusChange={loadCaseData}
+                  onStatusChange={() => {
+                    // Status change detected via Realtime - no need to reload
+                  }}
                 />
               </CardContent>
             </Card>
@@ -860,7 +862,9 @@ const ParticulierCaseTrackingModernRefonte = () => {
                     <div className="space-y-4">
                       <AppointmentScheduler
                         purchaseRequestId={purchaseRequest?.id}
-                        onAppointmentCreated={loadCaseData}
+                        onAppointmentCreated={() => {
+                          // Appointment created - Realtime subscription will update appointments list
+                        }}
                       />
 
                       {appointments.length > 0 && (
@@ -1031,7 +1035,9 @@ const ParticulierCaseTrackingModernRefonte = () => {
                   buyerData={buyerProfile}
                   sellerData={seller}
                   propertyData={property}
-                  onContractGenerated={loadCaseData}
+                  onContractGenerated={() => {
+                    // Contract generated - Realtime will handle updates
+                  }}
                 />
               </CardContent>
             </Card>

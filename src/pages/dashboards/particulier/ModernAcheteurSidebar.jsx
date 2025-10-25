@@ -543,35 +543,63 @@ const ModernAcheteurSidebar = () => {
                 <Search className="h-4 w-4" />
               </Button>
 
-              {/* Notifications avec badge réel */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/acheteur/notifications')}
-                className="relative"
-              >
-                <Bell className="h-4 w-4" />
-                {unreadNotificationsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
-                  </span>
-                )}
-              </Button>
+              {/* Notifications Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="relative"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {unreadNotificationsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="px-3 py-2 font-medium">Notifications</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled>
+                    <span className="text-sm text-slate-600">Aucune notification récente</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/acheteur/notifications')}>
+                    Voir toutes les notifications
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              {/* Messages avec badge réel */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/acheteur/messages')}
-                className="relative"
-              >
-                <MessageSquare className="h-4 w-4" />
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
-                    {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
-                  </span>
-                )}
-              </Button>
+              {/* Messages Dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="relative"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    {unreadMessagesCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="px-3 py-2 font-medium">Messages récents</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled>
+                    <span className="text-sm text-slate-600">Aucun message récent</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/acheteur/messages')}>
+                    Voir tous les messages
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* User Avatar */}
               <Avatar className="h-8 w-8 ring-2 ring-blue-500/20 cursor-pointer" onClick={() => handleNavigate('settings')}>

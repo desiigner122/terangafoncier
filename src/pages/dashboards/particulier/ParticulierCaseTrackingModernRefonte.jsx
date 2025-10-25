@@ -137,6 +137,15 @@ const ParticulierCaseTrackingModernRefonte = () => {
         return;
       }
 
+      // Vérifier que l'utilisateur est bien l'acheteur du dossier
+      if (caseData.buyer_id !== user.id) {
+        console.error('❌ Accès refusé - vous n\'êtes pas l\'acheteur de ce dossier');
+        toast.error('Vous n\'avez pas accès à ce dossier');
+        navigate('/acheteur/mes-achats');
+        setLoading(false);
+        return;
+      }
+
       console.log('📋 Dossier chargé (acheteur):', caseData);
       const normalizedCaseStatus = WorkflowStatusService.normalizeStatus(
         caseData.current_status || caseData.status

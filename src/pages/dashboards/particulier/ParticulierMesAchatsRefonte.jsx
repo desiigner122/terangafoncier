@@ -70,7 +70,12 @@ const ParticulierMesAchatsRefonte = () => {
       const { data: casesData, error: casesError } = await supabase
         .from('purchase_cases')
         .select(`
-          *,
+          id,
+          case_number,
+          status,
+          current_status,
+          offered_price,
+          created_at,
           request:requests!purchase_cases_request_id_fkey (
             id,
             user_id,

@@ -64,6 +64,7 @@ const ParticulierMesAchatsRefonte = () => {
   const loadPurchaseCases = async () => {
     try {
       setLoading(true);
+      console.log('🚀 [DEBUG] Exécution de loadPurchaseCases - Version 2');
 
       // Charger tous les dossiers d'achat où l'utilisateur est l'acheteur
       const { data: casesData, error: casesError } = await supabase
@@ -84,9 +85,6 @@ const ParticulierMesAchatsRefonte = () => {
             location,
             price,
             surface,
-            image_url,
-            photo_url,
-            images,
             status
           ),
           seller:profiles!purchase_cases_seller_id_fkey (

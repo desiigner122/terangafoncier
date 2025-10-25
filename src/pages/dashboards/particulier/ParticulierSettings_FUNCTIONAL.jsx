@@ -16,7 +16,8 @@ import {
   Calendar,
   Shield,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Download
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const ParticulierSettings = () => {
   const { user } = useOutletContext();
@@ -529,7 +530,7 @@ const ParticulierSettings = () => {
                   <p className="text-sm text-slate-600 mb-3">
                     Téléchargez une copie de toutes vos données personnelles
                   </p>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => toast.info('Fonctionnalité bientôt disponible!')}>
                     <Download className="h-4 w-4 mr-2" />
                     Exporter mes données
                   </Button>

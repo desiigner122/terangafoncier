@@ -109,58 +109,134 @@ const DashboardParticulierHome = () => {
         return;
       }
 
-      // Charger les vraies données
-      const [
-        messagesResult,
-        notificationsResult,
-        ticketsResult,
-        demandesResult,
-        documentsResult,
-        favorisResult
-      ] = await Promise.allSettled([
-  supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
-  supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0),
-  supabase.from('support_tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
-  supabase.from('demandes_terrains_communaux').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  supabase.from('user_documents').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  // use the 'favorites' table (English) which is the correct table used across the app
-  // wrap in try/catch via Promise.allSettled in the caller; this just ensures the table name is correct
-  supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
-      ]);
+      // Charger les vraies données depuis les tables existantes
+      
+      // 1. Récupérer les cases de l'utilisateur (en tant qu'acheteur)
+      const { data: userCases } = await supabase
+        .from('purchase_cases')
+        .select('id')
+        .eq('buyer_id', user.id);
+      
+      const caseIds = userCases?.map(c => c.id) || [];
+      
+      // 2. Compter les messages non lus dans ces cases
+      let messagesCount = 0;
+      if (caseIds.length > 0) {
+        const { count } = await supabase
+          .from('purchase_case_messages')
+          .select('*', { count: 'exact', head: true })
+          .in('case_id', caseIds)
+          .neq('sent_by', user.id)
+          .is('read_at', null);
+        messagesCount = count || 0;
+      }
+      
+      // 3. Compter les messages administratifs non lus
+      const { count: adminMessagesCount } = await supabase
+        .from('messages_administratifs')
+        .select('*', { count: 'exact', head: true })
+        .eq('destinataire_id', user.id)
+        .eq('statut', 'non_lu');
+      
+      // 4. Compter les notifications (notifications table ou notifications_system)
+      const { count: notificationsCount } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .is('read_at', null)
+        .limit(0);
+      
+      // 5. Compter les demandes/cases actifs
+      const { count: demandesCount } = await supabase
+        .from('purchase_cases')
+        .select('*', { count: 'exact', head: true })
+        .eq('buyer_id', user.id);
 
       setStats({
-        messages: messagesResult.value?.count || 0,
-        notifications: notificationsResult.value?.count || 0,
-        tickets: ticketsResult.value?.count || 0,
-        demandes: demandesResult.value?.count || 0,
-        documents: documentsResult.value?.count || 0,
-        favoris: favorisResult.value?.count || 0
+        messages: (messagesCount || 0) + (adminMessagesCount || 0),
+        notifications: notificationsCount || 0,
+        tickets: 0, // Table support_tickets n'existe pas encore
+        demandes: demandesCount || 0,
+        documents: 0, // Table documents pas encore créée
+        favoris: 0 // Table favoris pas encore créée
       });
 
-      // Charger activité récente
-      const { data: messages } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('recipient_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
+      // Charger activité récente - Messages des cases
+      const activities = [];
+      
+      if (caseIds.length > 0) {
+        const { data: recentMessages } = await supabase
+          .from('purchase_case_messages')
+          .select(`
+            id,
+            message,
+            created_at,
+            read_at,
+            sent_by,
+            case_id,
+            purchase_cases!inner(
+              reference,
+              seller_id
+            )
+          `)
+          .in('case_id', caseIds)
+          .neq('sent_by', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
 
-      if (messages) {
-        const messageActivity = messages.map(msg => ({
-          id: msg.id,
-          type: 'message',
-          title: msg.subject,
+        if (recentMessages) {
+          const messageActivities = recentMessages.map(msg => ({
+            id: msg.id,
+            type: 'message',
+            title: `Message sur ${msg.purchase_cases?.reference || 'votre dossier'}`,
+            description: msg.message.substring(0, 100) + '...',
+            time: msg.created_at,
+            status: msg.read_at ? 'lu' : 'nouveau',
+            icon: MessageSquare,
+            color: 'blue'
+          }));
+          activities.push(...messageActivities);
+        }
+      }
+      
+      // Charger messages administratifs récents
+      const { data: adminMessages } = await supabase
+        .from('messages_administratifs')
+        .select('*')
+        .eq('destinataire_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(2);
+      
+      if (adminMessages) {
+        const adminActivities = adminMessages.map(msg => ({
+          id: `admin-${msg.id}`,
+          type: 'admin',
+          title: msg.objet || 'Message administratif',
           description: msg.message.substring(0, 100) + '...',
           time: msg.created_at,
-          status: msg.read_at ? 'lu' : 'nouveau',
-          icon: MessageSquare,
-          color: 'blue'
+          status: msg.statut === 'non_lu' ? 'nouveau' : 'lu',
+          icon: Bell,
+          color: 'orange'
         }));
-        setRecentActivity(messageActivity);
+        activities.push(...adminActivities);
       }
+      
+      setRecentActivity(activities.sort((a, b) => 
+        new Date(b.time) - new Date(a.time)
+      ).slice(0, 5));
 
     } catch (error) {
-      console.error('Erreur chargement dashboard:', error);
+      console.error('Erreur chargement stats:', error);
+      // En cas d'erreur réseau, utiliser des valeurs par défaut
+      setStats({
+        messages: 0,
+        notifications: 0,
+        tickets: 0,
+        demandes: 0,
+        documents: 0,
+        favoris: 0
+      });
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }

@@ -21,7 +21,7 @@ import {
   DollarSign,
   AlertTriangle
 } from 'lucide-react';
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const ParticulierOverview = () => {
   // Gestion sécurisée du contexte Outlet
@@ -151,38 +151,13 @@ const ParticulierOverview = () => {
     try {
       // Si pas d'utilisateur, utiliser des données de fallback
       if (!user?.id) {
-        setStats(prev => ({ ...prev, demandes: 1 }));
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('demandes_terrains_communaux')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      if (error) {
-        console.warn('Demandes terrains non disponibles:', error.message);
         setStats(prev => ({ ...prev, demandes: 0 }));
         return;
       }
 
-      setStats(prev => ({ ...prev, demandes: data?.length || 0 }));
-      
-      // Ajouter à l'activité récente
-      if (data && data.length > 0) {
-        const demandeActivity = data.slice(0, 1).map(demande => ({
-          id: `demande-${demande.id}`,
-          type: 'demande',
-          title: `Demande terrain ${demande.commune}`,
-          description: `Statut: ${demande.statut}`,
-          time: demande.created_at,
-          icon: MapPin,
-          color: demande.statut === 'acceptee' ? 'green' : demande.statut === 'en_cours' ? 'orange' : 'gray'
-        }));
-        setRecentActivity(prev => [...prev, ...demandeActivity]);
-      }
+      // Table n'existe pas, skip silencieusement
+      setStats(prev => ({ ...prev, demandes: 0 }));
+      return;
     } catch (err) {
       console.warn('Erreur chargement demandes:', err);
       setStats(prev => ({ ...prev, demandes: 0 }));
@@ -193,24 +168,13 @@ const ParticulierOverview = () => {
     try {
       // Si pas d'utilisateur, utiliser des données de fallback
       if (!user?.id) {
-        setStats(prev => ({ ...prev, documents: 2 }));
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from('user_documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
-
-      if (error) {
-        console.warn('Documents non disponibles:', error.message);
         setStats(prev => ({ ...prev, documents: 0 }));
         return;
       }
 
-      setStats(prev => ({ ...prev, documents: data?.length || 0 }));
+      // Table n'existe pas, skip silencieusement
+      setStats(prev => ({ ...prev, documents: 0 }));
+      return;
     } catch (err) {
       console.warn('Erreur chargement documents:', err);
       setStats(prev => ({ ...prev, documents: 0 }));

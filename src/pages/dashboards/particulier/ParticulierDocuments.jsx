@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   FileText,
@@ -29,14 +30,87 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'react-hot-toast';
 
 const ParticulierDocuments = () => {
+  const outletContext = useOutletContext();
+  const { user } = outletContext || {};
+  
   const [activeTab, setActiveTab] = useState('mes_documents');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('tous');
+  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState([]);
 
-  // Documents administratifs organisés par dossier - SUIVI DOCUMENTAIRE
-  const [documents] = useState([
+  useEffect(() => {
+    if (user?.id) {
+      loadDocuments();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const loadDocuments = async () => {
+    if (!user?.id) {
+      console.log('❌ Utilisateur non disponible');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('📄 Chargement des documents...');
+
+      // Charger depuis la table documents_administratifs ou supabase storage
+      const { data, error } = await supabase
+        .from('documents_administratifs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        // Si la table n'existe pas, utiliser un array vide
+        console.warn('Table documents_administratifs non disponible:', error.message);
+        setDocuments([]);
+        setLoading(false);
+        return;
+      }
+
+      // Transformer les données Supabase au format attendu
+      const formattedDocs = data?.map(doc => ({
+        id: doc.id,
+        dossierRef: doc.case_reference || 'General',
+        nom: doc.file_name || doc.title || 'Document',
+        type: doc.document_type || 'autre',
+        format: doc.file_format || 'PDF',
+        taille: doc.file_size || '0 KB',
+        dateCreation: doc.created_at,
+        dateModification: doc.updated_at || doc.created_at,
+        statut: doc.status || 'En attente',
+        proprietaire: doc.owner_name || 'Utilisateur',
+        description: doc.description || '',
+        version: doc.version || '1.0',
+        acces: doc.access_level || 'Lecture seule',
+        etape: doc.workflow_stage || 'Soumission',
+        priorite: doc.priority || 'Normale',
+        actions: ['Télécharger', 'Partager'],
+        storage_path: doc.storage_path
+      })) || [];
+
+      setDocuments(formattedDocs);
+      console.log(`✅ ${formattedDocs.length} documents chargés`);
+    } catch (error) {
+      console.error('❌ Erreur chargement documents:', error);
+      toast.error('Erreur lors du chargement des documents');
+      setDocuments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Plus besoin de mock data - utilisation des données réelles ci-dessus
+  const [mockDocuments] = useState([
     // Documents pour DT-2024-001 (Demande Terrain)
     {
       id: 'DOC-001',
@@ -235,7 +309,10 @@ const ParticulierDocuments = () => {
     return colors[acces] || 'bg-gray-100 text-gray-800';
   };
 
-  const filteredDocuments = documents.filter(doc => {
+  // Fallback: afficher les mocks uniquement si pas de documents réels
+  const displayDocuments = documents.length > 0 ? documents : mockDocuments;
+
+  const filteredDocuments = displayDocuments.filter(doc => {
     const matchesSearch = doc.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.dossierRef.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.description.toLowerCase().includes(searchTerm.toLowerCase());

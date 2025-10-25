@@ -35,13 +35,14 @@ import { fr } from 'date-fns/locale';
 /**
  * Centre de messagerie avec inbox/outbox et real-time
  */
-const MessagesModal = ({ open, onOpenChange }) => {
+const MessagesModal = ({ open, onOpenChange, prefilledRecipient = null }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('inbox');
+  const [activeTab, setActiveTab] = useState(prefilledRecipient ? 'compose' : 'inbox');
   const [messages, setMessages] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [newMessage, setNewMessage] = useState({
-    recipient: '',
+    recipient: prefilledRecipient?.name || prefilledRecipient?.email || '',
+    recipient_id: prefilledRecipient?.id,
     subject: '',
     body: ''
   });
@@ -61,6 +62,17 @@ const MessagesModal = ({ open, onOpenChange }) => {
     if (open && user) {
       fetchMessages();
       
+      // Si un destinataire est préfilli, passer à l'onglet compose
+      if (prefilledRecipient) {
+        setActiveTab('compose');
+        setNewMessage({
+          recipient: prefilledRecipient?.name || prefilledRecipient?.email || '',
+          recipient_id: prefilledRecipient?.id,
+          subject: '',
+          body: ''
+        });
+      }
+      
       // Real-time subscription
       const subscription = supabase
         .channel('messages')
@@ -78,7 +90,7 @@ const MessagesModal = ({ open, onOpenChange }) => {
         subscription.unsubscribe();
       };
     }
-  }, [open, user]);
+  }, [open, user, prefilledRecipient]);
 
   const fetchMessages = async () => {
     setLoading(true);
@@ -145,16 +157,21 @@ const MessagesModal = ({ open, onOpenChange }) => {
 
     setLoading(true);
     try {
+      // Préparer les données du message avec les valeurs validées
+      const messageData = {
+        sender_id: user.id,
+        recipient_id: newMessage.recipient_id || selectedMessage?.sender_id,
+        subject: newMessage.subject || 'Re: ' + (selectedMessage?.subject || 'Sans sujet'),
+        message: newMessage.body && newMessage.body.trim() ? newMessage.body.trim() : 'Message',  // Utilise 'message' au lieu de 'body'
+        is_read: false,
+        created_at: new Date().toISOString()
+      };
+
+      console.log('📝 Envoi du message avec données:', messageData);
+
       const { error } = await supabase
         .from('messages')
-        .insert([{
-          sender_id: user.id,
-          recipient_id: newMessage.recipient_id || selectedMessage?.sender_id,
-          subject: newMessage.subject || 'Re: ' + (selectedMessage?.subject || 'Sans sujet'),
-          body: newMessage.body,
-          is_read: false,
-          created_at: new Date().toISOString()
-        }]);
+        .insert([messageData]);
 
       if (error) throw error;
 
@@ -383,8 +400,13 @@ const MessagesModal = ({ open, onOpenChange }) => {
                   placeholder="Nom ou email du destinataire"
                   value={newMessage.recipient}
                   onChange={(e) => setNewMessage(prev => ({ ...prev, recipient: e.target.value }))}
-                  disabled={selectedMessage}
+                  disabled={selectedMessage || prefilledRecipient}
                 />
+                {prefilledRecipient && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    ℹ️ Destinataire pré-sélectionné
+                  </p>
+                )}
               </div>
 
               <div>

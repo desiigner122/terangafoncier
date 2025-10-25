@@ -4,7 +4,7 @@ import ReactDOM from 'react-dom/client';
 import App from '@/App';
 import '@/index.css';
 import { BrowserRouter as Router } from 'react-router-dom';
-import { AuthProvider } from '@/contexts/AuthContext';
+import { AuthProvider } from '@/contexts/UnifiedAuthContext';
 import { HelmetProvider } from 'react-helmet-async';
 
 // 🛡️ PATCH GLOBAL ANTI-CRASH TOAST - Import du système de protection

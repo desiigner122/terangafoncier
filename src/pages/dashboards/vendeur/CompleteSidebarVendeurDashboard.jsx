@@ -25,6 +25,7 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
+  AlertCircle,
   Star,
   Share2,
   Download,
@@ -68,6 +69,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -88,7 +90,7 @@ const VendeurPhotos = React.lazy(() => import('./VendeurPhotosRealData'));
 const VendeurAnalytics = React.lazy(() => import('./VendeurAnalyticsRealData'));
 const VendeurAI = React.lazy(() => import('./VendeurAIRealData'));
 const VendeurBlockchain = React.lazy(() => import('./VendeurBlockchainRealData'));
-const VendeurMessages = React.lazy(() => import('./VendeurMessagesRealData'));
+const VendeurMessages = React.lazy(() => import('./VendeurMessagesModern'));
 const VendeurSupport = React.lazy(() => import('./VendeurSupport'));
 const VendeurSettings = React.lazy(() => import('./VendeurSettingsRealData'));
 
@@ -135,11 +137,12 @@ const CompleteSidebarVendeurDashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   
+  // Real-time unread counts
+  const { unreadMessagesCount, unreadNotificationsCount } = useUnreadCounts();
+  
   // États pour données réelles
   const [notifications, setNotifications] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [dashboardStats, setDashboardStats] = useState({
     totalProperties: 0,
     activeListings: 0,
@@ -154,6 +157,118 @@ const CompleteSidebarVendeurDashboard = () => {
     aiOptimized: 0,
     blockchainVerified: 0,
   });
+
+  const formatStatusLabel = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    const mapping = {
+      pending: 'en attente',
+      waiting_response: 'en attente',
+      negotiation: 'en négociation',
+      in_progress: 'en cours',
+      accepted: 'acceptée',
+      approved: 'acceptée',
+      rejected: 'refusée',
+      declined: 'refusée',
+      cancelled: 'annulée',
+      canceled: 'annulée',
+      completed: 'finalisée',
+      finalized: 'finalisée',
+    };
+
+    return mapping[normalized] || normalized || 'mise à jour';
+  };
+
+  const buildFallbackNotifications = async () => {
+    try {
+      // ✅ CORRECTION: Charger depuis requests (source stable) au lieu de purchase_requests
+      // Les noms sont dans la table 'profiles', pas 'users'
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('requests')
+        .select(`
+          id,
+          status,
+          created_at,
+          updated_at,
+          user_id,
+          parcel_id
+        `)
+        .order('updated_at', { ascending: false })
+        .limit(25);
+
+      if (requestsError) {
+        if (!['PGRST204', '42P01', 'PGRST200'].includes(requestsError.code)) {
+          console.warn('⚠️ Erreur fallback notifications (requests):', requestsError.code);
+        }
+        return [];
+      }
+
+      if (!requestsData || requestsData.length === 0) {
+        return [];
+      }
+
+      // Charger les parcelles (properties) pour les requests
+      const parcelIds = [...new Set(requestsData.map(r => r.parcel_id).filter(Boolean))];
+      let parcelMap = {};
+      
+      if (parcelIds.length > 0) {
+        const { data: parcelsData, error: parcelsError } = await supabase
+          .from('parcels')
+          .select('id, title, location, seller_id')
+          .in('id', parcelIds);
+        
+        if (!parcelsError && parcelsData) {
+          parcelsData.forEach(p => {
+            parcelMap[p.id] = p;
+          });
+        }
+      }
+
+      // Charger les profiles des acheteurs
+      const buyerIds = [...new Set(requestsData.map(r => r.user_id).filter(Boolean))];
+      let buyerMap = {};
+      
+      if (buyerIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', buyerIds);
+        
+        if (!profilesError && profilesData) {
+          profilesData.forEach(p => {
+            buyerMap[p.id] = p;
+          });
+        }
+      }
+
+      // Filtrer les demandes du vendeur et les transformer
+      const notifications = requestsData
+        .filter((item) => {
+          const parcel = parcelMap[item.parcel_id];
+          return parcel && parcel.seller_id === user?.id;
+        })
+        .map((item) => {
+          const parcel = parcelMap[item.parcel_id];
+          const buyer = buyerMap[item.user_id];
+          
+          return {
+            id: `fallback-${item.id}`,
+            title: `Demande ${formatStatusLabel(item.status)}`,
+            message: `${buyer?.first_name || 'Acheteur'} ${buyer?.last_name || ''} — ${
+              parcel?.title || 'Propriété'
+            } (${formatStatusLabel(item.status)})`,
+            created_at: item.updated_at || item.created_at,
+            status: item.status,
+            type: 'purchase_request',
+          };
+        })
+        .slice(0, 10);
+
+      return notifications;
+    } catch (error) {
+      console.warn('⚠️ Erreur construction fallback notifications:', error);
+      return [];
+    }
+  };
 
   // Navigation Items Configuration pour Vendeur - CRM + Anti-Fraude
   const navigationItems = [
@@ -289,6 +404,8 @@ const CompleteSidebarVendeurDashboard = () => {
 
   // Charger les notifications depuis Supabase
   const loadNotifications = async () => {
+    let fetchedNotifications = [];
+
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -298,45 +415,89 @@ const CompleteSidebarVendeurDashboard = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (!error && data) {
-        setNotifications(data);
-        setUnreadNotificationsCount(data.length);
+      if (error) {
+        if (!['PGRST204', '42P01'].includes(error.code)) {
+          console.error('Erreur chargement notifications:', error);
+        }
+      } else if (data?.length) {
+        fetchedNotifications = data;
       }
     } catch (error) {
       console.error('Erreur chargement notifications:', error);
     }
+
+    if (!fetchedNotifications.length) {
+      const fallback = await buildFallbackNotifications();
+      fetchedNotifications = fallback;
+    }
+
+    setNotifications(fetchedNotifications);
   };
 
   // Charger les messages depuis Supabase
   const loadMessages = async () => {
     try {
-      // Charger les conversations du vendeur puis les messages récents
+      // Charger les conversations du vendeur avec les détails des acheteurs
       const { data: conversations, error: convError } = await supabase
         .from('conversations')
-        .select('id')
+        .select(`
+          id,
+          buyer_id,
+          updated_at
+        `)
         .eq('vendor_id', user.id)
+        .order('updated_at', { ascending: false })
         .limit(20);
 
       if (convError || !conversations || conversations.length === 0) {
         console.log('Aucune conversation trouvée');
+        setMessages([]);
         return;
       }
 
-      const conversationIds = conversations.map(c => c.id);
-
-      // Charger les messages récents de ces conversations
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .in('thread_id', conversationIds)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (!error && data) {
-        setMessages(data);
-        // Compter non lus où recipient_id = user.id
-        setUnreadMessagesCount(data.filter(m => !m.read_at && m.recipient_id === user.id).length);
+      // Charger les profils des acheteurs
+      const buyerIds = conversations.map(c => c.buyer_id).filter(Boolean);
+      let buyerMap = {};
+      
+      if (buyerIds.length > 0) {
+        const { data: buyers } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url')
+          .in('id', buyerIds);
+        
+        if (buyers) {
+          buyers.forEach(b => {
+            buyerMap[b.id] = b;
+          });
+        }
       }
+
+      // Charger le dernier message de chaque conversation pour l'aperçu
+      const messagesList = await Promise.all(conversations.map(async (conv) => {
+        const { data: lastMsg } = await supabase
+          .from('purchase_case_messages')
+          .select('content')
+          .eq('conversation_id', conv.id)
+          .order('created_at', { ascending: false })
+          .limit(1)
+          .single()
+          .catch(() => ({ data: null }));
+
+        return {
+          id: conv.id,
+          conversation_id: conv.id,
+          buyer_id: conv.buyer_id,
+          buyer_name: buyerMap[conv.buyer_id] ? 
+            `${buyerMap[conv.buyer_id].first_name} ${buyerMap[conv.buyer_id].last_name}`.trim() : 
+            'Acheteur',
+          buyer_avatar: buyerMap[conv.buyer_id]?.avatar_url,
+          content: lastMsg?.content || 'Aucun message',
+          created_at: conv.updated_at,
+          timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
+        };
+      }));
+
+      setMessages(messagesList);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
     }
@@ -485,8 +646,8 @@ const CompleteSidebarVendeurDashboard = () => {
     console.log('📍 [RENDER] User disponible:', user ? `✅ ID: ${user.id}` : '❌ undefined');
     
     // Vérifier si c'est une route dynamique avec paramètres
-    if (activeTab.includes('edit-property')) {
-      console.log('📍 [RENDER] Route dynamique détectée (edit-property), rendu via <Outlet />');
+    if (activeTab.includes('edit-property') || activeTab.includes('cases')) {
+      console.log('📍 [RENDER] Route dynamique détectée (edit-property ou cases), rendu via <Outlet />');
       return <Outlet />;
     }
     
@@ -514,14 +675,15 @@ const CompleteSidebarVendeurDashboard = () => {
     console.log('📍 [RENDER] ActiveComponent trouvé:', ActiveComponent ? '✅' : '❌', 'pour tab:', activeTab);
     
     if (!ActiveComponent) {
+      console.error('❌ [ERROR] ActiveComponent is undefined for tab:', activeTab);
       return (
         <div className="text-center py-12">
-          <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Page en développement
+            Erreur: Page non trouvée
           </h3>
           <p className="text-gray-600">
-            Cette fonctionnalité sera bientôt disponible.
+            La page demandée n'existe pas.
           </p>
         </div>
       );
@@ -742,40 +904,52 @@ const CompleteSidebarVendeurDashboard = () => {
               {/* Messages */}
               <DropdownMenu open={showMessages} onOpenChange={setShowMessages}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative" onClick={() => navigate('/vendeur/messages')}>
+                  <Button variant="ghost" size="sm" className="relative">
                     <MessageSquare className="h-5 w-5" />
-                    <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      3
-                    </Badge>
+                    {unreadMessagesCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80">
                   <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Marie Diallo</p>
-                        <p className="text-sm text-gray-600">Intéressée par la villa Almadies</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Amadou Ba</p>
-                        <p className="text-sm text-gray-600">Question sur le financement</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
+                  {messages && messages.length > 0 ? (
+                    messages.slice(0, 5).map((msg, idx) => (
+                      <DropdownMenuItem 
+                        key={idx}
+                        onClick={() => {
+                          navigate(`/vendeur/messages?conversation=${msg.conversation_id}`);
+                          setShowMessages(false);
+                        }}
+                      >
+                        <div className="flex items-center space-x-3 w-full cursor-pointer">
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarImage src={msg.buyer_avatar} alt={msg.buyer_name} />
+                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                              {msg.buyer_name?.charAt(0) || 'A'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{msg.buyer_name}</p>
+                            <p className="text-xs text-gray-600 truncate">{msg.content}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{msg.timestamp}</p>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <div className="text-sm text-gray-500">Aucun message récent</div>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
+                  <DropdownMenuItem onClick={() => {
+                    navigate('/vendeur/messages');
+                    setShowMessages(false);
+                  }}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     <span>Voir tous les messages</span>
                   </DropdownMenuItem>
@@ -787,36 +961,75 @@ const CompleteSidebarVendeurDashboard = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
                     <Bell className="h-5 w-5" />
-                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      {dashboardStats.pendingInquiries}
-                    </Badge>
+                    {unreadNotificationsCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                        {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80">
-                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuLabel>Notifications ({notifications.length})</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Eye className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Nouvelle vue</p>
-                        <p className="text-sm text-gray-600">Villa Almadies - 15 vues aujourd'hui</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-orange-100 p-2 rounded-full">
-                        <TrendingUp className="h-4 w-4 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Performance IA</p>
-                        <p className="text-sm text-gray-600">6 propriétés optimisées cette semaine</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
+                  {notifications && notifications.length > 0 ? (
+                    notifications.slice(0, 5).map((notif, idx) => {
+                      // Déterminer la route basée sur le type de notification
+                      const getNotificationRoute = (notification) => {
+                        if (!notification) return '/vendeur/overview';
+                        
+                        // Si c'est une demande d'achat
+                        if (notification.type === 'purchase_request' || notification.type === 'demand') {
+                          return '/vendeur/purchase-requests';
+                        }
+                        
+                        // Si c'est un message
+                        if (notification.type === 'message' || notification.type === 'chat') {
+                          return '/vendeur/messages';
+                        }
+                        
+                        // Si c'est lié à une propriété
+                        if (notification.type === 'property') {
+                          return '/vendeur/properties';
+                        }
+                        
+                        // Si c'est un dossier/case
+                        if (notification.type === 'case' && notification.case_id) {
+                          return `/vendeur/dossier/${notification.case_id}`;
+                        }
+                        
+                        // Par défaut à overview
+                        return '/vendeur/overview';
+                      };
+
+                      return (
+                        <DropdownMenuItem 
+                          key={idx}
+                          onClick={() => {
+                            navigate(getNotificationRoute(notif));
+                            setShowNotifications(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 w-full">
+                            <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                              <Bell className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate text-sm">{notif.title || 'Notification'}</p>
+                              <p className="text-xs text-gray-600 truncate">{notif.message || 'Aucun message'}</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {new Date(notif.created_at).toLocaleDateString('fr-FR')}
+                              </p>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <p className="text-sm text-gray-600">Aucune notification</p>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 

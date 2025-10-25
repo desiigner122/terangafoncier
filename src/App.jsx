@@ -7,6 +7,7 @@ import { Analytics } from '@vercel/analytics/react';
 import { AIProvider } from '@/hooks/useAI.jsx';
 import { NotificationProvider } from '@/contexts/NotificationContext';
 import { MaintenanceProvider } from '@/contexts/MaintenanceContext';
+import { AuthProvider } from '@/contexts/UnifiedAuthContext';
 import MaintenanceWrapper from '@/components/MaintenanceWrapper';
 import { useTitleByRoute } from '@/hooks/usePageTitle';
 import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
@@ -143,7 +144,6 @@ import ScrollToTop from '@/components/layout/ScrollToTop';
 import TitleUpdater from '@/components/layout/TitleUpdater';
 import { motion } from 'framer-motion';
 import { ComparisonProvider } from '@/context/ComparisonContext';
-import { AuthProvider } from '@/contexts/UnifiedAuthContext';
 import './lib/errorManager';
 import './lib/securityConfig';
 import DashboardMunicipalRequestPage from '@/pages/DashboardMunicipalRequestPage';
@@ -179,7 +179,7 @@ import AdminLeadsList from '@/pages/admin/AdminLeadsList';
 import AuthDebugPage from '@/pages/AuthDebugPage';
 
 // Import des dashboards
-import ParticularDashboard from '@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard';
+import ParticularDashboard from '@/pages/dashboards/particulier/ModernAcheteurSidebar';
 import CompleteSidebarGeometreDashboard from '@/pages/dashboards/geometre/CompleteSidebarGeometreDashboard';
 import PromoteurDashboard from '@/pages/dashboards/promoteur/PromoteurDashboard';
 import MunicipaliteDashboard from '@/pages/dashboards/MunicipaliteDashboard';
@@ -254,7 +254,7 @@ import ArchivesPage from '@/pages/dashboards/notaire/ArchivesPage';
 import ComplianceCheckPage from '@/pages/dashboards/notaire/ComplianceCheckPage';
 // import ModernBanqueDashboard from '@/pages/dashboards/ModernBanqueDashboard';
 // import ModernPromoteurDashboard from '@/pages/dashboards/ModernPromoteurDashboard';
-import CompleteSidebarParticulierDashboard from '@/pages/dashboards/particulier/CompleteSidebarParticulierDashboard';
+import ModernAcheteurSidebar from '@/pages/dashboards/particulier/ModernAcheteurSidebar';
 
 // Nouvelles pages dashboard particulier refonte avec sidebar moderne
 import DashboardParticulierRefonte from '@/pages/dashboards/particulier/DashboardParticulierRefonte';
@@ -263,7 +263,7 @@ import ParticulierTicketsSupport from '@/pages/dashboards/particulier/Particulie
 import ParticulierAnalytics from '@/pages/dashboards/particulier/ParticulierAnalytics';
 
 // Sous-pages particulier refondues pour suivi administratif
-import ParticulierOverview from '@/pages/dashboards/particulier/ParticulierOverview_FIXED_ERRORS';
+import ParticulierOverview from '@/pages/dashboards/particulier/ParticulierOverviewModern';
 import ParticulierRechercheTerrain from '@/pages/dashboards/particulier/ParticulierRechercheTerrain';
 import ParticulierMesOffres from '@/pages/dashboards/particulier/ParticulierMesOffres';
 import ParticulierMesAchats from '@/pages/dashboards/particulier/ParticulierMesAchats';
@@ -274,17 +274,16 @@ import ParticulierDemandesTerrains from '@/pages/dashboards/particulier/Particul
 import ParticulierTerrainsPrive from '@/pages/dashboards/particulier/ParticulierTerrainsPrive';
 import ParticulierPromoteurs from '@/pages/dashboards/particulier/ParticulierPromoteurs';
 import ParticulierFavoris from '@/pages/dashboards/particulier/ParticulierFavoris';
-import ParticulierMessages from '@/pages/dashboards/particulier/ParticulierMessages';
-import ParticulierDocuments from '@/pages/dashboards/particulier/ParticulierDocuments_FUNCTIONAL';
-import ParticulierNotifications from '@/pages/dashboards/particulier/ParticulierNotifications_FUNCTIONAL';
+import ParticulierMessages from '@/pages/dashboards/particulier/ParticulierMessagesModern';
+import ParticulierDocuments from '@/pages/dashboards/particulier/ParticulierDocuments';
+import ParticulierNotifications from '@/pages/dashboards/particulier/ParticulierNotifications';
 import ParticulierConstructions from '@/pages/dashboards/particulier/ParticulierConstructions';
 import ParticulierCalendar from '@/pages/dashboards/particulier/ParticulierCalendar';
 import ParticulierTickets from '@/pages/dashboards/particulier/ParticulierTickets';
 import ParticulierAI from '@/pages/dashboards/particulier/ParticulierAI';
-import ParticulierBlockchain from '@/pages/dashboards/particulier/ParticulierBlockchain';
+import ParticulierBlockchain from '@/pages/dashboards/particulier/ParticulierBlockchainRealData';
 import ParticulierSettings from '@/pages/dashboards/particulier/ParticulierSettings_FUNCTIONAL';
 
-import ModernVendeurDashboard from '@/pages/dashboards/vendeur/ModernVendeurDashboard';
 import CompleteSidebarVendeurDashboard from '@/pages/dashboards/vendeur/CompleteSidebarVendeurDashboard';
 import VendeurDashboard from '@/pages/dashboards/vendeur/VendeurDashboard';
 
@@ -296,6 +295,10 @@ import VendeurPurchaseRequests from '@/pages/dashboards/vendeur/VendeurPurchaseR
 import VendeurCaseTracking from '@/pages/dashboards/vendeur/VendeurCaseTracking';
 import ParticulierCaseTracking from '@/pages/dashboards/particulier/ParticulierCaseTracking';
 import RefactoredParticulierCaseTracking from '@/pages/dashboards/particulier/RefactoredParticulierCaseTracking';
+import ModernBuyerCaseTracking from '@/pages/dashboards/particulier/ModernBuyerCaseTracking';
+import ModernBuyerCaseTrackingV2 from '@/pages/dashboards/particulier/ModernBuyerCaseTrackingV2';
+import PurchaseRequestsListWrapper from '@/pages/dashboards/particulier/PurchaseRequestsListWrapper';
+import ParticulierMesAchatsRefactored from '@/pages/dashboards/particulier/ParticulierMesAchatsRefactored';
 import RefactoredVendeurCaseTracking from '@/pages/dashboards/vendeur/RefactoredVendeurCaseTracking';
 import VendeurAntiFraudeRealData from '@/pages/dashboards/vendeur/VendeurAntiFraudeRealData';
 import VendeurGPSRealData from '@/pages/dashboards/vendeur/VendeurGPSRealData';
@@ -306,6 +309,10 @@ import VendeurAnalyticsRealData from '@/pages/dashboards/vendeur/VendeurAnalytic
 import VendeurAIRealData from '@/pages/dashboards/vendeur/VendeurAIRealData';
 import VendeurBlockchainRealData from '@/pages/dashboards/vendeur/VendeurBlockchainRealData';
 import VendeurMessagesRealData from '@/pages/dashboards/vendeur/VendeurMessagesRealData';
+import VendeurMessagesModern from '@/pages/dashboards/vendeur/VendeurMessagesModern';
+import VendeurCaseTrackingModernFixed from '@/pages/dashboards/vendeur/VendeurCaseTrackingModernFixed';
+import ParticulierMesAchatsRefonte from '@/pages/dashboards/particulier/ParticulierMesAchatsRefonte';
+import ParticulierCaseTrackingModernRefonte from '@/pages/dashboards/particulier/ParticulierCaseTrackingModernRefonte';
 import VendeurSettingsRealData from '@/pages/dashboards/vendeur/VendeurSettingsRealData';
 import VendeurSupport from '@/pages/dashboards/vendeur/VendeurSupport';
 import CompleteSidebarInvestisseurDashboard from '@/pages/dashboards/investisseur/CompleteSidebarInvestisseurDashboard';
@@ -531,23 +538,20 @@ function App() {
                 {/* Route de redirection intelligente pour /dashboard */}
                 <Route path="dashboard" element={<ProtectedRoute><RoleBasedRedirect /></ProtectedRoute>} />
                 
-                {/* Route de test complètement indépendante pour debugging */}
-                <Route path="test-vendeur" element={<ModernVendeurDashboard />} />
-                
-                {/* Dashboard Particulier/Acheteur avec le nouveau sidebar refonte */}
-                <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><DashboardParticulierRefonte /></RoleProtectedRoute>}>
-                  <Route index element={<DashboardParticulierHome />} />
-                  <Route path="home" element={<DashboardParticulierHome />} />
+                {/* Dashboard Particulier/Acheteur avec la nouvelle sidebar moderne */}
+                <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ModernAcheteurSidebar /></RoleProtectedRoute>}>
+                  <Route index element={<ParticulierOverview />} />
+                  <Route path="home" element={<ParticulierOverview />} />
                   <Route path="overview" element={<ParticulierOverview />} />
                   <Route path="recherche" element={<ParticulierRechercheTerrain />} />
                   <Route path="favoris" element={<ParticulierFavoris />} />
-                  <Route path="offres" element={<ParticulierMesOffres />} />
-                  <Route path="mes-achats" element={<ParticulierMesAchats />} />
-                  <Route path="cases/:caseNumber" element={<RefactoredParticulierCaseTracking />} />
+                  <Route path="mes-achats" element={<ParticulierMesAchatsRefonte />} />
+                  <Route path="dossier/:caseId" element={<ParticulierCaseTrackingModernRefonte />} />
+                  <Route path="cases/:caseNumber" element={<ParticulierCaseTrackingModernRefonte />} />
                   <Route path="visites" element={<ParticulierVisites />} />
                   <Route path="financement" element={<ParticulierFinancement />} />
                   <Route path="zones-communales" element={<ParticulierZonesCommunales />} />
-                  <Route path="demandes" element={<ParticulierDemandesTerrains />} />
+                  <Route path="demandes-terrains" element={<ParticulierDemandesTerrains />} />
                   <Route path="terrains-prives" element={<ParticulierTerrainsPrive />} />
                   <Route path="construction" element={<ParticulierConstructions />} />
                   <Route path="promoteurs" element={<ParticulierPromoteurs />} />
@@ -564,7 +568,7 @@ function App() {
                   <Route path="ai" element={<ParticulierAI />} />
                   <Route path="blockchain" element={<ParticulierBlockchain />} />
                   <Route path="settings" element={<ParticulierSettings />} />
-                  <Route path="profil" element={<ParticulierSettings />} />
+                  {/* Profil supprimé - utiliser settings */}
                   
                   {/* Parcours d'achat intégrés dans le dashboard - RÉSERVÉ AUX ACHETEURS */}
                   <Route path="buy/one-time" element={<BuyerOnlyRoute><OneTimePaymentPage /></BuyerOnlyRoute>} />
@@ -580,7 +584,8 @@ function App() {
                   <Route path="properties" element={<VendeurPropertiesRealData />} />
                   <Route path="edit-property/:id" element={<EditPropertyComplete />} />
                   <Route path="purchase-requests" element={<VendeurPurchaseRequests />} />
-                  <Route path="cases/:caseNumber" element={<RefactoredVendeurCaseTracking />} />
+                  <Route path="dossier/:caseId" element={<VendeurCaseTrackingModernFixed />} />
+                  <Route path="cases/:caseNumber" element={<VendeurCaseTrackingModernFixed />} />
                   <Route path="anti-fraud" element={<VendeurAntiFraudeRealData />} />
                   <Route path="gps-verification" element={<VendeurGPSRealData />} />
                   <Route path="digital-services" element={<VendeurServicesDigitauxRealData />} />
@@ -591,7 +596,7 @@ function App() {
                   <Route path="blockchain" element={<VendeurBlockchainRealData />} />
                   <Route path="transactions" element={<div />} /> {/* 🆕 SEMAINE 3 - Géré par CompleteSidebarVendeurDashboard */}
                   <Route path="market-analytics" element={<div />} /> {/* 🆕 SEMAINE 3 - Géré par CompleteSidebarVendeurDashboard */}
-                  <Route path="messages" element={<VendeurMessagesRealData />} />
+                  <Route path="messages" element={<VendeurMessagesModern />} />
                   <Route path="support" element={<VendeurSupport />} />
                   <Route path="settings" element={<VendeurSettingsRealData />} />
                 </Route>
@@ -672,10 +677,6 @@ function App() {
                   <Route path="add-parcel" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><AddParcelPage /></RoleProtectedRoute>} />
                   <Route path="my-requests" element={<RoleProtectedRoute allowedRoles={['Vendeur', 'Vendeur Particulier', 'Vendeur Pro']}><MyRequestsPage /></RoleProtectedRoute>} />
                   
-                  {/* Route de test pour dashboard moderne direct */}
-                  <Route path="vendeur-moderne" element={<ModernVendeurDashboard />} />
-                  {/* Route de test temporaire pour debugging */}
-                  <Route path="vendeur-test" element={<VendeurDashboard />} />
                   
                   {/* Redirection géomètre supprimée pour éviter les conflits avec /geometre direct */}
                   {/* Agent Foncier route supprimée pour éviter le conflit avec la route directe */}

@@ -1,5 +1,4 @@
-import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -21,7 +20,6 @@ import {
   Moon, 
   Sun,
   Camera,
-  Edit,
   Save,
   X,
   Check,
@@ -29,21 +27,31 @@ import {
   Key,
   Trash2,
   Crown,
-  Gem,
-  StarIcon,
   CreditCardIcon,
-  CalendarIcon,
-  UsersIcon,
-  ZapIcon
+  CalendarIcon
 } from 'lucide-react';
 import { useUser } from '@/hooks/useUserFixed';
 import { supabase } from '@/lib/supabaseClient';
+import SubscriptionService from '@/services/SubscriptionService';
 
 const SettingsPageNew = () => {
   const { user, profile, updateProfile } = useUser();
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState('profile');
   const [hasChanges, setHasChanges] = useState(false);
+
+  const [subscriptionInfo, setSubscriptionInfo] = useState(null);
+  const [availablePlans, setAvailablePlans] = useState([]);
+  const [subscriptionError, setSubscriptionError] = useState(null);
+  const [isSubscriptionLoading, setIsSubscriptionLoading] = useState(false);
+
+  const [billingHistory, setBillingHistory] = useState([]);
+  const [billingError, setBillingError] = useState(null);
+  const [isBillingLoading, setIsBillingLoading] = useState(false);
+
+  const [paymentMethods, setPaymentMethods] = useState([]);
+  const [paymentError, setPaymentError] = useState(null);
+  const [isPaymentLoading, setIsPaymentLoading] = useState(false);
 
   // États pour les différentes sections
   const [profileData, setProfileData] = useState({
@@ -84,18 +92,200 @@ const SettingsPageNew = () => {
     timezone: 'Africa/Dakar'
   });
 
+  const formatCurrency = useCallback((value, currency = 'XOF') => {
+    try {
+      return new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency
+      }).format(Number(value || 0));
+    } catch (error) {
+      return `${Number(value || 0).toLocaleString('fr-FR')} ${currency}`;
+    }
+  }, []);
+
+  const formatDate = useCallback((value) => {
+    if (!value) return 'Non défini';
+    try {
+      return new Date(value).toLocaleDateString('fr-FR', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric'
+      });
+    } catch (error) {
+      return value;
+    }
+  }, []);
+
+  const parseFeatures = useCallback((features) => {
+    if (!features) {
+      return [];
+    }
+
+    if (Array.isArray(features)) {
+      return features;
+    }
+
+    if (typeof features === 'string') {
+      try {
+        const parsed = JSON.parse(features);
+        return Array.isArray(parsed) ? parsed : [features];
+      } catch (error) {
+        return [features];
+      }
+    }
+
+    return [];
+  }, []);
+
   useEffect(() => {
     if (profile) {
+      const metadataFromProfile = profile || {};
+      const notificationPrefs = metadataFromProfile.notification_preferences || metadataFromProfile.notificationSettings;
+      const privacyPrefs = metadataFromProfile.privacy_settings || metadataFromProfile.privacySettings;
+      const securityPrefs = metadataFromProfile.security_settings || metadataFromProfile.securitySettings;
+      const appearancePrefs = metadataFromProfile.appearance_settings || metadataFromProfile.appearanceSettings;
+
       setProfileData({
-        fullName: profile.full_name || '',
+        fullName: metadataFromProfile.full_name || metadataFromProfile.name || '',
         email: user?.email || '',
-        phone: profile.phone || '',
-        address: profile.address || '',
-        bio: profile.bio || '',
-        avatar: profile.avatar_url
+        phone: metadataFromProfile.phone || metadataFromProfile.tel || '',
+        address: metadataFromProfile.address || '',
+        bio: metadataFromProfile.bio || metadataFromProfile.description || '',
+        avatar: metadataFromProfile.avatar_url || metadataFromProfile.avatar || null
       });
+
+      if (notificationPrefs && typeof notificationPrefs === 'object') {
+        setNotificationSettings(prev => ({
+          ...prev,
+          ...notificationPrefs
+        }));
+      }
+
+      if (privacyPrefs && typeof privacyPrefs === 'object') {
+        setPrivacySettings(prev => ({
+          ...prev,
+          ...privacyPrefs
+        }));
+      }
+
+      if (securityPrefs && typeof securityPrefs === 'object') {
+        setSecuritySettings(prev => ({
+          ...prev,
+          ...securityPrefs
+        }));
+      }
+
+      if (appearancePrefs && typeof appearancePrefs === 'object') {
+        setAppearanceSettings(prev => ({
+          ...prev,
+          ...appearancePrefs
+        }));
+      }
+
+      setHasChanges(false);
     }
   }, [user, profile]);
+
+  const loadSubscriptionData = useCallback(async () => {
+    if (!user) return;
+    setIsSubscriptionLoading(true);
+    setSubscriptionError(null);
+
+    try {
+      const [subscriptionResult, plansResult] = await Promise.all([
+        SubscriptionService.getUserSubscription(user.id),
+        SubscriptionService.getSubscriptionPlans(profile?.role)
+      ]);
+
+      if (subscriptionResult.success) {
+        setSubscriptionInfo(subscriptionResult.data || null);
+      } else {
+        setSubscriptionInfo(null);
+        setSubscriptionError(subscriptionResult.error || "Impossible de charger l'abonnement");
+      }
+
+      if (plansResult.success) {
+        setAvailablePlans(plansResult.data || []);
+      } else {
+        setAvailablePlans([]);
+        setSubscriptionError(prev => prev || plansResult.error || 'Plans indisponibles.');
+      }
+    } catch (error) {
+      console.error('Erreur chargement abonnement:', error);
+      setSubscriptionInfo(null);
+      setAvailablePlans([]);
+      setSubscriptionError(error.message || "Erreur lors du chargement de l'abonnement");
+    } finally {
+      setIsSubscriptionLoading(false);
+    }
+  }, [user, profile?.role]);
+
+  const loadBillingHistory = useCallback(async () => {
+    if (!user) return;
+    setIsBillingLoading(true);
+    setBillingError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('transactions')
+        .select('id, amount, status, type, description, created_at, payment_method, currency')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(12);
+
+      if (error) {
+        throw error;
+      }
+
+      setBillingHistory(data || []);
+    } catch (error) {
+      console.error('Erreur chargement transactions:', error);
+      setBillingHistory([]);
+      setBillingError(error.message || 'Transactions indisponibles');
+    } finally {
+      setIsBillingLoading(false);
+    }
+  }, [user]);
+
+  const loadPaymentMethods = useCallback(async () => {
+    if (!user) return;
+    setIsPaymentLoading(true);
+    setPaymentError(null);
+
+    try {
+      const { data, error } = await supabase
+        .from('user_payment_methods')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        // Gestion des tables manquantes côté Supabase
+        const missingRelation = error.message && error.message.toLowerCase().includes('does not exist');
+        if (missingRelation) {
+          setPaymentMethods([]);
+          setPaymentError("Aucune méthode de paiement enregistrée");
+          return;
+        }
+        throw error;
+      }
+
+      setPaymentMethods(data || []);
+    } catch (error) {
+      console.error('Erreur chargement moyens paiement:', error);
+      setPaymentMethods([]);
+      setPaymentError(error.message || 'Méthodes de paiement indisponibles');
+    } finally {
+      setIsPaymentLoading(false);
+    }
+  }, [user]);
+
+  useEffect(() => {
+    if (!user) return;
+    loadSubscriptionData();
+    loadBillingHistory();
+    loadPaymentMethods();
+  }, [user, loadSubscriptionData, loadBillingHistory, loadPaymentMethods]);
 
   // Sauvegarder les modifications du profil
   const saveProfileChanges = async () => {
@@ -107,6 +297,10 @@ const SettingsPageNew = () => {
         address: profileData.address,
         bio: profileData.bio,
         avatar_url: profileData.avatar || null,
+        notification_preferences: notificationSettings,
+        privacy_settings: privacySettings,
+        security_settings: securitySettings,
+        appearance_settings: appearanceSettings
       };
       await updateProfile(payload);
       setHasChanges(false);
@@ -136,12 +330,26 @@ const SettingsPageNew = () => {
     
     setIsLoading(true);
     try {
-      // Logique de changement de mot de passe avec Supabase
+      const { error } = await supabase.auth.updateUser({
+        password: passwordData.new
+      });
+
+      if (error) {
+        throw error;
+      }
+
       setPasswordData({ current: '', new: '', confirm: '' });
-      // Toast de succès
+      window.safeGlobalToast?.({
+        title: 'Mot de passe mis à jour',
+        description: 'Votre mot de passe a été modifié avec succès.'
+      });
     } catch (error) {
       console.error('Erreur lors du changement de mot de passe:', error);
-      // Toast d'erreur
+      window.safeGlobalToast?.({
+        variant: 'destructive',
+        title: 'Échec changement mot de passe',
+        description: error.message
+      });
     } finally {
       setIsLoading(false);
     }
@@ -206,7 +414,7 @@ const SettingsPageNew = () => {
             <CardHeader>
               <CardTitle>Informations personnelles</CardTitle>
               <CardDescription>
-                Mettez Ï  jour vos informations de profil et vos coordonnées
+                Mettez à jour vos informations de profil et vos coordonnées
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
@@ -216,7 +424,7 @@ const SettingsPageNew = () => {
                   <Avatar className="w-24 h-24">
                     <AvatarImage src={profileData.avatar} />
                     <AvatarFallback className="text-lg">
-                      {profileData.fullName.split(' ').map(n => n[0]).join('')}
+                      {(profileData.fullName && profileData.fullName.split(' ').map(n => n[0]).join('')) || profileData.email?.[0]?.toUpperCase() || '?'}
                     </AvatarFallback>
                   </Avatar>
                   <label className="absolute -bottom-2 -right-2 rounded-full w-8 h-8 p-0 cursor-pointer flex items-center justify-center bg-primary text-white">
@@ -334,21 +542,60 @@ const SettingsPageNew = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-4 rounded-lg border">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h3 className="font-semibold text-lg">Plan Standard</h3>
-                    <p className="text-gray-600">Accès aux fonctionnalités essentielles</p>
-                    <p className="text-sm text-gray-500 mt-1">
-                      Renouvelé le 15 décembre 2024
-                    </p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-2xl font-bold text-blue-600">500K XOF</p>
-                    <p className="text-sm text-gray-500">/mois</p>
-                  </div>
-                </div>
-              </div>
+              {isSubscriptionLoading ? (
+                <p className="text-sm text-gray-500">Chargement des informations d'abonnement...</p>
+              ) : (
+                <>
+                  {subscriptionError && (
+                    <p className="text-sm text-red-600 mb-3">{subscriptionError}</p>
+                  )}
+
+                  {subscriptionInfo ? (
+                    (() => {
+                      const linkedPlan = subscriptionInfo.subscription_plans || availablePlans.find(plan => plan.id === subscriptionInfo.plan_id);
+                      const planName = linkedPlan?.name || 'Plan personnalisé';
+                      const planDescription = linkedPlan?.description || 'Abonnement actif Teranga Foncier';
+                      const planPrice = linkedPlan?.price;
+                      const planCurrency = linkedPlan?.currency || 'XOF';
+                      const durationLabel = linkedPlan?.duration_days ? `${linkedPlan.duration_days} jours` : 'Durée flexible';
+
+                      return (
+                        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-5 rounded-lg border">
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="space-y-2">
+                              <div className="flex items-center gap-3">
+                                <h3 className="font-semibold text-lg text-gray-900">{planName}</h3>
+                                <Badge variant="secondary" className="uppercase tracking-wide">
+                                  {subscriptionInfo.status || 'actif'}
+                                </Badge>
+                              </div>
+                              <p className="text-gray-600 text-sm max-w-xl">{planDescription}</p>
+                              <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                                <span>Durée&nbsp;: <strong className="text-gray-900">{durationLabel}</strong></span>
+                                <span>Renouvellement&nbsp;: <strong className="text-gray-900">{subscriptionInfo.end_date ? formatDate(subscriptionInfo.end_date) : 'Non défini'}</strong></span>
+                                <span>Renouvellement auto&nbsp;: <strong className="text-gray-900">{subscriptionInfo.auto_renew ? 'Activé' : 'Désactivé'}</strong></span>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <p className="text-2xl font-bold text-blue-600">
+                                {planPrice !== undefined ? formatCurrency(planPrice, planCurrency) : '—'}
+                              </p>
+                              <p className="text-sm text-gray-500">{linkedPlan?.duration_days ? `par ${linkedPlan.duration_days} jours` : 'Facturation en fonction de votre contrat'}</p>
+                              {subscriptionInfo.updated_at && (
+                                <p className="text-xs text-gray-500 mt-2">Mis à jour le {formatDate(subscriptionInfo.updated_at)}</p>
+                              )}
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  ) : (
+                    <div className="p-4 border rounded-lg bg-gray-50 text-sm text-gray-600">
+                      Aucun abonnement actif détecté. Consultez les plans disponibles ci-dessous pour activer votre abonnement.
+                    </div>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -361,114 +608,60 @@ const SettingsPageNew = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                {/* Plan Basic */}
-                <div className="border rounded-lg p-6 relative">
-                  <div className="text-center mb-4">
-                    <Gem className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                    <h3 className="text-xl font-semibold">Basic</h3>
-                    <p className="text-gray-600">Pour commencer</p>
-                  </div>
-                  <div className="text-center mb-6">
-                    <div className="text-3xl font-bold">200K XOF</div>
-                    <div className="text-gray-500">/mois</div>
-                  </div>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Fonctionnalités de base</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Support email</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Jusqu'à 5 projets</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <X className="h-4 w-4 text-red-500" />
-                      <span className="text-sm text-gray-400">Rapports avancés</span>
-                    </li>
-                  </ul>
-                  <Button variant="outline" className="w-full">
-                    Changer de plan
-                  </Button>
-                </div>
+              {isSubscriptionLoading ? (
+                <p className="text-sm text-gray-500">Chargement des plans...</p>
+              ) : availablePlans.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                  {availablePlans.map(plan => {
+                    const isCurrent = subscriptionInfo?.plan_id === plan.id || subscriptionInfo?.subscription_plans?.id === plan.id;
+                    const features = parseFeatures(plan.features);
 
-                {/* Plan Standard */}
-                <div className="border-2 border-blue-500 rounded-lg p-6 relative">
-                  <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                    <span className="bg-blue-500 text-white px-3 py-1 rounded-full text-sm">
-                      Actuel
-                    </span>
-                  </div>
-                  <div className="text-center mb-4">
-                    <Crown className="h-8 w-8 mx-auto mb-2 text-blue-500" />
-                    <h3 className="text-xl font-semibold">Standard</h3>
-                    <p className="text-gray-600">Le plus populaire</p>
-                  </div>
-                  <div className="text-center mb-6">
-                    <div className="text-3xl font-bold">500K XOF</div>
-                    <div className="text-gray-500">/mois</div>
-                  </div>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Toutes les fonctionnalités</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Support prioritaire</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Projets illimités</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Rapports détaillés</span>
-                    </li>
-                  </ul>
-                  <Button className="w-full bg-blue-500 hover:bg-blue-600">
-                    Plan actuel
-                  </Button>
-                </div>
+                    return (
+                      <div
+                        key={plan.id}
+                        className={`border rounded-lg p-6 flex flex-col justify-between gap-4 ${isCurrent ? 'border-blue-500 shadow-sm' : 'border-gray-200'} bg-white`}
+                      >
+                        <div className="space-y-4">
+                          <div className="flex items-start justify-between gap-3">
+                            <div>
+                              <h3 className="text-xl font-semibold text-gray-900">{plan.name}</h3>
+                              <p className="text-sm text-gray-600 mt-1">{plan.description || 'Plan personnalisé pour votre profil Teranga Foncier'}</p>
+                            </div>
+                            {isCurrent && <Badge variant="secondary">Plan actuel</Badge>}
+                          </div>
 
-                {/* Plan Premium */}
-                <div className="border rounded-lg p-6 relative">
-                  <div className="text-center mb-4">
-                    <StarIcon className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-                    <h3 className="text-xl font-semibold">Premium</h3>
-                    <p className="text-gray-600">Pour les professionnels</p>
-                  </div>
-                  <div className="text-center mb-6">
-                    <div className="text-3xl font-bold">1M XOF</div>
-                    <div className="text-gray-500">/mois</div>
-                  </div>
-                  <ul className="space-y-3 mb-6">
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Tout du Standard</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">API complète</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Support dédié</span>
-                    </li>
-                    <li className="flex items-center gap-2">
-                      <Check className="h-4 w-4 text-green-500" />
-                      <span className="text-sm">Intégrations avancées</span>
-                    </li>
-                  </ul>
-                  <Button variant="outline" className="w-full">
-                    Passer à Premium
-                  </Button>
+                          <div>
+                            <div className="text-3xl font-bold text-gray-900">{formatCurrency(plan.price, plan.currency || 'XOF')}</div>
+                            <p className="text-sm text-gray-500">{plan.duration_days ? `Pour ${plan.duration_days} jours` : 'Durée personnalisée'}</p>
+                          </div>
+
+                          {features.length > 0 && (
+                            <ul className="space-y-2 text-sm text-gray-700">
+                              {features.map((feature, index) => (
+                                <li key={`${plan.id}-feature-${index}`} className="flex items-center gap-2">
+                                  <Check className="h-4 w-4 text-green-500" />
+                                  <span>{feature}</span>
+                                </li>
+                              ))}
+                            </ul>
+                          )}
+                        </div>
+
+                        <Button
+                          className="w-full"
+                          variant={isCurrent ? 'default' : 'outline'}
+                          disabled
+                          title="La modification de plan sera bientôt disponible"
+                        >
+                          {isCurrent ? 'Plan actuel' : 'Disponible prochainement'}
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              ) : (
+                <p className="text-sm text-gray-500">Aucun plan disponible pour votre profil utilisateur. Contactez le support pour activer un abonnement.</p>
+              )}
             </CardContent>
           </Card>
 
@@ -481,53 +674,64 @@ const SettingsPageNew = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CalendarIcon className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="font-medium">Décembre 2024</p>
-                      <p className="text-sm text-gray-500">Plan Standard</p>
+              {isBillingLoading ? (
+                <p className="text-sm text-gray-500">Chargement de l'historique...</p>
+              ) : (
+                <>
+                  {billingError && (
+                    <p className="text-sm text-red-600 mb-3">{billingError}</p>
+                  )}
+
+                  {billingHistory.length > 0 ? (
+                    <div className="space-y-4">
+                      {billingHistory.map((transaction) => {
+                        const status = (transaction.status || '').toLowerCase();
+                        const statusStyles = (() => {
+                          switch (status) {
+                            case 'completed':
+                            case 'paid':
+                              return 'bg-green-100 text-green-700';
+                            case 'failed':
+                            case 'cancelled':
+                              return 'bg-red-100 text-red-700';
+                            case 'pending':
+                              return 'bg-amber-100 text-amber-700';
+                            default:
+                              return 'bg-gray-100 text-gray-700';
+                          }
+                        })();
+
+                        return (
+                          <div key={transaction.id} className="p-4 border rounded-lg flex flex-col md:flex-row md:items-center justify-between gap-4">
+                            <div className="flex items-start gap-3">
+                              <div className="mt-1">
+                                <CalendarIcon className="h-4 w-4 text-gray-500" />
+                              </div>
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {transaction.description || `Transaction ${transaction.type || ''}`.trim() || 'Paiement Teranga Foncier'}
+                                </p>
+                                <p className="text-sm text-gray-500">{formatDate(transaction.created_at)}</p>
+                                {transaction.payment_method && (
+                                  <p className="text-xs text-gray-500 mt-1">Méthode&nbsp;: {transaction.payment_method}</p>
+                                )}
+                              </div>
+                            </div>
+                            <div className="text-right space-y-2">
+                              <p className="font-semibold text-gray-900">{formatCurrency(transaction.amount, transaction.currency || 'XOF')}</p>
+                              <span className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded ${statusStyles}`}>
+                                {status === 'completed' || status === 'paid' ? 'Payé' : status === 'pending' ? 'En attente' : status === 'failed' ? 'Échec' : status || 'Inconnu'}
+                              </span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">500K XOF</p>
-                    <p className="text-sm text-green-600">Payé</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CalendarIcon className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="font-medium">Novembre 2024</p>
-                      <p className="text-sm text-gray-500">Plan Standard</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">500K XOF</p>
-                    <p className="text-sm text-green-600">Payé</p>
-                  </div>
-                </div>
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CalendarIcon className="h-4 w-4 text-gray-500" />
-                    <div>
-                      <p className="font-medium">Octobre 2024</p>
-                      <p className="text-sm text-gray-500">Plan Basic</p>
-                    </div>
-                  </div>
-                  <div className="text-right">
-                    <p className="font-medium">200K XOF</p>
-                    <p className="text-sm text-green-600">Payé</p>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-4 pt-4 border-t">
-                <div className="flex items-center justify-between">
-                  <span className="text-sm text-gray-600">Prochaine facturation :</span>
-                  <span className="font-medium">15 janvier 2025</span>
-                </div>
-              </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Aucune transaction trouvée pour le moment.</p>
+                  )}
+                </>
+              )}
             </CardContent>
           </Card>
 
@@ -537,24 +741,58 @@ const SettingsPageNew = () => {
               <CardTitle>Méthodes de paiement</CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <CreditCardIcon className="h-8 w-8 text-blue-500" />
-                    <div>
-                      <p className="font-medium">•••• •••• •••• 4242</p>
-                      <p className="text-sm text-gray-500">Visa • Expire 12/26</p>
+              {isPaymentLoading ? (
+                <p className="text-sm text-gray-500">Chargement des méthodes de paiement...</p>
+              ) : (
+                <>
+                  {paymentError && (
+                    <p className="text-sm text-amber-600 mb-3">{paymentError}</p>
+                  )}
+
+                  {paymentMethods.length > 0 ? (
+                    <div className="space-y-4">
+                      {paymentMethods.map((method) => {
+                        const label = method.card_last4
+                          ? `${method.card_brand || 'Carte'} •••• ${method.card_last4}`
+                          : method.label || method.type || 'Méthode de paiement';
+                        const expiry = method.expiry_month && method.expiry_year
+                          ? `${String(method.expiry_month).padStart(2, '0')}/${method.expiry_year}`
+                          : null;
+
+                        return (
+                          <div key={method.id || `${label}-${expiry}`} className="flex items-center justify-between p-4 border rounded-lg">
+                            <div className="flex items-center gap-3">
+                              <CreditCardIcon className="h-8 w-8 text-blue-500" />
+                              <div>
+                                <p className="font-medium text-gray-900">
+                                  {label}
+                                  {method.is_default && (
+                                    <Badge variant="outline" className="ml-2 text-xs">Par défaut</Badge>
+                                  )}
+                                </p>
+                                <p className="text-sm text-gray-500">
+                                  {(method.provider && `${method.provider} • `) || ''}
+                                  {expiry ? `Expire ${expiry}` : "Aucune date d'expiration disponible"}
+                                </p>
+                              </div>
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm" disabled>Modifier</Button>
+                              <Button variant="outline" size="sm" disabled>Supprimer</Button>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
-                  </div>
-                  <div className="flex gap-2">
-                    <Button variant="outline" size="sm">Modifier</Button>
-                    <Button variant="outline" size="sm">Supprimer</Button>
-                  </div>
-                </div>
-                <Button variant="outline" className="w-full">
-                  Ajouter une méthode de paiement
-                </Button>
-              </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Vous n'avez pas encore enregistré de méthode de paiement.</p>
+                  )}
+
+                  <Button variant="outline" className="w-full mt-4" disabled>
+                    Ajouter une méthode de paiement (bientôt disponible)
+                  </Button>
+                </>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -594,9 +832,10 @@ const SettingsPageNew = () => {
                   </div>
                   <Switch
                     checked={notificationSettings[key]}
-                    onCheckedChange={(checked) => 
-                      setNotificationSettings(prev => ({ ...prev, [key]: checked }))
-                    }
+                    onCheckedChange={(checked) => {
+                      setNotificationSettings(prev => ({ ...prev, [key]: checked }));
+                      setHasChanges(true);
+                    }}
                   />
                 </div>
               ))}
@@ -628,9 +867,10 @@ const SettingsPageNew = () => {
                   </div>
                   <Switch
                     checked={privacySettings[key]}
-                    onCheckedChange={(checked) => 
-                      setPrivacySettings(prev => ({ ...prev, [key]: checked }))
-                    }
+                    onCheckedChange={(checked) => {
+                      setPrivacySettings(prev => ({ ...prev, [key]: checked }));
+                      setHasChanges(true);
+                    }}
                   />
                 </div>
               ))}
@@ -682,8 +922,8 @@ const SettingsPageNew = () => {
 
               {/* Autres paramètres de sécurité */}
               {Object.entries({
-                twoFactorEnabled: { label: 'Authentification Ï  deux facteurs', desc: 'Ajouter une couche de sécurité supplémentaire' },
-                loginAlerts: { label: 'Alertes de connexion', desc: 'Être notifié des nouvelles connexions Ï  votre compte' }
+                twoFactorEnabled: { label: 'Authentification à deux facteurs', desc: 'Ajouter une couche de sécurité supplémentaire' },
+                loginAlerts: { label: 'Alertes de connexion', desc: 'Être notifié des nouvelles connexions à votre compte' }
               }).map(([key, config]) => (
                 <div key={key} className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
@@ -692,9 +932,10 @@ const SettingsPageNew = () => {
                   </div>
                   <Switch
                     checked={securitySettings[key]}
-                    onCheckedChange={(checked) => 
-                      setSecuritySettings(prev => ({ ...prev, [key]: checked }))
-                    }
+                    onCheckedChange={(checked) => {
+                      setSecuritySettings(prev => ({ ...prev, [key]: checked }));
+                      setHasChanges(true);
+                    }}
                   />
                 </div>
               ))}
@@ -746,7 +987,10 @@ const SettingsPageNew = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <Button
                       variant={appearanceSettings.theme === 'light' ? 'default' : 'outline'}
-                      onClick={() => setAppearanceSettings(prev => ({ ...prev, theme: 'light' }))}
+                      onClick={() => {
+                        setAppearanceSettings(prev => ({ ...prev, theme: 'light' }));
+                        setHasChanges(true);
+                      }}
                       className="justify-start"
                     >
                       <Sun className="w-4 h-4 mr-2" />
@@ -754,7 +998,10 @@ const SettingsPageNew = () => {
                     </Button>
                     <Button
                       variant={appearanceSettings.theme === 'dark' ? 'default' : 'outline'}
-                      onClick={() => setAppearanceSettings(prev => ({ ...prev, theme: 'dark' }))}
+                      onClick={() => {
+                        setAppearanceSettings(prev => ({ ...prev, theme: 'dark' }));
+                        setHasChanges(true);
+                      }}
                       className="justify-start"
                     >
                       <Moon className="w-4 h-4 mr-2" />
@@ -768,7 +1015,10 @@ const SettingsPageNew = () => {
                   <select
                     id="language"
                     value={appearanceSettings.language}
-                    onChange={(e) => setAppearanceSettings(prev => ({ ...prev, language: e.target.value }))}
+                    onChange={(e) => {
+                      setAppearanceSettings(prev => ({ ...prev, language: e.target.value }));
+                      setHasChanges(true);
+                    }}
                     className="w-full p-2 border rounded-md mt-2"
                   >
                     <option value="fr">Français</option>
@@ -782,7 +1032,10 @@ const SettingsPageNew = () => {
                   <select
                     id="timezone"
                     value={appearanceSettings.timezone}
-                    onChange={(e) => setAppearanceSettings(prev => ({ ...prev, timezone: e.target.value }))}
+                    onChange={(e) => {
+                      setAppearanceSettings(prev => ({ ...prev, timezone: e.target.value }));
+                      setHasChanges(true);
+                    }}
                     className="w-full p-2 border rounded-md mt-2"
                   >
                     <option value="Africa/Dakar">Dakar (GMT+0)</option>

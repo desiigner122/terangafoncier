@@ -83,7 +83,6 @@ const ParticulierMesAchatsRefonte = () => {
           seller_id,
           case_number,
           status,
-          current_status,
           offered_price,
           created_at,
           request:requests!purchase_cases_request_id_fkey (
@@ -163,11 +162,11 @@ const ParticulierMesAchatsRefonte = () => {
   const calculateStats = (cases) => {
     const total = cases.length;
     const active = cases.filter(c => 
-      !['completed', 'cancelled', 'archived'].includes(c.current_status)
+      !['completed', 'cancelled', 'archived'].includes(c.status)
     ).length;
-    const completed = cases.filter(c => c.current_status === 'completed').length;
+    const completed = cases.filter(c => c.status === 'completed').length;
     const pending = cases.filter(c => 
-      ['initiated', 'pending', 'waiting_response'].includes(c.current_status)
+      ['initiated', 'pending', 'waiting_response'].includes(c.status)
     ).length;
 
     setStats({ total, active, completed, pending });
@@ -180,13 +179,13 @@ const ParticulierMesAchatsRefonte = () => {
     if (activeFilter !== 'all') {
       filtered = filtered.filter(c => {
         if (activeFilter === 'active') {
-          return !['completed', 'cancelled', 'archived'].includes(c.current_status);
+          return !['completed', 'cancelled', 'archived'].includes(c.status);
         }
         if (activeFilter === 'completed') {
-          return c.current_status === 'completed';
+          return c.status === 'completed';
         }
         if (activeFilter === 'pending') {
-          return ['initiated', 'pending', 'waiting_response'].includes(c.current_status);
+          return ['initiated', 'pending', 'waiting_response'].includes(c.status);
         }
         return true;
       });
@@ -419,9 +418,9 @@ const ParticulierMesAchatsRefonte = () => {
           <div className="grid grid-cols-1 gap-6">
             <AnimatePresence>
               {filteredCases.map((caseItem, index) => {
-                const statusInfo = getStatusInfo(caseItem.current_status);
+                const statusInfo = getStatusInfo(caseItem.status);
                 const StatusIcon = statusInfo.icon;
-                const progress = getProgressPercentage(caseItem.current_status);
+                const progress = getProgressPercentage(caseItem.status);
                 const property = caseItem.property;
                 const seller = caseItem.seller;
 

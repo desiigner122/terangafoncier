@@ -359,35 +359,63 @@ const CompleteSidebarParticulierDashboard = () => {
 
             {/* Actions et Profil */}
             <div className="flex items-center gap-2">
-              {/* Notifications */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/acheteur/notifications')}
-                className="relative"
-              >
-                <Bell className="h-4 w-4" />
-                {unreadNotificationsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                    {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
-                  </span>
-                )}
-              </Button>
+              {/* Notifications dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="relative"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {unreadNotificationsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                        {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="px-3 py-2 font-medium">Notifications</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled>
+                    <span className="text-sm text-slate-600">Aucune notification récente</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/acheteur/notifications')}>
+                    Voir toutes les notifications
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              {/* Messages avec notification */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/acheteur/messages')}
-                className="relative"
-              >
-                <MessageSquare className="h-4 w-4" />
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full text-xs text-white flex items-center justify-center">
-                    {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
-                  </span>
-                )}
-              </Button>
+              {/* Messages dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="relative"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    {unreadMessagesCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full text-xs text-white flex items-center justify-center">
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="px-3 py-2 font-medium">Messages récents</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled>
+                    <span className="text-sm text-slate-600">Aucun message récent</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/acheteur/messages')}>
+                    Voir tous les messages
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Calendrier */}
               <Button 

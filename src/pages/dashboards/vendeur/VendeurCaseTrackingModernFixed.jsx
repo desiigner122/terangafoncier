@@ -245,6 +245,93 @@ const VendeurCaseTrackingModernFixed = () => {
     }
   };
 
+  // Charger les messages du dossier (côté vendeur) - doit être au niveau racine des hooks
+  useEffect(() => {
+    const fetchMessages = async () => {
+      if (!purchaseCase?.id) {
+        setMessages([]);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('purchase_case_messages')
+          .select('*')
+          .eq('case_id', purchaseCase.id)
+          .order('created_at', { ascending: false });
+        if (!error) setMessages(data || []);
+      } catch (err) {
+        console.warn('⚠️ Erreur chargement messages (vendeur):', err);
+      }
+    };
+    fetchMessages();
+  }, [purchaseCase?.id]);
+
+  // Realtime: messages (vendeur)
+  useEffect(() => {
+    if (!purchaseCase?.id) return;
+
+    const channel = supabase
+      .channel(`seller-case-messages-${purchaseCase.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'purchase_case_messages',
+        filter: `case_id=eq.${purchaseCase.id}`
+      }, (payload) => {
+        setMessages((prev) => [payload.new, ...(prev || [])]);
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'purchase_case_messages',
+        filter: `case_id=eq.${purchaseCase.id}`
+      }, (payload) => {
+        const updated = payload.new;
+        setMessages((prev) => (prev || []).map((m) => m.id === updated.id ? updated : m));
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'purchase_case_messages',
+        filter: `case_id=eq.${purchaseCase.id}`
+      }, (payload) => {
+        const removed = payload.old;
+        setMessages((prev) => (prev || []).filter((m) => m.id !== removed.id));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [purchaseCase?.id]);
+
+  // Realtime: documents (vendeur)
+  useEffect(() => {
+    if (!purchaseCase?.request_id) return;
+    const channel = supabase
+      .channel(`seller-case-docs-${purchaseCase.request_id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'documents_administratifs',
+        filter: `purchase_request_id=eq.${purchaseCase.request_id}`
+      }, () => {
+        (async () => {
+          const { data, error } = await supabase
+            .from('documents_administratifs')
+            .select('*')
+            .eq('purchase_request_id', purchaseCase.request_id)
+            .order('created_at', { ascending: false });
+          if (!error) setDocuments(data || []);
+        })();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [purchaseCase?.request_id]);
+
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
@@ -279,7 +366,7 @@ const VendeurCaseTrackingModernFixed = () => {
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true, contentType: file.type || undefined });
 
       if (uploadError) throw uploadError;
 
@@ -354,24 +441,6 @@ const VendeurCaseTrackingModernFixed = () => {
         <AlertCircle className="w-16 h-16 text-red-500 mb-4" />
         <h2 className="text-2xl font-bold mb-2">Dossier introuvable</h2>
         <Button onClick={() => navigate('/vendeur/purchase-requests')}>
-
-  // Charger les messages du dossier (côté vendeur)
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!purchaseCase?.id) return;
-      try {
-        const { data, error } = await supabase
-          .from('purchase_case_messages')
-          .select('*')
-          .eq('case_id', purchaseCase.id)
-          .order('created_at', { ascending: false });
-        if (!error) setMessages(data || []);
-      } catch (err) {
-        console.warn('⚠️ Erreur chargement messages (vendeur):', err);
-      }
-    };
-    fetchMessages();
-  }, [purchaseCase?.id]);
           Retour aux demandes d'achat
         </Button>
       </div>
@@ -465,7 +534,7 @@ const VendeurCaseTrackingModernFixed = () => {
             <Card>
               <CardContent className="pt-6">
                 <Tabs defaultValue="documents">
-                  <TabsList className="grid w-full grid-cols-4">
+                  <TabsList className="grid w-full grid-cols-5">
                     <TabsTrigger value="documents">
                       <FileText className="w-4 h-4 mr-2" />
                       Documents
@@ -473,6 +542,10 @@ const VendeurCaseTrackingModernFixed = () => {
                     <TabsTrigger value="messages">
                       <MessageSquare className="w-4 h-4 mr-2" />
                       Messages ({messages.length})
+                    </TabsTrigger>
+                    <TabsTrigger value="appointments">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      Rendez-vous
                     </TabsTrigger>
                     <TabsTrigger value="payments">
                       <DollarSign className="w-4 h-4 mr-2" />
@@ -552,13 +625,19 @@ const VendeurCaseTrackingModernFixed = () => {
                           messages.map((msg) => (
                             <div key={msg.id} className="flex gap-3">
                               <Avatar className="h-8 w-8">
-                                <AvatarImage src={buyer?.avatar_url} alt={buyer?.full_name} />
+                                {msg.sent_by === user.id ? (
+                                  <AvatarImage src={user?.avatar_url} alt={user?.full_name || 'Vous'} />
+                                ) : (
+                                  <AvatarImage src={buyer?.avatar_url} alt={buyer?.full_name || 'Acheteur'} />
+                                )}
                                 <AvatarFallback>
-                                  {buyer?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'A'}
+                                  {msg.sent_by === user.id
+                                    ? (user?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'V')
+                                    : (buyer?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'A')}
                                 </AvatarFallback>
                               </Avatar>
                               <div className="flex-1">
-                                <p className="text-sm font-medium">{buyer?.full_name || 'Acheteur'}</p>
+                                <p className="text-sm font-medium">{msg.sent_by === user.id ? 'Vous' : (buyer?.full_name || 'Acheteur')}</p>
                                 <p className="text-sm text-gray-700">{msg.message || msg.content}</p>
                                 <p className="text-xs text-gray-400 mt-1">
                                   {msg.created_at && format(new Date(msg.created_at), 'dd MMM yyyy HH:mm', { locale: fr })}
@@ -576,13 +655,54 @@ const VendeurCaseTrackingModernFixed = () => {
                           placeholder="Votre message..."
                           value={newMessage}
                           onChange={(e) => setNewMessage(e.target.value)}
-                          onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' && !e.shiftKey) {
+                              e.preventDefault();
+                              sendMessage();
+                            }
+                          }}
                         />
-                        <Button onClick={sendMessage} size="sm">
+                        <Button onClick={(e) => { e.preventDefault(); sendMessage(); }} type="button" size="sm">
                           <Send className="w-4 h-4" />
                         </Button>
                       </div>
                     )}
+                  </TabsContent>
+
+                  {/* Rendez-vous */}
+                  <TabsContent value="appointments" className="space-y-4">
+                    <ScrollArea className="h-96">
+                      <div className="space-y-3 pr-4">
+                        {appointments.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            Aucun rendez-vous
+                          </div>
+                        ) : (
+                          appointments.map((apt) => (
+                            <Card key={apt.id} className="p-4">
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="font-medium text-sm">{apt.title || 'Rendez-vous'}</p>
+                                  <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                                    <Clock className="w-3 h-3" />
+                                    {apt.start_time && format(new Date(apt.start_time), 'dd MMM yyyy à HH:mm', { locale: fr })}
+                                  </p>
+                                  {apt.location && (
+                                    <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
+                                      <MapPin className="w-3 h-3" />
+                                      {apt.location}
+                                    </p>
+                                  )}
+                                </div>
+                                <Badge className={getStatusColor(apt.status)}>
+                                  {apt.status || 'planned'}
+                                </Badge>
+                              </div>
+                            </Card>
+                          ))
+                        )}
+                      </div>
+                    </ScrollArea>
                   </TabsContent>
 
                   {/* Paiements */}

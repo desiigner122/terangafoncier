@@ -869,37 +869,20 @@ const CompleteSidebarVendeurDashboard = () => {
               {/* Messages */}
               <DropdownMenu open={showMessages} onOpenChange={setShowMessages}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative" onClick={() => navigate('/vendeur/messages')}>
+                  <Button variant="ghost" size="sm" className="relative">
                     <MessageSquare className="h-5 w-5" />
-                    <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      3
-                    </Badge>
+                    {unreadMessagesCount > 0 && (
+                      <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80">
                   <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Marie Diallo</p>
-                        <p className="text-sm text-gray-600">Intéressée par la villa Almadies</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Amadou Ba</p>
-                        <p className="text-sm text-gray-600">Question sur le financement</p>
-                      </div>
-                    </div>
+                  <DropdownMenuItem disabled>
+                    <div className="text-sm text-gray-500">Aucun message récent</div>
                   </DropdownMenuItem>
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>

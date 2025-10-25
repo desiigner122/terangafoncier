@@ -339,6 +339,75 @@ const ParticulierCaseTrackingModernRefonte = () => {
     }
   };
 
+  // Realtime: messages du dossier (INSERT/UPDATE/DELETE)
+  useEffect(() => {
+    if (!purchaseCase?.id) return;
+
+    const channel = supabase
+      .channel(`case-messages-${purchaseCase.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'purchase_case_messages',
+        filter: `case_id=eq.${purchaseCase.id}`
+      }, (payload) => {
+        const newMsg = payload.new;
+        setMessages((prev) => [newMsg, ...(prev || [])]);
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'purchase_case_messages',
+        filter: `case_id=eq.${purchaseCase.id}`
+      }, (payload) => {
+        const updated = payload.new;
+        setMessages((prev) => (prev || []).map((m) => m.id === updated.id ? updated : m));
+      })
+      .on('postgres_changes', {
+        event: 'DELETE',
+        schema: 'public',
+        table: 'purchase_case_messages',
+        filter: `case_id=eq.${purchaseCase.id}`
+      }, (payload) => {
+        const removed = payload.old;
+        setMessages((prev) => (prev || []).filter((m) => m.id !== removed.id));
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [purchaseCase?.id]);
+
+  // Realtime: documents administratifs du dossier (INSERT/UPDATE/DELETE)
+  useEffect(() => {
+    if (!purchaseCase?.request_id) return;
+
+    const channel = supabase
+      .channel(`case-docs-${purchaseCase.request_id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'documents_administratifs',
+        filter: `purchase_request_id=eq.${purchaseCase.request_id}`
+      }, () => {
+        // Recharger rapidement les documents
+        (async () => {
+          const { data } = await supabase
+            .from('documents_administratifs')
+            .select('*')
+            .eq('purchase_request_id', purchaseCase.request_id)
+            .order('created_at', { ascending: false });
+          setDocuments(data || []);
+        })();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [purchaseCase?.request_id]);
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !purchaseCase?.id) return;
 
@@ -375,7 +444,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
       // Upload file to storage
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(filePath, file);
+        .upload(filePath, file, { upsert: true, contentType: file.type || undefined });
 
       if (uploadError) throw uploadError;
 
@@ -701,9 +770,16 @@ const ParticulierCaseTrackingModernRefonte = () => {
                         onChange={(e) => setNewMessage(e.target.value)}
                         rows={3}
                         className="resize-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage();
+                          }
+                        }}
                       />
                       <Button
-                        onClick={sendMessage}
+                        type="button"
+                        onClick={(e) => { e.preventDefault(); sendMessage(); }}
                         disabled={!newMessage.trim()}
                         className="self-end"
                       >

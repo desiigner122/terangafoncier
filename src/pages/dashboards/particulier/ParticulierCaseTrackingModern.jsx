@@ -235,11 +235,15 @@ const ParticulierCaseTrackingModern = () => {
   const uploadDocument = async (file, documentType) => {
     try {
       const fileName = `${Date.now()}_${file.name}`;
-      const filePath = `documents/${caseId}/${fileName}`;
+      // Store under the user's folder to match RLS policies: <userId>/<caseId>/<fileName>
+      const filePath = `${user.id}/${caseId}/${fileName}`;
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(filePath, file);
+        .upload(filePath, file, {
+          upsert: true,
+          contentType: file.type || 'application/octet-stream',
+        });
 
       if (uploadError) throw uploadError;
 
@@ -606,9 +610,14 @@ const ParticulierCaseTrackingModern = () => {
                         value={newMessage}
                         onChange={(e) => setNewMessage(e.target.value)}
                         placeholder="Écrire un message..."
-                        onKeyPress={(e) => e.key === 'Enter' && sendMessage()}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            sendMessage();
+                          }
+                        }}
                       />
-                      <Button onClick={sendMessage}>
+                      <Button type="button" onClick={(e) => { e.preventDefault(); sendMessage(); }}>
                         <Send className="w-4 h-4" />
                       </Button>
                     </div>

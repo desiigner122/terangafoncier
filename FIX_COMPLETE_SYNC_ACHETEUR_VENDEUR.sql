@@ -54,11 +54,10 @@ USING (
   OR auth.role() = 'service_role'
 );
 
--- Policy 2: Seul le SENDER peut INSÉRER des messages
 CREATE POLICY "Only sender can insert messages"
 ON public.purchase_case_messages FOR INSERT
 WITH CHECK (
-  sender_id = auth.uid()
+  (sent_by = auth.uid() OR sender_id = auth.uid())
   AND EXISTS (
     SELECT 1 FROM public.purchase_cases
     WHERE id = purchase_case_messages.case_id
@@ -141,6 +140,7 @@ USING (
 -- S'assurer que purchase_case_messages a toutes les colonnes
 ALTER TABLE public.purchase_case_messages
 ADD COLUMN IF NOT EXISTS case_id UUID,
+ADD COLUMN IF NOT EXISTS sent_by UUID,
 ADD COLUMN IF NOT EXISTS sender_id UUID,
 ADD COLUMN IF NOT EXISTS message TEXT,
 ADD COLUMN IF NOT EXISTS message_type VARCHAR(50) DEFAULT 'text',
@@ -162,6 +162,13 @@ BEGIN
     ALTER TABLE public.purchase_case_messages
     ADD CONSTRAINT fk_messages_sender
     FOREIGN KEY (sender_id) REFERENCES auth.users(id) ON DELETE CASCADE;
+  EXCEPTION WHEN duplicate_object THEN
+    NULL;
+  END;
+  BEGIN
+    ALTER TABLE public.purchase_case_messages
+    ADD CONSTRAINT fk_messages_sent_by
+    FOREIGN KEY (sent_by) REFERENCES auth.users(id) ON DELETE CASCADE;
   EXCEPTION WHEN duplicate_object THEN
     NULL;
   END;
@@ -208,6 +215,9 @@ CREATE INDEX IF NOT EXISTS idx_messages_case_id
 
 CREATE INDEX IF NOT EXISTS idx_messages_sender_id 
   ON public.purchase_case_messages(sender_id);
+
+CREATE INDEX IF NOT EXISTS idx_messages_sent_by 
+  ON public.purchase_case_messages(sent_by);
 
 CREATE INDEX IF NOT EXISTS idx_messages_created_at 
   ON public.purchase_case_messages(created_at DESC);

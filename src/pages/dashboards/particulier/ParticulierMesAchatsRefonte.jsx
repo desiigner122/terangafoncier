@@ -71,6 +71,8 @@ const ParticulierMesAchatsRefonte = () => {
         .from('purchase_cases')
         .select(`
           id,
+          buyer_id,
+          seller_id,
           case_number,
           status,
           current_status,

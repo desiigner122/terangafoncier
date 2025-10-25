@@ -64,9 +64,17 @@ const ParticulierMesAchatsRefonte = () => {
   const loadPurchaseCases = async () => {
     try {
       setLoading(true);
-      console.log('🚀 [DEBUG] Exécution de loadPurchaseCases - Version 2');
+      console.log('🚀 [DEBUG] Exécution de loadPurchaseCases - Version 3');
+      console.log('👤 User ID:', user.id);
 
-      // Charger tous les dossiers d'achat où l'utilisateur est l'acheteur
+      // Charger TOUS les dossiers d'abord (sans filtre) pour diagnostiquer
+      const { data: allCases, error: allCasesError } = await supabase
+        .from('purchase_cases')
+        .select('id, buyer_id, case_number, created_at');
+      
+      console.log('📊 Tous les dossiers (sans filtre):', { count: allCases?.length, error: allCasesError });
+
+      // Maintenant charger les dossiers filtrés avec les relations
       const { data: casesData, error: casesError } = await supabase
         .from('purchase_cases')
         .select(`
@@ -108,19 +116,19 @@ const ParticulierMesAchatsRefonte = () => {
         .order('created_at', { ascending: false });
 
       if (casesError) {
-        console.error('Erreur chargement dossiers:', casesError);
-        toast.error('Erreur lors du chargement');
+        console.error('❌ Erreur chargement dossiers:', casesError);
+        toast.error('Erreur lors du chargement: ' + casesError?.message);
         setLoading(false);
         return;
       }
 
-      console.log('📋 Dossiers chargés:', casesData);
+      console.log('📋 Dossiers chargés pour user:', { userId: user.id, count: casesData?.length, data: casesData });
       setPurchaseCases(casesData || []);
       calculateStats(casesData || []);
       setLoading(false);
     } catch (error) {
-      console.error('Erreur globale:', error);
-      toast.error('Erreur inattendue');
+      console.error('❌ Erreur globale:', error);
+      toast.error('Erreur inattendue: ' + error?.message);
       setLoading(false);
     }
   };

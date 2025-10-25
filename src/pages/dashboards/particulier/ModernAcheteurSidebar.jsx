@@ -101,6 +101,10 @@ const ModernAcheteurSidebar = () => {
   // Real-time unread counts
   const { unreadMessagesCount, unreadNotificationsCount } = useUnreadCounts();
   
+  // États pour les messages et notifications
+  const [messages, setMessages] = useState([]);
+  const [notifications, setNotifications] = useState([]);
+  
   // États pour les compteurs de badges réels
   const [dashboardStats, setDashboardStats] = useState({
     demandesTerrains: 0,
@@ -123,6 +127,96 @@ const ModernAcheteurSidebar = () => {
   useEffect(() => {
     setActiveTab(getActiveTabFromPath());
   }, [location.pathname]);
+
+  // Charger les messages et notifications
+  useEffect(() => {
+    if (user) {
+      loadMessages();
+      loadNotifications();
+    }
+  }, [user]);
+
+  // Charger les messages depuis les conversations
+  const loadMessages = async () => {
+    try {
+      const { data: conversations, error: convError } = await supabase
+        .from('conversations')
+        .select(`
+          id,
+          vendor_id,
+          last_message,
+          updated_at
+        `)
+        .eq('buyer_id', user.id)
+        .order('updated_at', { ascending: false })
+        .limit(20);
+
+      if (convError || !conversations || conversations.length === 0) {
+        setMessages([]);
+        return;
+      }
+
+      // Charger les profils des vendeurs
+      const vendorIds = conversations.map(c => c.vendor_id).filter(Boolean);
+      let vendorMap = {};
+      
+      if (vendorIds.length > 0) {
+        const { data: vendors } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url')
+          .in('id', vendorIds);
+        
+        if (vendors) {
+          vendors.forEach(v => {
+            vendorMap[v.id] = v;
+          });
+        }
+      }
+
+      // Transformer les conversations en messages
+      const messagesList = conversations.map(conv => ({
+        id: conv.id,
+        conversation_id: conv.id,
+        vendor_id: conv.vendor_id,
+        vendor_name: vendorMap[conv.vendor_id] ? 
+          `${vendorMap[conv.vendor_id].first_name} ${vendorMap[conv.vendor_id].last_name}`.trim() : 
+          'Vendeur',
+        vendor_avatar: vendorMap[conv.vendor_id]?.avatar_url,
+        content: conv.last_message || 'Aucun message',
+        created_at: conv.updated_at,
+        timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
+      }));
+
+      setMessages(messagesList);
+    } catch (error) {
+      console.error('Erreur chargement messages:', error);
+    }
+  };
+
+  // Charger les notifications
+  const loadNotifications = async () => {
+    try {
+      const { data: notif, error } = await supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('is_read', false)
+        .order('created_at', { ascending: false })
+        .limit(10);
+
+      if (error) {
+        if (!['PGRST204', '42P01'].includes(error.code)) {
+          console.error('Erreur chargement notifications:', error);
+        }
+        setNotifications([]);
+      } else {
+        setNotifications(notif || []);
+      }
+    } catch (error) {
+      console.error('Erreur chargement notifications:', error);
+      setNotifications([]);
+    }
+  };
 
   // Fonction de déconnexion
   const handleLogout = async () => {
@@ -562,9 +656,43 @@ const ModernAcheteurSidebar = () => {
                 <DropdownMenuContent align="end" className="w-80">
                   <div className="px-3 py-2 font-medium">Notifications</div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled>
-                    <span className="text-sm text-slate-600">Aucune notification récente</span>
-                  </DropdownMenuItem>
+                  {notifications && notifications.length > 0 ? (
+                    notifications.slice(0, 5).map((notif, idx) => {
+                      const getNotificationRoute = (notification) => {
+                        if (!notification) return '/acheteur/overview';
+                        if (notification.type === 'message' || notification.type === 'chat') {
+                          return '/acheteur/messages';
+                        }
+                        if (notification.type === 'purchase_request' || notification.type === 'demand') {
+                          return '/acheteur/mes-achats';
+                        }
+                        if (notification.type === 'case' && notification.case_id) {
+                          return `/acheteur/dossier/${notification.case_id}`;
+                        }
+                        return '/acheteur/overview';
+                      };
+
+                      return (
+                        <DropdownMenuItem
+                          key={idx}
+                          onClick={() => navigate(getNotificationRoute(notif))}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-2 w-full">
+                            <Bell className="h-4 w-4 text-red-500 flex-shrink-0" />
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm truncate">{notif.title || 'Notification'}</p>
+                              <p className="text-xs text-gray-600 truncate">{notif.message || 'Aucun message'}</p>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <span className="text-sm text-slate-600">Aucune notification récente</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/acheteur/notifications')}>
                     Voir toutes les notifications
@@ -591,9 +719,33 @@ const ModernAcheteurSidebar = () => {
                 <DropdownMenuContent align="end" className="w-80">
                   <div className="px-3 py-2 font-medium">Messages récents</div>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem disabled>
-                    <span className="text-sm text-slate-600">Aucun message récent</span>
-                  </DropdownMenuItem>
+                  {messages && messages.length > 0 ? (
+                    messages.slice(0, 5).map((msg, idx) => (
+                      <DropdownMenuItem 
+                        key={idx}
+                        onClick={() => navigate(`/acheteur/messages?conversation=${msg.conversation_id}`)}
+                        className="cursor-pointer"
+                      >
+                        <div className="flex items-center space-x-3 w-full">
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarImage src={msg.vendor_avatar} alt={msg.vendor_name} />
+                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                              {msg.vendor_name?.charAt(0) || 'V'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-medium text-sm truncate">{msg.vendor_name}</p>
+                            <p className="text-xs text-gray-600 truncate">{msg.content}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{msg.timestamp}</p>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <span className="text-sm text-slate-600">Aucun message récent</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={() => navigate('/acheteur/messages')}>
                     Voir tous les messages

@@ -138,7 +138,7 @@ const CompleteSidebarVendeurDashboard = () => {
   const [showMessages, setShowMessages] = useState(false);
   
   // Real-time unread counts
-  const { unreadMessagesCount, unreadNotificationsCount, reload: reloadUnread } = useUnreadCounts();
+  const { unreadMessagesCount, unreadNotificationsCount, reload: reloadUnread } = useUnreadCounts({ scope: 'vendor' });
   
   // États pour données réelles
   const [notifications, setNotifications] = useState([]);
@@ -276,7 +276,11 @@ const CompleteSidebarVendeurDashboard = () => {
       id: 'overview',
       label: 'Vue d\'ensemble',
       icon: Home,
-      description: 'Dashboard CRM + Anti-Fraude'
+      description: 'Dashboard CRM + Anti-Fraude',
+      // Affiche le total des éléments non lus (messages + notifications)
+      badge: (unreadMessagesCount + unreadNotificationsCount) > 0 
+        ? (unreadMessagesCount + unreadNotificationsCount).toString() 
+        : undefined
     },
     {
       id: 'crm',
@@ -438,9 +442,29 @@ const CompleteSidebarVendeurDashboard = () => {
         )
         .subscribe();
 
+      // Subscribe to notifications changes for this user
+      const notificationsSubscription = supabase
+        .channel('public:notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('🔔 [REALTIME] Notification change:', payload);
+            await loadNotifications();
+            if (typeof reloadUnread === 'function') reloadUnread();
+          }
+        )
+        .subscribe();
+
       return () => {
         supabase.removeChannel(conversationSubscription);
         supabase.removeChannel(messagesSubscription);
+        supabase.removeChannel(notificationsSubscription);
       };
     }
   }, [user]);
@@ -474,6 +498,48 @@ const CompleteSidebarVendeurDashboard = () => {
       fetchedNotifications = fallback;
     }
 
+    // Enrichir les notifications de type message avec le nom de l'acheteur
+    try {
+      const convIds = (fetchedNotifications || [])
+        .map(n => n.conversation_id || n?.data?.conversation_id || n?.metadata?.conversation_id)
+        .filter(Boolean);
+      if (convIds.length > 0) {
+        const { data: convs } = await supabase
+          .from('conversations')
+          .select('id, buyer_id')
+          .in('id', convIds);
+        const buyerIds = [...new Set((convs || []).map(c => c.buyer_id).filter(Boolean))];
+        let buyerMap = {};
+        if (buyerIds.length > 0) {
+          const { data: buyers } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name')
+            .in('id', buyerIds);
+          (buyers || []).forEach(b => {
+            buyerMap[b.id] = `${b.first_name || ''} ${b.last_name || ''}`.trim();
+          });
+        }
+
+        fetchedNotifications = (fetchedNotifications || []).map(n => {
+          const convId = n.conversation_id || n?.data?.conversation_id || n?.metadata?.conversation_id;
+          if ((n.type === 'message' || n.type === 'chat') && convId) {
+            const buyerName = (() => {
+              const conv = (convs || []).find(c => c.id === convId);
+              return conv ? buyerMap[conv.buyer_id] : undefined;
+            })();
+            return {
+              ...n,
+              title: n.title || (buyerName ? `Message de ${buyerName}` : 'Nouveau message'),
+              message: n.message || 'Vous avez reçu un nouveau message'
+            };
+          }
+          return n;
+        });
+      }
+    } catch (e) {
+      console.warn('⚠️ Enrichissement notifications (vendeur) échoué:', e);
+    }
+
     setNotifications(fetchedNotifications);
   };
 
@@ -488,7 +554,7 @@ const CompleteSidebarVendeurDashboard = () => {
           buyer_id,
           property_id,
           updated_at,
-          unread_count_buyer
+          unread_count_vendor
         `)
         .eq('vendor_id', user.id)
         .order('updated_at', { ascending: false })
@@ -773,24 +839,36 @@ const CompleteSidebarVendeurDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className={`bg-white shadow-lg transition-all duration-300 ${
-        sidebarCollapsed ? 'w-20' : 'w-80'
-      } ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
-      fixed lg:relative lg:translate-x-0 h-full z-30`}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/20 flex">
+      {/* Overlay mobile menu */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Responsive Layout */}
+      <div className={`
+        bg-white shadow-lg transition-all duration-300
+        ${sidebarCollapsed ? 'w-20' : 'w-72 sm:w-80'}
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        fixed lg:relative lg:translate-x-0
+        h-full z-40 lg:z-10
+        overflow-y-auto
+      `}>
         
         {/* Header Sidebar */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur-sm z-50">
           <div className="flex items-center justify-between">
             {!sidebarCollapsed && (
               <div className="flex items-center space-x-3">
                 <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-2 rounded-lg">
-                  <Building2 className="h-6 w-6 text-white" />
+                  <Building2 className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Vendeur Pro</h2>
-                  <p className="text-sm text-gray-600">Dashboard IA</p>
+                  <h2 className="text-base sm:text-lg font-bold text-gray-900">Vendeur Pro</h2>
+                  <p className="text-xs sm:text-sm text-gray-600">Dashboard IA</p>
                 </div>
               </div>
             )}
@@ -798,7 +876,7 @@ const CompleteSidebarVendeurDashboard = () => {
               variant="ghost"
               size="sm"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="lg:flex hidden"
+              className="hidden lg:flex"
             >
               {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </Button>
@@ -815,33 +893,33 @@ const CompleteSidebarVendeurDashboard = () => {
 
         {/* Stats rapides CRM + Anti-Fraude */}
         {!sidebarCollapsed && (
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-            <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3">
               <div className="text-center">
-                <div className="text-xl font-bold text-purple-600">
+                <div className="text-lg sm:text-xl font-bold text-purple-600">
                   {dashboardStats.activeProspects}
                 </div>
-                <div className="text-xs text-gray-600">Prospects</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">Prospects</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-lg sm:text-xl font-bold text-green-600">
                   {dashboardStats.securityScore}%
                 </div>
-                <div className="text-xs text-gray-600">Sécurité</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">Sécurité</div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">
+                <div className="text-base sm:text-lg font-bold text-blue-600">
                   {dashboardStats.verifiedTitles}
                 </div>
-                <div className="text-xs text-gray-600">Titres vérifiés</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">Titres</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">
+                <div className="text-base sm:text-lg font-bold text-orange-600">
                   {dashboardStats.conversionRate}%
                 </div>
-                <div className="text-xs text-gray-600">Conversion</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">Conversion</div>
               </div>
             </div>
           </div>
@@ -876,12 +954,13 @@ const CompleteSidebarVendeurDashboard = () => {
                     </div>
                     {item.badge && (
                       <Badge 
-                        className={`text-xs ${
+                        className={`text-xs font-bold ${
                           item.badge === 'NOUVEAU' ? 'bg-green-100 text-green-800' :
                           item.badge === 'IA' ? 'bg-purple-100 text-purple-800' :
                           item.badge === 'SÉCURISÉ' ? 'bg-green-100 text-green-800' :
                           item.badge === 'DIGITAL' ? 'bg-blue-100 text-blue-800' :
-                          'bg-blue-100 text-blue-800'
+                          // Nombre (compteur non-lus)
+                          'bg-red-500 text-white'
                         }`}
                       >
                         {item.badge}
@@ -930,44 +1009,47 @@ const CompleteSidebarVendeurDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        {/* Top Header - Responsive */}
+        <header className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-20">
+          <div className="flex items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden"
+                className="lg:hidden flex-shrink-0"
               >
                 <Menu className="h-5 w-5" />
               </Button>
               
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                   {navigationItems.find(item => item.id === activeTab)?.label || 'Dashboard Vendeur'}
                 </h1>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600 truncate hidden sm:block">
                   {navigationItems.find(item => item.id === activeTab)?.description}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               {/* Messages */}
               <DropdownMenu open={showMessages} onOpenChange={setShowMessages}>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
                     <MessageSquare className="h-5 w-5" />
                     {unreadMessagesCount > 0 && (
-                      <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                      <Badge 
+                        onClick={(e) => { e.stopPropagation(); navigate('/vendeur/messages'); }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0 font-bold cursor-pointer"
+                      >
                         {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
                       </Badge>
                     )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-80">
+                <DropdownMenuContent className="w-64 sm:w-80">
                   <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {messages && messages.length > 0 ? (
@@ -1045,7 +1127,10 @@ const CompleteSidebarVendeurDashboard = () => {
                   <Button variant="ghost" size="sm" className="relative">
                     <Bell className="h-5 w-5" />
                     {unreadNotificationsCount > 0 && (
-                      <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
+                      <Badge 
+                        onClick={(e) => { e.stopPropagation(); navigate('/vendeur/purchase-requests'); }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0 cursor-pointer"
+                      >
                         {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
                       </Badge>
                     )}

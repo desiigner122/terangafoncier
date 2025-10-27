@@ -354,16 +354,17 @@ const VendeurOverviewRealDataModern = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+      <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6 space-y-6 max-w-7xl mx-auto">
       {/* 🎯 HEADER MODERNE */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Tableau de Bord</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Bienvenue {user?.user_metadata?.full_name || user?.email} 👋
           </p>
         </div>
-        <div className="flex gap-3">
+  <div className="flex gap-2 sm:gap-3 flex-wrap">
           <Button 
             variant="outline" 
             onClick={handleRefresh}
@@ -382,7 +383,7 @@ const VendeurOverviewRealDataModern = () => {
         </div>
       </div>
 
-      {/* 🔔 ALERTES IMPORTANTES */}
+  {/* 🔔 ALERTES IMPORTANTES */}
       {alerts.length > 0 && (
         <div className="grid grid-cols-1 gap-3">
           {alerts.map((alert, idx) => (
@@ -415,8 +416,8 @@ const VendeurOverviewRealDataModern = () => {
         </div>
       )}
 
-      {/* 📊 STATS CARDS PRINCIPALES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  {/* 📊 STATS CARDS PRINCIPALES */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Propriétés Actives"
           value={dashboardStats.activeProperties}
@@ -449,8 +450,8 @@ const VendeurOverviewRealDataModern = () => {
         />
       </div>
 
-      {/* 📈 STATS SECONDAIRES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  {/* 📈 STATS SECONDAIRES */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Revenus Total"
           value={`${(dashboardStats.totalRevenue / 1000000).toFixed(1)}M`}
@@ -484,7 +485,7 @@ const VendeurOverviewRealDataModern = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* 🏆 TOP PROPRIÉTÉS */}
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -509,10 +510,10 @@ const VendeurOverviewRealDataModern = () => {
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => navigate(`/parcelle/${generatePropertySlug(property.title || '')}`)}
                   >
-                    <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center gap-3">
                       {property.image ? (
-                        <img 
-                          src={property.image} 
+                        <img
+                          src={property.image}
                           alt={property.title}
                           className="h-12 w-12 rounded object-cover"
                         />
@@ -642,6 +643,7 @@ const VendeurOverviewRealDataModern = () => {
           </div>
         </CardContent>
       </Card>
+    </div>
     </div>
   );
 };

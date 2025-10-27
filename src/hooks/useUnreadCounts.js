@@ -6,7 +6,9 @@ import { useAuth } from '@/contexts/UnifiedAuthContext';
  * Hook pour charger les compteurs de notifications et messages non lus
  * Utilise les vraies tables de la base de données
  */
-export const useUnreadCounts = () => {
+export const useUnreadCounts = (options = {}) => {
+  // scope: 'vendor' | 'buyer' | 'both'
+  const scope = options.scope || 'both';
   const { user, profile } = useAuth();
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
@@ -99,24 +101,53 @@ export const useUnreadCounts = () => {
     try {
       // Messages non lus (nouveau système): utiliser la table conversations
       // Vendeur: unread_count_vendor | Acheteur: unread_count_buyer
-      const normalizedRole = String(profile?.role || '').toLowerCase();
-      const isSeller = ['vendeur', 'seller'].includes(normalizedRole);
-
-      if (isSeller) {
-        const { count, error } = await supabase
+      // Compute unread for both roles to avoid relying on profile.role
+      const [vendorUnreadRes, buyerUnreadRes] = await Promise.all([
+        supabase
           .from('conversations')
           .select('id', { count: 'exact', head: true })
           .eq('vendor_id', user.id)
-          .gt('unread_count_vendor', 0);
-        if (!error) setUnreadMessagesCount(count || 0); else setUnreadMessagesCount(0);
-      } else {
-        const { count, error } = await supabase
+          .gt('unread_count_vendor', 0),
+        supabase
           .from('conversations')
           .select('id', { count: 'exact', head: true })
           .eq('buyer_id', user.id)
-          .gt('unread_count_buyer', 0);
-        if (!error) setUnreadMessagesCount(count || 0); else setUnreadMessagesCount(0);
+          .gt('unread_count_buyer', 0),
+      ]);
+
+  let vendorUnread = vendorUnreadRes?.count || 0;
+  let buyerUnread = buyerUnreadRes?.count || 0;
+  let totalUnread = scope === 'vendor' ? vendorUnread : scope === 'buyer' ? buyerUnread : (vendorUnread + buyerUnread);
+
+      // Fallback robuste: calculer via conversation_messages si les colonnes unread_count_* ne sont pas mises à jour
+      if (totalUnread === 0) {
+        try {
+          const [vendorMsgsRes, buyerMsgsRes] = await Promise.all([
+            // Messages non lus côté vendeur (messages reçus par le vendeur)
+            supabase
+              .from('conversation_messages')
+              .select('id, conversations!inner(id)', { count: 'exact', head: true })
+              .eq('is_read', false)
+              .neq('sender_id', user.id)
+              .eq('conversations.vendor_id', user.id),
+            // Messages non lus côté acheteur (messages reçus par l'acheteur)
+            supabase
+              .from('conversation_messages')
+              .select('id, conversations!inner(id)', { count: 'exact', head: true })
+              .eq('is_read', false)
+              .neq('sender_id', user.id)
+              .eq('conversations.buyer_id', user.id),
+          ]);
+
+          const vendorMsgsUnread = vendorMsgsRes?.count || 0;
+          const buyerMsgsUnread = buyerMsgsRes?.count || 0;
+          totalUnread = scope === 'vendor' ? vendorMsgsUnread : scope === 'buyer' ? buyerMsgsUnread : (vendorMsgsUnread + buyerMsgsUnread);
+        } catch (fallbackErr) {
+          console.warn('⚠️ Fallback unread messages (conversation_messages) échoué:', fallbackErr?.message || fallbackErr);
+        }
       }
+
+      setUnreadMessagesCount(totalUnread);
 
       // Messages administratifs non lus (si table existe encore)
       try {

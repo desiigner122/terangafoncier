@@ -323,8 +323,8 @@ const ModernBuyerCaseTrackingV2 = () => {
         () =>
           supabase
             .from('conversation_messages')
-            .select('*')
-            .eq('case_id', purchaseCase.id)
+            .select('id, conversation_id, sender_id, content, is_read, read_at, created_at, updated_at')
+            .eq('conversation_id', purchaseCase.conversation_id || purchaseCase.id)
             .order('created_at', { ascending: true }),
       ];
 

@@ -228,10 +228,10 @@ const VendeurMessagesModern = () => {
 
   const loadMessages = async (conversationId) => {
     try {
-      // Load messages from conversation_messages table
+      // Load messages from conversation_messages table - specify exact columns to avoid message_count error
       const { data, error } = await supabase
         .from('conversation_messages')
-        .select('*')
+        .select('id, conversation_id, sender_id, content, is_read, read_at, created_at, updated_at')
         .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 

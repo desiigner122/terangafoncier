@@ -411,9 +411,24 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     setIsNegotiating(true);
     try {
       console.log('💬 [NEGOTIATE] Soumission contre-offre:', counterOffer);
+      console.log('📋 [NEGOTIATE] Selected request:', selectedRequest);
       
       if (!selectedRequest) {
         toast.error('Aucune demande sélectionnée');
+        return;
+      }
+
+      // Get original price from various possible fields
+      const originalPrice = selectedRequest.proposed_price || 
+                           selectedRequest.price || 
+                           selectedRequest.offer_price || 
+                           selectedRequest.offered_price ||
+                           selectedRequest.parcels?.price ||
+                           0;
+
+      if (!originalPrice || originalPrice === 0) {
+        toast.error('Prix original introuvable pour cette demande');
+        setIsNegotiating(false);
         return;
       }
 
@@ -424,7 +439,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
           request_id: selectedRequest.id,
           conversation_id: selectedRequest.conversation_id,
           initiated_by: user.id,
-          original_price: selectedRequest.proposed_price || selectedRequest.price,
+          original_price: originalPrice,
           proposed_price: counterOffer.new_price,
           offer_message: counterOffer.message || 'Contre-offre',
           status: 'pending'

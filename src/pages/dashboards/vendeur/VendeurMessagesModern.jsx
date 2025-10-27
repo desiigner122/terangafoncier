@@ -165,6 +165,11 @@ const VendeurMessagesModern = () => {
         property: propertyMap[c.property_id]
       }));
 
+      console.log('✅ [MESSAGES] Conversations enrichies:', enrichedConversations.length);
+      enrichedConversations.forEach((conv, idx) => {
+        console.log(`  ${idx + 1}. Buyer: ${conv.buyer?.first_name} ${conv.buyer?.last_name}, Property: ${conv.property?.title}`);
+      });
+
       // Calculer stats
       const stats = {
         total: enrichedConversations.length || 0,
@@ -255,12 +260,10 @@ const VendeurMessagesModern = () => {
         message_type: 'text'
       };
 
-      // Update conversation with new message
+      // Update conversation timestamp only (last_message column doesn't exist)
       await supabase
         .from('conversations')
         .update({
-          last_message: newMessage.trim(),
-          last_message_preview: newMessage.trim(),
           updated_at: new Date().toISOString(),
           unread_count_buyer: (selectedConversation.unread_count_buyer || 0) + 1
         })
@@ -547,9 +550,11 @@ const VendeurMessagesModern = () => {
                   </Avatar>
                   <div>
                     <h3 className="font-semibold">
-                      {selectedConversation.buyer?.first_name} {selectedConversation.buyer?.last_name}
+                      {selectedConversation.buyer?.first_name && selectedConversation.buyer?.last_name
+                        ? `${selectedConversation.buyer.first_name} ${selectedConversation.buyer.last_name}`
+                        : selectedConversation.buyer?.email || 'Acheteur'}
                     </h3>
-                    <p className="text-sm text-gray-500">{selectedConversation.property?.title}</p>
+                    <p className="text-sm text-gray-500">{selectedConversation.property?.title || 'Propriété'}</p>
                   </div>
                 </div>
 

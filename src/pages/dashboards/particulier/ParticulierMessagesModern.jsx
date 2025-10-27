@@ -7,7 +7,7 @@ import {
   Check, CheckCheck, Clock, Pin, Archive, Trash2,
   Star, Bell, BellOff, User, Users, Info, X,
   ArrowLeft, Download, Eye, RefreshCw, AlertCircle,
-  Building
+  Building, Plus
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Dialog, DialogContent, DialogHeader as UIDialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
@@ -38,6 +39,12 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
     todayMessages: 0,
     responseTime: '0h'
   });
+  // Nouveau: création conversation
+  const [showCreate, setShowCreate] = useState(false);
+  const [vendorEmail, setVendorEmail] = useState('');
+  const [buyerParcels, setBuyerParcels] = useState([]);
+  const [selectedParcelId, setSelectedParcelId] = useState('');
+  const [creating, setCreating] = useState(false);
 
   // Charger conversations
   useEffect(() => {
@@ -46,21 +53,102 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
     }
   }, [user]);
 
-  // Sélectionner conversation si paramètre query présent
+  // Charger les parcelles liées aux demandes de l'acheteur (pour lier une conversation)
+  useEffect(() => {
+    const loadBuyerParcels = async () => {
+      try {
+        if (!user?.id) return;
+        const { data: reqs, error: reqErr } = await supabase
+          .from('requests')
+          .select('id, parcel_id')
+          .eq('user_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(50);
+        if (reqErr) return;
+        const parcelIds = [...new Set((reqs || []).map(r => r.parcel_id).filter(Boolean))];
+        if (parcelIds.length === 0) { setBuyerParcels([]); return; }
+        const { data: parcels } = await supabase
+          .from('parcels')
+          .select('id, title, seller_id')
+          .in('id', parcelIds);
+        setBuyerParcels(parcels || []);
+      } catch (e) {
+        console.warn('⚠️ Chargement parcelles acheteur échoué:', e);
+      }
+    };
+    loadBuyerParcels();
+  }, [user?.id]);
+
+  // Sélectionner conversation si paramètre query présent (avec fallback fetch si absente en mémoire)
+  const fetchedIdsRef = useRef(new Set());
   useEffect(() => {
     const conversationId = searchParams.get('conversation');
-    if (conversationId && conversations.length > 0) {
-      const conversation = conversations.find(c => c.id === conversationId);
-      if (conversation) {
-        setSelectedConversation(conversation);
-      }
+    if (!conversationId) return;
+
+    // Si déjà chargée dans la liste, sélectionner
+    const existing = conversations.find(c => String(c.id) === String(conversationId));
+    if (existing) {
+      setSelectedConversation(existing);
+      return;
     }
+
+    // Fallback: éviter boucles, fetch one-shot la conversation par ID et l'ajouter à la liste
+    if (fetchedIdsRef.current.has(conversationId)) return;
+    fetchedIdsRef.current.add(conversationId);
+
+    const fetchById = async () => {
+      try {
+        const { data: conv, error } = await supabase
+          .from('conversations')
+          .select('id, vendor_id, buyer_id, property_id, updated_at, unread_count_buyer')
+          .eq('id', conversationId)
+          .single();
+        if (error || !conv) return;
+
+        // Enrichir vendeur et propriété
+        const [{ data: vendor }, { data: property }] = await Promise.all([
+          supabase.from('profiles').select('id, first_name, last_name, email, avatar_url').eq('id', conv.vendor_id).single(),
+          supabase.from('properties').select('id, title, reference').eq('id', conv.property_id).single()
+        ]);
+
+        const enriched = {
+          id: conv.id,
+          thread_id: conv.id,
+          vendor_id: conv.vendor_id,
+          recipient_id: conv.vendor_id,
+          vendor_name: `${vendor?.first_name || ''} ${vendor?.last_name || ''}`.trim() || 'Vendeur',
+          vendor_email: vendor?.email || '',
+          vendor_avatar: vendor?.avatar_url,
+          property_title: property?.title || 'Propriété',
+          property_id: property?.reference || '',
+          subject: property?.title || 'Conversation Teranga',
+          last_message: 'Ouvrir la conversation',
+          last_message_time: conv.updated_at,
+          unread_count: conv.unread_count_buyer || 0,
+          is_pinned: false,
+          is_archived: false,
+          status: 'active'
+        };
+
+        setConversations(prev => {
+          const exists = prev.some(c => c.id === enriched.id);
+          return exists ? prev : [enriched, ...prev];
+        });
+        setSelectedConversation(enriched);
+      } catch (err) {
+        console.warn('⚠️ Fallback fetch conversation acheteur échoué:', err);
+      }
+    };
+
+    fetchById();
   }, [searchParams, conversations]);
 
   // Charger messages quand conversation sélectionnée
   useEffect(() => {
     if (selectedConversation) {
       loadMessages(selectedConversation);
+      // Mark as read when opening
+      markAsRead(selectedConversation.id);
     }
   }, [selectedConversation]);
 
@@ -68,6 +156,46 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Realtime subscription for buyer messages
+  useEffect(() => {
+    if (!selectedConversation) return;
+    const channel = supabase
+      .channel(`buyer_conversation_messages:${selectedConversation.id}`)
+      .on(
+        'postgres_changes',
+        { event: 'INSERT', schema: 'public', table: 'conversation_messages', filter: `conversation_id=eq.${selectedConversation.id}` },
+        (payload) => {
+          const m = payload.new;
+          setMessages(prev => [...prev, {
+            id: m.id,
+            conversation_id: m.conversation_id,
+            sender_id: m.sender_id,
+            sender_type: m.sender_id === user.id ? 'buyer' : 'vendor',
+            sender_name: m.sender_id === user.id ? 'Vous' : selectedConversation.vendor_name || 'Vendeur',
+            content: m.content,
+            subject: selectedConversation.subject,
+            sent_at: m.created_at,
+            read_at: m.read_at,
+            attachments: []
+          }]);
+        }
+      )
+      .on(
+        'postgres_changes',
+        { event: 'UPDATE', schema: 'public', table: 'conversation_messages', filter: `conversation_id=eq.${selectedConversation.id}` },
+        (payload) => {
+          const m = payload.new;
+          setMessages(prev => prev.map(msg => msg.id === m.id ? {
+            ...msg,
+            content: m.content,
+            read_at: m.read_at
+          } : msg));
+        }
+      )
+      .subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [selectedConversation, user]);
 
   const loadConversations = async () => {
     try {
@@ -84,13 +212,12 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
 
       if (error) {
         console.error('❌ Erreur chargement conversations:', error);
-        // Utiliser données mockées si erreur
-        setConversations(getMockConversations());
+        setConversations([]);
         setStats({
-          totalConversations: 3,
-          unreadCount: 2,
-          todayMessages: 5,
-          responseTime: '2h'
+          totalConversations: 0,
+          unreadCount: 0,
+          todayMessages: 0,
+          responseTime: '0h'
         });
         setLoading(false);
         return;
@@ -170,16 +297,16 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
         };
       });
 
-      setConversations(formattedConversations.length > 0 ? formattedConversations : getMockConversations());
+  setConversations(formattedConversations);
 
       // Calculer stats
       const unreadCount = formattedConversations.reduce((sum, c) => sum + c.unread_count, 0);
       
       setStats({
-        totalConversations: formattedConversations.length || 3,
-        unreadCount: unreadCount || 2,
-        todayMessages: 5,
-        responseTime: '2h'
+        totalConversations: formattedConversations.length || 0,
+        unreadCount: unreadCount || 0,
+        todayMessages: 0,
+        responseTime: '0h'
       });
 
       // Notifier le parent du compteur non lus
@@ -187,111 +314,54 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
         onUnreadChange(unreadCount);
       }
       
-      console.log('✅', formattedConversations.length, 'conversations chargées');
+  console.log('✅', formattedConversations.length, 'conversations chargées');
       
     } catch (error) {
       console.error('❌ Erreur chargement conversations:', error);
-      setConversations(getMockConversations());
+      setConversations([]);
       setStats({
-        totalConversations: 3,
-        unreadCount: 2,
-        todayMessages: 5,
-        responseTime: '2h'
+        totalConversations: 0,
+        unreadCount: 0,
+        todayMessages: 0,
+        responseTime: '0h'
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const getMockConversations = () => [
-    {
-      id: 'mock-1',
-      thread_id: 'mock-thread-1',
-      vendor_id: 'vendor-1',
-      recipient_id: 'vendor-1',
-      vendor_name: 'Amadou Diallo',
-      vendor_email: 'amadou@example.com',
-      vendor_avatar: null,
-      property_title: 'Terrain Almadies 500m²',
-      property_id: 'TER-001',
-      subject: 'Demande d\'information',
-      last_message: 'Bonjour, je suis intéressé par votre terrain...',
-      last_message_time: new Date().toISOString(),
-      unread_count: 2,
-      is_pinned: false,
-      is_archived: false,
-      status: 'active'
-    },
-    {
-      id: 'mock-2',
-      thread_id: 'mock-thread-2',
-      vendor_id: 'vendor-2',
-      recipient_id: 'vendor-2',
-      vendor_name: 'Fatou Ndiaye',
-      vendor_email: 'fatou@example.com',
-      vendor_avatar: null,
-      property_title: 'Villa Mermoz 4 pièces',
-      property_id: 'VIL-002',
-      subject: 'Visite du bien',
-      last_message: 'La visite est confirmée pour demain à 10h',
-      last_message_time: new Date(Date.now() - 3600000).toISOString(),
-      unread_count: 0,
-      is_pinned: true,
-      is_archived: false,
-      status: 'active'
-    },
-    {
-      id: 'mock-3',
-      thread_id: 'mock-thread-3',
-      vendor_id: 'vendor-3',
-      recipient_id: 'vendor-3',
-      vendor_name: 'Moussa Sarr',
-      vendor_email: 'moussa@example.com',
-      vendor_avatar: null,
-      property_title: 'Appartement Plateau 3 pièces',
-      property_id: 'APP-003',
-      subject: 'Négociation prix',
-      last_message: 'Je peux proposer 45M pour un paiement comptant',
-      last_message_time: new Date(Date.now() - 86400000).toISOString(),
-      unread_count: 0,
-      is_pinned: false,
-      is_archived: false,
-      status: 'active'
-    }
-  ];
+  // Suppression des mock conversations
 
   const loadMessages = async (conversation) => {
     try {
-      console.log('📨 Chargement messages conversation:', conversation.thread_id);
-      
+      console.log('📨 Chargement messages conversation:', conversation.id);
       const { data: messagesData, error } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('thread_id', conversation.thread_id)
+        .from('conversation_messages')
+        .select('id, conversation_id, sender_id, content, is_read, read_at, created_at, updated_at')
+        .eq('conversation_id', conversation.id)
         .order('created_at', { ascending: true });
 
       if (error) {
         console.error('❌ Erreur chargement messages:', error);
-        // Utiliser messages mockés
-        setMessages(getMockMessages(conversation));
+        setMessages([]);
         return;
       }
 
       // Transformer les messages de la BDD vers le format d'affichage
-      const formattedMessages = messagesData?.map(msg => ({
+      const formattedMessages = (messagesData || []).map(msg => ({
         id: msg.id,
-        conversation_id: conversation.thread_id,
+        conversation_id: msg.conversation_id,
         sender_id: msg.sender_id,
         sender_type: msg.sender_id === user.id ? 'buyer' : 'vendor',
         sender_name: msg.sender_id === user.id ? 'Vous' : conversation.vendor_name || 'Vendeur',
-        content: msg.message, // Le champ 'message' de la table devient 'content' pour l'affichage
-        subject: msg.subject,
+        content: msg.content,
+        subject: conversation.subject,
         sent_at: msg.created_at,
         read_at: msg.read_at,
-        attachments: msg.attachments || []
-      })) || [];
+        attachments: []
+      }));
 
-      setMessages(formattedMessages.length > 0 ? formattedMessages : getMockMessages(conversation));
+      setMessages(formattedMessages);
       
       // Marquer messages comme lus
       if (conversation.unread_count > 0) {
@@ -300,45 +370,29 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
       
     } catch (error) {
       console.error('❌ Erreur chargement messages:', error);
-      setMessages(getMockMessages(conversation));
+      setMessages([]);
     }
   };
-
-  const getMockMessages = (conversation) => [
-    {
-      id: 'msg-1',
-      sender_id: user.id,
-      sender_type: 'buyer',
-      content: `Bonjour, je suis intéressé par ${conversation.property_title}. Pouvez-vous me donner plus d'informations?`,
-      created_at: new Date(Date.now() - 7200000).toISOString(),
-      is_read: true
-    },
-    {
-      id: 'msg-2',
-      sender_id: conversation.vendor_id,
-      sender_type: 'vendor',
-      content: `Bonjour! Merci pour votre intérêt. Le terrain fait 500m² et est situé dans un quartier résidentiel calme.`,
-      created_at: new Date(Date.now() - 5400000).toISOString(),
-      is_read: true
-    },
-    {
-      id: 'msg-3',
-      sender_id: user.id,
-      sender_type: 'buyer',
-      content: 'Serait-il possible d\'organiser une visite cette semaine?',
-      created_at: new Date(Date.now() - 3600000).toISOString(),
-      is_read: true
-    }
-  ];
+  // Suppression des mock messages
 
   const markAsRead = async (conversationId) => {
     try {
-      const { error } = await supabase
+      const { error: convError } = await supabase
         .from('conversations')
         .update({ unread_count_buyer: 0 })
         .eq('id', conversationId);
 
-      if (!error) {
+      if (convError) throw convError;
+
+      const { error: msgError } = await supabase
+        .from('conversation_messages')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id);
+
+      if (msgError) throw msgError;
+
+      {
         // Mettre à jour local
         setConversations(prev => prev.map(c => 
           c.id === conversationId ? { ...c, unread_count: 0 } : c
@@ -353,45 +407,43 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
     if (!newMessage.trim() || !selectedConversation) return;
 
     try {
-      const threadId = selectedConversation.thread_id || selectedConversation.id;
-      const recipientId = selectedConversation.vendor_id;
-      const subject = selectedConversation.subject || selectedConversation.property_title || 'Message acheteur';
+  const conversationId = selectedConversation.id;
+  const recipientId = selectedConversation.vendor_id;
+  const subject = selectedConversation.subject || selectedConversation.property_title || 'Message acheteur';
 
       if (!recipientId) {
         toast.error('Destinataire introuvable pour cette conversation');
         return;
       }
 
-      // Envoyer via Supabase avec les bons champs
-      const { data, error } = await supabase
-        .from('messages')
+      // Envoyer via Supabase dans conversation_messages
+      const { data: inserted, error: messageError } = await supabase
+        .from('conversation_messages')
         .insert({
+          conversation_id: conversationId,
           sender_id: user.id,
-          recipient_id: recipientId,
-          subject,
-          message: newMessage.trim(),
-          thread_id: threadId,
-          status: 'sent'
+          content: newMessage.trim(),
+          is_read: false
         })
         .select()
         .single();
 
-      if (error) {
-        console.error('❌ Erreur envoi message:', error);
+      if (messageError) {
+        console.error('❌ Erreur envoi message:', messageError);
         toast.error('Erreur lors de l\'envoi du message');
         return;
       }
 
       // Ajouter le message à l'interface avec le bon format
       const formattedMessage = {
-        id: data.id,
-        conversation_id: threadId,
+        id: inserted.id,
+        conversation_id: conversationId,
         sender_id: user.id,
         sender_type: 'buyer',
         sender_name: 'Vous',
         content: newMessage.trim(),
         subject,
-        sent_at: data.created_at,
+        sent_at: inserted.created_at,
         read_at: null,
         attachments: []
       };
@@ -403,17 +455,15 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
       await supabase
         .from('conversations')
         .update({
-          last_message_preview: newMessage.trim(),
-          last_message: newMessage.trim(),
           updated_at: new Date().toISOString(),
           unread_count_vendor: (selectedConversation.unread_count_vendor || 0) + 1
         })
-        .eq('id', selectedConversation.id);
+        .eq('id', conversationId);
 
       // Mettre à jour localement
       setConversations(prev => prev.map(c =>
-        c.id === selectedConversation.id
-          ? { ...c, last_message: newMessage.trim(), last_message_time: data.created_at, unread_count: 0 }
+        c.id === conversationId
+          ? { ...c, last_message: newMessage.trim(), last_message_time: inserted.created_at, unread_count: 0 }
           : c
       ));
 
@@ -422,6 +472,89 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
     } catch (error) {
       console.error('❌ Erreur envoi message:', error);
       toast.error('Erreur lors de l\'envoi du message');
+    }
+  };
+
+  const createOrOpenConversation = async () => {
+    try {
+      if (!user?.id) return;
+      if (!selectedParcelId && !vendorEmail.trim()) {
+        toast.error('Sélectionnez une propriété ou entrez l\'email du vendeur');
+        return;
+      }
+      setCreating(true);
+
+      // Trouver vendor_id
+      let vendorId = null;
+      if (selectedParcelId) {
+        const parcel = buyerParcels.find(p => String(p.id) === String(selectedParcelId));
+        vendorId = parcel?.seller_id || null;
+      }
+      if (!vendorId && vendorEmail.trim()) {
+        const { data: vendor } = await supabase
+          .from('profiles')
+          .select('id, email')
+          .eq('email', vendorEmail.trim())
+          .single();
+        vendorId = vendor?.id || null;
+      }
+
+      if (!vendorId) {
+        toast.error('Vendeur introuvable');
+        setCreating(false);
+        return;
+      }
+
+      // Vérifier conversation existante
+      let existing = null;
+      if (selectedParcelId) {
+        const { data: convs } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('vendor_id', vendorId)
+          .eq('buyer_id', user.id)
+          .eq('property_id', selectedParcelId)
+          .limit(1);
+        existing = convs && convs[0];
+      } else {
+        const { data: convs } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('vendor_id', vendorId)
+          .eq('buyer_id', user.id)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+        existing = convs && convs[0];
+      }
+
+      let conversationId = existing?.id;
+      if (!conversationId) {
+        const { data: inserted, error: upErr } = await supabase
+          .from('conversations')
+          .upsert({
+            vendor_id: vendorId,
+            buyer_id: user.id,
+            property_id: selectedParcelId || null,
+            updated_at: new Date().toISOString(),
+            unread_count_vendor: 0,
+            unread_count_buyer: 0
+          })
+          .select('id')
+          .single();
+        if (upErr) throw upErr;
+        conversationId = inserted.id;
+      }
+
+      setShowCreate(false);
+      setVendorEmail('');
+      setSelectedParcelId('');
+      // Naviguer en deep-link
+      window.location.assign(`/acheteur/messages?conversation=${conversationId}`);
+    } catch (e) {
+      console.error('❌ Création/ouverture conversation:', e);
+      toast.error('Impossible d\'ouvrir la conversation');
+    } finally {
+      setCreating(false);
     }
   };
 
@@ -443,16 +576,17 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
     return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
+  const searchLower = (searchTerm || '').toLowerCase();
   const filteredConversations = conversations.filter(conv =>
-    conv.vendor_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.property_title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.last_message?.toLowerCase().includes(searchTerm.toLowerCase())
+    (conv.vendor_name || '').toLowerCase().includes(searchLower) ||
+    (conv.property_title || '').toLowerCase().includes(searchLower) ||
+    (conv.last_message || '').toLowerCase().includes(searchLower)
   );
 
   return (
-    <div className="h-full flex bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
+    <div className="h-full min-h-0 flex bg-gradient-to-br from-slate-50 via-white to-blue-50/30">
       {/* Sidebar - Liste des conversations */}
-      <div className="w-96 border-r border-slate-200 bg-white/80 backdrop-blur-sm flex flex-col">
+      <div className="w-full sm:w-80 md:w-96 border-r border-slate-200 bg-white/80 backdrop-blur-sm flex flex-col min-w-0">
         {/* Header */}
         <div className="p-4 border-b border-slate-200">
           <div className="flex items-center justify-between mb-4">
@@ -465,9 +599,14 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
                 }
               </p>
             </div>
-            <Button variant="ghost" size="sm">
-              <Filter className="h-4 w-4" />
-            </Button>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={() => setShowCreate(true)}>
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm">
+                <Filter className="h-4 w-4" />
+              </Button>
+            </div>
           </div>
 
           {/* Search */}
@@ -580,7 +719,7 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
       </div>
 
       {/* Zone de conversation */}
-      <div className="flex-1 flex flex-col">
+  <div className="flex-1 flex flex-col min-w-0">
         {selectedConversation ? (
           <>
             {/* Header conversation */}
@@ -641,9 +780,9 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
                         <div className={`flex items-center gap-1 mt-1 text-[11px] ${
                           isMe ? 'text-white/70 justify-end' : 'text-slate-400'
                         }`}>
-                          <span>{formatTime(message.created_at)}</span>
+                          <span>{formatTime(message.sent_at)}</span>
                           {isMe && (
-                            <CheckCheck className={`h-3 w-3 ${message.is_read ? 'text-blue-200' : 'text-white/50'}`} />
+                            <CheckCheck className={`h-3 w-3 ${message.read_at ? 'text-blue-200' : 'text-white/50'}`} />
                           )}
                         </div>
                       </div>
@@ -767,6 +906,45 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
           </motion.div>
         )}
       </AnimatePresence>
+
+      {/* Dialog nouvelle conversation */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent>
+          <UIDialogHeader>
+            <DialogTitle>Nouvelle conversation</DialogTitle>
+          </UIDialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-sm text-slate-600">Sélectionner une propriété (optionnel)</label>
+              <select
+                className="mt-1 w-full border rounded-md p-2 text-sm"
+                value={selectedParcelId}
+                onChange={(e) => setSelectedParcelId(e.target.value)}
+              >
+                <option value="">Aucune</option>
+                {buyerParcels.map(p => (
+                  <option key={p.id} value={p.id}>{p.title || `Parcelle ${p.id}`}</option>
+                ))}
+              </select>
+            </div>
+            <div>
+              <label className="text-sm text-slate-600">Email du vendeur (optionnel)</label>
+              <Input
+                placeholder="vendeur@exemple.com"
+                value={vendorEmail}
+                onChange={(e) => setVendorEmail(e.target.value)}
+              />
+              <p className="text-xs text-slate-500 mt-1">Choisissez soit une propriété liée à vos demandes, soit entrez l'email du vendeur.</p>
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowCreate(false)}>Annuler</Button>
+            <Button onClick={createOrOpenConversation} disabled={creating}>
+              {creating ? 'Ouverture…' : 'Ouvrir'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -478,19 +478,16 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
 
   const handleContact = async (request) => {
     try {
-      console.log('💬 [CONTACT] Initialisation conversation avec:', request.buyer_name, request.id);
+      console.log('💬 [CONTACT] Redirection vers discussion existante si possible:', request.id);
 
       if (!user?.id || !request?.user_id) {
-        toast.error('Informations utilisateur manquantes pour créer la conversation');
+        toast.error('Informations utilisateur manquantes');
         return;
       }
 
       const buyerId = request.user_id;
       const sellerId = user.id;
       const propertyId = request.parcel_id || request.parcels?.id || null;
-      const propertyTitle = request.parcels?.title || request.parcels?.name || 'Propriété';
-      const subject = `Demande d'achat - ${propertyTitle}`;
-      const messageBody = `Bonjour ${request.buyer_name || 'Acheteur'},\n\nJe vous contacte au sujet de votre demande d'achat concernant la parcelle "${propertyTitle}".\n\nCordialement,\n`;
 
       const isSchemaMismatch = (error) => {
         if (!error) return false;
@@ -499,182 +496,84 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         return code === '42703' || code === '42P01' || message.includes('does not exist') || message.includes('relation') || message.includes('column');
       };
 
-      const startConversationFlow = async () => {
-        let conversation = null;
+      // 1) Try to find conversation by vendor+buyer+property (explicit columns)
+      let query = supabase
+        .from('conversations')
+        .select('id, vendor_id, buyer_id, property_id, updated_at')
+        .eq('vendor_id', sellerId)
+        .eq('buyer_id', buyerId);
 
-        let baseQuery = supabase
+      if (propertyId) {
+        query = query.eq('property_id', propertyId);
+      } else {
+        query = query.is('property_id', null);
+      }
+
+      let { data: conv, error: convErr } = await query.maybeSingle();
+      if (convErr && !isSchemaMismatch(convErr)) {
+        console.error('❌ [CONTACT] Erreur recherche conversation:', convErr);
+      }
+
+      // 2) If not found, try vendor+buyer only (most recent)
+      if (!conv) {
+        const { data: altConvs, error: altErr } = await supabase
           .from('conversations')
-          .select('*')
+          .select('id, vendor_id, buyer_id, property_id, updated_at')
           .eq('vendor_id', sellerId)
-          .eq('buyer_id', buyerId);
+          .eq('buyer_id', buyerId)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+        if (!altErr && altConvs && altConvs.length > 0) conv = altConvs[0];
+      }
 
-        if (propertyId) {
-          baseQuery = baseQuery.eq('property_id', propertyId);
-        } else {
-          baseQuery = baseQuery.is('property_id', null);
-        }
+      // 3) If still not found, try buyer+property ignoring vendor filter (data inconsistencies)
+      if (!conv && propertyId) {
+        const { data: bpConvs, error: bpErr } = await supabase
+          .from('conversations')
+          .select('id, vendor_id, buyer_id, property_id, updated_at')
+          .eq('buyer_id', buyerId)
+          .eq('property_id', propertyId)
+          .order('updated_at', { ascending: false })
+          .limit(1);
+        if (!bpErr && bpConvs && bpConvs.length > 0) conv = bpConvs[0];
+      }
 
-        const { data: existingConversation, error: fetchError } = await baseQuery.maybeSingle();
-
-        if (fetchError) {
-          if (isSchemaMismatch(fetchError)) {
-            return { status: 'schema_mismatch' };
-          }
-          return { status: 'error', error: fetchError };
-        }
-
-        conversation = existingConversation;
-
-        if (!conversation) {
-          const newConversationPayload = {
-            vendor_id: sellerId,
-            buyer_id: buyerId,
-            subject,
-            status: 'active'
-          };
-
-          if (propertyId) {
-            newConversationPayload.property_id = propertyId;
-          }
-
-          const { data: newConversation, error: insertError } = await supabase
-            .from('conversations')
-            .insert(newConversationPayload)
-            .select()
-            .single();
-
-          if (insertError) {
-            if (!isSchemaMismatch(insertError)) {
-              return { status: 'error', error: insertError };
-            }
-
-            // Try fallback with different schema
-            const fallbackPayload = {
-              subject,
-              status: 'active',
-              metadata: {
-                request_id: request.id,
-                case_number: request.caseNumber || null,
-                initiated_by: 'seller',
-                vendor_id: sellerId,
-                buyer_id: buyerId
-              }
-            };
-
-            if (propertyId) {
-              fallbackPayload.property_id = propertyId;
-            }
-
-            const { data: fallbackConversation, error: fallbackError } = await supabase
-              .from('conversations')
-              .insert(fallbackPayload)
-              .select()
-              .single();
-
-            if (fallbackError) {
-              if (isSchemaMismatch(fallbackError)) {
-                return { status: 'schema_mismatch' };
-              }
-              return { status: 'error', error: fallbackError };
-            }
-
-            conversation = fallbackConversation;
-          } else {
-            conversation = newConversation;
-          }
-        }
-
-        if (!conversation) {
-          return { status: 'error', error: new Error('Conversation non disponible') };
-        }
-
-        // Try to send message to conversation_messages table (schema: conversation_id, sender_id, content, is_read)
-        const { error: messageError } = await supabase
-          .from('conversation_messages')
-          .insert({
-            conversation_id: conversation.id,
-            sender_id: sellerId,
-            content: messageBody.trim(),
-            is_read: false
-          });
-
-        if (messageError) {
-          // If conversation_messages doesn't exist, try messages table instead
-          if (isSchemaMismatch(messageError)) {
-            const { error: legacyMsgError } = await supabase
-              .from('messages')
-              .insert({
-                conversation_id: conversation.id,
-                sender_id: sellerId,
-                // Legacy table often uses 'message' instead of 'content'
-                message: messageBody.trim(),
-                sender_type: 'vendor',
-                metadata: {
-                  auto_generated: true,
-                  request_id: request.id
-                }
-              });
-            
-            if (legacyMsgError && isSchemaMismatch(legacyMsgError)) {
-              // Still a schema issue, but conversation was created successfully
-              return { status: 'success', conversation };
-            }
-          }
-        }
-
-        return { status: 'success', conversation };
-      };
-
-      const sendLegacyMessage = async () => {
-        console.warn('ℹ️ [CONTACT] Bascule vers la messagerie legacy (table messages)');
-        const legacyData = {
-          sender_id: sellerId,
-          recipient_id: buyerId,
-          subject,
-          message: messageBody.trim() || 'Message',
-          is_read: false,
-          created_at: new Date().toISOString()
+      // 4) If still not found, create (use upsert to avoid duplicates if unique index exists)
+      if (!conv) {
+        const insertPayload = {
+          vendor_id: sellerId,
+          buyer_id: buyerId,
+          updated_at: new Date().toISOString(),
         };
+        if (propertyId) insertPayload.property_id = propertyId;
 
-        const { data: newMsg, error: legacyError } = await supabase
-          .from('messages')
-          .insert([legacyData])
-          .select()
+        const { data: created, error: insErr } = await supabase
+          .from('conversations')
+          .upsert(insertPayload, { onConflict: 'vendor_id,buyer_id,property_id' })
+          .select('id')
           .single();
-
-        if (legacyError) {
-          console.error('❌ [CONTACT] Erreur messagerie legacy:', legacyError);
-          toast.error('Impossible de créer le message');
+        if (insErr) {
+          if (isSchemaMismatch(insErr)) {
+            // Fallback: navigate to messages root at least
+            navigate('/vendeur/messages');
+            return;
+          }
+          console.error('❌ [CONTACT] Erreur création conversation:', insErr);
+          toast.error("Impossible d'ouvrir la conversation");
           return;
         }
+        conv = created;
+      }
 
-        console.log('✅ [CONTACT] Message legacy créé:', newMsg?.id);
-        toast.success(`📧 Message créé pour ${request.buyer_name || 'l\'acheteur'}`);
+      // 5) Navigate to the conversation
+      if (conv?.id) {
+        navigate(`/vendeur/messages?conversation=${conv.id}`);
+      } else {
         navigate('/vendeur/messages');
-      };
-
-      const result = await startConversationFlow();
-
-      if (result.status === 'success' && result.conversation) {
-        console.log('✅ [CONTACT] Conversation prête:', result.conversation.id);
-        toast.success(`💬 Conversation prête avec ${request.buyer_name || 'l\'acheteur'}`);
-        navigate(`/vendeur/messages?conversation=${result.conversation.id}`);
-        return;
-      }
-
-      if (result.status === 'schema_mismatch') {
-        await sendLegacyMessage();
-        return;
-      }
-
-      if (result.status === 'error') {
-        console.error('❌ [CONTACT] Erreur conversation:', result.error);
-        toast.error('Impossible de créer la conversation');
-        return;
       }
     } catch (error) {
       console.error('❌ [CONTACT] Erreur inattendue:', error);
-      toast.error('Erreur lors de la création du message');
+      toast.error("Erreur lors de l'ouverture de la discussion");
     }
   };
 
@@ -950,6 +849,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   };
 
   // Filtrer les demandes - FIX: Vérifier hasCase ET status
+  const searchLower = (searchTerm || '').toLowerCase();
   const filteredRequests = requests.filter(request => {
     let matchesTab = false;
     
@@ -976,10 +876,10 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       matchesTab = request.status === 'rejected';
     }
     
-    const matchesSearch = searchTerm === '' || 
-      request.buyer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.buyer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      request.parcels?.title?.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = searchLower === '' || 
+      (request.buyer_name || '').toLowerCase().includes(searchLower) ||
+      (request.buyer_email || '').toLowerCase().includes(searchLower) ||
+      (request.parcels?.title || '').toLowerCase().includes(searchLower);
     return matchesTab && matchesSearch;
   });
 

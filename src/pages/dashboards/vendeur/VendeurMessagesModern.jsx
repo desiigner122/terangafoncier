@@ -1,398 +1,381 @@
 /**
- * Messagerie Vendeur Modernisée
- * Design moderne avec filtres avancés, pièces jointes, statuts, recherche
+ * Messagerie Vendeur - Nouvelle Version Moderne
+ * Basée sur le modèle acheteur avec adaptations vendeur
+ * - unread_count_vendor au lieu de unread_count_buyer
+ * - vendor_name/avatar au lieu de buyer
+ * - Realtime subscriptions, deep-link, info panel
  * @author Teranga Foncier Team
  */
 import React, { useState, useEffect, useRef } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  MessageSquare, Send, Search, Filter, MoreVertical, Paperclip, 
-  Image as ImageIcon, File, X, Check, CheckCheck, Clock, Star,
-  Archive, Trash2, Pin, Bell, BellOff, Users, User, Phone, Video,
-  Download, Eye, RefreshCw, AlertCircle, ChevronLeft, ChevronRight,
-  FileText, Smile, AtSign, Hash
+  MessageSquare, Send, Search, MoreVertical,
+  Phone, Video, Paperclip, Image as ImageIcon, Smile,
+  Check, CheckCheck, Clock, Pin, Archive, Trash2,
+  Star, Bell, BellOff, User, Users, Info, X,
+  ArrowLeft, Download, Eye, RefreshCw, AlertCircle,
+  Building, Plus
 } from 'lucide-react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-  DropdownMenuSeparator,
-} from '@/components/ui/dropdown-menu';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Card } from '@/components/ui/card';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
-import { format, formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 
-const VendeurMessagesModern = () => {
+const VendeurMessagesModern = ({ onUnreadChange }) => {
   const { user } = useAuth();
   const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
-  const fileInputRef = useRef(null);
 
-  // États
+  // États conversations
   const [conversations, setConversations] = useState([]);
-  const [filteredConversations, setFilteredConversations] = useState([]);
   const [selectedConversation, setSelectedConversation] = useState(null);
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeFilter, setActiveFilter] = useState('all');
-  const [attachments, setAttachments] = useState([]);
   const [showInfo, setShowInfo] = useState(false);
-  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load
-  const [stats, setStats] = useState({
-    total: 0,
-    unread: 0,
-    starred: 0,
-    archived: 0,
-  });
+  const [stats, setStats] = useState({ totalConversations: 0, unreadCount: 0 });
 
-  // Charger conversations
+  // États création conversation
+  const [showCreate, setShowCreate] = useState(false);
+  const [buyerEmail, setBuyerEmail] = useState('');
+  const [buyerProfile, setBuyerProfile] = useState(null);
+  const [vendorProperties, setVendorProperties] = useState([]);
+  const [selectedPropertyId, setSelectedPropertyId] = useState('');
+  const [creating, setCreating] = useState(false);
+
+  // Charger conversations vendeur
   useEffect(() => {
     if (user) {
       loadConversations();
-      // Only refresh every 60 seconds instead of 30 to reduce loading
-      const interval = setInterval(loadConversations, 60000);
-      return () => clearInterval(interval);
     }
   }, [user]);
 
-  // Realtime subscription for conversation updates (badges, unread counts)
-  useEffect(() => {
-    if (!user) return;
-
-    console.log('📡 [REALTIME] Souscription conversations');
-
-    const channel = supabase
-      .channel('public:conversations:vendor')
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversations',
-          filter: `vendor_id=eq.${user.id}`
-        },
-        (payload) => {
-          console.log('🔄 [CONVERSATION UPDATE] Reçu:', payload.new);
-          setConversations(prev =>
-            prev.map(c =>
-              c.id === payload.new.id
-                ? { ...c, ...payload.new }
-                : c
-            )
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('❌ [REALTIME] Désinscription conversations');
-      supabase.removeChannel(channel);
-    };
-  }, [user]);
-
-  // Filtrer conversations
-  useEffect(() => {
-    filterConversations();
-  }, [conversations, searchTerm, activeFilter]);
-
-  // Sélectionner conversation si paramètre query présent
+  // Deep-link fallback: charge conversation par ID si présent dans URL
+  const fetchedIdsRef = useRef(new Set());
   useEffect(() => {
     const conversationId = searchParams.get('conversation');
-    if (conversationId && conversations.length > 0) {
-      const conversation = conversations.find(c => c.id === conversationId);
-      if (conversation) {
-        setSelectedConversation(conversation);
-      }
+    if (!conversationId) return;
+
+    const existing = conversations.find(c => String(c.id) === String(conversationId));
+    if (existing) {
+      setSelectedConversation(existing);
+      return;
     }
+
+    if (fetchedIdsRef.current.has(conversationId)) return;
+    fetchedIdsRef.current.add(conversationId);
+
+    const fetchById = async () => {
+      try {
+        const { data: conv, error } = await supabase
+          .from('conversations')
+          .select('id, vendor_id, buyer_id, property_id, updated_at, unread_count_vendor, unread_count_buyer')
+          .eq('id', conversationId)
+          .single();
+        if (error || !conv) return;
+
+        // Enrichir avec acheteur et propriété
+        const [{ data: buyer }, { data: property }] = await Promise.all([
+          supabase.from('profiles').select('id, first_name, last_name, email, avatar_url').eq('id', conv.buyer_id).single(),
+          supabase.from('properties').select('id, title, reference').eq('id', conv.property_id).single()
+        ]);
+
+        const enriched = {
+          id: conv.id,
+          buyer_id: conv.buyer_id,
+          buyer_name: `${buyer?.first_name || ''} ${buyer?.last_name || ''}`.trim() || 'Acheteur',
+          buyer_email: buyer?.email || '',
+          buyer_avatar: buyer?.avatar_url,
+          property_title: property?.title || 'Propriété',
+          property_id: property?.reference || '',
+          subject: property?.title || 'Conversation Teranga',
+          last_message: 'Ouvrir la conversation',
+          last_message_time: conv.updated_at,
+          unread_count: conv.unread_count_vendor || 0,
+          is_pinned: false,
+          is_archived: false,
+          status: 'active'
+        };
+
+        setConversations(prev => {
+          const exists = prev.some(c => c.id === enriched.id);
+          return exists ? prev : [enriched, ...prev];
+        });
+        setSelectedConversation(enriched);
+      } catch (err) {
+        console.warn('⚠️ Fallback fetch conversation vendeur échoué:', err);
+      }
+    };
+
+    fetchById();
   }, [searchParams, conversations]);
 
-  // Charger messages quand conversation sélectionnée
+  // Charger messages et marquer comme lus
   useEffect(() => {
     if (selectedConversation) {
-      loadMessages(selectedConversation.id);
+      loadMessages(selectedConversation);
       markAsRead(selectedConversation.id);
     }
   }, [selectedConversation]);
 
-  // Realtime subscription for new messages
-  useEffect(() => {
-    if (!selectedConversation) return;
-
-    console.log('📡 [REALTIME] Souscription messages:', selectedConversation.id);
-
-    // Subscribe to new messages in this conversation
-    const channel = supabase
-      .channel(`conversation_messages:${selectedConversation.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'conversation_messages',
-          filter: `conversation_id=eq.${selectedConversation.id}`
-        },
-        (payload) => {
-          console.log('🔔 [NEW MESSAGE] Reçu:', payload.new);
-          const newMsg = {
-            ...payload.new,
-            message: payload.new.content,
-            message_type: 'text'
-          };
-          setMessages(prev => [...prev, newMsg]);
-          
-          // If message not from current user, play notification
-          if (payload.new.sender_id !== user.id) {
-            console.log('🔊 Son notification - nouveau message');
-            // Optional: Play sound notification
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('❌ [REALTIME] Désinscription messages');
-      supabase.removeChannel(channel);
-    };
-  }, [selectedConversation, user]);
-
-  // Also subscribe to updates on existing messages (read status)
-  useEffect(() => {
-    if (!selectedConversation) return;
-
-    console.log('📡 [REALTIME] Souscription mises à jour messages');
-
-    const channel = supabase
-      .channel(`conversation_messages_update:${selectedConversation.id}`)
-      .on(
-        'postgres_changes',
-        {
-          event: 'UPDATE',
-          schema: 'public',
-          table: 'conversation_messages',
-          filter: `conversation_id=eq.${selectedConversation.id}`
-        },
-        (payload) => {
-          console.log('✏️ [MESSAGE UPDATE] Reçu:', payload.new);
-          setMessages(prev => 
-            prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new, message: payload.new.content } : m)
-          );
-        }
-      )
-      .subscribe();
-
-    return () => {
-      console.log('❌ [REALTIME] Désinscription mises à jour');
-      supabase.removeChannel(channel);
-    };
-  }, [selectedConversation]);
-
-  // Auto-scroll vers le bas
+  // Auto-scroll
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
 
+  // Realtime: nouvelles conversations
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`public:conversations:vendor_${user.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'conversations',
+        filter: `vendor_id=eq.${user.id}`
+      }, (payload) => {
+        setConversations(prev =>
+          prev.map(c => c.id === payload.new.id ? { ...c, ...payload.new } : c)
+        );
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [user]);
+
+  // Realtime: nouveaux messages dans conversation sélectionnée
+  useEffect(() => {
+    if (!selectedConversation) return;
+    const channel = supabase
+      .channel(`conversation_messages:${selectedConversation.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'conversation_messages',
+        filter: `conversation_id=eq.${selectedConversation.id}`
+      }, (payload) => {
+        setMessages(prev => [...prev, {
+          id: payload.new.id,
+          sender_id: payload.new.sender_id,
+          content: payload.new.content,
+          created_at: payload.new.created_at,
+          read_at: payload.new.read_at,
+          is_read: payload.new.is_read
+        }]);
+      })
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'conversation_messages',
+        filter: `conversation_id=eq.${selectedConversation.id}`
+      }, (payload) => {
+        setMessages(prev => prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new } : m));
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [selectedConversation]);
+
+  // Realtime: nouveaux messages sur TOUTES conversations (notifications)
+  useEffect(() => {
+    if (!user) return;
+    const channel = supabase
+      .channel(`all_vendor_messages:${user.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'conversation_messages'
+      }, (payload) => {
+        // Vérifier si c'est une conversation du vendeur actuel
+        const isFromVendorConversation = conversations.some(c => c.id === payload.new.conversation_id);
+        if (!isFromVendorConversation) return;
+
+        // Si c'est pas la conversation sélectionnée, afficher notification
+        if (selectedConversation?.id !== payload.new.conversation_id && payload.new.sender_id !== user.id) {
+          const conv = conversations.find(c => c.id === payload.new.conversation_id);
+          if (conv) {
+            toast.info(`📨 ${conv.buyer_name}: ${payload.new.content.substring(0, 40)}...`, {
+              duration: 4000,
+              action: {
+                label: 'Voir',
+                onClick: () => setSelectedConversation(conv)
+              }
+            });
+          }
+        }
+
+        // Mise à jour du compte non lus
+        setConversations(prev => prev.map(c => 
+          c.id === payload.new.conversation_id 
+            ? { ...c, unread_count: (c.unread_count || 0) + 1 }
+            : c
+        ));
+      })
+      .subscribe();
+    return () => supabase.removeChannel(channel);
+  }, [user, conversations, selectedConversation]);
+
   const loadConversations = async () => {
     try {
-      // Only set loading on initial load
-      if (isInitialLoad) {
-        setLoading(true);
-      }
-      
-      // Charger simplement les conversations sans relations complexes
+      setLoading(true);
+
+      // Charger conversations du vendeur
       const { data: conversationsData, error } = await supabase
         .from('conversations')
-        .select('id, vendor_id, buyer_id, property_id, updated_at, unread_count_vendor, unread_count_buyer, is_starred_vendor, is_archived_vendor')
+        .select('id, vendor_id, buyer_id, property_id, updated_at, unread_count_vendor, unread_count_buyer, is_pinned_vendor, is_archived_vendor')
         .eq('vendor_id', user.id)
         .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Erreur chargement conversations:', error);
+        setConversations([]);
+        setLoading(false);
+        return;
+      }
 
       if (!conversationsData || conversationsData.length === 0) {
         setConversations([]);
-        setStats({ total: 0, unread: 0, starred: 0, archived: 0 });
-        if (isInitialLoad) {
-          setLoading(false);
-          setIsInitialLoad(false);
-        }
+        setStats({ totalConversations: 0, unreadCount: 0 });
+        setLoading(false);
         return;
       }
 
-      // Charger les profils des acheteurs séparément
+      // Charger profils acheteurs et propriétés
       const buyerIds = [...new Set(conversationsData.map(c => c.buyer_id).filter(Boolean))];
-      let buyerMap = {};
-      
+      const propertyIds = [...new Set(conversationsData.map(c => c.property_id).filter(Boolean))];
+      let buyerMap = {}, propertyMap = {};
+
       if (buyerIds.length > 0) {
         const { data: buyers } = await supabase
           .from('profiles')
-          .select('id, first_name, last_name, email, avatar_url, phone')
+          .select('id, first_name, last_name, email, avatar_url')
           .in('id', buyerIds);
-        
-        if (buyers) {
-          buyers.forEach(b => {
-            buyerMap[b.id] = b;
-          });
-        }
+        buyers?.forEach(b => {
+          buyerMap[b.id] = b;
+        });
       }
 
-      // Charger les propriétés séparément
-      const propertyIds = [...new Set(conversationsData.map(c => c.property_id).filter(Boolean))];
-      let propertyMap = {};
-      
       if (propertyIds.length > 0) {
         const { data: properties } = await supabase
           .from('properties')
-          .select('id, title, location, price, images')
+          .select('id, title, reference')
           .in('id', propertyIds);
-        
-        if (properties) {
-          properties.forEach(p => {
-            propertyMap[p.id] = p;
-          });
-        }
+        properties?.forEach(p => {
+          propertyMap[p.id] = p;
+        });
       }
 
-      // Charger le dernier message pour chaque conversation
+      // Charger derniers messages
       let lastMessagesMap = {};
-      const conversationIds = conversationsData.map(c => c.id);
-      
-      if (conversationIds.length > 0) {
-        // Charger le dernier message de chaque conversation
-        const { data: allMessages } = await supabase
-          .from('conversation_messages')
-          .select('id, conversation_id, content, created_at')
-          .in('conversation_id', conversationIds)
-          .order('created_at', { ascending: false });
-        
-        if (allMessages) {
-          // Garder juste le dernier message par conversation
-          allMessages.forEach(msg => {
-            if (!lastMessagesMap[msg.conversation_id]) {
-              lastMessagesMap[msg.conversation_id] = msg;
-            }
-          });
-        }
-      }
+      const { data: allMessages } = await supabase
+        .from('conversation_messages')
+        .select('id, conversation_id, content, created_at')
+        .in('conversation_id', conversationsData.map(c => c.id))
+        .order('created_at', { ascending: false });
 
-      // Enrichir les conversations avec les données chargées
-      const enrichedConversations = conversationsData.map(c => ({
-        ...c,
-        buyer: buyerMap[c.buyer_id],
-        property: propertyMap[c.property_id],
+      allMessages?.forEach(msg => {
+        if (!lastMessagesMap[msg.conversation_id]) {
+          lastMessagesMap[msg.conversation_id] = msg;
+        }
+      });
+
+      // Formater conversations
+      const formatted = conversationsData.map(c => ({
+        id: c.id,
+        buyer_id: c.buyer_id,
+        buyer_name: `${buyerMap[c.buyer_id]?.first_name || ''} ${buyerMap[c.buyer_id]?.last_name || ''}`.trim() || 'Acheteur',
+        buyer_email: buyerMap[c.buyer_id]?.email || '',
+        buyer_avatar: buyerMap[c.buyer_id]?.avatar_url,
+        property_title: propertyMap[c.property_id]?.title || 'Propriété',
+        property_id: propertyMap[c.property_id]?.reference || '',
+        subject: propertyMap[c.property_id]?.title || 'Conversation Teranga',
         last_message: lastMessagesMap[c.id]?.content || 'Pas de message',
-        last_message_at: lastMessagesMap[c.id]?.created_at
+        last_message_time: lastMessagesMap[c.id]?.created_at || c.updated_at,
+        unread_count: c.unread_count_vendor || 0,
+        is_pinned: c.is_pinned_vendor || false,
+        is_archived: c.is_archived_vendor || false,
+        status: 'active'
       }));
 
-      console.log('✅ [MESSAGES] Conversations enrichies:', enrichedConversations.length);
-      enrichedConversations.forEach((conv, idx) => {
-        console.log(`  ${idx + 1}. Buyer: ${conv.buyer?.first_name} ${conv.buyer?.last_name}, Property: ${conv.property?.title}`);
-      });
-
-      // Calculer stats
-      const stats = {
-        total: enrichedConversations.length || 0,
-        unread: enrichedConversations.filter(c => c.unread_count_vendor > 0).length || 0,
-        starred: enrichedConversations.filter(c => c.is_starred_vendor).length || 0,
-        archived: enrichedConversations.filter(c => c.is_archived_vendor).length || 0,
-      };
-
-      setConversations(enrichedConversations);
-      setStats(stats);
-      
-      if (isInitialLoad) {
-        setLoading(false);
-        setIsInitialLoad(false);
-      }
+      setConversations(formatted);
+      const unread = formatted.reduce((s, c) => s + c.unread_count, 0);
+      setStats({ totalConversations: formatted.length, unreadCount: unread });
+      if (onUnreadChange) onUnreadChange(unread);
+      console.log('✅ Compteur messages mis à jour:', unread);
     } catch (error) {
-      console.error('Erreur chargement conversations:', error);
-      toast.error('Erreur lors du chargement des conversations');
-      if (isInitialLoad) {
-        setLoading(false);
-        setIsInitialLoad(false);
-      }
+      console.error('❌ Erreur conversations:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const filterConversations = () => {
-    let filtered = conversations;
-
-    // Filtre par catégorie
-    switch (activeFilter) {
-      case 'unread':
-        filtered = conversations.filter(c => c.unread_count_vendor > 0);
-        break;
-      case 'starred':
-        filtered = conversations.filter(c => c.is_starred_vendor);
-        break;
-      case 'archived':
-        filtered = conversations.filter(c => c.is_archived_vendor);
-        break;
-      default:
-        filtered = conversations.filter(c => !c.is_archived_vendor);
-    }
-
-    // Filtre par recherche
-    if (searchTerm) {
-      filtered = filtered.filter(c => {
-        const buyerName = `${c.buyer?.first_name} ${c.buyer?.last_name}`.toLowerCase();
-        const propertyTitle = c.property?.title?.toLowerCase() || '';
-        const search = searchTerm.toLowerCase();
-        return buyerName.includes(search) || propertyTitle.includes(search);
-      });
-    }
-
-    setFilteredConversations(filtered);
-  };
-
-  const loadMessages = async (conversationId) => {
+  const loadMessages = async (conversation) => {
     try {
-      // Load messages from conversation_messages table - specify exact columns to avoid message_count error
       const { data, error } = await supabase
         .from('conversation_messages')
-        .select('id, conversation_id, sender_id, content, is_read, read_at, created_at, updated_at')
-        .eq('conversation_id', conversationId)
+        .select('id, sender_id, content, is_read, read_at, created_at')
+        .eq('conversation_id', conversation.id)
         .order('created_at', { ascending: true });
 
       if (error) {
-        console.error('Erreur chargement messages:', error);
+        console.error('❌ Erreur messages:', error);
         setMessages([]);
         return;
       }
-      
-      // Transform messages to match display format (content → message)
-      const transformedMessages = (data || []).map(msg => ({
-        ...msg,
-        message: msg.content,
-        message_type: 'text'
-      }));
-      
-      setMessages(transformedMessages);
+
+      setMessages(data || []);
     } catch (error) {
-      console.error('Erreur chargement messages:', error);
-      toast.error('Erreur lors du chargement des messages');
+      console.error('❌ Erreur chargement messages:', error);
+    }
+  };
+
+  const markAsRead = async (conversationId) => {
+    try {
+      // Marquer conversation comme lue (unread_count_vendor = 0)
+      await supabase
+        .from('conversations')
+        .update({ unread_count_vendor: 0 })
+        .eq('id', conversationId);
+
+      // Marquer messages comme lus
+      await supabase
+        .from('conversation_messages')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('conversation_id', conversationId)
+        .neq('sender_id', user.id);
+
+      // Mise à jour locale
+      setConversations(prev => prev.map(c => 
+        c.id === conversationId ? { ...c, unread_count: 0 } : c
+      ));
+      setMessages(prev => prev.map(m =>
+        m.sender_id !== user.id ? { ...m, is_read: true } : m
+      ));
+
+      // Mettre à jour stats et hook
+      const newUnread = conversations.reduce((s, c) => s + (c.id === conversationId ? 0 : c.unread_count), 0);
+      setStats(prev => ({ ...prev, unreadCount: newUnread }));
+      if (onUnreadChange) onUnreadChange(newUnread);
+    } catch (error) {
+      console.error('❌ Erreur mark as read:', error);
     }
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() && attachments.length === 0) return;
-    if (!selectedConversation) return;
+    if (!newMessage.trim() || !selectedConversation) return;
 
     try {
-      // Insert message into conversation_messages table
-      const { data: insertedMessage, error: messageError } = await supabase
+      const { data: inserted, error } = await supabase
         .from('conversation_messages')
         .insert({
           conversation_id: selectedConversation.id,
@@ -403,13 +386,9 @@ const VendeurMessagesModern = () => {
         .select()
         .single();
 
-      if (messageError) {
-        console.error('Erreur insertion message:', messageError);
-        toast.error('Erreur lors de l\'envoi du message');
-        return;
-      }
+      if (error) throw error;
 
-      // Update conversation timestamp and unread count
+      // Mettre à jour conversation
       await supabase
         .from('conversations')
         .update({
@@ -418,371 +397,334 @@ const VendeurMessagesModern = () => {
         })
         .eq('id', selectedConversation.id);
 
-      // Add message to local state (transform to match display format)
-      const displayMessage = {
-        ...insertedMessage,
-        message: insertedMessage.content,
-        message_type: 'text'
-      };
-      
-      setMessages([...messages, displayMessage]);
+      setMessages(prev => [...prev, {
+        id: inserted.id,
+        sender_id: inserted.sender_id,
+        content: inserted.content,
+        created_at: inserted.created_at,
+        read_at: null,
+        is_read: false
+      }]);
       setNewMessage('');
-      setAttachments([]);
-      scrollToBottom();
-      toast.success('Message envoyé');
-    } catch (error) {
-      console.error('Erreur envoi message:', error);
-      toast.error('Erreur lors de l\'envoi du message');
-    }
-  };
 
-  const markAsRead = async (conversationId) => {
-    try {
-      // Mark conversation as read for vendor
-      const { error: convError } = await supabase
-        .from('conversations')
-        .update({ unread_count_vendor: 0 })
-        .eq('id', conversationId);
-
-      if (convError) throw convError;
-
-      // Mark all messages in this conversation as read (use correct table)
-      const { error: msgError } = await supabase
-        .from('conversation_messages')
-        .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('conversation_id', conversationId)
-        .neq('sender_id', user.id); // Only mark others' messages as read
-
-      if (msgError) throw msgError;
-
-      // Update local state immediately for UI feedback
+      // Mettre à jour la conversation dans la liste (last_message)
       setConversations(prev => prev.map(c => 
-        c.id === conversationId 
-          ? { ...c, unread_count_vendor: 0 }
+        c.id === selectedConversation.id 
+          ? { ...c, last_message: inserted.content, last_message_time: inserted.created_at }
           : c
       ));
 
-      // Update messages locally
-      setMessages(prev => prev.map(m => 
-        m.sender_id !== user.id 
-          ? { ...m, is_read: true }
-          : m
-      ));
-
-      console.log('✅ [READ] Conversation marquée comme lue:', conversationId);
+      toast.success('Message envoyé');
     } catch (error) {
-      console.error('Erreur marquage lu:', error);
+      console.error('❌ Erreur envoi:', error);
+      toast.error('Erreur lors de l\'envoi');
     }
   };
 
-  const toggleStar = async (conversationId) => {
+  const loadVendorProperties = async () => {
     try {
-      const conversation = conversations.find(c => c.id === conversationId);
-      await supabase
-        .from('conversations')
-        .update({ is_starred_vendor: !conversation.is_starred_vendor })
-        .eq('id', conversationId);
-
-      loadConversations();
-      toast.success(conversation.is_starred_vendor ? 'Étoile retirée' : 'Conversation marquée');
-    } catch (error) {
-      console.error('Erreur étoile:', error);
-      toast.error('Erreur lors du marquage');
+      const { data, error } = await supabase
+        .from('properties')
+        .select('id, title')
+        .eq('owner_id', user.id)
+        .order('title', { ascending: true });
+      if (error) throw error;
+      setVendorProperties(data || []);
+    } catch (e) {
+      console.error('❌ Erreur propriétés vendeur:', e);
+      toast.error('Impossible de charger vos propriétés');
     }
   };
 
-  const toggleArchive = async (conversationId) => {
+  const lookupBuyerByEmail = async () => {
+    if (!buyerEmail?.trim()) return;
     try {
-      const conversation = conversations.find(c => c.id === conversationId);
-      await supabase
-        .from('conversations')
-        .update({ is_archived_vendor: !conversation.is_archived_vendor })
-        .eq('id', conversationId);
-
-      loadConversations();
-      toast.success(conversation.is_archived_vendor ? 'Désarchivée' : 'Conversation archivée');
-    } catch (error) {
-      console.error('Erreur archivage:', error);
-      toast.error('Erreur lors de l\'archivage');
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, first_name, last_name, email, avatar_url')
+        .ilike('email', buyerEmail.trim())
+        .limit(1)
+        .maybeSingle();
+      if (error) throw error;
+      setBuyerProfile(data);
+      if (!data) toast.error('Aucun acheteur trouvé');
+    } catch (e) {
+      console.error('❌ Erreur recherche acheteur:', e);
+      toast.error('Erreur lors de la recherche');
     }
   };
 
-  const handleFileSelect = (e) => {
-    const files = Array.from(e.target.files || []);
-    const newAttachments = files.map(file => ({
-      name: file.name,
-      size: file.size,
-      type: file.type,
-      file: file,
-    }));
-    setAttachments([...attachments, ...newAttachments]);
-  };
+  const createOrOpenConversation = async () => {
+    if (!selectedPropertyId || !buyerProfile?.id) {
+      toast.error('Sélectionnez une propriété et un acheteur');
+      return;
+    }
 
-  const removeAttachment = (index) => {
-    setAttachments(attachments.filter((_, i) => i !== index));
+    setCreating(true);
+    try {
+      // Vérifier si existe déjà
+      const { data: existing } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('vendor_id', user.id)
+        .eq('buyer_id', buyerProfile.id)
+        .eq('property_id', selectedPropertyId)
+        .maybeSingle();
+
+      let conversationId = existing?.id;
+      if (!conversationId) {
+        const { data: inserted, error: insertError } = await supabase
+          .from('conversations')
+          .insert({
+            vendor_id: user.id,
+            buyer_id: buyerProfile.id,
+            property_id: selectedPropertyId,
+            unread_count_vendor: 0,
+            unread_count_buyer: 0,
+            updated_at: new Date().toISOString(),
+          })
+          .select('id')
+          .single();
+        if (insertError) throw insertError;
+        conversationId = inserted.id;
+      }
+
+      await loadConversations();
+      const conv = conversations.find(c => c.id === conversationId);
+      if (conv) {
+        setSelectedConversation(conv);
+      } else {
+        setSearchParams({ conversation: conversationId });
+      }
+
+      setShowCreate(false);
+      setBuyerEmail('');
+      setBuyerProfile(null);
+      setSelectedPropertyId('');
+      toast.success('Conversation prête');
+    } catch (e) {
+      console.error('❌ Erreur création:', e);
+      toast.error('Impossible de créer la conversation');
+    } finally {
+      setCreating(false);
+    }
   };
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   };
 
-  const getMessageStatus = (message) => {
-    if (message.is_read) return { icon: CheckCheck, color: 'text-blue-500' };
-    if (message.message_type === 'text') return { icon: Check, color: 'text-gray-400' };
-    return { icon: Clock, color: 'text-gray-400' };
+  const formatTime = (timestamp) => {
+    if (!timestamp) return '';
+    const date = new Date(timestamp);
+    const now = new Date();
+    const diff = now - date;
+    const hours = Math.floor(diff / 3600000);
+    const days = Math.floor(diff / 86400000);
+    if (hours < 1) return 'À l\'instant';
+    if (hours < 24) return `Il y a ${hours}h`;
+    if (days < 7) return `Il y a ${days}j`;
+    return date.toLocaleDateString('fr-FR', { day: 'numeric', month: 'short' });
   };
 
-  const formatFileSize = (bytes) => {
-    if (bytes < 1024) return bytes + ' B';
-    if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + ' KB';
-    return (bytes / (1024 * 1024)).toFixed(1) + ' MB';
-  };
+  const searchLower = (searchTerm || '').toLowerCase();
+  const filteredConversations = conversations.filter(conv =>
+    (conv.buyer_name || '').toLowerCase().includes(searchLower) ||
+    (conv.property_title || '').toLowerCase().includes(searchLower) ||
+    (conv.last_message || '').toLowerCase().includes(searchLower)
+  );
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-screen">
-        <RefreshCw className="w-8 h-8 animate-spin text-blue-500" />
+      <div className="flex items-center justify-center h-full">
+        <RefreshCw className="h-6 w-6 animate-spin text-blue-500" />
       </div>
     );
   }
 
   return (
-    <div className="h-screen flex flex-col bg-gray-50">
-      {/* Header */}
-      <div className="bg-white border-b px-6 py-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Messagerie</h1>
-            <p className="text-sm text-gray-500 mt-1">
-              {stats.unread > 0 && `${stats.unread} message${stats.unread > 1 ? 's' : ''} non lu${stats.unread > 1 ? 's' : ''}`}
-            </p>
-          </div>
-
-          <div className="flex items-center gap-3">
-            {/* Recherche */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Rechercher..."
-                className="pl-10 w-64"
-              />
+    <div className="h-full min-h-0 w-full bg-gradient-to-br from-slate-50 via-white to-blue-50/30 flex flex-col">
+      <div className="flex-1 min-h-0 flex max-w-full w-full mx-auto">
+        {/* Sidebar - Liste conversations (responsive) */}
+        <div className="w-full sm:w-80 md:w-96 border-r border-slate-200 bg-white/80 backdrop-blur-sm flex flex-col min-w-0">
+        {/* Header */}
+        <div className="p-4 border-b border-slate-200">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h2 className="text-lg font-bold text-slate-900">Messages</h2>
+              <p className="text-sm text-slate-500">
+                {stats.unreadCount > 0 ? `${stats.unreadCount} non lu${stats.unreadCount > 1 ? 's' : ''}` : 'Toutes les conversations'}
+              </p>
             </div>
+            <div className="flex items-center gap-1">
+              <Button variant="ghost" size="sm" onClick={() => { setBuyerEmail(''); setBuyerProfile(null); setSelectedPropertyId(''); setShowCreate(true); loadVendorProperties(); }}>
+                <Plus className="h-4 w-4" />
+              </Button>
+              <Button variant="ghost" size="sm" onClick={loadConversations}>
+                <RefreshCw className="h-4 w-4" />
+              </Button>
+            </div>
+          </div>
 
-            {/* Actions */}
-            <Button variant="outline" size="sm" onClick={loadConversations}>
-              <RefreshCw className="w-4 h-4" />
-            </Button>
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Input
+              placeholder="Rechercher conversations..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="pl-10 bg-slate-50 border-slate-200"
+            />
           </div>
         </div>
 
-        {/* Filtres */}
-        <div className="flex items-center gap-2 mt-4">
-          <Button
-            variant={activeFilter === 'all' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveFilter('all')}
-          >
-            Toutes ({stats.total})
-          </Button>
-          <Button
-            variant={activeFilter === 'unread' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveFilter('unread')}
-          >
-            Non lus ({stats.unread})
-          </Button>
-          <Button
-            variant={activeFilter === 'starred' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveFilter('starred')}
-          >
-            <Star className="w-4 h-4 mr-1" />
-            Favoris ({stats.starred})
-          </Button>
-          <Button
-            variant={activeFilter === 'archived' ? 'default' : 'ghost'}
-            size="sm"
-            onClick={() => setActiveFilter('archived')}
-          >
-            <Archive className="w-4 h-4 mr-1" />
-            Archivées ({stats.archived})
-          </Button>
-        </div>
-      </div>
-
-      {/* Corps principal */}
-      <div className="flex-1 flex overflow-hidden">
-        {/* Liste conversations */}
-        <div className="w-96 bg-white border-r flex flex-col">
-          <ScrollArea className="flex-1">
-            <div className="p-2">
-              {filteredConversations.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-12 text-gray-500">
-                  <MessageSquare className="w-12 h-12 mb-3 opacity-20" />
-                  <p className="text-sm">Aucune conversation</p>
-                </div>
-              ) : (
-                filteredConversations.map((conversation) => (
-                  <motion.div
-                    key={conversation.id}
-                    initial={{ opacity: 0, y: 10 }}
+        {/* Conversations List */}
+        <ScrollArea className="flex-1">
+          <div className="p-2">
+            {filteredConversations.length === 0 ? (
+              <div className="flex flex-col items-center justify-center p-8 text-center">
+                <MessageSquare className="h-12 w-12 text-slate-300 mb-3" />
+                <p className="text-sm text-slate-600">Aucune conversation</p>
+                <p className="text-xs text-slate-400 mt-1">Démarrez une conversation avec un acheteur</p>
+              </div>
+            ) : (
+              <AnimatePresence>
+                {filteredConversations.map((conv) => (
+                  <motion.button
+                    key={conv.id}
+                    initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`p-3 rounded-lg cursor-pointer transition-colors mb-1 ${
-                      selectedConversation?.id === conversation.id
-                        ? 'bg-blue-50 border-l-4 border-blue-500'
-                        : 'hover:bg-gray-50'
-                    }`}
-                    onClick={() => setSelectedConversation(conversation)}
+                    exit={{ opacity: 0, x: -20 }}
+                    onClick={() => setSelectedConversation(conv)}
+                    className={`
+                      w-full p-3 rounded-lg text-left transition-all mb-2
+                      ${selectedConversation?.id === conv.id
+                        ? 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white shadow-lg'
+                        : 'bg-white hover:bg-slate-50 border border-slate-200'
+                      }
+                    `}
                   >
                     <div className="flex items-start gap-3">
+                      {/* Avatar */}
                       <div className="relative">
-                        <Avatar>
-                          <AvatarImage src={conversation.buyer?.avatar_url} />
-                          <AvatarFallback>
-                            {conversation.buyer?.first_name?.[0]}{conversation.buyer?.last_name?.[0]}
+                        <Avatar className="h-11 w-11 ring-2 ring-white">
+                          <AvatarImage src={conv.buyer_avatar} />
+                          <AvatarFallback className="bg-gradient-to-br from-blue-500 to-cyan-500 text-white">
+                            {conv.buyer_name?.charAt(0) || 'A'}
                           </AvatarFallback>
                         </Avatar>
-                        {conversation.unread_count_vendor > 0 && (
-                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
-                            {conversation.unread_count_vendor}
+                        {conv.unread_count > 0 && (
+                          <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                            <span className="text-[10px] font-bold text-white">{conv.unread_count > 9 ? '9+' : conv.unread_count}</span>
                           </div>
                         )}
                       </div>
 
+                      {/* Content */}
                       <div className="flex-1 min-w-0">
-                        <div className="flex items-center justify-between mb-1">
-                          <h4 className="font-semibold text-sm truncate">
-                            {conversation.buyer?.first_name} {conversation.buyer?.last_name}
+                        <div className="flex items-start justify-between mb-1">
+                          <h4 className={`font-semibold text-sm truncate ${
+                            selectedConversation?.id === conv.id ? 'text-white' : 'text-slate-900'
+                          }`}>
+                            {conv.buyer_name}
                           </h4>
-                          <div className="flex items-center gap-1">
-                            {conversation.is_starred_vendor && (
-                              <Star className="w-3 h-3 text-yellow-500 fill-yellow-500" />
-                            )}
-                            <span className="text-xs text-gray-500">
-                              {formatDistanceToNow(new Date(conversation.updated_at), { 
-                                addSuffix: true,
-                                locale: fr 
-                              })}
-                            </span>
-                          </div>
+                          <span className={`text-[11px] ml-2 ${
+                            selectedConversation?.id === conv.id ? 'text-white/80' : 'text-slate-500'
+                          }`}>
+                            {formatDistanceToNow(new Date(conv.last_message_time), { addSuffix: true, locale: fr })}
+                          </span>
                         </div>
 
-                        <p className="text-xs text-gray-600 truncate mb-1">
-                          {conversation.property?.title}
-                        </p>
+                        <div className="flex items-center gap-1 mb-1">
+                          <Building className={`h-3 w-3 ${
+                            selectedConversation?.id === conv.id ? 'text-white/60' : 'text-slate-400'
+                          }`} />
+                          <span className={`text-[11px] truncate ${
+                            selectedConversation?.id === conv.id ? 'text-white/80' : 'text-slate-600'
+                          }`}>
+                            {conv.property_title}
+                          </span>
+                        </div>
 
-                        <p className="text-sm text-gray-700 truncate">
-                          {conversation.last_message || 'Pas de message'}
+                        <p className={`text-xs truncate ${
+                          selectedConversation?.id === conv.id ? 'text-white/70' : 'text-slate-500'
+                        }`}>
+                          {conv.last_message || 'Pas de message'}
                         </p>
                       </div>
 
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="sm" className="h-8 w-8 p-0">
-                            <MoreVertical className="w-4 h-4" />
-                          </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          <DropdownMenuItem onClick={() => toggleStar(conversation.id)}>
-                            <Star className="w-4 h-4 mr-2" />
-                            {conversation.is_starred_vendor ? 'Retirer l\'étoile' : 'Ajouter aux favoris'}
-                          </DropdownMenuItem>
-                          <DropdownMenuItem onClick={() => toggleArchive(conversation.id)}>
-                            <Archive className="w-4 h-4 mr-2" />
-                            {conversation.is_archived_vendor ? 'Désarchiver' : 'Archiver'}
-                          </DropdownMenuItem>
-                          <DropdownMenuSeparator />
-                          <DropdownMenuItem className="text-red-600">
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Supprimer
-                          </DropdownMenuItem>
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                      {conv.is_pinned && (
+                        <Pin className={`h-3 w-3 ml-1 ${
+                          selectedConversation?.id === conv.id ? 'text-white' : 'text-blue-600'
+                        }`} />
+                      )}
                     </div>
-                  </motion.div>
-                ))
-              )}
-            </div>
-          </ScrollArea>
-        </div>
+                  </motion.button>
+                ))}
+              </AnimatePresence>
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
-        {/* Zone messages */}
+      {/* Zone conversation (responsive) */}
+      <div className="flex-1 flex flex-col min-w-0">
         {selectedConversation ? (
-          <div className="flex-1 flex flex-col">
-            {/* Header conversation */}
-            <div className="bg-white border-b px-6 py-4">
+          <>
+            {/* Header */}
+            <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
-                  <Avatar>
-                    <AvatarImage src={selectedConversation.buyer?.avatar_url} />
-                    <AvatarFallback>
-                      {selectedConversation.buyer?.first_name?.[0]}{selectedConversation.buyer?.last_name?.[0]}
+                  <Avatar className="h-10 w-10 ring-2 ring-blue-500/20">
+                    <AvatarImage src={selectedConversation.buyer_avatar} />
+                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white">
+                      {selectedConversation.buyer_name?.charAt(0)}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <h3 className="font-semibold">
-                      {selectedConversation.buyer?.first_name && selectedConversation.buyer?.last_name
-                        ? `${selectedConversation.buyer.first_name} ${selectedConversation.buyer.last_name}`
-                        : selectedConversation.buyer?.email || 'Acheteur'}
-                    </h3>
-                    <p className="text-sm text-gray-500">{selectedConversation.property?.title || 'Propriété'}</p>
+                    <h3 className="font-semibold text-slate-900">{selectedConversation.buyer_name}</h3>
+                    <div className="flex items-center gap-1 text-xs text-slate-500">
+                      <Building className="h-3 w-3" />
+                      <span>{selectedConversation.property_title}</span>
+                    </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Phone className="w-4 h-4" />
-                  </Button>
-                  <Button variant="ghost" size="sm">
-                    <Video className="w-4 h-4" />
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    size="sm"
-                    onClick={() => navigate(`/vendeur/dossier/${selectedConversation.id}`)}
-                  >
-                    <FileText className="w-4 h-4" />
-                  </Button>
+                  <Button variant="ghost" size="sm"><Phone className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm"><Video className="h-4 w-4" /></Button>
+                  <Button variant="ghost" size="sm" onClick={() => setShowInfo(!showInfo)}><Info className="h-4 w-4" /></Button>
                 </div>
               </div>
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-6">
-              <div className="space-y-4">
+            <ScrollArea className="flex-1 p-4 bg-slate-50/50">
+              <div className="space-y-4 max-w-4xl mx-auto">
                 {messages.map((message) => {
-                  const isOwn = message.sender_id === user.id;
-                  const status = getMessageStatus(message);
-                  const StatusIcon = status.icon;
-
+                  const isMe = message.sender_id === user.id;
                   return (
                     <motion.div
                       key={message.id}
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
-                      className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                      className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
                     >
-                      <div className={`max-w-md ${isOwn ? 'bg-blue-500 text-white' : 'bg-white'} rounded-2xl px-4 py-2 shadow-sm`}>
-                        <p className="text-sm">{message.message}</p>
-                        
-                        {message.attachments && message.attachments.length > 0 && (
-                          <div className="mt-2 space-y-1">
-                            {message.attachments.map((att, idx) => (
-                              <div key={idx} className="flex items-center gap-2 text-xs">
-                                <Paperclip className="w-3 h-3" />
-                                <span>{att.name}</span>
-                              </div>
-                            ))}
-                          </div>
-                        )}
-
-                        <div className="flex items-center justify-end gap-1 mt-1">
-                          <span className="text-xs opacity-70">
-                            {format(new Date(message.created_at), 'HH:mm')}
-                          </span>
-                          {isOwn && <StatusIcon className={`w-3 h-3 ${status.color}`} />}
+                      <div className={`
+                        max-w-md p-3 rounded-2xl
+                        ${isMe 
+                          ? 'bg-gradient-to-br from-blue-600 to-cyan-600 text-white rounded-br-sm' 
+                          : 'bg-white border border-slate-200 text-slate-900 rounded-bl-sm shadow-sm'
+                        }
+                      `}>
+                        <p className="text-sm">{message.content}</p>
+                        <div className={`flex items-center gap-1 mt-1 text-[11px] ${
+                          isMe ? 'text-white/70 justify-end' : 'text-slate-400'
+                        }`}>
+                          <span>{formatTime(message.created_at)}</span>
+                          {isMe && (
+                            <CheckCheck className={`h-3 w-3 ${message.is_read ? 'text-blue-200' : 'text-white/50'}`} />
+                          )}
                         </div>
                       </div>
                     </motion.div>
@@ -792,62 +734,137 @@ const VendeurMessagesModern = () => {
               </div>
             </ScrollArea>
 
-            {/* Zone saisie */}
-            <div className="bg-white border-t p-4">
-              {attachments.length > 0 && (
-                <div className="mb-3 flex flex-wrap gap-2">
-                  {attachments.map((att, idx) => (
-                    <div key={idx} className="flex items-center gap-2 bg-gray-100 rounded-lg px-3 py-2 text-sm">
-                      <File className="w-4 h-4" />
-                      <span>{att.name}</span>
-                      <span className="text-gray-500">({formatFileSize(att.size)})</span>
-                      <button onClick={() => removeAttachment(idx)}>
-                        <X className="w-4 h-4" />
-                      </button>
-                    </div>
-                  ))}
+            {/* Input */}
+            <div className="p-4 border-t border-slate-200 bg-white">
+              <div className="flex items-end gap-2 max-w-4xl mx-auto">
+                <Button variant="ghost" size="sm" className="mb-2"><Paperclip className="h-4 w-4" /></Button>
+                <Button variant="ghost" size="sm" className="mb-2"><ImageIcon className="h-4 w-4" /></Button>
+                <div className="flex-1 relative">
+                  <Input
+                    placeholder="Écrire un message..."
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
+                    className="pr-10 py-6 border-slate-300"
+                  />
+                  <Button variant="ghost" size="sm" className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <Smile className="h-4 w-4 text-slate-400" />
+                  </Button>
                 </div>
-              )}
-
-              <div className="flex items-end gap-2">
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  multiple
-                  className="hidden"
-                  onChange={handleFileSelect}
-                />
-
                 <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => fileInputRef.current?.click()}
+                  onClick={sendMessage}
+                  disabled={!newMessage.trim()}
+                  className="px-6 py-6 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-700 hover:to-cyan-700"
                 >
-                  <Paperclip className="w-5 h-5" />
-                </Button>
-
-                <Input
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  onKeyPress={(e) => e.key === 'Enter' && !e.shiftKey && sendMessage()}
-                  placeholder="Écrire un message..."
-                  className="flex-1"
-                />
-
-                <Button onClick={sendMessage} disabled={!newMessage.trim() && attachments.length === 0}>
-                  <Send className="w-4 h-4" />
+                  <Send className="h-4 w-4" />
                 </Button>
               </div>
             </div>
-          </div>
+          </>
         ) : (
-          <div className="flex-1 flex items-center justify-center bg-gray-50">
-            <div className="text-center text-gray-500">
-              <MessageSquare className="w-16 h-16 mx-auto mb-4 opacity-20" />
-              <p>Sélectionnez une conversation pour commencer</p>
+          <div className="flex-1 flex items-center justify-center bg-slate-50/50">
+            <div className="text-center">
+              <MessageSquare className="h-20 w-20 text-slate-300 mx-auto mb-4" />
+              <h3 className="text-lg font-semibold text-slate-700 mb-2">Sélectionnez une conversation</h3>
+              <p className="text-sm text-slate-500">Choisissez un acheteur pour commencer la discussion</p>
             </div>
           </div>
         )}
+      </div>
+
+      {/* Info Panel */}
+      <AnimatePresence>
+        {showInfo && selectedConversation && (
+          <motion.div
+            initial={{ x: 300, opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: 300, opacity: 0 }}
+            className="w-80 border-l border-slate-200 bg-white p-4"
+          >
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-slate-900">Informations</h3>
+              <Button variant="ghost" size="sm" onClick={() => setShowInfo(false)}>
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+
+            <div className="space-y-4">
+              {/* Acheteur */}
+              <div className="text-center pb-4 border-b border-slate-200">
+                <Avatar className="h-16 w-16 mx-auto mb-2 ring-2 ring-blue-500/20">
+                  <AvatarImage src={selectedConversation.buyer_avatar} />
+                  <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white text-xl">
+                    {selectedConversation.buyer_name?.charAt(0)}
+                  </AvatarFallback>
+                </Avatar>
+                <h4 className="font-semibold text-slate-900">{selectedConversation.buyer_name}</h4>
+                <p className="text-sm text-slate-500">{selectedConversation.buyer_email}</p>
+              </div>
+
+              {/* Propriété */}
+              <div>
+                <h5 className="text-xs font-semibold text-slate-700 uppercase mb-2">Propriété</h5>
+                <Card className="p-3">
+                  <div className="flex items-start gap-2">
+                    <Building className="h-4 w-4 text-blue-600 mt-0.5" />
+                    <div>
+                      <p className="font-medium text-sm text-slate-900">{selectedConversation.property_title}</p>
+                      <p className="text-xs text-slate-500">Réf: {selectedConversation.property_id}</p>
+                    </div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Dialog nouvelle conversation */}
+      <Dialog open={showCreate} onOpenChange={setShowCreate}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Nouvelle conversation</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 py-2">
+            <div>
+              <label className="text-sm text-slate-600">Sélectionner une propriété</label>
+              <Select value={selectedPropertyId} onValueChange={setSelectedPropertyId}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Choisir une propriété" />
+                </SelectTrigger>
+                <SelectContent>
+                  {vendorProperties.map(p => (
+                    <SelectItem key={p.id} value={p.id}>{p.title}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <label className="text-sm text-slate-600">Email de l'acheteur</label>
+              <div className="flex gap-2">
+                <Input
+                  placeholder="acheteur@email.com"
+                  value={buyerEmail}
+                  onChange={(e) => setBuyerEmail(e.target.value)}
+                  onBlur={lookupBuyerByEmail}
+                />
+                <Button variant="outline" onClick={lookupBuyerByEmail}>Rechercher</Button>
+              </div>
+              {buyerProfile && (
+                <div className="mt-2 text-sm text-slate-600">
+                  ✅ {buyerProfile.first_name} {buyerProfile.last_name}
+                </div>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="ghost" onClick={() => setShowCreate(false)}>Annuler</Button>
+            <Button onClick={createOrOpenConversation} disabled={creating}>
+              {creating ? 'Ouverture...' : 'Ouvrir'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
       </div>
     </div>
   );

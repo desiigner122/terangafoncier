@@ -51,6 +51,7 @@ const VendeurMessagesModern = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [attachments, setAttachments] = useState([]);
   const [showInfo, setShowInfo] = useState(false);
+  const [isInitialLoad, setIsInitialLoad] = useState(true); // Track initial load
   const [stats, setStats] = useState({
     total: 0,
     unread: 0,
@@ -62,7 +63,8 @@ const VendeurMessagesModern = () => {
   useEffect(() => {
     if (user) {
       loadConversations();
-      const interval = setInterval(loadConversations, 30000); // Refresh every 30s
+      // Only refresh every 60 seconds instead of 30 to reduce loading
+      const interval = setInterval(loadConversations, 60000);
       return () => clearInterval(interval);
     }
   }, [user]);
@@ -98,7 +100,10 @@ const VendeurMessagesModern = () => {
 
   const loadConversations = async () => {
     try {
-      setLoading(true);
+      // Only set loading on initial load
+      if (isInitialLoad) {
+        setLoading(true);
+      }
       
       // Charger simplement les conversations sans relations complexes
       const { data: conversationsData, error } = await supabase
@@ -112,7 +117,10 @@ const VendeurMessagesModern = () => {
       if (!conversationsData || conversationsData.length === 0) {
         setConversations([]);
         setStats({ total: 0, unread: 0, starred: 0, archived: 0 });
-        setLoading(false);
+        if (isInitialLoad) {
+          setLoading(false);
+          setIsInitialLoad(false);
+        }
         return;
       }
 
@@ -167,11 +175,18 @@ const VendeurMessagesModern = () => {
 
       setConversations(enrichedConversations);
       setStats(stats);
+      
+      if (isInitialLoad) {
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
     } catch (error) {
       console.error('Erreur chargement conversations:', error);
       toast.error('Erreur lors du chargement des conversations');
-    } finally {
-      setLoading(false);
+      if (isInitialLoad) {
+        setLoading(false);
+        setIsInitialLoad(false);
+      }
     }
   };
 

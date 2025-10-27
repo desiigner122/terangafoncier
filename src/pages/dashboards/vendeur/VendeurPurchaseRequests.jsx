@@ -417,33 +417,17 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         return;
       }
 
-      const buyerId = selectedRequest.user_id || selectedRequest.buyer_id;
-      const message = `Contre-offre de ${counterOffer.new_price} FCFA${counterOffer.message ? '\n' + counterOffer.message : ''}`;
-
-      // First, update the request status to 'negotiating'
-      const { error: updateError } = await supabase
-        .from('requests')
-        .update({ 
-          status: 'negotiating',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', selectedRequest.id);
-
-      if (updateError) {
-        console.warn('Erreur update demande:', updateError);
-        toast.warning('Contre-offre en attente (statut non mis à jour)');
-      } else {
-        toast.success('✅ Contre-offre envoyée ! L\'acheteur sera notifié.');
-      }
+      // Negotiation is handled through the messaging system
+      // No database update needed - just notify the user
+      toast.success('✅ Contre-offre préparée ! Vous pouvez maintenant la discuter via la messagerie.');
 
       // Fermer modal et recharger
       setShowNegotiationModal(false);
       setSelectedRequest(null);
-      await loadRequests();
       
     } catch (error) {
       console.error('❌ [NEGOTIATE] Erreur:', error);
-      toast.error('Erreur lors de l\'envoi de la contre-offre: ' + error.message);
+      toast.error('Erreur lors de la soumission de la contre-offre: ' + error.message);
     } finally {
       setIsNegotiating(false);
     }

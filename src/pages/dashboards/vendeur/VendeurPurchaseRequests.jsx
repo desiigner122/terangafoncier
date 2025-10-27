@@ -934,7 +934,9 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
 
       console.log('✅ [VENDEUR] Demandes enrichies:', enrichedRequests.length);
       enrichedRequests.forEach((r, idx) => {
-        console.log(`   ${idx + 1}. ID: ${r.id}, Status: ${r.status}, HasCase: ${r.hasCase}, Source: ${r.source}, Buyer: ${r.buyer_name}`);
+        if (r.negotiation) {
+          console.log(`   🔄 ${idx + 1}. ID: ${r.id}, Buyer: ${r.buyer_name}, Negotiation: status=${r.negotiation.status}, currentPrice=${r.current_price}, origPrice=${r.original_price}`);
+        }
       });
       
       setRequests(enrichedRequests);
@@ -966,7 +968,6 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       const hasCounterOffer = request.current_price && request.original_price && (request.current_price !== request.original_price);
       // Par défaut on affiche 'pending' en priorité, mais on considère toute négociation existante
       matchesTab = (hasNegotiation && (request.negotiation.status === 'pending' || request.negotiation.status === 'counter_offer')) || hasCounterOffer;
-      console.log(`🔍 [FILTER] Request ${request.id}: hasNeg=${hasNegotiation}, negStatus=${request.negotiation?.status}, currentPrice=${request.current_price}, origPrice=${request.original_price}, hasCounterOffer=${hasCounterOffer}, matches=${matchesTab}`);
     } else if (activeTab === 'completed') {
       // Complétées: purchase_case status = 'completed'
       matchesTab = request.hasCase && request.caseStatus === 'completed';

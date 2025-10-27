@@ -265,11 +265,35 @@ const VendeurMessagesModern = () => {
         }
       }
 
+      // Charger le dernier message pour chaque conversation
+      let lastMessagesMap = {};
+      const conversationIds = conversationsData.map(c => c.id);
+      
+      if (conversationIds.length > 0) {
+        // Charger le dernier message de chaque conversation
+        const { data: allMessages } = await supabase
+          .from('conversation_messages')
+          .select('id, conversation_id, content, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: false });
+        
+        if (allMessages) {
+          // Garder juste le dernier message par conversation
+          allMessages.forEach(msg => {
+            if (!lastMessagesMap[msg.conversation_id]) {
+              lastMessagesMap[msg.conversation_id] = msg;
+            }
+          });
+        }
+      }
+
       // Enrichir les conversations avec les données chargées
       const enrichedConversations = conversationsData.map(c => ({
         ...c,
         buyer: buyerMap[c.buyer_id],
-        property: propertyMap[c.property_id]
+        property: propertyMap[c.property_id],
+        last_message: lastMessagesMap[c.id]?.content || 'Pas de message',
+        last_message_at: lastMessagesMap[c.id]?.created_at
       }));
 
       console.log('✅ [MESSAGES] Conversations enrichies:', enrichedConversations.length);

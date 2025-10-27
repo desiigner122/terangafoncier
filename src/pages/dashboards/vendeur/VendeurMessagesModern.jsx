@@ -228,15 +228,27 @@ const VendeurMessagesModern = () => {
 
   const loadMessages = async (conversationId) => {
     try {
-      // Load messages for this case (conversationId is actually case_id)
+      // Load messages from conversation_messages table
       const { data, error } = await supabase
-        .from('purchase_case_messages')
+        .from('conversation_messages')
         .select('*')
-        .eq('case_id', conversationId)
+        .eq('conversation_id', conversationId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      setMessages(data || []);
+      if (error) {
+        console.error('Erreur chargement messages:', error);
+        setMessages([]);
+        return;
+      }
+      
+      // Transform messages to match display format (content → message)
+      const transformedMessages = (data || []).map(msg => ({
+        ...msg,
+        message: msg.content,
+        message_type: 'text'
+      }));
+      
+      setMessages(transformedMessages);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
       toast.error('Erreur lors du chargement des messages');
@@ -248,19 +260,25 @@ const VendeurMessagesModern = () => {
     if (!selectedConversation) return;
 
     try {
-      // For now, just store message in conversations table as metadata
-      // This avoids RLS issues with purchase_case_messages which requires purchase_cases reference
-      
-      const messageObj = {
-        id: Date.now().toString(),
-        sender_id: user.id,
-        message: newMessage.trim(),
-        created_at: new Date().toISOString(),
-        is_read: false,
-        message_type: 'text'
-      };
+      // Insert message into conversation_messages table
+      const { data: insertedMessage, error: messageError } = await supabase
+        .from('conversation_messages')
+        .insert({
+          conversation_id: selectedConversation.id,
+          sender_id: user.id,
+          content: newMessage.trim(),
+          is_read: false
+        })
+        .select()
+        .single();
 
-      // Update conversation timestamp only (last_message column doesn't exist)
+      if (messageError) {
+        console.error('Erreur insertion message:', messageError);
+        toast.error('Erreur lors de l\'envoi du message');
+        return;
+      }
+
+      // Update conversation timestamp and unread count
       await supabase
         .from('conversations')
         .update({
@@ -269,8 +287,14 @@ const VendeurMessagesModern = () => {
         })
         .eq('id', selectedConversation.id);
 
-      // Add message to local state
-      setMessages([...messages, messageObj]);
+      // Add message to local state (transform to match display format)
+      const displayMessage = {
+        ...insertedMessage,
+        message: insertedMessage.content,
+        message_type: 'text'
+      };
+      
+      setMessages([...messages, displayMessage]);
       setNewMessage('');
       setAttachments([]);
       scrollToBottom();

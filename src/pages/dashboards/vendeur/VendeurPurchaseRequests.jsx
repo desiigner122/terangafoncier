@@ -1246,6 +1246,12 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                                   Dossier #{request.caseNumber}
                                 </Badge>
                               )}
+                              {/* Badge négociation en cours */}
+                              {request.negotiation && request.negotiation.status === 'pending' && (
+                                <Badge className="bg-orange-100 text-orange-700 border border-orange-300 animate-pulse">
+                                  💬 Négociation en cours
+                                </Badge>
+                              )}
                               {/* Afficher le status du case ou de la transaction */}
                               {getStatusBadge(request.caseStatus || request.status)}
                               <Badge className="bg-blue-100 text-blue-700 border-blue-200">
@@ -1321,9 +1327,21 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                             </div>
                             <div className="text-right">
                               <p className="text-sm text-slate-600">Offre</p>
-                              <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                                {formatCurrency(request.offered_price)}
-                              </p>
+                              {request.negotiation && request.current_price !== request.original_price ? (
+                                <div>
+                                  <p className="text-sm text-slate-500 line-through">
+                                    {formatCurrency(request.original_price)}
+                                  </p>
+                                  <p className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                                    {formatCurrency(request.current_price)}
+                                  </p>
+                                  <p className="text-xs text-orange-600 font-medium">Contre-offre</p>
+                                </div>
+                              ) : (
+                                <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                  {formatCurrency(request.offered_price)}
+                                </p>
+                              )}
                             </div>
                           </div>
                         </div>

@@ -215,7 +215,7 @@ const VendeurMessagesModern = () => {
       // Charger simplement les conversations sans relations complexes
       const { data: conversationsData, error } = await supabase
         .from('conversations')
-        .select('*')
+        .select('id, vendor_id, buyer_id, property_id, updated_at, unread_count_vendor, unread_count_buyer, is_starred_vendor, is_archived_vendor')
         .eq('vendor_id', user.id)
         .order('updated_at', { ascending: false });
 

@@ -417,17 +417,39 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         return;
       }
 
-      // Negotiation is handled through the messaging system
-      // No database update needed - just notify the user
-      toast.success('✅ Contre-offre préparée ! Vous pouvez maintenant la discuter via la messagerie.');
+      // Create negotiation record
+      const { data: negotiation, error: negError } = await supabase
+        .from('negotiations')
+        .insert({
+          request_id: selectedRequest.id,
+          conversation_id: selectedRequest.conversation_id,
+          initiated_by: user.id,
+          original_price: selectedRequest.proposed_price || selectedRequest.price,
+          proposed_price: counterOffer.new_price,
+          offer_message: counterOffer.message || 'Contre-offre',
+          status: 'pending'
+        })
+        .select()
+        .single();
+
+      if (negError) {
+        console.warn('Erreur création négociation:', negError);
+        toast.error('Erreur lors de la création de la contre-offre');
+        setIsNegotiating(false);
+        return;
+      }
+
+      console.log('✅ Négociation créée:', negotiation.id);
+      toast.success(`✅ Contre-offre de ${counterOffer.new_price} FCFA envoyée ! L'acheteur sera notifié.`);
 
       // Fermer modal et recharger
       setShowNegotiationModal(false);
       setSelectedRequest(null);
+      await loadRequests();
       
     } catch (error) {
       console.error('❌ [NEGOTIATE] Erreur:', error);
-      toast.error('Erreur lors de la soumission de la contre-offre: ' + error.message);
+      toast.error('Erreur lors de l\'envoi de la contre-offre: ' + error.message);
     } finally {
       setIsNegotiating(false);
     }
@@ -783,6 +805,32 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         console.log('✅ [VENDEUR] Purchase cases trouvées:', purchaseCases?.length);
       }
 
+      // ✅ CORRECTION 5B: Charger les negotiations (counter-offers) pour toutes les demandes
+      console.log('💬 [VENDEUR] Chargement des négociations pour', allRequestIds.length, 'requests...');
+      
+      const { data: negotiationsData, error: negError } = await supabase
+        .from('negotiations')
+        .select('*')
+        .in('request_id', allRequestIds)
+        .order('created_at', { ascending: false });
+
+      if (negError) {
+        console.warn('⚠️ [VENDEUR] Erreur chargement négociations:', negError);
+      } else {
+        console.log('✅ [VENDEUR] Négociations trouvées:', negotiationsData?.length);
+      }
+
+      // Créer une map request_id -> latest negotiation
+      const requestNegotiationMap = {};
+      if (negotiationsData && negotiationsData.length > 0) {
+        negotiationsData.forEach(neg => {
+          if (!requestNegotiationMap[neg.request_id]) {
+            requestNegotiationMap[neg.request_id] = neg;
+          }
+        });
+        console.log('✅ [VENDEUR] Negotiation map created with', Object.keys(requestNegotiationMap).length, 'entries');
+      }
+
       // Créer une map request_id -> case info
       const requestCaseMap = {};
       if (purchaseCases && purchaseCases.length > 0) {
@@ -817,14 +865,18 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         const caseNumber = caseInfo?.caseNumber;
         const caseStatus = caseInfo?.caseStatus;
 
+        // Charger la dernière négociation
+        const negotiation = requestNegotiationMap[requestId];
+        const latestPrice = negotiation?.proposed_price;
+
         // Le statut effectif: priorité au case status si existe
         const rawStatus = isFromRequests ? demande.status : demande.status;
         const effectiveStatus = caseStatus || rawStatus;
         
-        // Prix de l'offre
-        const offeredPrice = isFromRequests 
+        // Prix de l'offre - utiliser le prix de négociation s'il existe
+        const offeredPrice = latestPrice || (isFromRequests 
           ? (demande.offered_price || demande.offer_price)
-          : demande.amount;
+          : demande.amount);
         
         return {
           id: isFromRequests ? demande.id : demande.id,
@@ -837,6 +889,11 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
           payment_method: isFromRequests ? demande.payment_type : demande.payment_method,
           offered_price: offeredPrice,
           offer_price: offeredPrice,
+          current_price: latestPrice,
+          original_price: isFromRequests 
+            ? (demande.offered_price || demande.offer_price)
+            : demande.amount,
+          negotiation: negotiation,
           request_type: isFromRequests ? 'request' : (demande.payment_method || 'general'),
           message: isFromRequests ? (demande.message || demande.description) : (demande.description || ''),
           buyer_info: buyerInfo,

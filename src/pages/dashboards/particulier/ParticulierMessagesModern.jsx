@@ -78,9 +78,8 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
       // Charger vraies conversations acheteur depuis Supabase
       const { data: conversationsData, error } = await supabase
         .from('conversations')
-        .select('*')
+        .select('id, vendor_id, buyer_id, property_id, updated_at, unread_count_vendor, unread_count_buyer, is_pinned_buyer, is_archived_buyer')
         .eq('buyer_id', user.id)
-        .eq('is_archived_buyer', false)
         .order('updated_at', { ascending: false });
 
       if (error) {
@@ -126,10 +125,31 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
         });
       }
 
+      // Load last message for each conversation
+      let lastMessagesMap = {};
+      const conversationIds = conversationsData?.map(c => c.id) || [];
+      
+      if (conversationIds.length > 0) {
+        const { data: allMessages } = await supabase
+          .from('conversation_messages')
+          .select('id, conversation_id, content, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: false });
+        
+        if (allMessages) {
+          allMessages.forEach(msg => {
+            if (!lastMessagesMap[msg.conversation_id]) {
+              lastMessagesMap[msg.conversation_id] = msg;
+            }
+          });
+        }
+      }
+
       // Mapper les données: vendor_id est le vendeur
       const formattedConversations = (conversationsData || []).map(conv => {
         const vendor = profilesMap[conv.vendor_id] || {};
         const property = propertiesMap[conv.property_id] || {};
+        const lastMsg = lastMessagesMap[conv.id];
         return {
           id: conv.id,
           thread_id: conv.thread_id || conv.id,
@@ -140,9 +160,9 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
           vendor_avatar: vendor?.avatar_url,
           property_title: property?.title || 'Propriété',
           property_id: property?.reference || '',
-          subject: conv.subject || property?.title || 'Conversation Teranga',
-          last_message: conv.last_message_preview || conv.last_message || '',
-          last_message_time: conv.updated_at,
+          subject: property?.title || 'Conversation Teranga',
+          last_message: lastMsg?.content || 'Pas de message',
+          last_message_time: lastMsg?.created_at || conv.updated_at,
           unread_count: conv.unread_count_buyer || 0,
           is_pinned: conv.is_pinned_buyer || false,
           is_archived: conv.is_archived_buyer || false,

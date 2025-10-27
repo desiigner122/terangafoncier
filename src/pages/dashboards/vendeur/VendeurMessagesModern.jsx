@@ -69,6 +69,41 @@ const VendeurMessagesModern = () => {
     }
   }, [user]);
 
+  // Realtime subscription for conversation updates (badges, unread counts)
+  useEffect(() => {
+    if (!user) return;
+
+    console.log('📡 [REALTIME] Souscription conversations');
+
+    const channel = supabase
+      .channel('public:conversations:vendor')
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversations',
+          filter: `vendor_id=eq.${user.id}`
+        },
+        (payload) => {
+          console.log('🔄 [CONVERSATION UPDATE] Reçu:', payload.new);
+          setConversations(prev =>
+            prev.map(c =>
+              c.id === payload.new.id
+                ? { ...c, ...payload.new }
+                : c
+            )
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('❌ [REALTIME] Désinscription conversations');
+      supabase.removeChannel(channel);
+    };
+  }, [user]);
+
   // Filtrer conversations
   useEffect(() => {
     filterConversations();
@@ -91,6 +126,78 @@ const VendeurMessagesModern = () => {
       loadMessages(selectedConversation.id);
       markAsRead(selectedConversation.id);
     }
+  }, [selectedConversation]);
+
+  // Realtime subscription for new messages
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    console.log('📡 [REALTIME] Souscription messages:', selectedConversation.id);
+
+    // Subscribe to new messages in this conversation
+    const channel = supabase
+      .channel(`conversation_messages:${selectedConversation.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'conversation_messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        },
+        (payload) => {
+          console.log('🔔 [NEW MESSAGE] Reçu:', payload.new);
+          const newMsg = {
+            ...payload.new,
+            message: payload.new.content,
+            message_type: 'text'
+          };
+          setMessages(prev => [...prev, newMsg]);
+          
+          // If message not from current user, play notification
+          if (payload.new.sender_id !== user.id) {
+            console.log('🔊 Son notification - nouveau message');
+            // Optional: Play sound notification
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('❌ [REALTIME] Désinscription messages');
+      supabase.removeChannel(channel);
+    };
+  }, [selectedConversation, user]);
+
+  // Also subscribe to updates on existing messages (read status)
+  useEffect(() => {
+    if (!selectedConversation) return;
+
+    console.log('📡 [REALTIME] Souscription mises à jour messages');
+
+    const channel = supabase
+      .channel(`conversation_messages_update:${selectedConversation.id}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'conversation_messages',
+          filter: `conversation_id=eq.${selectedConversation.id}`
+        },
+        (payload) => {
+          console.log('✏️ [MESSAGE UPDATE] Reçu:', payload.new);
+          setMessages(prev => 
+            prev.map(m => m.id === payload.new.id ? { ...m, ...payload.new, message: payload.new.content } : m)
+          );
+        }
+      )
+      .subscribe();
+
+    return () => {
+      console.log('❌ [REALTIME] Désinscription mises à jour');
+      supabase.removeChannel(channel);
+    };
   }, [selectedConversation]);
 
   // Auto-scroll vers le bas
@@ -308,19 +415,37 @@ const VendeurMessagesModern = () => {
   const markAsRead = async (conversationId) => {
     try {
       // Mark conversation as read for vendor
-      await supabase
+      const { error: convError } = await supabase
         .from('conversations')
         .update({ unread_count_vendor: 0 })
         .eq('id', conversationId);
 
-      // Mark all messages in this case as read
-      await supabase
-        .from('purchase_case_messages')
+      if (convError) throw convError;
+
+      // Mark all messages in this conversation as read (use correct table)
+      const { error: msgError } = await supabase
+        .from('conversation_messages')
         .update({ is_read: true, read_at: new Date().toISOString() })
-        .eq('case_id', conversationId)
+        .eq('conversation_id', conversationId)
         .neq('sender_id', user.id); // Only mark others' messages as read
 
-      loadConversations();
+      if (msgError) throw msgError;
+
+      // Update local state immediately for UI feedback
+      setConversations(prev => prev.map(c => 
+        c.id === conversationId 
+          ? { ...c, unread_count_vendor: 0 }
+          : c
+      ));
+
+      // Update messages locally
+      setMessages(prev => prev.map(m => 
+        m.sender_id !== user.id 
+          ? { ...m, is_read: true }
+          : m
+      ));
+
+      console.log('✅ [READ] Conversation marquée comme lue:', conversationId);
     } catch (error) {
       console.error('Erreur marquage lu:', error);
     }

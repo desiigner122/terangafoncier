@@ -100,31 +100,72 @@ const VendeurMessagesModern = () => {
     try {
       setLoading(true);
       
+      // Charger simplement les conversations sans relations complexes
       const { data: conversationsData, error } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          buyer:profiles!conversations_buyer_id_fkey (
-            id, first_name, last_name, email, avatar_url, phone
-          ),
-          property:properties (
-            id, title, location, price, images
-          )
-        `)
+        .select('*')
         .eq('vendor_id', user.id)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
+      if (!conversationsData || conversationsData.length === 0) {
+        setConversations([]);
+        setStats({ total: 0, unread: 0, starred: 0, archived: 0 });
+        setLoading(false);
+        return;
+      }
+
+      // Charger les profils des acheteurs séparément
+      const buyerIds = [...new Set(conversationsData.map(c => c.buyer_id).filter(Boolean))];
+      let buyerMap = {};
+      
+      if (buyerIds.length > 0) {
+        const { data: buyers } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email, avatar_url, phone')
+          .in('id', buyerIds);
+        
+        if (buyers) {
+          buyers.forEach(b => {
+            buyerMap[b.id] = b;
+          });
+        }
+      }
+
+      // Charger les propriétés séparément
+      const propertyIds = [...new Set(conversationsData.map(c => c.property_id).filter(Boolean))];
+      let propertyMap = {};
+      
+      if (propertyIds.length > 0) {
+        const { data: properties } = await supabase
+          .from('properties')
+          .select('id, title, location, price, images')
+          .in('id', propertyIds);
+        
+        if (properties) {
+          properties.forEach(p => {
+            propertyMap[p.id] = p;
+          });
+        }
+      }
+
+      // Enrichir les conversations avec les données chargées
+      const enrichedConversations = conversationsData.map(c => ({
+        ...c,
+        buyer: buyerMap[c.buyer_id],
+        property: propertyMap[c.property_id]
+      }));
+
       // Calculer stats
       const stats = {
-        total: conversationsData?.length || 0,
-        unread: conversationsData?.filter(c => c.unread_count_vendor > 0).length || 0,
-        starred: conversationsData?.filter(c => c.is_starred_vendor).length || 0,
-        archived: conversationsData?.filter(c => c.is_archived_vendor).length || 0,
+        total: enrichedConversations.length || 0,
+        unread: enrichedConversations.filter(c => c.unread_count_vendor > 0).length || 0,
+        starred: enrichedConversations.filter(c => c.is_starred_vendor).length || 0,
+        archived: enrichedConversations.filter(c => c.is_archived_vendor).length || 0,
       };
 
-      setConversations(conversationsData || []);
+      setConversations(enrichedConversations);
       setStats(stats);
     } catch (error) {
       console.error('Erreur chargement conversations:', error);

@@ -172,29 +172,18 @@ const ModernAcheteurSidebar = () => {
         }
       }
 
-      // Charger le dernier message de chaque conversation
-      const messagesList = await Promise.all(conversations.map(async (conv) => {
-        const { data: lastMsg } = await supabase
-          .from('purchase_case_messages')
-          .select('content')
-          .eq('conversation_id', conv.id)
-          .order('created_at', { ascending: false })
-          .limit(1)
-          .single()
-          .catch(() => ({ data: null }));
-
-        return {
-          id: conv.id,
-          conversation_id: conv.id,
-          vendor_id: conv.vendor_id,
-          vendor_name: vendorMap[conv.vendor_id] ? 
-            `${vendorMap[conv.vendor_id].first_name} ${vendorMap[conv.vendor_id].last_name}`.trim() : 
-            'Vendeur',
-          vendor_avatar: vendorMap[conv.vendor_id]?.avatar_url,
-          content: lastMsg?.content || 'Aucun message',
-          created_at: conv.updated_at,
-          timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
-        };
+      // Transformer les conversations en messages
+      const messagesList = conversations.map(conv => ({
+        id: conv.id,
+        conversation_id: conv.id,
+        vendor_id: conv.vendor_id,
+        vendor_name: vendorMap[conv.vendor_id] ? 
+          `${vendorMap[conv.vendor_id].first_name} ${vendorMap[conv.vendor_id].last_name}`.trim() : 
+          'Vendeur',
+        vendor_avatar: vendorMap[conv.vendor_id]?.avatar_url,
+        content: 'Voir la conversation',
+        created_at: conv.updated_at,
+        timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
       }));
 
       setMessages(messagesList);

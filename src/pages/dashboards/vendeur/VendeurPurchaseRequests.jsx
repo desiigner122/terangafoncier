@@ -420,25 +420,18 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       const buyerId = selectedRequest.user_id || selectedRequest.buyer_id;
       const message = `Contre-offre de ${counterOffer.new_price} FCFA${counterOffer.message ? '\n' + counterOffer.message : ''}`;
 
-      // Envoyer juste un message pour la négociation
-      const { error: messageError } = await supabase
-        .from('purchase_case_messages')
-        .insert({
-          conversation_id: selectedRequest.id || selectedRequest.conversation_id,
-          sender_id: user.id,
-          content: message,
-          message_type: 'negotiation_offer',
-          metadata: {
-            proposed_price: counterOffer.new_price,
-            conditions: counterOffer.conditions,
-            valid_until: counterOffer.valid_until
-          }
-        });
+      // First, update the request status to 'negotiating'
+      const { error: updateError } = await supabase
+        .from('requests')
+        .update({ 
+          status: 'negotiating',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', selectedRequest.id);
 
-      if (messageError) {
-        // Si purchase_case_messages ne fonctionne pas, essayer une autre approche
-        console.warn('Erreur insertion message:', messageError);
-        toast.warning('Contre-offre enregistrée (message non stocké)');
+      if (updateError) {
+        console.warn('Erreur update demande:', updateError);
+        toast.warning('Contre-offre en attente (statut non mis à jour)');
       } else {
         toast.success('✅ Contre-offre envoyée ! L\'acheteur sera notifié.');
       }

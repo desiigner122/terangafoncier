@@ -208,10 +208,11 @@ const VendeurMessagesModern = () => {
 
   const loadMessages = async (conversationId) => {
     try {
+      // Load messages for this case (conversationId is actually case_id)
       const { data, error } = await supabase
-        .from('messages')
+        .from('purchase_case_messages')
         .select('*')
-        .eq('conversation_id', conversationId)
+        .eq('case_id', conversationId)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -228,17 +229,16 @@ const VendeurMessagesModern = () => {
 
     try {
       const messageData = {
-        conversation_id: selectedConversation.id,
+        case_id: selectedConversation.id,
         sender_id: user.id,
-        receiver_id: selectedConversation.buyer_id,
-        content: newMessage.trim(),
-        status: 'sent',
-        read: false,
-        attachments: attachments.length > 0 ? attachments : null,
+        message: newMessage.trim(),
+        message_type: 'text',
+        attachments: attachments.length > 0 ? attachments : [],
+        is_read: false,
       };
 
       const { data, error } = await supabase
-        .from('messages')
+        .from('purchase_case_messages')
         .insert([messageData])
         .select()
         .single();
@@ -267,16 +267,18 @@ const VendeurMessagesModern = () => {
 
   const markAsRead = async (conversationId) => {
     try {
+      // Mark conversation as read for vendor
       await supabase
         .from('conversations')
         .update({ unread_count_vendor: 0 })
         .eq('id', conversationId);
 
+      // Mark all messages in this case as read
       await supabase
-        .from('messages')
-        .update({ read: true })
-        .eq('conversation_id', conversationId)
-        .eq('receiver_id', user.id);
+        .from('purchase_case_messages')
+        .update({ is_read: true, read_at: new Date().toISOString() })
+        .eq('case_id', conversationId)
+        .neq('sender_id', user.id); // Only mark others' messages as read
 
       loadConversations();
     } catch (error) {
@@ -336,8 +338,8 @@ const VendeurMessagesModern = () => {
   };
 
   const getMessageStatus = (message) => {
-    if (message.read) return { icon: CheckCheck, color: 'text-blue-500' };
-    if (message.status === 'sent') return { icon: Check, color: 'text-gray-400' };
+    if (message.is_read) return { icon: CheckCheck, color: 'text-blue-500' };
+    if (message.message_type === 'text') return { icon: Check, color: 'text-gray-400' };
     return { icon: Clock, color: 'text-gray-400' };
   };
 
@@ -572,7 +574,7 @@ const VendeurMessagesModern = () => {
                       className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
                     >
                       <div className={`max-w-md ${isOwn ? 'bg-blue-500 text-white' : 'bg-white'} rounded-2xl px-4 py-2 shadow-sm`}>
-                        <p className="text-sm">{message.content}</p>
+                        <p className="text-sm">{message.message}</p>
                         
                         {message.attachments && message.attachments.length > 0 && (
                           <div className="mt-2 space-y-1">

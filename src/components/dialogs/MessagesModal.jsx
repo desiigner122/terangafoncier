@@ -73,21 +73,11 @@ const MessagesModal = ({ open, onOpenChange, prefilledRecipient = null }) => {
         });
       }
       
-      // Real-time subscription
-      const subscription = supabase
-        .channel('messages')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `recipient_id=eq.${user.id}`
-        }, () => {
-          fetchMessages();
-        })
-        .subscribe();
+      // Real-time subscription disabled - this table is outdated
+      // Actual real-time messaging uses purchase_case_messages subscriptions in VendeurMessagesModern
 
       return () => {
-        subscription.unsubscribe();
+        // cleanup
       };
     }
   }, [open, user, prefilledRecipient]);
@@ -95,19 +85,10 @@ const MessagesModal = ({ open, onOpenChange, prefilledRecipient = null }) => {
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          sender:sender_id(full_name, email),
-          recipient:recipient_id(full_name, email)
-        `)
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setMessages(data || []);
+      // NOTE: This component uses an outdated 'messages' table schema.
+      // Messaging has been moved to purchase_case_messages and conversations.
+      // Keeping this stub to prevent errors, but actual messaging uses VendeurMessagesModern.
+      setMessages([]);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
     } finally {
@@ -138,14 +119,8 @@ const MessagesModal = ({ open, onOpenChange, prefilledRecipient = null }) => {
   // Marquer comme lu
   const markAsRead = async (messageId) => {
     try {
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('id', messageId);
-
-      setMessages(prev =>
-        prev.map(m => m.id === messageId ? { ...m, is_read: true } : m)
-      );
+      // This table is outdated - messaging now uses purchase_case_messages
+      console.warn('⚠️ markAsRead called on outdated MessagesModal');
     } catch (error) {
       console.error('Erreur marquage lu:', error);
     }
@@ -157,44 +132,17 @@ const MessagesModal = ({ open, onOpenChange, prefilledRecipient = null }) => {
 
     setLoading(true);
     try {
-      // Préparer les données du message avec les valeurs validées
-      const messageData = {
-        sender_id: user.id,
-        recipient_id: newMessage.recipient_id || selectedMessage?.sender_id,
-        subject: newMessage.subject || 'Re: ' + (selectedMessage?.subject || 'Sans sujet'),
-        message: newMessage.body && newMessage.body.trim() ? newMessage.body.trim() : 'Message',  // Utilise 'message' au lieu de 'body'
-        is_read: false,
-        created_at: new Date().toISOString()
-      };
-
-      console.log('📝 Envoi du message avec données:', messageData);
-
-      const { error } = await supabase
-        .from('messages')
-        .insert([messageData]);
-
-      if (error) throw error;
-
+      // This table is outdated - messaging now uses purchase_case_messages
+      console.warn('⚠️ handleSendMessage called on outdated MessagesModal - use VendeurMessagesModern instead');
+      
       if (window.safeGlobalToast) {
         window.safeGlobalToast({
-          title: "Message envoyé",
-          description: "Votre message a été envoyé avec succès."
+          title: "Information",
+          description: "Veuillez utiliser la messagerie principale pour envoyer des messages."
         });
       }
-
-      // Réinitialiser
-      setNewMessage({ recipient: '', subject: '', body: '' });
-      setSelectedMessage(null);
-      fetchMessages();
     } catch (error) {
       console.error('Erreur envoi message:', error);
-      if (window.safeGlobalToast) {
-        window.safeGlobalToast({
-          title: "Erreur",
-          description: "Impossible d'envoyer le message.",
-          variant: "destructive"
-        });
-      }
     } finally {
       setLoading(false);
     }

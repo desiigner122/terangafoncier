@@ -14,16 +14,19 @@ Corriger le système de messagerie et activer l'affichage des négociations avec
 
 ### 2. Exécuter les migrations dans l'ordre
 
-#### ✅ Migration 1: CREATE_CONVERSATION_MESSAGES_SIMPLE.sql
-**Fichier:** `sql/CREATE_CONVERSATION_MESSAGES_SIMPLE.sql`
+#### ✅ Migration 1: FIX_CONVERSATION_MESSAGES_STRUCTURE.sql ⚠️ IMPORTANT
+**Fichier:** `sql/FIX_CONVERSATION_MESSAGES_STRUCTURE.sql`
 
 **Pourquoi:** 
-- Remplace la table `purchase_case_messages` qui bloquait les messages avec RLS errors
-- Structure simplifiée avec conversation_id, sender_id, content
-- Politiques RLS basées sur les conversations (plus simple que purchase_cases)
+- Corrige la structure existante de `conversation_messages` dans Supabase
+- Ajoute les colonnes manquantes: `content`, `is_read`, `read_at`
+- Supprime les colonnes obsolètes: `message_count`
+- Copie les données de `message` vers `content` si nécessaire
+- Force le rechargement du schema cache de PostgREST
 
 **Action:**
 ```bash
+⚠️ EXÉCUTER CECI EN PREMIER - Corrige les erreurs PGRST204
 Copier tout le contenu du fichier et l'exécuter dans SQL Editor
 ```
 
@@ -83,7 +86,7 @@ WHERE tablename = 'negotiations';
 ## 📊 Changements dans le code frontend (déjà appliqués)
 
 ### VendeurMessagesModern.jsx
-- ✅ `loadMessages()`: Utilise maintenant `conversation_messages` avec transformation content→message
+- ✅ `loadMessages()`: Utilise `conversation_messages` avec transformation content→message
 - ✅ `sendMessage()`: Insère dans `conversation_messages` avec persistance en base
 - ✅ Suppression du stockage en local state uniquement
 
@@ -92,6 +95,7 @@ WHERE tablename = 'negotiations';
 - ✅ Affichage du prix original barré + contre-offre en orange
 - ✅ Toast success après création de négociation avec le montant
 - ✅ Chargement automatique des données de négociation dans `loadRequests()`
+- ✅ **NOUVEAU:** Filtre tab "Négociations" corrigé pour afficher les demandes avec `negotiation.status === 'pending'`
 
 ---
 
@@ -99,17 +103,21 @@ WHERE tablename = 'negotiations';
 
 ### Avant les migrations:
 ```
-❌ {"code":"42501","message":"new row violates row-level security policy for table purchase_case_messages"}
-❌ {"code":"PGRST204","message":"Could not find the 'last_message' column of 'conversations'"}
+❌ {"code":"42703","message":"column \"message_count\" does not exist"}
+❌ {"code":"PGRST204","message":"Could not find the 'content' column of 'messages'"}
+❌ {"code":"PGRST204","message":"Could not find the 'is_read' column of 'conversation_messages'"}
+❌ {"code":"42501","message":"new row violates row-level security policy"}
 ❌ {"code":"23502","message":"null value in column 'original_price' violates not-null constraint"}
 ```
 
 ### Après les migrations:
 ```
-✅ Messages persistés dans conversation_messages
+✅ Messages persistés dans conversation_messages avec colonnes correctes
+✅ Schema cache rechargé (plus d'erreurs PGRST204)
 ✅ Négociations enregistrées avec prix original et contre-offre
 ✅ Affichage des statuts de négociation dans l'UI
 ✅ Prix affichés avec comparaison original/contre-offre
+✅ Tab "Négociations" filtre correctement les demandes en cours
 ```
 
 ---
@@ -132,6 +140,8 @@ WHERE tablename = 'negotiations';
    - ✅ Toast success avec le montant
    - ✅ Badge "💬 Négociation en cours" apparaît
    - ✅ Prix affiché: original barré + contre-offre en orange
+   - ✅ **Cliquer sur l'onglet "Négociations"**
+   - ✅ La demande doit apparaître dans cet onglet avec le badge orange
 
 3. **Test persistance:**
    - Recharger la page dashboard
@@ -153,12 +163,14 @@ Si erreur après migration:
 
 ## ✅ Checklist finale
 
-- [ ] CREATE_CONVERSATION_MESSAGES_SIMPLE.sql exécuté
+- [ ] FIX_CONVERSATION_MESSAGES_STRUCTURE.sql exécuté ⚠️ PRIORITAIRE
 - [ ] CREATE_NEGOTIATIONS_TABLE.sql exécuté  
 - [ ] storage_documents_policies_fix.sql exécuté (optionnel)
-- [ ] Test messagerie OK
-- [ ] Test négociation OK
-- [ ] Aucune erreur dans la console browser
+- [ ] Refresh de la page dashboard après migrations
+- [ ] Test messagerie OK (messages persistent)
+- [ ] Test négociation OK (badge + prix)
+- [ ] Test onglet "Négociations" affiche les demandes en cours
+- [ ] Aucune erreur PGRST204 dans la console browser
 
 ---
 

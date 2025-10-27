@@ -963,8 +963,8 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       // (Même si hasCase est temporairement faux, hasCase=true le rendra vrai)
       matchesTab = !!request.hasCase || request.status === 'accepted' || request.status === 'seller_accepted';
     } else if (activeTab === 'negotiation') {
-      // En négociation: transaction status = 'negotiation'
-      matchesTab = request.status === 'negotiation';
+      // En négociation: request a un objet negotiation avec status pending
+      matchesTab = request.negotiation && request.negotiation.status === 'pending';
     } else if (activeTab === 'completed') {
       // Complétées: purchase_case status = 'completed'
       matchesTab = request.hasCase && request.caseStatus === 'completed';

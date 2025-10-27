@@ -588,17 +588,14 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
           return { status: 'error', error: new Error('Conversation non disponible') };
         }
 
-        // Try to send message to conversation_messages table
+        // Try to send message to conversation_messages table (schema: conversation_id, sender_id, content, is_read)
         const { error: messageError } = await supabase
           .from('conversation_messages')
           .insert({
             conversation_id: conversation.id,
             sender_id: sellerId,
             content: messageBody.trim(),
-            metadata: {
-              auto_generated: true,
-              request_id: request.id
-            }
+            is_read: false
           });
 
         if (messageError) {
@@ -609,7 +606,8 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
               .insert({
                 conversation_id: conversation.id,
                 sender_id: sellerId,
-                content: messageBody.trim(),
+                // Legacy table often uses 'message' instead of 'content'
+                message: messageBody.trim(),
                 sender_type: 'vendor',
                 metadata: {
                   auto_generated: true,
@@ -963,8 +961,11 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       // (Même si hasCase est temporairement faux, hasCase=true le rendra vrai)
       matchesTab = !!request.hasCase || request.status === 'accepted' || request.status === 'seller_accepted';
     } else if (activeTab === 'negotiation') {
-      // En négociation: request a un objet negotiation avec status pending
-      matchesTab = request.negotiation && request.negotiation.status === 'pending';
+      // En négociation: soit une négociation en base, soit un écart de prix (contre-offre)
+      const hasNegotiation = !!(request.negotiation && request.negotiation.status);
+      const hasCounterOffer = request.current_price && request.original_price && (request.current_price !== request.original_price);
+      // Par défaut on affiche 'pending' en priorité, mais on considère toute négociation existante
+      matchesTab = (hasNegotiation && (request.negotiation.status === 'pending' || request.negotiation.status === 'counter_offer')) || hasCounterOffer;
     } else if (activeTab === 'completed') {
       // Complétées: purchase_case status = 'completed'
       matchesTab = request.hasCase && request.caseStatus === 'completed';

@@ -400,6 +400,49 @@ const CompleteSidebarVendeurDashboard = () => {
     };
     
     loadDashboardData();
+
+    // Setup realtime subscriptions for live updates
+    if (user) {
+      // Subscribe to conversations updates (new messages, status changes)
+      const conversationSubscription = supabase
+        .channel('public:conversations')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversations',
+            filter: `vendor_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('🔔 [REALTIME] Conversation update:', payload);
+            await loadMessages();
+          }
+        )
+        .subscribe();
+
+      // Subscribe to conversation_messages for new messages
+      const messagesSubscription = supabase
+        .channel('public:conversation_messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'conversation_messages'
+          },
+          async (payload) => {
+            console.log('💬 [REALTIME] New message:', payload);
+            await loadMessages();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(conversationSubscription);
+        supabase.removeChannel(messagesSubscription);
+      };
+    }
   }, [user]);
 
   // Charger les notifications depuis Supabase
@@ -443,7 +486,9 @@ const CompleteSidebarVendeurDashboard = () => {
         .select(`
           id,
           buyer_id,
-          updated_at
+          property_id,
+          updated_at,
+          unread_count_buyer
         `)
         .eq('vendor_id', user.id)
         .order('updated_at', { ascending: false })
@@ -455,9 +500,11 @@ const CompleteSidebarVendeurDashboard = () => {
         return;
       }
 
-      // Charger les profils des acheteurs
+      // Charger les profils des acheteurs ET les propriétés
       const buyerIds = conversations.map(c => c.buyer_id).filter(Boolean);
+      const propertyIds = conversations.map(c => c.property_id).filter(Boolean);
       let buyerMap = {};
+      let propertyMap = {};
       
       if (buyerIds.length > 0) {
         const { data: buyers } = await supabase
@@ -472,21 +519,37 @@ const CompleteSidebarVendeurDashboard = () => {
         }
       }
 
-      // Transformer les conversations en messages avec infos acheteur
-      // Pas de derniers messages pour maintenant - juste les conversations
+      // Charger les propriétés (parcels) pour afficher le titre
+      if (propertyIds.length > 0) {
+        const { data: properties } = await supabase
+          .from('parcels')
+          .select('id, title')
+          .in('id', propertyIds);
+        
+        if (properties) {
+          properties.forEach(p => {
+            propertyMap[p.id] = p;
+          });
+        }
+      }
+
+      // Transformer les conversations en messages avec infos acheteur et propriété
       const messagesList = conversations.map(conv => ({
         id: conv.id,
         conversation_id: conv.id,
         buyer_id: conv.buyer_id,
         buyer_name: buyerMap[conv.buyer_id] ? 
-          `${buyerMap[conv.buyer_id].first_name} ${buyerMap[conv.buyer_id].last_name}`.trim() : 
+          `${buyerMap[conv.buyer_id].first_name} ${buyerMap[conv.buyer_id].last_name}`.trim() || 'Acheteur' : 
           'Acheteur',
+        property_title: propertyMap[conv.property_id]?.title || 'Propriété',
         buyer_avatar: buyerMap[conv.buyer_id]?.avatar_url,
         content: 'Voir la conversation',
+        unread: (conv.unread_count_buyer || 0) > 0,
         created_at: conv.updated_at,
         timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
       }));
 
+      console.log('✅ [MESSAGES] Chargées:', messagesList.length, messagesList.map(m => m.buyer_name));
       setMessages(messagesList);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
@@ -923,8 +986,13 @@ const CompleteSidebarVendeurDashboard = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{msg.buyer_name}</p>
-                            <p className="text-xs text-gray-600 truncate">{msg.content}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm truncate">{msg.buyer_name}</p>
+                              {msg.unread && (
+                                <div className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 truncate">{msg.property_title || msg.content}</p>
                             <p className="text-xs text-gray-400 mt-0.5">{msg.timestamp}</p>
                           </div>
                         </div>

@@ -134,6 +134,68 @@ const ModernAcheteurSidebar = () => {
       loadMessages();
       loadNotifications();
     }
+
+    // Setup realtime subscriptions for live updates
+    if (user) {
+      // Subscribe to conversations updates (new messages, status changes)
+      const conversationSubscription = supabase
+        .channel('public:conversations:buyer')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversations',
+            filter: `buyer_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('🔔 [REALTIME] Conversation update:', payload);
+            await loadMessages();
+          }
+        )
+        .subscribe();
+
+      // Subscribe to conversation_messages for new messages
+      const messagesSubscription = supabase
+        .channel('public:conversation_messages:buyer')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'conversation_messages'
+          },
+          async (payload) => {
+            console.log('💬 [REALTIME] New message:', payload);
+            await loadMessages();
+          }
+        )
+        .subscribe();
+
+      // Subscribe to requests and purchase_cases for status updates
+      const requestsSubscription = supabase
+        .channel('public:requests:buyer')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'requests',
+            filter: `user_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('📋 [REALTIME] Request update:', payload);
+            await loadNotifications();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(conversationSubscription);
+        supabase.removeChannel(messagesSubscription);
+        supabase.removeChannel(requestsSubscription);
+      };
+    }
   }, [user]);
 
   // Charger les messages depuis les conversations
@@ -144,7 +206,9 @@ const ModernAcheteurSidebar = () => {
         .select(`
           id,
           vendor_id,
-          updated_at
+          property_id,
+          updated_at,
+          unread_count_vendor
         `)
         .eq('buyer_id', user.id)
         .order('updated_at', { ascending: false })
@@ -155,9 +219,11 @@ const ModernAcheteurSidebar = () => {
         return;
       }
 
-      // Charger les profils des vendeurs
+      // Charger les profils des vendeurs ET les propriétés
       const vendorIds = conversations.map(c => c.vendor_id).filter(Boolean);
+      const propertyIds = conversations.map(c => c.property_id).filter(Boolean);
       let vendorMap = {};
+      let propertyMap = {};
       
       if (vendorIds.length > 0) {
         const { data: vendors } = await supabase
@@ -172,20 +238,37 @@ const ModernAcheteurSidebar = () => {
         }
       }
 
+      // Charger les propriétés
+      if (propertyIds.length > 0) {
+        const { data: properties } = await supabase
+          .from('parcels')
+          .select('id, title')
+          .in('id', propertyIds);
+        
+        if (properties) {
+          properties.forEach(p => {
+            propertyMap[p.id] = p;
+          });
+        }
+      }
+
       // Transformer les conversations en messages
       const messagesList = conversations.map(conv => ({
         id: conv.id,
         conversation_id: conv.id,
         vendor_id: conv.vendor_id,
         vendor_name: vendorMap[conv.vendor_id] ? 
-          `${vendorMap[conv.vendor_id].first_name} ${vendorMap[conv.vendor_id].last_name}`.trim() : 
+          `${vendorMap[conv.vendor_id].first_name} ${vendorMap[conv.vendor_id].last_name}`.trim() || 'Vendeur' : 
           'Vendeur',
+        property_title: propertyMap[conv.property_id]?.title || 'Propriété',
         vendor_avatar: vendorMap[conv.vendor_id]?.avatar_url,
         content: 'Voir la conversation',
+        unread: (conv.unread_count_vendor || 0) > 0,
         created_at: conv.updated_at,
         timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
       }));
 
+      console.log('✅ [MESSAGES] Chargées:', messagesList.length, messagesList.map(m => m.vendor_name));
       setMessages(messagesList);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
@@ -733,8 +816,13 @@ const ModernAcheteurSidebar = () => {
                             </AvatarFallback>
                           </Avatar>
                           <div className="flex-1 min-w-0">
-                            <p className="font-medium text-sm truncate">{msg.vendor_name}</p>
-                            <p className="text-xs text-gray-600 truncate">{msg.content}</p>
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm truncate">{msg.vendor_name}</p>
+                              {msg.unread && (
+                                <div className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 truncate">{msg.property_title || msg.content}</p>
                             <p className="text-xs text-gray-400 mt-0.5">{msg.timestamp}</p>
                           </div>
                         </div>

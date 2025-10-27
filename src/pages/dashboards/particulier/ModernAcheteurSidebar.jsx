@@ -99,7 +99,7 @@ const ModernAcheteurSidebar = () => {
   const [loading, setLoading] = useState(true);
   
   // Real-time unread counts
-  const { unreadMessagesCount, unreadNotificationsCount } = useUnreadCounts();
+  const { unreadMessagesCount, unreadNotificationsCount, reload: reloadUnread } = useUnreadCounts();
   
   // États pour les messages et notifications
   const [messages, setMessages] = useState([]);
@@ -263,7 +263,8 @@ const ModernAcheteurSidebar = () => {
         property_title: propertyMap[conv.property_id]?.title || 'Propriété',
         vendor_avatar: vendorMap[conv.vendor_id]?.avatar_url,
         content: 'Voir la conversation',
-        unread: (conv.unread_count_vendor || 0) > 0,
+  // Acheteur voit ses propres non-lus: utiliser unread_count_buyer
+  unread: (conv.unread_count_buyer || 0) > 0,
         created_at: conv.updated_at,
         timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
       }));
@@ -743,6 +744,8 @@ const ModernAcheteurSidebar = () => {
                       const getNotificationRoute = (notification) => {
                         if (!notification) return '/acheteur/overview';
                         if (notification.type === 'message' || notification.type === 'chat') {
+                          const convId = notification.conversation_id || notification?.data?.conversation_id || notification?.metadata?.conversation_id;
+                          if (convId) return `/acheteur/messages?conversation=${convId}`;
                           return '/acheteur/messages';
                         }
                         if (notification.type === 'purchase_request' || notification.type === 'demand') {
@@ -768,6 +771,8 @@ const ModernAcheteurSidebar = () => {
                               // Remove from local notifications list
                               setNotifications(prev => prev.filter(n => n.id !== notif.id));
                               console.log('✅ [BUYER] Notification marquée comme lue:', notif.id);
+                              // Refresh header counters
+                              if (typeof reloadUnread === 'function') reloadUnread();
                             } catch (error) {
                               console.error('❌ [BUYER] Erreur marquage notification:', error);
                             }
@@ -839,6 +844,8 @@ const ModernAcheteurSidebar = () => {
                                 )
                               );
                               console.log('✅ [BUYER] Message marqué comme lu:', msg.conversation_id);
+                              // Refresh header counters
+                              if (typeof reloadUnread === 'function') reloadUnread();
                             } catch (error) {
                               console.error('❌ [BUYER] Erreur marquage message lu:', error);
                             }

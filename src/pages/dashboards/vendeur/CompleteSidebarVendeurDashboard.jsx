@@ -138,7 +138,7 @@ const CompleteSidebarVendeurDashboard = () => {
   const [showMessages, setShowMessages] = useState(false);
   
   // Real-time unread counts
-  const { unreadMessagesCount, unreadNotificationsCount } = useUnreadCounts();
+  const { unreadMessagesCount, unreadNotificationsCount, reload: reloadUnread } = useUnreadCounts();
   
   // États pour données réelles
   const [notifications, setNotifications] = useState([]);
@@ -544,7 +544,8 @@ const CompleteSidebarVendeurDashboard = () => {
         property_title: propertyMap[conv.property_id]?.title || 'Propriété',
         buyer_avatar: buyerMap[conv.buyer_id]?.avatar_url,
         content: 'Voir la conversation',
-        unread: (conv.unread_count_buyer || 0) > 0,
+  // Vendeur voit ses propres non-lus: utiliser unread_count_vendor
+  unread: (conv.unread_count_vendor || 0) > 0,
         created_at: conv.updated_at,
         timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
       }));
@@ -991,6 +992,8 @@ const CompleteSidebarVendeurDashboard = () => {
                                 )
                               );
                               console.log('✅ Message marqué comme lu:', msg.conversation_id);
+                              // Refresh header counters
+                              if (typeof reloadUnread === 'function') reloadUnread();
                             } catch (error) {
                               console.error('❌ Erreur marquage message lu:', error);
                             }
@@ -1064,6 +1067,8 @@ const CompleteSidebarVendeurDashboard = () => {
                         
                         // Si c'est un message
                         if (notification.type === 'message' || notification.type === 'chat') {
+                          const convId = notification.conversation_id || notification?.data?.conversation_id || notification?.metadata?.conversation_id;
+                          if (convId) return `/vendeur/messages?conversation=${convId}`;
                           return '/vendeur/messages';
                         }
                         
@@ -1095,6 +1100,8 @@ const CompleteSidebarVendeurDashboard = () => {
                               // Remove from local notifications list
                               setNotifications(prev => prev.filter(n => n.id !== notif.id));
                               console.log('✅ Notification marquée comme lue:', notif.id);
+                              // Refresh header counters
+                              if (typeof reloadUnread === 'function') reloadUnread();
                             } catch (error) {
                               console.error('❌ Erreur marquage notification:', error);
                             }

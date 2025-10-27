@@ -97,45 +97,39 @@ export const useUnreadCounts = () => {
     }
 
     try {
-      // Messages non lus depuis purchase_case_messages
-      // La table a: case_id, sent_by, message, read_at
-      // Pour compter les messages NON LUS pour l'utilisateur:
-      // 1. Trouver tous les cas où l'utilisateur participe (buyer_id ou seller_id)
-      // 2. Compter les messages dans ces cas où sent_by != user.id ET read_at IS NULL
-      
-      let messagesCount = 0;
-      
-      // Get user's cases first
-      const { data: userCases, error: casesError } = await supabase
-        .from('purchase_cases')
-        .select('id')
-        .or(`buyer_id.eq.${user.id},seller_id.eq.${user.id}`);
-      
-      if (!casesError && userCases && userCases.length > 0) {
-        const caseIds = userCases.map(c => c.id);
-        
-        // Count unread messages in these cases that were NOT sent by current user
-        const { count: caseMessagesCount } = await supabase
-          .from('purchase_case_messages')
-          .select('*', { count: 'exact', head: true })
-          .in('case_id', caseIds)
-          .neq('sent_by', user.id)
-          .is('read_at', null);
-        
-        messagesCount = caseMessagesCount || 0;
+      // Messages non lus (nouveau système): utiliser la table conversations
+      // Vendeur: unread_count_vendor | Acheteur: unread_count_buyer
+      const normalizedRole = String(profile?.role || '').toLowerCase();
+      const isSeller = ['vendeur', 'seller'].includes(normalizedRole);
+
+      if (isSeller) {
+        const { count, error } = await supabase
+          .from('conversations')
+          .select('id', { count: 'exact', head: true })
+          .eq('vendor_id', user.id)
+          .gt('unread_count_vendor', 0);
+        if (!error) setUnreadMessagesCount(count || 0); else setUnreadMessagesCount(0);
+      } else {
+        const { count, error } = await supabase
+          .from('conversations')
+          .select('id', { count: 'exact', head: true })
+          .eq('buyer_id', user.id)
+          .gt('unread_count_buyer', 0);
+        if (!error) setUnreadMessagesCount(count || 0); else setUnreadMessagesCount(0);
       }
 
-      setUnreadMessagesCount(messagesCount);
-
-      // Messages administratifs non lus
-      const { count: adminMessagesCount, error: adminError } = await supabase
-        .from('messages_administratifs')
-        .select('*', { count: 'exact', head: true })
-        .eq('destinataire_id', user.id)
-        .eq('statut', 'non_lu');
-
-      if (!adminError && adminMessagesCount) {
-        setUnreadMessagesCount((prev) => prev + (adminMessagesCount || 0));
+      // Messages administratifs non lus (si table existe encore)
+      try {
+        const { count: adminMessagesCount, error: adminError } = await supabase
+          .from('messages_administratifs')
+          .select('*', { count: 'exact', head: true })
+          .eq('destinataire_id', user.id)
+          .eq('statut', 'non_lu');
+        if (!adminError && adminMessagesCount) {
+          setUnreadMessagesCount((prev) => prev + (adminMessagesCount || 0));
+        }
+      } catch (e) {
+        // Ignorer si la table n'existe pas
       }
 
       // Notifications non lues (si la table existe)
@@ -185,18 +179,49 @@ export const useUnreadCounts = () => {
   useEffect(() => {
     if (!user?.id) return;
 
-    // Messages en temps réel (watch all messages, filter in loadUnreadCounts)
-    const messagesChannel = supabase
-      .channel('messages_realtime')
+    // Conversations en temps réel (unread counts)
+    const conversationsChannel = supabase
+      .channel('conversations_realtime_counts')
       .on(
         'postgres_changes',
         {
           event: '*',
           schema: 'public',
-          table: 'purchase_case_messages',
+          table: 'conversations',
+          filter: `vendor_id=eq.${user.id}`,
         },
         () => {
-          console.log('📩 Message changed');
+          console.log('🗨️ Conversations changed (vendor)');
+          loadUnreadCounts();
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversations',
+          filter: `buyer_id=eq.${user.id}`,
+        },
+        () => {
+          console.log('🗨️ Conversations changed (buyer)');
+          loadUnreadCounts();
+        }
+      )
+      .subscribe();
+
+    // Messages en temps réel (insert/update) — déclenche recalcul
+    const messagesChannel = supabase
+      .channel('conversation_messages_realtime')
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'conversation_messages',
+        },
+        () => {
+          console.log('📩 Conversation message changed');
           loadUnreadCounts();
         }
       )
@@ -239,6 +264,7 @@ export const useUnreadCounts = () => {
       .subscribe();
 
     return () => {
+      conversationsChannel.unsubscribe();
       messagesChannel.unsubscribe();
       adminMessagesChannel.unsubscribe();
       notificationsChannel.unsubscribe();

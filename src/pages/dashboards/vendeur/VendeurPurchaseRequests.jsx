@@ -966,6 +966,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       const hasCounterOffer = request.current_price && request.original_price && (request.current_price !== request.original_price);
       // Par défaut on affiche 'pending' en priorité, mais on considère toute négociation existante
       matchesTab = (hasNegotiation && (request.negotiation.status === 'pending' || request.negotiation.status === 'counter_offer')) || hasCounterOffer;
+      console.log(`🔍 [FILTER] Request ${request.id}: hasNeg=${hasNegotiation}, negStatus=${request.negotiation?.status}, currentPrice=${request.current_price}, origPrice=${request.original_price}, hasCounterOffer=${hasCounterOffer}, matches=${matchesTab}`);
     } else if (activeTab === 'completed') {
       // Complétées: purchase_case status = 'completed'
       matchesTab = request.hasCase && request.caseStatus === 'completed';

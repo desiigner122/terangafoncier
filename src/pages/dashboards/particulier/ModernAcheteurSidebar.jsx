@@ -757,7 +757,23 @@ const ModernAcheteurSidebar = () => {
                       return (
                         <DropdownMenuItem
                           key={idx}
-                          onClick={() => navigate(getNotificationRoute(notif))}
+                          onClick={async () => {
+                            // Mark notification as read
+                            try {
+                              await supabase
+                                .from('notifications')
+                                .update({ is_read: true, read_at: new Date().toISOString() })
+                                .eq('id', notif.id);
+                              
+                              // Remove from local notifications list
+                              setNotifications(prev => prev.filter(n => n.id !== notif.id));
+                              console.log('✅ [BUYER] Notification marquée comme lue:', notif.id);
+                            } catch (error) {
+                              console.error('❌ [BUYER] Erreur marquage notification:', error);
+                            }
+                            
+                            navigate(getNotificationRoute(notif));
+                          }}
                           className="cursor-pointer"
                         >
                           <div className="flex items-center space-x-2 w-full">
@@ -805,7 +821,31 @@ const ModernAcheteurSidebar = () => {
                     messages.slice(0, 5).map((msg, idx) => (
                       <DropdownMenuItem 
                         key={idx}
-                        onClick={() => navigate(`/acheteur/messages?conversation=${msg.conversation_id}`)}
+                        onClick={async () => {
+                          // Mark conversation as read immediately for better UX
+                          if (msg.conversation_id && msg.unread) {
+                            try {
+                              await supabase
+                                .from('conversations')
+                                .update({ unread_count_buyer: 0 })
+                                .eq('id', msg.conversation_id);
+                              
+                              // Update local state immediately
+                              setMessages(prev => 
+                                prev.map(m => 
+                                  m.conversation_id === msg.conversation_id 
+                                    ? { ...m, unread: false }
+                                    : m
+                                )
+                              );
+                              console.log('✅ [BUYER] Message marqué comme lu:', msg.conversation_id);
+                            } catch (error) {
+                              console.error('❌ [BUYER] Erreur marquage message lu:', error);
+                            }
+                          }
+                          
+                          navigate(`/acheteur/messages?conversation=${msg.conversation_id}`);
+                        }}
                         className="cursor-pointer"
                       >
                         <div className="flex items-center space-x-3 w-full">

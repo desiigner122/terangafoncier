@@ -973,7 +973,29 @@ const CompleteSidebarVendeurDashboard = () => {
                     messages.slice(0, 5).map((msg, idx) => (
                       <DropdownMenuItem 
                         key={idx}
-                        onClick={() => {
+                        onClick={async () => {
+                          // Mark conversation as read immediately for better UX
+                          if (msg.conversation_id && msg.unread) {
+                            try {
+                              await supabase
+                                .from('conversations')
+                                .update({ unread_count_vendor: 0 })
+                                .eq('id', msg.conversation_id);
+                              
+                              // Update local state immediately
+                              setMessages(prev => 
+                                prev.map(m => 
+                                  m.conversation_id === msg.conversation_id 
+                                    ? { ...m, unread: false }
+                                    : m
+                                )
+                              );
+                              console.log('✅ Message marqué comme lu:', msg.conversation_id);
+                            } catch (error) {
+                              console.error('❌ Erreur marquage message lu:', error);
+                            }
+                          }
+                          
                           navigate(`/vendeur/messages?conversation=${msg.conversation_id}`);
                           setShowMessages(false);
                         }}
@@ -1062,7 +1084,21 @@ const CompleteSidebarVendeurDashboard = () => {
                       return (
                         <DropdownMenuItem 
                           key={idx}
-                          onClick={() => {
+                          onClick={async () => {
+                            // Mark notification as read
+                            try {
+                              await supabase
+                                .from('notifications')
+                                .update({ is_read: true, read_at: new Date().toISOString() })
+                                .eq('id', notif.id);
+                              
+                              // Remove from local notifications list
+                              setNotifications(prev => prev.filter(n => n.id !== notif.id));
+                              console.log('✅ Notification marquée comme lue:', notif.id);
+                            } catch (error) {
+                              console.error('❌ Erreur marquage notification:', error);
+                            }
+                            
                             navigate(getNotificationRoute(notif));
                             setShowNotifications(false);
                           }}

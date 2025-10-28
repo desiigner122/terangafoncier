@@ -116,7 +116,7 @@ const AISmartNotifications = () => {
         onClick={() => setIsOpen(!isOpen)}
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
       >
-        <MessageSquare className="h-5 w-5" />
+        <Brain className="h-5 w-5" />
         {/* Ne pas afficher de badge numérique ici pour éviter la confusion avec les vrais messages */}
         {unreadCount > 0 && (
           <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full" />
@@ -137,11 +137,11 @@ const AISmartNotifications = () => {
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="p-2 bg-blue-100 rounded-lg">
-                    <MessageSquare className="h-5 w-5 text-blue-600" />
+                    <Brain className="h-5 w-5 text-blue-600" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">Messages IA</h3>
-                    <p className="text-sm text-gray-600">Conversations intelligentes</p>
+                    <h3 className="font-semibold text-gray-900">Insights IA</h3>
+                    <p className="text-sm text-gray-600">Notifications intelligentes</p>
                   </div>
                 </div>
                 <button

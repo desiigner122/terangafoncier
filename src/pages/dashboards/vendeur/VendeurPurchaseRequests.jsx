@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -76,12 +76,21 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       loadRequests();
       
       // 🔄 REALTIME: Subscribe aux requests changes pour les parcelles du vendeur
+      // Ajout d'un cooldown pour éviter des rechargements multiples successifs
+      const lastReloadAt = { current: 0 };
+      const cooldownMs = 1000;
+      const scheduleReload = () => {
+        const now = Date.now();
+        if (now - lastReloadAt.current < cooldownMs) return;
+        lastReloadAt.current = now;
+        loadRequests();
+      };
+
       const unsubscribe = RealtimeSyncService.subscribeToVendorRequests(
         [], // Les parcel IDs seront chargés dans loadRequests
-        (payload) => {
-          console.log('🔄 [REALTIME] Vendor request update detected, reloading...');
-          // Recharger les demandes quand il y a un changement
-          loadRequests();
+        () => {
+          console.log('🔄 [REALTIME] Vendor request update detected, scheduled reload');
+          scheduleReload();
         }
       );
       
@@ -962,7 +971,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-3 sm:p-4 lg:p-6">
       {/* En-tête moderne */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}

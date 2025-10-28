@@ -459,7 +459,7 @@ const CompleteSidebarParticulierDashboard = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-slate-50/50">
+  <main className="flex-1 overflow-auto bg-slate-50/50 p-3 sm:p-4 lg:p-6">
           <Suspense 
             fallback={
               <div className="flex items-center justify-center h-64">

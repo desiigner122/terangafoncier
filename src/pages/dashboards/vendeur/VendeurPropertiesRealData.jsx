@@ -584,25 +584,27 @@ const VendeurPropertiesRealData = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6">
       {/* Header avec titre et action principale */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Mes Propriétés</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Mes Propriétés</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Gérez et optimisez vos annonces immobilières
           </p>
         </div>
-        <div className="flex gap-3">
+        <div className="flex gap-2 sm:gap-3">
           <Button 
-            variant="outline" 
+            variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
             onClick={() => exportToCSV(properties)}
           >
-            <Download className="h-4 w-4 mr-2" />
-            Exporter tout
+            <Download className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Exporter tout</span>
           </Button>
-          <Link to="/vendeur/add-property">
-            <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
+          <Link to="/vendeur/add-property" className="flex-1 sm:flex-none">
+            <Button className="bg-gradient-to-r from-blue-600 to-purple-600 w-full sm:w-auto">
               <Plus className="h-4 w-4 mr-2" />
               Ajouter une Propriété
             </Button>
@@ -611,7 +613,7 @@ const VendeurPropertiesRealData = () => {
       </div>
 
       {/* 🆕 STATS CARDS MODERNES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-4">
         <StatsCard
           title="Total"
           value={stats.total}
@@ -652,8 +654,8 @@ const VendeurPropertiesRealData = () => {
       </div>
 
       {/* 🆕 BARRE D'ACTIONS ET FILTRES */}
-      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 bg-white p-4 rounded-lg shadow-sm">
-        <div className="flex items-center gap-3 flex-wrap">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4 bg-white p-3 sm:p-4 rounded-lg shadow-sm">
+        <div className="flex items-center gap-2 sm:gap-3 flex-wrap w-full sm:w-auto">
           <AdvancedFilters
             filters={filters}
             presets={filterPresets}
@@ -668,13 +670,14 @@ const VendeurPropertiesRealData = () => {
             variant="outline"
             onClick={() => loadProperties()}
             size="sm"
+            className="flex-shrink-0"
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Actualiser
+            <RefreshCw className="h-4 w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Actualiser</span>
           </Button>
         </div>
 
-        <div className="text-sm text-muted-foreground">
+        <div className="text-xs sm:text-sm text-muted-foreground whitespace-nowrap">
           {sortedProperties.length} propriété(s)
           {selectedCount > 0 && ` · ${selectedCount} sélectionnée(s)`}
         </div>
@@ -697,7 +700,7 @@ const VendeurPropertiesRealData = () => {
           ]}
         />
       ) : (
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {sortedProperties.map((property, index) => (
             <motion.div
               key={property.id}
@@ -707,7 +710,7 @@ const VendeurPropertiesRealData = () => {
             >
               <Card className="overflow-hidden hover:shadow-lg transition-shadow">
                 {/* Image */}
-                <div className="relative h-48 bg-gray-200">
+                <div className="relative h-40 sm:h-48 bg-gray-200">
                   {property.imageUrl ? (
                     <img
                       src={property.imageUrl}
@@ -722,33 +725,33 @@ const VendeurPropertiesRealData = () => {
                   
                   {/* 🆕 CHECKBOX POUR BULK SELECTION */}
                   <div className="absolute top-2 left-2">
-                    <div className="bg-white/90 backdrop-blur-sm rounded p-1">
+                    <div className="bg-white/90 backdrop-blur-sm rounded p-0.5 sm:p-1">
                       <Checkbox
                         checked={isSelected(property.id)}
                         onCheckedChange={() => toggleSelection(property.id)}
-                        className="h-5 w-5"
+                        className="h-4 w-4 sm:h-5 sm:w-5"
                       />
                     </div>
                   </div>
 
                   {/* Badges overlay */}
-                  <div className="absolute top-2 left-14 flex flex-col gap-2">
+                  <div className="absolute top-2 left-10 sm:left-14 flex flex-col gap-1 sm:gap-2">
                     {property.featured && (
-                      <Badge className="bg-yellow-500">
-                        <Star className="h-3 w-3 mr-1" />
-                        En vedette
+                      <Badge className="bg-yellow-500 text-xs px-1 sm:px-2">
+                        <Star className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                        <span className="hidden sm:inline">En vedette</span>
                       </Badge>
                     )}
                     {property.aiOptimized && (
-                      <Badge className="bg-purple-500">
-                        <Sparkles className="h-3 w-3 mr-1" />
-                        IA
+                      <Badge className="bg-purple-500 text-xs px-1 sm:px-2">
+                        <Sparkles className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                        <span className="hidden sm:inline">IA</span>
                       </Badge>
                     )}
                     {property.blockchainVerified && (
-                      <Badge className="bg-orange-500">
-                        <Zap className="h-3 w-3 mr-1" />
-                        Blockchain
+                      <Badge className="bg-orange-500 text-xs px-1 sm:px-2">
+                        <Zap className="h-2 w-2 sm:h-3 sm:w-3 mr-0.5 sm:mr-1" />
+                        <span className="hidden sm:inline">BC</span>
                       </Badge>
                     )}
                   </div>
@@ -832,21 +835,21 @@ const VendeurPropertiesRealData = () => {
                 </div>
 
                 {/* Content */}
-                <CardContent className="pt-4">
+                <CardContent className="pt-3 sm:pt-4 p-3 sm:p-4">
                   <div className="mb-2">
-                    <h3 className="font-semibold text-lg line-clamp-1">{property.title}</h3>
-                    <div className="flex items-center text-sm text-gray-600 mt-1">
-                      <MapPin className="h-3 w-3 mr-1" />
-                      {property.location}
+                    <h3 className="font-semibold text-base sm:text-lg line-clamp-1">{property.title}</h3>
+                    <div className="flex items-center text-xs sm:text-sm text-gray-600 mt-1">
+                      <MapPin className="h-3 w-3 mr-1 flex-shrink-0" />
+                      <span className="truncate">{property.location}</span>
                     </div>
                   </div>
 
                   <div className="flex items-center justify-between mb-3">
-                    <div>
-                      <p className="text-2xl font-bold text-blue-600">
+                    <div className="min-w-0 flex-1">
+                      <p className="text-lg sm:text-2xl font-bold text-blue-600 truncate">
                         {parseInt(property.price).toLocaleString('fr-FR')} FCFA
                       </p>
-                      <p className="text-sm text-gray-600">{property.area} m²</p>
+                      <p className="text-xs sm:text-sm text-gray-600">{property.area} m²</p>
                     </div>
                     <Badge className={statusColors[property.status]}>
                       {statusLabels[property.status]}
@@ -863,17 +866,17 @@ const VendeurPropertiesRealData = () => {
                   )}
 
                   {/* Stats */}
-                  <div className="grid grid-cols-3 gap-2 mb-3 text-center">
-                    <div className="bg-gray-50 rounded p-2">
-                      <Eye className="h-4 w-4 mx-auto text-gray-600 mb-1" />
+                  <div className="grid grid-cols-3 gap-1.5 sm:gap-2 mb-3 text-center">
+                    <div className="bg-gray-50 rounded p-1.5 sm:p-2">
+                      <Eye className="h-3 w-3 sm:h-4 sm:w-4 mx-auto text-gray-600 mb-0.5 sm:mb-1" />
                       <p className="text-xs font-semibold">{property.views}</p>
                     </div>
-                    <div className="bg-gray-50 rounded p-2">
-                      <Heart className="h-4 w-4 mx-auto text-gray-600 mb-1" />
+                    <div className="bg-gray-50 rounded p-1.5 sm:p-2">
+                      <Heart className="h-3 w-3 sm:h-4 sm:w-4 mx-auto text-gray-600 mb-0.5 sm:mb-1" />
                       <p className="text-xs font-semibold">{property.favorites}</p>
                     </div>
-                    <div className="bg-gray-50 rounded p-2">
-                      <MessageSquare className="h-4 w-4 mx-auto text-gray-600 mb-1" />
+                    <div className="bg-gray-50 rounded p-1.5 sm:p-2">
+                      <MessageSquare className="h-3 w-3 sm:h-4 sm:w-4 mx-auto text-gray-600 mb-0.5 sm:mb-1" />
                       <p className="text-xs font-semibold">{property.inquiries}</p>
                     </div>
                   </div>

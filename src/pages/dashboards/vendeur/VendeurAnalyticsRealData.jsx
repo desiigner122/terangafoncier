@@ -335,40 +335,40 @@ const VendeurAnalyticsRealData = () => {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
+      <div className="flex items-center justify-center min-h-[60vh] sm:min-h-screen p-4">
         <div className="text-center">
-          <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
-          <p className="text-gray-600">Chargement des analytics...</p>
+          <div className="animate-spin rounded-full h-12 w-12 sm:h-16 sm:w-16 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-sm sm:text-base text-gray-600">Chargement des analytics...</p>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6">
       {/* En-tête avec badges IA/Blockchain */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between">
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center">
-            <BarChart3 className="mr-3 h-8 w-8 text-blue-600" />
-            Analytics Avancées
-            <Badge className="ml-3 bg-purple-100 text-purple-700 border-purple-200">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center flex-wrap gap-2">
+            <BarChart3 className="h-6 w-6 sm:h-8 sm:w-8 text-blue-600" />
+            <span>Analytics Avancées</span>
+            <Badge className="bg-purple-100 text-purple-700 border-purple-200 text-xs">
               <Brain className="w-3 h-3 mr-1" />
               IA Insights
             </Badge>
-            <Badge className="ml-2 bg-orange-100 text-orange-700 border-orange-200">
+            <Badge className="bg-orange-100 text-orange-700 border-orange-200 text-xs">
               <Shield className="w-3 h-3 mr-1" />
               Blockchain
             </Badge>
           </h1>
-          <p className="text-gray-600 mt-1">
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Analyses détaillées de performance de vos propriétés
           </p>
         </div>
         
-        <div className="flex items-center space-x-3 mt-4 lg:mt-0">
+        <div className="flex items-center gap-2 sm:gap-3">
           <Select value={selectedPeriod} onValueChange={setSelectedPeriod}>
-            <SelectTrigger className="w-32">
+            <SelectTrigger className="w-28 sm:w-32">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
@@ -379,41 +379,41 @@ const VendeurAnalyticsRealData = () => {
             </SelectContent>
           </Select>
           <Button variant="outline" size="sm">
-            <Download className="w-4 h-4 mr-2" />
-            Export
+            <Download className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Export</span>
           </Button>
         </div>
       </div>
 
       {/* KPIs principaux */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Vues totales</p>
-                  <p className="text-3xl font-bold text-blue-600">{formatNumber(analyticsData.totalViews)}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Vues totales</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-blue-600 truncate">{formatNumber(analyticsData.totalViews)}</p>
                   <div className="flex items-center mt-1">
                     {analyticsData.growthRate >= 0 ? (
                       <>
-                        <ArrowUp className="w-3 h-3 text-green-600 mr-1" />
+                        <ArrowUp className="w-3 h-3 text-green-600 mr-1 flex-shrink-0" />
                         <span className="text-xs text-green-600 font-semibold">+{analyticsData.growthRate}%</span>
                       </>
                     ) : (
                       <>
-                        <ArrowDown className="w-3 h-3 text-red-600 mr-1" />
+                        <ArrowDown className="w-3 h-3 text-red-600 mr-1 flex-shrink-0" />
                         <span className="text-xs text-red-600 font-semibold">{analyticsData.growthRate}%</span>
                       </>
                     )}
                   </div>
                 </div>
-                <div className="w-14 h-14 bg-blue-100 rounded-xl flex items-center justify-center">
-                  <Eye className="w-8 h-8 text-blue-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-blue-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Eye className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-blue-600" />
                 </div>
               </div>
             </CardContent>
@@ -426,13 +426,13 @@ const VendeurAnalyticsRealData = () => {
           transition={{ delay: 0.2 }}
         >
           <Card className="border-l-4 border-l-green-500">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Visiteurs uniques</p>
-                  <p className="text-3xl font-bold text-green-600">{formatNumber(analyticsData.uniqueVisitors)}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Visiteurs uniques</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-green-600 truncate">{formatNumber(analyticsData.uniqueVisitors)}</p>
                   <div className="flex items-center mt-1">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-500 truncate">
                       {analyticsData.uniqueVisitors > 0 
                         ? `${((analyticsData.uniqueVisitors / analyticsData.totalViews) * 100).toFixed(0)}% unique`
                         : 'N/A'
@@ -440,8 +440,8 @@ const VendeurAnalyticsRealData = () => {
                     </span>
                   </div>
                 </div>
-                <div className="w-14 h-14 bg-green-100 rounded-xl flex items-center justify-center">
-                  <Users className="w-8 h-8 text-green-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Users className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-green-600" />
                 </div>
               </div>
             </CardContent>
@@ -454,11 +454,11 @@ const VendeurAnalyticsRealData = () => {
           transition={{ delay: 0.3 }}
         >
           <Card className="border-l-4 border-l-purple-500">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Taux de conversion</p>
-                  <p className="text-3xl font-bold text-purple-600">{analyticsData.conversionRate}%</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Taux de conversion</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-600">{analyticsData.conversionRate}%</p>
                   <div className="flex items-center mt-1">
                     <Badge 
                       variant={analyticsData.conversionRate >= 8 ? 'default' : 'secondary'}
@@ -468,8 +468,8 @@ const VendeurAnalyticsRealData = () => {
                     </Badge>
                   </div>
                 </div>
-                <div className="w-14 h-14 bg-purple-100 rounded-xl flex items-center justify-center">
-                  <Target className="w-8 h-8 text-purple-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-purple-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Target className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-purple-600" />
                 </div>
               </div>
             </CardContent>
@@ -482,11 +482,11 @@ const VendeurAnalyticsRealData = () => {
           transition={{ delay: 0.4 }}
         >
           <Card className="border-l-4 border-l-orange-500">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">Temps moyen</p>
-                  <p className="text-3xl font-bold text-orange-600">
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-gray-600">Temps moyen</p>
+                  <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-orange-600">
                     {formatTime(analyticsData.averageTimeOnPage)}
                   </p>
                   <div className="flex items-center mt-1">
@@ -495,8 +495,8 @@ const VendeurAnalyticsRealData = () => {
                     </Badge>
                   </div>
                 </div>
-                <div className="w-14 h-14 bg-orange-100 rounded-xl flex items-center justify-center">
-                  <Clock className="w-8 h-8 text-orange-600" />
+                <div className="w-10 h-10 sm:w-12 sm:h-12 lg:w-14 lg:h-14 bg-orange-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <Clock className="w-5 h-5 sm:w-6 sm:h-6 lg:w-8 lg:h-8 text-orange-600" />
                 </div>
               </div>
             </CardContent>
@@ -505,25 +505,25 @@ const VendeurAnalyticsRealData = () => {
       </div>
 
       {/* Stats secondaires avec badges IA/Blockchain */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-6">
         <motion.div
           initial={{ opacity: 0, scale: 0.9 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ delay: 0.5 }}
         >
           <Card className="bg-gradient-to-br from-purple-50 to-pink-50 border-purple-100">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-purple-700 flex items-center">
-                    <Brain className="w-4 h-4 mr-1" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-purple-700 flex items-center">
+                    <Brain className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                     Propriétés optimisées IA
                   </p>
-                  <p className="text-3xl font-bold text-purple-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-purple-600">
                     {analyticsData.aiOptimizedProperties}
                   </p>
                 </div>
-                <Sparkles className="w-12 h-12 text-purple-400" />
+                <Sparkles className="w-10 h-10 sm:w-12 sm:h-12 text-purple-400 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -535,18 +535,18 @@ const VendeurAnalyticsRealData = () => {
           transition={{ delay: 0.6 }}
         >
           <Card className="bg-gradient-to-br from-orange-50 to-yellow-50 border-orange-100">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-orange-700 flex items-center">
-                    <Shield className="w-4 h-4 mr-1" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-orange-700 flex items-center">
+                    <Shield className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                     Propriétés tokenisées
                   </p>
-                  <p className="text-3xl font-bold text-orange-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-orange-600">
                     {analyticsData.blockchainVerifiedProperties}
                   </p>
                 </div>
-                <Shield className="w-12 h-12 text-orange-400" />
+                <Shield className="w-10 h-10 sm:w-12 sm:h-12 text-orange-400 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -558,25 +558,25 @@ const VendeurAnalyticsRealData = () => {
           transition={{ delay: 0.7 }}
         >
           <Card className="bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-100">
-            <CardContent className="p-6">
+            <CardContent className="p-3 sm:p-4 lg:p-6">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-blue-700 flex items-center">
-                    <Heart className="w-4 h-4 mr-1" />
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm font-medium text-blue-700 flex items-center">
+                    <Heart className="w-3 h-3 sm:w-4 sm:h-4 mr-1 flex-shrink-0" />
                     Total favoris
                   </p>
-                  <p className="text-3xl font-bold text-blue-600">
+                  <p className="text-2xl sm:text-3xl font-bold text-blue-600">
                     {analyticsData.totalFavorites}
                   </p>
                 </div>
-                <Heart className="w-12 h-12 text-blue-400" />
+                <Heart className="w-10 h-10 sm:w-12 sm:h-12 text-blue-400 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
         </motion.div>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-6">
         {/* Graphique des vues */}
         <motion.div
           initial={{ opacity: 0, x: -20 }}

@@ -401,12 +401,12 @@ const VendeurOverviewRealDataModern = () => {
                 }`}
                 onClick={alert.action}
               >
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <alert.icon className="h-5 w-5 text-gray-700" />
-                    <span className="text-sm font-medium text-gray-800">{alert.message}</span>
+                <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <alert.icon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-800 break-words">{alert.message}</span>
                   </div>
-                  <Button size="sm" variant="ghost">
+                  <Button size="sm" variant="ghost" className="self-end sm:self-auto flex-shrink-0">
                     Voir <ExternalLink className="h-3 w-3 ml-1" />
                   </Button>
                 </CardContent>
@@ -515,16 +515,16 @@ const VendeurOverviewRealDataModern = () => {
                         <img
                           src={property.image}
                           alt={property.title}
-                          className="h-12 w-12 rounded object-cover"
+                          className="h-10 w-10 sm:h-12 sm:w-12 rounded object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="h-12 w-12 rounded bg-gray-200 flex items-center justify-center">
-                          <Building2 className="h-6 w-6 text-gray-400" />
+                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{property.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
+                        <p className="font-medium text-xs sm:text-sm truncate">{property.title}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
                             <Eye className="h-3 w-3" /> {property.views}
                           </span>
@@ -534,17 +534,17 @@ const VendeurOverviewRealDataModern = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                       {property.aiOptimized && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs px-1 sm:px-2">
                           <Brain className="h-3 w-3 mr-1" />
-                          IA
+                          <span className="hidden sm:inline">IA</span>
                         </Badge>
                       )}
                       {property.blockchainVerified && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs px-1 sm:px-2">
                           <Shield className="h-3 w-3 mr-1" />
-                          BC
+                          <span className="hidden sm:inline">BC</span>
                         </Badge>
                       )}
                     </div>
@@ -604,41 +604,41 @@ const VendeurOverviewRealDataModern = () => {
       {/* 🚀 ACTIONS RAPIDES */}
       <Card>
         <CardHeader>
-          <CardTitle>Actions Rapides</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Actions Rapides</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
             <Button 
               variant="outline" 
-              className="h-auto flex-col gap-2 py-4"
+              className="h-auto flex-col gap-1 sm:gap-2 py-3 sm:py-4 text-xs sm:text-sm"
               onClick={() => navigate('/vendeur/properties')}
             >
-              <Building2 className="h-6 w-6" />
-              <span className="text-sm">Mes Propriétés</span>
+              <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="truncate w-full text-center">Mes Propriétés</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto flex-col gap-2 py-4"
+              className="h-auto flex-col gap-1 sm:gap-2 py-3 sm:py-4 text-xs sm:text-sm"
               onClick={() => navigate('/vendeur/crm')}
             >
-              <Users className="h-6 w-6" />
-              <span className="text-sm">CRM</span>
+              <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="truncate w-full text-center">CRM</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto flex-col gap-2 py-4"
+              className="h-auto flex-col gap-1 sm:gap-2 py-3 sm:py-4 text-xs sm:text-sm"
               onClick={() => navigate('/vendeur/analytics')}
             >
-              <BarChart3 className="h-6 w-6" />
-              <span className="text-sm">Analytics</span>
+              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="truncate w-full text-center">Analytics</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto flex-col gap-2 py-4"
+              className="h-auto flex-col gap-1 sm:gap-2 py-3 sm:py-4 text-xs sm:text-sm"
               onClick={() => navigate('/vendeur/ai-assistant')}
             >
-              <Brain className="h-6 w-6" />
-              <span className="text-sm">IA</span>
+              <Brain className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="truncate w-full text-center">IA</span>
             </Button>
           </div>
         </CardContent>

@@ -193,6 +193,7 @@ import AdminAuditLogPage from '@/pages/admin/AdminAuditLogPage';
 import AdminSettingsPage from '@/pages/admin/AdminSettingsPage';
 import AdminUserRequestsPage from '@/pages/admin/AdminUserRequestsPage';
 import AdminUserVerificationsPage from '@/pages/admin/AdminUserVerificationsPage';
+import ConversationMessagesDiagnosticsPage from '@/pages/admin/ConversationMessagesDiagnosticsPage';
 import AgentDashboardPage from '@/pages/agent/AgentDashboardPage';
 import AgentClientsPage from '@/pages/agent/AgentClientsPage';
 import AgentParcelsPage from '@/pages/agent/AgentParcelsPage';
@@ -730,6 +731,8 @@ function App() {
                 <Route path="audit-log" element={<AdminAuditLogPage />} />
                 <Route path="admin-settings" element={<AdminSettingsPage />} />
                 <Route path="security-diagnostic" element={<SecurityDiagnosticTool />} />
+                {/* Diagnostics DB: conversation_messages */}
+                <Route path="diagnostics/conversation-messages" element={<ConversationMessagesDiagnosticsPage />} />
                 <Route path="*" element={<NotFoundPage />} />
               </Route>
             </Route>

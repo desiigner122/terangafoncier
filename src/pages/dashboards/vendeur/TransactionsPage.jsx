@@ -55,10 +55,12 @@ const TransactionsPage = () => {
 
     // Filtre par recherche
     if (searchQuery) {
-      filtered = filtered.filter(tx =>
-        tx.hash.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        tx.property.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const q = String(searchQuery || '').toLowerCase();
+      filtered = filtered.filter(tx => {
+        const h = String(tx?.hash || '').toLowerCase();
+        const p = String(tx?.property || '').toLowerCase();
+        return h.includes(q) || p.includes(q);
+      });
     }
 
     // Filtre par statut
@@ -194,14 +196,16 @@ const TransactionsPage = () => {
     verification: { label: 'Vérification', color: 'bg-blue-100 text-blue-800' },
     nft_mint: { label: 'Création NFT', color: 'bg-purple-100 text-purple-800' },
     ownership_transfer: { label: 'Transfert', color: 'bg-orange-100 text-orange-800' },
-    smart_contract: { label: 'Smart Contract', color: 'bg-green-100 text-green-800' }
+    smart_contract: { label: 'Smart Contract', color: 'bg-green-100 text-green-800' },
+    __fallback: { label: 'Autre', color: 'bg-gray-100 text-gray-800' }
   };
 
   // Statuts
   const statusConfig = {
     confirmed: { label: 'Confirmé', icon: CheckCircle, color: 'text-green-600' },
     pending: { label: 'En cours', icon: Clock, color: 'text-yellow-600' },
-    failed: { label: 'Échoué', icon: XCircle, color: 'text-red-600' }
+    failed: { label: 'Échoué', icon: XCircle, color: 'text-red-600' },
+    __fallback: { label: 'Inconnu', icon: Clock, color: 'text-gray-600' }
   };
 
   // Statistiques
@@ -343,23 +347,25 @@ const TransactionsPage = () => {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
+            <table className="w-full text-xs sm:text-sm">
               <thead>
                 <tr className="border-b">
                   <th className="text-left p-3 text-sm font-semibold text-gray-600">Hash</th>
                   <th className="text-left p-3 text-sm font-semibold text-gray-600">Propriété</th>
                   <th className="text-left p-3 text-sm font-semibold text-gray-600">Type</th>
                   <th className="text-left p-3 text-sm font-semibold text-gray-600">Statut</th>
-                  <th className="text-left p-3 text-sm font-semibold text-gray-600">Bloc</th>
-                  <th className="text-left p-3 text-sm font-semibold text-gray-600">Gas</th>
-                  <th className="text-left p-3 text-sm font-semibold text-gray-600">Confirmations</th>
+                  <th className="text-left p-3 text-sm font-semibold text-gray-600 hidden md:table-cell">Bloc</th>
+                  <th className="text-left p-3 text-sm font-semibold text-gray-600 hidden md:table-cell">Gas</th>
+                  <th className="text-left p-3 text-sm font-semibold text-gray-600 hidden lg:table-cell">Confirmations</th>
                   <th className="text-left p-3 text-sm font-semibold text-gray-600">Date</th>
                   <th className="text-left p-3 text-sm font-semibold text-gray-600">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {paginatedTransactions.map((tx) => {
-                  const StatusIcon = statusConfig[tx.status].icon;
+                  const statusCfg = statusConfig[tx.status] || statusConfig.__fallback;
+                  const typeCfg = transactionTypes[tx.type] || transactionTypes.__fallback;
+                  const StatusIcon = statusCfg.icon;
                   return (
                     <tr key={tx.id} className="border-b hover:bg-gray-50">
                       <td className="p-3">
@@ -379,21 +385,21 @@ const TransactionsPage = () => {
                       </td>
                       <td className="p-3 text-sm">{tx.property}</td>
                       <td className="p-3">
-                        <Badge className={transactionTypes[tx.type].color}>
-                          {transactionTypes[tx.type].label}
+                        <Badge className={typeCfg.color}>
+                          {typeCfg.label}
                         </Badge>
                       </td>
                       <td className="p-3">
                         <div className="flex items-center space-x-2">
-                          <StatusIcon className={`w-4 h-4 ${statusConfig[tx.status].color}`} />
-                          <span className="text-sm">{statusConfig[tx.status].label}</span>
+                          <StatusIcon className={`w-4 h-4 ${statusCfg.color}`} />
+                          <span className="text-sm">{statusCfg.label}</span>
                         </div>
                       </td>
-                      <td className="p-3 text-sm">#{tx.blockNumber.toLocaleString()}</td>
-                      <td className="p-3 text-sm">{tx.gasUsed} ETH</td>
-                      <td className="p-3 text-sm">{tx.confirmations}</td>
-                      <td className="p-3 text-sm">
-                        {format(new Date(tx.timestamp), 'dd/MM/yyyy HH:mm')}
+                      <td className="p-3 text-sm hidden md:table-cell">#{tx.blockNumber.toLocaleString()}</td>
+                      <td className="p-3 text-sm hidden md:table-cell">{tx.gasUsed} ETH</td>
+                      <td className="p-3 text-sm hidden lg:table-cell">{tx.confirmations}</td>
+                      <td className="p-3 text-sm whitespace-nowrap">
+                        {format(new Date(tx.timestamp), 'dd/MM/yyyy HH:mm', { locale: fr })}
                       </td>
                       <td className="p-3">
                         <Button

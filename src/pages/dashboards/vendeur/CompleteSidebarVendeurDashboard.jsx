@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Outlet, useParams } from 'react-router-dom';
 import { 
@@ -407,6 +407,24 @@ const CompleteSidebarVendeurDashboard = () => {
 
     // Setup realtime subscriptions for live updates
     if (user) {
+      // Debounce guards to avoid over-fetching on bursts
+      const lastMsgReloadAt = { current: 0 };
+      const lastNotifReloadAt = { current: 0 };
+      const cooldownMs = 1000;
+      const scheduleMessagesReload = async () => {
+        const now = Date.now();
+        if (now - lastMsgReloadAt.current < cooldownMs) return;
+        lastMsgReloadAt.current = now;
+        await loadMessages();
+      };
+      const scheduleNotificationsReload = async () => {
+        const now = Date.now();
+        if (now - lastNotifReloadAt.current < cooldownMs) return;
+        lastNotifReloadAt.current = now;
+        await loadNotifications();
+        if (typeof reloadUnread === 'function') reloadUnread();
+      };
+
       // Subscribe to conversations updates (new messages, status changes)
       const conversationSubscription = supabase
         .channel('public:conversations')
@@ -420,7 +438,7 @@ const CompleteSidebarVendeurDashboard = () => {
           },
           async (payload) => {
             console.log('🔔 [REALTIME] Conversation update:', payload);
-            await loadMessages();
+            await scheduleMessagesReload();
           }
         )
         .subscribe();
@@ -437,7 +455,7 @@ const CompleteSidebarVendeurDashboard = () => {
           },
           async (payload) => {
             console.log('💬 [REALTIME] New message:', payload);
-            await loadMessages();
+            await scheduleMessagesReload();
           }
         )
         .subscribe();
@@ -455,8 +473,7 @@ const CompleteSidebarVendeurDashboard = () => {
           },
           async (payload) => {
             console.log('🔔 [REALTIME] Notification change:', payload);
-            await loadNotifications();
-            if (typeof reloadUnread === 'function') reloadUnread();
+            await scheduleNotificationsReload();
           }
         )
         .subscribe();
@@ -844,7 +861,7 @@ const CompleteSidebarVendeurDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[60vh] sm:min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -1286,7 +1303,7 @@ const CompleteSidebarVendeurDashboard = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
+  <main className="flex-1 p-3 sm:p-4 lg:p-6 overflow-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

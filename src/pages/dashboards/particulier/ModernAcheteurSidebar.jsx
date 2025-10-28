@@ -190,10 +190,30 @@ const ModernAcheteurSidebar = () => {
         )
         .subscribe();
 
+      // Subscribe to notifications changes for this buyer
+      const notificationsSubscription = supabase
+        .channel('public:notifications:buyer')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('🔔 [REALTIME] Notification update (buyer):', payload);
+            await loadNotifications();
+            if (typeof reloadUnread === 'function') reloadUnread();
+          }
+        )
+        .subscribe();
+
       return () => {
         supabase.removeChannel(conversationSubscription);
         supabase.removeChannel(messagesSubscription);
         supabase.removeChannel(requestsSubscription);
+        supabase.removeChannel(notificationsSubscription);
       };
     }
   }, [user]);
@@ -208,7 +228,7 @@ const ModernAcheteurSidebar = () => {
           vendor_id,
           property_id,
           updated_at,
-          unread_count_vendor
+          unread_count_buyer
         `)
         .eq('buyer_id', user.id)
         .order('updated_at', { ascending: false })
@@ -292,9 +312,51 @@ const ModernAcheteurSidebar = () => {
           console.error('Erreur chargement notifications:', error);
         }
         setNotifications([]);
-      } else {
-        setNotifications(notif || []);
+        return;
       }
+
+      let notifications = notif || [];
+
+      // Enrichir les notifications de type "message" avec le nom du vendeur si disponible
+      const convIds = notifications
+        .map(n => n.conversation_id || n?.data?.conversation_id || n?.metadata?.conversation_id)
+        .filter(Boolean);
+
+      if (convIds.length > 0) {
+        const { data: convs } = await supabase
+          .from('conversations')
+          .select('id, vendor_id')
+          .in('id', convIds);
+
+        const vendorIds = [...new Set((convs || []).map(c => c.vendor_id).filter(Boolean))];
+        let vendorMap = {};
+        if (vendorIds.length > 0) {
+          const { data: vendors } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name')
+            .in('id', vendorIds);
+          (vendors || []).forEach(v => {
+            vendorMap[v.id] = `${v.first_name || ''} ${v.last_name || ''}`.trim();
+          });
+        }
+
+        // Remplacer titre/message si manquants
+        notifications = notifications.map(n => {
+          const convId = n.conversation_id || n?.data?.conversation_id || n?.metadata?.conversation_id;
+          if ((n.type === 'message' || n.type === 'chat') && convId) {
+            const conv = (convs || []).find(c => c.id === convId);
+            const name = conv ? vendorMap[conv.vendor_id] : undefined;
+            return {
+              ...n,
+              title: n.title || (name ? `Message de ${name}` : 'Nouveau message'),
+              message: n.message || 'Vous avez reçu un nouveau message'
+            };
+          }
+          return n;
+        });
+      }
+
+      setNotifications(notifications);
     } catch (error) {
       console.error('Erreur chargement notifications:', error);
       setNotifications([]);

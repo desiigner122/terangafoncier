@@ -96,11 +96,11 @@ const ModernHeader = () => {
 
       let buyerMap = {}, vendorMap = {}, propertyMap = {};
       if (buyerIds.length) {
-        const { data: buyers } = await supabase.from('profiles').select('id, first_name, last_name, avatar_url').in('id', buyerIds);
+        const { data: buyers } = await supabase.from('profiles').select('id, first_name, last_name, full_name, avatar_url').in('id', buyerIds);
         (buyers || []).forEach(b => { buyerMap[b.id] = b; });
       }
       if (vendorIds.length) {
-        const { data: vendors } = await supabase.from('profiles').select('id, first_name, last_name, avatar_url').in('id', vendorIds);
+        const { data: vendors } = await supabase.from('profiles').select('id, first_name, last_name, full_name, avatar_url').in('id', vendorIds);
         (vendors || []).forEach(v => { vendorMap[v.id] = v; });
       }
       if (propertyIds.length) {
@@ -108,14 +108,26 @@ const ModernHeader = () => {
         (props || []).forEach(p => { propertyMap[p.id] = p; });
       }
 
+      const safeStr = (val) => {
+        const s = (val ?? '').toString().trim();
+        if (!s) return '';
+        const lower = s.toLowerCase();
+        if (lower === 'null' || lower === 'undefined' || s === '-') return '';
+        return s;
+      };
+
       const list = conversations.map(conv => {
         const other = isVendor ? buyerMap[conv.buyer_id] : vendorMap[conv.vendor_id];
+        const full = safeStr(other?.full_name);
+        const fn = safeStr(other?.first_name);
+        const ln = safeStr(other?.last_name);
+        const computedName = (fn || ln) ? `${fn} ${ln}`.trim() : (full || 'Utilisateur');
         return {
           id: conv.id,
           conversation_id: conv.id,
-          other_name: other ? `${other.first_name || ''} ${other.last_name || ''}`.trim() || 'Utilisateur' : 'Utilisateur',
+          other_name: other ? computedName : 'Utilisateur',
           other_avatar: other?.avatar_url,
-          property_title: propertyMap[conv.property_id]?.title || 'Propriété',
+          property_title: safeStr(propertyMap[conv.property_id]?.title) || 'Propriété',
           unread: isVendor ? (conv.unread_count_vendor || 0) > 0 : (conv.unread_count_buyer || 0) > 0,
           timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR'),
         };
@@ -457,21 +469,6 @@ const ModernHeader = () => {
                 {/* Search */}
                 <Button variant="ghost" size="sm" className="hidden md:flex">
                   <Search className="w-4 h-4" />
-                </Button>
-
-                {/* Real Messages (Conversations) */}
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="relative"
-                  onClick={() => navigate(messagesPath)}
-                >
-                  <MessageSquare className="h-5 w-5" />
-                  {unreadMessagesCount > 0 && (
-                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
-                    </Badge>
-                  )}
                 </Button>
 
                 {/* Messages dropdown */}

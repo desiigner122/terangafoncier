@@ -588,11 +588,11 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
       {/* Sidebar - Liste des conversations */}
       <div className="w-full sm:w-80 md:w-96 border-r border-slate-200 bg-white/80 backdrop-blur-sm flex flex-col min-w-0">
         {/* Header */}
-        <div className="p-4 border-b border-slate-200">
-          <div className="flex items-center justify-between mb-4">
+        <div className="p-3 sm:p-4 border-b border-slate-200">
+          <div className="flex items-center justify-between mb-3 sm:mb-4">
             <div>
-              <h2 className="text-lg font-bold text-slate-900">Messages</h2>
-              <p className="text-sm text-slate-500">
+              <h2 className="text-base sm:text-lg font-bold text-slate-900">Messages</h2>
+              <p className="text-xs sm:text-sm text-slate-500">
                 {stats.unreadCount > 0 
                   ? `${stats.unreadCount} non lu${stats.unreadCount > 1 ? 's' : ''}`
                   : 'Toutes les conversations'
@@ -600,23 +600,23 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
               </p>
             </div>
             <div className="flex items-center gap-1">
-              <Button variant="ghost" size="sm" onClick={() => setShowCreate(true)}>
-                <Plus className="h-4 w-4" />
+              <Button variant="ghost" size="sm" onClick={() => setShowCreate(true)} className="h-8 w-8 p-0 sm:h-9 sm:w-9">
+                <Plus className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
-              <Button variant="ghost" size="sm">
-                <Filter className="h-4 w-4" />
+              <Button variant="ghost" size="sm" className="h-8 w-8 p-0 sm:h-9 sm:w-9">
+                <Filter className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
               </Button>
             </div>
           </div>
 
           {/* Search */}
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-slate-400" />
+            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-slate-400" />
             <Input
-              placeholder="Rechercher conversations..."
+              placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10 bg-slate-50 border-slate-200"
+              className="pl-8 sm:pl-10 bg-slate-50 border-slate-200 text-xs sm:text-sm"
             />
           </div>
         </div>
@@ -723,43 +723,43 @@ const ParticulierMessagesModern = ({ onUnreadChange }) => {
         {selectedConversation ? (
           <>
             {/* Header conversation */}
-            <div className="p-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
+            <div className="p-3 sm:p-4 border-b border-slate-200 bg-white/80 backdrop-blur-sm">
               <div className="flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <Avatar className="h-10 w-10 ring-2 ring-blue-500/20">
+                <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+                  <Avatar className="h-8 w-8 sm:h-10 sm:w-10 ring-2 ring-blue-500/20 flex-shrink-0">
                     <AvatarImage src={selectedConversation.vendor_avatar} />
-                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white">
+                    <AvatarFallback className="bg-gradient-to-br from-blue-600 to-cyan-600 text-white text-xs sm:text-sm">
                       {selectedConversation.vendor_name?.charAt(0) || 'V'}
                     </AvatarFallback>
                   </Avatar>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold text-slate-900 text-sm sm:text-base truncate">
                       {selectedConversation.vendor_name}
                     </h3>
-                    <div className="flex items-center gap-1 text-xs text-slate-500">
-                      <Building className="h-3 w-3" />
-                      <span>{selectedConversation.property_title}</span>
+                    <div className="flex items-center gap-1 text-[10px] sm:text-xs text-slate-500">
+                      <Building className="h-2.5 w-2.5 sm:h-3 sm:w-3 flex-shrink-0" />
+                      <span className="truncate">{selectedConversation.property_title}</span>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <Button variant="ghost" size="sm">
-                    <Phone className="h-4 w-4" />
+                <div className="flex items-center gap-1 sm:gap-2">
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hidden sm:flex sm:h-9 sm:w-9">
+                    <Phone className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm">
-                    <Video className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" className="h-8 w-8 p-0 hidden sm:flex sm:h-9 sm:w-9">
+                    <Video className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
-                  <Button variant="ghost" size="sm" onClick={() => setShowInfo(!showInfo)}>
-                    <Info className="h-4 w-4" />
+                  <Button variant="ghost" size="sm" onClick={() => setShowInfo(!showInfo)} className="h-8 w-8 p-0 sm:h-9 sm:w-9">
+                    <Info className="h-3.5 w-3.5 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
             </div>
 
             {/* Messages */}
-            <ScrollArea className="flex-1 p-4 bg-slate-50/50">
-              <div className="space-y-4 max-w-4xl mx-auto">
+            <ScrollArea className="flex-1 p-2 sm:p-3 lg:p-4 bg-slate-50/50">
+              <div className="space-y-3 sm:space-y-4 max-w-4xl mx-auto">
                 {messages.map((message) => {
                   const isMe = message.sender_id === user.id || message.sender_type === 'buyer';
                   return (

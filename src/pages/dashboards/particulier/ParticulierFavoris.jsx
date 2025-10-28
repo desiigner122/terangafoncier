@@ -450,71 +450,72 @@ const ParticulierFavoris = () => {
   };
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-          <Heart className="w-8 h-8 text-red-500" />
+    <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6 lg:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+          <Heart className="w-6 h-6 sm:w-7 sm:w-7 lg:w-8 lg:h-8 text-red-500" />
           Mes Dossiers Favoris
         </h1>
-        <p className="text-gray-600">
+        <p className="text-xs sm:text-sm lg:text-base text-gray-600">
           Retrouvez rapidement vos dossiers administratifs les plus importants
         </p>
       </div>
 
       {/* Stats rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6 lg:mb-8">
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-red-600">
+          <CardContent className="p-2 sm:p-3 lg:p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-red-600">
               {stats.total}
             </div>
-            <div className="text-sm text-gray-600">Total favoris</div>
+            <div className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Total favoris</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-blue-600">
+          <CardContent className="p-2 sm:p-3 lg:p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-blue-600">
               {stats.properties}
             </div>
-            <div className="text-sm text-gray-600">Terrains privés</div>
+            <div className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Terrains privés</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-green-600">
+          <CardContent className="p-2 sm:p-3 lg:p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-green-600">
               {stats.zones}
             </div>
-            <div className="text-sm text-gray-600">Zones communales</div>
+            <div className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Zones communales</div>
           </CardContent>
         </Card>
         <Card>
-          <CardContent className="p-4 text-center">
-            <div className="text-2xl font-bold text-purple-600">
+          <CardContent className="p-2 sm:p-3 lg:p-4 text-center">
+            <div className="text-xl sm:text-2xl font-bold text-purple-600">
               {stats.projects}
             </div>
-            <div className="text-sm text-gray-600">Projets promoteurs</div>
+            <div className="text-[10px] sm:text-xs lg:text-sm text-gray-600">Projets promoteurs</div>
           </CardContent>
         </Card>
       </div>
 
       {/* Barre de recherche et filtres */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <Input
-              placeholder="Rechercher dans vos favoris..."
+              placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-8 sm:pl-10 text-xs sm:text-sm"
             />
           </div>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
           <Button
             variant={filterType === 'tous' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterType('tous')}
+            className="text-xs sm:text-sm px-2 sm:px-3"
           >
             Tous
           </Button>
@@ -522,40 +523,46 @@ const ParticulierFavoris = () => {
             variant={filterType === 'terrain_prive' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterType('terrain_prive')}
+            className="text-xs sm:text-sm px-2 sm:px-3"
           >
-            Terrains Privés
+            <span className="hidden sm:inline">Terrains Privés</span>
+            <span className="sm:hidden">Terrains</span>
           </Button>
           <Button
             variant={filterType === 'zone_communale' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterType('zone_communale')}
+            className="text-xs sm:text-sm px-2 sm:px-3"
           >
-            Zones Communales
+            <span className="hidden sm:inline">Zones Communales</span>
+            <span className="sm:hidden">Zones</span>
           </Button>
           <Button
             variant={filterType === 'projet_promoteur' ? 'default' : 'outline'}
             size="sm"
             onClick={() => setFilterType('projet_promoteur')}
+            className="text-xs sm:text-sm px-2 sm:px-3"
           >
-            Projets Promoteurs
+            <span className="hidden sm:inline">Projets Promoteurs</span>
+            <span className="sm:hidden">Projets</span>
           </Button>
         </div>
       </div>
 
       {/* Liste des dossiers favoris */}
-      <div className="space-y-4">
+      <div className="space-y-3 sm:space-y-4">
         {filteredDossiers.length === 0 ? (
           <Card>
-            <CardContent className="p-12 text-center">
-              <Heart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-gray-900 mb-2">
+            <CardContent className="p-6 sm:p-8 lg:p-12 text-center">
+              <Heart className="w-12 h-12 sm:w-14 sm:h-14 lg:w-16 lg:h-16 text-gray-300 mx-auto mb-3 sm:mb-4" />
+              <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-1 sm:mb-2">
                 Aucun dossier favori trouvé
               </h3>
-              <p className="text-gray-600 mb-4">
+              <p className="text-xs sm:text-sm lg:text-base text-gray-600 mb-3 sm:mb-4">
                 {searchTerm ? 'Aucun résultat pour votre recherche' : 'Vous n\'avez pas encore de dossiers favoris'}
               </p>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
+              <Button size="sm">
+                <Plus className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                 Ajouter un favori
               </Button>
             </CardContent>

@@ -434,29 +434,29 @@ const ParticulierDocuments = () => {
 
   const StatCard = ({ title, value, subtitle, icon: Icon, color }) => (
     <Card>
-      <CardContent className="p-4 text-center">
-        <Icon className={`w-8 h-8 mx-auto mb-2 text-${color}-600`} />
-        <div className={`text-2xl font-bold text-${color}-600`}>{value}</div>
-        <div className="text-sm font-medium text-gray-900">{title}</div>
-        {subtitle && <div className="text-xs text-gray-600">{subtitle}</div>}
+      <CardContent className="p-2 sm:p-3 lg:p-4 text-center">
+        <Icon className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 mx-auto mb-1 sm:mb-2 text-${color}-600`} />
+        <div className={`text-lg sm:text-xl lg:text-2xl font-bold text-${color}-600`}>{value}</div>
+        <div className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-900 line-clamp-1">{title}</div>
+        {subtitle && <div className="text-[10px] sm:text-xs text-gray-600">{subtitle}</div>}
       </CardContent>
     </Card>
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-          <FileText className="w-8 h-8 text-blue-600" />
+    <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6 lg:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+          <FileText className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-blue-600" />
           Gestion Documentaire
         </h1>
-        <p className="text-gray-600">
+        <p className="text-xs sm:text-sm lg:text-base text-gray-600">
           Tous vos documents administratifs organisés par dossier
         </p>
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6 lg:mb-8">
         <StatCard
           title="Documents total"
           value={documents.length}
@@ -491,12 +491,12 @@ const ParticulierDocuments = () => {
       </div>
 
       {/* Barre de recherche et filtres */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <Input
-              placeholder="Rechercher dans les documents..."
+              placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"

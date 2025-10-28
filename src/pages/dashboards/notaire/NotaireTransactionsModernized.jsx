@@ -195,11 +195,11 @@ const NotaireTransactionsModernized = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Transactions Notariales</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Transactions Notariales</h2>
           <p className="text-gray-600">Gestion des actes et transactions en cours</p>
         </div>
         <Button onClick={handleCreateTransaction} className="bg-amber-600 hover:bg-amber-700">
@@ -209,64 +209,64 @@ const NotaireTransactionsModernized = () => {
       </div>
 
       {/* Statistiques rapides */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Actes</p>
-                <p className="text-2xl font-bold text-gray-900">{transactions.length}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Actes</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{transactions.length}</p>
               </div>
-              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">En Cours</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">En Cours</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {transactions.filter(t => ['draft', 'draft_review', 'documentation', 'signature_pending', 'registration'].includes(t.status)).length}
                 </p>
               </div>
-              <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Terminés</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Terminés</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {transactions.filter(t => t.status === 'completed').length}
                 </p>
               </div>
-              <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Valeur Totale</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Valeur Totale</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {formatCurrency(transactions.reduce((sum, t) => sum + (t.property_value || 0), 0))}
                 </p>
               </div>
-              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-purple-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -275,8 +275,8 @@ const NotaireTransactionsModernized = () => {
 
       {/* Filtres et recherche */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="p-3 sm:p-4 lg:p-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -314,7 +314,7 @@ const NotaireTransactionsModernized = () => {
         <CardContent>
           {filteredTransactions.length === 0 ? (
             <div className="text-center py-12">
-              <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
               <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune transaction trouvée</h3>
               <p className="text-gray-600 mb-4">
                 {transactions.length === 0
@@ -426,7 +426,7 @@ const NotaireTransactionsModernized = () => {
                             <div>
                               <div className="font-semibold">{formatCurrency(transaction.property_value)}</div>
                               {transaction.notary_fees && (
-                                <div className="text-xs text-gray-600">
+                                <div className="text-[10px] sm:text-xs text-gray-600">
                                   Frais: {formatCurrency(transaction.notary_fees)}
                                 </div>
                               )}
@@ -436,7 +436,7 @@ const NotaireTransactionsModernized = () => {
                             <div className="text-sm">
                               <div>{formatDate(transaction.created_at)}</div>
                               {transaction.estimated_completion && (
-                                <div className="text-xs text-gray-600 flex items-center mt-1">
+                                <div className="text-[10px] sm:text-xs text-gray-600 flex items-center mt-1">
                                   <Clock className="h-3 w-3 mr-1" />
                                   Échéance: {formatDate(transaction.estimated_completion)}
                                 </div>
@@ -557,7 +557,7 @@ const NotaireTransactionsModernized = () => {
               </div>
             </DialogHeader>
             
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {/* Colonne gauche - Informations principales */}
               <div className="lg:col-span-2 space-y-6">
                 {/* Progression visuelle */}
@@ -596,7 +596,7 @@ const NotaireTransactionsModernized = () => {
                               <span className={`text-sm ${item.completed ? 'text-gray-900' : 'text-gray-500'}`}>
                                 {item.step}
                               </span>
-                              <span className="text-xs text-gray-400 ml-auto">{item.date}</span>
+                              <span className="text-[10px] sm:text-xs text-gray-400 ml-auto">{item.date}</span>
                             </div>
                           ))}
                         </div>
@@ -611,13 +611,13 @@ const NotaireTransactionsModernized = () => {
                     <CardTitle className="text-lg">Informations de l'acte</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Type d'acte</Label>
+                        <Label className="text-xs sm:text-sm font-medium text-gray-600">Type d'acte</Label>
                         <p className="mt-1 font-medium">{selectedTransaction.act_type?.replace('_', ' ')}</p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Statut actuel</Label>
+                        <Label className="text-xs sm:text-sm font-medium text-gray-600">Statut actuel</Label>
                         <div className="mt-1">
                           <Badge className={getStatusBadge(selectedTransaction.status).color}>
                             {getStatusBadge(selectedTransaction.status).label}
@@ -625,7 +625,7 @@ const NotaireTransactionsModernized = () => {
                         </div>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Priorité</Label>
+                        <Label className="text-xs sm:text-sm font-medium text-gray-600">Priorité</Label>
                         <div className="mt-1 flex items-center space-x-2">
                           <p>{selectedTransaction.priority || 'Normale'}</p>
                           {selectedTransaction.priority === 'urgent' && (
@@ -634,7 +634,7 @@ const NotaireTransactionsModernized = () => {
                         </div>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Échéance prévue</Label>
+                        <Label className="text-xs sm:text-sm font-medium text-gray-600">Échéance prévue</Label>
                         <p className="mt-1 flex items-center space-x-1">
                           <Clock className="h-4 w-4 text-gray-400" />
                           <span>{selectedTransaction.estimated_completion ? formatDate(selectedTransaction.estimated_completion) : '15 nov. 2024'}</span>
@@ -675,7 +675,7 @@ const NotaireTransactionsModernized = () => {
               </div>
 
               {/* Colonne droite - Données financières et documents */}
-              <div className="space-y-6">
+              <div className="space-y-4 sm:space-y-6">
                 {/* Informations financières */}
                 <Card>
                   <CardHeader>
@@ -683,20 +683,20 @@ const NotaireTransactionsModernized = () => {
                   </CardHeader>
                   <CardContent className="space-y-4">
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Valeur de la propriété</Label>
+                      <Label className="text-xs sm:text-sm font-medium text-gray-600">Valeur de la propriété</Label>
                       <p className="mt-1 text-xl font-bold text-green-600">{formatCurrency(selectedTransaction.property_value)}</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Frais notariaux</Label>
+                      <Label className="text-xs sm:text-sm font-medium text-gray-600">Frais notariaux</Label>
                       <p className="mt-1 font-medium">{formatCurrency(selectedTransaction.notary_fees)}</p>
                     </div>
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Droits d'enregistrement</Label>
+                      <Label className="text-xs sm:text-sm font-medium text-gray-600">Droits d'enregistrement</Label>
                       <p className="mt-1 font-medium">{formatCurrency(selectedTransaction.property_value * 0.03)}</p>
                     </div>
                     <hr />
                     <div>
-                      <Label className="text-sm font-medium text-gray-600">Total frais</Label>
+                      <Label className="text-xs sm:text-sm font-medium text-gray-600">Total frais</Label>
                       <p className="mt-1 text-lg font-bold">{formatCurrency((selectedTransaction.notary_fees || 0) + (selectedTransaction.property_value * 0.03))}</p>
                     </div>
                   </CardContent>
@@ -710,18 +710,18 @@ const NotaireTransactionsModernized = () => {
                   <CardContent>
                     <div className="space-y-3">
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Adresse</Label>
+                        <Label className="text-xs sm:text-sm font-medium text-gray-600">Adresse</Label>
                         <p className="mt-1 flex items-start space-x-2">
                           <MapPin className="h-4 w-4 text-gray-400 mt-0.5" />
                           <span>{selectedTransaction.property_address || 'Dakar, Plateau, Rue 15'}</span>
                         </p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Surface</Label>
+                        <Label className="text-xs sm:text-sm font-medium text-gray-600">Surface</Label>
                         <p className="mt-1">250 m²</p>
                       </div>
                       <div>
-                        <Label className="text-sm font-medium text-gray-600">Type</Label>
+                        <Label className="text-xs sm:text-sm font-medium text-gray-600">Type</Label>
                         <p className="mt-1">Appartement 4 pièces</p>
                       </div>
                     </div>
@@ -751,7 +751,7 @@ const NotaireTransactionsModernized = () => {
                             <FileText className="h-4 w-4 text-blue-500" />
                             <div>
                               <p className="text-sm font-medium">{doc.name}</p>
-                              <p className="text-xs text-gray-500">{doc.type}</p>
+                              <p className="text-[10px] sm:text-xs text-gray-500">{doc.type}</p>
                             </div>
                           </div>
                           <Badge variant="outline" className="text-xs">

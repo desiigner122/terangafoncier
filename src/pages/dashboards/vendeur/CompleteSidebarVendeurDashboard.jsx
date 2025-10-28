@@ -469,6 +469,26 @@ const CompleteSidebarVendeurDashboard = () => {
     }
   }, [user]);
 
+  // Auto-clear notification badges when landing on the notifications page
+  useEffect(() => {
+    if (!user?.id) return;
+    if (location.pathname.startsWith('/vendeur/purchase-requests')) {
+      (async () => {
+        try {
+          await supabase
+            .from('notifications')
+            .update({ is_read: true, read_at: new Date().toISOString() })
+            .eq('user_id', user.id)
+            .eq('is_read', false);
+          if (typeof reloadUnread === 'function') reloadUnread();
+          await loadNotifications();
+        } catch (e) {
+          console.warn('Failed to auto-clear notifications on page visit', e);
+        }
+      })();
+    }
+  }, [location.pathname, user?.id]);
+
   // Charger les notifications depuis Supabase
   const loadNotifications = async () => {
     let fetchedNotifications = [];

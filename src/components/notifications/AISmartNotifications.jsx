@@ -117,14 +117,9 @@ const AISmartNotifications = () => {
         className="relative p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors"
       >
         <MessageSquare className="h-5 w-5" />
+        {/* Ne pas afficher de badge numérique ici pour éviter la confusion avec les vrais messages */}
         {unreadCount > 0 && (
-          <motion.div
-            initial={{ scale: 0 }}
-            animate={{ scale: 1 }}
-            className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold"
-          >
-            {unreadCount > 9 ? '9+' : unreadCount}
-          </motion.div>
+          <span className="absolute -top-1 -right-1 w-2 h-2 bg-blue-500 rounded-full" />
         )}
       </button>
 

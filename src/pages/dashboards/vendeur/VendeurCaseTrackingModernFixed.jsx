@@ -445,33 +445,37 @@ const VendeurCaseTrackingModernFixed = () => {
   const paymentsProgress = calculatePaymentsProgress();
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-purple-50 to-pink-50 p-3 sm:p-4 lg:p-6">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
-        <div className="mb-6">
+        <div className="mb-4 sm:mb-6">
           <Button
             variant="ghost"
             onClick={() => navigate('/vendeur/purchase-requests')}
-            className="mb-4"
+            className="mb-3 sm:mb-4 text-xs sm:text-sm"
+            size="sm"
           >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Retour aux demandes
+            <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+            <span className="hidden sm:inline">Retour aux demandes</span>
+            <span className="sm:hidden">Retour</span>
           </Button>
 
-          <div className="flex items-start justify-between">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">{property?.title || 'Propriété'}</h1>
-              <p className="text-gray-600 mt-1 flex items-center gap-2">
-                <MapPin className="w-4 h-4" />
-                {property?.location || 'Localisation non disponible'}
+          <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-3 sm:gap-4">
+            <div className="flex-1">
+              <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 break-words">
+                {property?.title || 'Propriété'}
+              </h1>
+              <p className="text-gray-600 mt-1 flex items-center gap-1 sm:gap-2 text-xs sm:text-sm">
+                <MapPin className="w-3 h-3 sm:w-4 sm:h-4 flex-shrink-0" />
+                <span className="line-clamp-1">{property?.location || 'Localisation non disponible'}</span>
               </p>
             </div>
 
-            <div className="text-right">
-              <div className="text-3xl font-bold text-purple-600">
+            <div className="text-left sm:text-right w-full sm:w-auto">
+              <div className="text-xl sm:text-2xl lg:text-3xl font-bold text-purple-600">
                 {formatPrice(purchaseCase?.negotiated_price || purchaseCase?.purchase_price || purchaseCase?.amount || 0)}
               </div>
-              <p className="text-sm text-gray-500">Montant du dossier</p>
+              <p className="text-xs sm:text-sm text-gray-500">Montant du dossier</p>
               <Badge className={cn('mt-2', getStatusColor(purchaseCase?.status))}>
                 {WorkflowStatusService.getLabel(purchaseCase?.status || 'initiated')}
               </Badge>
@@ -479,30 +483,34 @@ const VendeurCaseTrackingModernFixed = () => {
           </div>
 
           {/* Barre de progression - Utilise le vrai progress_percentage */}
-          <Card className="mt-6">
-            <CardContent className="pt-6">
+          <Card className="mt-4 sm:mt-6">
+            <CardContent className="pt-4 sm:pt-6 p-3 sm:p-6">
               <div className="flex items-center justify-between mb-2">
-                <span className="text-sm font-medium">Progression du dossier (Phase {purchaseCase?.phase || 1})</span>
-                <span className="text-sm font-bold text-purple-600">{Math.round(progress)}%</span>
+                <span className="text-xs sm:text-sm font-medium">
+                  <span className="hidden sm:inline">Progression du dossier </span>
+                  <span className="sm:hidden">Progression </span>
+                  (Phase {purchaseCase?.phase || 1})
+                </span>
+                <span className="text-xs sm:text-sm font-bold text-purple-600">{Math.round(progress)}%</span>
               </div>
-              <Progress value={progress} className="h-3" />
+              <Progress value={progress} className="h-2 sm:h-3" />
             </CardContent>
           </Card>
         </div>
 
         {/* Contenu principal */}
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {/* Colonne gauche */}
-          <div className="lg:col-span-2 space-y-6">
+          <div className="lg:col-span-2 space-y-3 sm:space-y-4 lg:space-y-6">
             {/* Timeline */}
             <Card>
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Package className="w-5 h-5" />
+              <CardHeader className="p-3 sm:p-4 lg:p-6">
+                <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+                  <Package className="w-4 h-4 sm:w-5 sm:h-5" />
                   Suivi du dossier
                 </CardTitle>
               </CardHeader>
-              <CardContent>
+              <CardContent className="p-3 sm:p-4 lg:p-6">
                 <TimelineTrackerModern
                   currentStatus={purchaseCase?.status || 'initiated'}
                   paymentMethod={purchaseCase?.payment_method || 'one_time'}
@@ -526,33 +534,38 @@ const VendeurCaseTrackingModernFixed = () => {
 
             {/* Tabs */}
             <Card>
-              <CardContent className="pt-6">
+              <CardContent className="pt-4 sm:pt-6 p-3 sm:p-4 lg:p-6">
                 <Tabs defaultValue="documents">
-                  <TabsList className="grid w-full grid-cols-5">
-                    <TabsTrigger value="documents">
-                      <FileText className="w-4 h-4 mr-2" />
-                      Documents
+                  <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-1 sm:gap-0 h-auto sm:h-10">
+                    <TabsTrigger value="documents" className="text-xs sm:text-sm px-2 py-2 sm:py-0">
+                      <FileText className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Documents</span>
+                      <span className="sm:hidden">Docs</span>
                     </TabsTrigger>
-                    <TabsTrigger value="messages">
-                      <MessageSquare className="w-4 h-4 mr-2" />
-                      Messages ({messages.length})
+                    <TabsTrigger value="messages" className="text-xs sm:text-sm px-2 py-2 sm:py-0">
+                      <MessageSquare className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden lg:inline">Messages ({messages.length})</span>
+                      <span className="lg:hidden">Msg ({messages.length})</span>
                     </TabsTrigger>
-                    <TabsTrigger value="appointments">
-                      <Calendar className="w-4 h-4 mr-2" />
-                      Rendez-vous
+                    <TabsTrigger value="appointments" className="text-xs sm:text-sm px-2 py-2 sm:py-0">
+                      <Calendar className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">RDV</span>
+                      <span className="sm:hidden">📅</span>
                     </TabsTrigger>
-                    <TabsTrigger value="payments">
-                      <DollarSign className="w-4 h-4 mr-2" />
-                      Paiements
+                    <TabsTrigger value="payments" className="text-xs sm:text-sm px-2 py-2 sm:py-0">
+                      <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Paiements</span>
+                      <span className="sm:hidden">💰</span>
                     </TabsTrigger>
-                    <TabsTrigger value="history">
-                      <Clock className="w-4 h-4 mr-2" />
-                      Historique
+                    <TabsTrigger value="history" className="text-xs sm:text-sm px-2 py-2 sm:py-0">
+                      <Clock className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+                      <span className="hidden sm:inline">Historique</span>
+                      <span className="sm:hidden">⏱️</span>
                     </TabsTrigger>
                   </TabsList>
 
                   {/* Documents */}
-                  <TabsContent value="documents" className="space-y-4">
+                  <TabsContent value="documents" className="space-y-4 mt-4">
                     <div className="flex justify-between items-center">
                       <h3 className="font-semibold">Documents du dossier</h3>
                       <Dialog>
@@ -771,53 +784,53 @@ const VendeurCaseTrackingModernFixed = () => {
           </div>
 
           {/* Colonne droite - Infos acheteur et actions */}
-          <div className="space-y-6">
+          <div className="space-y-3 sm:space-y-4 lg:space-y-6">
             {/* Infos acheteur */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Acheteur</CardTitle>
+              <CardHeader className="p-3 sm:p-4 lg:p-6">
+                <CardTitle className="text-base sm:text-lg">Acheteur</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-4 lg:p-6 pt-0">
                 {buyer ? (
                   <>
-                    <div className="flex items-center gap-3">
-                      <Avatar className="w-12 h-12">
+                    <div className="flex items-center gap-2 sm:gap-3">
+                      <Avatar className="w-10 h-10 sm:w-12 sm:h-12">
                         <AvatarImage src={buyer?.avatar_url} alt={buyer?.full_name} />
-                        <AvatarFallback>
+                        <AvatarFallback className="text-xs sm:text-sm">
                           {buyer?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'A'}
                         </AvatarFallback>
                       </Avatar>
-                      <div>
-                        <p className="font-semibold">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm sm:text-base truncate">
                           {buyer?.full_name || 'Acheteur'}
                         </p>
-                        <p className="text-sm text-gray-500">{buyer?.email}</p>
+                        <p className="text-xs sm:text-sm text-gray-500 truncate">{buyer?.email}</p>
                       </div>
                     </div>
                     {buyer?.phone && (
-                      <Button variant="outline" className="w-full" size="sm">
-                        <Phone className="w-4 h-4 mr-2" />
+                      <Button variant="outline" className="w-full text-xs sm:text-sm" size="sm">
+                        <Phone className="w-3 h-3 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
                         {buyer?.phone}
                       </Button>
                     )}
                   </>
                 ) : (
-                  <p className="text-gray-500">Acheteur non disponible</p>
+                  <p className="text-gray-500 text-sm">Acheteur non disponible</p>
                 )}
               </CardContent>
             </Card>
 
             {/* Infos propriété */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Propriété</CardTitle>
+              <CardHeader className="p-3 sm:p-4 lg:p-6">
+                <CardTitle className="text-base sm:text-lg">Propriété</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-4">
+              <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-4 lg:p-6 pt-0">
                 {property ? (
                   <>
                     {/* Image de la propriété */}
                     {(property.image_url || property.photo_url || property.image || property.photo || (property.images && property.images[0])) && (
-                      <div className="w-full h-40 rounded-lg overflow-hidden bg-gray-100">
+                      <div className="w-full h-32 sm:h-40 rounded-lg overflow-hidden bg-gray-100">
                         <img 
                           src={property.image_url || property.photo_url || property.image || property.photo || property.images[0]} 
                           alt={property.title || property.name}
@@ -830,26 +843,26 @@ const VendeurCaseTrackingModernFixed = () => {
                       </div>
                     )}
                     <div>
-                      <p className="text-sm text-gray-500">Titre</p>
-                      <p className="font-semibold">{property.title || property.name || 'Sans titre'}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Titre</p>
+                      <p className="font-semibold text-sm sm:text-base break-words">{property.title || property.name || 'Sans titre'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Localisation</p>
-                      <p className="font-semibold">{property.location || property.address || property.commune || 'N/A'}</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Localisation</p>
+                      <p className="font-semibold text-sm sm:text-base break-words">{property.location || property.address || property.commune || 'N/A'}</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Surface</p>
-                      <p className="font-semibold">{property.surface || property.area || 'N/A'} m²</p>
+                      <p className="text-xs sm:text-sm text-gray-500">Surface</p>
+                      <p className="font-semibold text-sm sm:text-base">{property.surface || property.area || 'N/A'} m²</p>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Prix initial</p>
-                      <p className="font-semibold text-lg">
+                      <p className="text-xs sm:text-sm text-gray-500">Prix initial</p>
+                      <p className="font-semibold text-base sm:text-lg">
                         {formatPrice(property.price || 0)}
                       </p>
                     </div>
                   </>
                 ) : (
-                  <p className="text-gray-500">Propriété non disponible</p>
+                  <p className="text-gray-500 text-sm">Propriété non disponible</p>
                 )}
               </CardContent>
             </Card>
@@ -857,24 +870,25 @@ const VendeurCaseTrackingModernFixed = () => {
             {/* Prochains rendez-vous */}
             {appointments.length > 0 && (
               <Card>
-                <CardHeader>
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    Rendez-vous planifiés
+                <CardHeader className="p-3 sm:p-4 lg:p-6">
+                  <CardTitle className="text-base sm:text-lg flex items-center gap-2">
+                    <Calendar className="w-4 h-4 sm:w-5 sm:h-5" />
+                    <span className="hidden sm:inline">Rendez-vous planifiés</span>
+                    <span className="sm:hidden">RDV</span>
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-3">
+                <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-4 lg:p-6 pt-0">
                   {appointments.slice(0, 3).map((apt) => (
-                    <div key={apt.id} className="p-3 bg-blue-50 rounded-lg border border-blue-100">
-                      <p className="font-medium text-sm">{apt.title}</p>
-                      <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
-                        <Clock className="w-3 h-3" />
+                    <div key={apt.id} className="p-2 sm:p-3 bg-blue-50 rounded-lg border border-blue-100">
+                      <p className="font-medium text-xs sm:text-sm line-clamp-2">{apt.title}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-600 mt-1 flex items-center gap-1">
+                        <Clock className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
                         {format(new Date(apt.start_time), 'dd MMM yyyy à HH:mm', { locale: fr })}
                       </p>
                       {apt.location && (
-                        <p className="text-xs text-gray-600 mt-1 flex items-center gap-1">
-                          <MapPin className="w-3 h-3" />
-                          {apt.location}
+                        <p className="text-[10px] sm:text-xs text-gray-600 mt-1 flex items-center gap-1">
+                          <MapPin className="w-2.5 h-2.5 sm:w-3 sm:h-3 flex-shrink-0" />
+                          <span className="line-clamp-1">{apt.location}</span>
                         </p>
                       )}
                     </div>
@@ -885,10 +899,10 @@ const VendeurCaseTrackingModernFixed = () => {
 
             {/* Actions */}
             <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Actions</CardTitle>
+              <CardHeader className="p-3 sm:p-4 lg:p-6">
+                <CardTitle className="text-base sm:text-lg">Actions</CardTitle>
               </CardHeader>
-              <CardContent className="space-y-3">
+              <CardContent className="space-y-2 sm:space-y-3 p-3 sm:p-4 lg:p-6 pt-0">
                 {purchaseCase && (
                   <>
                     {purchaseRequest?.id ? (
@@ -900,8 +914,8 @@ const VendeurCaseTrackingModernFixed = () => {
                         }}
                       />
                     ) : (
-                      <Button disabled className="w-full gap-2">
-                        <Calendar className="w-4 h-4" />
+                      <Button disabled className="w-full gap-2 text-xs sm:text-sm" size="sm">
+                        <Calendar className="w-3 h-3 sm:w-4 sm:h-4" />
                         Rendez-vous indisponible
                       </Button>
                     )}

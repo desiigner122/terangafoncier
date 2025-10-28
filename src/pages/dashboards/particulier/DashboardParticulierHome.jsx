@@ -356,12 +356,12 @@ const DashboardParticulierHome = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="p-3 sm:p-4 lg:p-6">
+        <div className="animate-pulse space-y-4 sm:space-y-6">
+          <div className="h-6 sm:h-8 bg-gray-200 rounded w-1/2 sm:w-1/3"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             {[1,2,3,4,5,6].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+              <div key={i} className="h-28 sm:h-32 bg-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -370,35 +370,35 @@ const DashboardParticulierHome = () => {
   }
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header de bienvenue */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white"
+        className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white"
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold mb-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex-1">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 break-words">
               Bienvenue, {profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Particulier'} ! 👋
             </h2>
-            <p className="text-blue-100 text-lg">
+            <p className="text-blue-100 text-sm sm:text-base lg:text-lg">
               Gérez vos dossiers immobiliers en toute simplicité
             </p>
-            <div className="flex items-center gap-4 mt-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-300" />
-                <span className="text-sm">Compte vérifié</span>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 sm:mt-4">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-300" />
+                <span className="text-xs sm:text-sm">Compte vérifié</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-yellow-300" />
-                <span className="text-sm">Membre depuis 2025</span>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-300" />
+                <span className="text-xs sm:text-sm">Membre depuis 2025</span>
               </div>
             </div>
           </div>
           <div className="hidden lg:block">
-            <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
-              <Activity className="h-16 w-16 text-white/80" />
+            <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white/10 rounded-full flex items-center justify-center">
+              <Activity className="h-12 w-12 lg:h-16 lg:w-16 text-white/80" />
             </div>
           </div>
         </div>
@@ -410,8 +410,8 @@ const DashboardParticulierHome = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <h3 className="text-xl font-bold text-slate-900 mb-6">Vue d'ensemble</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">Vue d'ensemble</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {statsCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -425,15 +425,15 @@ const DashboardParticulierHome = () => {
                   className="hover:shadow-lg transition-all duration-200 cursor-pointer group"
                   onClick={() => navigate(stat.path)}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-slate-600">{stat.title}</p>
-                        <p className="text-3xl font-bold text-slate-900 mt-1">{stat.value}</p>
-                        <p className="text-xs text-slate-500 mt-1">{stat.change}</p>
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">{stat.title}</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mt-0.5 sm:mt-1">{stat.value}</p>
+                        <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1 truncate">{stat.change}</p>
                       </div>
                       <div className={`
-                        p-3 rounded-xl transition-all duration-200 group-hover:scale-110
+                        p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-200 group-hover:scale-110 self-end sm:self-auto
                         ${stat.color === 'blue' ? 'bg-blue-100 text-blue-600' : ''}
                         ${stat.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' : ''}
                         ${stat.color === 'red' ? 'bg-red-100 text-red-600' : ''}
@@ -441,7 +441,7 @@ const DashboardParticulierHome = () => {
                         ${stat.color === 'purple' ? 'bg-purple-100 text-purple-600' : ''}
                         ${stat.color === 'orange' ? 'bg-orange-100 text-orange-600' : ''}
                       `}>
-                        <Icon className="h-6 w-6" />
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
                       </div>
                     </div>
                   </CardContent>
@@ -458,8 +458,8 @@ const DashboardParticulierHome = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h3 className="text-xl font-bold text-slate-900 mb-6">Actions rapides</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">Actions rapides</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {quickActionItems.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -473,18 +473,18 @@ const DashboardParticulierHome = () => {
                   className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-transparent hover:border-blue-200"
                   onClick={() => navigate(action.path)}
                 >
-                  <CardContent className="p-4 text-center">
+                  <CardContent className="p-3 sm:p-4 text-center">
                     <div className={`
-                      w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110
+                      w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110
                       ${action.color === 'blue' ? 'bg-blue-100 text-blue-600' : ''}
                       ${action.color === 'red' ? 'bg-red-100 text-red-600' : ''}
                       ${action.color === 'green' ? 'bg-green-100 text-green-600' : ''}
                       ${action.color === 'purple' ? 'bg-purple-100 text-purple-600' : ''}
                     `}>
-                      <Icon className="h-6 w-6" />
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <h4 className="font-semibold text-slate-900 text-sm mb-1">{action.title}</h4>
-                    <p className="text-xs text-slate-500">{action.description}</p>
+                    <h4 className="font-semibold text-slate-900 text-xs sm:text-sm mb-0.5 sm:mb-1 line-clamp-2">{action.title}</h4>
+                    <p className="text-[10px] sm:text-xs text-slate-500 line-clamp-2">{action.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -498,41 +498,41 @@ const DashboardParticulierHome = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8"
       >
         {/* Activités */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-600" />
+          <CardHeader className="p-3 sm:p-4 lg:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               Activité récente
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Vos dernières interactions et mises à jour
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-4 lg:p-6 pt-0">
             {recentActivity.length > 0 ? (
               recentActivity.map((activity) => {
                 const Icon = activity.icon;
                 return (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors">
+                  <div key={activity.id} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 hover:bg-slate-50 rounded-lg transition-colors">
                     <div className={`
-                      p-2 rounded-lg
+                      p-1.5 sm:p-2 rounded-lg flex-shrink-0
                       ${activity.color === 'blue' ? 'bg-blue-100 text-blue-600' : ''}
                       ${activity.color === 'green' ? 'bg-green-100 text-green-600' : ''}
                       ${activity.color === 'orange' ? 'bg-orange-100 text-orange-600' : ''}
                     `}>
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900">{activity.title}</p>
-                      <p className="text-xs text-slate-500 mt-1">{activity.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge className={getStatusColor(activity.status)}>
+                      <p className="text-xs sm:text-sm font-medium text-slate-900 line-clamp-2">{activity.title}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1 line-clamp-2">{activity.description}</p>
+                      <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 flex-wrap">
+                        <Badge className={`text-[10px] sm:text-xs ${getStatusColor(activity.status)}`}>
                           {activity.status}
                         </Badge>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-[10px] sm:text-xs text-slate-400">
                           il y a {getTimeAgo(activity.time)}
                         </span>
                       </div>
@@ -541,9 +541,9 @@ const DashboardParticulierHome = () => {
                 );
               })
             ) : (
-              <div className="text-center py-8">
-                <Clock className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500">Aucune activité récente</p>
+              <div className="text-center py-6 sm:py-8">
+                <Clock className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 mx-auto mb-3 sm:mb-4" />
+                <p className="text-xs sm:text-sm text-slate-500">Aucune activité récente</p>
               </div>
             )}
           </CardContent>
@@ -551,52 +551,52 @@ const DashboardParticulierHome = () => {
 
         {/* Progression et objectifs */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-green-600" />
+          <CardHeader className="p-3 sm:p-4 lg:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Target className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               Vos objectifs
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Suivi de vos démarches immobilières
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6 pt-0">
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Profil complet</span>
-                <span className="text-sm text-slate-500">85%</span>
+              <div className="flex justify-between items-center mb-1.5 sm:mb-2">
+                <span className="text-xs sm:text-sm font-medium">Profil complet</span>
+                <span className="text-xs sm:text-sm text-slate-500">85%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+              <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
+                <div className="bg-blue-600 h-1.5 sm:h-2 rounded-full" style={{ width: '85%' }}></div>
               </div>
             </div>
             
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Documents validés</span>
-                <span className="text-sm text-slate-500">60%</span>
+              <div className="flex justify-between items-center mb-1.5 sm:mb-2">
+                <span className="text-xs sm:text-sm font-medium">Documents validés</span>
+                <span className="text-xs sm:text-sm text-slate-500">60%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: '60%' }}></div>
+              <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
+                <div className="bg-green-600 h-1.5 sm:h-2 rounded-full" style={{ width: '60%' }}></div>
               </div>
             </div>
             
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Demandes actives</span>
-                <span className="text-sm text-slate-500">75%</span>
+              <div className="flex justify-between items-center mb-1.5 sm:mb-2">
+                <span className="text-xs sm:text-sm font-medium">Demandes actives</span>
+                <span className="text-xs sm:text-sm text-slate-500">75%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: '75%' }}></div>
+              <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
+                <div className="bg-orange-600 h-1.5 sm:h-2 rounded-full" style={{ width: '75%' }}></div>
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-4 mt-4">
-              <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-blue-600" />
-                <span className="font-medium text-blue-900">Prochain objectif</span>
+            <div className="bg-blue-50 rounded-lg p-3 sm:p-4 mt-3 sm:mt-4">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Award className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+                <span className="font-medium text-blue-900 text-xs sm:text-sm">Prochain objectif</span>
               </div>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="text-xs sm:text-sm text-blue-700 mt-1">
                 Compléter la validation de vos documents pour accélérer vos demandes
               </p>
             </div>

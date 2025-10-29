@@ -411,7 +411,7 @@ const CaseTrackingUnified = () => {
 
         {/* Timeline */}
         <TabsContent value="timeline">
-          <TimelineTrackerModern caseId={caseIdentifier} />
+          <TimelineTrackerModern caseId={caseData?.id || caseIdentifier} />
         </TabsContent>
 
         {/* Documents */}
@@ -453,7 +453,7 @@ const CaseTrackingUnified = () => {
 
         {/* Rendez-vous */}
         <TabsContent value="appointments">
-          <AppointmentScheduler caseId={caseIdentifier} />
+          <AppointmentScheduler caseId={caseData?.id || caseIdentifier} />
         </TabsContent>
       </Tabs>
 
@@ -461,14 +461,14 @@ const CaseTrackingUnified = () => {
       <AgentSelectionModal
         isOpen={showAgentModal}
         onClose={() => setShowAgentModal(false)}
-        caseId={caseIdentifier}
+        caseId={caseData?.id || caseIdentifier}
         onAgentSelected={handleAgentSelected}
       />
 
       <GeometreSelectionModal
         isOpen={showGeometreModal}
         onClose={() => setShowGeometreModal(false)}
-        caseId={caseIdentifier}
+        caseId={caseData?.id || caseIdentifier}
         onGeometreSelected={handleGeometreSelected}
       />
     </div>

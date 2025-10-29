@@ -106,8 +106,8 @@ const CaseTrackingUnified = () => {
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
 
-  // Service
-  const service = new UnifiedCaseTrackingService();
+  // Service (singleton déjà instancié)
+  const service = UnifiedCaseTrackingService;
 
   /**
    * Charger les données complètes du dossier

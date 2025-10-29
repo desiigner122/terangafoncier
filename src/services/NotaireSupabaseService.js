@@ -25,7 +25,7 @@ export class NotaireSupabaseService {
         .select('case_id')
         .eq('user_id', notaireId)
         .eq('role', 'notary')
-        .eq('status', 'active');
+        .eq('status', 'accepted');
       
       if (participError) {
         console.error('❌ Error fetching participations:', participError);
@@ -52,7 +52,7 @@ export class NotaireSupabaseService {
           seller:profiles!seller_id(
             id, full_name, email, phone, avatar_url
           ),
-          parcelle:parcelles!parcelle_id(
+          parcelle:parcels!parcelle_id(
             id, title, location, surface_area, price, land_use, 
             title_deed_number, coordinates
           )
@@ -254,6 +254,13 @@ export class NotaireSupabaseService {
       console.error('Erreur récupération actes récents:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * Alias pour getRecentActs - utilisé par NotaireTransactionsModernized
+   */
+  static async getNotarialActs(notaireId, limit = 100) {
+    return this.getRecentActs(notaireId, limit);
   }
 
   /**

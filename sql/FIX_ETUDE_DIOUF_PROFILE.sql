@@ -35,7 +35,7 @@ SELECT
   id,
   '6b222cf1-0bc0-42b3-a360-5fc1ca1c7eee',
   'notary',
-  'active',
+  'accepted',
   NOW()
 FROM purchase_cases
 WHERE status NOT IN ('completed', 'cancelled', 'archived')

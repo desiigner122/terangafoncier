@@ -389,7 +389,7 @@ const ParticulierMesAchatsModern = () => {
           let propertyMap = {};
           if (propertyIds.length > 0) {
             const { data: propertyData } = await supabase
-              .from('parcelles')
+              .from('parcels')
               .select('*')
               .in('id', propertyIds);
             propertyData?.forEach(p => {

@@ -16,13 +16,49 @@ import { supabase } from './supabaseClient';
 class UnifiedCaseTrackingService {
   
   /**
+   * Résoudre un case_number ou UUID en UUID réel
+   * @param {string} caseIdentifier - UUID ou case_number (ex: TF-20251021-0002)
+   * @returns {Promise<string|null>} - UUID du dossier ou null
+   */
+  async resolveCaseId(caseIdentifier) {
+    try {
+      // Si c'est déjà un UUID (format: xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx)
+      const uuidRegex = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+      if (uuidRegex.test(caseIdentifier)) {
+        return caseIdentifier;
+      }
+
+      // Sinon, c'est un case_number, on cherche l'UUID
+      const { data, error } = await supabase
+        .from('purchase_cases')
+        .select('id')
+        .eq('case_number', caseIdentifier)
+        .single();
+
+      if (error || !data) {
+        console.error('Dossier introuvable avec case_number:', caseIdentifier, error);
+        return null;
+      }
+
+      return data.id;
+    } catch (error) {
+      console.error('Erreur resolveCaseId:', error);
+      return null;
+    }
+  }
+
+  /**
    * Détecter le rôle de l'utilisateur dans un dossier spécifique
-   * @param {string} caseId - ID du dossier
+   * @param {string} caseIdentifier - UUID ou case_number du dossier
    * @param {string} userId - ID de l'utilisateur
    * @returns {Promise<string|null>} - 'buyer', 'seller', 'notaire', 'agent', 'geometre', ou null
    */
-  async detectUserRole(caseId, userId) {
+  async detectUserRole(caseIdentifier, userId) {
     try {
+      // Résoudre le case_number en UUID si nécessaire
+      const caseId = await this.resolveCaseId(caseIdentifier);
+      if (!caseId) return null;
+
       const { data: purchaseCase, error } = await supabase
         .from('purchase_cases')
         .select('buyer_id, seller_id, notaire_id, agent_foncier_id, geometre_id')
@@ -48,12 +84,18 @@ class UnifiedCaseTrackingService {
 
   /**
    * Récupérer toutes les informations du dossier avec tous les participants
-   * @param {string} caseId - ID du dossier
+   * @param {string} caseIdentifier - UUID ou case_number du dossier
    * @param {string} userId - ID de l'utilisateur connecté
    * @returns {Promise<Object>} - Objet complet avec dossier, participants, permissions
    */
-  async getCaseWithAllParticipants(caseId, userId) {
+  async getCaseWithAllParticipants(caseIdentifier, userId) {
     try {
+      // 0. Résoudre le case_number en UUID si nécessaire
+      const caseId = await this.resolveCaseId(caseIdentifier);
+      if (!caseId) {
+        throw new Error('Dossier introuvable');
+      }
+
       // 1. Détecter le rôle
       const userRole = await this.detectUserRole(caseId, userId);
       if (!userRole) {
@@ -100,16 +142,7 @@ class UnifiedCaseTrackingService {
             phone,
             avatar_url
           ),
-          parcelle:parcelle_id (
-            id,
-            title,
-            surface_area,
-            price,
-            location,
-            region,
-            title_deed_number,
-            coordinates
-          )
+          parcelle:parcelle_id (*)
         `)
         .eq('id', caseId)
         .single();

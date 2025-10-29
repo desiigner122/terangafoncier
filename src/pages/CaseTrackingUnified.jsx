@@ -86,7 +86,9 @@ const STATUS_META = {
 };
 
 const CaseTrackingUnified = () => {
-  const { caseId } = useParams();
+  // Support both routes: /dossier/:caseId and /cases/:caseNumber
+  const params = useParams();
+  const caseIdentifier = params.caseId || params.caseNumber; // UUID or case_number
   const navigate = useNavigate();
   const { user } = useAuth();
 
@@ -96,6 +98,7 @@ const CaseTrackingUnified = () => {
   const [permissions, setPermissions] = useState({});
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
+  const [surveyingMission, setSurveyingMission] = useState(null);
 
   // États des modals
   const [showAgentModal, setShowAgentModal] = useState(false);
@@ -115,11 +118,12 @@ const CaseTrackingUnified = () => {
   const loadCaseData = async () => {
     try {
       setLoading(true);
-      const data = await service.getCaseWithAllParticipants(caseId, user.id);
+      const data = await service.getCaseWithAllParticipants(caseIdentifier, user.id);
       
       setCaseData(data.purchaseCase);
       setUserRole(data.userRole);
       setPermissions(data.permissions);
+  setSurveyingMission(data.surveyingMission || null);
 
       console.log('✅ Données chargées:', {
         role: data.userRole,
@@ -139,10 +143,10 @@ const CaseTrackingUnified = () => {
    * Charger au montage
    */
   useEffect(() => {
-    if (caseId && user?.id) {
+    if (caseIdentifier && user?.id) {
       loadCaseData();
     }
-  }, [caseId, user?.id]);
+  }, [caseIdentifier, user?.id]);
 
   /**
    * Callbacks après sélection agent
@@ -393,8 +397,11 @@ const CaseTrackingUnified = () => {
             <CardContent>
               <RoleSpecificActions
                 userRole={userRole}
-                caseData={caseData}
+                purchaseCase={caseData}
                 permissions={permissions}
+                hasAgent={caseData?.has_agent}
+                hasSurveying={caseData?.has_surveying}
+                surveyingMission={surveyingMission}
                 onChooseAgent={handleChooseAgent}
                 onRequestSurveying={handleRequestSurveying}
               />
@@ -404,7 +411,7 @@ const CaseTrackingUnified = () => {
 
         {/* Timeline */}
         <TabsContent value="timeline">
-          <TimelineTrackerModern caseId={caseId} />
+          <TimelineTrackerModern caseId={caseIdentifier} />
         </TabsContent>
 
         {/* Documents */}
@@ -435,16 +442,18 @@ const CaseTrackingUnified = () => {
         {permissions.canViewPayments && (
           <TabsContent value="payments">
             <PaymentsSection
-              caseData={caseData}
+              purchaseCase={caseData}
               userRole={userRole}
-              permissions={permissions}
+              hasAgent={caseData?.has_agent}
+              hasSurveying={caseData?.has_surveying}
+              surveyingMission={surveyingMission}
             />
           </TabsContent>
         )}
 
         {/* Rendez-vous */}
         <TabsContent value="appointments">
-          <AppointmentScheduler caseId={caseId} />
+          <AppointmentScheduler caseId={caseIdentifier} />
         </TabsContent>
       </Tabs>
 
@@ -452,14 +461,14 @@ const CaseTrackingUnified = () => {
       <AgentSelectionModal
         isOpen={showAgentModal}
         onClose={() => setShowAgentModal(false)}
-        caseId={caseId}
+        caseId={caseIdentifier}
         onAgentSelected={handleAgentSelected}
       />
 
       <GeometreSelectionModal
         isOpen={showGeometreModal}
         onClose={() => setShowGeometreModal(false)}
-        caseId={caseId}
+        caseId={caseIdentifier}
         onGeometreSelected={handleGeometreSelected}
       />
     </div>

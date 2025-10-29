@@ -53,8 +53,7 @@ export class NotaireSupabaseService {
             id, full_name, email, phone, avatar_url
           ),
           parcelle:parcels!parcelle_id(
-            id, title, location, surface_area, price, land_use, 
-            title_deed_number, coordinates
+            id, title, location, surface
           )
         `)
         .in('id', caseIds)
@@ -240,8 +239,7 @@ export class NotaireSupabaseService {
           created_at,
           property_value,
           notary_fees,
-          estimated_completion,
-          client:profiles(first_name, last_name, email)
+          estimated_completion
         `)
         .eq('notaire_id', notaireId)
         .order('created_at', { ascending: false })
@@ -504,6 +502,13 @@ export class NotaireSupabaseService {
       console.error('Erreur récupération documents:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * Alias utilisé par certaines pages du dashboard
+   */
+  static async getNotarialDocuments(notaireId, actId = null) {
+    return this.getDocuments(notaireId, actId);
   }
 
   /**

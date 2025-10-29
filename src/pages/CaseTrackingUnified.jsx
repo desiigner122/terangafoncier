@@ -13,7 +13,7 @@
 
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/UnifiedAuthContext.jsx';
 import { ArrowLeft, Building2, User, Scale, Briefcase, Ruler } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -22,7 +22,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 
 // Services
-import UnifiedCaseTrackingService from '@/services/UnifiedCaseTrackingService';
+import UnifiedCaseTrackingService from '@/services/UnifiedCaseTrackingService.js';
 
 // Composants auxiliaires
 import {
@@ -30,15 +30,15 @@ import {
   DocumentsSection,
   PaymentsSection,
   MessageBubble
-} from '@/components/unified/UnifiedCaseTrackingComponents';
+} from '@/components/unified/UnifiedCaseTrackingComponents.jsx';
 
 // Modals de sélection
-import AgentSelectionModal from '@/components/modals/AgentSelectionModal';
-import GeometreSelectionModal from '@/components/modals/GeometreSelectionModal';
+import AgentSelectionModal from '@/components/modals/AgentSelectionModal.jsx';
+import GeometreSelectionModal from '@/components/modals/GeometreSelectionModal.jsx';
 
 // Composants existants
-import TimelineTrackerModern from '@/components/timeline/TimelineTrackerModern';
-import AppointmentScheduler from '@/components/appointments/AppointmentScheduler';
+import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern.jsx';
+import AppointmentScheduler from '@/components/purchase/AppointmentScheduler.jsx';
 
 // Configuration des rôles
 const ROLE_CONFIG = {

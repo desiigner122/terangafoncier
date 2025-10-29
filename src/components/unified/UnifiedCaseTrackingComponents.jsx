@@ -4,7 +4,7 @@
  * Composants auxiliaires pour UnifiedCaseTracking
  */
 
-import React from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { 
   Upload, Download, FileText, CheckCircle, Clock,
   CreditCard, Building2, Ruler, Star, Send, AlertCircle
@@ -16,6 +16,9 @@ import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
 import { toast } from 'sonner';
+import { Input } from '@/components/ui/input';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 /**
  * Actions spécifiques selon le rôle de l'utilisateur
@@ -350,7 +353,130 @@ const GeometreActions = ({ surveyingMission, permissions }) => {
 /**
  * Section Documents
  */
-export const DocumentsSection = ({ caseId, userRole, permissions }) => {
+export const DocumentsSection = ({ caseData, userRole, permissions }) => {
+  const { user } = useAuth();
+  const [docs, setDocs] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [docType, setDocType] = useState('general');
+  const fileInputRef = useRef(null);
+
+  const caseId = caseData?.id;
+
+  useEffect(() => {
+    const load = async () => {
+      if (!caseId) return;
+      try {
+        const { data, error } = await supabase
+          .from('purchase_case_documents')
+          .select('*')
+          .eq('case_id', caseId)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        setDocs(data || []);
+      } catch (e) {
+        console.error('Error loading documents:', e);
+      }
+    };
+    load();
+    // subscribe to realtime inserts if possible
+    if (!caseId) return;
+    const channel = supabase
+      .channel(`case-docs-${caseId}`)
+      .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'purchase_case_documents', filter: `case_id=eq.${caseId}` }, () => {
+        // reload
+        (async () => {
+          const { data } = await supabase
+            .from('purchase_case_documents')
+            .select('*')
+            .eq('case_id', caseId)
+            .order('created_at', { ascending: false });
+          setDocs(data || []);
+        })();
+      })
+      .subscribe();
+    return () => {
+      try { supabase.removeChannel(channel); } catch {}
+    };
+  }, [caseId]);
+
+  const canUpload = !!(permissions?.canUploadDocument && user && caseId);
+
+  const handleUploadClick = () => fileInputRef.current?.click();
+
+  const handleFileSelected = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !user || !caseId) return;
+
+    try {
+      setUploading(true);
+      const fileName = `${Date.now()}_${file.name}`;
+      const storagePath = `${caseId}/${user.id}/${fileName}`;
+
+      const { error: uploadError } = await supabase.storage
+        .from('documents')
+        .upload(storagePath, file, { upsert: true, contentType: file.type || undefined });
+      if (uploadError) throw uploadError;
+
+      const { data: { publicUrl } } = supabase.storage
+        .from('documents')
+        .getPublicUrl(storagePath);
+
+      // Try multiple payload shapes for compatibility across environments
+      const attempts = [
+        {
+          case_id: caseId,
+          document_type: docType,
+          document_name: file.name,
+          document_url: publicUrl,
+          uploaded_by: user.id,
+          file_size: file.size,
+          status: 'uploaded',
+        },
+        {
+          case_id: caseId,
+          document_type: docType,
+          file_name: file.name,
+          file_url: publicUrl,
+          uploaded_by: user.id,
+          file_size: file.size,
+          status: 'uploaded',
+        },
+        {
+          case_id: caseId,
+          document_type: docType,
+          name: file.name,
+          document_url: publicUrl,
+          uploaded_by: user.id,
+          status: 'uploaded',
+        }
+      ];
+
+      let inserted = false;
+      let lastErr = null;
+      for (const payload of attempts) {
+        const { error } = await supabase.from('purchase_case_documents').insert(payload);
+        if (!error) { inserted = true; break; }
+        lastErr = error;
+      }
+      if (!inserted) throw lastErr || new Error('Insert failed');
+
+      toast.success('Document uploadé');
+      // reload list
+      const { data } = await supabase
+        .from('purchase_case_documents')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false });
+      setDocs(data || []);
+    } catch (err) {
+      console.error('Upload error:', err);
+      toast.error("Échec de l'upload du document");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = '';
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -360,61 +486,56 @@ export const DocumentsSection = ({ caseId, userRole, permissions }) => {
         </CardDescription>
       </CardHeader>
       <CardContent>
-        <div className="space-y-4">
-          {/* Documents acheteur */}
-          <div>
-            <Label className="text-sm font-semibold">Documents Acheteur</Label>
-            <div className="mt-2 space-y-2">
-              <DocumentItem 
-                name="Pièce d'identité"
-                status="pending"
-                canUpload={userRole === 'buyer' && permissions?.canUploadDocument}
-              />
-              <DocumentItem 
-                name="Justificatif de domicile"
-                status="pending"
-                canUpload={userRole === 'buyer' && permissions?.canUploadDocument}
-              />
-            </div>
-          </div>
+        <div className="flex items-center gap-2 mb-4">
+          <Label className="text-sm">Type</Label>
+          <select
+            value={docType}
+            onChange={(e) => setDocType(e.target.value)}
+            className="border rounded px-2 py-1 text-sm"
+          >
+            <option value="general">Général</option>
+            <option value="buyer_id">Pièce identité acheteur</option>
+            <option value="seller_title">Titre foncier</option>
+            <option value="notary_contract">Contrat</option>
+            <option value="survey_plan">Plan de bornage</option>
+          </select>
+          {canUpload && (
+            <Button size="sm" onClick={handleUploadClick} disabled={uploading}>
+              <Upload className="w-4 h-4 mr-2" />
+              {uploading ? 'Upload...' : 'Uploader'}
+            </Button>
+          )}
+          <Input ref={fileInputRef} type="file" className="hidden" onChange={handleFileSelected} />
+        </div>
 
-          <Separator />
-
-          {/* Documents vendeur */}
-          <div>
-            <Label className="text-sm font-semibold">Documents Vendeur</Label>
-            <div className="mt-2 space-y-2">
-              <DocumentItem 
-                name="Titre foncier"
-                status="uploaded"
-                canUpload={userRole === 'seller' && permissions?.canUploadDocument}
-              />
-              <DocumentItem 
-                name="Quitus fiscal"
-                status="pending"
-                canUpload={userRole === 'seller' && permissions?.canUploadDocument}
-              />
-            </div>
-          </div>
-
-          <Separator />
-
-          {/* Documents notaire */}
-          <div>
-            <Label className="text-sm font-semibold">Documents Notaire</Label>
-            <div className="mt-2 space-y-2">
-              <DocumentItem 
-                name="Projet de contrat"
-                status="pending"
-                canUpload={userRole === 'notaire' && permissions?.canUploadDocument}
-              />
-              <DocumentItem 
-                name="Acte de vente"
-                status="pending"
-                canUpload={userRole === 'notaire' && permissions?.canUploadDocument}
-              />
-            </div>
-          </div>
+        <div className="space-y-2">
+          {docs.length === 0 ? (
+            <p className="text-sm text-muted-foreground">Aucun document pour le moment</p>
+          ) : (
+            docs.map((d) => (
+              <div key={d.id} className="flex items-center justify-between p-3 border rounded-lg">
+                <div className="flex items-center gap-3 min-w-0">
+                  <FileText className="w-5 h-5 text-muted-foreground" />
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm truncate">{d.document_name || d.file_name || d.name || 'Document'}</p>
+                    <p className="text-xs text-muted-foreground">{d.document_type || 'général'} • {d.file_size ? `${Math.round(d.file_size/1024)} Ko` : ''}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    {d.status || 'uploaded'}
+                  </Badge>
+                  {(d.document_url || d.file_url) && (
+                    <Button asChild size="sm" variant="outline">
+                      <a href={d.document_url || d.file_url} target="_blank" rel="noopener noreferrer">
+                        <Download className="w-4 h-4" />
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </CardContent>
     </Card>

@@ -23,6 +23,7 @@ import { toast } from 'sonner';
 
 // Services
 import UnifiedCaseTrackingService from '@/services/UnifiedCaseTrackingService.js';
+import WorkflowStatusService from '@/services/WorkflowStatusService';
 
 // Composants auxiliaires
 import {
@@ -39,6 +40,7 @@ import GeometreSelectionModal from '@/components/modals/GeometreSelectionModal.j
 // Composants existants
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern.jsx';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler.jsx';
+import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging.jsx';
 
 // Configuration des rôles
 const ROLE_CONFIG = {
@@ -71,19 +73,7 @@ const ROLE_CONFIG = {
   }
 };
 
-// Métadonnées des statuts
-const STATUS_META = {
-  pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: '⏳' },
-  preliminary_agreement: { label: 'Accord préliminaire', color: 'bg-blue-100 text-blue-800', icon: '🤝' },
-  notary_assigned: { label: 'Notaire assigné', color: 'bg-purple-100 text-purple-800', icon: '⚖️' },
-  document_audit: { label: 'Audit documents', color: 'bg-indigo-100 text-indigo-800', icon: '📋' },
-  payment_completed: { label: 'Paiement complété', color: 'bg-green-100 text-green-800', icon: '💰' },
-  contract_draft: { label: 'Contrat rédigé', color: 'bg-cyan-100 text-cyan-800', icon: '📄' },
-  property_transfer: { label: 'Transfert propriété', color: 'bg-orange-100 text-orange-800', icon: '🏠' },
-  completed: { label: 'Complété', color: 'bg-emerald-100 text-emerald-800', icon: '✅' },
-  rejected: { label: 'Rejeté', color: 'bg-red-100 text-red-800', icon: '❌' },
-  cancelled: { label: 'Annulé', color: 'bg-gray-100 text-gray-800', icon: '🚫' }
-};
+// Affichage/statut via WorkflowStatusService
 
 const CaseTrackingUnified = () => {
   // Support both routes: /dossier/:caseId and /cases/:caseNumber
@@ -195,13 +185,8 @@ const CaseTrackingUnified = () => {
   /**
    * Calculer la progression (%)
    */
-  const calculateProgress = () => {
-    if (!caseData) return 0;
-    const statuses = ['pending', 'preliminary_agreement', 'notary_assigned', 'document_audit', 
-                     'payment_completed', 'contract_draft', 'property_transfer', 'completed'];
-    const currentIndex = statuses.indexOf(caseData.status);
-    return currentIndex >= 0 ? ((currentIndex + 1) / statuses.length) * 100 : 0;
-  };
+  const summary = caseData ? WorkflowStatusService.getSummary(caseData) : null;
+  const calculateProgress = () => summary?.progressPercentage || 0;
 
   /**
    * Rendu du loading
@@ -240,7 +225,7 @@ const CaseTrackingUnified = () => {
 
   const roleConfig = ROLE_CONFIG[userRole] || ROLE_CONFIG.buyer;
   const RoleIcon = roleConfig.icon;
-  const statusMeta = STATUS_META[caseData.status] || STATUS_META.pending;
+  const statusInfo = WorkflowStatusService.getStatusInfo(caseData.status || caseData.current_status || 'initiated');
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -272,9 +257,8 @@ const CaseTrackingUnified = () => {
           </div>
 
           <div className="text-right">
-            <Badge className={statusMeta.color}>
-              <span className="mr-2">{statusMeta.icon}</span>
-              {statusMeta.label}
+            <Badge className={statusInfo.colorClass}>
+              {WorkflowStatusService.getLabel(caseData.status || caseData.current_status)}
             </Badge>
             <div className="mt-2">
               <div className="w-48 bg-gray-200 rounded-full h-2">
@@ -425,17 +409,10 @@ const CaseTrackingUnified = () => {
 
         {/* Messages */}
         <TabsContent value="messages">
-          <Card>
-            <CardHeader>
-              <CardTitle>Messagerie</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-muted-foreground mb-4">
-                Fonctionnalité à intégrer avec purchase_case_messages
-              </p>
-              {/* TODO: Intégrer composant de messagerie */}
-            </CardContent>
-          </Card>
+          <PurchaseCaseMessaging
+            caseId={caseData?.id || caseIdentifier}
+            caseNumber={caseData?.case_number}
+          />
         </TabsContent>
 
         {/* Paiements */}

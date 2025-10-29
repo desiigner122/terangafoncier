@@ -7,7 +7,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Search, Star, Ruler, Phone, Mail, CheckCircle, X,
-  AlertCircle, Drone, MapPin, Award, Clock
+  AlertCircle, Plane, MapPin, Award, Clock
 } from 'lucide-react';
 
 import {
@@ -377,7 +377,7 @@ const GeometreCard = ({ geometre, missionType, isSelected, onSelect }) => {
               )}
               {geometre.has_drone && (
                 <Badge variant="secondary" className="text-xs">
-                  <Drone className="w-3 h-3 mr-1" />
+                  <Plane className="w-3 h-3 mr-1" />
                   Drone
                 </Badge>
               )}

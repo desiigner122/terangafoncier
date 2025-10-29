@@ -2,9 +2,7 @@
 -- Run in Supabase SQL editor with **service_role** (top-right dropdown in editor)
 -- This script is idempotent and handles all edge cases
 
--- STEP 1: Verify RLS is enabled on storage.objects
--- (Supabase enables it by default; this is informational)
-ALTER TABLE storage.objects ENABLE ROW LEVEL SECURITY;
+-- STEP 1: RLS is already enabled by default on storage.objects (no ALTER needed)
 
 -- STEP 2: Drop any conflicting or old policies
 DROP POLICY IF EXISTS "authenticated can insert documents" ON storage.objects;
@@ -45,10 +43,13 @@ CREATE POLICY "authenticated can read documents"
 -- - For immediate testing: use the debug policy below (temporary), then revert to the bucket-specific one.
 
 -- DEBUG POLICY (temporary, for testing only - removes all RLS restrictions):
--- DROP POLICY IF EXISTS "debug allow all authenticated" ON storage.objects;
--- CREATE POLICY "debug allow all authenticated"
---   ON storage.objects FOR ALL
---   TO authenticated
---   USING (true)
---   WITH CHECK (true);
+-- Uncomment ONLY if the restrictive policies above don't work.
+-- This will allow ALL authenticated users to do anything on storage.objects.
+-- Once uploads work, comment this out and we'll refine the restrictive policies.
+DROP POLICY IF EXISTS "debug allow all authenticated" ON storage.objects;
+CREATE POLICY "debug allow all authenticated"
+  ON storage.objects FOR ALL
+  TO authenticated
+  USING (true)
+  WITH CHECK (true);
 -- Once uploads work, delete this debug policy and use the restrictive ones above.

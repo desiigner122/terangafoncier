@@ -39,7 +39,11 @@ SELECT
   NOW()
 FROM purchase_cases
 WHERE status NOT IN ('completed', 'cancelled', 'archived')
-ON CONFLICT DO NOTHING;
+ON CONFLICT (case_id, user_id, role)
+DO UPDATE SET 
+  status = EXCLUDED.status,
+  joined_at = COALESCE(purchase_case_participants.joined_at, EXCLUDED.joined_at),
+  updated_at = NOW();
 
 -- Step 4: Verify assignments
 SELECT 

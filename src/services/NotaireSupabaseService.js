@@ -22,20 +22,28 @@ export class NotaireSupabaseService {
       // Step 1: Get case IDs where this notaire is a participant
       const { data: participations, error: participError } = await supabase
         .from('purchase_case_participants')
-        .select('case_id')
+        .select('case_id, status, role')
         .eq('user_id', notaireId)
-        .eq('role', 'notary')
-        .eq('status', 'accepted');
+        .eq('role', 'notary');
       
       if (participError) {
         console.error('❌ Error fetching participations:', participError);
         throw participError;
       }
       
-      console.log('📋 Found participations:', participations?.length || 0);
+      console.log('📋 Found participations:', participations?.length || 0, participations);
       
       if (!participations || participations.length === 0) {
         console.log('⚠️ No active cases found for this notaire');
+        console.log('🔍 Checking all participants with role=notary...');
+        
+        // Debug: voir tous les notaires
+        const { data: allNotaries } = await supabase
+          .from('purchase_case_participants')
+          .select('user_id, role, status, case_id')
+          .eq('role', 'notary');
+        console.log('🔍 All notary participants:', allNotaries);
+        
         return { success: true, data: [] };
       }
       

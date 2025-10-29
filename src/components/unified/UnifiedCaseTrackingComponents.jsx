@@ -423,8 +423,9 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
         .from('documents')
         .getPublicUrl(storagePath);
 
-      // Try multiple payload shapes for compatibility across environments
+      // Try multiple payload shapes for compatibility with different schema versions
       const attempts = [
+        // Schema: document_name, document_url
         {
           case_id: caseId,
           document_type: docType,
@@ -432,8 +433,8 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
           document_url: publicUrl,
           uploaded_by: user.id,
           file_size: file.size,
-          status: 'uploaded',
         },
+        // Schema: file_name, file_url
         {
           case_id: caseId,
           document_type: docType,
@@ -441,15 +442,11 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
           file_url: publicUrl,
           uploaded_by: user.id,
           file_size: file.size,
-          status: 'uploaded',
         },
+        // Fallback: basic columns only
         {
           case_id: caseId,
-          document_type: docType,
-          name: file.name,
           document_url: publicUrl,
-          uploaded_by: user.id,
-          status: 'uploaded',
         }
       ];
 
@@ -460,7 +457,13 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
         if (!error) { inserted = true; break; }
         lastErr = error;
       }
-      if (!inserted) throw lastErr || new Error('Insert failed');
+      if (!inserted) {
+        const errMsg = String(lastErr?.message || lastErr);
+        if (errMsg.includes('PGRST204')) {
+          throw new Error('Schema mismatch: purchase_case_documents table may need to be created. See sql/CREATE_PURCHASE_CASE_DOCUMENTS.sql');
+        }
+        throw lastErr || new Error('Insert failed');
+      }
 
       toast.success('Document uploadé');
       // reload list

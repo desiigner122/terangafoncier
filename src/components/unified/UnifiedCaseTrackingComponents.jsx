@@ -362,6 +362,26 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
 
   const caseId = caseData?.id;
 
+  // Helper: extract storage key (path inside bucket) from a Supabase Storage URL
+  const extractStorageKey = (urlOrKey) => {
+    if (!urlOrKey) return null;
+    // If it looks like a key already (no protocol), return as is
+    if (!/^https?:\/\//i.test(urlOrKey)) return urlOrKey.replace(/^\/+/, '');
+    try {
+      // Matches .../documents/<key>[?query]
+      const match = urlOrKey.match(/\/documents\/(.+?)(?:\?|$)/);
+      if (match && match[1]) return match[1];
+    } catch (_) {}
+    return null;
+  };
+
+  // Helper: get a filename from a storage key when DB name missing
+  const fileNameFromKey = (key) => {
+    if (!key) return 'document';
+    const parts = key.split('/');
+    return parts[parts.length - 1] || 'document';
+  };
+
   useEffect(() => {
     const load = async () => {
       if (!caseId) return;
@@ -490,6 +510,37 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
     }
   };
 
+  // Robust download: fetch blob from Storage API to force browser download
+  const handleDownload = async (doc) => {
+    try {
+      const url = doc.document_url || doc.file_url || doc.url;
+      const storageKey = doc.storage_key || extractStorageKey(url);
+      if (!storageKey) {
+        // Fallback: open the URL in new tab if we can't derive the key
+        if (url) window.open(url, '_blank', 'noopener,noreferrer');
+        return;
+      }
+
+      const { data, error } = await supabase.storage
+        .from('documents')
+        .download(storageKey);
+      if (error || !data) throw error || new Error('Empty file');
+
+      const blobUrl = URL.createObjectURL(data);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = doc.document_name || doc.file_name || fileNameFromKey(storageKey);
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      // Revoke after a tick to allow download to start
+      setTimeout(() => URL.revokeObjectURL(blobUrl), 2000);
+    } catch (err) {
+      console.error('Download error:', err);
+      toast.error('Téléchargement impossible pour ce fichier');
+    }
+  };
+
   return (
     <Card>
       <CardHeader>
@@ -538,18 +589,9 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
                   <Badge variant="outline" className="text-xs">
                     {d.status || 'uploaded'}
                   </Badge>
-                  {(d.document_url || d.file_url) && (
-                    <Button asChild size="sm" variant="outline">
-                      <a 
-                        href={d.document_url || d.file_url} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        download
-                      >
-                        <Download className="w-4 h-4" />
-                      </a>
-                    </Button>
-                  )}
+                  <Button size="sm" variant="outline" onClick={() => handleDownload(d)}>
+                    <Download className="w-4 h-4" />
+                  </Button>
                 </div>
               </div>
             ))

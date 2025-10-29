@@ -76,11 +76,43 @@ export default function NotaireCasesModernized() {
   const loadCases = async () => {
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.getCases(user.id);
+      console.log('📋 Loading cases for notaire:', user.id);
+      
+      // Use getAssignedCases which queries purchase_cases via purchase_case_participants
+      const result = await NotaireSupabaseService.getAssignedCases(user.id);
+      
+      console.log('📊 Result:', result);
+      
       if (result.success) {
-        setCases(result.data);
-        setFilteredCases(result.data);
+        // Transform purchase_cases data to match expected case format
+        const transformedCases = result.data.map(purchaseCase => ({
+          id: purchaseCase.id,
+          case_number: purchaseCase.case_number,
+          title: `Vente ${purchaseCase.parcelle?.title || 'Terrain'} - ${purchaseCase.parcelle?.location || 'Location'}`,
+          case_type: 'vente_terrain',
+          status: purchaseCase.status || 'open',
+          priority: purchaseCase.priority || 'medium',
+          progress: calculateProgress(purchaseCase.status),
+          opened_date: purchaseCase.created_at,
+          due_date: purchaseCase.estimated_completion_date,
+          last_activity: purchaseCase.updated_at || purchaseCase.created_at,
+          buyer_name: purchaseCase.buyer?.full_name || 'Acheteur',
+          seller_name: purchaseCase.seller?.full_name || 'Vendeur',
+          property_address: purchaseCase.parcelle?.location || 'N/A',
+          property_value: purchaseCase.final_price || purchaseCase.proposed_price || 0,
+          notary_fees: purchaseCase.notaire_fees || 0,
+          next_action: getNextAction(purchaseCase.status),
+          documents_count: 0,
+          completed_documents: 0,
+          // Keep original data for details
+          _original: purchaseCase
+        }));
+        
+        console.log('✅ Transformed cases:', transformedCases.length);
+        setCases(transformedCases);
+        setFilteredCases(transformedCases);
       } else {
+        console.error('❌ Error loading cases:', result.error);
         window.safeGlobalToast?.({
           title: "Erreur de chargement",
           description: result.error || "Impossible de charger les dossiers",
@@ -88,7 +120,7 @@ export default function NotaireCasesModernized() {
         });
       }
     } catch (error) {
-      console.error('Erreur chargement dossiers:', error);
+      console.error('❌ Exception loading cases:', error);
       window.safeGlobalToast?.({
         title: "Erreur système",
         description: "Une erreur est survenue lors du chargement",
@@ -97,6 +129,46 @@ export default function NotaireCasesModernized() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper: Calculate progress percentage based on status
+  const calculateProgress = (status) => {
+    const progressMap = {
+      'initiated': 10,
+      'buyer_verification': 20,
+      'seller_notification': 30,
+      'document_collection': 40,
+      'title_verification': 50,
+      'contract_preparation': 60,
+      'deposit_pending': 70,
+      'contract_validation': 75,
+      'appointment_scheduling': 80,
+      'final_payment': 85,
+      'signature': 90,
+      'registration': 95,
+      'completed': 100
+    };
+    return progressMap[status] || 0;
+  };
+
+  // Helper: Get next action based on status
+  const getNextAction = (status) => {
+    const actionsMap = {
+      'initiated': 'Vérifier nouveau dossier',
+      'buyer_verification': 'Vérifier identité acheteur',
+      'seller_notification': 'Attendre confirmation vendeur',
+      'document_collection': 'Collecter documents',
+      'title_verification': 'Vérifier titre au cadastre',
+      'contract_preparation': 'Préparer acte de vente',
+      'deposit_pending': 'Attendre paiement acompte',
+      'contract_validation': 'Valider contrat',
+      'appointment_scheduling': 'Planifier RDV signature',
+      'final_payment': 'Attendre paiement solde',
+      'signature': 'Procéder à la signature',
+      'registration': 'Enregistrer aux impôts',
+      'completed': 'Dossier clôturé'
+    };
+    return actionsMap[status] || 'En attente';
   };
 
   /**

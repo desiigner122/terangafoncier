@@ -17,8 +17,32 @@ export class NotaireSupabaseService {
    */
   static async getAssignedCases(notaireId) {
     try {
-      // Requête avec jointures multiples
-      const { data, error } = await supabase
+      console.log('🔍 getAssignedCases for notaireId:', notaireId);
+      
+      // Step 1: Get case IDs where this notaire is a participant
+      const { data: participations, error: participError } = await supabase
+        .from('purchase_case_participants')
+        .select('case_id')
+        .eq('user_id', notaireId)
+        .eq('role', 'notary')
+        .eq('status', 'active');
+      
+      if (participError) {
+        console.error('❌ Error fetching participations:', participError);
+        throw participError;
+      }
+      
+      console.log('📋 Found participations:', participations?.length || 0);
+      
+      if (!participations || participations.length === 0) {
+        console.log('⚠️ No active cases found for this notaire');
+        return { success: true, data: [] };
+      }
+      
+      const caseIds = participations.map(p => p.case_id);
+      
+      // Step 2: Fetch full case details for these case IDs
+      const { data: cases, error: casesError } = await supabase
         .from('purchase_cases')
         .select(`
           *,
@@ -31,24 +55,21 @@ export class NotaireSupabaseService {
           parcelle:parcelles!parcelle_id(
             id, title, location, surface_area, price, land_use, 
             title_deed_number, coordinates
-          ),
-          participants:purchase_case_participants!case_id(
-            id, user_id, role, status, assigned_at
-          ),
-          documents:case_documents!case_id(
-            id, name, type, status, uploaded_at
           )
         `)
-        .eq('participants.user_id', notaireId)
-        .eq('participants.role', 'notary')
-        .eq('participants.status', 'active')
+        .in('id', caseIds)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (casesError) {
+        console.error('❌ Error fetching cases:', casesError);
+        throw casesError;
+      }
       
-      return { success: true, data: data || [] };
+      console.log('✅ Loaded cases:', cases?.length || 0);
+      
+      return { success: true, data: cases || [] };
     } catch (error) {
-      console.error('Erreur getAssignedCases:', error);
+      console.error('❌ Erreur getAssignedCases:', error);
       return { success: false, error: error.message };
     }
   }

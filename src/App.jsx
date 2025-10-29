@@ -334,6 +334,7 @@ import DebugRole from '@/pages/DebugRole';
 import DiagnosticVendorProfilePage from '@/pages/DiagnosticVendorProfilePage';
 import UserStatusWrapper from '@/components/layout/UserStatusWrapper';
 import CaseTrackingPage from '@/pages/CaseTrackingPage';
+import CaseTrackingUnified from '@/pages/CaseTrackingUnified';
 import DigitalVaultPage from '@/pages/DigitalVaultPage';
 import TransactionsPage from '@/pages/TransactionsPage';
 import VendeurDashboardPage from '@/pages/solutions/dashboards/VendeurDashboardPage';
@@ -539,6 +540,9 @@ function App() {
                 {/* Route de redirection intelligente pour /dashboard */}
                 <Route path="dashboard" element={<ProtectedRoute><RoleBasedRedirect /></ProtectedRoute>} />
                 
+                {/* Route unifiée de suivi de dossier - Accessible à tous les rôles */}
+                <Route path="case-tracking/:caseId" element={<ProtectedRoute><CaseTrackingUnified /></ProtectedRoute>} />
+                
                 {/* Dashboard Particulier/Acheteur avec la nouvelle sidebar moderne */}
                 <Route path="acheteur" element={<RoleProtectedRoute allowedRoles={['Acheteur','Particulier']}><ModernAcheteurSidebar /></RoleProtectedRoute>}>
                   <Route index element={<ParticulierOverview />} />
@@ -547,8 +551,8 @@ function App() {
                   <Route path="recherche" element={<ParticulierRechercheTerrain />} />
                   <Route path="favoris" element={<ParticulierFavoris />} />
                   <Route path="mes-achats" element={<ParticulierMesAchatsRefonte />} />
-                  <Route path="dossier/:caseId" element={<ParticulierCaseTrackingModernRefonte />} />
-                  <Route path="cases/:caseNumber" element={<ParticulierCaseTrackingModernRefonte />} />
+                  <Route path="dossier/:caseId" element={<CaseTrackingUnified />} />
+                  <Route path="cases/:caseNumber" element={<CaseTrackingUnified />} />
                   <Route path="visites" element={<ParticulierVisites />} />
                   <Route path="financement" element={<ParticulierFinancement />} />
                   <Route path="zones-communales" element={<ParticulierZonesCommunales />} />
@@ -585,8 +589,8 @@ function App() {
                   <Route path="properties" element={<VendeurPropertiesRealData />} />
                   <Route path="edit-property/:id" element={<EditPropertyComplete />} />
                   <Route path="purchase-requests" element={<VendeurPurchaseRequests />} />
-                  <Route path="dossier/:caseId" element={<VendeurCaseTrackingModernFixed />} />
-                  <Route path="cases/:caseNumber" element={<VendeurCaseTrackingModernFixed />} />
+                  <Route path="dossier/:caseId" element={<CaseTrackingUnified />} />
+                  <Route path="cases/:caseNumber" element={<CaseTrackingUnified />} />
                   <Route path="anti-fraud" element={<VendeurAntiFraudeRealData />} />
                   <Route path="gps-verification" element={<VendeurGPSRealData />} />
                   <Route path="digital-services" element={<VendeurServicesDigitauxRealData />} />

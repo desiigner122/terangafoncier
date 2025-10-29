@@ -1,5 +1,5 @@
 -- FIXED: Assign notaire to all active purchase_cases
--- profiles table uses 'id' column only (no user_id)
+-- profiles table uses 'id' column only
 
 DO $$
 DECLARE
@@ -7,7 +7,7 @@ DECLARE
   case_record RECORD;
   assigned_count INT := 0;
 BEGIN
-  -- Find notaire by role in profiles (id = auth.users.id)
+  -- Find notaire by role in profiles
   SELECT id INTO notaire_profile_id 
   FROM profiles 
   WHERE role = 'notaire' 

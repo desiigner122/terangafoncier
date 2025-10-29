@@ -423,14 +423,17 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
         .from('documents')
         .getPublicUrl(storagePath);
 
-      // Try multiple payload shapes for compatibility with different schema versions
+      // Append download parameter to force download instead of preview
+      const downloadUrl = `${publicUrl}?download`;
+
+      // Insert into DB with the download URL
       const attempts = [
         // Schema: document_name, document_url
         {
           case_id: caseId,
           document_type: docType,
           document_name: file.name,
-          document_url: publicUrl,
+          document_url: downloadUrl,
           uploaded_by: user.id,
           file_size: file.size,
         },
@@ -439,14 +442,14 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
           case_id: caseId,
           document_type: docType,
           file_name: file.name,
-          file_url: publicUrl,
+          file_url: downloadUrl,
           uploaded_by: user.id,
           file_size: file.size,
         },
         // Fallback: basic columns only
         {
           case_id: caseId,
-          document_url: publicUrl,
+          document_url: downloadUrl,
         }
       ];
 
@@ -537,7 +540,12 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
                   </Badge>
                   {(d.document_url || d.file_url) && (
                     <Button asChild size="sm" variant="outline">
-                      <a href={d.document_url || d.file_url} target="_blank" rel="noopener noreferrer">
+                      <a 
+                        href={d.document_url || d.file_url} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        download
+                      >
                         <Download className="w-4 h-4" />
                       </a>
                     </Button>

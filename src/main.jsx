@@ -31,11 +31,21 @@ ReactDOM.createRoot(rootElement).render(
   </React.StrictMode>
 );
 
-// Register service worker for PWA (only if supported)
+// Register/unregister service worker for PWA with environment guards
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js').catch((err) => {
-      console.warn('SW registration failed:', err);
-    });
+  window.addEventListener('load', async () => {
+    try {
+      const isProd = import.meta.env.PROD === true || import.meta.env.MODE === 'production';
+      const isSecure = window.isSecureContext;
+      if (isProd && isSecure) {
+        await navigator.serviceWorker.register('/sw.js');
+      } else {
+        // In dev or non-secure context, ensure any existing SW is unregistered to avoid intercept issues
+        const regs = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(regs.map((r) => r.unregister()));
+      }
+    } catch (err) {
+      console.warn('Service worker setup error:', err);
+    }
   });
 }

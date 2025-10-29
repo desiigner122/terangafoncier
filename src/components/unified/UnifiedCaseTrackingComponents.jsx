@@ -403,14 +403,16 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
 
   const handleUploadClick = () => fileInputRef.current?.click();
 
+  const sanitizeKey = (s) => s.replace(/[^A-Za-z0-9._\-/]/g, '_');
+
   const handleFileSelected = async (e) => {
     const file = e.target.files?.[0];
     if (!file || !user || !caseId) return;
 
     try {
       setUploading(true);
-      const fileName = `${Date.now()}_${file.name}`;
-      const storagePath = `${caseId}/${user.id}/${fileName}`;
+  const fileName = sanitizeKey(`${Date.now()}_${file.name}`);
+  const storagePath = sanitizeKey(`${caseId}/${user.id}/${fileName}`);
 
       const { error: uploadError } = await supabase.storage
         .from('documents')
@@ -470,7 +472,12 @@ export const DocumentsSection = ({ caseData, userRole, permissions }) => {
       setDocs(data || []);
     } catch (err) {
       console.error('Upload error:', err);
-      toast.error("Échec de l'upload du document");
+      const msg = String(err?.message || err);
+      if (msg.toLowerCase().includes('row-level security')) {
+        toast.error("Upload bloqué par la policy RLS du bucket 'documents'. Voir le fichier sql/FIX_STORAGE_RLS_DOCUMENTS.sql pour l'activer.");
+      } else {
+        toast.error("Échec de l'upload du document");
+      }
     } finally {
       setUploading(false);
       if (fileInputRef.current) fileInputRef.current.value = '';

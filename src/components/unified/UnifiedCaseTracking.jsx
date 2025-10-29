@@ -40,6 +40,8 @@ import { useAuth } from '@/hooks/useAuth';
 // Composants spécialisés
 import TimelineTrackerModern from '@/components/buyer/TimelineTrackerModern';
 import AppointmentScheduler from '@/components/shared/AppointmentScheduler';
+import AgentSelectionModal from '@/components/modals/AgentSelectionModal';
+import GeometreSelectionModal from '@/components/modals/GeometreSelectionModal';
 
 // Métadonnées des statuts
 const STATUS_META = {
@@ -92,6 +94,8 @@ const UnifiedCaseTracking = () => {
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
+  const [showAgentModal, setShowAgentModal] = useState(false);
+  const [showGeometreModal, setShowGeometreModal] = useState(false);
 
   // Charger les données du dossier
   useEffect(() => {
@@ -138,14 +142,24 @@ const UnifiedCaseTracking = () => {
 
   // Choisir un agent (ACHETEUR uniquement)
   const handleChooseAgent = () => {
-    // TODO: Ouvrir modal de sélection agent
-    toast.info('Fonctionnalité en cours de développement');
+    setShowAgentModal(true);
   };
 
   // Demander un bornage (ACHETEUR uniquement)
   const handleRequestSurveying = () => {
-    // TODO: Ouvrir modal de sélection géomètre
-    toast.info('Fonctionnalité en cours de développement');
+    setShowGeometreModal(true);
+  };
+
+  // Callback après sélection agent
+  const handleAgentSelected = (agent) => {
+    loadCaseData(); // Recharger les données
+    toast.success('Agent assigné avec succès !');
+  };
+
+  // Callback après sélection géomètre
+  const handleGeometreSelected = (result) => {
+    loadCaseData(); // Recharger les données
+    toast.success('Mission de bornage demandée !');
   };
 
   if (loading) {
@@ -416,6 +430,21 @@ const UnifiedCaseTracking = () => {
           <AppointmentScheduler caseId={caseId} />
         </TabsContent>
       </Tabs>
+
+      {/* Modals */}
+      <AgentSelectionModal
+        isOpen={showAgentModal}
+        onClose={() => setShowAgentModal(false)}
+        caseId={caseId}
+        onAgentSelected={handleAgentSelected}
+      />
+
+      <GeometreSelectionModal
+        isOpen={showGeometreModal}
+        onClose={() => setShowGeometreModal(false)}
+        caseId={caseId}
+        onGeometreSelected={handleGeometreSelected}
+      />
     </div>
   );
 };

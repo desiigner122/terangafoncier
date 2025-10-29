@@ -883,6 +883,43 @@ class UnifiedCaseTrackingService {
       throw error;
     }
   }
+
+  /**
+   * Mettre à jour le statut d'un dossier
+   * @param {string} caseId - UUID du dossier
+   * @param {string} newStatus - Nouveau statut (voir WorkflowStatusService)
+   * @returns {Promise<object>}
+   */
+  async updateCaseStatus(caseId, newStatus) {
+    try {
+      const { data, error } = await supabase
+        .from('purchase_cases')
+        .update({
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', caseId)
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      // Log history
+      await supabase.from('purchase_case_history').insert({
+        case_id: caseId,
+        previous_status: data.status,
+        new_status: newStatus,
+        status: newStatus,
+        updated_by: (await supabase.auth.getUser()).data.user?.id || 'system',
+        notes: `Status updated to ${newStatus}`
+      });
+
+      return { success: true, data };
+    } catch (error) {
+      console.error('Erreur updateCaseStatus:', error);
+      throw error;
+    }
+  }
 }
 
 // Export singleton

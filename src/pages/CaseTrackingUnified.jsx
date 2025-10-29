@@ -24,6 +24,7 @@ import { toast } from 'sonner';
 // Services
 import UnifiedCaseTrackingService from '@/services/UnifiedCaseTrackingService.js';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
+import ContextualActionsService from '@/services/ContextualActionsService';
 
 // Composants auxiliaires
 import {
@@ -32,6 +33,7 @@ import {
   PaymentsSection,
   MessageBubble
 } from '@/components/unified/UnifiedCaseTrackingComponents.jsx';
+import ContextualActionsPanel from '@/components/unified/ContextualActionsPanel.jsx';
 
 // Modals de sélection
 import AgentSelectionModal from '@/components/modals/AgentSelectionModal.jsx';
@@ -183,6 +185,176 @@ const CaseTrackingUnified = () => {
   };
 
   /**
+   * Action handlers registry
+   * Maps handler names from ContextualActionsService to actual functions
+   */
+  const actionHandlers = {
+    // Optional actions
+    onChooseAgent: handleChooseAgent,
+    onRequestSurveying: handleRequestSurveying,
+    
+    // Document uploads (generic - handled by DocumentsSection with docType)
+    onUploadBuyerIdentity: () => toast.info('Utilisez l\'onglet Documents pour uploader'),
+    onUploadTitleDeed: () => toast.info('Utilisez l\'onglet Documents pour uploader'),
+    onUploadSurveyPlan: () => toast.info('Utilisez l\'onglet Documents pour uploader'),
+    onUploadCertificate: () => toast.info('Utilisez l\'onglet Documents pour uploader'),
+    
+    // Payments
+    onPayDeposit: async () => {
+      try {
+        toast.info('Redirection vers paiement acompte...');
+        // TODO: Integrate payment gateway
+      } catch (error) {
+        toast.error('Erreur lors du paiement');
+      }
+    },
+    onPayNotaryFees: async () => {
+      try {
+        toast.info('Redirection vers paiement frais notaire...');
+        // TODO: Integrate payment gateway
+      } catch (error) {
+        toast.error('Erreur lors du paiement');
+      }
+    },
+    onPayBalance: async () => {
+      try {
+        toast.info('Redirection vers paiement du solde...');
+        // TODO: Integrate payment gateway
+      } catch (error) {
+        toast.error('Erreur lors du paiement');
+      }
+    },
+    
+    // Validations
+    onAcceptOffer: async () => {
+      try {
+        // Update status to seller_acceptance → buyer_verification
+        await service.updateCaseStatus(caseData.id, 'buyer_verification');
+        toast.success('Offre acceptée');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur lors de l\'acceptation');
+      }
+    },
+    onValidateContract: async () => {
+      try {
+        await service.updateCaseStatus(caseData.id, 'appointment_scheduling');
+        toast.success('Contrat validé');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur lors de la validation');
+      }
+    },
+    onVerifyBuyerIdentity: async () => {
+      try {
+        await service.updateCaseStatus(caseData.id, 'seller_notification');
+        toast.success('Identité vérifiée');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur lors de la vérification');
+      }
+    },
+    onVerifyTitleCadastre: async () => {
+      try {
+        await service.updateCaseStatus(caseData.id, 'contract_preparation');
+        toast.success('Titre vérifié au cadastre');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur lors de la vérification');
+      }
+    },
+    onGenerateContract: async () => {
+      try {
+        await service.updateCaseStatus(caseData.id, 'deposit_pending');
+        toast.success('Contrat généré');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur lors de la génération');
+      }
+    },
+    onRegisterDeed: async () => {
+      try {
+        await service.updateCaseStatus(caseData.id, 'completed');
+        toast.success('Acte enregistré - Dossier complété!');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur lors de l\'enregistrement');
+      }
+    },
+    
+    // Appointments
+    onConfirmAppointment: async () => {
+      try {
+        toast.info('Utilisez l\'onglet Rendez-vous pour confirmer');
+      } catch (error) {
+        toast.error('Erreur');
+      }
+    },
+    onScheduleAppointment: async () => {
+      try {
+        toast.info('Utilisez l\'onglet Rendez-vous pour planifier');
+      } catch (error) {
+        toast.error('Erreur');
+      }
+    },
+    onScheduleSiteVisit: async () => {
+      try {
+        toast.info('Utilisez l\'onglet Rendez-vous pour planifier la visite');
+      } catch (error) {
+        toast.error('Erreur');
+      }
+    },
+    
+    // Review
+    onReviewContract: () => {
+      toast.info('Consultez l\'onglet Documents pour voir le contrat');
+    },
+    
+    // Agent/Geometre specific
+    onFacilitateNegotiation: () => {
+      toast.info('Utilisez l\'onglet Messages pour communiquer');
+    },
+    onTrackCommission: () => {
+      toast.info('Voir onglet Paiements pour le suivi');
+    },
+    onConfirmFeesReceived: async () => {
+      try {
+        toast.success('Réception des honoraires confirmée');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur');
+      }
+    },
+    onAcceptMission: async () => {
+      try {
+        // TODO: Update surveying_missions status
+        toast.success('Mission acceptée');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur');
+      }
+    },
+    onDeclineMission: async () => {
+      try {
+        // TODO: Update surveying_missions status
+        toast.info('Mission déclinée');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur');
+      }
+    },
+    onCompleteMission: async () => {
+      try {
+        // TODO: Update surveying_missions status to completed
+        toast.success('Mission clôturée');
+        await loadCaseData();
+      } catch (error) {
+        toast.error('Erreur');
+      }
+    }
+  };
+
+  /**
    * Calculer la progression (%)
    */
   const summary = caseData ? WorkflowStatusService.getSummary(caseData) : null;
@@ -226,6 +398,19 @@ const CaseTrackingUnified = () => {
   const roleConfig = ROLE_CONFIG[userRole] || ROLE_CONFIG.buyer;
   const RoleIcon = roleConfig.icon;
   const statusInfo = WorkflowStatusService.getStatusInfo(caseData.status || caseData.current_status || 'initiated');
+
+  // Get contextual actions
+  const enrichedCaseData = {
+    ...caseData,
+    hasAgent: caseData.agent_foncier_id !== null,
+    hasSurveying: caseData.surveying_mission_id !== null,
+    surveyingMission
+  };
+  const actionsByCategory = ContextualActionsService.getAvailableActions(
+    enrichedCaseData,
+    userRole,
+    permissions
+  );
 
   return (
     <div className="container mx-auto px-4 py-6 max-w-7xl">
@@ -373,24 +558,13 @@ const CaseTrackingUnified = () => {
             </CardContent>
           </Card>
 
-          {/* Actions spécifiques au rôle */}
-          <Card>
-            <CardHeader>
-              <CardTitle>Vos actions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <RoleSpecificActions
-                userRole={userRole}
-                purchaseCase={caseData}
-                permissions={permissions}
-                hasAgent={caseData?.has_agent}
-                hasSurveying={caseData?.has_surveying}
-                surveyingMission={surveyingMission}
-                onChooseAgent={handleChooseAgent}
-                onRequestSurveying={handleRequestSurveying}
-              />
-            </CardContent>
-          </Card>
+          {/* Actions spécifiques au rôle - NOUVEAU PANNEAU CONTEXTUEL */}
+          <ContextualActionsPanel
+            actionsByCategory={actionsByCategory}
+            handlers={actionHandlers}
+            userRole={userRole}
+            caseStatus={caseData.status || caseData.current_status}
+          />
         </TabsContent>
 
         {/* Timeline */}

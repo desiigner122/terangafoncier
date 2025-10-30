@@ -26,9 +26,11 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import { jsPDF } from 'jspdf';
 
 const CONTRACT_TYPES = [
   {
@@ -58,6 +60,7 @@ const CONTRACT_TYPES = [
 ];
 
 export const ContractGenerator = ({ purchaseRequest, buyer, seller, property, onContractGenerated }) => {
+  const { user: currentUserCtx } = useAuth?.() || { user: null };
   const [open, setOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [generating, setGenerating] = useState(false);
@@ -113,6 +116,48 @@ export const ContractGenerator = ({ purchaseRequest, buyer, seller, property, on
       // Générer le contenu du contrat
       const contractContent = generateContractContent(contractType);
       
+      // Récupérer l'utilisateur courant pour respecter la RLS (uploaded_by = auth.uid())
+      let uploaderId = currentUserCtx?.id;
+      try {
+        if (!uploaderId) {
+          const { data: authData } = await supabase.auth.getUser();
+          uploaderId = authData?.user?.id || buyer.id;
+        }
+      } catch (_) {
+        uploaderId = buyer.id;
+      }
+
+      // Générer un PDF simple (placeholder) et uploader dans le bucket Supabase Storage 'contracts'
+      const pdf = new jsPDF();
+      pdf.setFontSize(14);
+      pdf.text(contractType.label, 20, 20);
+      pdf.setFontSize(11);
+      pdf.text(`Dossier: ${purchaseRequest.id}`, 20, 30);
+      pdf.text(`Acheteur: ${contractContent.parties.buyer.name}`, 20, 38);
+      pdf.text(`Vendeur: ${contractContent.parties.seller.name}`, 20, 46);
+      pdf.text(`Bien: ${contractContent.property.title || ''}`, 20, 54);
+      pdf.text(`Prix de vente: ${formData.sale_price} FCFA`, 20, 62);
+      pdf.text(`Date de signature: ${formData.signing_date}`, 20, 70);
+      const pdfBlob = pdf.output('blob');
+
+      const storagePath = `contracts/${purchaseRequest.id}/${Date.now()}.pdf`;
+      let publicUrl = null;
+      try {
+        const { error: uploadErr } = await supabase
+          .storage
+          .from('contracts')
+          .upload(storagePath, pdfBlob, {
+            cacheControl: '3600',
+            upsert: true,
+            contentType: 'application/pdf'
+          });
+        if (uploadErr) throw uploadErr;
+        const { data: pub } = supabase.storage.from('contracts').getPublicUrl(storagePath);
+        publicUrl = pub?.publicUrl || null;
+      } catch (e) {
+        console.warn('Upload Storage échoué (bucket manquant ?):', e?.message || e);
+      }
+
       // Créer le document dans la base
       const documentData = {
         user_id: buyer.id,
@@ -123,9 +168,9 @@ export const ContractGenerator = ({ purchaseRequest, buyer, seller, property, on
         description: `${contractType.description} généré automatiquement`,
         document_type: selectedType === 'sale_agreement' ? 'sale_contract' : 'purchase_agreement',
         file_format: 'pdf',
-        storage_path: `/contracts/${purchaseRequest.id}/${Date.now()}.pdf`,
+        storage_path: storagePath,
         status: 'pending',
-        uploaded_by: buyer.id,
+        uploaded_by: uploaderId,
         workflow_stage: 'generation',
         metadata: {
           contract_type: selectedType,
@@ -134,6 +179,7 @@ export const ContractGenerator = ({ purchaseRequest, buyer, seller, property, on
           deposit_amount: formData.deposit_amount,
           signing_date: formData.signing_date,
           completion_date: formData.completion_date,
+          file_url: publicUrl,
           buyer_info: {
             id: buyer.id,
             name: `${buyer?.first_name || buyer?.full_name || ''} ${buyer?.last_name || ''}`.trim() || 'Acheteur',
@@ -160,6 +206,29 @@ export const ContractGenerator = ({ purchaseRequest, buyer, seller, property, on
         .single();
 
       if (error) throw error;
+
+      // Enregistrer également dans les documents "publics" du dossier pour affichage dans l'onglet Documents
+      try {
+        const publicDoc = {
+          case_id: purchaseRequest.id,
+          uploaded_by: uploaderId,
+          file_name: documentData.file_name,
+          document_type: 'contract',
+          status: 'pending',
+          file_url: publicUrl, // URL publique si upload réussi
+          mime_type: 'application/pdf',
+          created_at: new Date().toISOString(),
+          metadata: {
+            source: 'contract_generator',
+            admin_document_id: data?.id || null,
+            contract_type: selectedType,
+          }
+        };
+        await supabase.from('purchase_case_documents').insert([publicDoc]);
+      } catch (e) {
+        // Non bloquant si la RLS empêche l'insertion ici; l'admin doc existe déjà
+        console.warn('Insertion document public échouée (non bloquant):', e);
+      }
 
       toast.success('Contrat généré avec succès');
       loadContracts();

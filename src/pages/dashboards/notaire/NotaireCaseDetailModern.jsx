@@ -63,12 +63,75 @@ const NotaireCaseDetailModern = () => {
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [realtimeBound, setRealtimeBound] = useState(false);
+
+  // Ensure notary participant is marked active (not pending) for this case
+  const ensureNotaryParticipantActive = async () => {
+    try {
+      if (!user?.id) return;
+      await supabase
+        .from('purchase_case_participants')
+        .update({ status: 'active' })
+        .eq('case_id', caseId)
+        .eq('user_id', user.id)
+        .eq('role', 'notary')
+        .eq('status', 'pending');
+    } catch (e) {
+      // silencieux si RLS empêche l'update
+    }
+  };
 
   useEffect(() => {
     if (caseId && user) {
       loadCaseDetails();
     }
   }, [caseId, user]);
+
+  // Realtime sync for case status and documents
+  useEffect(() => {
+    if (!caseId || !user || realtimeBound) return;
+
+    try {
+      const caseChannel = supabase
+        .channel(`realtime:purchase_cases:${caseId}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'purchase_cases',
+          filter: `id=eq.${caseId}`
+        }, () => {
+          // Refresh case on any change
+          loadCaseDetails();
+        })
+        .subscribe();
+
+      const docsChannel = supabase
+        .channel(`realtime:purchase_case_documents:${caseId}`)
+        .on('postgres_changes', {
+          event: '*',
+          schema: 'public',
+          table: 'purchase_case_documents',
+          filter: `case_id=eq.${caseId}`
+        }, () => {
+          // Refresh docs on any change
+          loadDocuments();
+        })
+        .subscribe();
+
+      setRealtimeBound(true);
+
+      return () => {
+        try {
+          supabase.removeChannel(caseChannel);
+          supabase.removeChannel(docsChannel);
+        } catch (_) {
+          // ignore cleanup errors
+        }
+      };
+    } catch (_) {
+      // ignore realtime bind errors
+    }
+  }, [caseId, user, realtimeBound]);
 
   const loadCaseDetails = async () => {
     try {
@@ -96,6 +159,9 @@ const NotaireCaseDetailModern = () => {
       // Charger les documents
       loadDocuments();
 
+  // S'assurer que le notaire n'est pas marqué "en attente" côté participants
+  ensureNotaryParticipantActive();
+
     } catch (error) {
       console.error('❌ Error loading case:', error);
       window.safeGlobalToast?.({
@@ -107,6 +173,8 @@ const NotaireCaseDetailModern = () => {
       setLoading(false);
     }
   };
+
+  
 
   const loadDocuments = async () => {
     try {
@@ -182,13 +250,30 @@ const NotaireCaseDetailModern = () => {
       setShowStatusDialog(false);
     } catch (error) {
       console.error('Error updating status:', error);
+      const isConstraint = error?.code === '23514';
       window.safeGlobalToast?.({
-        title: "Erreur",
-        description: "Impossible de mettre à jour le statut",
+        title: isConstraint ? "Statut non autorisé par la base" : "Erreur",
+        description: isConstraint
+          ? "Veuillez exécuter le script SQL FIX_ALL_RLS_AND_CONSTRAINTS.sql dans Supabase pour mettre à jour la contrainte des statuts."
+          : "Impossible de mettre à jour le statut",
         variant: "destructive"
       });
     } finally {
       setUpdatingStatus(false);
+    }
+  };
+
+  const advanceToNextStatus = async () => {
+    try {
+      const list = WorkflowStatusService.chronologicalOrder || [];
+      const current = caseData?.status;
+      if (!current) return;
+      const idx = list.indexOf(current);
+      const next = idx >= 0 && idx + 1 < list.length ? list[idx + 1] : null;
+      if (!next || next === current) return;
+      await handleStatusUpdate(next);
+    } catch (e) {
+      // errors are handled in handleStatusUpdate
     }
   };
 
@@ -210,6 +295,9 @@ const NotaireCaseDetailModern = () => {
         description: "Tous les documents en attente ont été validés",
         variant: "success"
       });
+
+      // Avancer automatiquement au prochain statut
+      await advanceToNextStatus();
     } catch (error) {
       console.error('Error validating documents:', error);
       window.safeGlobalToast?.({
@@ -510,14 +598,16 @@ const NotaireCaseDetailModern = () => {
                       </Dialog>
 
                       {/* Valider Documents */}
-                      <Button 
-                        variant="outline" 
-                        className="w-full justify-start gap-2"
-                        onClick={handleValidateDocuments}
-                      >
-                        <CheckCircle className="h-4 w-4" />
-                        Valider les documents
-                      </Button>
+                      {documents.some((d) => d.status === 'pending') && (
+                        <Button 
+                          variant="outline" 
+                          className="w-full justify-start gap-2"
+                          onClick={handleValidateDocuments}
+                        >
+                          <CheckCircle className="h-4 w-4" />
+                          Valider les documents
+                        </Button>
+                      )}
 
                       {/* Changer le statut */}
                       <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>

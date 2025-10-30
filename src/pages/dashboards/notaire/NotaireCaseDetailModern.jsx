@@ -114,14 +114,20 @@ const NotaireCaseDetailModern = () => {
 
       if (error) throw error;
 
+      console.log('📄 Documents loaded:', docsData?.length, docsData);
+
       // Charger les profils des uploaders
       if (docsData && docsData.length > 0) {
         const uploaderIds = [...new Set(docsData.map(d => d.uploaded_by).filter(Boolean))];
         
+        console.log('👤 Loading profiles for uploader IDs:', uploaderIds);
+        
         const { data: profilesData } = await supabase
           .from('profiles')
-          .select('id, full_name')
+          .select('id, full_name, email')
           .in('id', uploaderIds);
+
+        console.log('👤 Uploader profiles loaded:', profilesData);
 
         // Mapper les profils aux documents
         const profilesMap = {};
@@ -131,9 +137,11 @@ const NotaireCaseDetailModern = () => {
 
         const docsWithUploaders = docsData.map(doc => ({
           ...doc,
-          uploaded_by_name: profilesMap[doc.uploaded_by]?.full_name || 'Utilisateur'
+          uploader: profilesMap[doc.uploaded_by] || null,
+          uploaded_by_name: profilesMap[doc.uploaded_by]?.full_name || profilesMap[doc.uploaded_by]?.email || 'Utilisateur'
         }));
 
+        console.log('✅ Documents with uploaders:', docsWithUploaders);
         setDocuments(docsWithUploaders);
       } else {
         setDocuments([]);
@@ -155,14 +163,20 @@ const NotaireCaseDetailModern = () => {
 
       if (messagesError) throw messagesError;
 
+      console.log('📨 Messages loaded:', messagesData?.length, messagesData);
+
       // Charger les profils des expéditeurs (utiliser sent_by qui est NOT NULL)
       if (messagesData && messagesData.length > 0) {
         const senderIds = [...new Set(messagesData.map(m => m.sent_by || m.sender_id).filter(Boolean))];
+        
+        console.log('👥 Loading profiles for sender IDs:', senderIds);
         
         const { data: profilesData } = await supabase
           .from('profiles')
           .select('id, full_name, email, avatar_url')
           .in('id', senderIds);
+
+        console.log('👥 Profiles loaded:', profilesData);
 
         // Mapper les profils aux messages
         const profilesMap = {};
@@ -177,6 +191,7 @@ const NotaireCaseDetailModern = () => {
           content: msg.message || msg.content // Normaliser à content pour l'affichage
         }));
 
+        console.log('✅ Messages with senders:', messagesWithSenders);
         setMessages(messagesWithSenders);
       } else {
         setMessages([]);

@@ -130,9 +130,9 @@ const NotaireCaseDetailModern = () => {
 
       if (messagesError) throw messagesError;
 
-      // Charger les profils des expéditeurs
+      // Charger les profils des expéditeurs (utiliser sent_by qui est NOT NULL)
       if (messagesData && messagesData.length > 0) {
-        const senderIds = [...new Set(messagesData.map(m => m.sender_id).filter(Boolean))];
+        const senderIds = [...new Set(messagesData.map(m => m.sent_by || m.sender_id).filter(Boolean))];
         
         const { data: profilesData } = await supabase
           .from('profiles')
@@ -147,7 +147,9 @@ const NotaireCaseDetailModern = () => {
 
         const messagesWithSenders = messagesData.map(msg => ({
           ...msg,
-          sender: profilesMap[msg.sender_id] || null
+          sender_id: msg.sent_by || msg.sender_id, // Normaliser à sender_id
+          sender: profilesMap[msg.sent_by || msg.sender_id] || null,
+          content: msg.message || msg.content // Normaliser à content pour l'affichage
         }));
 
         setMessages(messagesWithSenders);
@@ -170,10 +172,9 @@ const NotaireCaseDetailModern = () => {
         .from('purchase_case_messages')
         .insert({
           case_id: caseId,
-          sender_id: user.id,
-          message_type: 'text',
-          content: newMessage.trim(),
-          created_at: new Date().toISOString()
+          sent_by: user.id,
+          message: newMessage.trim(),
+          message_type: 'text'
         });
 
       if (error) throw error;

@@ -43,6 +43,9 @@ ALTER TABLE documents_administratifs
 DROP CONSTRAINT IF EXISTS fk_documents_administratifs_request;
 
 ALTER TABLE documents_administratifs 
+DROP CONSTRAINT IF EXISTS fk_documents_administratifs_purchase_case;
+
+ALTER TABLE documents_administratifs 
 ADD CONSTRAINT fk_documents_administratifs_purchase_case
 FOREIGN KEY (purchase_request_id) 
 REFERENCES purchase_cases(id) 

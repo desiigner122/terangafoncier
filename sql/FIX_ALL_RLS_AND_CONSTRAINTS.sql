@@ -32,8 +32,23 @@ CHECK (status IN (
 ));
 
 -- ============================================
--- 2. FIX: documents_administratifs RLS
+-- 2. FIX: documents_administratifs FOREIGN KEY & RLS
 -- ============================================
+
+-- FIX 1: Foreign Key Constraint
+-- Erreur: "violates foreign key constraint fk_documents_administratifs_request"
+-- La table "requests" n'existe pas, il faut pointer vers "purchase_cases"
+
+ALTER TABLE documents_administratifs 
+DROP CONSTRAINT IF EXISTS fk_documents_administratifs_request;
+
+ALTER TABLE documents_administratifs 
+ADD CONSTRAINT fk_documents_administratifs_purchase_case
+FOREIGN KEY (purchase_request_id) 
+REFERENCES purchase_cases(id) 
+ON DELETE CASCADE;
+
+-- FIX 2: RLS Policies
 
 DROP POLICY IF EXISTS "Enable read access for authenticated users" ON documents_administratifs;
 DROP POLICY IF EXISTS "Enable insert for authenticated users" ON documents_administratifs;

@@ -26,6 +26,8 @@ import { supabase } from '@/lib/supabaseClient';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
+import ContractGenerator from '@/components/purchase/ContractGenerator';
+import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 
 const STATUS_META = {
   initiated: { label: 'Initié', color: 'bg-gray-500', progress: 10 },
@@ -54,6 +56,10 @@ const NotaireCaseDetailModern = () => {
   const [caseData, setCaseData] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [documents, setDocuments] = useState([]);
+  const [showContractDialog, setShowContractDialog] = useState(false);
+  const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
+  const [showStatusDialog, setShowStatusDialog] = useState(false);
+  const [updatingStatus, setUpdatingStatus] = useState(false);
 
   useEffect(() => {
     if (caseId && user) {
@@ -145,6 +151,83 @@ const NotaireCaseDetailModern = () => {
       console.error('Error loading documents:', error);
       setDocuments([]);
     }
+  };
+
+  const handleStatusUpdate = async (newStatus) => {
+    try {
+      setUpdatingStatus(true);
+      
+      const { error } = await supabase
+        .from('purchase_cases')
+        .update({ 
+          status: newStatus,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', caseId);
+
+      if (error) throw error;
+
+      // Recharger les données
+      await loadCaseDetails();
+      
+      window.safeGlobalToast?.({
+        title: "Statut mis à jour",
+        description: `Le dossier est maintenant en: ${WorkflowStatusService.getLabel(newStatus)}`,
+        variant: "success"
+      });
+
+      setShowStatusDialog(false);
+    } catch (error) {
+      console.error('Error updating status:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur",
+        description: "Impossible de mettre à jour le statut",
+        variant: "destructive"
+      });
+    } finally {
+      setUpdatingStatus(false);
+    }
+  };
+
+  const handleValidateDocuments = async () => {
+    try {
+      // Valider tous les documents en attente
+      const { error } = await supabase
+        .from('purchase_case_documents')
+        .update({ status: 'approved' })
+        .eq('case_id', caseId)
+        .eq('status', 'pending');
+
+      if (error) throw error;
+
+      await loadDocuments();
+      
+      window.safeGlobalToast?.({
+        title: "Documents validés",
+        description: "Tous les documents en attente ont été validés",
+        variant: "success"
+      });
+    } catch (error) {
+      console.error('Error validating documents:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur",
+        description: "Impossible de valider les documents",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const getAvailableStatusTransitions = () => {
+    if (!caseData?.status) return [];
+    
+    const currentIndex = WorkflowStatusService.chronologicalOrder.indexOf(caseData.status);
+    if (currentIndex === -1) return WorkflowStatusService.chronologicalOrder;
+    
+    // Permettre d'avancer au statut suivant ou de revenir en arrière
+    return WorkflowStatusService.chronologicalOrder.slice(
+      Math.max(0, currentIndex - 1),
+      Math.min(WorkflowStatusService.chronologicalOrder.length, currentIndex + 3)
+    );
   };
 
   if (loading) {
@@ -305,24 +388,125 @@ const NotaireCaseDetailModern = () => {
                   </CardContent>
                 </Card>
 
-                {/* Actions contextuelles - TODO: Implémenter */}
+                {/* Actions contextuelles */}
                 <Card>
                   <CardHeader>
                     <CardTitle>Actions disponibles</CardTitle>
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-2">
-                      <Button variant="outline" className="w-full justify-start gap-2">
-                        <FileText className="h-4 w-4" />
-                        Préparer le contrat
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start gap-2">
-                        <Calendar className="h-4 w-4" />
-                        Planifier la signature
-                      </Button>
-                      <Button variant="outline" className="w-full justify-start gap-2">
+                      {/* Générer/Préparer Contrat */}
+                      <Dialog open={showContractDialog} onOpenChange={setShowContractDialog}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start gap-2">
+                            <FileText className="h-4 w-4" />
+                            Préparer le contrat
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-4xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Génération de contrat</DialogTitle>
+                            <DialogDescription>
+                              Générez les documents officiels pour ce dossier
+                            </DialogDescription>
+                          </DialogHeader>
+                          <ContractGenerator
+                            purchaseRequest={{ id: caseId }}
+                            buyer={caseData?.buyer}
+                            seller={caseData?.seller}
+                            property={caseData?.parcelle}
+                            onContractGenerated={() => {
+                              setShowContractDialog(false);
+                              loadDocuments();
+                            }}
+                          />
+                        </DialogContent>
+                      </Dialog>
+
+                      {/* Planifier RDV/Signature */}
+                      <Dialog open={showAppointmentDialog} onOpenChange={setShowAppointmentDialog}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start gap-2">
+                            <Calendar className="h-4 w-4" />
+                            Planifier la signature
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
+                          <DialogHeader>
+                            <DialogTitle>Planifier un rendez-vous</DialogTitle>
+                            <DialogDescription>
+                              Créez un rendez-vous de signature avec toutes les parties
+                            </DialogDescription>
+                          </DialogHeader>
+                          <AppointmentScheduler
+                            purchaseRequestId={caseId}
+                            userId={user?.id}
+                            onAppointmentCreated={() => {
+                              setShowAppointmentDialog(false);
+                              window.safeGlobalToast?.({
+                                title: "Rendez-vous créé",
+                                description: "Le rendez-vous a été planifié avec succès",
+                                variant: "success"
+                              });
+                            }}
+                          />
+                        </DialogContent>
+                      </Dialog>
+
+                      {/* Valider Documents */}
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2"
+                        onClick={handleValidateDocuments}
+                      >
                         <CheckCircle className="h-4 w-4" />
                         Valider les documents
+                      </Button>
+
+                      {/* Changer le statut */}
+                      <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
+                        <DialogTrigger asChild>
+                          <Button variant="outline" className="w-full justify-start gap-2">
+                            <TrendingUp className="h-4 w-4" />
+                            Changer le statut
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                          <DialogHeader>
+                            <DialogTitle>Mettre à jour le statut du dossier</DialogTitle>
+                            <DialogDescription>
+                              Statut actuel: {WorkflowStatusService.getLabel(caseData?.status)}
+                            </DialogDescription>
+                          </DialogHeader>
+                          <div className="space-y-4 py-4">
+                            <div className="space-y-2">
+                              <Label>Nouveau statut</Label>
+                              <div className="grid gap-2">
+                                {getAvailableStatusTransitions().map((status) => (
+                                  <Button
+                                    key={status}
+                                    variant={caseData?.status === status ? "default" : "outline"}
+                                    className="justify-start"
+                                    onClick={() => handleStatusUpdate(status)}
+                                    disabled={updatingStatus || caseData?.status === status}
+                                  >
+                                    <CheckCircle className="h-4 w-4 mr-2" />
+                                    {WorkflowStatusService.getLabel(status)}
+                                  </Button>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+
+                      <Button 
+                        variant="outline" 
+                        className="w-full justify-start gap-2"
+                        onClick={() => setActiveTab('documents')}
+                      >
+                        <Upload className="h-4 w-4" />
+                        Télécharger un document
                       </Button>
                     </div>
                   </CardContent>

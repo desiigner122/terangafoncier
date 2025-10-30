@@ -233,6 +233,59 @@ const NotaireCaseDetailModern = () => {
     );
   };
 
+  const handleDeleteDocument = async (documentId) => {
+    if (!confirm('Êtes-vous sûr de vouloir supprimer ce document ?')) return;
+    
+    try {
+      const { error } = await supabase
+        .from('purchase_case_documents')
+        .delete()
+        .eq('id', documentId);
+
+      if (error) throw error;
+
+      await loadDocuments();
+      
+      window.safeGlobalToast?.({
+        title: "Document supprimé",
+        description: "Le document a été supprimé avec succès",
+        variant: "success"
+      });
+    } catch (error) {
+      console.error('Error deleting document:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur",
+        description: "Impossible de supprimer le document",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownloadDocument = (doc) => {
+    if (doc.file_url) {
+      window.open(doc.file_url, '_blank');
+    } else {
+      window.safeGlobalToast?.({
+        title: "Document non disponible",
+        description: "L'URL du document n'est pas disponible",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handlePreviewDocument = (doc) => {
+    if (doc.file_url) {
+      // Ouvrir dans un nouvel onglet pour preview
+      window.open(doc.file_url, '_blank');
+    } else {
+      window.safeGlobalToast?.({
+        title: "Aperçu non disponible",
+        description: "L'URL du document n'est pas disponible",
+        variant: "destructive"
+      });
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-screen">
@@ -539,7 +592,12 @@ const NotaireCaseDetailModern = () => {
                         <FileText className="h-5 w-5" />
                         Documents du dossier
                       </span>
-                      <Button size="sm" variant="outline" className="gap-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="gap-2"
+                        onClick={() => setActiveTab('documents')}
+                      >
                         <Upload className="h-4 w-4" />
                         Uploader
                       </Button>
@@ -551,7 +609,15 @@ const NotaireCaseDetailModern = () => {
                         <FileText className="h-16 w-16 mx-auto mb-3 opacity-20" />
                         <p className="font-medium">Aucun document pour le moment</p>
                         <p className="text-sm mt-1">Les documents ajoutés au dossier apparaîtront ici</p>
-                        <Button className="mt-4 gap-2" variant="outline">
+                        <Button 
+                          className="mt-4 gap-2" 
+                          variant="outline"
+                          onClick={() => window.safeGlobalToast?.({
+                            title: "Upload de document",
+                            description: "Fonctionnalité en cours de développement",
+                            variant: "default"
+                          })}
+                        >
                           <Upload className="h-4 w-4" />
                           Ajouter le premier document
                         </Button>
@@ -597,13 +663,29 @@ const NotaireCaseDetailModern = () => {
                                     </div>
                                   </div>
                                   <div className="flex items-center gap-2">
-                                    <Button size="sm" variant="outline" title="Prévisualiser">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      title="Prévisualiser"
+                                      onClick={() => handlePreviewDocument(doc)}
+                                    >
                                       <Eye className="h-4 w-4" />
                                     </Button>
-                                    <Button size="sm" variant="outline" title="Télécharger">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      title="Télécharger"
+                                      onClick={() => handleDownloadDocument(doc)}
+                                    >
                                       <Download className="h-4 w-4" />
                                     </Button>
-                                    <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50" title="Supprimer">
+                                    <Button 
+                                      size="sm" 
+                                      variant="ghost" 
+                                      className="text-red-600 hover:text-red-700 hover:bg-red-50" 
+                                      title="Supprimer"
+                                      onClick={() => handleDeleteDocument(doc.id)}
+                                    >
                                       <Trash2 className="h-4 w-4" />
                                     </Button>
                                   </div>
@@ -619,7 +701,16 @@ const NotaireCaseDetailModern = () => {
                       <div className="mt-4 pt-4 border-t">
                         <div className="flex items-center justify-between text-sm text-gray-600">
                           <span>{documents.length} document(s) au total</span>
-                          <Button variant="outline" size="sm" className="gap-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm" 
+                            className="gap-2"
+                            onClick={() => window.safeGlobalToast?.({
+                              title: "Upload de document",
+                              description: "Fonctionnalité en cours de développement",
+                              variant: "default"
+                            })}
+                          >
                             <Upload className="h-4 w-4" />
                             Ajouter un document
                           </Button>

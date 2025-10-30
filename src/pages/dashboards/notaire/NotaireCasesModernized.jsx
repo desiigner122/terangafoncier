@@ -89,14 +89,6 @@ export default function NotaireCasesModernized() {
       if (result.success) {
         // Transform purchase_cases data to match expected case format
         const transformedCases = result.data.map(purchaseCase => {
-          console.log('💰 Price fields:', {
-            final_price: purchaseCase.final_price,
-            proposed_price: purchaseCase.proposed_price,
-            notaire_fees: purchaseCase.notaire_fees,
-            purchase_price: purchaseCase.purchase_price,
-            amount: purchaseCase.amount
-          });
-          
           return {
             id: purchaseCase.id,
             case_number: purchaseCase.case_number,
@@ -111,8 +103,8 @@ export default function NotaireCasesModernized() {
             buyer_name: purchaseCase.buyer?.full_name || 'Acheteur',
             seller_name: purchaseCase.seller?.full_name || 'Vendeur',
             property_address: purchaseCase.parcelle?.location || 'N/A',
-            property_value: purchaseCase.final_price || purchaseCase.proposed_price || purchaseCase.purchase_price || purchaseCase.amount || 0,
-            notary_fees: purchaseCase.notaire_fees || purchaseCase.notary_fees || 0,
+            property_value: purchaseCase.purchase_price || 0,
+            notary_fees: purchaseCase.notaire_fees || 0,
             next_action: getNextAction(purchaseCase.status),
             documents_count: 0,
             completed_documents: 0,

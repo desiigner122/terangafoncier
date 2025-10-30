@@ -83,14 +83,6 @@ const NotaireCaseDetailModern = () => {
       if (error) throw error;
 
       console.log('✅ Case loaded:', purchaseCase);
-      console.log('💰 Price fields available:', {
-        proposed_price: purchaseCase.proposed_price,
-        final_price: purchaseCase.final_price,
-        purchase_price: purchaseCase.purchase_price,
-        amount: purchaseCase.amount,
-        notaire_fees: purchaseCase.notaire_fees,
-        notary_fees: purchaseCase.notary_fees
-      });
       
       setCaseData(purchaseCase);
 
@@ -280,24 +272,24 @@ const NotaireCaseDetailModern = () => {
                       <Badge className={statusConfig.color}>{statusConfig.label}</Badge>
                     </div>
                     <div>
-                      <p className="text-sm text-gray-500">Prix proposé</p>
+                      <p className="text-sm text-gray-500">Prix d'achat</p>
                       <p className="font-semibold text-lg text-green-600">
                         {new Intl.NumberFormat('fr-FR', {
                           style: 'currency',
                           currency: 'XOF',
                           minimumFractionDigits: 0
-                        }).format(caseData.proposed_price || 0)}
+                        }).format(caseData.purchase_price || 0)}
                       </p>
                     </div>
-                    {caseData.final_price && (
+                    {caseData.notaire_fees && (
                       <div>
-                        <p className="text-sm text-gray-500">Prix final</p>
+                        <p className="text-sm text-gray-500">Frais de notaire</p>
                         <p className="font-semibold text-lg text-blue-600">
                           {new Intl.NumberFormat('fr-FR', {
                             style: 'currency',
                             currency: 'XOF',
                             minimumFractionDigits: 0
-                          }).format(caseData.final_price)}
+                          }).format(caseData.notaire_fees)}
                         </p>
                       </div>
                     )}

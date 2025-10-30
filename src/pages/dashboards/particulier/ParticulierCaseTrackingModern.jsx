@@ -36,6 +36,7 @@ import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
+import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
 
 const ParticulierCaseTrackingModern = () => {
   const { caseId } = useParams();
@@ -55,10 +56,12 @@ const ParticulierCaseTrackingModern = () => {
   const [history, setHistory] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
+  // Real-time sync hook for case changes
+  useRealtimeCaseSync(caseId, () => loadCaseData());
+
   useEffect(() => {
     if (user && caseId) {
       loadCaseData();
-      setupRealtimeSubscriptions();
     }
 
     return () => {

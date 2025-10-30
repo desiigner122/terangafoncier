@@ -31,6 +31,7 @@ import { cn } from '@/lib/utils';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import ContractGenerator from '@/components/purchase/ContractGenerator';
 import TimelineTracker from '@/components/purchase/TimelineTracker';
+import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
 
 const VendeurCaseTrackingModern = () => {
   const { caseNumber } = useParams();
@@ -48,6 +49,9 @@ const VendeurCaseTrackingModern = () => {
   const [payments, setPayments] = useState([]);
   const [history, setHistory] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+
+  // Real-time sync hook for case changes
+  useRealtimeCaseSync(purchaseCase?.id, () => loadCaseData());
 
   useEffect(() => {
     if (user && caseNumber) {

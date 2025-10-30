@@ -84,31 +84,42 @@ export default function NotaireCasesModernized() {
       const result = await NotaireSupabaseService.getAssignedCases(user.id);
       
       console.log('📊 Result:', result);
+      console.log('📊 First case data:', result.data?.[0]);
       
       if (result.success) {
         // Transform purchase_cases data to match expected case format
-        const transformedCases = result.data.map(purchaseCase => ({
-          id: purchaseCase.id,
-          case_number: purchaseCase.case_number,
-          title: `Vente ${purchaseCase.parcelle?.title || 'Terrain'} - ${purchaseCase.parcelle?.location || 'Location'}`,
-          case_type: 'vente_terrain',
-          status: purchaseCase.status || 'open',
-          priority: purchaseCase.priority || 'medium',
-          progress: calculateProgress(purchaseCase.status),
-          opened_date: purchaseCase.created_at,
-          due_date: purchaseCase.estimated_completion_date,
-          last_activity: purchaseCase.updated_at || purchaseCase.created_at,
-          buyer_name: purchaseCase.buyer?.full_name || 'Acheteur',
-          seller_name: purchaseCase.seller?.full_name || 'Vendeur',
-          property_address: purchaseCase.parcelle?.location || 'N/A',
-          property_value: purchaseCase.final_price || purchaseCase.proposed_price || 0,
-          notary_fees: purchaseCase.notaire_fees || 0,
-          next_action: getNextAction(purchaseCase.status),
-          documents_count: 0,
-          completed_documents: 0,
-          // Keep original data for details
-          _original: purchaseCase
-        }));
+        const transformedCases = result.data.map(purchaseCase => {
+          console.log('💰 Price fields:', {
+            final_price: purchaseCase.final_price,
+            proposed_price: purchaseCase.proposed_price,
+            notaire_fees: purchaseCase.notaire_fees,
+            purchase_price: purchaseCase.purchase_price,
+            amount: purchaseCase.amount
+          });
+          
+          return {
+            id: purchaseCase.id,
+            case_number: purchaseCase.case_number,
+            title: `Vente ${purchaseCase.parcelle?.title || 'Terrain'} - ${purchaseCase.parcelle?.location || 'Location'}`,
+            case_type: 'vente_terrain',
+            status: purchaseCase.status || 'open',
+            priority: purchaseCase.priority || 'medium',
+            progress: calculateProgress(purchaseCase.status),
+            opened_date: purchaseCase.created_at,
+            due_date: purchaseCase.estimated_completion_date,
+            last_activity: purchaseCase.updated_at || purchaseCase.created_at,
+            buyer_name: purchaseCase.buyer?.full_name || 'Acheteur',
+            seller_name: purchaseCase.seller?.full_name || 'Vendeur',
+            property_address: purchaseCase.parcelle?.location || 'N/A',
+            property_value: purchaseCase.final_price || purchaseCase.proposed_price || purchaseCase.purchase_price || purchaseCase.amount || 0,
+            notary_fees: purchaseCase.notaire_fees || purchaseCase.notary_fees || 0,
+            next_action: getNextAction(purchaseCase.status),
+            documents_count: 0,
+            completed_documents: 0,
+            // Keep original data for details
+            _original: purchaseCase
+          };
+        });
         
         console.log('✅ Transformed cases:', transformedCases.length);
         setCases(transformedCases);

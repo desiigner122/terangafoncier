@@ -19,8 +19,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-import ContextualActionsPanel from '@/components/unified/ContextualActionsPanel';
-import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging';
+// import ContextualActionsPanel from '@/components/unified/ContextualActionsPanel';
+// import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging';
 
 const STATUS_META = {
   initiated: { label: 'Initié', color: 'bg-gray-500', progress: 10 },
@@ -246,17 +246,39 @@ const NotaireCaseDetailModern = () => {
                   </CardContent>
                 </Card>
 
-                {/* Actions contextuelles */}
-                <ContextualActionsPanel
-                  caseId={caseId}
-                  currentStatus={caseData.status}
-                  userRole="notaire"
-                  onActionComplete={loadCaseDetails}
-                />
+                {/* Actions contextuelles - TODO: Implémenter */}
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Actions disponibles</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="space-y-2">
+                      <Button variant="outline" className="w-full justify-start gap-2">
+                        <FileText className="h-4 w-4" />
+                        Préparer le contrat
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start gap-2">
+                        <Calendar className="h-4 w-4" />
+                        Planifier la signature
+                      </Button>
+                      <Button variant="outline" className="w-full justify-start gap-2">
+                        <CheckCircle className="h-4 w-4" />
+                        Valider les documents
+                      </Button>
+                    </div>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="messages">
-                <PurchaseCaseMessaging caseId={caseId} />
+                <Card>
+                  <CardHeader>
+                    <CardTitle>Messages</CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <p className="text-sm text-gray-500">La messagerie sera bientôt disponible.</p>
+                  </CardContent>
+                </Card>
               </TabsContent>
 
               <TabsContent value="documents">

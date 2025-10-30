@@ -35,11 +35,11 @@ import { toast } from 'sonner';
 
 // Services
 import unifiedCaseTrackingService from '@/services/UnifiedCaseTrackingService';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 // Composants spécialisés
-import TimelineTrackerModern from '@/components/buyer/TimelineTrackerModern';
-import AppointmentScheduler from '@/components/shared/AppointmentScheduler';
+import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
+import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import AgentSelectionModal from '@/components/modals/AgentSelectionModal';
 import GeometreSelectionModal from '@/components/modals/GeometreSelectionModal';
 

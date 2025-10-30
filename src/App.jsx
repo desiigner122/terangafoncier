@@ -226,7 +226,7 @@ import NotaireCommunicationModernized from '@/pages/dashboards/notaire/NotaireCo
 import NotaireTransactionsModernized from '@/pages/dashboards/notaire/NotaireTransactionsModernized';
 import NotaireAuthenticationModernized from '@/pages/dashboards/notaire/NotaireAuthenticationModernized';
 import NotaireCasesModernized from '@/pages/dashboards/notaire/NotaireCasesModernized';
-import NotaireCaseDetailPage from '@/pages/dashboards/notaire/NotaireCaseDetailPage';
+import NotaireCaseDetailModern from '@/pages/dashboards/notaire/NotaireCaseDetailModern';
 import NotaireArchivesModernized from '@/pages/dashboards/notaire/NotaireArchivesModernized';
 import NotaireComplianceModernized from '@/pages/dashboards/notaire/NotaireComplianceModernized';
 import NotaireAnalyticsModernized from '@/pages/dashboards/notaire/NotaireAnalyticsModernized';
@@ -762,7 +762,7 @@ function App() {
               <Route path="transactions" element={<NotaireTransactionsModernized />} />
               <Route path="authentication" element={<NotaireAuthenticationModernized />} />
               <Route path="cases" element={<NotaireCasesModernized />} />
-              <Route path="cases/:caseId" element={<NotaireCaseDetailPage />} />
+              <Route path="cases/:caseId" element={<NotaireCaseDetailModern />} />
               <Route path="archives" element={<NotaireArchivesModernized />} />
               <Route path="compliance" element={<NotaireComplianceModernized />} />
               <Route path="analytics" element={<NotaireAnalyticsModernized />} />
@@ -801,7 +801,7 @@ function App() {
               <Route path="transactions" element={<NotaireTransactionsModernized />} />
               <Route path="authentication" element={<NotaireAuthenticationModernized />} />
               <Route path="cases" element={<NotaireCasesModernized />} />
-              <Route path="cases/:caseId" element={<NotaireCaseDetailPage />} />
+              <Route path="cases/:caseId" element={<NotaireCaseDetailModern />} />
               <Route path="archives" element={<NotaireArchivesModernized />} />
               <Route path="compliance" element={<NotaireComplianceModernized />} />
               <Route path="analytics" element={<NotaireAnalyticsModernized />} />

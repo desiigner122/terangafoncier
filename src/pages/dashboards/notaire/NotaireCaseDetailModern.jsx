@@ -9,7 +9,8 @@ import React, { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { 
   ArrowLeft, FileText, Users, MessageSquare, Calendar, DollarSign,
-  CheckCircle, Clock, AlertCircle, TrendingUp, MapPin, Phone, Mail
+  CheckCircle, Clock, AlertCircle, TrendingUp, MapPin, Phone, Mail,
+  Send, Paperclip, Download, Upload, Eye, Trash2, User
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -17,6 +18,9 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Textarea } from '@/components/ui/textarea';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 // import ContextualActionsPanel from '@/components/unified/ContextualActionsPanel';
@@ -48,6 +52,10 @@ const NotaireCaseDetailModern = () => {
   const [loading, setLoading] = useState(true);
   const [caseData, setCaseData] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
+  const [documents, setDocuments] = useState([]);
+  const [messages, setMessages] = useState([]);
+  const [newMessage, setNewMessage] = useState('');
+  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (caseId && user) {
@@ -75,7 +83,23 @@ const NotaireCaseDetailModern = () => {
       if (error) throw error;
 
       console.log('✅ Case loaded:', purchaseCase);
+      console.log('💰 Price fields available:', {
+        proposed_price: purchaseCase.proposed_price,
+        final_price: purchaseCase.final_price,
+        purchase_price: purchaseCase.purchase_price,
+        amount: purchaseCase.amount,
+        notaire_fees: purchaseCase.notaire_fees,
+        notary_fees: purchaseCase.notary_fees
+      });
+      
       setCaseData(purchaseCase);
+
+      // Charger les documents
+      loadDocuments();
+      
+      // Charger les messages
+      loadMessages();
+
     } catch (error) {
       console.error('❌ Error loading case:', error);
       window.safeGlobalToast?.({
@@ -85,6 +109,76 @@ const NotaireCaseDetailModern = () => {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadDocuments = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('purchase_case_documents')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('uploaded_at', { ascending: false });
+
+      if (error) throw error;
+      setDocuments(data || []);
+    } catch (error) {
+      console.error('Error loading documents:', error);
+    }
+  };
+
+  const loadMessages = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('purchase_case_messages')
+        .select(`
+          *,
+          sender:profiles!sender_id(id, full_name, email, avatar_url)
+        `)
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setMessages(data || []);
+    } catch (error) {
+      console.error('Error loading messages:', error);
+    }
+  };
+
+  const sendMessage = async () => {
+    if (!newMessage.trim()) return;
+
+    try {
+      setSendingMessage(true);
+      
+      const { error } = await supabase
+        .from('purchase_case_messages')
+        .insert({
+          case_id: caseId,
+          sender_id: user.id,
+          message_type: 'text',
+          content: newMessage.trim(),
+          created_at: new Date().toISOString()
+        });
+
+      if (error) throw error;
+
+      setNewMessage('');
+      loadMessages();
+      
+      window.safeGlobalToast?.({
+        title: "Message envoyé",
+        variant: "success"
+      });
+    } catch (error) {
+      console.error('Error sending message:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur",
+        description: "Impossible d'envoyer le message",
+        variant: "destructive"
+      });
+    } finally {
+      setSendingMessage(false);
     }
   };
 
@@ -273,10 +367,104 @@ const NotaireCaseDetailModern = () => {
               <TabsContent value="messages">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Messages</CardTitle>
+                    <CardTitle className="flex items-center gap-2">
+                      <MessageSquare className="h-5 w-5" />
+                      Messages du dossier
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-sm text-gray-500">La messagerie sera bientôt disponible.</p>
+                    {/* Messages list */}
+                    <ScrollArea className="h-[400px] pr-4 mb-4">
+                      <div className="space-y-4">
+                        {messages.length === 0 ? (
+                          <div className="text-center py-8 text-gray-500">
+                            <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-20" />
+                            <p>Aucun message pour le moment</p>
+                            <p className="text-sm">Envoyez le premier message ci-dessous</p>
+                          </div>
+                        ) : (
+                          messages.map((message) => {
+                            const isOwnMessage = message.sender_id === user?.id;
+                            return (
+                              <div
+                                key={message.id}
+                                className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
+                              >
+                                <Avatar className="h-8 w-8 flex-shrink-0">
+                                  {message.sender?.avatar_url ? (
+                                    <img src={message.sender.avatar_url} alt={message.sender.full_name} />
+                                  ) : (
+                                    <AvatarFallback className={isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-300'}>
+                                      {message.sender?.full_name?.charAt(0) || 'U'}
+                                    </AvatarFallback>
+                                  )}
+                                </Avatar>
+                                <div className={`flex-1 max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'} flex flex-col`}>
+                                  <div className={`rounded-lg p-3 ${isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800'}`}>
+                                    <p className="text-xs font-medium mb-1 opacity-80">
+                                      {message.sender?.full_name || 'Utilisateur'}
+                                    </p>
+                                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+                                  </div>
+                                  <span className="text-xs text-gray-500 mt-1 px-1">
+                                    {message.created_at ? new Date(message.created_at).toLocaleString('fr-FR', {
+                                      day: 'numeric',
+                                      month: 'short',
+                                      hour: '2-digit',
+                                      minute: '2-digit'
+                                    }) : ''}
+                                  </span>
+                                </div>
+                              </div>
+                            );
+                          })
+                        )}
+                      </div>
+                    </ScrollArea>
+
+                    <Separator className="my-4" />
+
+                    {/* Message input */}
+                    <div className="flex gap-2">
+                      <Textarea
+                        placeholder="Tapez votre message..."
+                        value={newMessage}
+                        onChange={(e) => setNewMessage(e.target.value)}
+                        className="min-h-[80px] resize-none"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            if (newMessage.trim()) sendMessage();
+                          }
+                        }}
+                      />
+                      <div className="flex flex-col gap-2">
+                        <Button
+                          onClick={sendMessage}
+                          disabled={sendingMessage || !newMessage.trim()}
+                          size="icon"
+                          className="h-10 w-10"
+                        >
+                          {sendingMessage ? (
+                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
+                          ) : (
+                            <Send className="h-4 w-4" />
+                          )}
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="icon"
+                          className="h-10 w-10"
+                          title="Joindre un fichier"
+                          disabled
+                        >
+                          <Paperclip className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-gray-500 mt-2">
+                      Appuyez sur Entrée pour envoyer, Shift+Entrée pour un saut de ligne
+                    </p>
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -284,10 +472,98 @@ const NotaireCaseDetailModern = () => {
               <TabsContent value="documents">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Documents du dossier</CardTitle>
+                    <CardTitle className="flex items-center justify-between">
+                      <span className="flex items-center gap-2">
+                        <FileText className="h-5 w-5" />
+                        Documents du dossier
+                      </span>
+                      <Button size="sm" variant="outline" className="gap-2">
+                        <Upload className="h-4 w-4" />
+                        Uploader
+                      </Button>
+                    </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-500">Gestion des documents à venir...</p>
+                    {documents.length === 0 ? (
+                      <div className="text-center py-12 text-gray-500">
+                        <FileText className="h-16 w-16 mx-auto mb-3 opacity-20" />
+                        <p className="font-medium">Aucun document pour le moment</p>
+                        <p className="text-sm mt-1">Les documents ajoutés au dossier apparaîtront ici</p>
+                        <Button className="mt-4 gap-2" variant="outline">
+                          <Upload className="h-4 w-4" />
+                          Ajouter le premier document
+                        </Button>
+                      </div>
+                    ) : (
+                      <ScrollArea className="h-[500px]">
+                        <div className="space-y-3">
+                          {documents.map((doc) => (
+                            <Card key={doc.id} className="border-l-4 border-l-blue-500">
+                              <CardContent className="p-4">
+                                <div className="flex items-start justify-between gap-4">
+                                  <div className="flex items-start gap-3 flex-1">
+                                    <div className="p-2 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                                      <FileText className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <h4 className="font-semibold text-sm truncate">
+                                        {doc.document_name || doc.file_name || 'Document sans nom'}
+                                      </h4>
+                                      <div className="flex items-center gap-3 mt-1 text-xs text-gray-500">
+                                        <span className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 rounded">
+                                          {doc.document_type || doc.file_type || 'Type inconnu'}
+                                        </span>
+                                        {doc.file_size && (
+                                          <span>{(doc.file_size / 1024).toFixed(0)} Ko</span>
+                                        )}
+                                        {doc.uploaded_at && (
+                                          <span>
+                                            {new Date(doc.uploaded_at).toLocaleDateString('fr-FR', {
+                                              day: 'numeric',
+                                              month: 'short',
+                                              year: 'numeric'
+                                            })}
+                                          </span>
+                                        )}
+                                      </div>
+                                      {doc.uploaded_by_name && (
+                                        <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
+                                          <User className="h-3 w-3" />
+                                          Ajouté par {doc.uploaded_by_name}
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="flex items-center gap-2">
+                                    <Button size="sm" variant="outline" title="Prévisualiser">
+                                      <Eye className="h-4 w-4" />
+                                    </Button>
+                                    <Button size="sm" variant="outline" title="Télécharger">
+                                      <Download className="h-4 w-4" />
+                                    </Button>
+                                    <Button size="sm" variant="ghost" className="text-red-600 hover:text-red-700 hover:bg-red-50" title="Supprimer">
+                                      <Trash2 className="h-4 w-4" />
+                                    </Button>
+                                  </div>
+                                </div>
+                              </CardContent>
+                            </Card>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    )}
+
+                    {documents.length > 0 && (
+                      <div className="mt-4 pt-4 border-t">
+                        <div className="flex items-center justify-between text-sm text-gray-600">
+                          <span>{documents.length} document(s) au total</span>
+                          <Button variant="outline" size="sm" className="gap-2">
+                            <Upload className="h-4 w-4" />
+                            Ajouter un document
+                          </Button>
+                        </div>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
@@ -295,10 +571,125 @@ const NotaireCaseDetailModern = () => {
               <TabsContent value="timeline">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Historique</CardTitle>
+                    <CardTitle>Historique du dossier</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-500">Timeline à venir...</p>
+                    <ScrollArea className="h-[500px] pr-4">
+                      <div className="space-y-6">
+                        {/* Timeline vertical */}
+                        <div className="relative pl-8 space-y-8">
+                          {/* Ligne verticale */}
+                          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
+
+                          {/* Event: Case created */}
+                          <div className="relative">
+                            <div className="absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full bg-blue-500 border-4 border-white dark:border-gray-900 flex items-center justify-center">
+                              <div className="w-2 h-2 bg-white rounded-full" />
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-semibold text-sm">Dossier créé</h4>
+                                <span className="text-xs text-gray-500">
+                                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString('fr-FR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }) : 'Date inconnue'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Le dossier {caseData.case_number} a été créé
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Event: Current status */}
+                          <div className="relative">
+                            <div className={`absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full border-4 border-white dark:border-gray-900 flex items-center justify-center ${STATUS_META[caseData.status]?.color || 'bg-gray-400'}`}>
+                              <div className="w-2 h-2 bg-white rounded-full" />
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-semibold text-sm">
+                                  {STATUS_META[caseData.status]?.label || caseData.status}
+                                </h4>
+                                <span className="text-xs text-gray-500">
+                                  {caseData.updated_at ? new Date(caseData.updated_at).toLocaleDateString('fr-FR', {
+                                    day: 'numeric',
+                                    month: 'long',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit'
+                                  }) : 'En cours'}
+                                </span>
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Statut actuel du dossier
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Event: Notaire assignation */}
+                          <div className="relative">
+                            <div className="absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full bg-green-500 border-4 border-white dark:border-gray-900 flex items-center justify-center">
+                              <User className="w-3 h-3 text-white" />
+                            </div>
+                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                              <div className="flex items-center justify-between mb-2">
+                                <h4 className="font-semibold text-sm">Notaire assigné</h4>
+                                <span className="text-xs text-gray-500">Confirmé</span>
+                              </div>
+                              <p className="text-sm text-gray-600 dark:text-gray-400">
+                                Vous êtes le notaire en charge de ce dossier
+                              </p>
+                            </div>
+                          </div>
+
+                          {/* Placeholder for future events */}
+                          {messages.length > 0 && (
+                            <div className="relative">
+                              <div className="absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full bg-purple-500 border-4 border-white dark:border-gray-900 flex items-center justify-center">
+                                <MessageSquare className="w-3 h-3 text-white" />
+                              </div>
+                              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-semibold text-sm">{messages.length} message(s) échangé(s)</h4>
+                                  <span className="text-xs text-gray-500">
+                                    {messages[messages.length - 1]?.created_at ? 
+                                      new Date(messages[messages.length - 1].created_at).toLocaleDateString('fr-FR', {
+                                        day: 'numeric',
+                                        month: 'short'
+                                      }) : ''}
+                                  </span>
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  Dernier message envoyé
+                                </p>
+                              </div>
+                            </div>
+                          )}
+
+                          {documents.length > 0 && (
+                            <div className="relative">
+                              <div className="absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full bg-orange-500 border-4 border-white dark:border-gray-900 flex items-center justify-center">
+                                <FileText className="w-3 h-3 text-white" />
+                              </div>
+                              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
+                                <div className="flex items-center justify-between mb-2">
+                                  <h4 className="font-semibold text-sm">{documents.length} document(s) ajouté(s)</h4>
+                                  <span className="text-xs text-gray-500">Disponibles</span>
+                                </div>
+                                <p className="text-sm text-gray-600 dark:text-gray-400">
+                                  Documents du dossier disponibles
+                                </p>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </ScrollArea>
                   </CardContent>
                 </Card>
               </TabsContent>

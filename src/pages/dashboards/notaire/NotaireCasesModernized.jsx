@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Briefcase, Plus, Search, Filter, Eye, Edit2, Trash2, 
   FileText, Calendar, Clock, User, Users, MapPin, 
   TrendingUp, AlertCircle, CheckCircle, XCircle, 
   ArrowRight, Download, Upload, Phone, Mail, Home,
-  DollarSign, Percent, Shield, Link2, BookOpen
+  DollarSign, Percent, Shield, Link2, BookOpen, FolderOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
@@ -29,6 +30,7 @@ import { NotaireSupabaseService } from '@/services/NotaireSupabaseService';
 
 export default function NotaireCasesModernized() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // États principaux
   const [cases, setCases] = useState([]);
@@ -690,6 +692,14 @@ export default function NotaireCasesModernized() {
                       <div className="flex flex-col gap-2">
                         <Button
                           size="sm"
+                          onClick={() => navigate(`/notaire/cases/${caseItem.id}`)}
+                          className="gap-2"
+                        >
+                          <FolderOpen className="h-4 w-4" />
+                          Ouvrir
+                        </Button>
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => {
                             setSelectedCase(caseItem);
@@ -697,7 +707,7 @@ export default function NotaireCasesModernized() {
                           }}
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          Détails
+                          Aperçu
                         </Button>
                         <select
                           value={caseItem.status}

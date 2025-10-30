@@ -23,8 +23,9 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
-// import ContextualActionsPanel from '@/components/unified/ContextualActionsPanel';
-// import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging';
+import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
+import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging';
+import WorkflowStatusService from '@/services/WorkflowStatusService';
 
 const STATUS_META = {
   initiated: { label: 'Initié', color: 'bg-gray-500', progress: 10 },
@@ -53,9 +54,6 @@ const NotaireCaseDetailModern = () => {
   const [caseData, setCaseData] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [documents, setDocuments] = useState([]);
-  const [messages, setMessages] = useState([]);
-  const [newMessage, setNewMessage] = useState('');
-  const [sendingMessage, setSendingMessage] = useState(false);
 
   useEffect(() => {
     if (caseId && user) {
@@ -88,9 +86,6 @@ const NotaireCaseDetailModern = () => {
 
       // Charger les documents
       loadDocuments();
-      
-      // Charger les messages
-      loadMessages();
 
     } catch (error) {
       console.error('❌ Error loading case:', error);
@@ -149,92 +144,6 @@ const NotaireCaseDetailModern = () => {
     } catch (error) {
       console.error('Error loading documents:', error);
       setDocuments([]);
-    }
-  };
-
-  const loadMessages = async () => {
-    try {
-      // Charger les messages
-      const { data: messagesData, error: messagesError } = await supabase
-        .from('purchase_case_messages')
-        .select('*')
-        .eq('case_id', caseId)
-        .order('created_at', { ascending: true });
-
-      if (messagesError) throw messagesError;
-
-      console.log('📨 Messages loaded:', messagesData?.length, messagesData);
-
-      // Charger les profils des expéditeurs (utiliser sent_by qui est NOT NULL)
-      if (messagesData && messagesData.length > 0) {
-        const senderIds = [...new Set(messagesData.map(m => m.sent_by || m.sender_id).filter(Boolean))];
-        
-        console.log('👥 Loading profiles for sender IDs:', senderIds);
-        
-        const { data: profilesData } = await supabase
-          .from('profiles')
-          .select('id, full_name, email, avatar_url')
-          .in('id', senderIds);
-
-        console.log('👥 Profiles loaded:', profilesData);
-
-        // Mapper les profils aux messages
-        const profilesMap = {};
-        (profilesData || []).forEach(profile => {
-          profilesMap[profile.id] = profile;
-        });
-
-        const messagesWithSenders = messagesData.map(msg => ({
-          ...msg,
-          sender_id: msg.sent_by || msg.sender_id, // Normaliser à sender_id
-          sender: profilesMap[msg.sent_by || msg.sender_id] || null,
-          content: msg.message || msg.content // Normaliser à content pour l'affichage
-        }));
-
-        console.log('✅ Messages with senders:', messagesWithSenders);
-        setMessages(messagesWithSenders);
-      } else {
-        setMessages([]);
-      }
-    } catch (error) {
-      console.error('Error loading messages:', error);
-      setMessages([]);
-    }
-  };
-
-  const sendMessage = async () => {
-    if (!newMessage.trim()) return;
-
-    try {
-      setSendingMessage(true);
-      
-      const { error } = await supabase
-        .from('purchase_case_messages')
-        .insert({
-          case_id: caseId,
-          sent_by: user.id,
-          message: newMessage.trim(),
-          message_type: 'text'
-        });
-
-      if (error) throw error;
-
-      setNewMessage('');
-      loadMessages();
-      
-      window.safeGlobalToast?.({
-        title: "Message envoyé",
-        variant: "success"
-      });
-    } catch (error) {
-      console.error('Error sending message:', error);
-      window.safeGlobalToast?.({
-        title: "Erreur",
-        description: "Impossible d'envoyer le message",
-        variant: "destructive"
-      });
-    } finally {
-      setSendingMessage(false);
     }
   };
 
@@ -421,108 +330,18 @@ const NotaireCaseDetailModern = () => {
               </TabsContent>
 
               <TabsContent value="messages">
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <MessageSquare className="h-5 w-5" />
-                      Messages du dossier
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {/* Messages list */}
-                    <ScrollArea className="h-[400px] pr-4 mb-4">
-                      <div className="space-y-4">
-                        {messages.length === 0 ? (
-                          <div className="text-center py-8 text-gray-500">
-                            <MessageSquare className="h-12 w-12 mx-auto mb-2 opacity-20" />
-                            <p>Aucun message pour le moment</p>
-                            <p className="text-sm">Envoyez le premier message ci-dessous</p>
-                          </div>
-                        ) : (
-                          messages.map((message) => {
-                            const isOwnMessage = message.sender_id === user?.id;
-                            return (
-                              <div
-                                key={message.id}
-                                className={`flex gap-3 ${isOwnMessage ? 'flex-row-reverse' : 'flex-row'}`}
-                              >
-                                <Avatar className="h-8 w-8 flex-shrink-0">
-                                  {message.sender?.avatar_url ? (
-                                    <img src={message.sender.avatar_url} alt={message.sender.full_name} />
-                                  ) : (
-                                    <AvatarFallback className={isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-300'}>
-                                      {message.sender?.full_name?.charAt(0) || 'U'}
-                                    </AvatarFallback>
-                                  )}
-                                </Avatar>
-                                <div className={`flex-1 max-w-[70%] ${isOwnMessage ? 'items-end' : 'items-start'} flex flex-col`}>
-                                  <div className={`rounded-lg p-3 ${isOwnMessage ? 'bg-blue-500 text-white' : 'bg-gray-100 dark:bg-gray-800'}`}>
-                                    <p className="text-xs font-medium mb-1 opacity-80">
-                                      {message.sender?.full_name || 'Utilisateur'}
-                                    </p>
-                                    <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-                                  </div>
-                                  <span className="text-xs text-gray-500 mt-1 px-1">
-                                    {message.created_at ? new Date(message.created_at).toLocaleString('fr-FR', {
-                                      day: 'numeric',
-                                      month: 'short',
-                                      hour: '2-digit',
-                                      minute: '2-digit'
-                                    }) : ''}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })
-                        )}
-                      </div>
-                    </ScrollArea>
-
-                    <Separator className="my-4" />
-
-                    {/* Message input */}
-                    <div className="flex gap-2">
-                      <Textarea
-                        placeholder="Tapez votre message..."
-                        value={newMessage}
-                        onChange={(e) => setNewMessage(e.target.value)}
-                        className="min-h-[80px] resize-none"
-                        onKeyDown={(e) => {
-                          if (e.key === 'Enter' && !e.shiftKey) {
-                            e.preventDefault();
-                            if (newMessage.trim()) sendMessage();
-                          }
-                        }}
-                      />
-                      <div className="flex flex-col gap-2">
-                        <Button
-                          onClick={sendMessage}
-                          disabled={sendingMessage || !newMessage.trim()}
-                          size="icon"
-                          className="h-10 w-10"
-                        >
-                          {sendingMessage ? (
-                            <div className="animate-spin h-4 w-4 border-2 border-white border-t-transparent rounded-full" />
-                          ) : (
-                            <Send className="h-4 w-4" />
-                          )}
-                        </Button>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          className="h-10 w-10"
-                          title="Joindre un fichier"
-                          disabled
-                        >
-                          <Paperclip className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-2">
-                      Appuyez sur Entrée pour envoyer, Shift+Entrée pour un saut de ligne
-                    </p>
-                  </CardContent>
-                </Card>
+                <PurchaseCaseMessaging
+                  caseId={caseId}
+                  caseNumber={caseData?.case_number}
+                  buyerInfo={{
+                    id: caseData?.buyer?.id,
+                    name: caseData?.buyer?.full_name || caseData?.buyer?.email
+                  }}
+                  sellerInfo={{
+                    id: caseData?.seller?.id,
+                    name: caseData?.seller?.full_name || caseData?.seller?.email
+                  }}
+                />
               </TabsContent>
 
               <TabsContent value="documents">
@@ -630,122 +449,13 @@ const NotaireCaseDetailModern = () => {
                     <CardTitle>Historique du dossier</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <ScrollArea className="h-[500px] pr-4">
-                      <div className="space-y-6">
-                        {/* Timeline vertical */}
-                        <div className="relative pl-8 space-y-8">
-                          {/* Ligne verticale */}
-                          <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700" />
-
-                          {/* Event: Case created */}
-                          <div className="relative">
-                            <div className="absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full bg-blue-500 border-4 border-white dark:border-gray-900 flex items-center justify-center">
-                              <div className="w-2 h-2 bg-white rounded-full" />
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-semibold text-sm">Dossier créé</h4>
-                                <span className="text-xs text-gray-500">
-                                  {caseData.created_at ? new Date(caseData.created_at).toLocaleDateString('fr-FR', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  }) : 'Date inconnue'}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Le dossier {caseData.case_number} a été créé
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Event: Current status */}
-                          <div className="relative">
-                            <div className={`absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full border-4 border-white dark:border-gray-900 flex items-center justify-center ${STATUS_META[caseData.status]?.color || 'bg-gray-400'}`}>
-                              <div className="w-2 h-2 bg-white rounded-full" />
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-semibold text-sm">
-                                  {STATUS_META[caseData.status]?.label || caseData.status}
-                                </h4>
-                                <span className="text-xs text-gray-500">
-                                  {caseData.updated_at ? new Date(caseData.updated_at).toLocaleDateString('fr-FR', {
-                                    day: 'numeric',
-                                    month: 'long',
-                                    year: 'numeric',
-                                    hour: '2-digit',
-                                    minute: '2-digit'
-                                  }) : 'En cours'}
-                                </span>
-                              </div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Statut actuel du dossier
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Event: Notaire assignation */}
-                          <div className="relative">
-                            <div className="absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full bg-green-500 border-4 border-white dark:border-gray-900 flex items-center justify-center">
-                              <User className="w-3 h-3 text-white" />
-                            </div>
-                            <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                              <div className="flex items-center justify-between mb-2">
-                                <h4 className="font-semibold text-sm">Notaire assigné</h4>
-                                <span className="text-xs text-gray-500">Confirmé</span>
-                              </div>
-                              <p className="text-sm text-gray-600 dark:text-gray-400">
-                                Vous êtes le notaire en charge de ce dossier
-                              </p>
-                            </div>
-                          </div>
-
-                          {/* Placeholder for future events */}
-                          {messages.length > 0 && (
-                            <div className="relative">
-                              <div className="absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full bg-purple-500 border-4 border-white dark:border-gray-900 flex items-center justify-center">
-                                <MessageSquare className="w-3 h-3 text-white" />
-                              </div>
-                              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="font-semibold text-sm">{messages.length} message(s) échangé(s)</h4>
-                                  <span className="text-xs text-gray-500">
-                                    {messages[messages.length - 1]?.created_at ? 
-                                      new Date(messages[messages.length - 1].created_at).toLocaleDateString('fr-FR', {
-                                        day: 'numeric',
-                                        month: 'short'
-                                      }) : ''}
-                                  </span>
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  Dernier message envoyé
-                                </p>
-                              </div>
-                            </div>
-                          )}
-
-                          {documents.length > 0 && (
-                            <div className="relative">
-                              <div className="absolute left-[-1.45rem] top-1 w-6 h-6 rounded-full bg-orange-500 border-4 border-white dark:border-gray-900 flex items-center justify-center">
-                                <FileText className="w-3 h-3 text-white" />
-                              </div>
-                              <div className="bg-gray-50 dark:bg-gray-800/50 rounded-lg p-4">
-                                <div className="flex items-center justify-between mb-2">
-                                  <h4 className="font-semibold text-sm">{documents.length} document(s) ajouté(s)</h4>
-                                  <span className="text-xs text-gray-500">Disponibles</span>
-                                </div>
-                                <p className="text-sm text-gray-600 dark:text-gray-400">
-                                  Documents du dossier disponibles
-                                </p>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    </ScrollArea>
+                    <TimelineTrackerModern
+                      currentStatus={caseData?.status || 'initiated'}
+                      paymentMethod={caseData?.payment_method || 'one_time'}
+                      financingApproved={caseData?.financing_approved || false}
+                      completedStages={WorkflowStatusService.getCompletedStages(caseData?.status || 'initiated')}
+                      history={[]}
+                    />
                   </CardContent>
                 </Card>
               </TabsContent>

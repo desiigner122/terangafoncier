@@ -110,7 +110,7 @@ const NotaireCaseDetailModern = () => {
         .from('purchase_case_documents')
         .select('*')
         .eq('case_id', caseId)
-        .order('uploaded_at', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setDocuments(data || []);
@@ -121,19 +121,42 @@ const NotaireCaseDetailModern = () => {
 
   const loadMessages = async () => {
     try {
-      const { data, error } = await supabase
+      // Charger les messages
+      const { data: messagesData, error: messagesError } = await supabase
         .from('purchase_case_messages')
-        .select(`
-          *,
-          sender:profiles!sender_id(id, full_name, email, avatar_url)
-        `)
+        .select('*')
         .eq('case_id', caseId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
-      setMessages(data || []);
+      if (messagesError) throw messagesError;
+
+      // Charger les profils des expéditeurs
+      if (messagesData && messagesData.length > 0) {
+        const senderIds = [...new Set(messagesData.map(m => m.sender_id).filter(Boolean))];
+        
+        const { data: profilesData } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, avatar_url')
+          .in('id', senderIds);
+
+        // Mapper les profils aux messages
+        const profilesMap = {};
+        (profilesData || []).forEach(profile => {
+          profilesMap[profile.id] = profile;
+        });
+
+        const messagesWithSenders = messagesData.map(msg => ({
+          ...msg,
+          sender: profilesMap[msg.sender_id] || null
+        }));
+
+        setMessages(messagesWithSenders);
+      } else {
+        setMessages([]);
+      }
     } catch (error) {
       console.error('Error loading messages:', error);
+      setMessages([]);
     }
   };
 
@@ -508,9 +531,9 @@ const NotaireCaseDetailModern = () => {
                                         {doc.file_size && (
                                           <span>{(doc.file_size / 1024).toFixed(0)} Ko</span>
                                         )}
-                                        {doc.uploaded_at && (
+                                        {(doc.created_at || doc.uploaded_at) && (
                                           <span>
-                                            {new Date(doc.uploaded_at).toLocaleDateString('fr-FR', {
+                                            {new Date(doc.created_at || doc.uploaded_at).toLocaleDateString('fr-FR', {
                                               day: 'numeric',
                                               month: 'short',
                                               year: 'numeric'
@@ -518,10 +541,10 @@ const NotaireCaseDetailModern = () => {
                                           </span>
                                         )}
                                       </div>
-                                      {doc.uploaded_by_name && (
+                                      {(doc.uploaded_by_name || doc.uploaded_by) && (
                                         <p className="text-xs text-gray-500 mt-1 flex items-center gap-1">
                                           <User className="h-3 w-3" />
-                                          Ajouté par {doc.uploaded_by_name}
+                                          Ajouté par {doc.uploaded_by_name || doc.uploaded_by || 'Utilisateur'}
                                         </p>
                                       )}
                                     </div>

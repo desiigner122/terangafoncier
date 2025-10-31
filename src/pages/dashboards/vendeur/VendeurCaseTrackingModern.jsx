@@ -44,6 +44,7 @@ const VendeurCaseTrackingModern = () => {
   const [purchaseRequest, setPurchaseRequest] = useState(null);
   const [property, setProperty] = useState(null);
   const [buyer, setBuyer] = useState(null);
+  const [notaire, setNotaire] = useState(null);
   const [messages, setMessages] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -121,6 +122,21 @@ const VendeurCaseTrackingModern = () => {
           console.warn('⚠️ Erreur chargement acheteur:', buyerError);
         } else {
           setBuyer(buyerData);
+        }
+      }
+
+      // ✅ CORRECTION 4b: Charger le profil du notaire
+      if (caseData?.notaire_id) {
+        const { data: notaireData, error: notaireError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', caseData.notaire_id)
+          .single();
+
+        if (notaireError) {
+          console.warn('⚠️ Erreur chargement notaire:', notaireError);
+        } else {
+          setNotaire(notaireData);
         }
       }
 
@@ -698,6 +714,56 @@ const VendeurCaseTrackingModern = () => {
                     </div>
                   )}
                 </div>
+              </CardContent>
+            </Card>
+
+            {/* Infos notaire */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Notaire</CardTitle>
+              </CardHeader>
+              <CardContent>
+                {notaire ? (
+                  <>
+                    <div className="flex items-center gap-3 mb-4">
+                      <Avatar className="w-12 h-12">
+                        <AvatarImage src={notaire?.avatar_url} alt={notaire?.full_name} />
+                        <AvatarFallback className="bg-purple-100 text-purple-700">
+                          {notaire?.full_name?.split(' ')?.map(n => n[0]).join('').toUpperCase() || 'N'}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-semibold">
+                          {notaire?.full_name || notaire?.first_name && notaire?.last_name 
+                            ? `${notaire.first_name} ${notaire.last_name}` 
+                            : 'Notaire'}
+                        </p>
+                        <Badge variant="default" className="mt-1">
+                          <CheckCircle className="w-3 h-3 mr-1" />
+                          Assigné
+                        </Badge>
+                      </div>
+                    </div>
+
+                    <div className="space-y-2 text-sm">
+                      <div className="flex items-center gap-2 text-gray-600">
+                        <Mail className="w-4 h-4" />
+                        {notaire?.email || 'N/A'}
+                      </div>
+                      {notaire?.phone && (
+                        <div className="flex items-center gap-2 text-gray-600">
+                          <Phone className="w-4 h-4" />
+                          {notaire?.phone}
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : (
+                  <div className="flex flex-col items-center justify-center py-4 text-center">
+                    <AlertCircle className="w-12 h-12 text-yellow-500 mb-2" />
+                    <p className="text-sm text-gray-600">Notaire en attente d'assignation</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 

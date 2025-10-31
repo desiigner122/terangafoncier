@@ -298,11 +298,12 @@ const VendeurCaseTrackingModern = () => {
   };
 
   const calculateProgress = () => {
-    const stages = ['offer_submitted', 'offer_accepted', 'documents_pending', 'financing_approval', 'compromis_signed', 'final_payment', 'title_transfer', 'completed'];
-    // ✅ CORRECTION: Use purchaseCase status or workflow_stage if available
-    const currentStage = purchaseCase?.workflow_stage || purchaseRequest?.workflow_stage || purchaseCase?.status || 'offer_submitted';
-    const currentIndex = stages.indexOf(currentStage);
-    return ((currentIndex + 1) / stages.length) * 100;
+    // Utiliser le workflow unifié basé sur WorkflowStatusService
+    const currentStatus = (purchaseCase?.status || purchaseCase?.workflow_stage || purchaseRequest?.workflow_stage || 'initiated');
+    const order = WorkflowStatusService.chronologicalOrder || [];
+    const idx = order.indexOf(WorkflowStatusService.normalizeStatus ? WorkflowStatusService.normalizeStatus(currentStatus) : currentStatus);
+    if (idx === -1) return 0;
+    return Math.round(((idx + 1) / order.length) * 100);
   };
 
   const calculatePaymentsProgress = () => {

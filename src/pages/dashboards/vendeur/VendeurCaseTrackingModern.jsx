@@ -30,8 +30,9 @@ import { fr } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import ContractGenerator from '@/components/purchase/ContractGenerator';
-import TimelineTracker from '@/components/purchase/TimelineTracker';
+import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
+import WorkflowStatusService from '@/services/WorkflowStatusService';
 
 const VendeurCaseTrackingModern = () => {
   const { caseNumber } = useParams();
@@ -434,9 +435,11 @@ const VendeurCaseTrackingModern = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <TimelineTracker
-                  currentStage={purchaseCase?.workflow_stage || purchaseRequest?.workflow_stage || purchaseCase?.status}
-                  completedStages={purchaseRequest?.completed_stages || purchaseCase?.completed_stages || []}
+                <TimelineTrackerModern
+                  currentStatus={purchaseCase?.status || 'initiated'}
+                  paymentMethod={purchaseCase?.payment_method || 'one_time'}
+                  financingApproved={purchaseCase?.financing_approved || false}
+                  completedStages={WorkflowStatusService.getCompletedStages(purchaseCase?.status || 'initiated')}
                   history={history}
                 />
               </CardContent>

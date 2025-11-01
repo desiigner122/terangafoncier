@@ -17,7 +17,7 @@ import {
   Info
 } from 'lucide-react';
 import { toast } from 'sonner';
-import { useAuth } from '@/contexts/AuthContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 /**
  * PaymentModal - Modal permettant à l'acheteur de choisir le mode de paiement

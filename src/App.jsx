@@ -369,7 +369,7 @@ import RejoignezNousPage from '@/pages/RejoignezNousPage';
 import SolutionsPage from '@/pages/SolutionsPage';
 import SolutionsParticuliersPage from '@/pages/solutions/SolutionsParticuliersPage';
 
-import OneTimePaymentPage from '@/pages/buy/OneTimePaymentPage';
+import OneTimePaymentPage from '@/pages/buy/OneTimePaymentPageSimplified';
 import InstallmentsPaymentPage from '@/pages/buy/InstallmentsPaymentPage';
 import BankFinancingPage from '@/pages/buy/BankFinancingPage';
 import BuyerBlockchainDashboard from '@/pages/dashboards/blockchain/BuyerBlockchainDashboard';

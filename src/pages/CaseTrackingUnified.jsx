@@ -48,6 +48,12 @@ import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging.
 import AvailableActionsSection from '@/components/buyer/AvailableActionsSection.jsx';
 import PaymentModal from '@/components/modals/PaymentModal.jsx';
 
+// Composants Phase 6 - Actions Buyer/Seller
+import UserActionButtonsSection from '@/components/shared/UserActionButtonsSection.jsx';
+import SignPreliminaryAgreementModal from '@/components/modals/SignPreliminaryAgreementModal.jsx';
+import UploadDocumentsModal from '@/components/modals/UploadDocumentsModal.jsx';
+import ConfirmActionModal from '@/components/modals/ConfirmActionModal.jsx';
+
 // Configuration des rôles
 const ROLE_CONFIG = {
   buyer: {
@@ -102,6 +108,13 @@ const CaseTrackingUnified = () => {
   const [showGeometreModal, setShowGeometreModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPaymentRequest, setSelectedPaymentRequest] = useState(null);
+
+  // États Phase 6 - Actions Buyer/Seller
+  const [showSignModal, setShowSignModal] = useState(false);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [showConfirmModal, setShowConfirmModal] = useState(false);
+  const [currentAction, setCurrentAction] = useState(null);
+  const [actionLoading, setActionLoading] = useState(false);
 
   // États de la messagerie
   const [messages, setMessages] = useState([]);
@@ -214,6 +227,57 @@ const CaseTrackingUnified = () => {
     setSelectedPaymentRequest(null);
     await loadCaseData(); // Recharger pour mettre à jour le dossier
     toast.success('Paiement effectué avec succès !');
+  };
+
+  /**
+   * Handlers Phase 6 - Actions Buyer/Seller
+   */
+  const handleUserActionClick = (action) => {
+    console.log('🎯 Action clicked:', action);
+    setCurrentAction(action);
+
+    // Router vers le bon modal selon le type d'action
+    if (action.requiresSignature || action.action === 'preliminary_agreement') {
+      setShowSignModal(true);
+    } else if (action.requiresDocuments || action.requiresDocument) {
+      setShowUploadModal(true);
+    } else if (action.requiresPayment) {
+      // Utiliser le modal de paiement existant
+      const mockPaymentRequest = {
+        id: `temp_${Date.now()}`,
+        request_type: action.action,
+        amount: action.amount || 0,
+        description: action.label,
+        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+        status: 'pending'
+      };
+      setSelectedPaymentRequest(mockPaymentRequest);
+      setShowPaymentModal(true);
+    } else {
+      // Actions simples (confirmations, autorisations)
+      setShowConfirmModal(true);
+    }
+  };
+
+  const handleUserPaymentClick = (paymentRequest) => {
+    setSelectedPaymentRequest(paymentRequest);
+    setShowPaymentModal(true);
+  };
+
+  const handleUserDocumentUpload = async (documents) => {
+    console.log('📎 Documents uploaded:', documents);
+    setShowUploadModal(false);
+    setCurrentAction(null);
+    await loadCaseData();
+    toast.success('Documents uploadés avec succès !');
+  };
+
+  const handleUserCancelAction = () => {
+    setShowSignModal(false);
+    setShowUploadModal(false);
+    setShowConfirmModal(false);
+    setCurrentAction(null);
+    toast.info('Action annulée');
   };
 
   const handleSendMessage = async () => {
@@ -563,6 +627,21 @@ const CaseTrackingUnified = () => {
         </CardContent>
       </Card>
 
+      {/* Section actions Phase 6 - Pour Buyer et Seller */}
+      {(userRole === 'buyer' || userRole === 'seller') && caseData?.id && (
+        <UserActionButtonsSection
+          userRole={userRole}
+          currentStatus={caseData.status || caseData.current_status}
+          caseData={caseData}
+          userId={user.id}
+          onActionClick={handleUserActionClick}
+          onPaymentClick={handleUserPaymentClick}
+          onDocumentUpload={handleUserDocumentUpload}
+          onCancelClick={handleUserCancelAction}
+          loading={actionLoading}
+        />
+      )}
+
       {/* Section paiements en attente (Phase 3) - Visible uniquement pour les acheteurs */}
       {userRole === 'buyer' && caseData?.id && (
         <AvailableActionsSection
@@ -693,6 +772,52 @@ const CaseTrackingUnified = () => {
         }}
         paymentRequest={selectedPaymentRequest}
         onSuccess={handlePaymentSuccess}
+      />
+
+      {/* Phase 6 Modals - Buyer/Seller Actions */}
+      <SignPreliminaryAgreementModal
+        isOpen={showSignModal}
+        onClose={() => {
+          setShowSignModal(false);
+          setCurrentAction(null);
+        }}
+        caseData={caseData}
+        userRole={userRole}
+        userId={user.id}
+        onSuccess={async () => {
+          setShowSignModal(false);
+          setCurrentAction(null);
+          await loadCaseData();
+          toast.success('Document signé avec succès !');
+        }}
+      />
+
+      <UploadDocumentsModal
+        isOpen={showUploadModal}
+        onClose={() => {
+          setShowUploadModal(false);
+          setCurrentAction(null);
+        }}
+        caseData={caseData}
+        action={currentAction}
+        onSuccess={handleUserDocumentUpload}
+      />
+
+      <ConfirmActionModal
+        isOpen={showConfirmModal}
+        onClose={() => {
+          setShowConfirmModal(false);
+          setCurrentAction(null);
+        }}
+        caseData={caseData}
+        action={currentAction}
+        userRole={userRole}
+        onSuccess={async () => {
+          setShowConfirmModal(false);
+          setCurrentAction(null);
+          await loadCaseData();
+          toast.success('Action confirmée avec succès !');
+        }}
       />
     </div>
   );

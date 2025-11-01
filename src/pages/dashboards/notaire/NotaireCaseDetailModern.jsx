@@ -33,6 +33,10 @@ import ContractGenerator from '@/components/purchase/ContractGenerator';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
 import AdvancedCaseTrackingService from '@/services/AdvancedCaseTrackingService';
+import ActionButtonsSection from '@/components/notaire/ActionButtonsSection';
+import PaymentRequestModal from '@/components/modals/PaymentRequestModal';
+import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
+import { toast } from 'sonner';
 
 const STATUS_META = {
   initiated: { label: 'Initié', color: 'bg-gray-500', progress: 10 },
@@ -66,6 +70,8 @@ const NotaireCaseDetailModern = () => {
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentModalData, setPaymentModalData] = useState(null);
 
   // Use unified realtime sync hook
   useRealtimeCaseSync(caseId, () => {
@@ -166,6 +172,39 @@ const NotaireCaseDetailModern = () => {
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleActionClick = async ({ action, nextStatus }) => {
+    try {
+      const result = await PurchaseWorkflowService.updateCaseStatus(
+        caseData.id,
+        nextStatus,
+        user.id,
+        `Action: ${action}`
+      );
+      
+      if (result.success) {
+        toast.success('Action effectuée avec succès');
+        await loadCaseDetails();
+      } else {
+        toast.error(result.error || 'Erreur lors de l\'action');
+      }
+    } catch (error) {
+      console.error('Error executing action:', error);
+      toast.error('Erreur lors de l\'exécution de l\'action');
+    }
+  };
+
+  const handlePaymentRequestClick = ({ paymentType, nextStatus }) => {
+    setPaymentModalData({ paymentType, nextStatus });
+    setShowPaymentModal(true);
+  };
+
+  const handlePaymentRequestSuccess = async () => {
+    setShowPaymentModal(false);
+    setPaymentModalData(null);
+    await loadCaseDetails();
+    toast.success('Demande de paiement envoyée avec succès');
   };
 
   
@@ -489,6 +528,15 @@ const NotaireCaseDetailModern = () => {
                 <TabsTrigger value="messages">Messages</TabsTrigger>
                 <TabsTrigger value="timeline">Timeline</TabsTrigger>
               </TabsList>
+
+              {/* Action Buttons Section */}
+              <ActionButtonsSection
+                currentStatus={caseData.status}
+                caseData={caseData}
+                onActionClick={handleActionClick}
+                onPaymentRequestClick={handlePaymentRequestClick}
+                loading={updatingStatus}
+              />
 
               <TabsContent value="overview" className="space-y-4">
                 {/* Informations générales */}
@@ -936,6 +984,19 @@ const NotaireCaseDetailModern = () => {
           </div>
         </div>
       </div>
+
+      {/* Payment Request Modal */}
+      <PaymentRequestModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setPaymentModalData(null);
+        }}
+        caseData={caseData}
+        paymentType={paymentModalData?.paymentType}
+        nextStatus={paymentModalData?.nextStatus}
+        onSuccess={handlePaymentRequestSuccess}
+      />
     </div>
   );
 };

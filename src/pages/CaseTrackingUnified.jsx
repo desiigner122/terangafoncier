@@ -44,6 +44,10 @@ import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern.j
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler.jsx';
 import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging.jsx';
 
+// Composants Phase 3 - Paiements
+import AvailableActionsSection from '@/components/buyer/AvailableActionsSection.jsx';
+import PaymentModal from '@/components/modals/PaymentModal.jsx';
+
 // Configuration des rôles
 const ROLE_CONFIG = {
   buyer: {
@@ -96,6 +100,8 @@ const CaseTrackingUnified = () => {
   // États des modals
   const [showAgentModal, setShowAgentModal] = useState(false);
   const [showGeometreModal, setShowGeometreModal] = useState(false);
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [selectedPaymentRequest, setSelectedPaymentRequest] = useState(null);
 
   // États de la messagerie
   const [messages, setMessages] = useState([]);
@@ -184,8 +190,26 @@ const CaseTrackingUnified = () => {
     setShowAgentModal(true);
   };
 
-  const handleRequestSurveying = () => {
+  const handleChooseGeometre = () => {
     setShowGeometreModal(true);
+  };
+
+  /**
+   * Handler pour le paiement (Phase 3)
+   */
+  const handlePaymentClick = (paymentRequest) => {
+    setSelectedPaymentRequest(paymentRequest);
+    setShowPaymentModal(true);
+  };
+
+  /**
+   * Callback après succès paiement
+   */
+  const handlePaymentSuccess = async () => {
+    setShowPaymentModal(false);
+    setSelectedPaymentRequest(null);
+    await loadCaseData(); // Recharger pour mettre à jour le dossier
+    toast.success('Paiement effectué avec succès !');
   };
 
   const handleSendMessage = async () => {
@@ -535,6 +559,15 @@ const CaseTrackingUnified = () => {
         </CardContent>
       </Card>
 
+      {/* Section paiements en attente (Phase 3) - Visible uniquement pour les acheteurs */}
+      {userRole === 'buyer' && caseData?.id && (
+        <AvailableActionsSection
+          caseData={caseData}
+          user={user}
+          onPaymentClick={handlePaymentClick}
+        />
+      )}
+
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
         <TabsList className="grid w-full grid-cols-6">
@@ -645,6 +678,17 @@ const CaseTrackingUnified = () => {
         onClose={() => setShowGeometreModal(false)}
         caseId={caseData?.id || caseIdentifier}
         onGeometreSelected={handleGeometreSelected}
+      />
+
+      {/* Payment Modal (Phase 3) */}
+      <PaymentModal
+        isOpen={showPaymentModal}
+        onClose={() => {
+          setShowPaymentModal(false);
+          setSelectedPaymentRequest(null);
+        }}
+        paymentRequest={selectedPaymentRequest}
+        onSuccess={handlePaymentSuccess}
       />
     </div>
   );

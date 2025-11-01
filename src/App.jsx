@@ -37,6 +37,10 @@ import ContactPage from '@/pages/ContactPage';
 import BlockchainContactPage from '@/pages/BlockchainContactPage';
 import AboutPage from '@/pages/AboutPage';
 
+// Payment Pages - Phase 4
+import PaymentSuccess from '@/pages/payment/PaymentSuccess';
+import PaymentCancel from '@/pages/payment/PaymentCancel';
+
 // Imports des sous-pages de suivi Particulier
 import { 
   PrivateInterests, 
@@ -426,6 +430,11 @@ function App() {
               <Route path="about" element={<ModernAboutPage />} />
               <Route path="purchase/:propertyId" element={<PurchaseProcessPage />} />
               <Route path="purchase-success/:propertyId" element={<PurchaseSuccessPage />} />
+              
+              {/* Payment Routes - Phase 4 */}
+              <Route path="payment/success" element={<PaymentSuccess />} />
+              <Route path="payment/cancel" element={<PaymentCancel />} />
+              
               <Route path="diaspora" element={<DiasporaPage />} />
               <Route path="banques" element={<BanquesPage />} />
               <Route path="notaires" element={<NotairesPage />} />

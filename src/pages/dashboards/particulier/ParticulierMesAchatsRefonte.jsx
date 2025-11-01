@@ -101,7 +101,18 @@ const ParticulierMesAchatsRefonte = () => {
 
       if (!negotiation) throw new Error('Négociation introuvable');
 
-      // 3. Créer le dossier d'achat (purchase_case) avec le prix négocié
+      // 3. Vérifier si un dossier existe déjà
+      const { data: existingCase } = await supabase
+        .from('purchase_cases')
+        .select('id, case_number')
+        .eq('request_id', negotiation.request_id)
+        .maybeSingle();
+
+      if (existingCase) {
+        throw new Error(`Un dossier existe déjà pour cette demande: ${existingCase.case_number}`);
+      }
+
+      // 4. Créer le dossier d'achat (purchase_case) avec le prix négocié
       const result = await PurchaseWorkflowService.createPurchaseCase({
         request_id: negotiation.request_id,
         buyer_id: user.id,
@@ -114,24 +125,27 @@ const ParticulierMesAchatsRefonte = () => {
 
       if (!result.success) throw new Error(result.error);
 
-      // 4. Mettre à jour le statut de la demande
+      // 5. Mettre à jour le statut de la demande
       await supabase
         .from('requests')
         .update({ status: 'accepted' })
         .eq('id', negotiation.request_id);
 
-      // 5. Notifier le vendeur
-      await NotificationService.sendNotification({
-        user_id: negotiation.initiated_by,
-        type: 'negotiation_accepted',
-        title: 'Contre-offre acceptée ! 🎉',
-        message: `L'acheteur a accepté votre contre-offre de ${negotiation.proposed_price.toLocaleString()} FCFA`,
-        link: `/vendeur/cases/${result.case.case_number}`,
-        metadata: {
-          request_id: negotiation.request_id,
-          negotiation_id: negotiationId,
-          case_number: result.case.case_number
-        }
+      // 6. Récupérer les infos du vendeur pour notification
+      const { data: sellerProfile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email')
+        .eq('id', negotiation.initiated_by)
+        .single();
+
+      // 7. Notifier le vendeur avec la méthode correcte
+      await NotificationService.sendPurchaseRequestAccepted({
+        buyerId: user.id,
+        buyerEmail: user.email,
+        sellerName: sellerProfile ? `${sellerProfile.first_name} ${sellerProfile.last_name}` : 'Vendeur',
+        caseNumber: result.case.case_number,
+        parcelTitle: selectedRequest.parcel_title || 'Parcelle',
+        purchasePrice: negotiation.proposed_price
       });
 
       toast.success(`Contre-offre acceptée ! Dossier créé : ${result.case.case_number}`);
@@ -165,7 +179,7 @@ const ParticulierMesAchatsRefonte = () => {
 
       if (updateError) throw updateError;
 
-      // 2. Récupérer la négociation pour notifier le vendeur
+      // 2. Récupérer la négociation et le profil vendeur pour notification
       const { data: negotiation } = await supabase
         .from('negotiations')
         .select('*')
@@ -173,17 +187,18 @@ const ParticulierMesAchatsRefonte = () => {
         .single();
 
       if (negotiation) {
-        await NotificationService.sendNotification({
-          user_id: negotiation.initiated_by,
-          type: 'negotiation_rejected',
-          title: 'Contre-offre refusée',
-          message: `L'acheteur a refusé votre contre-offre. Raison: ${reason}`,
-          link: `/vendeur/demandes`,
-          metadata: {
-            request_id: negotiation.request_id,
-            negotiation_id: negotiationId,
-            reason
-          }
+        const { data: sellerProfile } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email')
+          .eq('id', negotiation.initiated_by)
+          .single();
+
+        // Notifier le vendeur avec la méthode correcte
+        await NotificationService.sendPurchaseRequestRejected({
+          buyerId: user.id,
+          buyerEmail: user.email,
+          sellerName: sellerProfile ? `${sellerProfile.first_name} ${sellerProfile.last_name}` : 'Vendeur',
+          parcelTitle: selectedRequest.parcel_title || 'Parcelle'
         });
       }
 
@@ -239,18 +254,21 @@ const ParticulierMesAchatsRefonte = () => {
         .update({ status: 'negotiation' })
         .eq('id', selectedRequest.id);
 
-      // 4. Notifier le vendeur
-      await NotificationService.sendNotification({
-        user_id: selectedNegotiation.initiated_by,
-        type: 'counter_offer_received',
-        title: 'Nouvelle contre-offre reçue 💬',
-        message: `L'acheteur propose ${counterOffer.new_price.toLocaleString()} FCFA`,
-        link: `/vendeur/demandes`,
-        metadata: {
-          request_id: selectedRequest.id,
-          negotiation_id: newNegotiation.id,
-          price: counterOffer.new_price
-        }
+      // 4. Récupérer le profil vendeur pour notification
+      const { data: sellerProfile } = await supabase
+        .from('profiles')
+        .select('first_name, last_name, email')
+        .eq('id', selectedNegotiation.initiated_by)
+        .single();
+
+      // 5. Notifier le vendeur avec la méthode correcte
+      await NotificationService.sendNegotiationProposal({
+        buyerId: user.id,
+        buyerEmail: user.email,
+        sellerName: sellerProfile ? `${sellerProfile.first_name} ${sellerProfile.last_name}` : 'Vendeur',
+        parcelTitle: selectedRequest.parcel_title || 'Parcelle',
+        proposedPrice: counterOffer.new_price,
+        message: counterOffer.message || 'Nouvelle contre-offre de l\'acheteur'
       });
 
       toast.success('Votre contre-offre a été envoyée au vendeur !');

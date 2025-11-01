@@ -6,50 +6,94 @@
 export class WorkflowStatusService {
   // Mapping des statuts BD aux labels français
   static statusLabels = {
+    // Phase 1: Initiation
     initiated: 'Dossier créé',
     buyer_verification: 'Vérification acheteur',
     seller_notification: 'Notification vendeur',
-    negotiation: 'Phase de négociation',
-    preliminary_agreement: 'Accord préalable',
+    // Phase 2: Pré-contractuelle
+    preliminary_agreement: 'Accord préliminaire',
+    deposit_payment: 'Versement des arrhes',
+    title_verification: 'Vérification titres propriété',
+    // Phase 3: Due Diligence
+    property_survey: 'Enquête au Conservateur',
+    certificate_verification: 'Vérification certificats',
+    tax_clearance: 'Situation fiscale',
+    land_survey: 'Bornage et métrés',
+    // Phase 4: Frais et Fiscalité
+    notary_fees_calculation: 'Calcul frais notaire',
+    payment_request: 'Demande de paiement',
+    fees_payment_pending: 'Paiement en attente',
+    // Phase 5: Contractuelle
     contract_preparation: 'Préparation contrat',
-    legal_verification: 'Vérification légale',
-    document_audit: 'Audit documents',
-    property_evaluation: 'Évaluation propriété',
-    notary_appointment: 'RDV notaire',
-    signing_process: 'Process de signature',
-    payment_processing: 'Traitement paiement',
+    signing_appointment: 'Rendez-vous signature',
+    // Phase 6: Paiement Final
+    final_payment_pending: 'Paiement du solde',
+    // Phase 7: Post-contractuelle
+    property_registration: 'Enregistrement au Livre Foncier',
     property_transfer: 'Transfert propriété',
+    // Phase 8: Finalisation
     completed: 'Complété',
+    // Statuts spéciaux
+    negotiation: 'Phase de négociation',
     cancelled: 'Annulé',
     rejected: 'Rejeté',
     seller_declined: 'Vendeur décline',
     negotiation_failed: 'Négociation échouée',
     legal_issues_found: 'Problèmes légaux détectés',
     archived: 'Archivé',
+    // Anciens statuts (rétrocompatibilité)
+    legal_verification: 'Vérification légale',
+    document_audit: 'Audit documents',
+    property_evaluation: 'Évaluation propriété',
+    notary_appointment: 'RDV notaire',
+    signing_process: 'Process de signature',
+    payment_processing: 'Traitement paiement',
   };
 
   // Mapping des statuts aux couleurs
   static statusColors = {
+    // Phase 1: Initiation
     initiated: 'bg-blue-100 text-blue-800',
     buyer_verification: 'bg-cyan-100 text-cyan-800',
     seller_notification: 'bg-indigo-100 text-indigo-800',
-    negotiation: 'bg-purple-100 text-purple-800',
+    // Phase 2: Pré-contractuelle
     preliminary_agreement: 'bg-violet-100 text-violet-800',
+    deposit_payment: 'bg-green-100 text-green-800',
+    title_verification: 'bg-blue-100 text-blue-800',
+    // Phase 3: Due Diligence
+    property_survey: 'bg-cyan-100 text-cyan-800',
+    certificate_verification: 'bg-teal-100 text-teal-800',
+    tax_clearance: 'bg-amber-100 text-amber-800',
+    land_survey: 'bg-orange-100 text-orange-800',
+    // Phase 4: Frais et Fiscalité
+    notary_fees_calculation: 'bg-pink-100 text-pink-800',
+    payment_request: 'bg-red-100 text-red-800',
+    fees_payment_pending: 'bg-yellow-100 text-yellow-800',
+    // Phase 5: Contractuelle
     contract_preparation: 'bg-fuchsia-100 text-fuchsia-800',
-    legal_verification: 'bg-pink-100 text-pink-800',
-    document_audit: 'bg-rose-100 text-rose-800',
-    property_evaluation: 'bg-orange-100 text-orange-800',
-    notary_appointment: 'bg-amber-100 text-amber-800',
-    signing_process: 'bg-yellow-100 text-yellow-800',
-    payment_processing: 'bg-lime-100 text-lime-800',
+    signing_appointment: 'bg-purple-100 text-purple-800',
+    // Phase 6: Paiement Final
+    final_payment_pending: 'bg-lime-100 text-lime-800',
+    // Phase 7: Post-contractuelle
+    property_registration: 'bg-blue-100 text-blue-800',
     property_transfer: 'bg-green-100 text-green-800',
+    // Phase 8: Finalisation
     completed: 'bg-emerald-100 text-emerald-800',
+    // Statuts spéciaux
+    negotiation: 'bg-purple-100 text-purple-800',
     cancelled: 'bg-red-100 text-red-800',
     rejected: 'bg-red-100 text-red-800',
     seller_declined: 'bg-orange-100 text-orange-800',
     negotiation_failed: 'bg-red-100 text-red-800',
     legal_issues_found: 'bg-red-100 text-red-800',
     archived: 'bg-gray-100 text-gray-800',
+    // Anciens statuts (rétrocompatibilité)
+    legal_verification: 'bg-pink-100 text-pink-800',
+    document_audit: 'bg-rose-100 text-rose-800',
+    property_evaluation: 'bg-orange-100 text-orange-800',
+    notary_appointment: 'bg-amber-100 text-amber-800',
+    signing_process: 'bg-yellow-100 text-yellow-800',
+    payment_processing: 'bg-lime-100 text-lime-800',
   };
 
   // Statuts terminaux (processus ne continuera pas)
@@ -120,45 +164,80 @@ export class WorkflowStatusService {
     return canonical;
   }
 
-  // Mapping statut → phase
+  // Mapping statut → phase (mis à jour pour 18 étapes)
   static statusToPhase = {
+    // Phase 0: Initiation
     initiated: 0,
     buyer_verification: 0,
     seller_notification: 0,
-    negotiation: 1,
+    // Phase 1: Pré-contractuelle
     preliminary_agreement: 1,
-    contract_preparation: 2,
+    deposit_payment: 1,
+    title_verification: 1,
+    // Phase 2: Due Diligence
+    property_survey: 2,
+    certificate_verification: 2,
+    tax_clearance: 2,
+    land_survey: 2,
+    // Phase 3: Frais et Fiscalité
+    notary_fees_calculation: 3,
+    payment_request: 3,
+    fees_payment_pending: 3,
+    // Phase 4: Contractuelle
+    contract_preparation: 4,
+    signing_appointment: 4,
+    // Phase 5: Paiement Final
+    final_payment_pending: 5,
+    // Phase 6: Post-contractuelle
+    property_registration: 6,
+    property_transfer: 6,
+    // Phase 7: Finalisation
+    completed: 7,
+    // Statuts spéciaux
+    negotiation: 1,
+    cancelled: 7,
+    rejected: 7,
+    seller_declined: 7,
+    negotiation_failed: 7,
+    legal_issues_found: 7,
+    archived: 7,
+    // Anciens statuts (rétrocompatibilité)
     legal_verification: 2,
     document_audit: 2,
     property_evaluation: 2,
-    notary_appointment: 3,
-    signing_process: 3,
-    payment_processing: 3,
-    property_transfer: 3,
-    completed: 4,
-    cancelled: 4,
-    rejected: 4,
-    seller_declined: 4,
-    negotiation_failed: 4,
-    legal_issues_found: 4,
-    archived: 4,
+    notary_appointment: 4,
+    signing_process: 4,
+    payment_processing: 5,
   };
 
-  // Ordre chronologique des statuts
+  // Ordre chronologique des statuts (18 étapes)
   static chronologicalOrder = [
+    // Phase 1: Initiation (3 étapes)
     'initiated',
     'buyer_verification',
     'seller_notification',
-    'negotiation',
+    // Phase 2: Pré-contractuelle (3 étapes)
     'preliminary_agreement',
+    'deposit_payment',
+    'title_verification',
+    // Phase 3: Due Diligence (4 étapes)
+    'property_survey',
+    'certificate_verification',
+    'tax_clearance',
+    'land_survey',
+    // Phase 4: Frais et Fiscalité (3 étapes)
+    'notary_fees_calculation',
+    'payment_request',
+    'fees_payment_pending',
+    // Phase 5: Contractuelle (2 étapes)
     'contract_preparation',
-    'legal_verification',
-    'document_audit',
-    'property_evaluation',
-    'notary_appointment',
-    'signing_process',
-    'payment_processing',
+    'signing_appointment',
+    // Phase 6: Paiement Final (1 étape)
+    'final_payment_pending',
+    // Phase 7: Post-contractuelle (2 étapes)
+    'property_registration',
     'property_transfer',
+    // Phase 8: Finalisation (1 étape)
     'completed',
   ];
 
@@ -311,6 +390,189 @@ export class WorkflowStatusService {
 
   static getKnownStatuses() {
     return Object.keys(this.statusLabels);
+  }
+
+  /**
+   * Configuration des actions notaire par étape
+   * Chaque action définit le bouton à afficher au notaire selon l'étape actuelle
+   */
+  static notaryActions = {
+    'buyer_verification': {
+      label: 'Valider identité acheteur',
+      action: 'validate_buyer',
+      nextStatus: 'seller_notification',
+      icon: 'CheckCircle',
+      color: 'blue',
+      description: 'Vérifier documents identité, capacité juridique'
+    },
+    'seller_notification': {
+      label: 'Notifier le vendeur',
+      action: 'notify_seller',
+      nextStatus: 'preliminary_agreement',
+      icon: 'Bell',
+      color: 'indigo',
+      description: 'Informer le vendeur de l\'offre d\'achat'
+    },
+    'preliminary_agreement': {
+      label: 'Générer promesse de vente',
+      action: 'generate_preliminary_agreement',
+      nextStatus: 'deposit_payment',
+      icon: 'FileText',
+      color: 'purple',
+      description: 'Rédiger et faire signer la promesse de vente'
+    },
+    'deposit_payment': {
+      label: 'Demander versement des arrhes (10%)',
+      action: 'request_deposit_payment',
+      nextStatus: 'title_verification',
+      icon: 'DollarSign',
+      color: 'green',
+      requiresPayment: true,
+      paymentType: 'deposit',
+      description: 'Demander à l\'acheteur de verser les arrhes'
+    },
+    'title_verification': {
+      label: 'Vérifier titres de propriété',
+      action: 'verify_title',
+      nextStatus: 'property_survey',
+      icon: 'Shield',
+      color: 'blue',
+      description: 'Contrôler la légalité des titres fonciers'
+    },
+    'property_survey': {
+      label: 'Lancer enquête au Conservateur',
+      action: 'initiate_property_survey',
+      nextStatus: 'certificate_verification',
+      icon: 'Search',
+      color: 'cyan',
+      description: 'Vérifier inscription au Livre Foncier'
+    },
+    'certificate_verification': {
+      label: 'Obtenir certificats',
+      action: 'request_certificates',
+      nextStatus: 'tax_clearance',
+      icon: 'FileCheck',
+      color: 'teal',
+      description: 'Certificats de non-gage et non-expropriation'
+    },
+    'tax_clearance': {
+      label: 'Vérifier situation fiscale',
+      action: 'verify_tax_status',
+      nextStatus: 'land_survey',
+      icon: 'Receipt',
+      color: 'amber',
+      description: 'Contrôler que les impôts fonciers sont à jour'
+    },
+    'land_survey': {
+      label: 'Commander bornage et métrés',
+      action: 'order_land_survey',
+      nextStatus: 'notary_fees_calculation',
+      icon: 'Map',
+      color: 'orange',
+      description: 'Faire établir le plan cadastral et limites'
+    },
+    'notary_fees_calculation': {
+      label: 'Calculer frais de notaire',
+      action: 'calculate_notary_fees',
+      nextStatus: 'payment_request',
+      icon: 'Calculator',
+      color: 'pink',
+      description: 'Droits 10%, honoraires 5%, taxes 2.5%'
+    },
+    'payment_request': {
+      label: 'Envoyer demande de paiement frais',
+      action: 'request_notary_fees_payment',
+      nextStatus: 'fees_payment_pending',
+      icon: 'Send',
+      color: 'red',
+      requiresPayment: true,
+      paymentType: 'notary_fees',
+      description: 'Demander le paiement des frais de notaire'
+    },
+    'fees_payment_pending': {
+      label: 'Attendre paiement...',
+      action: null,
+      nextStatus: 'contract_preparation',
+      icon: 'Clock',
+      color: 'gray',
+      disabled: true,
+      description: 'En attente du paiement par l\'acheteur'
+    },
+    'contract_preparation': {
+      label: 'Rédiger acte de vente',
+      action: 'draft_sales_contract',
+      nextStatus: 'signing_appointment',
+      icon: 'FileEdit',
+      color: 'violet',
+      description: 'Préparer l\'acte authentique de vente'
+    },
+    'signing_appointment': {
+      label: 'Planifier rendez-vous signature',
+      action: 'schedule_signing',
+      nextStatus: 'final_payment_pending',
+      icon: 'Calendar',
+      color: 'indigo',
+      description: 'Organiser la signature de l\'acte chez le notaire'
+    },
+    'final_payment_pending': {
+      label: 'Demander paiement du solde',
+      action: 'request_final_payment',
+      nextStatus: 'property_registration',
+      icon: 'CreditCard',
+      color: 'green',
+      requiresPayment: true,
+      paymentType: 'final_payment',
+      description: 'Demander le versement du solde du prix de vente'
+    },
+    'property_registration': {
+      label: 'Enregistrer au Livre Foncier',
+      action: 'register_property',
+      nextStatus: 'property_transfer',
+      icon: 'Book',
+      color: 'blue',
+      description: 'Inscrire la vente au Conservateur foncier'
+    },
+    'property_transfer': {
+      label: 'Organiser remise des clés',
+      action: 'transfer_property',
+      nextStatus: 'completed',
+      icon: 'Key',
+      color: 'emerald',
+      description: 'Remettre les clés et documents à l\'acheteur'
+    },
+    'completed': {
+      label: 'Dossier complété',
+      action: null,
+      nextStatus: null,
+      icon: 'CheckCircle2',
+      color: 'green',
+      disabled: true,
+      description: 'Transaction finalisée avec succès'
+    }
+  };
+
+  /**
+   * Obtenir l'action notaire pour une étape donnée
+   */
+  static getNotaryAction(status) {
+    const normalized = this.normalizeStatus(status);
+    return this.notaryActions[normalized] || null;
+  }
+
+  /**
+   * Vérifier si une étape requiert un paiement
+   */
+  static requiresPayment(status) {
+    const action = this.getNotaryAction(status);
+    return action?.requiresPayment || false;
+  }
+
+  /**
+   * Obtenir le type de paiement pour une étape
+   */
+  static getPaymentType(status) {
+    const action = this.getNotaryAction(status);
+    return action?.paymentType || null;
   }
 }
 

@@ -64,30 +64,40 @@ const ParticulierMesAchatsRefonte = () => {
   const loadPurchaseCases = async () => {
     try {
       setLoading(true);
-      console.log('🚀 [DEBUG] Exécution de loadPurchaseCases - Version 3');
+      console.log('🚀 [DEBUG] Exécution de loadPurchaseCases - Version 4 avec requests');
       console.log('👤 User ID:', user.id);
 
-      // Essayer d'abord une requête simple sans relations
+      // ✅ 1. Charger depuis purchase_cases (dossiers acceptés)
       const { data: casesData, error: casesError } = await supabase
         .from('purchase_cases')
         .select('*')
         .eq('buyer_id', user.id)
         .order('created_at', { ascending: false });
       
-      console.log('📊 Données brutes purchase_cases:', { count: casesData?.length, data: casesData, error: casesError });
+      console.log('📊 Données purchase_cases:', { count: casesData?.length, error: casesError });
 
-      if (casesError) {
-        console.error('❌ Erreur chargement dossiers:', casesError);
-        toast.error('Erreur lors du chargement: ' + casesError?.message);
+      // ✅ 2. Charger depuis requests (demandes en attente)
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('requests')
+        .select('*')
+        .eq('user_id', user.id)
+        .in('type', ['one_time', 'installment', 'bank'])
+        .order('created_at', { ascending: false });
+      
+      console.log('📊 Données requests:', { count: requestsData?.length, error: requestsError });
+
+      if (casesError && requestsError) {
+        console.error('❌ Erreur chargement:', { casesError, requestsError });
+        toast.error('Erreur lors du chargement des demandes');
         setLoading(false);
         return;
       }
 
-      // Maintenant charger les relations (requests, parcels, profiles) pour chaque dossier
-      let enrichedCases = casesData || [];
-      if (enrichedCases.length > 0) {
+      // ✅ 3. Enrichir purchase_cases avec relations
+      let enrichedCases = [];
+      if (casesData && casesData.length > 0) {
         enrichedCases = await Promise.all(
-          enrichedCases.map(async (caseItem) => {
+          casesData.map(async (caseItem) => {
             // Charger la request
             let request = null;
             if (caseItem.request_id) {
@@ -121,19 +131,90 @@ const ParticulierMesAchatsRefonte = () => {
               seller = sellerData;
             }
 
+            // Charger l'acheteur (profiles)
+            let buyer = null;
+            if (caseItem.buyer_id) {
+              const { data: buyerData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', caseItem.buyer_id)
+                .single();
+              buyer = buyerData;
+            }
+
             return {
               ...caseItem,
               request,
               property,
-              seller
+              seller,
+              buyer,
+              source: 'purchase_case'
             };
           })
         );
       }
 
-      console.log('📋 Dossiers chargés avec relations:', { count: enrichedCases?.length, data: enrichedCases });
-      setPurchaseCases(enrichedCases || []);
-      calculateStats(enrichedCases || []);
+      // ✅ 4. Enrichir requests avec données parcelles/vendeur
+      let enrichedRequests = [];
+      if (requestsData && requestsData.length > 0) {
+        enrichedRequests = await Promise.all(
+          requestsData.map(async (req) => {
+            // Charger la propriété
+            let property = null;
+            if (req.parcel_id) {
+              const { data: propData } = await supabase
+                .from('parcels')
+                .select('*')
+                .eq('id', req.parcel_id)
+                .single();
+              property = propData;
+            }
+
+            // Charger le vendeur depuis la parcelle
+            let seller = null;
+            if (property?.owner_id) {
+              const { data: sellerData } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', property.owner_id)
+                .single();
+              seller = sellerData;
+            }
+
+            // Créer structure similaire à purchase_case
+            return {
+              id: req.id,
+              case_number: `REQ-${req.id.slice(0, 8).toUpperCase()}`,
+              buyer_id: req.user_id,
+              seller_id: property?.owner_id || null,
+              parcelle_id: req.parcel_id,
+              status: req.status || 'pending',
+              type: req.type,
+              offered_price: req.offered_price,
+              created_at: req.created_at,
+              updated_at: req.updated_at,
+              request: req,
+              property,
+              seller,
+              buyer: null, // Current user is buyer, already have their data
+              source: 'request'
+            };
+          })
+        );
+      }
+
+      // ✅ 5. Combiner les deux sources
+      const allCases = [...enrichedCases, ...enrichedRequests]
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      console.log('📋 Toutes les demandes chargées:', { 
+        cases: enrichedCases?.length, 
+        requests: enrichedRequests?.length,
+        total: allCases.length 
+      });
+      
+      setPurchaseCases(allCases);
+      calculateStats(allCases);
       setLoading(false);
     } catch (error) {
       console.error('❌ Erreur globale:', error);

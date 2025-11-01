@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MessageSquare, Send, Search, Filter, MoreVertical,
@@ -17,8 +18,9 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
 
-const VendeurMessagesRealData = () => {
+const VendeurMessagesRealData = ({ onUnreadChange }) => {
   const { user } = useAuth();
+  const [searchParams] = useSearchParams();
   const [loading, setLoading] = useState(true);
   const messagesEndRef = useRef(null);
   
@@ -43,10 +45,21 @@ const VendeurMessagesRealData = () => {
     }
   }, [user]);
 
+  // Sélectionner conversation si paramètre query présent
+  useEffect(() => {
+    const conversationId = searchParams.get('conversation');
+    if (conversationId && conversations.length > 0) {
+      const conversation = conversations.find(c => c.id === conversationId);
+      if (conversation) {
+        setSelectedConversation(conversation);
+      }
+    }
+  }, [searchParams, conversations]);
+
   // Charger messages quand conversation sélectionnée
   useEffect(() => {
     if (selectedConversation) {
-      loadMessages(selectedConversation.id);
+      loadMessages(selectedConversation);
     }
   }, [selectedConversation]);
 
@@ -60,45 +73,65 @@ const VendeurMessagesRealData = () => {
       setLoading(true);
       
       // Charger vraies conversations vendeur depuis Supabase
-      // Note: conversations utilise participant1_id et participant2_id, pas buyer_id
+      // Conversations utilise vendor_id et buyer_id (vendeur = participant2, acheteur = participant1)
       const { data: conversationsData, error } = await supabase
         .from('conversations')
-        .select(`
-          *,
-          profiles!participant1_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            avatar_url
-          ),
-          properties!property_id(
-            id,
-            title,
-            reference
-          )
-        `)
-        .eq('participant2_id', user.id)
-        .eq('is_archived_by_p2', false)
+        .select('*')
+        .eq('vendor_id', user.id)
+        .eq('is_archived_vendor', false)
         .order('updated_at', { ascending: false });
 
       if (error) throw error;
 
-      // Mapper les données: participant1_id devient 'profiles' (le participant1)
+      // Fetch buyer profiles separately
+      const buyerIds = conversationsData?.map(c => c.buyer_id).filter(Boolean) || [];
+      const propertyIds = conversationsData?.map(c => c.property_id).filter(Boolean) || [];
+
+      let profilesMap = {};
+      let propertiesMap = {};
+
+      if (buyerIds.length > 0) {
+        const { data: profiles } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, email, avatar_url')
+          .in('id', buyerIds);
+        
+        profiles?.forEach(p => {
+          profilesMap[p.id] = p;
+        });
+      }
+
+      if (propertyIds.length > 0) {
+        const { data: properties } = await supabase
+          .from('properties')
+          .select('id, title, reference')
+          .in('id', propertyIds);
+        
+        properties?.forEach(p => {
+          propertiesMap[p.id] = p;
+        });
+      }
+
+      // Mapper les données: buyer_id est l'acheteur
       const formattedConversations = (conversationsData || []).map(conv => {
-        const participant = conv.profiles || {};
+        const buyer = profilesMap[conv.buyer_id] || {};
+        const property = propertiesMap[conv.property_id] || {};
         return {
           id: conv.id,
-          buyer_name: `${participant?.first_name || ''} ${participant?.last_name || ''}`.trim() || 'Utilisateur',
-          buyer_email: participant?.email || '',
-          buyer_avatar: participant?.avatar_url,
-          property_title: conv.properties?.title || 'Propriété',
-          property_id: conv.properties?.reference || '',
-          last_message: conv.last_message_preview || '',
+          thread_id: conv.thread_id || conv.id,
+    buyer_id: conv.buyer_id,
+    recipient_id: conv.buyer_id,
+          buyer_name: `${buyer?.first_name || ''} ${buyer?.last_name || ''}`.trim() || 'Utilisateur',
+          buyer_email: buyer?.email || '',
+          buyer_avatar: buyer?.avatar_url,
+          property_title: property?.title || 'Propriété',
+          property_id: property?.reference || '',
+          subject: conv.subject || property?.title || 'Conversation Teranga',
+          last_message: conv.last_message_preview || conv.last_message || '',
           last_message_time: conv.updated_at,
-          unread_count: conv.unread_count_p2 || 0,
-          is_pinned: conv.is_pinned_by_p2 || false,
-          is_archived: conv.is_archived_by_p2 || false,
+          unread_count: conv.unread_count_vendor || 0,
+          is_pinned: conv.is_pinned_vendor || false,
+          is_archived: conv.is_archived_vendor || false,
           status: 'active'
         };
       });
@@ -116,6 +149,10 @@ const VendeurMessagesRealData = () => {
         responseTime: '2h' // À calculer vraiment
       });
 
+      if (typeof onUnreadChange === 'function') {
+        onUnreadChange(unreadCount);
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('Erreur chargement conversations:', error);
@@ -130,7 +167,7 @@ const VendeurMessagesRealData = () => {
       today.setHours(0, 0, 0, 0);
       
       const { data, error } = await supabase
-        .from('messages_vendeur')
+        .from('messages')
         .select('id')
         .eq('sender_id', user.id)
         .gte('created_at', today.toISOString());
@@ -143,30 +180,44 @@ const VendeurMessagesRealData = () => {
     }
   };
 
-  const loadMessages = async (conversationId) => {
+  const loadMessages = async (conversation) => {
     try {
+      if (!conversation) return;
+
+      const threadId = conversation.thread_id || conversation.id;
+
       // Charger vraies messages depuis Supabase
       const { data: messagesData, error } = await supabase
-        .from('messages_vendeur')
-        .select(`
-          *,
-          sender:profiles!messages_vendeur_sender_id_fkey(
-            id,
-            first_name,
-            last_name,
-            role
-          )
-        `)
-        .eq('thread_id', conversationId)
+        .from('messages_with_sender_info')
+        .select('id, sender_id, recipient_id, message, subject, status, read_at, created_at, thread_id, attachments, metadata, sender_name, sender_email')
+        .eq('thread_id', threadId)
         .order('created_at', { ascending: true });
 
-      if (error) throw error;
+      let resolvedMessages = messagesData;
+      let resolvedError = error;
 
-      const formattedMessages = (messagesData || []).map(msg => ({
+      if (resolvedError && resolvedError.code === 'PGRST205') {
+        // Vue indisponible: fallback direct sur la table messages
+        const { data: fallbackData, error: fallbackError } = await supabase
+          .from('messages')
+          .select('id, sender_id, recipient_id, message, subject, status, read_at, created_at, thread_id, attachments, metadata')
+          .eq('thread_id', threadId)
+          .order('created_at', { ascending: true });
+
+        resolvedMessages = fallbackData;
+        resolvedError = fallbackError;
+      }
+
+      if (resolvedError) throw resolvedError;
+
+      const formattedMessages = (resolvedMessages || []).map(msg => ({
         id: msg.id,
-        conversation_id: msg.conversation_id,
-        sender_type: msg.sender?.role === 'vendeur' ? 'vendor' : 'buyer',
-        content: msg.content,
+        conversation_id: threadId,
+        sender_id: msg.sender_id,
+        sender_type: msg.sender_id === user.id ? 'vendor' : 'buyer',
+        sender_name: msg.sender_name || (msg.sender_id === user.id ? 'Vous' : conversation.buyer_name),
+        content: msg.message,
+        subject: msg.subject,
         sent_at: msg.created_at,
         read_at: msg.read_at,
         attachments: msg.attachments || []
@@ -175,35 +226,49 @@ const VendeurMessagesRealData = () => {
       setMessages(formattedMessages);
 
       // Marquer comme lu
-      markAsRead(conversationId);
+      markAsRead(conversation, conversation.unread_count || 0);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
       toast.error('Erreur lors du chargement des messages');
     }
   };
 
-  const markAsRead = async (conversationId) => {
+  const markAsRead = async (conversationToUpdate, unreadDelta = 0) => {
     try {
+      if (!conversationToUpdate) return;
+
+      const threadId = conversationToUpdate.thread_id || conversationToUpdate.id;
+
       // Marquer messages comme lus
       const { error } = await supabase
-        .from('messages_vendeur')
-        .update({ read_at: new Date().toISOString() })
-        .eq('thread_id', conversationId)
-        .is('read_at', null)
-        .neq('sender_id', user.id);
+        .from('messages')
+        .update({ read_at: new Date().toISOString(), status: 'read' })
+        .eq('thread_id', threadId)
+        .eq('recipient_id', user.id)
+        .is('read_at', null);
 
       if (error) throw error;
 
       // Mettre à jour le compteur local
       setConversations(prev => prev.map(c => 
-        c.id === conversationId ? { ...c, unread_count: 0 } : c
+        c.id === conversationToUpdate.id ? { ...c, unread_count: 0 } : c
+      ));
+
+      setSelectedConversation(prev => (
+        prev && prev.id === conversationToUpdate.id ? { ...prev, unread_count: 0 } : prev
       ));
 
       // Mettre à jour stats
-      setStats(prev => ({
-        ...prev,
-        unreadCount: Math.max(0, prev.unreadCount - (selectedConversation?.unread_count || 0))
-      }));
+      setStats(prev => {
+        const nextUnread = Math.max(0, prev.unreadCount - unreadDelta);
+        if (typeof onUnreadChange === 'function') {
+          onUnreadChange(nextUnread);
+        }
+        return {
+          ...prev,
+          unreadCount: nextUnread
+        };
+      });
     } catch (error) {
       console.error('Erreur marquage lu:', error);
     }
@@ -213,14 +278,25 @@ const VendeurMessagesRealData = () => {
     if (!newMessage.trim() || !selectedConversation) return;
 
     try {
+      const threadId = selectedConversation.thread_id || selectedConversation.id;
+      const recipientId = selectedConversation.recipient_id || selectedConversation.buyer_id;
+      const subject = selectedConversation.subject || selectedConversation.property_title || 'Message vendeur';
+
+      if (!recipientId) {
+        toast.error('Destinataire introuvable pour cette conversation');
+        return;
+      }
+
       // Envoyer via Supabase
       const { data, error } = await supabase
-        .from('messages_vendeur')
+        .from('messages')
         .insert({
-          conversation_id: selectedConversation.id,
           sender_id: user.id,
-          content: newMessage.trim(),
-          read_at: null
+          recipient_id: recipientId,
+          subject,
+          message: newMessage.trim(),
+          thread_id: threadId,
+          status: 'sent'
         })
         .select()
         .single();
@@ -229,9 +305,12 @@ const VendeurMessagesRealData = () => {
 
       const message = {
         id: data.id,
-        conversation_id: selectedConversation.id,
+        conversation_id: threadId,
+        sender_id: user.id,
         sender_type: 'vendor',
+        sender_name: 'Vous',
         content: newMessage.trim(),
+        subject,
         sent_at: data.created_at,
         read_at: null,
         attachments: []
@@ -244,8 +323,9 @@ const VendeurMessagesRealData = () => {
       const { error: updateError } = await supabase
         .from('conversations')
         .update({
-          last_message: message.content,
-          updated_at: new Date().toISOString()
+          last_message_preview: message.content,
+          updated_at: new Date().toISOString(),
+          unread_count_vendor: 0
         })
         .eq('id', selectedConversation.id);
 
@@ -254,9 +334,14 @@ const VendeurMessagesRealData = () => {
       // Mettre à jour localement
       setConversations(prev => prev.map(c =>
         c.id === selectedConversation.id
-          ? { ...c, last_message: message.content, last_message_time: message.sent_at }
+          ? { ...c, last_message: message.content, last_message_time: message.sent_at, unread_count: 0 }
           : c
       ));
+
+      setStats(prev => ({
+        ...prev,
+        todayMessages: prev.todayMessages + 1
+      }));
 
       toast.success('Message envoyé');
     } catch (error) {

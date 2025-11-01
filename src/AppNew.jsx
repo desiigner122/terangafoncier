@@ -131,6 +131,7 @@ import AgentsFonciersPage from '@/pages/AgentsFonciersPage';
 import VendeursPage from '@/pages/VendeursPage';
 import PromoteursPage from '@/pages/PromoteursPage';
 import RejoignezNousPage from '@/pages/RejoignezNousPage';
+import FloatingWhatsApp from '@/components/common/FloatingWhatsApp';
 
 const PublicLayout = () => (
   <div className="flex flex-col min-h-screen">
@@ -267,6 +268,8 @@ function App() {
           <Toaster />
         </ComparisonProvider>
       </HelmetProvider>
+      {/* Global floating WhatsApp button (left side) */}
+      <FloatingWhatsApp phone="221775934241" />
     </ErrorBoundary>
   );
 }

@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabaseClient';
 // useToast import supprimé - utilisation window.safeGlobalToast
 
 const getActionBadge = (action) => {
-  const lowerAction = action.toLowerCase();
+  const lowerAction = (action || '').toLowerCase();
   if (lowerAction.includes('create') || lowerAction.includes('add')) {
     return <Badge variant="success">Création</Badge>;
   }
@@ -77,7 +77,7 @@ const AdminAuditLogPage = () => {
 
   const filteredLogs = useMemo(() => logs.filter(log => {
       return (
-          (filters.searchTerm === '' || log.user.toLowerCase().includes(filters.searchTerm.toLowerCase()) || log.details.toLowerCase().includes(filters.searchTerm.toLowerCase())) &&
+          (filters.searchTerm === '' || (log.user || '').toLowerCase().includes(filters.searchTerm.toLowerCase()) || (log.details || '').toLowerCase().includes(filters.searchTerm.toLowerCase())) &&
           (filters.user === '' || log.user === filters.user) &&
           (filters.action === '' || log.action === filters.action) &&
           (filters.entity === '' || log.entity === filters.entity)

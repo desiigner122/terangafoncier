@@ -276,7 +276,7 @@ const ParcellesVendeursPage = () => {
     // Optimistic update
     const next = isFav ? favoriteIds.filter(id => id !== parcelId) : [...favoriteIds, parcelId];
     setFavoriteIds(next);
-    const { error } = await supabase.from('users').update({ favorites: next }).eq('id', user.id);
+    const { error } = await supabase.from('profiles').update({ favorites: next }).eq('id', user.id);
     if (error) {
       // revert on error
       setFavoriteIds(favoriteIds);

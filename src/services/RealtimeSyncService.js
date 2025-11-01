@@ -204,6 +204,7 @@ export class RealtimeSyncService {
 
   /**
    * Subscribe aux changements de demandes pour un acheteur
+   * FIXED: Now properly filters by buyer_id
    * Utile pour la page ParticulierMesAchats
    * 
    * @param {string} buyerId - ID de l'acheteur
@@ -211,7 +212,7 @@ export class RealtimeSyncService {
    * @returns {function} Fonction pour unsubscribe
    */
   static subscribeToBuyerRequests(buyerId, callback) {
-    console.log(`� [REALTIME] Creating subscription for buyer: ${buyerId}`);
+    console.log(`🔄 [REALTIME] Creating subscription for buyer: ${buyerId}`);
 
     try {
       const subscription = supabase
@@ -221,32 +222,35 @@ export class RealtimeSyncService {
           {
             event: '*',
             schema: 'public',
-            table: 'purchase_cases'
+            table: 'purchase_cases',
+            filter: `buyer_id=eq.${buyerId}`
           },
           (payload) => {
-            console.log('� [REALTIME] CALLBACK TRIGGERED!');
+            console.log('📨 [REALTIME] CALLBACK TRIGGERED FOR BUYER!');
             console.log('   Event type:', payload.eventType);
             console.log('   New data:', payload.new);
             console.log('   Old data:', payload.old);
+            console.log('   BuyerID:', buyerId);
+            console.log('   Payload buyer_id:', payload.new?.buyer_id);
             console.log('   🔄 Calling callback to reload...');
             callback(payload);
           }
         )
         .subscribe((status) => {
-          console.log(`🟢 [REALTIME] Subscription status: ${status}`);
+          console.log(`🟢 [REALTIME] Buyer subscription status: ${status}`);
         });
 
       this.subscriptions.push(subscription);
-      console.log(`🟢 [REALTIME] Subscription established successfully`);
+      console.log(`🟢 [REALTIME] Buyer subscription established successfully with filter buyer_id=${buyerId}`);
 
       return async () => {
         try {
           console.log(`🔴 [REALTIME] Unsubscribe buyer requests`);
           await supabase.channel(`buyer-requests-${buyerId}`).unsubscribe();
           this.subscriptions = this.subscriptions.filter(s => s !== subscription);
-          console.log(`✅ [REALTIME] Unsubscribe successful`);
+          console.log(`✅ [REALTIME] Buyer unsubscribe successful`);
         } catch (err) {
-          console.log(`⚠️ [REALTIME] Unsubscribe error (acceptable):`, err.message);
+          console.log(`⚠️ [REALTIME] Buyer unsubscribe error (acceptable):`, err.message);
         }
       };
     } catch (error) {

@@ -95,22 +95,38 @@ const VendeurCaseTracking = () => {
         setTransaction(txData);
       }
 
-      // 3. Charger les données de l'acheteur
-      const { data: buyerData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', caseData.buyer_id)
-        .single();
+      // 2. Charger la demande d'achat (request) si disponible
+      let requestData = null;
+      if (caseData?.request_id) {
+        const { data: rData } = await supabase
+          .from('requests')
+          .select('*')
+          .eq('id', caseData.request_id)
+          .single();
 
-      if (buyerData) {
-        setBuyer(buyerData);
+        if (rData) {
+          requestData = rData;
+        }
+      }
+
+      // 3. Charger les données de l'acheteur
+      if (requestData?.user_id) {
+        const { data: buyerData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', requestData.user_id)
+          .single();
+
+        if (buyerData) {
+          setBuyer(buyerData);
+        }
       }
 
       // 4. Charger la parcelle
       const { data: parcelData } = await supabase
         .from('parcels')
         .select('*')
-        .eq('id', caseData.parcelle_id)
+        .eq('id', caseData.parcel_id)
         .single();
 
       if (parcelData) {
@@ -137,9 +153,9 @@ const VendeurCaseTracking = () => {
 
       // 7. Charger les documents
       const { data: docsData } = await supabase
-        .from('purchase_case_documents')
+        .from('documents_administratifs')
         .select('*')
-        .eq('case_id', caseData.id)
+        .eq('purchase_request_id', caseData.request_id)
         .order('created_at', { ascending: false });
 
       setDocuments(docsData || []);
@@ -160,9 +176,8 @@ const VendeurCaseTracking = () => {
         .from('purchase_case_messages')
         .insert({
           case_id: purchaseCase.id,
-          sender_id: user.id,
+          sent_by: user.id,
           message: newMessage,
-          created_at: new Date().toISOString(),
         });
 
       if (error) throw error;
@@ -355,7 +370,7 @@ const VendeurCaseTracking = () => {
                             initial={{ opacity: 0, y: 10 }}
                             animate={{ opacity: 1, y: 0 }}
                             className={`p-3 rounded-lg ${
-                              msg.sender_id === user.id
+                              msg.sent_by === user.id
                                 ? 'bg-blue-100 ml-8'
                                 : 'bg-white border border-slate-200 mr-8'
                             }`}

@@ -240,19 +240,26 @@ export class NotificationService {
 
       // Insérer les notifications en base
       if (notifications.length > 0) {
-        const { error: insertError } = await supabase
-          .from('purchase_case_notifications')
-          .insert(notifications)
-          .catch(err => {
-            // Si la table n'existe pas, ignorer l'erreur (non bloquante)
-            if (err.code === 'PGRST205' || err.message?.includes('Could not find the table')) {
-              console.warn('⚠️ Table purchase_case_notifications non disponible - notifications stockées localement');
-              return { error: null };
-            }
-            throw err;
-          });
+        try {
+          const { error: insertError } = await supabase
+            .from('purchase_case_notifications')
+            .insert(notifications);
 
-        if (insertError && !insertError.suppressed) throw insertError;
+          if (insertError && insertError.code !== 'PGRST205') {
+            throw insertError;
+          }
+          
+          if (insertError) {
+            console.warn('⚠️ Table purchase_case_notifications non disponible - notifications stockées localement');
+          }
+        } catch (err) {
+          // Si la table n'existe pas, ignorer l'erreur (non bloquante)
+          if (err.code === 'PGRST205' || err.message?.includes('Could not find the table')) {
+            console.warn('⚠️ Table purchase_case_notifications non disponible - notifications stockées localement');
+          } else {
+            throw err;
+          }
+        }
 
         // Traiter l'envoi sur chaque canal
         for (const notification of notifications) {

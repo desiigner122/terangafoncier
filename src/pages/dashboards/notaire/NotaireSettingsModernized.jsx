@@ -266,12 +266,12 @@ const NotaireSettingsModernized = () => {
   }
 
   return (
-    <div className="space-y-6">
-      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+    <div className="space-y-4 sm:space-y-6">
+      <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
         <div className="space-y-2">
           <div className="flex items-center gap-2">
-            <Settings className="h-6 w-6 text-amber-600" />
-            <h1 className="text-2xl font-semibold text-gray-900">Centre de configuration avancée</h1>
+            <Settings className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
+            <h1 className="text-lg sm:text-xl lg:text-xl sm:text-2xl font-semibold text-gray-900">Centre de configuration avancée</h1>
           </div>
           <p className="text-gray-600 max-w-2xl">
             Personnalisez chaque aspect de votre étude notariale : sécurité, notifications, intégrations et automatisations.
@@ -292,16 +292,16 @@ const NotaireSettingsModernized = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 xl:grid-cols-4 gap-3 sm:gap-4">
         <Card>
           <CardContent className="p-5 flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500">Indice de sécurité</p>
-              <p className="text-2xl font-semibold text-gray-900">{securityScore}%</p>
+              <p className="text-lg sm:text-xl lg:text-xl sm:text-2xl font-semibold text-gray-900">{securityScore}%</p>
               <Badge className="mt-2 bg-green-100 text-green-800 border-green-200">{securityScore > 80 ? 'Excellente' : 'Élevée'}</Badge>
             </div>
-            <div className="h-12 w-12 bg-emerald-100 rounded-full flex items-center justify-center">
-              <ShieldCheck className="h-6 w-6 text-emerald-600" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 bg-emerald-100 rounded-full flex items-center justify-center">
+              <ShieldCheck className="h-5 w-5 sm:h-6 sm:w-6 text-emerald-600" />
             </div>
           </CardContent>
         </Card>
@@ -310,11 +310,11 @@ const NotaireSettingsModernized = () => {
           <CardContent className="p-5 flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500">Canaux actifs</p>
-              <p className="text-2xl font-semibold text-gray-900">{notificationChannels}/5</p>
-              <p className="text-xs text-gray-500">Notifications personnalisées</p>
+              <p className="text-lg sm:text-xl lg:text-xl sm:text-2xl font-semibold text-gray-900">{notificationChannels}/5</p>
+              <p className="text-[10px] sm:text-xs text-gray-500">Notifications personnalisées</p>
             </div>
-            <div className="h-12 w-12 bg-blue-100 rounded-full flex items-center justify-center">
-              <Bell className="h-6 w-6 text-blue-600" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 rounded-full flex items-center justify-center">
+              <Bell className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
             </div>
           </CardContent>
         </Card>
@@ -323,11 +323,11 @@ const NotaireSettingsModernized = () => {
           <CardContent className="p-5 flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500">Sessions actives</p>
-              <p className="text-2xl font-semibold text-gray-900">{settings?.security?.sessionTimeout || 30} min</p>
-              <p className="text-xs text-gray-500">Expiration automatique</p>
+              <p className="text-lg sm:text-xl lg:text-xl sm:text-2xl font-semibold text-gray-900">{settings?.security?.sessionTimeout || 30} min</p>
+              <p className="text-[10px] sm:text-xs text-gray-500">Expiration automatique</p>
             </div>
-            <div className="h-12 w-12 bg-amber-100 rounded-full flex items-center justify-center">
-              <Clock className="h-6 w-6 text-amber-600" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 bg-amber-100 rounded-full flex items-center justify-center">
+              <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
             </div>
           </CardContent>
         </Card>
@@ -336,18 +336,18 @@ const NotaireSettingsModernized = () => {
           <CardContent className="p-5 flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500">Dernière sauvegarde</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatDate(dashboardStats?.lastSettingsBackup)}</p>
-              <p className="text-xs text-gray-500">Synchronisé avec Supabase</p>
+              <p className="text-lg sm:text-xl lg:text-xl sm:text-2xl font-semibold text-gray-900">{formatDate(dashboardStats?.lastSettingsBackup)}</p>
+              <p className="text-[10px] sm:text-xs text-gray-500">Synchronisé avec Supabase</p>
             </div>
-            <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
-              <Database className="h-6 w-6 text-purple-600" />
+            <div className="h-10 w-10 sm:h-12 sm:w-12 bg-purple-100 rounded-full flex items-center justify-center">
+              <Database className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
             </div>
           </CardContent>
         </Card>
       </div>
 
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7">
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 h-auto">
           <TabsTrigger value="overview">Synthèse</TabsTrigger>
           <TabsTrigger value="profile">Profil</TabsTrigger>
           <TabsTrigger value="preferences">Préférences</TabsTrigger>
@@ -364,8 +364,8 @@ const NotaireSettingsModernized = () => {
           </TabsTrigger>
         </TabsList>
 
-        <TabsContent value="overview" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <TabsContent value="overview" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             <Card className="lg:col-span-2">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -402,7 +402,7 @@ const NotaireSettingsModernized = () => {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{event.label}</p>
-                        <p className="text-xs text-gray-500">{event.date}</p>
+                        <p className="text-[10px] sm:text-xs text-gray-500">{event.date}</p>
                       </div>
                     </div>
                     <Button variant="ghost" size="sm">
@@ -444,7 +444,7 @@ const NotaireSettingsModernized = () => {
             </Card>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -494,7 +494,7 @@ const NotaireSettingsModernized = () => {
           </div>
         </TabsContent>
 
-        <TabsContent value="profile" className="space-y-6">
+        <TabsContent value="profile" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -503,7 +503,7 @@ const NotaireSettingsModernized = () => {
               </CardTitle>
               <CardDescription>Mettez à jour les informations visibles par vos clients et partenaires</CardDescription>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label>Prénom</Label>
                 <Input
@@ -596,7 +596,7 @@ const NotaireSettingsModernized = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="preferences" className="space-y-6">
+        <TabsContent value="preferences" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -605,7 +605,7 @@ const NotaireSettingsModernized = () => {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div>
                   <Label>Thème de l'application</Label>
                   <Select
@@ -674,11 +674,11 @@ const NotaireSettingsModernized = () => {
 
               <Separator />
 
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">Résumé quotidien</p>
-                    <p className="text-xs text-gray-500">Envoyer un rapport des actes tous les matins</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500">Envoyer un rapport des actes tous les matins</p>
                   </div>
                   <Switch
                     checked={settings.preferences?.dailyDigest}
@@ -688,7 +688,7 @@ const NotaireSettingsModernized = () => {
                 <div className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
                     <p className="font-medium text-gray-900">Notifications desktop</p>
-                    <p className="text-xs text-gray-500">Alerte lors des nouvelles validations</p>
+                    <p className="text-[10px] sm:text-xs text-gray-500">Alerte lors des nouvelles validations</p>
                   </div>
                   <Switch
                     checked={settings.preferences?.desktopNotifications}
@@ -706,7 +706,7 @@ const NotaireSettingsModernized = () => {
                 Prévisualisation
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               {[
                 { title: 'Mode clair', icon: Sun, active: settings.preferences?.theme === 'light' },
                 { title: 'Mode sombre', icon: Moon, active: settings.preferences?.theme === 'dark' },
@@ -715,14 +715,14 @@ const NotaireSettingsModernized = () => {
                 <div key={index} className={`p-4 border rounded-lg ${mode.active ? 'border-amber-400 bg-amber-50' : 'border-gray-200'}`}>
                   <mode.icon className={`h-6 w-6 mb-3 ${mode.active ? 'text-amber-600' : 'text-gray-400'}`} />
                   <p className="font-medium text-gray-900">{mode.title}</p>
-                  <p className="text-xs text-gray-500">Interface optimisée</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">Interface optimisée</p>
                 </div>
               ))}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="security" className="space-y-6">
+        <TabsContent value="security" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -760,7 +760,7 @@ const NotaireSettingsModernized = () => {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{item.label}</p>
-                      <p className="text-xs text-gray-500">{item.description}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{item.description}</p>
                     </div>
                   </div>
                   <Switch
@@ -819,7 +819,7 @@ const NotaireSettingsModernized = () => {
                 </div>
                 <div className="flex items-center gap-2">
                   <Unlock className="h-4 w-4 text-emerald-600" />
-                  <span className="text-xs text-gray-500">Alertes en temps réel</span>
+                  <span className="text-[10px] sm:text-xs text-gray-500">Alertes en temps réel</span>
                 </div>
               </div>
             </CardContent>
@@ -863,7 +863,7 @@ const NotaireSettingsModernized = () => {
                         </div>
                         <div>
                           <p className="font-medium text-gray-900">{session.device}</p>
-                          <p className="text-xs text-gray-500">{session.location} • {session.lastSeen}</p>
+                          <p className="text-[10px] sm:text-xs text-gray-500">{session.location} • {session.lastSeen}</p>
                         </div>
                       </div>
                       <Button size="sm" variant="outline">
@@ -878,7 +878,7 @@ const NotaireSettingsModernized = () => {
           </Card>
         </TabsContent>
 
-        <TabsContent value="integrations" className="space-y-6">
+        <TabsContent value="integrations" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -931,7 +931,7 @@ const NotaireSettingsModernized = () => {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{integration.label}</p>
-                      <p className="text-xs text-gray-500">{integration.description}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{integration.description}</p>
                     </div>
                   </div>
                   <Switch
@@ -950,22 +950,22 @@ const NotaireSettingsModernized = () => {
                 Synchronisations programmées
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
+            <CardContent className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm text-gray-600">
               <div className="p-4 border rounded-lg">
                 <p className="font-medium text-gray-900">Export Supabase</p>
-                <p className="text-xs text-gray-500">Chaque nuit à 02h00</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Chaque nuit à 02h00</p>
                 <p className="mt-2 text-xs text-emerald-600">Statut : opérationnel</p>
               </div>
               <div className="p-4 border rounded-lg">
                 <p className="font-medium text-gray-900">Synchronisation CRM</p>
-                <p className="text-xs text-gray-500">Toutes les 2 heures</p>
+                <p className="text-[10px] sm:text-xs text-gray-500">Toutes les 2 heures</p>
                 <p className="mt-2 text-xs text-blue-600">Dernière sync : 09:15</p>
               </div>
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="notifications" className="space-y-6">
+        <TabsContent value="notifications" className="space-y-4 sm:space-y-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
@@ -1008,7 +1008,7 @@ const NotaireSettingsModernized = () => {
                     </div>
                     <div>
                       <p className="font-medium text-gray-900">{item.label}</p>
-                      <p className="text-xs text-gray-500">{item.description}</p>
+                      <p className="text-[10px] sm:text-xs text-gray-500">{item.description}</p>
                     </div>
                   </div>
                   <Switch
@@ -1027,7 +1027,7 @@ const NotaireSettingsModernized = () => {
                 Canaux privilégiés
               </CardTitle>
             </CardHeader>
-            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <CardContent className="grid grid-cols-1 md:grid-cols-3 gap-3 sm:gap-4">
               {[{
                 title: 'Email sécurisé',
                 description: 'Chiffrement TLS & archivage automatique',
@@ -1047,7 +1047,7 @@ const NotaireSettingsModernized = () => {
                 <div key={index} className={`p-4 border rounded-lg ${channel.active ? 'border-amber-400 bg-amber-50' : 'border-gray-200'}`}>
                   <channel.icon className={`h-6 w-6 mb-3 ${channel.active ? 'text-amber-600' : 'text-gray-400'}`} />
                   <p className="font-medium text-gray-900">{channel.title}</p>
-                  <p className="text-xs text-gray-500">{channel.description}</p>
+                  <p className="text-[10px] sm:text-xs text-gray-500">{channel.description}</p>
                 </div>
               ))}
             </CardContent>
@@ -1055,12 +1055,12 @@ const NotaireSettingsModernized = () => {
         </TabsContent>
 
         {/* Tab Tickets/Support */}
-        <TabsContent value="tickets" className="space-y-6">
+        <TabsContent value="tickets" className="space-y-4 sm:space-y-6">
           <NotaireTickets />
         </TabsContent>
 
         {/* Tab Abonnement */}
-        <TabsContent value="subscription" className="space-y-6">
+        <TabsContent value="subscription" className="space-y-4 sm:space-y-6">
           <NotaireSubscription />
         </TabsContent>
       </Tabs>

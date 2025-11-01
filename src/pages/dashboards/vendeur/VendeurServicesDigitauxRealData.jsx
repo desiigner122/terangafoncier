@@ -286,32 +286,32 @@ const VendeurServicesDigitauxRealData = () => {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-7xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4"
       >
         <div>
-          <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-            <div className="p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
-              <Zap className="h-8 w-8 text-white" />
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+            <div className="p-1.5 sm:p-2 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl">
+              <Zap className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-white" />
             </div>
             Services Digitaux
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
             Boostez votre activité avec nos outils numériques
           </p>
         </div>
-        <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700">
+        <Button className="bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 w-full sm:w-auto">
           <Plus className="h-4 w-4 mr-2" />
           Nouveau Service
         </Button>
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4">
         {[
           {
             label: 'Services Actifs',
@@ -349,22 +349,22 @@ const VendeurServicesDigitauxRealData = () => {
             transition={{ delay: index * 0.1 }}
           >
             <Card className="border-l-4" style={{ borderLeftColor: `var(--${stat.color}-500)` }}>
-              <CardContent className="p-4">
+              <CardContent className="p-2 sm:p-3 lg:p-4">
                 <div className="flex items-center justify-between">
-                  <div>
-                    <p className="text-sm text-gray-600">{stat.label}</p>
-                    <p className="text-2xl font-bold text-gray-900 mt-1">
+                  <div className="min-w-0 flex-1">
+                    <p className="text-xs sm:text-sm text-gray-600 truncate">{stat.label}</p>
+                    <p className="text-base sm:text-lg lg:text-2xl font-bold text-gray-900 mt-0.5 sm:mt-1 truncate">
                       {stat.value}
                     </p>
                     {stat.trend && (
-                      <Badge variant="outline" className="mt-2 text-green-700 bg-green-50">
+                      <Badge variant="outline" className="mt-1 sm:mt-2 text-green-700 bg-green-50 text-xs">
                         <TrendingUp className="h-3 w-3 mr-1" />
                         {stat.trend}
                       </Badge>
                     )}
                   </div>
-                  <div className={`p-3 bg-${stat.color}-100 rounded-lg`}>
-                    <stat.icon className={`h-6 w-6 text-${stat.color}-600`} />
+                  <div className={`p-2 sm:p-3 bg-${stat.color}-100 rounded-lg flex-shrink-0`}>
+                    <stat.icon className={`h-5 w-5 sm:h-6 sm:w-6 text-${stat.color}-600`} />
                   </div>
                 </div>
               </CardContent>
@@ -375,28 +375,32 @@ const VendeurServicesDigitauxRealData = () => {
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="overview">
-            <Eye className="h-4 w-4 mr-2" />
-            Vue d'ensemble
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1">
+          <TabsTrigger value="overview" className="text-xs sm:text-sm">
+            <Eye className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Vue d'ensemble</span>
+            <span className="sm:hidden">Vue</span>
           </TabsTrigger>
-          <TabsTrigger value="services">
-            <Package className="h-4 w-4 mr-2" />
-            Tous les Services
+          <TabsTrigger value="services" className="text-xs sm:text-sm">
+            <Package className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Tous les Services</span>
+            <span className="sm:hidden">Services</span>
           </TabsTrigger>
-          <TabsTrigger value="subscriptions">
-            <CheckCircle className="h-4 w-4 mr-2" />
-            Mes Abonnements
+          <TabsTrigger value="subscriptions" className="text-xs sm:text-sm">
+            <CheckCircle className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Mes Abonnements</span>
+            <span className="sm:hidden">Abonnements</span>
           </TabsTrigger>
-          <TabsTrigger value="usage">
-            <Activity className="h-4 w-4 mr-2" />
-            Utilisation
+          <TabsTrigger value="usage" className="text-xs sm:text-sm">
+            <Activity className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Utilisation</span>
+            <span className="sm:hidden">Usage</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Overview */}
-        <TabsContent value="overview" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <TabsContent value="overview" className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4">
             {/* Services actifs */}
             <Card>
               <CardHeader>
@@ -497,8 +501,8 @@ const VendeurServicesDigitauxRealData = () => {
         </TabsContent>
 
         {/* Tous les Services */}
-        <TabsContent value="services" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <TabsContent value="services" className="space-y-3 sm:space-y-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
             {services.map((service, index) => {
               const isSubscribed = subscriptions.some(s => s.service_id === service.id);
               const IconComponent = getIconComponent(service.icon);

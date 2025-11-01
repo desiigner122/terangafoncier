@@ -194,7 +194,7 @@ export default function NotaireArchivesModernized() {
   const availableYears = [...new Set(archives.map(a => new Date(a.archive_date).getFullYear()))].sort((a, b) => b - a);
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto">
       {/* En-tête */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -203,7 +203,7 @@ export default function NotaireArchivesModernized() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <Archive className="h-8 w-8 text-amber-600" />
               Archives Notariales
             </h1>
@@ -214,13 +214,13 @@ export default function NotaireArchivesModernized() {
         </div>
 
         {/* Statistiques */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3 sm:gap-4">
           <Card className="bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Total</p>
-                  <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.total}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.total}</p>
                 </div>
                 <Archive className="h-8 w-8 text-blue-500" />
               </div>
@@ -232,7 +232,7 @@ export default function NotaireArchivesModernized() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-green-600 dark:text-green-400 font-medium">Cette année</p>
-                  <p className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.thisYear}</p>
+                  <p className="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-300">{stats.thisYear}</p>
                 </div>
                 <Calendar className="h-8 w-8 text-green-500" />
               </div>
@@ -272,7 +272,7 @@ export default function NotaireArchivesModernized() {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Durée moy.</p>
-                  <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{stats.avgDuration}j</p>
+                  <p className="text-xl sm:text-2xl font-bold text-indigo-700 dark:text-indigo-300">{stats.avgDuration}j</p>
                 </div>
                 <Clock className="h-8 w-8 text-indigo-500" />
               </div>
@@ -282,8 +282,8 @@ export default function NotaireArchivesModernized() {
       </motion.div>
 
       {/* Barre de recherche et filtres */}
-      <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Card className="p-3 sm:p-4 lg:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
@@ -356,7 +356,7 @@ export default function NotaireArchivesModernized() {
         </Card>
       ) : (
         <div className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             <AnimatePresence mode="popLayout">
               {paginatedArchives.map((archive, index) => (
                 <motion.div
@@ -376,7 +376,7 @@ export default function NotaireArchivesModernized() {
                         <Badge className={getTypeColor(archive.act_type)}>
                           {getTypeLabel(archive.act_type)}
                         </Badge>
-                        <span className="text-xs text-gray-500 font-mono">
+                        <span className="text-[10px] sm:text-xs text-gray-500 font-mono">
                           {archive.act_number}
                         </span>
                       </div>
@@ -514,8 +514,8 @@ export default function NotaireArchivesModernized() {
 
           {selectedArchive && (
             <ScrollArea className="max-h-[70vh] pr-4">
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-4 sm:space-y-6">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Type d'acte</p>
                     <Badge className={getTypeColor(selectedArchive.act_type)}>
@@ -546,7 +546,7 @@ export default function NotaireArchivesModernized() {
                   </div>
                 )}
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                     <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Date de completion</p>
                     <p className="font-semibold">{formatDate(selectedArchive.completion_date)}</p>
@@ -557,7 +557,7 @@ export default function NotaireArchivesModernized() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   {selectedArchive.property_value && (
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Valeur propriété</p>

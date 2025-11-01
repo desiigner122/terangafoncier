@@ -662,7 +662,7 @@ const VendeursPage = () => {
                           className="w-full mt-4 bg-gradient-to-r from-green-600 to-emerald-600 text-white"
                         >
                           <Link to="/contact">
-                            Estimer mon {property.type.toLowerCase()}
+                            Estimer mon {(property.type || 'bien').toLowerCase()}
                           </Link>
                         </Button>
                       </div>

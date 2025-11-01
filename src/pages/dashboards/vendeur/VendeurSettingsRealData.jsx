@@ -385,54 +385,54 @@ const VendeurSettingsRealData = () => {
   }
 
   return (
-    <div className="space-y-6 p-6 max-w-5xl mx-auto">
+    <div className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6 max-w-5xl mx-auto">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
       >
-        <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
-          <div className="p-2 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl">
-            <Settings className="h-8 w-8 text-white" />
+        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 flex items-center gap-2 sm:gap-3">
+          <div className="p-1.5 sm:p-2 bg-gradient-to-br from-gray-500 to-gray-600 rounded-xl">
+            <Settings className="h-5 w-5 sm:h-6 sm:w-6 lg:h-8 lg:w-8 text-white" />
           </div>
           Paramètres
         </h1>
-        <p className="text-gray-600 mt-2">
+        <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
           Gérez votre profil et vos préférences
         </p>
       </motion.div>
 
       {/* Tabs */}
       <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-6">
-          <TabsTrigger value="profile">
-            <User className="h-4 w-4 mr-2" />
-            Profil
+        <TabsList className="grid w-full grid-cols-3 sm:grid-cols-6 gap-1">
+          <TabsTrigger value="profile" className="text-xs sm:text-sm">
+            <User className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Profil</span>
           </TabsTrigger>
-          <TabsTrigger value="subscription">
-            <CreditCard className="h-4 w-4 mr-2" />
-            Abonnement
+          <TabsTrigger value="subscription" className="text-xs sm:text-sm">
+            <CreditCard className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Abonnement</span>
           </TabsTrigger>
-          <TabsTrigger value="notifications">
-            <Bell className="h-4 w-4 mr-2" />
-            Notifications
+          <TabsTrigger value="notifications" className="text-xs sm:text-sm">
+            <Bell className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Notifications</span>
           </TabsTrigger>
-          <TabsTrigger value="security">
-            <Lock className="h-4 w-4 mr-2" />
-            Sécurité
+          <TabsTrigger value="security" className="text-xs sm:text-sm">
+            <Lock className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Sécurité</span>
           </TabsTrigger>
-          <TabsTrigger value="social">
-            <Link2 className="h-4 w-4 mr-2" />
-            Réseaux Sociaux
+          <TabsTrigger value="social" className="text-xs sm:text-sm">
+            <Link2 className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Réseaux</span>
           </TabsTrigger>
-          <TabsTrigger value="preferences">
-            <Monitor className="h-4 w-4 mr-2" />
-            Préférences
+          <TabsTrigger value="preferences" className="text-xs sm:text-sm">
+            <Monitor className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+            <span className="hidden sm:inline">Préférences</span>
           </TabsTrigger>
         </TabsList>
 
         {/* Profil */}
-        <TabsContent value="profile" className="space-y-4">
+        <TabsContent value="profile" className="space-y-3 sm:space-y-4">
           <Card>
             <CardHeader>
               <CardTitle>Informations Personnelles</CardTitle>
@@ -440,26 +440,26 @@ const VendeurSettingsRealData = () => {
                 Mettez à jour vos informations de profil
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-6">
+            <CardContent className="space-y-4 sm:space-y-6">
               {/* Avatar */}
-              <div className="flex items-center gap-6">
-                <Avatar className="w-24 h-24">
+              <div className="flex flex-col sm:flex-row items-center sm:items-start gap-3 sm:gap-6">
+                <Avatar className="w-20 h-20 sm:w-24 sm:h-24">
                   {profileData.avatar_url ? (
                     <AvatarImage src={profileData.avatar_url} />
                   ) : (
-                    <AvatarFallback className="bg-blue-100 text-blue-600 text-3xl">
+                    <AvatarFallback className="bg-blue-100 text-blue-600 text-2xl sm:text-3xl">
                       {profileData.full_name?.charAt(0) || 'V'}
                     </AvatarFallback>
                   )}
                 </Avatar>
-                <div>
-                  <p className="text-sm text-gray-600 mb-2">
+                <div className="text-center sm:text-left">
+                  <p className="text-xs sm:text-sm text-gray-600 mb-2">
                     Photo de profil
                   </p>
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="relative">
-                      <Upload className="h-4 w-4 mr-2" />
-                      Changer
+                    <Button variant="outline" size="sm" className="relative text-xs sm:text-sm">
+                      <Upload className="h-3 w-3 sm:h-4 sm:w-4 sm:mr-2" />
+                      <span className="hidden sm:inline">Changer</span>
                       <input
                         type="file"
                         accept="image/*"
@@ -468,7 +468,7 @@ const VendeurSettingsRealData = () => {
                       />
                     </Button>
                     <Button variant="outline" size="sm">
-                      <Trash2 className="h-4 w-4" />
+                      <Trash2 className="h-3 w-3 sm:h-4 sm:w-4" />
                     </Button>
                   </div>
                 </div>
@@ -477,7 +477,7 @@ const VendeurSettingsRealData = () => {
               <Separator />
 
               {/* Formulaire */}
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="full_name">Nom complet</Label>
                   <Input

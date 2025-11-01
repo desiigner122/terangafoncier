@@ -1,26 +1,16 @@
-import { createClient } from '@supabase/supabase-js';
+/**
+ * ⚠️ DEPRECATED: Use @/lib/supabaseClient instead!
+ * This file is kept for backward compatibility only.
+ * 
+ * All new code should import from @/lib/supabaseClient
+ */
 
-// Configuration Supabase centralisée
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'your-anon-key';
+import { supabase as centralizedSupabase, fetchDirect } from '@/lib/supabaseClient';
 
-// Instance unique Supabase
-let supabaseInstance = null;
+// Re-export the centralized client
+export const supabase = centralizedSupabase;
+export { fetchDirect };
 
-export const getSupabaseClient = () => {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false
-      }
-    });
-  }
-  return supabaseInstance;
-};
-
-// Export par défaut pour compatibilité
-export const supabase = getSupabaseClient();
-
-export default supabase;
+// Legacy exports
+export const getSupabaseClient = () => centralizedSupabase;
+export default centralizedSupabase;

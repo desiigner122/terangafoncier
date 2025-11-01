@@ -16,7 +16,8 @@ import {
   Calendar,
   Shield,
   Trash2,
-  AlertTriangle
+  AlertTriangle,
+  Download
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -26,7 +27,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const ParticulierSettings = () => {
   const { user } = useOutletContext();
@@ -198,18 +199,24 @@ const ParticulierSettings = () => {
     <div className="space-y-6">
       {/* En-tête */}
       <div>
-        <h1 className="text-2xl font-bold text-slate-900">Paramètres du Compte</h1>
-        <p className="text-slate-600 mt-1">
+        <h1 className="text-xl sm:text-2xl font-bold text-slate-900">Paramètres du Compte</h1>
+        <p className="text-xs sm:text-sm lg:text-base text-slate-600 mt-1">
           Gérez vos informations personnelles et préférences
         </p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="profile">Profil</TabsTrigger>
-          <TabsTrigger value="notifications">Notifications</TabsTrigger>
-          <TabsTrigger value="security">Sécurité</TabsTrigger>
-          <TabsTrigger value="privacy">Confidentialité</TabsTrigger>
+      <Tabs defaultValue="profile" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 gap-1 sm:gap-0 h-auto sm:h-10">
+          <TabsTrigger value="profile" className="text-xs sm:text-sm px-2 py-2 sm:py-0">Profil</TabsTrigger>
+          <TabsTrigger value="notifications" className="text-xs sm:text-sm px-2 py-2 sm:py-0">
+            <span className="hidden sm:inline">Notifications</span>
+            <span className="sm:hidden">Notifs</span>
+          </TabsTrigger>
+          <TabsTrigger value="security" className="text-xs sm:text-sm px-2 py-2 sm:py-0">Sécurité</TabsTrigger>
+          <TabsTrigger value="privacy" className="text-xs sm:text-sm px-2 py-2 sm:py-0">
+            <span className="hidden sm:inline">Confidentialité</span>
+            <span className="sm:hidden">Confid.</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Onglet Profil */}
@@ -224,75 +231,81 @@ const ParticulierSettings = () => {
                 Mettez à jour vos informations de profil
               </CardDescription>
             </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="prenom">Prénom</Label>
+            <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-4 lg:p-6">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="prenom" className="text-xs sm:text-sm">Prénom</Label>
                   <Input
                     id="prenom"
                     value={profile.prenom || ''}
                     onChange={(e) => setProfile(prev => ({...prev, prenom: e.target.value}))}
+                    className="text-xs sm:text-sm"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="nom">Nom</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="nom" className="text-xs sm:text-sm">Nom</Label>
                   <Input
                     id="nom"
                     value={profile.nom || ''}
                     onChange={(e) => setProfile(prev => ({...prev, nom: e.target.value}))}
+                    className="text-xs sm:text-sm"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="email" className="text-xs sm:text-sm">Email</Label>
                   <Input
                     id="email"
                     type="email"
                     value={user.email}
                     disabled
-                    className="bg-slate-50"
+                    className="bg-slate-50 text-xs sm:text-sm"
                   />
-                  <p className="text-xs text-slate-500">L'email ne peut pas être modifié</p>
+                  <p className="text-[10px] sm:text-xs text-slate-500">L'email ne peut pas être modifié</p>
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="telephone">Téléphone</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="telephone" className="text-xs sm:text-sm">Téléphone</Label>
                   <Input
                     id="telephone"
                     value={profile.telephone || ''}
                     onChange={(e) => setProfile(prev => ({...prev, telephone: e.target.value}))}
+                    className="text-xs sm:text-sm"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="adresse">Adresse</Label>
+              <div className="space-y-1.5 sm:space-y-2">
+                <Label htmlFor="adresse" className="text-xs sm:text-sm">Adresse</Label>
                 <Input
                   id="adresse"
                   value={profile.adresse || ''}
                   onChange={(e) => setProfile(prev => ({...prev, adresse: e.target.value}))}
+                  className="text-xs sm:text-sm"
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="ville">Ville</Label>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="ville" className="text-xs sm:text-sm">Ville</Label>
                   <Input
                     id="ville"
                     value={profile.ville || ''}
                     onChange={(e) => setProfile(prev => ({...prev, ville: e.target.value}))}
+                    className="text-xs sm:text-sm"
                   />
                 </div>
                 
-                <div className="space-y-2">
-                  <Label htmlFor="profession">Profession</Label>
+                <div className="space-y-1.5 sm:space-y-2">
+                  <Label htmlFor="profession" className="text-xs sm:text-sm">Profession</Label>
                   <Input
                     id="profession"
                     value={profile.profession || ''}
                     onChange={(e) => setProfile(prev => ({...prev, profession: e.target.value}))}
+                    className="text-xs sm:text-sm"
                   />
                 </div>
               </div>
@@ -529,7 +542,7 @@ const ParticulierSettings = () => {
                   <p className="text-sm text-slate-600 mb-3">
                     Téléchargez une copie de toutes vos données personnelles
                   </p>
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={() => toast.info('Fonctionnalité bientôt disponible!')}>
                     <Download className="h-4 w-4 mr-2" />
                     Exporter mes données
                   </Button>

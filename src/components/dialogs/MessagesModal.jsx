@@ -35,13 +35,14 @@ import { fr } from 'date-fns/locale';
 /**
  * Centre de messagerie avec inbox/outbox et real-time
  */
-const MessagesModal = ({ open, onOpenChange }) => {
+const MessagesModal = ({ open, onOpenChange, prefilledRecipient = null }) => {
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState('inbox');
+  const [activeTab, setActiveTab] = useState(prefilledRecipient ? 'compose' : 'inbox');
   const [messages, setMessages] = useState([]);
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [newMessage, setNewMessage] = useState({
-    recipient: '',
+    recipient: prefilledRecipient?.name || prefilledRecipient?.email || '',
+    recipient_id: prefilledRecipient?.id,
     subject: '',
     body: ''
   });
@@ -61,41 +62,33 @@ const MessagesModal = ({ open, onOpenChange }) => {
     if (open && user) {
       fetchMessages();
       
-      // Real-time subscription
-      const subscription = supabase
-        .channel('messages')
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'messages',
-          filter: `recipient_id=eq.${user.id}`
-        }, () => {
-          fetchMessages();
-        })
-        .subscribe();
+      // Si un destinataire est préfilli, passer à l'onglet compose
+      if (prefilledRecipient) {
+        setActiveTab('compose');
+        setNewMessage({
+          recipient: prefilledRecipient?.name || prefilledRecipient?.email || '',
+          recipient_id: prefilledRecipient?.id,
+          subject: '',
+          body: ''
+        });
+      }
+      
+      // Real-time subscription disabled - this table is outdated
+      // Actual real-time messaging uses purchase_case_messages subscriptions in VendeurMessagesModern
 
       return () => {
-        subscription.unsubscribe();
+        // cleanup
       };
     }
-  }, [open, user]);
+  }, [open, user, prefilledRecipient]);
 
   const fetchMessages = async () => {
     setLoading(true);
     try {
-      const { data, error } = await supabase
-        .from('messages')
-        .select(`
-          *,
-          sender:sender_id(full_name, email),
-          recipient:recipient_id(full_name, email)
-        `)
-        .or(`sender_id.eq.${user.id},recipient_id.eq.${user.id}`)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      setMessages(data || []);
+      // NOTE: This component uses an outdated 'messages' table schema.
+      // Messaging has been moved to purchase_case_messages and conversations.
+      // Keeping this stub to prevent errors, but actual messaging uses VendeurMessagesModern.
+      setMessages([]);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
     } finally {
@@ -126,14 +119,8 @@ const MessagesModal = ({ open, onOpenChange }) => {
   // Marquer comme lu
   const markAsRead = async (messageId) => {
     try {
-      await supabase
-        .from('messages')
-        .update({ is_read: true })
-        .eq('id', messageId);
-
-      setMessages(prev =>
-        prev.map(m => m.id === messageId ? { ...m, is_read: true } : m)
-      );
+      // This table is outdated - messaging now uses purchase_case_messages
+      console.warn('⚠️ markAsRead called on outdated MessagesModal');
     } catch (error) {
       console.error('Erreur marquage lu:', error);
     }
@@ -145,39 +132,17 @@ const MessagesModal = ({ open, onOpenChange }) => {
 
     setLoading(true);
     try {
-      const { error } = await supabase
-        .from('messages')
-        .insert([{
-          sender_id: user.id,
-          recipient_id: newMessage.recipient_id || selectedMessage?.sender_id,
-          subject: newMessage.subject || 'Re: ' + (selectedMessage?.subject || 'Sans sujet'),
-          body: newMessage.body,
-          is_read: false,
-          created_at: new Date().toISOString()
-        }]);
-
-      if (error) throw error;
-
+      // This table is outdated - messaging now uses purchase_case_messages
+      console.warn('⚠️ handleSendMessage called on outdated MessagesModal - use VendeurMessagesModern instead');
+      
       if (window.safeGlobalToast) {
         window.safeGlobalToast({
-          title: "Message envoyé",
-          description: "Votre message a été envoyé avec succès."
+          title: "Information",
+          description: "Veuillez utiliser la messagerie principale pour envoyer des messages."
         });
       }
-
-      // Réinitialiser
-      setNewMessage({ recipient: '', subject: '', body: '' });
-      setSelectedMessage(null);
-      fetchMessages();
     } catch (error) {
       console.error('Erreur envoi message:', error);
-      if (window.safeGlobalToast) {
-        window.safeGlobalToast({
-          title: "Erreur",
-          description: "Impossible d'envoyer le message.",
-          variant: "destructive"
-        });
-      }
     } finally {
       setLoading(false);
     }
@@ -383,8 +348,13 @@ const MessagesModal = ({ open, onOpenChange }) => {
                   placeholder="Nom ou email du destinataire"
                   value={newMessage.recipient}
                   onChange={(e) => setNewMessage(prev => ({ ...prev, recipient: e.target.value }))}
-                  disabled={selectedMessage}
+                  disabled={selectedMessage || prefilledRecipient}
                 />
+                {prefilledRecipient && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    ℹ️ Destinataire pré-sélectionné
+                  </p>
+                )}
               </div>
 
               <div>

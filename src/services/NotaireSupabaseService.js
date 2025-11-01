@@ -17,8 +17,40 @@ export class NotaireSupabaseService {
    */
   static async getAssignedCases(notaireId) {
     try {
-      // Requête avec jointures multiples
-      const { data, error } = await supabase
+      console.log('🔍 getAssignedCases for notaireId:', notaireId);
+      
+      // Step 1: Get case IDs where this notaire is a participant
+      const { data: participations, error: participError } = await supabase
+        .from('purchase_case_participants')
+        .select('case_id, status, role')
+        .eq('user_id', notaireId)
+        .eq('role', 'notary');
+      
+      if (participError) {
+        console.error('❌ Error fetching participations:', participError);
+        throw participError;
+      }
+      
+      console.log('📋 Found participations:', participations?.length || 0, participations);
+      
+      if (!participations || participations.length === 0) {
+        console.log('⚠️ No active cases found for this notaire');
+        console.log('🔍 Checking all participants with role=notary...');
+        
+        // Debug: voir tous les notaires
+        const { data: allNotaries } = await supabase
+          .from('purchase_case_participants')
+          .select('user_id, role, status, case_id')
+          .eq('role', 'notary');
+        console.log('🔍 All notary participants:', allNotaries);
+        
+        return { success: true, data: [] };
+      }
+      
+      const caseIds = participations.map(p => p.case_id);
+      
+      // Step 2: Fetch full case details for these case IDs
+      const { data: cases, error: casesError } = await supabase
         .from('purchase_cases')
         .select(`
           *,
@@ -28,27 +60,23 @@ export class NotaireSupabaseService {
           seller:profiles!seller_id(
             id, full_name, email, phone, avatar_url
           ),
-          parcelle:parcelles!parcelle_id(
-            id, title, location, surface_area, price, land_use, 
-            title_deed_number, coordinates
-          ),
-          participants:purchase_case_participants!case_id(
-            id, user_id, role, status, assigned_at
-          ),
-          documents:case_documents!case_id(
-            id, name, type, status, uploaded_at
+          parcelle:parcels!parcelle_id(
+            id, title, location, surface
           )
         `)
-        .eq('participants.user_id', notaireId)
-        .eq('participants.role', 'notary')
-        .eq('participants.status', 'active')
+        .in('id', caseIds)
         .order('created_at', { ascending: false });
       
-      if (error) throw error;
+      if (casesError) {
+        console.error('❌ Error fetching cases:', casesError);
+        throw casesError;
+      }
       
-      return { success: true, data: data || [] };
+      console.log('✅ Loaded cases:', cases?.length || 0);
+      
+      return { success: true, data: cases || [] };
     } catch (error) {
-      console.error('Erreur getAssignedCases:', error);
+      console.error('❌ Erreur getAssignedCases:', error);
       return { success: false, error: error.message };
     }
   }
@@ -219,8 +247,7 @@ export class NotaireSupabaseService {
           created_at,
           property_value,
           notary_fees,
-          estimated_completion,
-          client:profiles(first_name, last_name, email)
+          estimated_completion
         `)
         .eq('notaire_id', notaireId)
         .order('created_at', { ascending: false })
@@ -233,6 +260,13 @@ export class NotaireSupabaseService {
       console.error('Erreur récupération actes récents:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * Alias pour getRecentActs - utilisé par NotaireTransactionsModernized
+   */
+  static async getNotarialActs(notaireId, limit = 100) {
+    return this.getRecentActs(notaireId, limit);
   }
 
   /**
@@ -476,6 +510,13 @@ export class NotaireSupabaseService {
       console.error('Erreur récupération documents:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  /**
+   * Alias utilisé par certaines pages du dashboard
+   */
+  static async getNotarialDocuments(notaireId, actId = null) {
+    return this.getDocuments(notaireId, actId);
   }
 
   /**

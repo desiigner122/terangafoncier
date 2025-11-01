@@ -47,8 +47,8 @@ const AdminAgentsPage = () => {
 
   const filteredAgents = agents.filter(agent => {
     return (
-      (agent.name.toLowerCase().includes(searchTerm.toLowerCase()) || agent.email.toLowerCase().includes(searchTerm.toLowerCase()) || agent.id.toLowerCase().includes(searchTerm.toLowerCase())) &&
-      (zoneFilter === 'all' || agent.zone.toLowerCase().includes(zoneFilter.toLowerCase())) &&
+      ((agent.name || '').toLowerCase().includes(searchTerm.toLowerCase()) || (agent.email || '').toLowerCase().includes(searchTerm.toLowerCase()) || (agent.id || '').toLowerCase().includes(searchTerm.toLowerCase())) &&
+      (zoneFilter === 'all' || (agent.zone || '').toLowerCase().includes(zoneFilter.toLowerCase())) &&
       (statusFilter === 'all' || agent.status === statusFilter)
     );
   });

@@ -1,15 +1,14 @@
 ﻿/**
- * ðŸ”” SERVICE WORKER - TERANGA FONCIER
- * Gestion des push notifications et cache offline
+ * Service Worker - Teranga Foncier
+ * Gestion des push notifications et du cache offline (compatible Vite)
  */
 
-const CACHE_NAME = 'teranga-foncier-v1.0.0';
+const CACHE_NAME = 'teranga-foncier-v1.1.0';
 const urlsToCache = [
   '/',
-  '/static/js/bundle.js',
-  '/static/css/main.css',
+  '/index.html',
   '/manifest.json',
-  '/icon-192x192.png'
+  '/teranga-foncier-logo.png'
 ];
 
 // Installation du service worker
@@ -17,7 +16,7 @@ self.addEventListener('install', event => {
   event.waitUntil(
     caches.open(CACHE_NAME)
       .then(cache => {
-        console.log('ðŸ“¦ Cache ouvert');
+        console.log('📦 Cache ouvert');
         return cache.addAll(urlsToCache);
       })
   );
@@ -30,7 +29,7 @@ self.addEventListener('activate', event => {
       return Promise.all(
         cacheNames.map(cacheName => {
           if (cacheName !== CACHE_NAME) {
-            console.log('ðŸ—‘ï¸ Suppression ancien cache:', cacheName);
+            console.log('🧹 Suppression ancien cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -39,25 +38,54 @@ self.addEventListener('activate', event => {
   );
 });
 
-// Interception des requêtes (stratégie cache-first)
+// Interception des requêtes
+// Stratégie: Cache-first pour assets statiques, network-first pour le reste
 self.addEventListener('fetch', event => {
-  event.respondWith(
-    caches.match(event.request)
-      .then(response => {
-        // Retourner la réponse en cache ou fetch depuis le réseau
-        return response || fetch(event.request);
-      })
-  );
+  const { request } = event;
+
+  // Navigations SPA -> retourner index.html
+  if (request.mode === 'navigate') {
+    event.respondWith(
+      fetch(request).catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  const url = new URL(request.url);
+  const isStaticAsset = url.pathname.startsWith('/assets/') ||
+    url.pathname.endsWith('.css') ||
+    url.pathname.endsWith('.js') ||
+    url.pathname.endsWith('.svg') ||
+    url.pathname.endsWith('.png') ||
+    url.pathname.endsWith('.jpg') ||
+    url.pathname.endsWith('.jpeg') ||
+    url.pathname.endsWith('.ico');
+
+  if (isStaticAsset) {
+    event.respondWith(
+      caches.match(request).then(cached => cached || fetch(request))
+    );
+  } else {
+    event.respondWith(
+      fetch(request)
+        .then(response => {
+          const respClone = response.clone();
+          caches.open(CACHE_NAME).then(cache => cache.put(request, respClone));
+          return response;
+        })
+        .catch(() => caches.match(request))
+    );
+  }
 });
 
 // Gestion des push notifications
 self.addEventListener('push', event => {
-  console.log('ðŸ“± Push notification reçue:', event);
+  console.log('📱 Push notification reçue:', event);
 
   const options = {
     body: 'Nouvelle notification Teranga Foncier',
-    icon: '/icon-192x192.png',
-    badge: '/badge-72x72.png',
+  icon: '/teranga-foncier-logo.png',
+  badge: '/teranga-foncier-logo.png',
     vibrate: [100, 50, 100],
     data: {
       dateOfArrival: Date.now(),
@@ -118,8 +146,8 @@ self.addEventListener('sync', event => {
     event.waitUntil(
       // Logique de synchronisation
       fetch('/api/sync-blockchain', { method: 'POST' })
-        .then(response => console.log('✅ Sync blockchain terminée'))
-        .catch(error => console.error('âŒ Erreur sync blockchain:', error))
+        .then(() => console.log('✅ Sync blockchain terminée'))
+        .catch(error => console.error('❌ Erreur sync blockchain:', error))
     );
   }
 });

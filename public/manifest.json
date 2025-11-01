@@ -1,7 +1,7 @@
 ﻿{
-  "name": "Teranga Foncier - Plateforme ImmobiliÃ¨re Intelligence Artificielle",
+  "name": "Teranga Foncier - Plateforme Immobilière Intelligence Artificielle",
   "short_name": "Teranga Foncier",
-  "description": "Plateforme immobiliÃ¨re intelligente avec blockchain et IA pour le SÃ©nÃ©gal",
+  "description": "Plateforme immobilière intelligente avec blockchain et IA pour le Sénégal",
   "start_url": "/",
   "display": "standalone",
   "theme_color": "#e67e22",
@@ -11,84 +11,15 @@
   "lang": "fr-SN",
   "icons": [
     {
-      "src": "/icon-72x72.png",
-      "sizes": "72x72",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-96x96.png",
-      "sizes": "96x96",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-128x128.png",
-      "sizes": "128x128",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-144x144.png",
-      "sizes": "144x144",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-152x152.png",
-      "sizes": "152x152",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-192x192.png",
+      "src": "/teranga-foncier-logo.png",
       "sizes": "192x192",
       "type": "image/png"
     },
     {
-      "src": "/icon-384x384.png",
-      "sizes": "384x384",
-      "type": "image/png"
-    },
-    {
-      "src": "/icon-512x512.png",
+      "src": "/teranga-foncier-logo.png",
       "sizes": "512x512",
-      "type": "image/png"
-    }
-  ],
-  "shortcuts": [
-    {
-      "name": "Dashboard",
-      "short_name": "Dashboard",
-      "description": "AccÃ©der au dashboard principal",
-      "url": "/dashboard",
-      "icons": [
-        {
-          "src": "/dashboard-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    },
-    {
-      "name": "Rechercher",
-      "short_name": "Recherche",
-      "description": "Rechercher des propriÃ©tÃ©s",
-      "url": "/search",
-      "icons": [
-        {
-          "src": "/search-icon.png",
-          "sizes": "96x96"
-        }
-      ]
-    }
-  ],
-  "screenshots": [
-    {
-      "src": "/screenshot-desktop.png",
-      "sizes": "1280x720",
       "type": "image/png",
-      "form_factor": "wide"
-    },
-    {
-      "src": "/screenshot-mobile.png",
-      "sizes": "540x720",
-      "type": "image/png",
-      "form_factor": "narrow"
+      "purpose": "any maskable"
     }
   ]
 }

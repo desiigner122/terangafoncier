@@ -157,14 +157,14 @@ const NotaireAnalyticsModernized = () => {
 
 	return (
 		<motion.div
-			className="space-y-6"
+			className="space-y-4 sm:space-y-6"
 			initial={{ opacity: 0, y: 10 }}
 			animate={{ opacity: 1, y: 0 }}
 			transition={{ duration: 0.4 }}
 		>
 			<div className="flex flex-wrap gap-4 items-center justify-between">
 				<div>
-					<h2 className="text-3xl font-bold text-gray-900">Analytics avancés</h2>
+					<h2 className="text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Analytics avancés</h2>
 					<p className="text-gray-600">Analyse des performances, conformité et productivité notariale.</p>
 				</div>
 				<div className="flex flex-wrap items-center gap-3">
@@ -187,14 +187,14 @@ const NotaireAnalyticsModernized = () => {
 				</div>
 			</div>
 
-			<div className="grid gap-4 grid-cols-1 sm:grid-cols-2 xl:grid-cols-4">
+			<div className="grid gap-3 sm:gap-4 grid-cols-2 xl:grid-cols-4">
 				<Card>
 					<CardHeader className="flex flex-row items-center justify-between pb-2">
 						<CardTitle className="text-sm font-medium">Revenus consolidés</CardTitle>
 						<TrendingUp className="h-5 w-5 text-emerald-600" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-3xl font-bold">{formatCurrency(latestMetrics?.monthly_revenue || contextStats?.monthlyRevenue || 0)}</div>
+						<div className="text-xl sm:text-2xl lg:text-3xl font-bold">{formatCurrency(latestMetrics?.monthly_revenue || contextStats?.monthlyRevenue || 0)}</div>
 						<div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
 							Variation
 							<span className={`font-semibold ${computeRevenueGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
@@ -211,7 +211,7 @@ const NotaireAnalyticsModernized = () => {
 						<ShieldCheck className="h-5 w-5 text-blue-600" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-3xl font-bold">{complianceAverage}%</div>
+						<div className="text-xl sm:text-2xl lg:text-3xl font-bold">{complianceAverage}%</div>
 						<Progress value={complianceAverage} className="mt-3" />
 						<p className="text-xs text-muted-foreground mt-2">
 							{complianceChecks.length} contrôles effectués ce trimestre
@@ -225,7 +225,7 @@ const NotaireAnalyticsModernized = () => {
 						<Users className="h-5 w-5 text-violet-600" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-3xl font-bold">{satisfactionAverage ? `${satisfactionAverage.toFixed(1)} / 5` : '—'}</div>
+						<div className="text-xl sm:text-2xl lg:text-3xl font-bold">{satisfactionAverage ? `${satisfactionAverage.toFixed(1)} / 5` : '—'}</div>
 						<Progress value={Math.min(100, (satisfactionAverage || 0) / 5 * 100)} className="mt-3" />
 						<p className="text-xs text-muted-foreground mt-2">Indice de fidélisation {formatPercent(latestMetrics?.client_retention_rate || 0)}</p>
 					</CardContent>
@@ -237,9 +237,9 @@ const NotaireAnalyticsModernized = () => {
 						<Cpu className="h-5 w-5 text-amber-600" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-3xl font-bold">{latestMetrics?.documents_authenticated || contextStats?.documentsAuthenticated || 0}</div>
+						<div className="text-xl sm:text-2xl lg:text-3xl font-bold">{latestMetrics?.documents_authenticated || contextStats?.documentsAuthenticated || 0}</div>
 						<p className="text-xs text-muted-foreground">Documents blockchain authentifiés</p>
-						<div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-500">
+						<div className="mt-3 grid grid-cols-2 gap-2 text-[10px] sm:text-xs text-gray-500">
 							<div>Transactions blockchain<br /><span className="font-semibold text-gray-900">{latestMetrics?.blockchain_transactions || 0}</span></div>
 							<div>Requêtes IA assistant<br /><span className="font-semibold text-gray-900">{latestMetrics?.ai_assistant_queries || 0}</span></div>
 						</div>
@@ -296,16 +296,16 @@ const NotaireAnalyticsModernized = () => {
 									<div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
 										<Gauge className="h-4 w-4 text-amber-600" /> Durée moyenne
 									</div>
-									<div className="mt-2 text-2xl font-bold text-gray-900">
+									<div className="mt-2 text-xl sm:text-2xl font-bold text-gray-900">
 										{latestMetrics?.avg_completion_days || contextStats?.avgCompletionDays || 0} jours
 									</div>
-									<p className="text-xs text-gray-500">Objectif: 30 jours</p>
+									<p className="text-[10px] sm:text-xs text-gray-500">Objectif: 30 jours</p>
 								</div>
 								<div className="p-4 border rounded-lg">
 									<div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
 										<CheckCircle2 className="h-4 w-4 text-emerald-600" /> Respect des délais
 									</div>
-																			<div className="mt-2 text-2xl font-bold text-gray-900">
+																			<div className="mt-2 text-xl sm:text-2xl font-bold text-gray-900">
 																				{formatPercent(onTimeRate)}
 																			</div>
 																			<Progress value={onTimeProgress} className="mt-3" />
@@ -339,7 +339,7 @@ const NotaireAnalyticsModernized = () => {
 													<TableCell>
 														<div className="flex flex-col">
 															<span className="font-medium text-gray-900">{entry.total_acts || 0} actes</span>
-															<span className="text-xs text-gray-500">{entry.completed_acts || 0} finalisés</span>
+															<span className="text-[10px] sm:text-xs text-gray-500">{entry.completed_acts || 0} finalisés</span>
 														</div>
 													</TableCell>
 													<TableCell>{formatCurrency(entry.monthly_revenue || 0)}</TableCell>
@@ -360,7 +360,7 @@ const NotaireAnalyticsModernized = () => {
 				</TabsContent>
 
 				<TabsContent value="conformite" className="space-y-4 mt-4">
-					<div className="grid gap-4 grid-cols-1 lg:grid-cols-2">
+					<div className="grid gap-3 sm:gap-4 grid-cols-1 lg:grid-cols-2">
 						<Card>
 							<CardHeader>
 								<CardTitle>Contrôles récents</CardTitle>
@@ -375,9 +375,9 @@ const NotaireAnalyticsModernized = () => {
 													<div className="flex items-start justify-between">
 														<div>
 															<div className="font-semibold text-gray-900">{check.check_type}</div>
-															<div className="text-xs text-gray-500">{new Date(check.checked_at).toLocaleString('fr-FR')}</div>
+															<div className="text-[10px] sm:text-xs text-gray-500">{new Date(check.checked_at).toLocaleString('fr-FR')}</div>
 															{check.act?.title && (
-																<div className="text-xs text-gray-600 mt-1">Acte: {check.act.title}</div>
+																<div className="text-[10px] sm:text-xs text-gray-600 mt-1">Acte: {check.act.title}</div>
 															)}
 														</div>
 														<Badge className={check.check_status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
@@ -385,7 +385,7 @@ const NotaireAnalyticsModernized = () => {
 														</Badge>
 													</div>
 													<div className="mt-3">
-														<div className="flex items-center justify-between text-xs text-gray-500">
+														<div className="flex items-center justify-between text-[10px] sm:text-xs text-gray-500">
 															<span>Score</span>
 															<span>{check.compliance_score || 0}%</span>
 														</div>
@@ -429,12 +429,12 @@ const NotaireAnalyticsModernized = () => {
 															className="h-2 w-2 rounded-full"
 															style={{ backgroundColor: item.color || '#2563eb' }}
 														/>
-														<span className="text-sm font-medium text-gray-800">{item.name}</span>
+														<span className="text-xs sm:text-sm font-medium text-gray-800">{item.name}</span>
 													</div>
-													<div className="text-xs text-gray-500">{item.count} actes</div>
+													<div className="text-[10px] sm:text-xs text-gray-500">{item.count} actes</div>
 												</div>
 												<Progress value={item.value} className="h-1.5" />
-												<div className="text-xs text-gray-500">{item.value}% du volume total</div>
+												<div className="text-[10px] sm:text-xs text-gray-500">{item.value}% du volume total</div>
 											</div>
 										))}
 									</div>
@@ -457,36 +457,36 @@ const NotaireAnalyticsModernized = () => {
 							</CardHeader>
 							<CardContent>
 								{latestMetrics ? (
-									<div className="grid gap-4 sm:grid-cols-2">
+									<div className="grid gap-3 sm:gap-4 sm:grid-cols-2">
 										<div className="p-4 border rounded-lg bg-gradient-to-br from-amber-50 to-white">
 											<div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
 												<Activity className="h-4 w-4" /> Actes traités
 											</div>
-											<div className="mt-2 text-3xl font-bold text-gray-900">{latestMetrics.total_acts || 0}</div>
-											<p className="text-xs text-gray-500">{latestMetrics.new_acts || 0} nouveaux actes créés</p>
+											<div className="mt-2 text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{latestMetrics.total_acts || 0}</div>
+											<p className="text-[10px] sm:text-xs text-gray-500">{latestMetrics.new_acts || 0} nouveaux actes créés</p>
 										</div>
 										<div className="p-4 border rounded-lg bg-gradient-to-br from-emerald-50 to-white">
 											<div className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
 												<Users className="h-4 w-4" /> Clients actifs
 											</div>
-											<div className="mt-2 text-3xl font-bold text-gray-900">{latestMetrics.active_clients || 0}</div>
-											<p className="text-xs text-gray-500">{latestMetrics.new_clients || 0} nouveaux clients</p>
+											<div className="mt-2 text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{latestMetrics.active_clients || 0}</div>
+											<p className="text-[10px] sm:text-xs text-gray-500">{latestMetrics.new_clients || 0} nouveaux clients</p>
 										</div>
 										<div className="p-4 border rounded-lg bg-gradient-to-br from-blue-50 to-white">
 											<div className="flex items-center gap-2 text-sm font-semibold text-blue-700">
 												<PieChart className="h-4 w-4" /> Répartition actes
 											</div>
-											<div className="mt-2 text-3xl font-bold text-gray-900">{distribution.reduce((acc, item) => acc + (item.count || 0), 0)}</div>
-											<p className="text-xs text-gray-500">{distribution.length} typologies actives</p>
+											<div className="mt-2 text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">{distribution.reduce((acc, item) => acc + (item.count || 0), 0)}</div>
+											<p className="text-[10px] sm:text-xs text-gray-500">{distribution.length} typologies actives</p>
 										</div>
 										<div className="p-4 border rounded-lg bg-gradient-to-br from-purple-50 to-white">
 											<div className="flex items-center gap-2 text-sm font-semibold text-purple-700">
 												<LineChart className="h-4 w-4" /> Honoraires moyens
 											</div>
-											<div className="mt-2 text-3xl font-bold text-gray-900">
+											<div className="mt-2 text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">
 												{formatCurrency(latestMetrics.avg_act_value || 0)}
 											</div>
-											<p className="text-xs text-gray-500">par acte finalisé</p>
+											<p className="text-[10px] sm:text-xs text-gray-500">par acte finalisé</p>
 										</div>
 									</div>
 								) : (

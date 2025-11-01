@@ -126,8 +126,49 @@ export const RoleProtectedRoute = ({ children, allowedRoles = [] }) => {
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '') // Remove accents
       .trim();
-      
-    return roleMap[lowerRole] || lowerRole.replace(/\s+/g, '_');
+
+    if (roleMap[lowerRole]) {
+      return roleMap[lowerRole];
+    }
+
+    const sanitized = lowerRole
+      .replace(/[^a-z0-9]+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+
+    if (!sanitized) {
+      return '';
+    }
+
+    if (sanitized.includes('acheteur') || sanitized.includes('buyer')) {
+      return 'acheteur';
+    }
+
+    if (sanitized.includes('particulier')) {
+      return 'particulier';
+    }
+
+    if (sanitized.includes('investisseur')) {
+      return 'investisseur';
+    }
+
+    if (sanitized.includes('promoteur')) {
+      return 'promoteur';
+    }
+
+    if (sanitized.includes('vendeur') && (sanitized.includes('pro') || sanitized.includes('professionnel'))) {
+      return 'vendeur_pro';
+    }
+
+    if (sanitized.includes('vendeur') && sanitized.includes('particulier')) {
+      return 'vendeur_particulier';
+    }
+
+    if (sanitized.includes('vendeur')) {
+      return 'vendeur';
+    }
+
+    return sanitized.replace(/\s+/g, '_');
   };
 
   const currentRole = normalizeRole(profile.role || profile.user_type || '');

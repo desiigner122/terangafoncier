@@ -159,7 +159,7 @@ export class PurchaseIntegrationService {
         await PurchaseWorkflowService.updateCaseStatus(
           caseId, 
           newStatus, 
-          'System', 
+          null, 
           'Mise à jour suite à modification de paiement'
         );
       }
@@ -188,7 +188,7 @@ export class PurchaseIntegrationService {
         await PurchaseWorkflowService.updateCaseStatus(
           purchaseCase.id,
           'cancelled',
-          'System',
+          null,
           `Dossier annulé: ${reason}`
         );
       }

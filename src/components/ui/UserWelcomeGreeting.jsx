@@ -35,7 +35,8 @@ const UserWelcomeGreeting = ({
   const getRoleBasedMessage = () => {
     if (customMessage) return customMessage;
     
-    switch (userRole.toLowerCase()) {
+    const normalizedRole = (userRole || '').toLowerCase();
+    switch (normalizedRole) {
       case 'banque':
         return 'Gérez vos services financiers et crédits immobiliers';
       case 'notaire':
@@ -63,7 +64,8 @@ const UserWelcomeGreeting = ({
 
   // Emojis selon le rôle
   const getRoleEmoji = () => {
-    switch (userRole.toLowerCase()) {
+    const normalizedRole = (userRole || '').toLowerCase();
+    switch (normalizedRole) {
       case 'banque': return '🏦';
       case 'notaire': return '⚖️';
       case 'mairie': return '🏛️';

@@ -137,7 +137,7 @@ const ParticulierCaseTracking = () => {
       const { data: parcelData } = await supabase
         .from('parcels')
         .select('*')
-        .eq('id', caseData.parcelle_id)
+        .eq('id', caseData.parcel_id)
         .single();
 
       if (parcelData) {
@@ -166,9 +166,9 @@ const ParticulierCaseTracking = () => {
 
       // 7. Charger les documents
       const { data: docsData } = await supabase
-        .from('purchase_case_documents')
+        .from('documents_administratifs')
         .select('*')
-        .eq('case_id', caseData.id)
+        .eq('purchase_request_id', caseData.request_id)
         .order('created_at', { ascending: false });
 
       setDocuments(docsData || []);
@@ -190,9 +190,8 @@ const ParticulierCaseTracking = () => {
         .from('purchase_case_messages')
         .insert({
           case_id: purchaseCase.id,
-          sender_id: user.id,
+          sent_by: user.id,
           message: newMessage,
-          created_at: new Date().toISOString(),
         });
 
       if (error) throw error;
@@ -501,11 +500,11 @@ const ParticulierCaseTracking = () => {
                     key={index}
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className={`flex gap-3 ${msg.sender_id === user.id ? 'flex-row-reverse' : ''}`}
+                    className={`flex gap-3 ${msg.sent_by === user.id ? 'flex-row-reverse' : ''}`}
                   >
                     <div
                       className={`flex-1 rounded-lg px-4 py-2 ${
-                        msg.sender_id === user.id
+                        msg.sent_by === user.id
                           ? 'bg-blue-100 text-blue-900'
                           : 'bg-slate-200 text-slate-900'
                       }`}

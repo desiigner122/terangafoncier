@@ -411,6 +411,9 @@ export class AdvancedCaseTrackingService {
    */
   static async logTimelineEvent(caseId, eventType, title, details = {}) {
     try {
+      // Récupérer l'utilisateur actuel
+      const { data: { user } } = await supabase.auth.getUser();
+      
       const { data, error } = await supabase
         .from('purchase_case_timeline')
         .insert({
@@ -419,12 +422,17 @@ export class AdvancedCaseTrackingService {
           title,
           description: JSON.stringify(details),
           metadata: details,
-          triggered_by: null,
+          triggered_by: user?.id || null,
         })
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        console.error('❌ Error logging timeline event:', error);
+        throw error;
+      }
+      
+      console.log('✅ Timeline event logged:', eventType, title);
       return data;
     } catch (error) {
       console.error('❌ Error logging timeline event:', error);

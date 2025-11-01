@@ -167,72 +167,73 @@ const NotaireCRMModernized = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* En-tête CRM */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">CRM Notarial</h2>
-          <p className="text-gray-600">Gestion des clients et partenaires bancaires</p>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">CRM Notarial</h2>
+          <p className="text-sm sm:text-base text-gray-600">Gestion des clients et partenaires bancaires</p>
         </div>
-        <Button onClick={handleAddClient} className="bg-amber-600 hover:bg-amber-700">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Nouveau Client
+        <Button onClick={handleAddClient} className="bg-amber-600 hover:bg-amber-700 w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-10">
+          <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
+          <span className="hidden sm:inline">Nouveau Client</span>
+          <span className="sm:hidden">Ajouter</span>
         </Button>
       </div>
 
       {/* Statistiques CRM */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Clients</p>
-                <p className="text-2xl font-bold text-gray-900">{crmStats.totalClients || clients.length}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Clients</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{crmStats.totalClients || clients.length}</p>
               </div>
-              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <Users className="h-6 w-6 text-blue-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Dossiers Actifs</p>
-                <p className="text-2xl font-bold text-gray-900">{crmStats.activeFiles || dashboardStats?.activeCases || 0}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Dossiers Actifs</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{crmStats.activeFiles || dashboardStats?.activeCases || 0}</p>
               </div>
-              <div className="h-12 w-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <FileText className="h-6 w-6 text-amber-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Partenaires Banques</p>
-                <p className="text-2xl font-bold text-gray-900">{bankingPartners.length}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Partenaires Banques</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{bankingPartners.length}</p>
               </div>
-              <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Building className="h-6 w-6 text-green-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Building className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Revenus Mensuels</p>
-                <p className="text-2xl font-bold text-gray-900">{(dashboardStats?.monthlyRevenue / 1000000).toFixed(1)}M</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600 truncate">Revenus Mensuels</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{(dashboardStats?.monthlyRevenue / 1000000).toFixed(1)}M</p>
               </div>
-              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <DollarSign className="h-6 w-6 text-purple-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <DollarSign className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -240,30 +241,42 @@ const NotaireCRMModernized = () => {
       </div>
 
       {/* Contenu principal avec onglets */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
-        <TabsList className="grid w-full grid-cols-4">
-          <TabsTrigger value="clients">Clients ({filteredClients.length})</TabsTrigger>
-          <TabsTrigger value="banks">Banques ({filteredPartners.length})</TabsTrigger>
-          <TabsTrigger value="files">Dossiers Actifs</TabsTrigger>
-          <TabsTrigger value="analytics">Analyses</TabsTrigger>
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 sm:grid-cols-4 h-auto">
+          <TabsTrigger value="clients" className="text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-2.5">
+            <span className="hidden sm:inline">Clients ({filteredClients.length})</span>
+            <span className="sm:hidden">Clients</span>
+          </TabsTrigger>
+          <TabsTrigger value="banks" className="text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-2.5">
+            <span className="hidden sm:inline">Banques ({filteredPartners.length})</span>
+            <span className="sm:hidden">Banques</span>
+          </TabsTrigger>
+          <TabsTrigger value="files" className="text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-2.5">
+            <span className="hidden sm:inline">Dossiers Actifs</span>
+            <span className="sm:hidden">Dossiers</span>
+          </TabsTrigger>
+          <TabsTrigger value="analytics" className="text-xs sm:text-sm px-2 sm:px-4 py-2 sm:py-2.5">
+            <span className="hidden sm:inline">Analyses</span>
+            <span className="sm:hidden">Stats</span>
+          </TabsTrigger>
         </TabsList>
 
         {/* Barre de recherche et filtres */}
-        <div className="flex flex-col sm:flex-row gap-4">
+        <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
           <div className="relative flex-1">
-            <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+            <Search className="absolute left-3 top-2.5 sm:top-3 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
             <Input
               placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="pl-10"
+              className="pl-9 sm:pl-10 text-xs sm:text-sm h-9 sm:h-10"
             />
           </div>
           {activeTab === 'clients' && (
             <select
               value={filterType}
               onChange={(e) => setFilterType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+              className="px-2 sm:px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-amber-500 focus:border-transparent text-xs sm:text-sm h-9 sm:h-10"
             >
               <option value="all">Tous les clients</option>
               <option value="active">Actifs</option>
@@ -275,26 +288,26 @@ const NotaireCRMModernized = () => {
         </div>
 
         {/* Onglet Clients */}
-        <TabsContent value="clients" className="space-y-6">
+        <TabsContent value="clients" className="space-y-4 sm:space-y-6 mt-0">
           {filteredClients.length === 0 ? (
             <Card>
-              <CardContent className="p-12 text-center">
-                <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun client trouvé</h3>
-                <p className="text-gray-600 mb-4">
+              <CardContent className="p-8 sm:p-12 text-center">
+                <Users className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                <h3 className="text-base sm:text-lg font-medium text-gray-900 mb-2">Aucun client trouvé</h3>
+                <p className="text-sm sm:text-base text-gray-600 mb-3 sm:mb-4">
                   {clients.length === 0 
                     ? "Vous n'avez pas encore de clients dans votre base de données."
                     : "Aucun client ne correspond à vos critères de recherche."
                   }
                 </p>
-                <Button onClick={handleAddClient} className="bg-amber-600 hover:bg-amber-700">
-                  <UserPlus className="h-4 w-4 mr-2" />
+                <Button onClick={handleAddClient} className="bg-amber-600 hover:bg-amber-700 text-xs sm:text-sm h-8 sm:h-10">
+                  <UserPlus className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
                   Ajouter un client
                 </Button>
               </CardContent>
             </Card>
           ) : (
-            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
               {filteredClients.map((client) => (
                 <motion.div
                   key={client.id}
@@ -305,69 +318,69 @@ const NotaireCRMModernized = () => {
                   <Card className={`h-full hover:shadow-lg transition-all duration-300 border-l-4 ${
                     selectedClient?.id === client.id ? 'border-l-amber-600 bg-amber-50' : 'border-l-gray-300'
                   }`}>
-                    <CardHeader className="pb-3">
-                      <div className="flex items-start justify-between">
-                        <div className="flex items-center space-x-3">
-                          <Avatar className="w-12 h-12">
-                            <AvatarFallback className="font-semibold bg-amber-100 text-amber-700">
+                    <CardHeader className="pb-2 sm:pb-3 p-3 sm:p-4 lg:p-6">
+                      <div className="flex items-start justify-between gap-2 sm:gap-3">
+                        <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                          <Avatar className="w-10 h-10 sm:w-12 sm:h-12 flex-shrink-0">
+                            <AvatarFallback className="font-semibold bg-amber-100 text-amber-700 text-xs sm:text-sm">
                               {client.name?.split(' ').map(n => n[0]).join('') || 'C'}
                             </AvatarFallback>
                           </Avatar>
-                          <div>
-                            <CardTitle className="text-lg font-semibold text-gray-900">
+                          <div className="min-w-0 flex-1">
+                            <CardTitle className="text-sm sm:text-base lg:text-lg font-semibold text-gray-900 truncate">
                               {client.name || 'Client'}
                             </CardTitle>
-                            <div className="flex items-center space-x-2 mt-1">
-                              <Badge variant="outline" className="text-xs">
+                            <div className="flex flex-wrap items-center gap-1 sm:gap-2 mt-1">
+                              <Badge variant="outline" className="text-[10px] sm:text-xs px-1.5 py-0.5">
                                 {client.client_type || 'Particulier'}
                               </Badge>
-                              <Badge className={
+                              <Badge className={`text-[10px] sm:text-xs px-1.5 py-0.5 ${
                                 client.client_status === 'active' ? 'bg-green-100 text-green-800' :
                                 client.client_status === 'prospect' ? 'bg-blue-100 text-blue-800' :
                                 client.client_status === 'vip' ? 'bg-purple-100 text-purple-800' :
                                 'bg-gray-100 text-gray-800'
-                              }>
+                              }`}>
                                 {client.client_status || 'Actif'}
                               </Badge>
                             </div>
                           </div>
                         </div>
-                        <div className="text-right">
+                        <div className="text-right flex-shrink-0">
                           <div className="flex items-center space-x-1 mb-1">
-                            <Star className="h-3 w-3 text-yellow-500" />
-                            <span className="text-sm font-medium">{client.satisfaction_score || 0}</span>
+                            <Star className="h-2.5 w-2.5 sm:h-3 sm:w-3 text-yellow-500" />
+                            <span className="text-xs sm:text-sm font-medium">{client.satisfaction_score || 0}</span>
                           </div>
-                          <div className="text-xs text-gray-500">
+                          <div className="text-[10px] sm:text-xs text-gray-500">
                             {client.total_acts || 0} transaction(s)
                           </div>
                         </div>
                       </div>
                     </CardHeader>
 
-                    <CardContent className="pt-0">
-                      <div className="space-y-3">
+                    <CardContent className="pt-0 p-3 sm:p-4 lg:p-6">
+                      <div className="space-y-2 sm:space-y-3">
                         {/* Transaction actuelle simulée */}
-                        <div className="bg-gray-50 p-3 rounded-lg">
-                          <div className="flex items-center justify-between mb-2">
-                            <span className="text-sm font-medium text-gray-900">
+                        <div className="bg-gray-50 p-2 sm:p-3 rounded-lg">
+                          <div className="flex items-center justify-between mb-1.5 sm:mb-2">
+                            <span className="text-xs sm:text-sm font-medium text-gray-900">
                               Dossier en cours
                             </span>
-                            <span className="text-sm font-bold text-green-600">
+                            <span className="text-xs sm:text-sm font-bold text-green-600">
                               {client.avg_act_value ? `${(client.avg_act_value / 1000000).toFixed(1)}M FCFA` : 'N/A'}
                             </span>
                           </div>
-                          <div className="text-xs text-gray-600 space-y-1">
+                          <div className="text-[10px] sm:text-xs text-gray-600 space-y-1">
                             <div className="flex items-center space-x-1">
-                              <MapPin className="h-3 w-3" />
-                              <span>Localisation en cours</span>
+                              <MapPin className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                              <span className="truncate">Localisation en cours</span>
                             </div>
                             <div className="flex items-center space-x-1">
-                              <Building className="h-3 w-3" />
-                              <span>Partenaire bancaire</span>
+                              <Building className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
+                              <span className="truncate">Partenaire bancaire</span>
                             </div>
                             <div className="flex items-center justify-between">
                               <span>Étape: {client.active_acts > 0 ? 'En cours' : 'Aucune'}</span>
-                              <Badge className="text-xs bg-blue-100 text-blue-800">
+                              <Badge className="text-[9px] sm:text-[10px] bg-blue-100 text-blue-800 px-1 py-0.5">
                                 REF-{client.id?.substring(0, 8)}
                               </Badge>
                             </div>
@@ -375,52 +388,54 @@ const NotaireCRMModernized = () => {
                         </div>
 
                         {/* Informations de contact */}
-                        <div className="space-y-2">
+                        <div className="space-y-1.5 sm:space-y-2">
                           {client.email && (
-                            <div className="flex items-center text-sm text-gray-600">
-                              <Mail className="h-4 w-4 mr-2" />
-                              {client.email}
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                              <Mail className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                              <span className="truncate">{client.email}</span>
                             </div>
                           )}
                           {client.phone && (
-                            <div className="flex items-center text-sm text-gray-600">
-                              <Phone className="h-4 w-4 mr-2" />
-                              {client.phone}
+                            <div className="flex items-center text-xs sm:text-sm text-gray-600">
+                              <Phone className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2 flex-shrink-0" />
+                              <span>{client.phone}</span>
                             </div>
                           )}
                         </div>
 
                         {/* Relation bancaire */}
-                        <div className="border-t pt-3">
-                          <div className="flex items-center justify-between text-sm">
+                        <div className="border-t pt-2 sm:pt-3">
+                          <div className="flex items-center justify-between text-xs sm:text-sm">
                             <span className="text-gray-600">Revenus totaux:</span>
                             <span className="font-medium">{client.total_revenue ? `${(client.total_revenue / 1000000).toFixed(1)}M FCFA` : '0 FCFA'}</span>
                           </div>
-                          <div className="flex items-center justify-between text-sm">
+                          <div className="flex items-center justify-between text-xs sm:text-sm">
                             <span className="text-gray-600">Dossiers actifs:</span>
-                            <Badge className="bg-blue-100 text-blue-800">
+                            <Badge className="bg-blue-100 text-blue-800 text-[10px] sm:text-xs">
                               {client.active_acts || 0}
                             </Badge>
                           </div>
                         </div>
 
                         {/* Actions */}
-                        <div className="flex space-x-2 pt-2">
+                        <div className="flex space-x-1.5 sm:space-x-2 pt-1 sm:pt-2">
                           <Button 
                             size="sm" 
                             variant="outline" 
-                            className="flex-1" 
+                            className="flex-1 h-7 sm:h-8 text-[10px] sm:text-xs px-2" 
                             onClick={(e) => {
                               e.stopPropagation();
                               handleContactClient(client, 'téléphone');
                             }}
                           >
-                            <Phone className="h-3 w-3 mr-1" />
-                            Appeler
+                            <Phone className="h-2.5 w-2.5 sm:h-3 sm:w-3 mr-1" />
+                            <span className="hidden sm:inline">Appeler</span>
+                            <span className="sm:hidden">Tel</span>
                           </Button>
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="h-7 sm:h-8 px-2"
                             onClick={(e) => {
                               e.stopPropagation();
                               window.safeGlobalToast({
@@ -430,17 +445,18 @@ const NotaireCRMModernized = () => {
                               });
                             }}
                           >
-                            <Calendar className="h-3 w-3" />
+                            <Calendar className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                           </Button>
                           <Button 
                             size="sm" 
                             variant="outline"
+                            className="h-7 sm:h-8 px-2"
                             onClick={(e) => {
                               e.stopPropagation();
                               handleContactClient(client, 'email');
                             }}
                           >
-                            <MessageSquare className="h-3 w-3" />
+                            <MessageSquare className="h-2.5 w-2.5 sm:h-3 sm:w-3" />
                           </Button>
                         </div>
                       </div>

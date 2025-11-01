@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Bell, X, AlertCircle, CheckCircle, Info, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 
 const NotificationContext = createContext();
 
@@ -14,7 +16,9 @@ export const useNotifications = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState([
+  const { user } = useAuth();
+  const isAuthenticated = !!user?.id;
+  const [notifications, setNotifications] = useState(isAuthenticated ? [] : [
     {
       id: 1,
       type: 'urgent',
@@ -112,8 +116,11 @@ export const NotificationProvider = ({ children }) => {
 
   // Simulation de nouvelles notifications
   useEffect(() => {
+    // Désactiver toute simulation si l'utilisateur est authentifié
+    if (isAuthenticated) return;
+
     const interval = setInterval(() => {
-      // Ajouter une notification aléatoire toutes les 5 minutes (pour demo)
+      // Ajouter une notification aléatoire toutes les 5 minutes (pour demo anonymes)
       const sampleNotifications = [
         {
           type: 'info',
@@ -136,7 +143,7 @@ export const NotificationProvider = ({ children }) => {
     }, 300000); // 5 minutes
 
     return () => clearInterval(interval);
-  }, []);
+  }, [isAuthenticated]);
 
   return (
     <NotificationContext.Provider value={{
@@ -161,8 +168,11 @@ export const NotificationBell = () => {
     showNotificationPanel, 
     setShowNotificationPanel 
   } = useNotifications();
-
-  const unreadCount = getUnreadCount();
+  const { user } = useAuth();
+  // Utiliser les vraies notifications si connecté; sinon, utiliser le contexte (démo)
+  const { unreadNotificationsCount } = useUnreadCounts({ scope: 'both' });
+  const isAuthenticated = !!user?.id;
+  const unreadCount = isAuthenticated ? unreadNotificationsCount : getUnreadCount();
 
   return (
     <div className="relative">

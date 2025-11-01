@@ -8,7 +8,7 @@
   <meta name="description" content="Plateforme immobilière intelligente avec blockchain et IA pour le Sénégal" />
   
   <!-- PWA Meta Tags -->
-  <link rel="apple-touch-icon" href="/icon-192x192.png" />
+  <link rel="apple-touch-icon" href="/teranga-foncier-logo.png" />
   <link rel="manifest" href="/manifest.json" />
   
   <!-- Préchargement des ressources critiques -->
@@ -33,19 +33,6 @@
   <noscript>Vous devez activer JavaScript pour utiliser cette application.</noscript>
   <div id="root"></div>
   
-  <!-- Installation automatique du service worker -->
-  <script>
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((registration) => {
-            console.log('✅ SW registered: ', registration);
-          })
-          .catch((registrationError) => {
-            console.log('❌ SW registration failed: ', registrationError);
-          });
-      });
-    }
-  </script>
+  <!-- Service worker is registered in src/main.jsx to avoid double registration -->
 </body>
 </html>

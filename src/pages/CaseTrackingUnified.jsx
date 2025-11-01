@@ -194,6 +194,10 @@ const CaseTrackingUnified = () => {
     setShowGeometreModal(true);
   };
 
+  const handleRequestSurveying = () => {
+    setShowGeometreModal(true);
+  };
+
   /**
    * Handler pour le paiement (Phase 3)
    */

@@ -6,6 +6,7 @@ import { Card } from '@/components/ui/card';
 import NotaryFeesCalculator from '@/services/NotaryFeesCalculator';
 import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
 import NotificationService from '@/services/NotificationService';
+import PaymentGatewayService from '@/services/PaymentGatewayService';
 import { 
   CreditCard, 
   Smartphone, 
@@ -137,18 +138,82 @@ const PaymentModal = ({ isOpen, onClose, paymentRequest, onSuccess }) => {
       setProcessing(true);
       setStep('instructions');
 
-      // TODO Phase 4: Intégrer PaymentGatewayService pour vrais paiements
-      // Pour Phase 3, on simule le paiement
-      
-      // Simuler délai de traitement
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // Phase 4: Intégration PaymentGatewayService
+      console.log('💳 Initiation paiement:', {
+        method: selectedMethod.id,
+        amount: paymentRequest.amount,
+        request_id: paymentRequest.id
+      });
 
+      // Préparer les données de transaction
+      const transactionData = {
+        notary_request_id: paymentRequest.id,
+        case_id: paymentRequest.case_id,
+        amount: calculateTotalAmount(selectedMethod),
+        payer_id: user.id,
+        description: paymentRequest.description
+      };
+
+      // Initier le paiement via la passerelle appropriée
+      const paymentResult = await PaymentGatewayService.initiatePayment(
+        selectedMethod.id,
+        transactionData
+      );
+
+      if (!paymentResult.success) {
+        throw new Error(paymentResult.error || 'Erreur lors de l\'initiation du paiement');
+      }
+
+      console.log('✅ Paiement initié:', paymentResult.data);
+
+      // Pour Wave, Orange Money, et Carte : rediriger vers URL de paiement
+      if (paymentResult.data.payment_url) {
+        toast.success('Redirection vers la passerelle de paiement...');
+        
+        // Stocker les infos pour le retour
+        localStorage.setItem('pending_payment', JSON.stringify({
+          transaction_id: paymentResult.data.transaction_id,
+          notary_request_id: paymentRequest.id,
+          case_id: paymentRequest.case_id,
+          amount: paymentRequest.amount
+        }));
+
+        // Rediriger vers la passerelle
+        setTimeout(() => {
+          window.location.href = paymentResult.data.payment_url;
+        }, 1000);
+        return;
+      }
+
+      // Pour virement bancaire : afficher les instructions
+      if (selectedMethod.id === 'bank_transfer') {
+        // Marquer comme en attente de vérification
+        await NotificationService.create({
+          userId: paymentRequest.notary_id,
+          type: 'payment_pending_verification',
+          title: 'Virement en attente',
+          message: `${user?.full_name || user?.email} a initié un virement bancaire de ${NotaryFeesCalculator.formatCurrency(paymentRequest.amount)}`,
+          relatedId: paymentRequest.case_id,
+          relatedType: 'purchase_case'
+        });
+
+        toast.success('Instructions de virement envoyées !');
+        onSuccess?.();
+        
+        setTimeout(() => {
+          onClose();
+          resetModal();
+        }, 2000);
+        return;
+      }
+
+      // Cas par défaut (simulation pour développement)
       // Marquer la demande de paiement comme payée
       const markPaidResult = await NotaryFeesCalculator.markAsPaid(
         paymentRequest.id,
         {
           payment_method: selectedMethod.id,
-          transaction_id: `SIM-${Date.now()}`, // Simulé pour Phase 3
+          transaction_id: paymentResult.data.transaction_id || `TF-${Date.now()}`,
           paid_at: new Date().toISOString()
         }
       );

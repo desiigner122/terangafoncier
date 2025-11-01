@@ -69,14 +69,37 @@ const NotaireCaseDetailModern = () => {
   const ensureNotaryParticipantActive = async () => {
     try {
       if (!user?.id) return;
-      await supabase
+      
+      // D'abord vérifier si le notaire existe dans les participants
+      const { data: existingParticipant } = await supabase
         .from('purchase_case_participants')
-        .update({ status: 'active' })
+        .select('id, status')
         .eq('case_id', caseId)
         .eq('user_id', user.id)
         .eq('role', 'notary')
-        .eq('status', 'pending');
+        .maybeSingle();
+
+      if (!existingParticipant) {
+        // Insérer le notaire comme participant actif
+        await supabase
+          .from('purchase_case_participants')
+          .insert({
+            case_id: caseId,
+            user_id: user.id,
+            role: 'notary',
+            status: 'active'
+          });
+      } else if (existingParticipant.status === 'pending') {
+        // Mettre à jour de pending vers active
+        await supabase
+          .from('purchase_case_participants')
+          .update({ status: 'active' })
+          .eq('case_id', caseId)
+          .eq('user_id', user.id)
+          .eq('role', 'notary');
+      }
     } catch (e) {
+      console.warn('⚠️ Erreur sync participant notaire:', e);
       // silencieux si RLS empêche l'update
     }
   };

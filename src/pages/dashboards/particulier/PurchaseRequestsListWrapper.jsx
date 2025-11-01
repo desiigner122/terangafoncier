@@ -46,6 +46,13 @@ const PurchaseRequestsListWrapper = () => {
   useEffect(() => {
     if (user?.id) {
       loadPurchaseRequests();
+      
+      // ✅ NOUVEAU: Refresh automatique toutes les 10 secondes pour voir les nouvelles demandes
+      const interval = setInterval(() => {
+        loadPurchaseRequests();
+      }, 10000);
+      
+      return () => clearInterval(interval);
     }
   }, [user?.id]);
 
@@ -135,10 +142,17 @@ const PurchaseRequestsListWrapper = () => {
       console.log('✅ Demandes chargées:', {
         cases: casesData?.length || 0,
         requests: requestsWithParcels.filter(r => r).length,
-        total: allRequests.length
+        total: allRequests.length,
+        details: allRequests.map(r => ({
+          id: r.id,
+          source: r.source,
+          status: r.status,
+          case_number: r.case_number
+        }))
       });
 
-      setPurchaseRequests(allRequests.length > 0 ? allRequests : getMockPurchaseRequests());
+      // Toujours mettre à jour, même si vide (pas de mock si vraiment vide)
+      setPurchaseRequests(allRequests);
 
     } catch (error) {
       console.error('❌ Erreur:', error);
@@ -263,14 +277,25 @@ const PurchaseRequestsListWrapper = () => {
                 Gérez vos demandes d'achat de propriétés
               </p>
             </div>
-            <Button 
-              variant="secondary" 
-              onClick={() => navigate('/acheteur')}
-              className="bg-white/20 hover:bg-white/30 text-white border-white/30"
-            >
-              <Home className="h-4 w-4 mr-2" />
-              Retour
-            </Button>
+            <div className="flex gap-2">
+              <Button 
+                variant="secondary" 
+                onClick={loadPurchaseRequests}
+                disabled={loading}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                <RefreshCw className={`h-4 w-4 mr-2 ${loading ? 'animate-spin' : ''}`} />
+                Actualiser
+              </Button>
+              <Button 
+                variant="secondary" 
+                onClick={() => navigate('/acheteur')}
+                className="bg-white/20 hover:bg-white/30 text-white border-white/30"
+              >
+                <Home className="h-4 w-4 mr-2" />
+                Retour
+              </Button>
+            </div>
           </div>
 
           {/* Stats */}
@@ -312,9 +337,10 @@ const PurchaseRequestsListWrapper = () => {
                 Vous n'avez pas encore effectué de demande d'achat de propriété
               </p>
               <Button 
-                onClick={() => navigate('/acheteur/recherche')}
+                onClick={() => navigate('/parcelles')}
                 className="bg-gradient-to-r from-purple-600 to-pink-600"
               >
+                <ShoppingCart className="h-4 w-4 mr-2" />
                 Explorer les propriétés
               </Button>
             </CardContent>

@@ -141,10 +141,31 @@ const OneTimePaymentPageSimplified = () => {
         }
       });
 
-      // 4. Succès !
-      toast.success('Demande envoyée avec succès !', {
+      // 4. Créer notification pour l'acheteur (confirmation)
+      await supabase.from('notifications').insert({
+        user_id: user.id,
+        type: 'request_submitted',
+        title: 'Demande d\'achat envoyée',
+        message: `Votre offre de ${offeredPriceInt.toLocaleString()} FCFA pour ${parcelle.title || 'la propriété'} a été envoyée au vendeur. Vous recevrez une notification dès qu'il répondra.`,
+        link: `/acheteur/mes-achats`,
+        metadata: {
+          request_id: request.id,
+          parcel_id: context.parcelleId,
+          offered_price: offeredPriceInt
+        }
+      });
+
+      // 5. Succès !
+      toast.success('✅ Demande envoyée avec succès !', {
         description: 'Le vendeur sera notifié et pourra répondre à votre offre.',
         duration: 5000
+      });
+
+      console.log('✅ Demande créée et notifications envoyées:', {
+        request_id: request.id,
+        buyer_id: user.id,
+        seller_id: parcelData?.seller_id,
+        offered_price: offeredPriceInt
       });
 
       // Rediriger vers la page de suivi des achats

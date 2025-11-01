@@ -97,12 +97,25 @@ const ParticulierCaseTrackingModern = () => {
 
       // 2b. Charger les infos du notaire
       if (caseData?.notaire_id) {
-        const { data: notaireData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', caseData.notaire_id)
-          .single();
-        setNotaire(notaireData);
+        try {
+          const { data: notaireData, error: notaireError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', caseData.notaire_id)
+            .single();
+
+          if (notaireError) {
+            console.warn('⚠️ Erreur chargement notaire:', notaireError);
+            setNotaire({ id: caseData.notaire_id });
+          } else {
+            setNotaire(notaireData || { id: caseData.notaire_id });
+          }
+        } catch (error) {
+          console.warn('⚠️ Exception chargement notaire:', error);
+          setNotaire({ id: caseData.notaire_id });
+        }
+      } else {
+        setNotaire(null);
       }
 
       // 2b. Charger les infos de la propriété (nouvelle table/colonne)
@@ -779,7 +792,7 @@ const ParticulierCaseTrackingModern = () => {
                 <CardTitle className="text-lg">Notaire</CardTitle>
               </CardHeader>
               <CardContent>
-                {notaire ? (
+                {purchaseCase?.notaire_id ? (
                   <>
                     <div className="flex items-center gap-3 mb-4">
                       <Avatar className="w-12 h-12">
@@ -790,9 +803,9 @@ const ParticulierCaseTrackingModern = () => {
                       </Avatar>
                       <div>
                         <p className="font-semibold">
-                          {notaire?.full_name || notaire?.first_name && notaire?.last_name 
-                            ? `${notaire.first_name} ${notaire.last_name}` 
-                            : 'Notaire'}
+                          {notaire?.full_name || (notaire?.first_name && notaire?.last_name)
+                            ? `${notaire?.first_name || ''} ${notaire?.last_name || ''}`.trim()
+                            : 'Notaire assigné'}
                         </p>
                         <Badge variant="default" className="mt-1">
                           <CheckCircle className="w-3 h-3 mr-1" />
@@ -804,13 +817,18 @@ const ParticulierCaseTrackingModern = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex items-center gap-2 text-gray-600">
                         <Mail className="w-4 h-4" />
-                        {notaire?.email || 'N/A'}
+                        {notaire?.email || 'Coordonnées indisponibles'}
                       </div>
                       {notaire?.phone && (
                         <div className="flex items-center gap-2 text-gray-600">
                           <Phone className="w-4 h-4" />
                           {notaire?.phone}
                         </div>
+                      )}
+                      {!notaire?.phone && (
+                        <p className="text-xs text-gray-500">
+                          Contact détaillé non accessible avec vos permissions.
+                        </p>
                       )}
                     </div>
                   </>

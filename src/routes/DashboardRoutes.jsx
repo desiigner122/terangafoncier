@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children, allowedRoles }) => {
   }
 
   // Pour Supabase, on récupère le rôle depuis les métadonnées et on normalise
-  const userRole = user.user_metadata?.role?.toLowerCase();
+  const userRole = user.user_metadata?.role?.toLowerCase?.() || '';
   
   if (allowedRoles && !allowedRoles.includes(userRole)) {
     console.log('❌ Accès refusé - Rôle:', userRole, 'Rôles autorisés:', allowedRoles);
@@ -38,7 +38,7 @@ const DashboardSelector = () => {
   const { user } = useAuth();
 
   // Normaliser le rôle en minuscules pour la correspondance
-  const userRole = user?.user_metadata?.role?.toLowerCase();
+  const userRole = user?.user_metadata?.role?.toLowerCase?.() || '';
 
   const dashboardMap = {
     'particulier': <ParticulierDashboard />,

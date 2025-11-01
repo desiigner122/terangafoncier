@@ -19,7 +19,7 @@ const FloatingWhatsApp = ({
       target="_blank"
       rel="noopener noreferrer"
       aria-label="Contacter sur WhatsApp"
-      className="fixed left-4 bottom-20 z-50 group"
+      className="fixed left-4 bottom-6 z-50 group"
     >
       <div className="flex items-center gap-3">
         {/* Badge text (shown on hover on desktop) */}

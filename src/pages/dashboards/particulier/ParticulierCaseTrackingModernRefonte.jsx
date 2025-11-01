@@ -37,6 +37,7 @@ import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
+import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
 
 const STATUS_META = {
   initiated: { label: 'Dossier créé', color: 'blue', icon: Clock },
@@ -91,15 +92,13 @@ const ParticulierCaseTrackingModernRefonte = () => {
   const [newMessage, setNewMessage] = useState('');
   const [uploadingDoc, setUploadingDoc] = useState(false);
 
+  // Use unified realtime sync hook
+  useRealtimeCaseSync(purchaseCase?.id, () => loadCaseData());
+
   useEffect(() => {
     if (user && caseIdentifier) {
       loadCaseData();
-      setupRealtimeSubscriptions();
     }
-
-    return () => {
-      RealtimeNotificationService.unsubscribeAll();
-    };
   }, [user, caseIdentifier]);
 
   const loadCaseData = async () => {
@@ -322,16 +321,6 @@ const ParticulierCaseTrackingModernRefonte = () => {
       console.error('❌ Erreur globale loadCaseData:', error);
       toast.error('Erreur de chargement');
       setLoading(false);
-    }
-  };
-
-  const setupRealtimeSubscriptions = () => {
-    try {
-      // Don't use setupCaseTracking with auto-reload - let granular subscriptions handle updates
-      // RealtimeNotificationService.setupCaseTracking will reload the entire page, which is not desired
-      console.log('✅ Realtime subscriptions en place (granular subscriptions for messages/documents/appointments)');
-    } catch (error) {
-      console.error('Erreur setup Realtime:', error);
     }
   };
 

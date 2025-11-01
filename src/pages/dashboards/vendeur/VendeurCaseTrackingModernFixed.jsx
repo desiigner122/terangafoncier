@@ -35,6 +35,7 @@ import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
+import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
 
 const VendeurCaseTrackingModernFixed = () => {
   const { caseNumber } = useParams();
@@ -51,18 +52,16 @@ const VendeurCaseTrackingModernFixed = () => {
   const [appointments, setAppointments] = useState([]);
   const [payments, setPayments] = useState([]);
   const [history, setHistory] = useState([]);
+  const [timeline, setTimeline] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+
+  // Use unified realtime sync hook
+  useRealtimeCaseSync(purchaseCase?.id, () => loadCaseData());
 
   useEffect(() => {
     if (user && caseNumber) {
       loadCaseData();
-      setupRealtimeSubscriptions();
     }
-
-    return () => {
-      // Cleanup subscriptions
-      RealtimeNotificationService.unsubscribeAll();
-    };
   }, [user, caseNumber]);
 
   const loadCaseData = async () => {
@@ -204,6 +203,22 @@ const VendeurCaseTrackingModernFixed = () => {
         console.warn('⚠️ Erreur historique:', error);
       }
 
+      // 7b. Charger le timeline (événements réels)
+      try {
+        const { data: timelineData, error: timelineError } = await supabase
+          .from('purchase_case_timeline')
+          .select('*')
+          .eq('case_id', caseData.id)
+          .order('created_at', { ascending: false});
+        
+        if (!timelineError) {
+          setTimeline(timelineData || []);
+          console.log('📊 Timeline chargé:', timelineData?.length, 'événements');
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur timeline:', error);
+      }
+
       // 8. Charger les paiements (si user_id disponible)
       if (requestData?.user_id) {
         try {
@@ -226,16 +241,6 @@ const VendeurCaseTrackingModernFixed = () => {
       toast.error('Erreur lors du chargement du dossier');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const setupRealtimeSubscriptions = () => {
-    try {
-      // Don't use setupCaseTracking with auto-reload - causes page refresh on every message
-      // Instead, rely on granular subscriptions (messages, documents) that update state directly
-      console.log('✅ Realtime subscriptions configured (granular updates without full reload)');
-    } catch (error) {
-      console.error('Erreur setup Realtime:', error);
     }
   };
 
@@ -517,6 +522,7 @@ const VendeurCaseTrackingModernFixed = () => {
                   financingApproved={purchaseCase?.financing_approved || false}
                   completedStages={WorkflowStatusService.getCompletedStages(purchaseCase?.status || 'initiated')}
                   history={history}
+                  timeline={timeline}
                 />
               </CardContent>
             </Card>

@@ -50,6 +50,7 @@ const VendeurCaseTrackingModern = () => {
   const [appointments, setAppointments] = useState([]);
   const [payments, setPayments] = useState([]);
   const [history, setHistory] = useState([]);
+  const [timeline, setTimeline] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
   // Real-time sync hook for case changes
@@ -189,6 +190,26 @@ const VendeurCaseTrackingModern = () => {
       } catch (error) {
         console.warn('⚠️ Erreur chargement historique:', error);
         setHistory([]);
+      }
+
+      // ✅ NOUVEAU: Charger les événements timeline
+      try {
+        console.log('📊 [VENDEUR] Chargement timeline events...');
+        const { data: timelineData, error: timelineError } = await supabase
+          .from('purchase_case_timeline')
+          .select('*')
+          .eq('case_id', caseData.id)
+          .order('created_at', { ascending: true });
+        
+        if (timelineError) {
+          console.error('❌ [VENDEUR] Erreur timeline:', timelineError);
+        } else {
+          console.log('✅ [VENDEUR] Timeline chargé:', timelineData?.length, 'événements');
+          setTimeline(timelineData || []);
+        }
+      } catch (error) {
+        console.warn('⚠️ Erreur chargement timeline:', error);
+        setTimeline([]);
       }
 
       // ✅ CORRECTION 8: Charger paiements avec try-catch
@@ -458,6 +479,7 @@ const VendeurCaseTrackingModern = () => {
                   financingApproved={purchaseCase?.financing_approved || false}
                   completedStages={WorkflowStatusService.getCompletedStages(purchaseCase?.status || 'initiated')}
                   history={history}
+                  timeline={timeline}
                 />
               </CardContent>
             </Card>

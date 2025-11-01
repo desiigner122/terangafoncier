@@ -86,6 +86,54 @@ export const useRealtimeCaseSync = (caseId, onDataChange, dependencies = []) => 
 
       subscriptionsRef.current.push(msgChannel);
 
+      // Subscribe to purchase_case_timeline updates (for timeline/audit trail)
+      const timelineChannel = supabase
+        .channel(`realtime:purchase_case_timeline:${caseId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'purchase_case_timeline',
+            filter: `case_id=eq.${caseId}`
+          },
+          () => {
+            console.log('📡 Realtime: purchase_case_timeline changed');
+            onDataChange?.();
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Subscribed to purchase_case_timeline realtime');
+          }
+        });
+
+      subscriptionsRef.current.push(timelineChannel);
+
+      // Subscribe to purchase_case_history updates (for status history)
+      const historyChannel = supabase
+        .channel(`realtime:purchase_case_history:${caseId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'purchase_case_history',
+            filter: `case_id=eq.${caseId}`
+          },
+          () => {
+            console.log('📡 Realtime: purchase_case_history changed');
+            onDataChange?.();
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Subscribed to purchase_case_history realtime');
+          }
+        });
+
+      subscriptionsRef.current.push(historyChannel);
+
       return () => {
         // Cleanup all subscriptions on unmount or dependency change
         subscriptionsRef.current.forEach((channel) => {

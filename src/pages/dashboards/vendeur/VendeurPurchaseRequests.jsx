@@ -45,6 +45,7 @@ import { toast } from 'sonner';
 import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
 import NotificationService from '@/services/NotificationService';
 import RealtimeSyncService from '@/services/RealtimeSyncService';
+import WorkflowStatusService from '@/services/WorkflowStatusService';
 import NegotiationModal from '@/components/modals/NegotiationModal';
 import RequestDetailsModal from '@/components/modals/RequestDetailsModal';
 
@@ -970,6 +971,39 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     }
   };
 
+  // Calculer le pourcentage de progression pour une demande
+  const calculateProgress = (request) => {
+    // Si le dossier existe, utiliser le status du dossier (plus précis)
+    const status = request.caseStatus || request.status;
+    
+    if (!status) return 0;
+    
+    // Utiliser le service pour calculer depuis le statut
+    const stages = WorkflowStatusService.chronologicalOrder;
+    const normalizedStatus = WorkflowStatusService.normalizeStatus(status);
+    const currentIndex = stages.indexOf(normalizedStatus);
+    
+    if (currentIndex === -1) {
+      // Si statut inconnu, vérifier si c'est terminal
+      if (normalizedStatus === 'completed') return 100;
+      if (normalizedStatus === 'rejected' || normalizedStatus === 'cancelled') return 0;
+      // Par défaut pour 'pending', 'initiated'
+      return 7; // 1/14 stages ≈ 7%
+    }
+    
+    // Calculer pourcentage: (index + 1) / total stages * 100
+    const percentage = Math.round(((currentIndex + 1) / stages.length) * 100);
+    return percentage;
+  };
+
+  // Obtenir la couleur du badge de progression
+  const getProgressColor = (percentage) => {
+    if (percentage >= 100) return 'bg-emerald-500';
+    if (percentage >= 70) return 'bg-green-500';
+    if (percentage >= 40) return 'bg-amber-500';
+    return 'bg-orange-500';
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 p-3 sm:p-4 lg:p-6">
       {/* En-tête moderne */}
@@ -1170,6 +1204,17 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                                 {getPaymentMethodIcon(request.payment_method)}
                                 <span className="ml-1">{getPaymentMethodLabel(request.payment_method)}</span>
                               </Badge>
+                              {/* 🎯 NOUVEAU: Afficher le pourcentage de progression */}
+                              {request.hasCase && (() => {
+                                const progress = calculateProgress(request);
+                                const progressColor = getProgressColor(progress);
+                                return (
+                                  <Badge className={`${progressColor} text-white border-0 font-semibold`}>
+                                    <Sparkles className="w-3 h-3 mr-1" />
+                                    {progress}% complété
+                                  </Badge>
+                                );
+                              })()}
                             </div>
                             <div className="flex items-center gap-4 text-sm text-slate-600 flex-wrap">
                               {request.buyer_email && (

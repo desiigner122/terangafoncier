@@ -91,6 +91,7 @@ const CaseTrackingUnified = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [surveyingMission, setSurveyingMission] = useState(null);
+  const [timeline, setTimeline] = useState([]);
 
   // États des modals
   const [showAgentModal, setShowAgentModal] = useState(false);
@@ -123,6 +124,24 @@ const CaseTrackingUnified = () => {
         hasSurveying: data.hasSurveying,
         participants: Object.keys(data.participants).filter(k => data.participants[k])
       });
+
+      // ✅ NOUVEAU: Charger les événements timeline
+      if (data.purchaseCase?.id) {
+        console.log('📊 [UNIFIED] Chargement timeline events...');
+        const { supabase } = await import('@/lib/supabaseClient');
+        const { data: timelineData, error: timelineError } = await supabase
+          .from('purchase_case_timeline')
+          .select('*')
+          .eq('case_id', data.purchaseCase.id)
+          .order('created_at', { ascending: true });
+        
+        if (timelineError) {
+          console.error('❌ [UNIFIED] Erreur timeline:', timelineError);
+        } else {
+          console.log('✅ [UNIFIED] Timeline chargé:', timelineData?.length, 'événements');
+          setTimeline(timelineData || []);
+        }
+      }
     } catch (error) {
       console.error('❌ Erreur chargement dossier:', error);
       toast.error('Impossible de charger le dossier');
@@ -569,7 +588,12 @@ const CaseTrackingUnified = () => {
 
         {/* Timeline */}
         <TabsContent value="timeline">
-          <TimelineTrackerModern caseId={caseData?.id || caseIdentifier} />
+          <TimelineTrackerModern 
+            caseId={caseData?.id || caseIdentifier}
+            currentStatus={caseData?.status || 'initiated'}
+            timeline={timeline}
+            paymentMethod={caseData?.payment_method || 'unknown'}
+          />
         </TabsContent>
 
         {/* Documents */}

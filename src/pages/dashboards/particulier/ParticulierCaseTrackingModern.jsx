@@ -55,6 +55,7 @@ const ParticulierCaseTrackingModern = () => {
   const [appointments, setAppointments] = useState([]);
   const [payments, setPayments] = useState([]);
   const [history, setHistory] = useState([]);
+  const [timeline, setTimeline] = useState([]);
   const [newMessage, setNewMessage] = useState('');
 
   // Real-time sync hook for case changes
@@ -200,7 +201,16 @@ const ParticulierCaseTrackingModern = () => {
         .order('created_at', { ascending: false });
       setHistory(historyData || []);
 
-      // 7. Si pas de demande ou user_id indisponible, fallback sur l'utilisateur courant
+      // 7. Charger le timeline (événements réels)
+      const { data: timelineData } = await supabase
+        .from('purchase_case_timeline')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false });
+      setTimeline(timelineData || []);
+      console.log('📊 Timeline chargé:', timelineData?.length, 'événements');
+
+      // 8. Si pas de demande ou user_id indisponible, fallback sur l'utilisateur courant
       if (!payments?.length && user?.id) {
         const { data: paymentsData } = await supabase
           .from('payments')
@@ -497,6 +507,7 @@ const ParticulierCaseTrackingModern = () => {
                   financingApproved={purchaseCase?.financing_approved || false}
                   completedStages={WorkflowStatusService.getCompletedStages(purchaseCase?.status || 'initiated')}
                   history={history}
+                  timeline={timeline}
                 />
               </CardContent>
             </Card>

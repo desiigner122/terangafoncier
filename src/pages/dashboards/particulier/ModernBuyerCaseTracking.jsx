@@ -15,6 +15,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'sonner';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
+import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import {
   Card,
   CardContent,
@@ -62,6 +63,7 @@ const ModernBuyerCaseTracking = () => {
   const [participants, setParticipants] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [messages, setMessages] = useState([]);
+  const [timeline, setTimeline] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
 
@@ -164,6 +166,23 @@ const ModernBuyerCaseTracking = () => {
         setMessages(msgs || []);
       }
 
+      // 7. Load timeline events (NEW)
+      if (purchaseCase.id) {
+        console.log('📊 [BUYER] Chargement timeline events...');
+        const { data: timelineData, error: timelineError } = await supabase
+          .from('purchase_case_timeline')
+          .select('*')
+          .eq('case_id', purchaseCase.id)
+          .order('created_at', { ascending: true });
+        
+        if (timelineError) {
+          console.error('❌ [BUYER] Erreur timeline:', timelineError);
+        } else {
+          console.log('✅ [BUYER] Timeline chargé:', timelineData?.length, 'événements');
+          setTimeline(timelineData || []);
+        }
+      }
+
       setLoading(false);
     } catch (error) {
       console.error('❌ [BUYER] Erreur chargement:', error);
@@ -194,6 +213,28 @@ const ModernBuyerCaseTracking = () => {
 
   const getProgressPercentage = () => {
     if (!caseData?.status) return 0;
+    
+    // Si on a des événements timeline, compter les étapes complétées
+    if (timeline && timeline.length > 0) {
+      const stages = ['initiated', 'buyer_verification', 'seller_notification', 'negotiation',
+        'preliminary_agreement', 'contract_preparation', 'legal_verification', 'document_audit',
+        'property_evaluation', 'notary_appointment', 'signing_process', 'payment_processing',
+        'property_transfer', 'completed'];
+      
+      const completedStages = timeline.filter(event => {
+        if (event.event_type !== 'status_change') return false;
+        const targetStatus = event.metadata?.to_status || event.metadata?.new_status;
+        return stages.includes(targetStatus);
+      });
+      
+      const uniqueCompletedStatuses = new Set(
+        completedStages.map(evt => evt.metadata?.to_status || evt.metadata?.new_status)
+      );
+      
+      return Math.round((uniqueCompletedStatuses.size / stages.length) * 100);
+    }
+    
+    // Fallback: utiliser workflowStages
     const stageIndex = workflowStages.findIndex(s => s.key === caseData.status);
     return ((stageIndex + 1) / workflowStages.length) * 100;
   };
@@ -270,7 +311,7 @@ const ModernBuyerCaseTracking = () => {
         </Card>
       </motion.div>
 
-      {/* TIMELINE */}
+      {/* TIMELINE - Utilise maintenant TimelineTrackerModern avec événements réels */}
       <motion.div
         initial={{ opacity: 0 }}
         animate={{ opacity: 1 }}
@@ -281,66 +322,12 @@ const ModernBuyerCaseTracking = () => {
             <CardTitle className="text-lg">Étapes du processus</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-2">
-              {workflowStages.map((stage, idx) => {
-                const isCompleted =
-                  workflowStages.findIndex(s => s.key === caseData.status) >= idx;
-                const isCurrent = stage.key === caseData.status;
-                const Icon = stage.icon;
-
-                return (
-                  <motion.div
-                    key={stage.key}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: idx * 0.03 }}
-                    className={`flex items-center gap-3 p-2 rounded-lg transition-colors ${
-                      isCurrent
-                        ? 'bg-blue-50 border border-blue-200'
-                        : isCompleted
-                        ? 'bg-green-50 border border-green-200'
-                        : 'bg-gray-50 border border-gray-200'
-                    }`}
-                  >
-                    <div
-                      className={`p-2 rounded-lg ${
-                        isCurrent
-                          ? 'bg-blue-100'
-                          : isCompleted
-                          ? 'bg-green-100'
-                          : 'bg-gray-100'
-                      }`}
-                    >
-                      <Icon
-                        className={`w-4 h-4 ${
-                          isCurrent
-                            ? 'text-blue-600'
-                            : isCompleted
-                            ? 'text-green-600'
-                            : 'text-gray-600'
-                        }`}
-                      />
-                    </div>
-                    <div>
-                      <p
-                        className={`font-medium ${
-                          isCurrent
-                            ? 'text-blue-900'
-                            : isCompleted
-                            ? 'text-green-900'
-                            : 'text-gray-900'
-                        }`}
-                      >
-                        {stage.label}
-                      </p>
-                    </div>
-                    {isCompleted && (
-                      <CheckCircle2 className="w-4 h-4 text-green-600 ml-auto" />
-                    )}
-                  </motion.div>
-                );
-              })}
-            </div>
+            <TimelineTrackerModern
+              currentStatus={caseData.status}
+              timeline={timeline}
+              paymentMethod={caseData.payment_method || 'unknown'}
+              compact={false}
+            />
           </CardContent>
         </Card>
       </motion.div>

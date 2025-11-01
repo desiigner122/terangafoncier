@@ -48,6 +48,7 @@ const STATUS_CONFIG = {
  * @param {boolean} props.financingApproved - Si financement bancaire approuvé
  * @param {Array} props.completedStages - Stages complétés (pas utilisé, on calcule à partir de currentStatus)
  * @param {Array} props.history - Historique des changements
+ * @param {Array} props.timeline - Événements réels du timeline (purchase_case_timeline)
  * @param {boolean} props.compact - Mode compact (horizontal)
  */
 export const TimelineTracker = ({
@@ -56,7 +57,8 @@ export const TimelineTracker = ({
   financingApproved = false,
   completedStages = [],
   history = [],
-  compact = false,
+  timeline = [],
+  compact = false
 }) => {
   // Construire la timeline basée sur le vrai workflow
   const timelineStages = useMemo(() => {
@@ -91,15 +93,49 @@ export const TimelineTracker = ({
       return financingApproved ? 'completed' : 'pending';
     }
 
-    // Utiliser le service pour obtenir les étapes complétées
-    const completedFromService = WorkflowStatusService.getCompletedStages(currentStatus);
-    
-    if (completedFromService.includes(stageId)) {
-      return 'completed';
+    // 1. PRIORITÉ: Utiliser les événements réels du timeline
+    if (timeline && timeline.length > 0) {
+      // Chercher un événement de type 'status_change' pour ce stage
+      const stageEvent = timeline.find(event => {
+        if (event.event_type !== 'status_change') return false;
+        
+        // Vérifier dans metadata (to_status prioritaire, puis new_status)
+        if (event.metadata?.to_status === stageId) return true;
+        if (event.metadata?.new_status === stageId) return true;
+        
+        // Vérifier dans description (pour compatibilité avec anciens événements)
+        if (typeof event.description === 'string') {
+          try {
+            const desc = JSON.parse(event.description);
+            if (desc.to_status === stageId || desc.new_status === stageId) return true;
+          } catch (e) {
+            // Ignorer les erreurs de parsing
+          }
+        }
+        
+        return false;
+      });
+      
+      if (stageEvent) {
+        return 'completed';
+      }
     }
+
+    // 2. Vérifier si c'est l'étape actuelle
     if (currentStatus === stageId) {
       return 'in_progress';
     }
+
+    // 3. FALLBACK intelligent: Utiliser le service UNIQUEMENT si pas de timeline
+    if (!timeline || timeline.length === 0) {
+      const completedFromService = WorkflowStatusService.getCompletedStages(currentStatus);
+      
+      if (completedFromService.includes(stageId)) {
+        return 'completed';
+      }
+    }
+    
+    // 4. Par défaut, étape en attente
     return 'pending';
   };
 

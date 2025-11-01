@@ -31,6 +31,8 @@ import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging'
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import ContractGenerator from '@/components/purchase/ContractGenerator';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
+import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
+import AdvancedCaseTrackingService from '@/services/AdvancedCaseTrackingService';
 
 const STATUS_META = {
   initiated: { label: 'Initié', color: 'bg-gray-500', progress: 10 },
@@ -59,11 +61,17 @@ const NotaireCaseDetailModern = () => {
   const [caseData, setCaseData] = useState(null);
   const [activeTab, setActiveTab] = useState('overview');
   const [documents, setDocuments] = useState([]);
+  const [timeline, setTimeline] = useState([]);
   const [showContractDialog, setShowContractDialog] = useState(false);
   const [showAppointmentDialog, setShowAppointmentDialog] = useState(false);
   const [showStatusDialog, setShowStatusDialog] = useState(false);
   const [updatingStatus, setUpdatingStatus] = useState(false);
-  const [realtimeBound, setRealtimeBound] = useState(false);
+
+  // Use unified realtime sync hook
+  useRealtimeCaseSync(caseId, () => {
+    loadCaseDetails();
+    loadDocuments();
+  });
 
   // Ensure notary participant is marked active (not pending) for this case
   const ensureNotaryParticipantActive = async () => {
@@ -110,52 +118,6 @@ const NotaireCaseDetailModern = () => {
     }
   }, [caseId, user]);
 
-  // Realtime sync for case status and documents
-  useEffect(() => {
-    if (!caseId || !user || realtimeBound) return;
-
-    try {
-      const caseChannel = supabase
-        .channel(`realtime:purchase_cases:${caseId}`)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'purchase_cases',
-          filter: `id=eq.${caseId}`
-        }, () => {
-          // Refresh case on any change
-          loadCaseDetails();
-        })
-        .subscribe();
-
-      const docsChannel = supabase
-        .channel(`realtime:purchase_case_documents:${caseId}`)
-        .on('postgres_changes', {
-          event: '*',
-          schema: 'public',
-          table: 'purchase_case_documents',
-          filter: `case_id=eq.${caseId}`
-        }, () => {
-          // Refresh docs on any change
-          loadDocuments();
-        })
-        .subscribe();
-
-      setRealtimeBound(true);
-
-      return () => {
-        try {
-          supabase.removeChannel(caseChannel);
-          supabase.removeChannel(docsChannel);
-        } catch (_) {
-          // ignore cleanup errors
-        }
-      };
-    } catch (_) {
-      // ignore realtime bind errors
-    }
-  }, [caseId, user, realtimeBound]);
-
   const loadCaseDetails = async () => {
     try {
       setLoading(true);
@@ -181,6 +143,15 @@ const NotaireCaseDetailModern = () => {
 
       // Charger les documents
       loadDocuments();
+
+      // Charger le timeline
+      const { data: timelineData } = await supabase
+        .from('purchase_case_timeline')
+        .select('*')
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false});
+      setTimeline(timelineData || []);
+      console.log('📊 Timeline chargé:', timelineData?.length, 'événements');
 
   // S'assurer que le notaire n'est pas marqué "en attente" côté participants
   ensureNotaryParticipantActive();
@@ -251,6 +222,8 @@ const NotaireCaseDetailModern = () => {
     try {
       setUpdatingStatus(true);
       
+      const oldStatus = caseData?.status;
+      
       const { error } = await supabase
         .from('purchase_cases')
         .update({ 
@@ -260,6 +233,20 @@ const NotaireCaseDetailModern = () => {
         .eq('id', caseId);
 
       if (error) throw error;
+
+      // Enregistrer l'événement dans le timeline
+      await AdvancedCaseTrackingService.logTimelineEvent(
+        caseId,
+        'status_change',
+        `Statut mis à jour: ${WorkflowStatusService.getLabel(newStatus)}`,
+        {
+          old_status: oldStatus,
+          new_status: newStatus,
+          to_status: newStatus,
+          changed_by: 'notary',
+          changed_by_id: user?.id
+        }
+      );
 
       // Recharger les données
       await loadCaseDetails();
@@ -419,6 +406,33 @@ const NotaireCaseDetailModern = () => {
   }
 
   const statusConfig = STATUS_META[caseData.status] || STATUS_META.initiated;
+  
+  // Calculer le vrai pourcentage basé sur les événements timeline
+  const calculateRealProgress = () => {
+    if (!timeline || timeline.length === 0) {
+      // Fallback: utiliser la position dans chronologicalOrder
+      const stages = WorkflowStatusService.chronologicalOrder;
+      const currentIndex = stages.indexOf(caseData?.status || 'initiated');
+      return Math.round(((currentIndex + 1) / stages.length) * 100);
+    }
+    
+    // Compter les étapes complétées via les événements timeline
+    const stages = WorkflowStatusService.chronologicalOrder;
+    const completedStages = timeline.filter(event => {
+      if (event.event_type !== 'status_change') return false;
+      const targetStatus = event.metadata?.to_status || event.metadata?.new_status;
+      return stages.includes(targetStatus);
+    });
+    
+    // Utiliser les statuts uniques complétés
+    const uniqueCompletedStatuses = new Set(
+      completedStages.map(evt => evt.metadata?.to_status || evt.metadata?.new_status)
+    );
+    
+    return Math.round((uniqueCompletedStatuses.size / stages.length) * 100);
+  };
+  
+  const realProgress = calculateRealProgress();
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -455,10 +469,10 @@ const NotaireCaseDetailModern = () => {
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm text-gray-600 dark:text-gray-400">Progression</span>
               <span className="text-sm font-semibold text-gray-900 dark:text-white">
-                {statusConfig.progress}%
+                {realProgress}%
               </span>
             </div>
-            <Progress value={statusConfig.progress} className="h-2" />
+            <Progress value={realProgress} className="h-2" />
           </div>
         </div>
       </div>
@@ -846,6 +860,7 @@ const NotaireCaseDetailModern = () => {
                       financingApproved={caseData?.financing_approved || false}
                       completedStages={WorkflowStatusService.getCompletedStages(caseData?.status || 'initiated')}
                       history={[]}
+                      timeline={timeline}
                     />
                   </CardContent>
                 </Card>

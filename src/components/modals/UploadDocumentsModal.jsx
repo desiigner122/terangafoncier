@@ -41,6 +41,10 @@ const UploadDocumentsModal = ({
     proof_of_address: 'Justificatif de domicile',
   };
 
+  // Types de documents par défaut si non spécifiés
+  const defaultDocumentTypes = ['title_deed', 'land_certificate', 'tax_receipts'];
+  const requiredDocTypes = documentTypes || action?.requiredDocuments || defaultDocumentTypes;
+
   /**
    * Gérer la sélection de fichier
    */
@@ -157,19 +161,19 @@ const UploadDocumentsModal = ({
           user_id: caseData.notaire_id,
           type: 'documents_uploaded',
           title: 'Nouveaux documents uploadés',
-          message: `Le vendeur a fourni ${documentTypes.length} document(s) pour le dossier ${caseData.case_number}`,
+          message: `Le vendeur a fourni ${requiredDocTypes.length} document(s) pour le dossier ${caseData.case_number}`,
           link: `/notaire/dossier/${caseData.case_number}`,
           metadata: {
             case_id: caseData.id,
             case_number: caseData.case_number,
-            document_types: documentTypes,
-            uploaded_count: documentTypes.length,
+            document_types: requiredDocTypes,
+            uploaded_count: requiredDocTypes.length,
           },
         });
       }
 
       toast.success('✅ Documents uploadés avec succès', {
-        description: `${documentTypes.length} document(s) envoyé(s)`,
+        description: `${requiredDocTypes.length} document(s) envoyé(s)`,
         duration: 4000,
       });
 
@@ -200,7 +204,7 @@ const UploadDocumentsModal = ({
 
         <div className="space-y-6 py-4">
           {/* Liste des documents à uploader */}
-          {documentTypes.map((docType) => (
+          {requiredDocTypes.map((docType) => (
             <div key={docType} className="border rounded-lg p-4 space-y-3">
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">
@@ -271,7 +275,7 @@ const UploadDocumentsModal = ({
           {Object.keys(files).length > 0 && (
             <div className="bg-blue-50 rounded-lg p-3">
               <p className="text-sm text-blue-800">
-                {Object.keys(files).length} / {documentTypes.length} document(s) sélectionné(s)
+                {Object.keys(files).length} / {requiredDocTypes.length} document(s) sélectionné(s)
               </p>
             </div>
           )}
@@ -287,7 +291,7 @@ const UploadDocumentsModal = ({
           </Button>
           <Button
             onClick={handleUpload}
-            disabled={Object.keys(files).length !== documentTypes.length || loading}
+            disabled={Object.keys(files).length !== requiredDocTypes.length || loading}
             className="bg-blue-600 hover:bg-blue-700"
           >
             {loading ? (
@@ -298,7 +302,7 @@ const UploadDocumentsModal = ({
             ) : (
               <>
                 <Upload className="h-4 w-4 mr-2" />
-                Envoyer les documents ({Object.keys(files).length}/{documentTypes.length})
+                Envoyer les documents ({Object.keys(files).length}/{requiredDocTypes.length})
               </>
             )}
           </Button>

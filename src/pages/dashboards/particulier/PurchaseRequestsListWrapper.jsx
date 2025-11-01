@@ -53,23 +53,92 @@ const PurchaseRequestsListWrapper = () => {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from('purchase_requests')
+      // ✅ NOUVEAU: Charger depuis purchase_cases (dossiers créés après acceptation)
+      const { data: casesData, error: casesError } = await supabase
+        .from('purchase_cases')
         .select(`
-          *,
-          property:properties(id, title, reference, price, city, images),
+          id,
+          case_number,
+          status,
+          created_at,
+          proposed_price,
+          buyer_id,
+          seller_id,
+          parcelle_id,
+          parcelle:parcels!parcelle_id(id, title, reference, price, city, images, seller_id),
           seller:profiles!seller_id(id, first_name, last_name, email)
         `)
         .eq('buyer_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('❌ Erreur chargement purchase requests:', error);
-        // Utiliser données mockées
-        setPurchaseRequests(getMockPurchaseRequests());
-      } else {
-        setPurchaseRequests(data || getMockPurchaseRequests());
-      }
+      // ✅ NOUVEAU: Charger depuis requests (demandes en attente d'acceptation)
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('requests')
+        .select(`
+          id,
+          user_id,
+          status,
+          created_at,
+          offered_price,
+          parcel_id,
+          metadata
+        `)
+        .eq('user_id', user.id)
+        .in('type', ['one_time', 'installment', 'bank'])
+        .order('created_at', { ascending: false });
+
+      // Charger infos des parcelles pour les requests
+      const requestsWithParcels = await Promise.all(
+        (requestsData || []).map(async (req) => {
+          if (req.parcel_id) {
+            const { data: parcel } = await supabase
+              .from('parcels')
+              .select('id, title, reference, price, city, images, seller_id')
+              .eq('id', req.parcel_id)
+              .single();
+
+            const { data: seller } = await supabase
+              .from('profiles')
+              .select('id, first_name, last_name, email')
+              .eq('id', parcel?.seller_id)
+              .single();
+
+            return {
+              id: req.id,
+              case_number: `REQ-${req.id.slice(0, 8)}`,
+              status: req.status,
+              created_at: req.created_at,
+              proposed_price: req.offered_price,
+              property: parcel,
+              parcelle: parcel,
+              seller: seller,
+              source: 'request' // Identifier la source
+            };
+          }
+          return null;
+        })
+      );
+
+      // Formater les cases
+      const formattedCases = (casesData || []).map(c => ({
+        ...c,
+        property: c.parcelle,
+        source: 'purchase_case' // Identifier la source
+      }));
+
+      // Combiner et trier par date
+      const allRequests = [
+        ...formattedCases,
+        ...requestsWithParcels.filter(r => r !== null)
+      ].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+
+      console.log('✅ Demandes chargées:', {
+        cases: casesData?.length || 0,
+        requests: requestsWithParcels.filter(r => r).length,
+        total: allRequests.length
+      });
+
+      setPurchaseRequests(allRequests.length > 0 ? allRequests : getMockPurchaseRequests());
 
     } catch (error) {
       console.error('❌ Erreur:', error);

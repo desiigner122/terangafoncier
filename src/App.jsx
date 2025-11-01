@@ -12,6 +12,7 @@ import MaintenanceWrapper from '@/components/MaintenanceWrapper';
 import { useTitleByRoute } from '@/hooks/usePageTitle';
 import GlobalAIAssistant from '@/components/ai/GlobalAIAssistant';
 import PremiumAIChatbot from '@/components/ai/PremiumAIChatbot';
+import FloatingWhatsAppButton from '@/components/layout/FloatingWhatsAppButton';
 import FonctionnalitesAvanceesPage from '@/pages/FonctionnalitesAvanceesPage';
 import ModernHeader from '@/components/layout/ModernHeader';
 import BlockchainFooter from '@/components/layout/BlockchainFooter';
@@ -891,6 +892,9 @@ function App() {
           </Routes>
           <Toaster />
           <ToastProvider />
+          
+          {/* BOUTON WHATSAPP FLOTTANT */}
+          <FloatingWhatsAppButton />
           
           {/* IA CONVERSATIONNELLE PREMIUM */}
           <PremiumAIChatbot />

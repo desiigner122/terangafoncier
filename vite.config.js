@@ -256,6 +256,7 @@ export default defineConfig({
 		'process.env': process.env
 	},
 	build: {
+		sourcemap: true,
 		rollupOptions: {
 			external: [
 				'@babel/parser',

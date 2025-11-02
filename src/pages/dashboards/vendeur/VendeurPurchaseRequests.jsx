@@ -24,7 +24,8 @@ import {
   Wallet,
   ArrowUpRight,
   ArrowDownRight,
-  Sparkles
+  Sparkles,
+  Package
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -349,7 +350,8 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       console.log('🔄 [ACCEPT] Mise à jour locale du statut → accepted');
       setRequests(prevRequests =>
         prevRequests.map(req =>
-          req.id === requestId 
+          // Mettre à jour en se basant sur l'id de la request OU l'id interne (transactions)
+          (req.id === requestId || req.request_id === requestId)
             ? { ...req, status: 'accepted', caseNumber: purchaseCase.case_number, hasCase: true }
             : req
         )
@@ -975,22 +977,17 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     
     if (!status) return 0;
     
-    // Utiliser le service pour calculer depuis le statut
-    const stages = WorkflowStatusService.chronologicalOrder;
-    const normalizedStatus = WorkflowStatusService.normalizeStatus(status);
-    const currentIndex = stages.indexOf(normalizedStatus);
-    
-    if (currentIndex === -1) {
-      // Si statut inconnu, vérifier si c'est terminal
-      if (normalizedStatus === 'completed') return 100;
-      if (normalizedStatus === 'rejected' || normalizedStatus === 'cancelled') return 0;
-      // Par défaut pour 'pending', 'initiated'
-      return 7; // 1/14 stages ≈ 7%
+    // Si c'est juste une request (pas encore de case), retourner 5-15% selon statut
+    if (!request.hasCase) {
+      if (status === 'pending' || status === 'initiated') return 5;
+      if (status === 'negotiation') return 10;
+      if (status === 'accepted') return 15; // Accepté mais case pas encore créé
+      if (status === 'rejected' || status === 'cancelled') return 0;
+      return 5;
     }
     
-    // Calculer pourcentage: (index + 1) / total stages * 100
-    const percentage = Math.round(((currentIndex + 1) / stages.length) * 100);
-    return percentage;
+    // Utiliser le service pour calculer depuis le statut du case
+    return WorkflowStatusService.calculateProgressFromStatus(status);
   };
 
   // Obtenir la couleur du badge de progression
@@ -1257,77 +1254,172 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                           </DropdownMenu>
                         </div>
 
-                        {/* Terrain */}
+                        {/* Terrain - Version complète avec image */}
                         <div className="bg-gradient-to-br from-slate-50 to-blue-50 rounded-xl p-4 mb-4 border border-slate-200">
-                          <div className="flex items-center gap-3">
-                            <div className="p-2 bg-white rounded-lg shadow-sm">
-                              <Building2 className="w-5 h-5 text-blue-600" />
-                            </div>
-                            <div className="flex-1">
-                              <p className="font-semibold text-slate-900">
-                                {request.parcels?.title || request.parcels?.name || 'Propriété'}
-                              </p>
-                              <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
-                                {request.parcels?.location && (
-                                  <span className="flex items-center gap-1">
-                                    <MapPin className="w-3 h-3" />
-                                    {request.parcels.location}
-                                  </span>
-                                )}
-                                {request.parcels?.surface && (
-                                  <span>{request.parcels.surface} m²</span>
-                                )}
-                              </div>
-                            </div>
-                            <div className="text-right">
-                              <p className="text-sm text-slate-600">Offre</p>
-                              {request.negotiation && request.current_price !== request.original_price ? (
-                                <div>
-                                  <p className="text-sm text-slate-500 line-through">
-                                    {formatCurrency(request.original_price)}
-                                  </p>
-                                  <p className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
-                                    {formatCurrency(request.current_price)}
-                                  </p>
-                                  <p className="text-xs text-orange-600 font-medium">Contre-offre</p>
-                                </div>
+                          <div className="flex gap-4">
+                            {/* Image de la propriété */}
+                            <div className="w-32 h-24 rounded-lg overflow-hidden bg-white flex-shrink-0 shadow-sm">
+                              {request.parcels?.image_url || request.parcels?.photo_url ? (
+                                <img
+                                  src={request.parcels.image_url || request.parcels.photo_url}
+                                  alt={request.parcels.title || request.parcels.name}
+                                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                                />
                               ) : (
-                                <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                                  {formatCurrency(request.offered_price)}
-                                </p>
+                                <div className="w-full h-full flex items-center justify-center">
+                                  <Building2 className="w-8 h-8 text-slate-300" />
+                                </div>
                               )}
+                            </div>
+
+                            {/* Détails de la propriété */}
+                            <div className="flex-1 min-w-0">
+                              <div className="flex items-start justify-between gap-3">
+                                <div className="flex-1">
+                                  <p className="font-semibold text-slate-900 mb-1">
+                                    {request.parcels?.title || request.parcels?.name || 'Propriété'}
+                                  </p>
+                                  {/* Référence parcelle */}
+                                  {request.parcels?.id && (
+                                    <p className="text-xs text-slate-500 font-mono mb-2">
+                                      Réf: {request.parcels.id.slice(0, 8).toUpperCase()}
+                                    </p>
+                                  )}
+                                  <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
+                                    {request.parcels?.location && (
+                                      <span className="flex items-center gap-1">
+                                        <MapPin className="w-3 h-3 text-green-600" />
+                                        {request.parcels.location}
+                                      </span>
+                                    )}
+                                    {request.parcels?.surface && (
+                                      <span className="flex items-center gap-1">
+                                        <Package className="w-3 h-3 text-orange-600" />
+                                        {request.parcels.surface} m²
+                                      </span>
+                                    )}
+                                    {/* Prix de vente original de la parcelle */}
+                                    {request.parcels?.price && (
+                                      <span className="flex items-center gap-1">
+                                        <DollarSign className="w-3 h-3 text-blue-600" />
+                                        Prix: {formatCurrency(request.parcels.price)}
+                                      </span>
+                                    )}
+                                  </div>
+                                </div>
+
+                                {/* Offre/Prix négocié */}
+                                <div className="text-right flex-shrink-0">
+                                  <p className="text-xs text-slate-600 mb-1">Offre d'achat</p>
+                                  {request.negotiation && request.current_price !== request.original_price ? (
+                                    <div>
+                                      <p className="text-sm text-slate-500 line-through">
+                                        {formatCurrency(request.original_price)}
+                                      </p>
+                                      <p className="text-2xl font-bold bg-gradient-to-r from-orange-600 to-red-600 bg-clip-text text-transparent">
+                                        {formatCurrency(request.current_price)}
+                                      </p>
+                                      <p className="text-xs text-orange-600 font-medium">Contre-offre</p>
+                                    </div>
+                                  ) : (
+                                    <p className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                                      {formatCurrency(request.offered_price)}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
                             </div>
                           </div>
                         </div>
 
                         {/* Actions selon le statut */}
                         {/* FIX #1: Check for hasCase first, then check status */}
-                        {(request.hasCase || request.status === 'accepted' || acceptedRequests.has(request.id)) && (
-                          <div className="flex gap-2">
-                            <Button 
-                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl flex-1"
-                              onClick={() => {
-                                const caseNum = request.caseNumber || caseNumbers[request.id];
-                                if (caseNum) {
-                                  navigate(`/vendeur/cases/${caseNum}`);
-                                } else {
-                                  toast.error('Numéro de dossier non disponible');
-                                }
-                              }}
-                            >
-                              <FileText className="w-4 h-4 mr-2" />
-                              👁️ Voir le dossier {request.caseNumber && `(${request.caseNumber})`}
-                            </Button>
+                        {(request.hasCase || request.status === 'accepted' || acceptedRequests.has(request.request_id || request.id)) && (
+                          <div className="space-y-3">
+                            {/* Barre de progression avec statut */}
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <span className="text-slate-500">Progression du dossier</span>
+                                <span className="font-medium text-slate-700">
+                                  {(() => {
+                                    const prog = calculateProgress(request);
+                                    return `${Math.round(prog)}%`;
+                                  })()}
+                                </span>
+                              </div>
+                              <div className="h-2 bg-slate-200 rounded-full overflow-hidden">
+                                <div 
+                                  className={`h-full transition-all duration-500 ${getProgressColor(calculateProgress(request))}`}
+                                  style={{ width: `${calculateProgress(request)}%` }}
+                                />
+                              </div>
+                              <p className="text-xs text-slate-600">
+                                {WorkflowStatusService.getLabel(request.caseStatus || request.status)}
+                              </p>
+                            </div>
+
+                            {/* Actions principales */}
+                            <div className="flex gap-2 flex-wrap">
+                              <Button 
+                                className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl"
+                                onClick={() => {
+                                  const caseNum = request.caseNumber || caseNumbers[request.id];
+                                  if (caseNum) {
+                                    navigate(`/vendeur/cases/${caseNum}`);
+                                  } else {
+                                    toast.error('Numéro de dossier non disponible');
+                                  }
+                                }}
+                              >
+                                <FileText className="w-4 h-4 mr-2" />
+                                Voir le dossier {request.caseNumber && `(${request.caseNumber})`}
+                              </Button>
+                              
+                              {/* Contacter l'acheteur */}
+                              <Button 
+                                variant="outline"
+                                className="rounded-xl border-slate-200"
+                                onClick={() => handleContact(request)}
+                              >
+                                <MessageSquare className="w-4 h-4 mr-2" />
+                                Contacter l'acheteur
+                              </Button>
+                            </div>
+
+                            {/* Actions contextuelles selon l'étape */}
+                            {['deposit_payment', 'fees_payment_pending', 'final_payment_pending'].includes(request.caseStatus) && (
+                              <div className="p-3 bg-amber-50 border-l-4 border-amber-500 rounded-lg">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Clock className="w-4 h-4 text-amber-600" />
+                                  <span className="text-sm font-semibold text-amber-900">En attente de paiement</span>
+                                </div>
+                                <p className="text-xs text-amber-700">
+                                  L'acheteur doit effectuer un paiement pour continuer le processus.
+                                </p>
+                              </div>
+                            )}
+                            
+                            {['signing_appointment', 'contract_preparation'].includes(request.caseStatus) && (
+                              <div className="p-3 bg-blue-50 border-l-4 border-blue-500 rounded-lg">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <Calendar className="w-4 h-4 text-blue-600" />
+                                  <span className="text-sm font-semibold text-blue-900">Phase contractuelle</span>
+                                </div>
+                                <p className="text-xs text-blue-700">
+                                  Préparez vos documents pour la signature chez le notaire.
+                                </p>
+                              </div>
+                            )}
                           </div>
                         )}
 
                         {/* Standard actions for pending requests */}
-                        {request.status === 'pending' && !request.hasCase && !acceptedRequests.has(request.id) && (
+                        {request.status === 'pending' && !request.hasCase && !acceptedRequests.has(request.request_id || request.id) && (
                           <div className="flex gap-2 flex-wrap">
                             <Button 
                               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl"
                               onClick={() => handleAccept(request.request_id || request.id)}
-                              disabled={actionLoading === request.id}
+                              disabled={actionLoading === (request.request_id || request.id)}
                             >
                               <CheckCircle2 className="w-4 h-4 mr-2" />
                               {actionLoading === request.id ? 'Traitement...' : 'Accepter l\'offre'}
@@ -1345,7 +1437,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                               variant="outline" 
                               className="rounded-xl border-red-200 text-red-600 hover:bg-red-50"
                               onClick={() => handleReject(request.request_id || request.id)}
-                              disabled={actionLoading === request.id}
+                              disabled={actionLoading === (request.request_id || request.id)}
                             >
                               <XCircle className="w-4 h-4 mr-2" />
                               Refuser
@@ -1354,7 +1446,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                         )}
                         
                         {/* Demande en négociation */}
-                        {request.status === 'negotiation' && (
+                        {!request.hasCase && !acceptedRequests.has(request.request_id || request.id) && request.status === 'negotiation' && (
                           <div className="flex gap-2 flex-wrap">
                             <Button 
                               variant="outline"
@@ -1368,7 +1460,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                             <Button 
                               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl"
                               onClick={() => handleAccept(request.request_id || request.id)}
-                              disabled={actionLoading === request.id}
+                              disabled={actionLoading === (request.request_id || request.id)}
                             >
                               <CheckCircle2 className="w-4 h-4 mr-2" />
                               Accepter la contre-offre

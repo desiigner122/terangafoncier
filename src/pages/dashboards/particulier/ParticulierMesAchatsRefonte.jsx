@@ -11,7 +11,7 @@ import {
   DollarSign, Calendar, Filter, Search, Download, Home, Building2,
   MapPin, TrendingUp, AlertCircle, Plus, Users, Phone, Mail, Package,
   ChevronRight, Star, Briefcase, FileCheck, ClipboardList, Sparkles,
-  Activity, BarChart3, Zap
+  Activity, BarChart3, Zap, CreditCard
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -566,8 +566,22 @@ const ParticulierMesAchatsRefonte = () => {
     };
   };
 
-  const getProgressPercentage = (status) => {
-    return WorkflowStatusService.calculateProgressFromStatus(status) || 0;
+  const getProgressPercentage = (caseItem) => {
+    const status = caseItem.caseStatus || caseItem.status;
+    
+    if (!status) return 0;
+    
+    // Si c'est juste une request (pas encore de case), retourner 5-15% selon statut
+    if (caseItem.source === 'request' && !caseItem.hasCase) {
+      if (status === 'pending' || status === 'initiated') return 5;
+      if (status === 'negotiation') return 10;
+      if (status === 'accepted') return 15; // Accepté mais case pas encore créé
+      if (status === 'rejected' || status === 'cancelled') return 0;
+      return 5;
+    }
+    
+    // Utiliser le service pour calculer depuis le statut du case
+    return WorkflowStatusService.calculateProgressFromStatus(status);
   };
 
   const formatPrice = (price) => {
@@ -754,7 +768,7 @@ const ParticulierMesAchatsRefonte = () => {
               {filteredCases.map((caseItem, index) => {
                 const statusInfo = getStatusInfo(caseItem.status);
                 const StatusIcon = statusInfo.icon;
-                const progress = getProgressPercentage(caseItem.status);
+                const progress = getProgressPercentage(caseItem);
                 const property = caseItem.property;
                 const seller = caseItem.seller;
 
@@ -816,6 +830,13 @@ const ParticulierMesAchatsRefonte = () => {
                                     <FileText className="w-4 h-4 text-blue-600" />
                                     <span className="font-medium">{caseItem.case_number}</span>
                                   </div>
+                                  {/* Référence de la propriété */}
+                                  {property?.id && (
+                                    <div className="flex items-center gap-1">
+                                      <FileCheck className="w-4 h-4 text-purple-600" />
+                                      <span className="font-mono text-xs">Réf: {property.id.slice(0, 8).toUpperCase()}</span>
+                                    </div>
+                                  )}
                                   {property?.location && (
                                     <div className="flex items-center gap-1">
                                       <MapPin className="w-4 h-4 text-green-600" />
@@ -910,13 +931,74 @@ const ParticulierMesAchatsRefonte = () => {
                                 )}
 
                                 {/* Progress bar */}
-                                <div className="space-y-2">
+                                <div className="space-y-2 mb-4">
                                   <div className="flex items-center justify-between text-xs">
                                     <span className="text-gray-500">Progression</span>
                                     <span className="font-medium text-gray-700">{Math.round(progress)}%</span>
                                   </div>
                                   <Progress value={progress} className="h-2" />
+                                  {/* Statut actuel */}
+                                  <p className="text-xs text-gray-600 mt-1">
+                                    {WorkflowStatusService.getLabel(caseItem.status)}
+                                  </p>
                                 </div>
+
+                                {/* Actions contextuelles selon le statut */}
+                                {caseItem.source === 'purchase_case' && (
+                                  <div className="flex gap-2 flex-wrap">
+                                    <Button
+                                      size="sm"
+                                      className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        navigateToCaseDetail(caseItem);
+                                      }}
+                                    >
+                                      <Eye className="w-4 h-4 mr-2" />
+                                      Voir le dossier complet
+                                    </Button>
+                                    {['deposit_payment', 'fees_payment_pending', 'final_payment_pending'].includes(caseItem.status) && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        className="border-green-300 text-green-700 hover:bg-green-50"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          toast.info('Fonctionnalité de paiement en ligne à venir');
+                                        }}
+                                      >
+                                        <CreditCard className="w-4 h-4 mr-2" />
+                                        Effectuer le paiement
+                                      </Button>
+                                    )}
+                                    {seller && (
+                                      <Button
+                                        size="sm"
+                                        variant="outline"
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          navigate(`/acheteur/messages?seller=${seller.id}`);
+                                        }}
+                                      >
+                                        <MessageSquare className="w-4 h-4 mr-2" />
+                                        Contacter le vendeur
+                                      </Button>
+                                    )}
+                                  </div>
+                                )}
+
+                                {/* Actions pour requests en attente */}
+                                {caseItem.source === 'request' && caseItem.status === 'pending' && (
+                                  <div className="p-3 bg-amber-50 border-l-4 border-amber-500 rounded-lg">
+                                    <div className="flex items-center gap-2 mb-1">
+                                      <Clock className="w-4 h-4 text-amber-600" />
+                                      <span className="text-sm font-semibold text-amber-900">En attente de réponse</span>
+                                    </div>
+                                    <p className="text-xs text-amber-700">
+                                      Le vendeur a été notifié de votre offre. Vous recevrez une notification dès qu'il répondra.
+                                    </p>
+                                  </div>
+                                )}
                               </div>
 
                               {/* Actions */}

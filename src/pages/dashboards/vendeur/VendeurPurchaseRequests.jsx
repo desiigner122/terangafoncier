@@ -644,8 +644,8 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       id: request.id,
       status: request.caseStatus || request.status,
       notaire_id: request.notaire_id, // Utiliser uniquement notaire_id (standard DB)
-      hasAgent: false,
-      hasSurveying: false
+      hasAgent: request.agent_foncier_id !== null,
+      hasSurveying: request.surveying_mission_id !== null
     };
 
     return ContextualActionsService.getAvailableActions(

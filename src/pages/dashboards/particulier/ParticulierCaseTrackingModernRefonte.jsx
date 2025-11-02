@@ -797,11 +797,11 @@ const ParticulierCaseTrackingModernRefonte = () => {
                           </div>
                         )}
                         {/* Prix - support multi-format */}
-                        {(property.price || property.prix || purchaseCase?.purchase_price || purchaseCase?.offered_price) && (
+                        {(property.price || property.prix || purchaseCase?.purchase_price) && (
                           <div className="flex items-center gap-2 text-gray-600">
                             <DollarSign className="w-4 h-4 text-green-600" />
                             <span className="font-bold text-green-700">
-                              {(property.price || property.prix || purchaseCase?.purchase_price || purchaseCase?.offered_price).toLocaleString()} FCFA
+                              {(property.price || property.prix || purchaseCase?.purchase_price).toLocaleString()} FCFA
                             </span>
                           </div>
                         )}

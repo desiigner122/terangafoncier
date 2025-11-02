@@ -135,7 +135,7 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
       id: 'pay_deposit',
       label: 'Payer acompte (10%)',
       icon: 'CreditCard',
-      amount: purchaseCase.deposit_amount || (purchaseCase.offered_price * 0.10),
+      amount: purchaseCase.deposit_amount || (purchaseCase.purchase_price * 0.10),
       description: 'Paiement de l\'acompte',
       handler: 'onPayDeposit'
     });
@@ -147,7 +147,7 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
       id: 'pay_notary_fees',
       label: 'Payer frais de notaire',
       icon: 'Receipt',
-      amount: purchaseCase.notary_fees || (purchaseCase.offered_price * 0.05),
+      amount: purchaseCase.notary_fees || (purchaseCase.purchase_price * 0.05),
       description: 'Frais notaire et enregistrement',
       handler: 'onPayNotaryFees'
     });
@@ -177,8 +177,8 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
 
   // PAYMENTS: Final payment before signature
   if (['final_payment_pending', 'signing_appointment'].includes(status)) {
-    const depositPaid = purchaseCase.deposit_amount || (purchaseCase.offered_price * 0.10);
-    const balance = (purchaseCase.offered_price || 0) - depositPaid;
+    const depositPaid = purchaseCase.deposit_amount || (purchaseCase.purchase_price * 0.10);
+    const balance = (purchaseCase.purchase_price || 0) - depositPaid;
     
     actions[ACTION_CATEGORIES.PAYMENTS].push({
       id: 'pay_balance',

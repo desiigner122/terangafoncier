@@ -970,7 +970,6 @@ const ParticulierMesAchatsRefonte = () => {
                                   <div className="text-2xl font-bold text-blue-600">
                                     {formatPrice(
                                       caseItem.purchase_price || 
-                                      caseItem.offered_price ||
                                       property?.price || 
                                       property?.prix ||
                                       0

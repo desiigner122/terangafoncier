@@ -130,7 +130,7 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
   }
 
   // PAYMENTS: Deposit payment
-  if (['deposit_payment', 'preliminary_agreement', 'title_verification'].includes(status) && permissions.canPayDeposit) {
+  if (['deposit_payment', 'preliminary_agreement', 'title_verification', 'initiated', 'buyer_verification', 'seller_notification'].includes(status)) {
     actions[ACTION_CATEGORIES.PAYMENTS].push({
       id: 'pay_deposit',
       label: 'Payer acompte (10%)',
@@ -142,7 +142,7 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
   }
 
   // PAYMENTS: Notary fees
-  if (['notary_fees_calculation', 'payment_request', 'fees_payment_pending', 'contract_preparation'].includes(status) && permissions.canPayNotaryFees) {
+  if (['notary_fees_calculation', 'payment_request', 'fees_payment_pending', 'contract_preparation', 'title_verification', 'property_survey', 'certificate_verification', 'tax_clearance', 'land_survey'].includes(status)) {
     actions[ACTION_CATEGORIES.PAYMENTS].push({
       id: 'pay_notary_fees',
       label: 'Payer frais de notaire',
@@ -154,7 +154,7 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
   }
 
   // DOCUMENTS: Review contract
-  if (['contract_preparation', 'signing_appointment'].includes(status) && permissions.canReviewContract) {
+  if (['contract_preparation', 'signing_appointment'].includes(status)) {
     actions[ACTION_CATEGORIES.DOCUMENTS].push({
       id: 'review_contract',
       label: 'Consulter le contrat',
@@ -165,7 +165,7 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
   }
 
   // APPOINTMENTS: Confirm appointment
-  if (['signing_appointment'].includes(status) && permissions.canConfirmAppointment) {
+  if (['signing_appointment'].includes(status)) {
     actions[ACTION_CATEGORIES.APPOINTMENTS].push({
       id: 'confirm_appointment',
       label: 'Confirmer rendez-vous',
@@ -176,7 +176,7 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
   }
 
   // PAYMENTS: Final payment before signature
-  if (['final_payment_pending', 'signing_appointment'].includes(status) && permissions.canPayBalance) {
+  if (['final_payment_pending', 'signing_appointment'].includes(status)) {
     const depositPaid = purchaseCase.deposit_amount || (purchaseCase.offered_price * 0.10);
     const balance = (purchaseCase.offered_price || 0) - depositPaid;
     

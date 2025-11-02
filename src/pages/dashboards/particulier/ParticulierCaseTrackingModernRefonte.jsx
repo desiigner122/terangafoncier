@@ -36,6 +36,9 @@ import ContractGenerator from '@/components/purchase/ContractGenerator';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import BuyerActionButtonsSection from '@/components/purchase/BuyerActionButtonsSection';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
+import PaymentModal from '@/components/modals/PaymentModal';
+import UploadDocumentsModal from '@/components/modals/UploadDocumentsModal';
+import NotarySelectionModal from '@/components/modals/NotarySelectionModal';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
 import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
@@ -92,6 +95,13 @@ const ParticulierCaseTrackingModernRefonte = () => {
   const [history, setHistory] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [uploadingDoc, setUploadingDoc] = useState(false);
+
+  // Modal states
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [paymentModalData, setPaymentModalData] = useState(null);
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadModalConfig, setUploadModalConfig] = useState(null);
+  const [showNotaryModal, setShowNotaryModal] = useState(false);
 
   // Use unified realtime sync hook
   useRealtimeCaseSync(purchaseCase?.id, () => loadCaseData());
@@ -400,51 +410,107 @@ const ParticulierCaseTrackingModernRefonte = () => {
     
     switch (action.id) {
       case 'select_notary':
-        toast.info('Sélection du notaire - Fonctionnalité en cours d\'implémentation');
-        // TODO: Ouvrir modal de sélection de notaire
+        setShowNotaryModal(true);
         break;
       
       case 'upload_identity':
-        toast.info('Upload pièce d\'identité - Fonctionnalité en cours d\'implémentation');
-        // TODO: Ouvrir modal d'upload de document
+        setUploadModalConfig({
+          documentTypes: ['identity_card', 'proof_of_address'],
+          action: action,
+          nextStatus: 'buyer_documents_submitted'
+        });
+        setShowUploadModal(true);
         break;
       
       case 'pay_deposit':
-        toast.info(`Paiement acompte de ${action.amount?.toLocaleString()} FCFA - Fonctionnalité en cours d\'implémentation`);
-        // TODO: Ouvrir modal de paiement
+        setPaymentModalData({
+          id: `payment_deposit_${purchaseCase.id}`,
+          request_type: 'deposit',
+          amount: action.amount || (property?.price * 0.10) || 0,
+          description: 'Acompte sur le prix d\'achat (10%)',
+          deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'pending',
+          caseId: purchaseCase.id
+        });
+        setShowPaymentModal(true);
         break;
       
       case 'pay_notary_fees':
-        toast.info(`Paiement frais notaire de ${action.amount?.toLocaleString()} FCFA - Fonctionnalité en cours d\'implémentation`);
-        // TODO: Ouvrir modal de paiement
+        setPaymentModalData({
+          id: `payment_notary_${purchaseCase.id}`,
+          request_type: 'notary_fees',
+          amount: action.amount || (property?.price * 0.05) || 0,
+          description: 'Frais de notaire et frais d\'enregistrement',
+          deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'pending',
+          caseId: purchaseCase.id
+        });
+        setShowPaymentModal(true);
         break;
       
       case 'review_contract':
         toast.info('Révision du contrat - Fonctionnalité en cours d\'implémentation');
-        // TODO: Ouvrir modal de révision de contrat
+        // TODO: Ouvrir ContractGenerator ou vue de révision de contrat
         break;
       
       case 'confirm_appointment':
         toast.info('Confirmation rendez-vous - Fonctionnalité en cours d\'implémentation');
-        // TODO: Ouvrir modal de confirmation de rendez-vous
+        // TODO: Utiliser AppointmentScheduler existant
         break;
       
       case 'pay_balance':
-        toast.info(`Paiement solde de ${action.amount?.toLocaleString()} FCFA - Fonctionnalité en cours d\'implémentation`);
-        // TODO: Ouvrir modal de paiement
+        const depositPaid = (property?.price * 0.10) || 0;
+        const notaryFeesPaid = (property?.price * 0.05) || 0;
+        const balance = (property?.price || 0) - depositPaid;
+        
+        setPaymentModalData({
+          id: `payment_balance_${purchaseCase.id}`,
+          request_type: 'balance',
+          amount: action.amount || balance,
+          description: 'Solde restant du prix d\'achat',
+          deadline: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'pending',
+          caseId: purchaseCase.id
+        });
+        setShowPaymentModal(true);
         break;
       
       case 'choose_agent':
         toast.info('Choix agent foncier - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir AgentSelectionModal
         break;
       
       case 'request_surveying':
         toast.info('Demande bornage - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir GeometreSelectionModal
         break;
       
       default:
         toast.info('Action non implémentée: ' + action.label);
     }
+  };
+
+  // Handler pour succès paiement
+  const handlePaymentSuccess = async () => {
+    toast.success('Paiement effectué avec succès !');
+    setShowPaymentModal(false);
+    setPaymentModalData(null);
+    await loadCaseData(); // Recharger les données
+  };
+
+  // Handler pour succès upload
+  const handleDocumentUploadSuccess = async () => {
+    toast.success('Documents uploadés avec succès !');
+    setShowUploadModal(false);
+    setUploadModalConfig(null);
+    await loadCaseData(); // Recharger les données
+  };
+
+  // Handler pour succès sélection notaire
+  const handleNotarySelected = async (notary) => {
+    toast.success(`Notaire ${notary.profile?.full_name} sélectionné !`);
+    setShowNotaryModal(false);
+    await loadCaseData(); // Recharger les données
   };
 
   const sendMessage = async () => {
@@ -1171,6 +1237,43 @@ const ParticulierCaseTrackingModernRefonte = () => {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {showPaymentModal && paymentModalData && (
+        <PaymentModal
+          isOpen={showPaymentModal}
+          onClose={() => {
+            setShowPaymentModal(false);
+            setPaymentModalData(null);
+          }}
+          paymentRequest={paymentModalData}
+          onSuccess={handlePaymentSuccess}
+        />
+      )}
+
+      {showUploadModal && uploadModalConfig && (
+        <UploadDocumentsModal
+          isOpen={showUploadModal}
+          onClose={() => {
+            setShowUploadModal(false);
+            setUploadModalConfig(null);
+          }}
+          caseData={purchaseCase}
+          documentTypes={uploadModalConfig.documentTypes}
+          action={uploadModalConfig.action}
+          nextStatus={uploadModalConfig.nextStatus}
+          onSuccess={handleDocumentUploadSuccess}
+        />
+      )}
+
+      {showNotaryModal && purchaseCase && (
+        <NotarySelectionModal
+          isOpen={showNotaryModal}
+          onClose={() => setShowNotaryModal(false)}
+          caseId={purchaseCase.id}
+          onNotarySelected={handleNotarySelected}
+        />
+      )}
     </div>
   );
 };

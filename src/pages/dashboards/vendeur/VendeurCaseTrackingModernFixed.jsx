@@ -34,6 +34,8 @@ import ContractGenerator from '@/components/purchase/ContractGenerator';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import SellerActionButtonsSection from '@/components/purchase/SellerActionButtonsSection';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
+import UploadDocumentsModal from '@/components/modals/UploadDocumentsModal';
+import NotarySelectionModal from '@/components/modals/NotarySelectionModal';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
 import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
@@ -55,6 +57,11 @@ const VendeurCaseTrackingModernFixed = () => {
   const [history, setHistory] = useState([]);
   const [timeline, setTimeline] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+
+  // Modal states
+  const [showUploadModal, setShowUploadModal] = useState(false);
+  const [uploadModalConfig, setUploadModalConfig] = useState(null);
+  const [showNotaryModal, setShowNotaryModal] = useState(false);
 
   // Use unified realtime sync hook
   useRealtimeCaseSync(purchaseCase?.id, () => loadCaseData());
@@ -338,28 +345,46 @@ const VendeurCaseTrackingModernFixed = () => {
     
     switch (action.id) {
       case 'select_notary':
-        toast.info('Proposition de notaire - Fonctionnalité en cours d\'implémentation');
-        // TODO: Ouvrir modal de sélection de notaire
+        setShowNotaryModal(true);
         break;
       
       case 'upload_title_deed':
-        toast.info('Upload titre foncier - Fonctionnalité en cours d\'implémentation');
-        // TODO: Ouvrir modal d'upload de document
+        setUploadModalConfig({
+          documentTypes: ['title_deed', 'land_certificate', 'tax_receipts'],
+          action: action,
+          nextStatus: 'seller_documents_submitted'
+        });
+        setShowUploadModal(true);
         break;
       
       case 'validate_contract':
         toast.info('Validation du contrat - Fonctionnalité en cours d\'implémentation');
-        // TODO: Ouvrir modal de validation de contrat
+        // TODO: Utiliser ContractGenerator existant pour afficher et valider le contrat
         break;
       
       case 'confirm_appointment':
         toast.info('Confirmation rendez-vous - Fonctionnalité en cours d\'implémentation');
-        // TODO: Ouvrir modal de confirmation de rendez-vous
+        // TODO: Utiliser AppointmentScheduler existant
         break;
       
       default:
         toast.info('Action non implémentée: ' + action.label);
     }
+  };
+
+  // Handler pour succès upload
+  const handleDocumentUploadSuccess = async () => {
+    toast.success('Documents uploadés avec succès !');
+    setShowUploadModal(false);
+    setUploadModalConfig(null);
+    await loadCaseData(); // Recharger les données
+  };
+
+  // Handler pour succès sélection notaire
+  const handleNotarySelected = async (notary) => {
+    toast.success(`Notaire ${notary.profile?.full_name} proposé !`);
+    setShowNotaryModal(false);
+    await loadCaseData(); // Recharger les données
   };
 
   const sendMessage = async () => {
@@ -1017,6 +1042,31 @@ const VendeurCaseTrackingModernFixed = () => {
           </div>
         </div>
       </div>
+
+      {/* Modals */}
+      {showUploadModal && uploadModalConfig && (
+        <UploadDocumentsModal
+          isOpen={showUploadModal}
+          onClose={() => {
+            setShowUploadModal(false);
+            setUploadModalConfig(null);
+          }}
+          caseData={purchaseCase}
+          documentTypes={uploadModalConfig.documentTypes}
+          action={uploadModalConfig.action}
+          nextStatus={uploadModalConfig.nextStatus}
+          onSuccess={handleDocumentUploadSuccess}
+        />
+      )}
+
+      {showNotaryModal && purchaseCase && (
+        <NotarySelectionModal
+          isOpen={showNotaryModal}
+          onClose={() => setShowNotaryModal(false)}
+          caseId={purchaseCase.id}
+          onNotarySelected={handleNotarySelected}
+        />
+      )}
     </div>
   );
 };

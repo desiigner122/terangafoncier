@@ -294,80 +294,46 @@ class NotaireAssignmentService {
       
       console.log('🎉 [NotaireService] Assignment créé avec succès:', assignment);
       
-      // Mettre à jour le statut du purchase_case si nécessaire
-      const { data: purchaseCase } = await supabase
+      // Ne PAS mettre à jour le statut du purchase_case - attendre l'acceptation du notaire
+      // On met seulement à jour le notaire_id pour référence
+      const { error: updateError } = await supabase
         .from('purchase_cases')
-        .select('status, notaire_id')
-        .eq('id', caseId)
-        .single();
+        .update({ 
+          notaire_id: notaireId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', caseId);
       
-      console.log('📊 [NotaireService] Statut actuel:', purchaseCase?.status);
-      
-      // Mettre à jour le notary_id et avancer le workflow si nécessaire
-      const statusesRequiringNotary = [
-        'buyer_verification',
-        'seller_verification', 
-        'buyer_documents_submitted',
-        'seller_documents_submitted',
-        'pending_approval',
-        'offer_accepted'
-      ];
-      
-      if (statusesRequiringNotary.includes(purchaseCase?.status)) {
-        console.log('📊 [NotaireService] Mise à jour statut purchase_case vers contract_preparation');
-        
-        const { error: updateError } = await supabase
-          .from('purchase_cases')
-          .update({ 
-            status: 'contract_preparation',
-            notaire_id: notaireId,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', caseId);
-        
-        if (updateError) {
-          console.error('❌ [NotaireService] Erreur mise à jour purchase_case:', updateError);
-        } else {
-          console.log('✅ [NotaireService] Purchase case mis à jour avec succès');
-        }
-        
-        // Créer événement timeline
-        const { error: timelineError } = await supabase
-          .from('purchase_case_timeline')
-          .insert({
-            case_id: caseId,
-            event_type: 'status_change',
-            title: 'Préparation du contrat',
-            description: `${proposedByRole === 'buyer' ? 'L\'acheteur' : 'Le vendeur'} a sélectionné un notaire. La préparation du contrat peut commencer.`,
-            triggered_by: proposedBy,
-            old_value: { status: purchaseCase?.status },
-            new_value: { status: 'contract_preparation' },
-            metadata: {
-              notaire_id: notaireId,
-              assignment_id: assignment.id,
-              proposed_by_role: proposedByRole
-            }
-          });
-        
-        if (timelineError) {
-          console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
-        } else {
-          console.log('✅ [NotaireService] Timeline event créé');
-        }
+      if (updateError) {
+        console.error('❌ [NotaireService] Erreur mise à jour notaire_id:', updateError);
       } else {
-        console.log('ℹ️ [NotaireService] Statut ne nécessite pas de changement:', purchaseCase?.status);
-        
-        // Juste mettre à jour le notaire_id sans changer le statut
-        await supabase
-          .from('purchase_cases')
-          .update({ 
-            notaire_id: notaireId,
-            updated_at: new Date().toISOString()
-          })
-          .eq('id', caseId);
+        console.log('✅ [NotaireService] Notaire_id assigné, en attente d\'acceptation');
       }
       
-      // TODO: Envoyer notification (à implémenter)
+      // Créer événement timeline pour la proposition (pas le changement de statut)
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: caseId,
+          event_type: 'notaire_proposed',
+          title: 'Notaire proposé',
+          description: `${proposedByRole === 'buyer' ? 'L\'acheteur' : proposedByRole === 'seller' ? 'Le vendeur' : 'Le système'} a proposé un notaire pour ce dossier. En attente d'acceptation.`,
+          triggered_by: proposedBy,
+          metadata: {
+            notaire_id: notaireId,
+            assignment_id: assignment.id,
+            proposed_by_role: proposedByRole,
+            status: 'pending'
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      } else {
+        console.log('✅ [NotaireService] Timeline event créé');
+      }
+      
+      // TODO: Envoyer notification au notaire (à implémenter)
       // await NotificationService.send({...});
       
       return { success: true, data: assignment };
@@ -413,53 +379,76 @@ class NotaireAssignmentService {
   /**
    * ✅ Notaire accepte le dossier
    */
-  static async acceptAssignment(assignmentId, notaireId, options = {}) {
+  static async acceptAssignment(assignmentId, notaireId, quotedFee = 0, quotedDisbursements = 0, justification = '') {
     try {
-      const { quotedFee = null, feeBreakdown = {}, notes = '' } = options;
+      // 1. Get assignment data first
+      const { data: assignmentData, error: fetchError } = await supabase
+        .from('notaire_case_assignments')
+        .select('case_id, status')
+        .eq('id', assignmentId)
+        .single();
+        
+      if (fetchError) throw fetchError;
       
-      // 1. Mettre à jour l'assignment
+      // 2. Mettre à jour l'assignment
       const { data: assignment, error: updateError } = await supabase
         .from('notaire_case_assignments')
         .update({ 
-          status: 'notaire_accepted',
           notaire_status: 'accepted',
           notaire_responded_at: new Date().toISOString(),
           quoted_fee: quotedFee,
-          fee_breakdown: feeBreakdown,
-          notaire_notes: notes
+          quoted_disbursements: quotedDisbursements,
+          justification: justification
         })
         .eq('id', assignmentId)
         .eq('notaire_id', notaireId)
-        .eq('status', 'both_approved') // Peut accepter que si les 2 parties ont approuvé
-        .select('case_id')
+        .select()
         .single();
       
       if (updateError) throw updateError;
       
-      // 2. Assigner le notaire au dossier
-      const { error: caseError } = await supabase
+      console.log('✅ [NotaireService] Assignment accepté:', assignment);
+      
+      // 3. Mettre à jour le statut du purchase_case vers contract_preparation
+      const { data: purchaseCase, error: caseUpdateError } = await supabase
         .from('purchase_cases')
         .update({
-          notaire_id: notaireId,
-          notaire_accepted_at: new Date().toISOString(),
-          notaire_fees: quotedFee,
-          status: 'notary_assigned'
+          status: 'contract_preparation',
+          updated_at: new Date().toISOString()
         })
-        .eq('id', assignment.case_id);
+        .eq('id', assignmentData.case_id)
+        .select('status')
+        .single();
       
-      if (caseError) throw caseError;
+      if (caseUpdateError) throw caseUpdateError;
       
-      // 3. Incrémenter le compteur du notaire
-      const { error: incrementError } = await supabase.rpc(
-        'increment_notaire_cases', 
-        { p_notaire_id: notaireId }
-      );
+      console.log('✅ [NotaireService] Purchase case statut mis à jour:', purchaseCase);
       
-      if (incrementError) {
-        console.warn('Erreur increment notaire cases:', incrementError);
+      // 4. Créer événement timeline pour l'acceptation
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: assignmentData.case_id,
+          event_type: 'notaire_accepted',
+          title: 'Notaire a accepté le dossier',
+          description: `Le notaire a accepté le dossier et fixé ses honoraires à ${quotedFee.toLocaleString()} FCFA. La préparation du contrat peut commencer.`,
+          triggered_by: notaireId,
+          metadata: {
+            assignment_id: assignmentId,
+            quoted_fee: quotedFee,
+            quoted_disbursements: quotedDisbursements,
+            old_status: 'pending',
+            new_status: 'contract_preparation'
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      } else {
+        console.log('✅ [NotaireService] Timeline event créé');
       }
       
-      // TODO: Envoyer notifications aux parties
+      // TODO: Envoyer notifications aux parties (acheteur et vendeur)
       
       return { success: true, data: assignment };
       
@@ -474,13 +463,22 @@ class NotaireAssignmentService {
    */
   static async declineAssignment(assignmentId, notaireId, reason = '') {
     try {
+      // 1. Get assignment data first
+      const { data: assignmentData, error: fetchError } = await supabase
+        .from('notaire_case_assignments')
+        .select('case_id')
+        .eq('id', assignmentId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // 2. Update assignment with decline
       const { data, error } = await supabase
         .from('notaire_case_assignments')
         .update({ 
-          status: 'notaire_declined',
           notaire_status: 'declined',
           notaire_responded_at: new Date().toISOString(),
-          notaire_decline_reason: reason
+          decline_reason: reason
         })
         .eq('id', assignmentId)
         .eq('notaire_id', notaireId)
@@ -489,7 +487,29 @@ class NotaireAssignmentService {
       
       if (error) throw error;
       
+      console.log('✅ [NotaireService] Assignment refusé:', data);
+      
+      // 3. Créer événement timeline
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: assignmentData.case_id,
+          event_type: 'notaire_declined',
+          title: 'Notaire a refusé le dossier',
+          description: `Le notaire a refusé le dossier. Raison: ${reason}`,
+          triggered_by: notaireId,
+          metadata: {
+            assignment_id: assignmentId,
+            decline_reason: reason
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      }
+      
       // TODO: Suggérer un autre notaire automatiquement
+      // TODO: Envoyer notifications aux parties
       
       return { success: true, data };
       

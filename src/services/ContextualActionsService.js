@@ -55,9 +55,9 @@ export const getAvailableActions = (purchaseCase, userRole, permissions) => {
 
   switch (userRole) {
     case 'buyer':
-      return getBuyerActions(status, purchaseCase, permissions, actions);
+      return getBuyerActionsInternal(status, purchaseCase, permissions, actions);
     case 'seller':
-      return getSellerActions(status, purchaseCase, permissions, actions);
+      return getSellerActionsInternal(status, purchaseCase, permissions, actions);
     case 'notaire':
       return getNotaireActions(status, purchaseCase, permissions, actions);
     case 'agent':
@@ -72,23 +72,14 @@ export const getAvailableActions = (purchaseCase, userRole, permissions) => {
 /**
  * BUYER ACTIONS
  */
-const getBuyerActions = (status, purchaseCase, permissions, actions) => {
+const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => {
   // CRITICAL: Choose notary (MUST be done before workflow can progress)
-  // Available from preliminary_agreement onwards if not already assigned
+  // Available from initiated onwards if not already assigned
   if (!purchaseCase.notary_id && !purchaseCase.notaire_id) {
-    const canSelectNotary = [
-      'preliminary_agreement', 
-      'deposit_payment', 
-      'title_verification',
-      'property_survey',
-      'certificate_verification',
-      'tax_clearance',
-      'land_survey',
-      'notary_fees_calculation',
-      'contract_preparation'
-    ].includes(status);
-
-    if (canSelectNotary) {
+    // Notaire requis pour tous les statuts avant 'completed' et 'cancelled'
+    const isActiveCase = !['completed', 'cancelled', 'rejected', 'archived', 'seller_declined', 'negotiation_failed'].includes(status);
+    
+    if (isActiveCase) {
       actions[ACTION_CATEGORIES.VALIDATIONS].unshift({
         id: 'select_notary',
         label: '⚠️ Sélectionner un notaire',
@@ -104,7 +95,8 @@ const getBuyerActions = (status, purchaseCase, permissions, actions) => {
   }
 
   // OPTIONAL: Choose agent/surveyor (available early in workflow)
-  if ([WORKFLOW_STATES.INITIATED, WORKFLOW_STATES.BUYER_VERIFICATION, 'preliminary_agreement'].includes(status)) {
+  const earlyStatuses = ['initiated', 'buyer_verification', 'seller_notification', 'preliminary_agreement', 'negotiation'];
+  if (earlyStatuses.includes(status)) {
     if (!purchaseCase.hasAgent) {
       actions[ACTION_CATEGORIES.OPTIONAL].push({
         id: 'choose_agent',
@@ -126,9 +118,9 @@ const getBuyerActions = (status, purchaseCase, permissions, actions) => {
   }
 
   // DOCUMENTS: Upload identity during buyer_verification
-  if (status === WORKFLOW_STATES.BUYER_VERIFICATION) {
+  if (status === 'buyer_verification' || status === 'initiated') {
     actions[ACTION_CATEGORIES.DOCUMENTS].push({
-      id: 'upload_buyer_identity',
+      id: 'upload_identity',
       label: 'Uploader pièce d\'identité',
       icon: 'Upload',
       description: 'CNI ou passeport requis',
@@ -138,14 +130,63 @@ const getBuyerActions = (status, purchaseCase, permissions, actions) => {
   }
 
   // PAYMENTS: Deposit payment
-  if (status === WORKFLOW_STATES.DEPOSIT_PENDING && permissions.canConfirmPayment) {
+  if (['deposit_payment', 'preliminary_agreement', 'title_verification'].includes(status) && permissions.canPayDeposit) {
     actions[ACTION_CATEGORIES.PAYMENTS].push({
       id: 'pay_deposit',
-      label: 'Payer acompte (15%)',
+      label: 'Payer acompte (10%)',
       icon: 'CreditCard',
-      amount: purchaseCase.deposit_amount || (purchaseCase.final_price * 0.15),
+      amount: purchaseCase.deposit_amount || (purchaseCase.offered_price * 0.10),
       description: 'Paiement de l\'acompte',
       handler: 'onPayDeposit'
+    });
+  }
+
+  // PAYMENTS: Notary fees
+  if (['notary_fees_calculation', 'payment_request', 'fees_payment_pending', 'contract_preparation'].includes(status) && permissions.canPayNotaryFees) {
+    actions[ACTION_CATEGORIES.PAYMENTS].push({
+      id: 'pay_notary_fees',
+      label: 'Payer frais de notaire',
+      icon: 'Receipt',
+      amount: purchaseCase.notary_fees || (purchaseCase.offered_price * 0.05),
+      description: 'Frais notaire et enregistrement',
+      handler: 'onPayNotaryFees'
+    });
+  }
+
+  // DOCUMENTS: Review contract
+  if (['contract_preparation', 'signing_appointment'].includes(status) && permissions.canReviewContract) {
+    actions[ACTION_CATEGORIES.DOCUMENTS].push({
+      id: 'review_contract',
+      label: 'Consulter le contrat',
+      icon: 'Eye',
+      description: 'Lire le contrat avant signature',
+      handler: 'onReviewContract'
+    });
+  }
+
+  // APPOINTMENTS: Confirm appointment
+  if (['signing_appointment'].includes(status) && permissions.canConfirmAppointment) {
+    actions[ACTION_CATEGORIES.APPOINTMENTS].push({
+      id: 'confirm_appointment',
+      label: 'Confirmer rendez-vous',
+      icon: 'Calendar',
+      description: 'Confirmer votre disponibilité',
+      handler: 'onConfirmAppointment'
+    });
+  }
+
+  // PAYMENTS: Final payment before signature
+  if (['final_payment_pending', 'signing_appointment'].includes(status) && permissions.canPayBalance) {
+    const depositPaid = purchaseCase.deposit_amount || (purchaseCase.offered_price * 0.10);
+    const balance = (purchaseCase.offered_price || 0) - depositPaid;
+    
+    actions[ACTION_CATEGORIES.PAYMENTS].push({
+      id: 'pay_balance',
+      label: 'Payer le solde',
+      icon: 'CreditCard',
+      amount: purchaseCase.balance_amount || balance,
+      description: 'Paiement du solde restant',
+      handler: 'onPayBalance'
     });
   }
 
@@ -201,23 +242,14 @@ const getBuyerActions = (status, purchaseCase, permissions, actions) => {
 /**
  * SELLER ACTIONS
  */
-const getSellerActions = (status, purchaseCase, permissions, actions) => {
+const getSellerActionsInternal = (status, purchaseCase, permissions, actions) => {
   // CRITICAL: Choose notary (MUST be done before workflow can progress)
   // Seller can also suggest/select a notary if buyer hasn't yet
   if (!purchaseCase.notary_id && !purchaseCase.notaire_id) {
-    const canSelectNotary = [
-      'preliminary_agreement', 
-      'deposit_payment', 
-      'title_verification',
-      'property_survey',
-      'certificate_verification',
-      'tax_clearance',
-      'land_survey',
-      'notary_fees_calculation',
-      'contract_preparation'
-    ].includes(status);
-
-    if (canSelectNotary) {
+    // Notaire requis pour tous les statuts avant 'completed' et 'cancelled'
+    const isActiveCase = !['completed', 'cancelled', 'rejected', 'archived', 'seller_declined', 'negotiation_failed'].includes(status);
+    
+    if (isActiveCase) {
       actions[ACTION_CATEGORIES.VALIDATIONS].unshift({
         id: 'select_notary',
         label: '⚠️ Proposer un notaire',
@@ -232,46 +264,46 @@ const getSellerActions = (status, purchaseCase, permissions, actions) => {
   }
 
   // VALIDATIONS: Accept offer (if applicable)
-  if (status === WORKFLOW_STATES.SELLER_NOTIFICATION) {
+  if (['seller_notification', 'preliminary_agreement', 'negotiation'].includes(status)) {
     actions[ACTION_CATEGORIES.VALIDATIONS].push({
       id: 'accept_offer',
       label: 'Accepter l\'offre',
       icon: 'CheckCircle',
-      description: 'Confirmer la vente',
+      description: 'Accepter la proposition d\'achat',
       handler: 'onAcceptOffer'
     });
   }
 
-  // DOCUMENTS: Upload title deed
-  if ([WORKFLOW_STATES.DOCUMENT_COLLECTION, WORKFLOW_STATES.TITLE_VERIFICATION].includes(status)) {
+  // DOCUMENTS: Upload title deed and ownership documents
+  if (['initiated', 'buyer_verification', 'seller_notification', 'preliminary_agreement', 'title_verification', 'property_survey'].includes(status)) {
     actions[ACTION_CATEGORIES.DOCUMENTS].push({
       id: 'upload_title_deed',
       label: 'Uploader titre foncier',
       icon: 'Upload',
-      description: 'Titre de propriété obligatoire',
+      description: 'Titre de propriété et documents légaux',
       handler: 'onUploadTitleDeed',
-      docType: 'seller_title'
+      docType: 'title_deed'
     });
   }
 
   // VALIDATIONS: Validate contract
-  if (status === WORKFLOW_STATES.CONTRACT_VALIDATION && permissions.canValidateContract) {
+  if (['contract_preparation', 'signing_appointment'].includes(status)) {
     actions[ACTION_CATEGORIES.VALIDATIONS].push({
       id: 'validate_contract',
       label: 'Valider le contrat',
-      icon: 'CheckCircle',
-      description: 'Approuver le contrat proposé',
+      icon: 'FileCheck',
+      description: 'Approuver le contrat de vente',
       handler: 'onValidateContract'
     });
   }
 
   // APPOINTMENTS: Confirm signature appointment
-  if (status === WORKFLOW_STATES.APPOINTMENT_SCHEDULING) {
+  if (['signing_appointment'].includes(status)) {
     actions[ACTION_CATEGORIES.APPOINTMENTS].push({
       id: 'confirm_appointment',
       label: 'Confirmer RDV signature',
       icon: 'Calendar',
-      description: 'Confirmer votre disponibilité',
+      description: 'Confirmer votre présence',
       handler: 'onConfirmAppointment'
     });
   }
@@ -453,8 +485,50 @@ const getGeometreActions = (status, purchaseCase, permissions, actions) => {
   return actions;
 };
 
+/**
+ * Public wrapper for getBuyerActions
+ * @param {Object} purchaseCase - The purchase case object
+ * @param {Object} permissions - Optional permissions object with flags like canSelectNotary, canPayDeposit, etc.
+ * @returns {Object} Actions grouped by category
+ */
+const getBuyerActions = (purchaseCase, permissions = {}) => {
+  const status = purchaseCase?.status || purchaseCase?.current_status || 'initiated';
+  const actions = {
+    [ACTION_CATEGORIES.DOCUMENTS]: [],
+    [ACTION_CATEGORIES.PAYMENTS]: [],
+    [ACTION_CATEGORIES.APPOINTMENTS]: [],
+    [ACTION_CATEGORIES.VALIDATIONS]: [],
+    [ACTION_CATEGORIES.OPTIONAL]: []
+  };
+  return getBuyerActionsInternal(status, purchaseCase, permissions, actions);
+};
+
+/**
+ * Public wrapper for getSellerActions
+ * @param {Object} purchaseCase - The purchase case object
+ * @param {Object} permissions - Optional permissions object
+ * @returns {Object} Actions grouped by category
+ */
+const getSellerActions = (purchaseCase, permissions = {}) => {
+  const status = purchaseCase?.status || purchaseCase?.current_status || 'initiated';
+  const actions = {
+    [ACTION_CATEGORIES.DOCUMENTS]: [],
+    [ACTION_CATEGORIES.PAYMENTS]: [],
+    [ACTION_CATEGORIES.APPOINTMENTS]: [],
+    [ACTION_CATEGORIES.VALIDATIONS]: [],
+    [ACTION_CATEGORIES.OPTIONAL]: []
+  };
+  return getSellerActionsInternal(status, purchaseCase, permissions, actions);
+};
+
+// Export named functions for direct use
+export { getBuyerActions, getSellerActions, getNotaireActions };
+
 export default {
   getAvailableActions,
+  getBuyerActions,
+  getSellerActions,
+  getNotaireActions,
   ACTION_CATEGORIES,
   WORKFLOW_STATES
 };

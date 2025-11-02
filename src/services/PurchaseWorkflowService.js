@@ -336,6 +336,12 @@ export class PurchaseWorkflowService {
    */
   static async updateCaseStatus(caseId, newStatus, updatedBy, notes = '', attachments = []) {
     try {
+      // Si newStatus est undefined, on ne fait rien (action sans changement de statut)
+      if (!newStatus) {
+        console.log('⚠️ Pas de changement de statut pour cette action');
+        return { success: true, message: 'Action effectuée sans changement de statut' };
+      }
+
       const statusInfo = this.WORKFLOW_STATUSES[newStatus.toUpperCase()];
       if (!statusInfo) {
         throw new Error(`Statut invalide: ${newStatus}`);

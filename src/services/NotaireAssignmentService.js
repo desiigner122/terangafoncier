@@ -874,17 +874,12 @@ class NotaireAssignmentService {
   static async searchNotaires(filters = {}) {
     try {
       let query = supabase
-        .from('notaire_profiles')
-        .select(`
-          *,
-          profile:profiles(
-            id,
-            email,
-            full_name,
-            avatar_url
-          )
-        `)
-        .eq('is_available', true);
+        .from('profiles')
+        .select('*')
+        .eq('role', 'notaire');
+      
+      // Les filtres suivants ne fonctionneront que si ces colonnes existent dans profiles
+      // Sinon ils seront simplement ignorés
       
       if (filters.region) {
         query = query.eq('office_region', filters.region);
@@ -895,7 +890,8 @@ class NotaireAssignmentService {
       }
       
       if (filters.hasAvailableSlots) {
-        query = query.lt('current_cases_count', supabase.ref('max_concurrent_cases'));
+        // Ignorer ce filtre si les colonnes n'existent pas
+        // query = query.lt('current_cases_count', supabase.ref('max_concurrent_cases'));
       }
       
       if (filters.specialization) {

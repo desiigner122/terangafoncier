@@ -156,9 +156,10 @@ class UnifiedCaseTrackingService {
 
       if (purchaseCase.notaire_id) {
         const { data } = await supabase
-          .from('notaire_profiles')
+          .from('profiles')
           .select('*')
           .eq('id', purchaseCase.notaire_id)
+          .eq('role', 'notaire')
           .single();
         notaireProfile = data;
       }

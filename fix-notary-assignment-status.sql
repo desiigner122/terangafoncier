@@ -6,7 +6,7 @@ SELECT
   pc.id,
   pc.case_number,
   pc.status as current_status,
-  pc.notary_id,
+  pc.notaire_id,
   nca.id as assignment_id,
   nca.notaire_id,
   nca.status as assignment_status,
@@ -19,7 +19,7 @@ WHERE pc.case_number = 'TF-20251101-0002';
 UPDATE purchase_cases
 SET 
   status = 'notary_assigned',
-  notary_id = (
+  notaire_id = (
     SELECT notaire_id 
     FROM notaire_case_assignments 
     WHERE case_id = purchase_cases.id 
@@ -69,7 +69,7 @@ SELECT
   pc.id,
   pc.case_number,
   pc.status as current_status,
-  pc.notary_id,
+  pc.notaire_id,
   nca.notaire_id as assignment_notaire_id,
   nca.status as assignment_status,
   (SELECT COUNT(*) FROM purchase_case_timeline WHERE case_id = pc.id AND event_type = 'notary_assigned') as timeline_events

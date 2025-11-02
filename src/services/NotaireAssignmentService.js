@@ -297,7 +297,7 @@ class NotaireAssignmentService {
       // Mettre à jour le statut du purchase_case si nécessaire
       const { data: purchaseCase } = await supabase
         .from('purchase_cases')
-        .select('status, notary_id')
+        .select('status, notaire_id')
         .eq('id', caseId)
         .single();
       
@@ -320,7 +320,7 @@ class NotaireAssignmentService {
           .from('purchase_cases')
           .update({ 
             status: 'notary_assigned',
-            notary_id: notaireId,
+            notaire_id: notaireId,
             updated_at: new Date().toISOString()
           })
           .eq('id', caseId);
@@ -355,11 +355,11 @@ class NotaireAssignmentService {
       } else {
         console.log('ℹ️ [NotaireService] Statut ne nécessite pas de changement:', purchaseCase?.status);
         
-        // Juste mettre à jour le notary_id sans changer le statut
+        // Juste mettre à jour le notaire_id sans changer le statut
         await supabase
           .from('purchase_cases')
           .update({ 
-            notary_id: notaireId,
+            notaire_id: notaireId,
             updated_at: new Date().toISOString()
           })
           .eq('id', caseId);

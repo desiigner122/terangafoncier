@@ -43,55 +43,51 @@ class NotaireAssignmentService {
       
       console.log('📦 [NotaireService] Purchase case:', purchaseCase);
       
-      // 2. Récupérer tous les notaires disponibles
-      // Note: Simplifié pour éviter erreurs - on filtre manuellement après
-      const { data: notaires, error: notairesError } = await supabase
-        .from('notaire_profiles')
+      // 2. Récupérer tous les utilisateurs avec le rôle "notaire"
+      // Recherche dans profiles avec role='notaire' au lieu de notaire_profiles
+      const { data: notaireProfiles, error: notairesError } = await supabase
+        .from('profiles')
         .select(`
-          *,
-          profile:profiles(
-            id,
-            email,
-            full_name,
-            avatar_url,
-            phone
-          )
+          id,
+          email,
+          full_name,
+          avatar_url,
+          phone,
+          role
         `)
-        .eq('is_available', true)
-        .eq('is_accepting_cases', true);
+        .eq('role', 'notaire');
       
       if (notairesError) {
-        console.error('❌ [NotaireService] Erreur notaire_profiles:', notairesError);
+        console.error('❌ [NotaireService] Erreur profiles notaires:', notairesError);
         throw notairesError;
       }
       
-      console.log('👔 [NotaireService] Notaires trouvés:', notaires?.length, notaires);
+      console.log('👔 [NotaireService] Notaires trouvés:', notaireProfiles?.length, notaireProfiles);
       
-      if (!notaires || notaires.length === 0) {
-        console.warn('⚠️ [NotaireService] Aucun notaire disponible');
+      if (!notaireProfiles || notaireProfiles.length === 0) {
+        console.warn('⚠️ [NotaireService] Aucun notaire inscrit sur la plateforme');
         return { 
           success: false, 
-          error: 'Aucun notaire disponible pour le moment',
+          error: 'Aucun notaire inscrit pour le moment. Veuillez réessayer plus tard.',
           data: [] 
         };
       }
       
-      // Filtrer manuellement ceux qui ont trop de cas
-      const availableNotaires = notaires.filter(n => {
-        const currentCases = n.current_cases_count || 0;
-        const maxCases = n.max_concurrent_cases || 10;
-        return currentCases < maxCases;
-      });
+      // Convertir en format attendu (simuler notaire_profiles)
+      const availableNotaires = notaireProfiles.map(profile => ({
+        id: profile.id,
+        user_id: profile.id,
+        profile: profile,
+        office_name: profile.full_name || profile.email,
+        current_cases_count: 0, // Par défaut
+        max_concurrent_cases: 10,
+        is_available: true,
+        is_accepting_cases: true,
+        office_latitude: null,
+        office_longitude: null
+      }));
       
-      console.log('✅ [NotaireService] Notaires disponibles après filtre:', availableNotaires.length);
-      
-      if (availableNotaires.length === 0) {
-        return { 
-          success: false, 
-          error: 'Tous les notaires sont actuellement occupés',
-          data: [] 
-        };
-      }
+      console.log('✅ [NotaireService] Notaires disponibles:', availableNotaires.length);
       
       // 3. Calculer score pour chaque notaire
       const scoredNotaires = availableNotaires.map(notaire => {

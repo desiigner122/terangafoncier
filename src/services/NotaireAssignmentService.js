@@ -353,6 +353,16 @@ class NotaireAssignmentService {
       const updateField = role === 'buyer' ? 'buyer_approved' : 'seller_approved';
       const updateDateField = role === 'buyer' ? 'buyer_approved_at' : 'seller_approved_at';
       
+      // 1. Get current assignment state
+      const { data: currentAssignment, error: fetchError } = await supabase
+        .from('notaire_case_assignments')
+        .select('*, case_id, buyer_approved, seller_approved')
+        .eq('id', assignmentId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // 2. Update approval
       const { data, error } = await supabase
         .from('notaire_case_assignments')
         .update({
@@ -365,10 +375,54 @@ class NotaireAssignmentService {
       
       if (error) throw error;
       
-      // Si les 2 ont approuvé, le trigger va mettre status = 'both_approved'
-      // TODO: Envoyer notification au notaire si both_approved
+      console.log(`✅ [NotaireService] ${role} a approuvé l'assignation:`, data);
       
-      return { success: true, data };
+      // 3. Check if both have approved
+      const buyerApproved = role === 'buyer' ? true : currentAssignment.buyer_approved;
+      const sellerApproved = role === 'seller' ? true : currentAssignment.seller_approved;
+      const bothApproved = buyerApproved && sellerApproved;
+      
+      // 4. Create timeline event
+      const roleLabel = role === 'buyer' ? 'L\'acheteur' : 'Le vendeur';
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: currentAssignment.case_id,
+          event_type: `notaire_approved_by_${role}`,
+          title: `${roleLabel} a approuvé le notaire`,
+          description: bothApproved 
+            ? `${roleLabel} a approuvé le notaire proposé. Les deux parties ont maintenant approuvé. Le notaire peut accepter le dossier.`
+            : `${roleLabel} a approuvé le notaire proposé. En attente de l'approbation de ${role === 'buyer' ? 'du vendeur' : 'de l\'acheteur'}.`,
+          triggered_by: userId,
+          metadata: {
+            assignment_id: assignmentId,
+            buyer_approved: buyerApproved,
+            seller_approved: sellerApproved,
+            both_approved: bothApproved
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      }
+      
+      // 5. If both approved, update status and notify notaire
+      if (bothApproved) {
+        const { error: statusError } = await supabase
+          .from('notaire_case_assignments')
+          .update({ status: 'both_approved' })
+          .eq('id', assignmentId);
+          
+        if (statusError) {
+          console.error('❌ [NotaireService] Erreur mise à jour statut:', statusError);
+        } else {
+          console.log('🎉 [NotaireService] Les deux parties ont approuvé - Notaire peut accepter');
+        }
+        
+        // TODO: Envoyer notification au notaire
+      }
+      
+      return { success: true, data, bothApproved };
       
     } catch (error) {
       console.error('Erreur approveNotaire:', error);
@@ -381,16 +435,30 @@ class NotaireAssignmentService {
    */
   static async acceptAssignment(assignmentId, notaireId, quotedFee = 0, quotedDisbursements = 0, justification = '') {
     try {
-      // 1. Get assignment data first
+      // 1. Get assignment data first and verify approvals
       const { data: assignmentData, error: fetchError } = await supabase
         .from('notaire_case_assignments')
-        .select('case_id, status')
+        .select('case_id, status, buyer_approved, seller_approved')
         .eq('id', assignmentId)
         .single();
         
       if (fetchError) throw fetchError;
       
-      // 2. Mettre à jour l'assignment
+      // 2. Vérifier que les deux parties ont approuvé
+      if (!assignmentData.buyer_approved || !assignmentData.seller_approved) {
+        console.error('❌ [NotaireService] Approbations incomplètes:', {
+          buyer_approved: assignmentData.buyer_approved,
+          seller_approved: assignmentData.seller_approved
+        });
+        return {
+          success: false,
+          error: 'Le notaire ne peut accepter que si les deux parties (acheteur et vendeur) ont approuvé l\'assignation.'
+        };
+      }
+      
+      console.log('✅ [NotaireService] Approbations vérifiées - Acceptation autorisée');
+      
+      // 3. Mettre à jour l'assignment
       const { data: assignment, error: updateError } = await supabase
         .from('notaire_case_assignments')
         .update({ 
@@ -409,7 +477,7 @@ class NotaireAssignmentService {
       
       console.log('✅ [NotaireService] Assignment accepté:', assignment);
       
-      // 3. Mettre à jour le statut du purchase_case vers contract_preparation
+      // 4. Mettre à jour le statut du purchase_case vers contract_preparation
       const { data: purchaseCase, error: caseUpdateError } = await supabase
         .from('purchase_cases')
         .update({
@@ -424,7 +492,7 @@ class NotaireAssignmentService {
       
       console.log('✅ [NotaireService] Purchase case statut mis à jour:', purchaseCase);
       
-      // 4. Créer événement timeline pour l'acceptation
+      // 5. Créer événement timeline pour l'acceptation
       const { error: timelineError } = await supabase
         .from('purchase_case_timeline')
         .insert({

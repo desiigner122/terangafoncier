@@ -38,6 +38,7 @@ import UploadDocumentsModal from '@/components/modals/UploadDocumentsModal';
 import NotarySelectionModal from '@/components/modals/NotarySelectionModal';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
+import NotaireAssignmentService from '@/services/NotaireAssignmentService';
 import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
 
 const VendeurCaseTrackingModernFixed = () => {
@@ -57,11 +58,14 @@ const VendeurCaseTrackingModernFixed = () => {
   const [history, setHistory] = useState([]);
   const [timeline, setTimeline] = useState([]);
   const [newMessage, setNewMessage] = useState('');
+  const [notaireAssignment, setNotaireAssignment] = useState(null);
 
   // Modal states
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [uploadModalConfig, setUploadModalConfig] = useState(null);
   const [showNotaryModal, setShowNotaryModal] = useState(false);
+  const [showApproveNotaireDialog, setShowApproveNotaireDialog] = useState(false);
+  const [isApprovingNotaire, setIsApprovingNotaire] = useState(false);
 
   // Use unified realtime sync hook
   useRealtimeCaseSync(purchaseCase?.id, () => loadCaseData());
@@ -234,13 +238,37 @@ const VendeurCaseTrackingModernFixed = () => {
             .from('payments')
             .select('*')
             .eq('user_id', requestData.user_id)
-            .order('created_at', { ascending: false });
+            .order('created_at', { ascending: false});
 
           if (!paymentsError) {
             setPayments(paymentsData || []);
           }
         } catch (error) {
           console.warn('⚠️ Erreur paiements:', error);
+        }
+      }
+
+      // 9. Charger l'assignation notaire
+      if (caseData?.id) {
+        try {
+          const { data: assignmentData, error: assignmentError } = await supabase
+            .from('notaire_case_assignments')
+            .select(`
+              *,
+              notaire:profiles!notaire_id(id, full_name, email, phone, avatar_url)
+            `)
+            .eq('case_id', caseData.id)
+            .order('created_at', { ascending: false })
+            .limit(1)
+            .single();
+
+          if (!assignmentError && assignmentData) {
+            console.log('👨‍⚖️ Assignation notaire chargée:', assignmentData);
+            // Stocker l'assignation dans le state (on va l'ajouter)
+            setNotaireAssignment(assignmentData);
+          }
+        } catch (error) {
+          console.warn('⚠️ Aucune assignation notaire:', error);
         }
       }
 
@@ -385,6 +413,41 @@ const VendeurCaseTrackingModernFixed = () => {
     toast.success(`Notaire ${notary.profile?.full_name} proposé !`);
     setShowNotaryModal(false);
     await loadCaseData(); // Recharger les données
+  };
+
+  const handleApproveNotaire = async () => {
+    if (!notaireAssignment) {
+      toast.error('Aucune assignation notaire trouvée');
+      return;
+    }
+
+    try {
+      setIsApprovingNotaire(true);
+
+      const result = await NotaireAssignmentService.approveNotaire(
+        notaireAssignment.id,
+        user.id,
+        'seller'
+      );
+
+      if (result.success) {
+        if (result.bothApproved) {
+          toast.success('Notaire approuvé ! Les deux parties ont approuvé. Le notaire peut maintenant accepter le dossier.');
+        } else {
+          toast.success('Notaire approuvé ! En attente de l\'approbation de l\'acheteur.');
+        }
+        
+        setShowApproveNotaireDialog(false);
+        await loadCaseData();
+      } else {
+        toast.error(result.error || 'Erreur lors de l\'approbation');
+      }
+    } catch (error) {
+      console.error('❌ Erreur approbation notaire:', error);
+      toast.error('Erreur lors de l\'approbation du notaire');
+    } finally {
+      setIsApprovingNotaire(false);
+    }
   };
 
   const sendMessage = async () => {
@@ -570,6 +633,64 @@ const VendeurCaseTrackingModernFixed = () => {
               onActionClick={handleSellerAction}
               loading={false}
             />
+
+            {/* Card d'approbation notaire si assignation en attente */}
+            {notaireAssignment && !notaireAssignment.seller_approved && (
+              <Card className="border-blue-500 bg-blue-50 dark:bg-blue-950/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-800 dark:text-blue-200">
+                    <User className="h-5 w-5" />
+                    Notaire proposé - Approbation requise
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <p className="font-semibold text-lg">
+                          {notaireAssignment.notaire?.full_name || 'Notaire'}
+                        </p>
+                        {notaireAssignment.notaire?.email && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2 mt-1">
+                            <Mail className="h-4 w-4" />
+                            {notaireAssignment.notaire.email}
+                          </p>
+                        )}
+                        {notaireAssignment.notaire?.phone && (
+                          <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-2 mt-1">
+                            <Phone className="h-4 w-4" />
+                            {notaireAssignment.notaire.phone}
+                          </p>
+                        )}
+                      </div>
+                    </div>
+
+                    <div className="mt-3 space-y-2">
+                      <div className="flex items-center gap-2 text-sm">
+                        <CheckCircle className={`h-4 w-4 ${notaireAssignment.buyer_approved ? 'text-green-500' : 'text-gray-400'}`} />
+                        <span className={notaireAssignment.buyer_approved ? 'text-green-700 dark:text-green-400' : 'text-gray-500'}>
+                          {notaireAssignment.buyer_approved ? 'Approuvé par l\'acheteur' : 'En attente de l\'acheteur'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 text-sm">
+                        <AlertCircle className="h-4 w-4 text-blue-500" />
+                        <span className="text-blue-700 dark:text-blue-400 font-semibold">
+                          Votre approbation est requise
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <Button
+                    onClick={() => setShowApproveNotaireDialog(true)}
+                    className="w-full bg-blue-600 hover:bg-blue-700"
+                  >
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Approuver ce notaire
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
 
             {/* Timeline */}
             <Card>
@@ -1067,6 +1188,51 @@ const VendeurCaseTrackingModernFixed = () => {
           onNotarySelected={handleNotarySelected}
         />
       )}
+
+      {/* Dialog d'approbation notaire */}
+      <Dialog open={showApproveNotaireDialog} onOpenChange={setShowApproveNotaireDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Approuver le notaire proposé</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <p className="text-sm text-gray-600">
+              Confirmez-vous que vous acceptez le notaire <strong>{notaireAssignment?.notaire?.full_name}</strong> pour ce dossier ?
+            </p>
+            
+            {notaireAssignment?.buyer_approved && (
+              <div className="bg-green-50 dark:bg-green-950/20 p-3 rounded-lg">
+                <p className="text-sm text-green-700 dark:text-green-400 flex items-center gap-2">
+                  <CheckCircle className="h-4 w-4" />
+                  L'acheteur a déjà approuvé ce notaire
+                </p>
+              </div>
+            )}
+
+            <p className="text-xs text-gray-500">
+              Une fois les deux parties (vous et l'acheteur) approuvées, le notaire pourra accepter le dossier et commencer la préparation du contrat.
+            </p>
+
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowApproveNotaireDialog(false)}
+                disabled={isApprovingNotaire}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleApproveNotaire}
+                disabled={isApprovingNotaire}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {isApprovingNotaire ? 'Approbation...' : 'Confirmer l\'approbation'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

@@ -32,6 +32,7 @@ import { cn } from '@/lib/utils';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import ContractGenerator from '@/components/purchase/ContractGenerator';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
+import SellerActionButtonsSection from '@/components/purchase/SellerActionButtonsSection';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
@@ -331,6 +332,36 @@ const VendeurCaseTrackingModernFixed = () => {
     };
   }, [purchaseCase?.request_id]);
 
+  // Handler pour les actions du vendeur
+  const handleSellerAction = async (action) => {
+    console.log('🔔 Action vendeur:', action);
+    
+    switch (action.id) {
+      case 'select_notary':
+        toast.info('Proposition de notaire - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir modal de sélection de notaire
+        break;
+      
+      case 'upload_title_deed':
+        toast.info('Upload titre foncier - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir modal d'upload de document
+        break;
+      
+      case 'validate_contract':
+        toast.info('Validation du contrat - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir modal de validation de contrat
+        break;
+      
+      case 'confirm_appointment':
+        toast.info('Confirmation rendez-vous - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir modal de confirmation de rendez-vous
+        break;
+      
+      default:
+        toast.info('Action non implémentée: ' + action.label);
+    }
+  };
+
   const sendMessage = async () => {
     if (!newMessage.trim()) return;
 
@@ -507,6 +538,14 @@ const VendeurCaseTrackingModernFixed = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {/* Colonne gauche */}
           <div className="lg:col-span-2 space-y-3 sm:space-y-4 lg:space-y-6">
+            {/* Section Boutons d'Actions */}
+            <SellerActionButtonsSection
+              currentStatus={purchaseCase?.status}
+              caseData={purchaseCase}
+              onActionClick={handleSellerAction}
+              loading={false}
+            />
+
             {/* Timeline */}
             <Card>
               <CardHeader className="p-3 sm:p-4 lg:p-6">
@@ -834,18 +873,54 @@ const VendeurCaseTrackingModernFixed = () => {
               <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-4 lg:p-6 pt-0">
                 {property ? (
                   <>
-                    {/* Image de la propriété */}
-                    {(property.image_url || property.photo_url || property.image || property.photo || (property.images && property.images[0])) && (
-                      <div className="w-full h-32 sm:h-40 rounded-lg overflow-hidden bg-gray-100">
-                        <img 
-                          src={property.image_url || property.photo_url || property.image || property.photo || property.images[0]} 
-                          alt={property.title || property.name}
-                          className="w-full h-full object-cover"
-                          onError={(e) => {
-                            console.error('❌ Erreur chargement image:', e.target.src);
-                            e.target.style.display = 'none';
-                          }}
-                        />
+                    {/* Image de la propriété - Support multi-format */}
+                    {(() => {
+                      // Gérer plusieurs formats d'image possibles
+                      let imageUrl = null;
+                      if (property?.image_url || property?.photo_url) {
+                        imageUrl = property.image_url || property.photo_url;
+                      } else if (property?.image || property?.photo) {
+                        imageUrl = property.image || property.photo;
+                      } else if (property?.images && Array.isArray(property.images) && property.images.length > 0) {
+                        imageUrl = property.images[0];
+                      } else if (property?.images && typeof property.images === 'string') {
+                        try {
+                          const parsed = JSON.parse(property.images);
+                          if (Array.isArray(parsed) && parsed.length > 0) {
+                            imageUrl = parsed[0];
+                          }
+                        } catch (e) {
+                          imageUrl = property.images;
+                        }
+                      }
+
+                      return imageUrl ? (
+                        <div className="w-full h-32 sm:h-40 rounded-lg overflow-hidden bg-gray-100">
+                          <img 
+                            src={imageUrl} 
+                            alt={property.title || property.name || 'Propriété'}
+                            className="w-full h-full object-cover"
+                            onError={(e) => {
+                              console.error('❌ Erreur chargement image:', e.target.src);
+                              e.target.style.display = 'none';
+                              e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                            }}
+                          />
+                          <div className="w-full h-full flex items-center justify-center" style={{ display: 'none' }}>
+                            <Building2 className="w-12 h-12 text-gray-300" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-32 sm:h-40 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <Building2 className="w-12 h-12 text-gray-300" />
+                        </div>
+                      );
+                    })()}
+                    {/* Référence */}
+                    {property.id && (
+                      <div>
+                        <p className="text-xs sm:text-sm text-gray-500">Référence</p>
+                        <p className="font-mono text-xs font-semibold text-gray-700">{property.id.slice(0, 8).toUpperCase()}</p>
                       </div>
                     )}
                     <div>
@@ -854,16 +929,16 @@ const VendeurCaseTrackingModernFixed = () => {
                     </div>
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">Localisation</p>
-                      <p className="font-semibold text-sm sm:text-base break-words">{property.location || property.address || property.commune || 'N/A'}</p>
+                      <p className="font-semibold text-sm sm:text-base break-words">{property.location || property.address || property.commune || property.city || 'N/A'}</p>
                     </div>
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">Surface</p>
-                      <p className="font-semibold text-sm sm:text-base">{property.surface || property.area || 'N/A'} m²</p>
+                      <p className="font-semibold text-sm sm:text-base">{property.surface || property.area || property.size || property.superficie || 'N/A'} m²</p>
                     </div>
                     <div>
                       <p className="text-xs sm:text-sm text-gray-500">Prix initial</p>
                       <p className="font-semibold text-base sm:text-lg">
-                        {formatPrice(property.price || 0)}
+                        {formatPrice(property.price || property.prix || 0)}
                       </p>
                     </div>
                   </>

@@ -233,29 +233,77 @@ const CaseTrackingUnified = () => {
    * Handlers Phase 6 - Actions Buyer/Seller
    */
   const handleUserActionClick = (action) => {
-    console.log('🎯 Action clicked:', action);
+    console.log('🎯 [UNIFIED] Action clicked:', action);
+    console.log('🎯 [UNIFIED] Action ID:', action.id);
+    console.log('🎯 [UNIFIED] Action type:', action);
+    
     setCurrentAction(action);
 
-    // Router vers le bon modal selon le type d'action
-    if (action.requiresSignature || action.action === 'preliminary_agreement') {
-      setShowSignModal(true);
-    } else if (action.requiresDocuments || action.requiresDocument) {
-      setShowUploadModal(true);
-    } else if (action.requiresPayment) {
-      // Utiliser le modal de paiement existant
-      const mockPaymentRequest = {
-        id: `temp_${Date.now()}`,
-        request_type: action.action,
-        amount: action.amount || 0,
-        description: action.label,
-        deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
-        status: 'pending'
-      };
-      setSelectedPaymentRequest(mockPaymentRequest);
-      setShowPaymentModal(true);
-    } else {
-      // Actions simples (confirmations, autorisations)
-      setShowConfirmModal(true);
+    // Router selon l'ID de l'action
+    switch (action.id) {
+      case 'select_notary':
+        console.log('✅ [UNIFIED] Opening notary selection');
+        toast.info('Sélection notaire - Modal à implémenter');
+        break;
+        
+      case 'upload_identity':
+      case 'upload_title_deed':
+        console.log('✅ [UNIFIED] Opening upload modal');
+        setShowUploadModal(true);
+        break;
+        
+      case 'pay_deposit':
+      case 'pay_notary_fees':
+      case 'pay_balance':
+        console.log('✅ [UNIFIED] Opening payment modal');
+        const mockPaymentRequest = {
+          id: `temp_${Date.now()}`,
+          request_type: action.id,
+          amount: action.amount || 0,
+          description: action.description || action.label,
+          deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+          status: 'pending',
+          caseId: caseData?.id
+        };
+        setSelectedPaymentRequest(mockPaymentRequest);
+        setShowPaymentModal(true);
+        break;
+        
+      case 'review_contract':
+      case 'confirm_appointment':
+      case 'validate_contract':
+        console.log('✅ [UNIFIED] Opening confirm modal');
+        setShowConfirmModal(true);
+        break;
+        
+      case 'choose_agent':
+      case 'request_surveying':
+        console.log('✅ [UNIFIED] Action simple:', action.id);
+        toast.info(action.label + ' - Fonctionnalité à implémenter');
+        break;
+        
+      default:
+        console.warn('⚠️ [UNIFIED] Action non gérée:', action.id);
+        
+        // Fallback sur l'ancienne logique
+        if (action.requiresSignature || action.action === 'preliminary_agreement') {
+          setShowSignModal(true);
+        } else if (action.requiresDocuments || action.requiresDocument) {
+          setShowUploadModal(true);
+        } else if (action.requiresPayment) {
+          const mockPaymentRequest = {
+            id: `temp_${Date.now()}`,
+            request_type: action.action,
+            amount: action.amount || 0,
+            description: action.label,
+            deadline: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(),
+            status: 'pending'
+          };
+          setSelectedPaymentRequest(mockPaymentRequest);
+          setShowPaymentModal(true);
+        } else {
+          setShowConfirmModal(true);
+        }
     }
   };
 

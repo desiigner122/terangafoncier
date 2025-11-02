@@ -22,10 +22,14 @@ import {
   Bell,
   Shield,
   Search,
-  X
+  X,
+  Zap,
+  Eye,
+  UserPlus,
+  DollarSign
 } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { getUserAction, canUserAct } from '@/config/userWorkflowActions';
+import ContextualActionsService from '@/services/ContextualActionsService';
 
 /**
  * Mapping des icônes par nom
@@ -51,11 +55,16 @@ const iconMap = {
   Shield,
   Search,
   X,
+  Zap,
+  Eye,
+  UserPlus,
+  DollarSign,
+  CheckCircle2: CheckCircle
 };
 
 /**
  * Composant pour afficher les boutons d'action pour Acheteur/Vendeur
- * Similaire à ActionButtonsSection pour notaire
+ * Utilise ContextualActionsService pour déterminer les actions disponibles
  * 
  * @param {Object} props
  * @param {string} props.userRole - 'buyer' ou 'seller'
@@ -63,9 +72,6 @@ const iconMap = {
  * @param {Object} props.caseData - Données complètes du dossier
  * @param {string} props.userId - ID de l'utilisateur connecté
  * @param {Function} props.onActionClick - Callback quand action cliquée
- * @param {Function} props.onPaymentClick - Callback pour actions de paiement
- * @param {Function} props.onDocumentUpload - Callback pour upload documents
- * @param {Function} props.onCancelClick - Callback pour annulation
  * @param {boolean} props.loading - État de chargement
  */
 const UserActionButtonsSection = ({
@@ -74,199 +80,161 @@ const UserActionButtonsSection = ({
   caseData,
   userId,
   onActionClick,
-  onPaymentClick,
-  onDocumentUpload,
-  onCancelClick,
   loading = false,
 }) => {
-  // Récupérer l'action disponible pour cet utilisateur à cette étape
-  const action = getUserAction(userRole, currentStatus);
-  
-  // Vérifier si l'utilisateur peut agir
-  const canAct = canUserAct(userRole, currentStatus, userId, caseData);
+  console.log('🎬 [UserActionButtonsSection] Rendu', { userRole, currentStatus, caseDataId: caseData?.id });
 
-  // Si pas d'action disponible, ne rien afficher
-  if (!action) {
+  if (!caseData || !currentStatus) {
+    console.log('⚠️ [UserActionButtonsSection] Missing data');
     return null;
   }
 
-  // Récupérer l'icône
-  const IconComponent = iconMap[action.icon] || Clock;
+  // Récupérer les actions selon le rôle
+  const getActions = () => {
+    const permissions = {
+      canSelectNotary: true,
+      canUploadDocuments: true,
+      canPayDeposit: true,
+      canPayNotaryFees: true,
+      canReviewContract: true,
+      canConfirmAppointment: true,
+      canPayBalance: true
+    };
 
-  /**
-   * Handler du click sur le bouton principal
-   */
-  const handleClick = () => {
-    if (action.disabled || loading) return;
-
-    // Si action nécessite un paiement
-    if (action.requiresPayment) {
-      onPaymentClick?.({
-        action: action.action,
-        nextStatus: action.nextStatus,
-        paymentType: action.paymentType,
-        paymentMethods: action.paymentMethods,
-      });
-      return;
+    if (userRole === 'buyer') {
+      return ContextualActionsService.getBuyerActions(caseData, permissions);
+    } else if (userRole === 'seller') {
+      return ContextualActionsService.getSellerActions(caseData, permissions);
     }
-
-    // Si action nécessite upload documents
-    if (action.requiresDocuments || action.requiresDocument) {
-      onDocumentUpload?.({
-        action: action.action,
-        nextStatus: action.nextStatus,
-        documentTypes: action.documentTypes || [action.documentType],
-      });
-      return;
-    }
-
-    // Action standard
-    onActionClick?.({
-      action: action.action,
-      nextStatus: action.nextStatus,
-      requiresAppointment: action.requiresAppointment,
-      requiresProof: action.requiresProof,
-    });
+    return { validations: [], documents: [], payments: [], appointments: [], optional: [] };
   };
 
-  /**
-   * Handler pour annulation
-   */
-  const handleCancel = () => {
-    onCancelClick?.();
-  };
+  const actions = getActions();
 
-  // Couleur du badge selon le rôle
+  // Regrouper toutes les actions
+  const allActions = [
+    ...(actions.validations || []),
+    ...(actions.documents || []),
+    ...(actions.payments || []),
+    ...(actions.appointments || []),
+    ...(actions.optional || [])
+  ];
+
+  console.log('📋 [UserActionButtonsSection] Actions disponibles:', allActions.length, allActions);
+
+  // Si pas d'action disponible, ne rien afficher
+  if (allActions.length === 0) {
+    console.log('⚠️ [UserActionButtonsSection] Aucune action - composant masqué');
+    return null;
+  }
+
+  // Séparer les actions prioritaires et régulières
+  const priorityActions = allActions.filter(a => a.priority === 'high' || a.required);
+  const regularActions = allActions.filter(a => a.priority !== 'high' && !a.required);
+
+  const roleLabel = userRole === 'buyer' ? 'Acheteur' : 'Vendeur';
   const roleBadgeColor = userRole === 'buyer' 
     ? 'bg-blue-100 text-blue-800' 
     : 'bg-green-100 text-green-800';
 
-  const roleLabel = userRole === 'buyer' ? 'Acheteur' : 'Vendeur';
-
   return (
-    <Card className="border-l-4 border-l-primary shadow-sm">
+    <Card className="border-l-4 border-l-primary shadow-sm mb-6">
       <CardContent className="p-6">
         <div className="space-y-4">
           {/* Header avec rôle */}
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-3">
-              <div className={`p-2 rounded-lg ${action.disabled ? 'bg-gray-100' : `bg-${action.color}-50`}`}>
-                <IconComponent 
-                  className={`h-5 w-5 ${action.disabled ? 'text-gray-400' : `text-${action.color}-600`}`} 
-                />
-              </div>
-              <div>
-                <Badge variant="outline" className={roleBadgeColor}>
-                  {roleLabel}
-                </Badge>
-                <h3 className="text-lg font-semibold mt-1">
-                  {action.label}
-                </h3>
-              </div>
+              <Badge variant="outline" className={roleBadgeColor}>
+                {roleLabel}
+              </Badge>
+              <h3 className="text-lg font-semibold">
+                Actions Disponibles
+              </h3>
             </div>
-
-            {/* Badge statut */}
-            {action.disabled && (
-              <Badge variant="secondary" className="bg-gray-100">
-                En attente
-              </Badge>
-            )}
-            {action.criticalAction && !action.disabled && (
-              <Badge variant="destructive" className="animate-pulse">
-                Action requise
-              </Badge>
-            )}
           </div>
 
-          {/* Description */}
-          <Alert className={action.disabled ? 'bg-gray-50' : ''}>
-            <AlertDescription className="text-sm text-muted-foreground">
-              {action.description}
-            </AlertDescription>
-          </Alert>
+          {/* Actions prioritaires */}
+          {priorityActions.length > 0 && (
+            <div className="space-y-3">
+              {priorityActions.map((action) => {
+                const IconComponent = iconMap[action.icon] || Zap;
+                
+                return (
+                  <div key={action.id} className="space-y-2">
+                    {/* Carte d'action prioritaire */}
+                    <Alert className={action.className?.includes('bg-red') ? 'border-red-200 bg-red-50' : 'border-orange-200 bg-orange-50'}>
+                      <AlertDescription>
+                        <div className="flex items-center gap-3">
+                          <IconComponent className={`h-5 w-5 ${action.className?.includes('bg-red') ? 'text-red-600' : 'text-orange-600'}`} />
+                          <div>
+                            <p className="font-semibold">{action.label}</p>
+                            {action.description && (
+                              <p className="text-sm text-muted-foreground mt-1">
+                                {action.description}
+                              </p>
+                            )}
+                            {action.required && (
+                              <p className="text-xs text-red-600 mt-1 font-medium">
+                                ⚠️ OBLIGATOIRE pour continuer
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </AlertDescription>
+                    </Alert>
 
-          {/* Informations additionnelles */}
-          {action.requiresPayment && (
-            <div className="flex items-center gap-2 text-sm">
-              <CreditCard className="h-4 w-4 text-green-600" />
-              <span className="text-muted-foreground">
-                Paiement requis • Montant calculé selon le prix d'achat
-              </span>
+                    {/* Bouton d'action */}
+                    <Button
+                      onClick={() => {
+                        console.log('🖱️ [UserActionButtons] Clic:', action.id, action.label);
+                        onActionClick?.(action);
+                      }}
+                      disabled={loading}
+                      className={action.className || "w-full"}
+                      size="lg"
+                    >
+                      <IconComponent className="h-4 w-4 mr-2" />
+                      {action.label}
+                      {action.amount && (
+                        <span className="ml-auto">
+                          {action.amount.toLocaleString()} FCFA
+                        </span>
+                      )}
+                    </Button>
+                  </div>
+                );
+              })}
             </div>
           )}
 
-          {action.requiresDocuments && (
-            <div className="flex items-center gap-2 text-sm">
-              <Upload className="h-4 w-4 text-blue-600" />
-              <span className="text-muted-foreground">
-                Documents à fournir : {action.documentTypes?.length || 1} fichier(s)
-              </span>
+          {/* Actions régulières */}
+          {regularActions.length > 0 && (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
+              {regularActions.map((action) => {
+                const IconComponent = iconMap[action.icon] || FileText;
+
+                return (
+                  <Button
+                    key={action.id}
+                    onClick={() => {
+                      console.log('🖱️ [UserActionButtons Regular] Clic:', action.id, action.label);
+                      onActionClick?.(action);
+                    }}
+                    disabled={loading}
+                    variant="outline"
+                    className="justify-start"
+                  >
+                    <IconComponent className="h-4 w-4 mr-2" />
+                    {action.label}
+                    {action.amount && (
+                      <span className="ml-auto text-xs font-semibold">
+                        {action.amount.toLocaleString()} FCFA
+                      </span>
+                    )}
+                  </Button>
+                );
+              })}
             </div>
-          )}
-
-          {action.requiresAppointment && (
-            <div className="flex items-center gap-2 text-sm">
-              <Calendar className="h-4 w-4 text-purple-600" />
-              <span className="text-muted-foreground">
-                Confirmation de rendez-vous requise
-              </span>
-            </div>
-          )}
-
-          {/* Boutons d'action */}
-          <div className="flex gap-3 pt-2">
-            {/* Bouton principal */}
-            <Button
-              onClick={handleClick}
-              disabled={!canAct || action.disabled || loading}
-              className={`flex-1 ${action.criticalAction ? 'bg-red-600 hover:bg-red-700' : ''}`}
-              size="lg"
-            >
-              {loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2" />
-                  Traitement...
-                </>
-              ) : (
-                <>
-                  <IconComponent className="h-4 w-4 mr-2" />
-                  {action.label}
-                </>
-              )}
-            </Button>
-
-            {/* Bouton annuler (si disponible) */}
-            {action.canCancel && !action.disabled && (
-              <Button
-                onClick={handleCancel}
-                variant="outline"
-                disabled={loading}
-                size="lg"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Annuler
-              </Button>
-            )}
-
-            {/* Bouton décliner (pour vendeur) */}
-            {action.canDecline && !action.disabled && (
-              <Button
-                onClick={handleCancel}
-                variant="destructive"
-                disabled={loading}
-                size="lg"
-              >
-                <X className="h-4 w-4 mr-2" />
-                Décliner
-              </Button>
-            )}
-          </div>
-
-          {/* Note pour actions désactivées */}
-          {action.disabled && (
-            <p className="text-xs text-muted-foreground italic text-center">
-              Aucune action requise de votre part pour le moment. Vous serez notifié lorsque votre intervention sera nécessaire.
-            </p>
           )}
         </div>
       </CardContent>

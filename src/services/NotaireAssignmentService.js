@@ -295,18 +295,28 @@ class NotaireAssignmentService {
       console.log('🎉 [NotaireService] Assignment créé avec succès:', assignment);
       
       // Mettre à jour le statut du purchase_case si nécessaire
-      // Si c'était en attente de notaire, passer à l'étape suivante
       const { data: purchaseCase } = await supabase
         .from('purchase_cases')
-        .select('current_status')
+        .select('current_status, notary_id')
         .eq('id', caseId)
         .single();
       
-      if (purchaseCase?.current_status === 'buyer_documents_submitted' || 
-          purchaseCase?.current_status === 'seller_documents_submitted') {
+      console.log('📊 [NotaireService] Statut actuel:', purchaseCase?.current_status);
+      
+      // Mettre à jour le notary_id et avancer le workflow si nécessaire
+      const statusesRequiringNotary = [
+        'buyer_verification',
+        'seller_verification', 
+        'buyer_documents_submitted',
+        'seller_documents_submitted',
+        'pending_approval',
+        'offer_accepted'
+      ];
+      
+      if (statusesRequiringNotary.includes(purchaseCase?.current_status)) {
         console.log('📊 [NotaireService] Mise à jour statut purchase_case vers notary_assigned');
         
-        await supabase
+        const { error: updateError } = await supabase
           .from('purchase_cases')
           .update({ 
             current_status: 'notary_assigned',
@@ -315,8 +325,14 @@ class NotaireAssignmentService {
           })
           .eq('id', caseId);
         
+        if (updateError) {
+          console.error('❌ [NotaireService] Erreur mise à jour purchase_case:', updateError);
+        } else {
+          console.log('✅ [NotaireService] Purchase case mis à jour avec succès');
+        }
+        
         // Créer événement timeline
-        await supabase
+        const { error: timelineError } = await supabase
           .from('purchase_case_timeline')
           .insert({
             case_id: caseId,
@@ -330,6 +346,23 @@ class NotaireAssignmentService {
               proposed_by_role: proposedByRole
             }
           });
+        
+        if (timelineError) {
+          console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+        } else {
+          console.log('✅ [NotaireService] Timeline event créé');
+        }
+      } else {
+        console.log('ℹ️ [NotaireService] Statut ne nécessite pas de changement:', purchaseCase?.current_status);
+        
+        // Juste mettre à jour le notary_id sans changer le statut
+        await supabase
+          .from('purchase_cases')
+          .update({ 
+            notary_id: notaireId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', caseId);
       }
       
       // TODO: Envoyer notification (à implémenter)

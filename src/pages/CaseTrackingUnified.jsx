@@ -876,11 +876,13 @@ const CaseTrackingUnified = () => {
       />
 
       {/* Modal sélection notaire */}
-      {showNotaryModal && caseData?.id && (
+      {showNotaryModal && caseData?.id && user?.id && (
         <NotarySelectionModal
           isOpen={showNotaryModal}
           onClose={() => setShowNotaryModal(false)}
           caseId={caseData.id}
+          userId={user.id}
+          userRole={userRole}
           onNotarySelected={async (notary) => {
             console.log('✅ [UNIFIED] Notaire sélectionné:', notary);
             setShowNotaryModal(false);

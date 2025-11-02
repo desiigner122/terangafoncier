@@ -30,7 +30,14 @@ import { toast } from 'sonner';
 
 import NotaireAssignmentService from '@/services/NotaireAssignmentService';
 
-const NotarySelectionModal = ({ isOpen, onClose, caseId, onNotarySelected }) => {
+const NotarySelectionModal = ({ 
+  isOpen, 
+  onClose, 
+  caseId, 
+  userId, 
+  userRole = 'buyer',
+  onNotarySelected 
+}) => {
   const [notaries, setNotaries] = useState([]);
   const [loading, setLoading] = useState(false);
   const [selectedNotary, setSelectedNotary] = useState(null);
@@ -86,9 +93,17 @@ const NotarySelectionModal = ({ isOpen, onClose, caseId, onNotarySelected }) => 
     try {
       setAssigning(true);
       
+      console.log('🔍 [NotaryModal] Assignation:', {
+        caseId,
+        notaireId: selectedNotary.id,
+        userId,
+        userRole
+      });
+      
       // Proposer le notaire via le service
       const result = await NotaireAssignmentService.proposeNotaire(caseId, selectedNotary.id, {
-        proposedBy: 'buyer', // ou 'seller' selon le contexte
+        proposedBy: userId, // UUID de l'utilisateur connecté
+        proposedByRole: userRole, // Role: 'buyer' ou 'seller'
         score: selectedNotary.score,
         distance: selectedNotary.distance,
         reason: 'Sélection manuelle par l\'utilisateur'
@@ -301,11 +316,13 @@ const NotarySelectionModal = ({ isOpen, onClose, caseId, onNotarySelected }) => 
             <Scale className="w-6 h-6 text-indigo-600" />
             Choisir un Notaire pour votre dossier
           </DialogTitle>
-          <DialogDescription className="space-y-2">
-            <p>Sélectionnez le notaire qui accompagnera votre transaction.</p>
-            <p className="text-xs text-gray-500">
-              ℹ️ Tous les notaires inscrits sur la plateforme sont affichés. Vous pouvez consulter leurs informations de contact et leur disponibilité.
-            </p>
+          <DialogDescription>
+            <div className="space-y-2">
+              <p>Sélectionnez le notaire qui accompagnera votre transaction.</p>
+              <p className="text-xs text-gray-500">
+                ℹ️ Tous les notaires inscrits sur la plateforme sont affichés. Vous pouvez consulter leurs informations de contact et leur disponibilité.
+              </p>
+            </div>
           </DialogDescription>
         </DialogHeader>
 

@@ -11,7 +11,7 @@ import {
   DollarSign, Calendar, Filter, Search, Download, Home, Building2,
   MapPin, TrendingUp, AlertCircle, Plus, Users, Phone, Mail, Package,
   ChevronRight, Star, Briefcase, FileCheck, ClipboardList, Sparkles,
-  Activity, BarChart3, Zap, CreditCard
+  Activity, BarChart3, Zap, CreditCard, Upload
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,6 +31,7 @@ import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
 import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
 import NotificationService from '@/services/NotificationService';
+import ContextualActionsService from '@/services/ContextualActionsService';
 import BuyerCounterOfferResponseModal from '@/components/modals/BuyerCounterOfferResponseModal';
 
 const ParticulierMesAchatsRefonte = () => {
@@ -56,6 +57,88 @@ const ParticulierMesAchatsRefonte = () => {
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedNegotiation, setSelectedNegotiation] = useState(null);
   const [isSubmittingResponse, setIsSubmittingResponse] = useState(false);
+
+  // ========================================
+  // HANDLERS POUR LES ACTIONS CONTEXTUELLES
+  // ========================================
+
+  const handleSelectNotary = (caseItem) => {
+    toast.info('Fonctionnalité de sélection de notaire à venir');
+    // TODO: Ouvrir modal de sélection de notaire
+    console.log('🔔 [BUYER] Sélection notaire pour case:', caseItem.id);
+  };
+
+  const handleUploadBuyerIdentity = (caseItem) => {
+    toast.info('Fonctionnalité d\'upload de documents à venir');
+    console.log('📄 [BUYER] Upload identity pour case:', caseItem.id);
+  };
+
+  const handlePayDeposit = (caseItem) => {
+    toast.info('Fonctionnalité de paiement en ligne à venir');
+    console.log('💳 [BUYER] Paiement acompte pour case:', caseItem.id);
+  };
+
+  const handlePayNotaryFees = (caseItem) => {
+    toast.info('Fonctionnalité de paiement en ligne à venir');
+    console.log('💳 [BUYER] Paiement frais notaire pour case:', caseItem.id);
+  };
+
+  const handleReviewContract = (caseItem) => {
+    toast.info('Fonctionnalité de consultation de contrat à venir');
+    console.log('📄 [BUYER] Consultation contrat pour case:', caseItem.id);
+  };
+
+  const handleConfirmAppointment = (caseItem) => {
+    toast.info('Fonctionnalité de confirmation RDV à venir');
+    console.log('📅 [BUYER] Confirmation RDV pour case:', caseItem.id);
+  };
+
+  const handlePayBalance = (caseItem) => {
+    toast.info('Fonctionnalité de paiement solde à venir');
+    console.log('💳 [BUYER] Paiement solde pour case:', caseItem.id);
+  };
+
+  const handleChooseAgent = (caseItem) => {
+    toast.info('Fonctionnalité de sélection d\'agent à venir');
+    console.log('👤 [BUYER] Sélection agent pour case:', caseItem.id);
+  };
+
+  const handleRequestSurveying = (caseItem) => {
+    toast.info('Fonctionnalité de demande de bornage à venir');
+    console.log('📐 [BUYER] Demande bornage pour case:', caseItem.id);
+  };
+
+  // Créer les handlers pour chaque action
+  const createActionHandlers = (caseItem) => ({
+    onSelectNotary: () => handleSelectNotary(caseItem),
+    onUploadBuyerIdentity: () => handleUploadBuyerIdentity(caseItem),
+    onPayDeposit: () => handlePayDeposit(caseItem),
+    onPayNotaryFees: () => handlePayNotaryFees(caseItem),
+    onReviewContract: () => handleReviewContract(caseItem),
+    onConfirmAppointment: () => handleConfirmAppointment(caseItem),
+    onPayBalance: () => handlePayBalance(caseItem),
+    onChooseAgent: () => handleChooseAgent(caseItem),
+    onRequestSurveying: () => handleRequestSurveying(caseItem)
+  });
+
+  // Obtenir les actions disponibles pour un dossier
+  const getContextualActions = (caseItem) => {
+    if (caseItem.source !== 'purchase_case') return null;
+    
+    const permissions = {
+      canConfirmPayment: true,
+      canValidateContract: false, // Only sellers can validate
+      canVerifyDocuments: false,  // Only notaries
+      canGenerateContract: false,  // Only notaries
+      canScheduleAppointment: false // Only notaries
+    };
+
+    return ContextualActionsService.getAvailableActions(
+      caseItem,
+      'buyer',
+      permissions
+    );
+  };
 
   useEffect(() => {
     if (user) {
@@ -944,8 +1027,91 @@ const ParticulierMesAchatsRefonte = () => {
                                 </div>
 
                                 {/* Actions contextuelles selon le statut */}
+                                {caseItem.source === 'purchase_case' && (() => {
+                                  const actions = getContextualActions(caseItem);
+                                  const handlers = createActionHandlers(caseItem);
+                                  
+                                  // Afficher les actions prioritaires en premier
+                                  const allActions = [
+                                    ...(actions?.validations || []),
+                                    ...(actions?.documents || []),
+                                    ...(actions?.payments || []),
+                                    ...(actions?.appointments || []),
+                                    ...(actions?.optional || [])
+                                  ];
+
+                                  if (allActions.length === 0) return null;
+
+                                  // Séparer les actions prioritaires
+                                  const priorityActions = allActions.filter(a => a.priority === 'high' || a.required);
+                                  const regularActions = allActions.filter(a => a.priority !== 'high' && !a.required);
+
+                                  return (
+                                    <div className="space-y-2 mt-3">
+                                      {/* Actions prioritaires (notaire obligatoire) */}
+                                      {priorityActions.map((action) => {
+                                        const IconComponent = {
+                                          UserPlus: Users,
+                                          Upload: Upload,
+                                          CreditCard: CreditCard,
+                                          CheckCircle: CheckCircle,
+                                          FileText: FileText,
+                                          Calendar: Calendar
+                                        }[action.icon] || FileText;
+
+                                        return (
+                                          <Button
+                                            key={action.id}
+                                            size="sm"
+                                            className={action.className || "bg-red-600 hover:bg-red-700 w-full"}
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const handler = handlers[action.handler];
+                                              if (handler) handler();
+                                            }}
+                                          >
+                                            <IconComponent className="w-4 h-4 mr-2" />
+                                            {action.label}
+                                          </Button>
+                                        );
+                                      })}
+
+                                      {/* Actions régulières */}
+                                      {regularActions.length > 0 && (
+                                        <div className="flex gap-2 flex-wrap">
+                                          {regularActions.slice(0, 2).map((action) => {
+                                            const IconComponent = {
+                                              Upload: Upload,
+                                              CreditCard: CreditCard,
+                                              CheckCircle: CheckCircle,
+                                              FileText: FileText,
+                                              Calendar: Calendar
+                                            }[action.icon] || FileText;
+
+                                            return (
+                                              <Button
+                                                key={action.id}
+                                                size="sm"
+                                                variant="outline"
+                                                onClick={(e) => {
+                                                  e.stopPropagation();
+                                                  const handler = handlers[action.handler];
+                                                  if (handler) handler();
+                                                }}
+                                              >
+                                                <IconComponent className="w-4 h-4 mr-2" />
+                                                {action.label}
+                                              </Button>
+                                            );
+                                          })}
+                                        </div>
+                                      )}
+                                    </div>
+                                  );
+                                })()}
+
                                 {caseItem.source === 'purchase_case' && (
-                                  <div className="flex gap-2 flex-wrap">
+                                  <div className="flex gap-2 flex-wrap mt-3">
                                     <Button
                                       size="sm"
                                       className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700"

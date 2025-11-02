@@ -73,8 +73,38 @@ export const getAvailableActions = (purchaseCase, userRole, permissions) => {
  * BUYER ACTIONS
  */
 const getBuyerActions = (status, purchaseCase, permissions, actions) => {
+  // CRITICAL: Choose notary (MUST be done before workflow can progress)
+  // Available from preliminary_agreement onwards if not already assigned
+  if (!purchaseCase.notary_id && !purchaseCase.notaire_id) {
+    const canSelectNotary = [
+      'preliminary_agreement', 
+      'deposit_payment', 
+      'title_verification',
+      'property_survey',
+      'certificate_verification',
+      'tax_clearance',
+      'land_survey',
+      'notary_fees_calculation',
+      'contract_preparation'
+    ].includes(status);
+
+    if (canSelectNotary) {
+      actions[ACTION_CATEGORIES.VALIDATIONS].unshift({
+        id: 'select_notary',
+        label: '⚠️ Sélectionner un notaire',
+        icon: 'UserPlus',
+        description: 'OBLIGATOIRE - Choisissez un notaire pour poursuivre',
+        handler: 'onSelectNotary',
+        priority: 'high',
+        required: true,
+        variant: 'default',
+        className: 'bg-red-600 hover:bg-red-700 text-white animate-pulse'
+      });
+    }
+  }
+
   // OPTIONAL: Choose agent/surveyor (available early in workflow)
-  if ([WORKFLOW_STATES.INITIATED, WORKFLOW_STATES.BUYER_VERIFICATION].includes(status)) {
+  if ([WORKFLOW_STATES.INITIATED, WORKFLOW_STATES.BUYER_VERIFICATION, 'preliminary_agreement'].includes(status)) {
     if (!purchaseCase.hasAgent) {
       actions[ACTION_CATEGORIES.OPTIONAL].push({
         id: 'choose_agent',
@@ -172,6 +202,35 @@ const getBuyerActions = (status, purchaseCase, permissions, actions) => {
  * SELLER ACTIONS
  */
 const getSellerActions = (status, purchaseCase, permissions, actions) => {
+  // CRITICAL: Choose notary (MUST be done before workflow can progress)
+  // Seller can also suggest/select a notary if buyer hasn't yet
+  if (!purchaseCase.notary_id && !purchaseCase.notaire_id) {
+    const canSelectNotary = [
+      'preliminary_agreement', 
+      'deposit_payment', 
+      'title_verification',
+      'property_survey',
+      'certificate_verification',
+      'tax_clearance',
+      'land_survey',
+      'notary_fees_calculation',
+      'contract_preparation'
+    ].includes(status);
+
+    if (canSelectNotary) {
+      actions[ACTION_CATEGORIES.VALIDATIONS].unshift({
+        id: 'select_notary',
+        label: '⚠️ Proposer un notaire',
+        icon: 'UserPlus',
+        description: 'RECOMMANDÉ - Proposez un notaire de confiance',
+        handler: 'onSelectNotary',
+        priority: 'high',
+        variant: 'default',
+        className: 'bg-orange-600 hover:bg-orange-700 text-white'
+      });
+    }
+  }
+
   // VALIDATIONS: Accept offer (if applicable)
   if (status === WORKFLOW_STATES.SELLER_NOTIFICATION) {
     actions[ACTION_CATEGORIES.VALIDATIONS].push({

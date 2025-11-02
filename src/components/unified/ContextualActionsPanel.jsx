@@ -9,7 +9,7 @@ import React from 'react';
 import {
   Upload, Download, FileText, CheckCircle, Clock, XCircle,
   CreditCard, Building2, Ruler, Calendar, MessageSquare,
-  FileSearch, FileCheck
+  FileSearch, FileCheck, UserPlus
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,8 @@ const ICON_MAP = {
   Calendar,
   MessageSquare,
   FileSearch,
-  FileCheck
+  FileCheck,
+  UserPlus
 };
 
 /**
@@ -75,7 +76,7 @@ const ActionButton = ({ action, handlers }) => {
     <Button
       onClick={handler}
       variant={action.variant || 'default'}
-      className="w-full justify-start h-auto py-3 px-4"
+      className={`w-full justify-start h-auto py-3 px-4 ${action.className || ''}`}
     >
       <div className="flex items-start gap-3 w-full">
         <IconComponent className="w-5 h-5 mt-0.5 flex-shrink-0" />
@@ -88,6 +89,11 @@ const ActionButton = ({ action, handlers }) => {
             <p className="text-xs font-semibold mt-1">
               {new Intl.NumberFormat('fr-FR').format(action.amount)} FCFA
             </p>
+          )}
+          {action.required && (
+            <Badge variant="destructive" className="mt-2 text-xs">
+              OBLIGATOIRE
+            </Badge>
           )}
         </div>
       </div>

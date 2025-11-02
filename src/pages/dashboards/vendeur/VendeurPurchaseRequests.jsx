@@ -25,7 +25,9 @@ import {
   ArrowUpRight,
   ArrowDownRight,
   Sparkles,
-  Package
+  Package,
+  Users,
+  Upload
 } from 'lucide-react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -47,6 +49,7 @@ import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
 import NotificationService from '@/services/NotificationService';
 import RealtimeSyncService from '@/services/RealtimeSyncService';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
+import ContextualActionsService from '@/services/ContextualActionsService';
 import NegotiationModal from '@/components/modals/NegotiationModal';
 import RequestDetailsModal from '@/components/modals/RequestDetailsModal';
 
@@ -589,6 +592,69 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   const handleGenerateContract = (request) => {
     toast.info('Génération de contrat à venir ! 📄');
     // TODO: Générer PDF du contrat de vente
+  };
+
+  // ========================================
+  // HANDLERS POUR LES ACTIONS CONTEXTUELLES
+  // ========================================
+
+  const handleSelectNotaryVendor = (request) => {
+    toast.info('Fonctionnalité de sélection de notaire à venir');
+    console.log('🔔 [VENDOR] Proposition notaire pour request:', request.id);
+  };
+
+  const handleUploadTitleDeed = (request) => {
+    toast.info('Fonctionnalité d\'upload de titre foncier à venir');
+    console.log('📄 [VENDOR] Upload titre pour request:', request.id);
+  };
+
+  const handleValidateContract = (request) => {
+    toast.info('Fonctionnalité de validation de contrat à venir');
+    console.log('✅ [VENDOR] Validation contrat pour request:', request.id);
+  };
+
+  const handleConfirmAppointmentVendor = (request) => {
+    toast.info('Fonctionnalité de confirmation RDV à venir');
+    console.log('📅 [VENDOR] Confirmation RDV pour request:', request.id);
+  };
+
+  // Créer les handlers pour chaque action vendeur
+  const createVendorActionHandlers = (request) => ({
+    onSelectNotary: () => handleSelectNotaryVendor(request),
+    onUploadTitleDeed: () => handleUploadTitleDeed(request),
+    onValidateContract: () => handleValidateContract(request),
+    onConfirmAppointment: () => handleConfirmAppointmentVendor(request)
+  });
+
+  // Obtenir les actions disponibles pour une demande
+  const getVendorContextualActions = (request) => {
+    // Seulement pour les dossiers acceptés (avec case)
+    if (!request.hasCase) return null;
+    
+    const permissions = {
+      canConfirmPayment: false, // Only buyers
+      canValidateContract: true,
+      canVerifyDocuments: false,  // Only notaries
+      canGenerateContract: false,  // Only notaries
+      canScheduleAppointment: false // Only notaries
+    };
+
+    // Construire un objet purchase_case compatible
+    const purchaseCase = {
+      id: request.id,
+      status: request.caseStatus || request.status,
+      current_status: request.caseStatus || request.status,
+      notary_id: request.notary_id || request.notaire_id,
+      notaire_id: request.notary_id || request.notaire_id,
+      hasAgent: false,
+      hasSurveying: false
+    };
+
+    return ContextualActionsService.getAvailableActions(
+      purchaseCase,
+      'seller',
+      permissions
+    );
   };
 
   const loadRequests = async (retryCount = 0) => {
@@ -1385,6 +1451,78 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                                 Contacter l'acheteur
                               </Button>
                             </div>
+
+                            {/* Actions contextuelles du vendeur */}
+                            {(() => {
+                              const actions = getVendorContextualActions(request);
+                              if (!actions) return null;
+
+                              const handlers = createVendorActionHandlers(request);
+                              
+                              const allActions = [
+                                ...(actions.validations || []),
+                                ...(actions.documents || []),
+                                ...(actions.appointments || [])
+                              ];
+
+                              if (allActions.length === 0) return null;
+
+                              // Séparer les actions prioritaires
+                              const priorityActions = allActions.filter(a => a.priority === 'high' || a.required);
+                              const regularActions = allActions.filter(a => a.priority !== 'high' && !a.required);
+
+                              return (
+                                <div className="space-y-2 mt-3">
+                                  {/* Actions prioritaires (notaire) */}
+                                  {priorityActions.map((action) => (
+                                    <Button
+                                      key={action.id}
+                                      size="sm"
+                                      className={action.className || "bg-orange-600 hover:bg-orange-700 w-full rounded-xl"}
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        const handler = handlers[action.handler];
+                                        if (handler) handler();
+                                      }}
+                                    >
+                                      <Users className="w-4 h-4 mr-2" />
+                                      {action.label}
+                                    </Button>
+                                  ))}
+
+                                  {/* Actions régulières */}
+                                  {regularActions.length > 0 && (
+                                    <div className="flex gap-2 flex-wrap">
+                                      {regularActions.slice(0, 2).map((action) => {
+                                        const IconMap = {
+                                          Upload: Upload,
+                                          CheckCircle: CheckCircle2,
+                                          Calendar: Calendar
+                                        };
+                                        const IconComponent = IconMap[action.icon] || FileText;
+
+                                        return (
+                                          <Button
+                                            key={action.id}
+                                            size="sm"
+                                            variant="outline"
+                                            className="rounded-xl"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              const handler = handlers[action.handler];
+                                              if (handler) handler();
+                                            }}
+                                          >
+                                            <IconComponent className="w-4 h-4 mr-2" />
+                                            {action.label}
+                                          </Button>
+                                        );
+                                      })}
+                                    </div>
+                                  )}
+                                </div>
+                              );
+                            })()}
 
                             {/* Actions contextuelles selon l'étape */}
                             {['deposit_payment', 'fees_payment_pending', 'final_payment_pending'].includes(request.caseStatus) && (

@@ -500,7 +500,24 @@ const getBuyerActions = (purchaseCase, permissions = {}) => {
     [ACTION_CATEGORIES.VALIDATIONS]: [],
     [ACTION_CATEGORIES.OPTIONAL]: []
   };
-  return getBuyerActionsInternal(status, purchaseCase, permissions, actions);
+  
+  console.log('🔍 [ContextualActions] getBuyerActions appelé:', {
+    status,
+    hasNotary: !!(purchaseCase?.notary_id || purchaseCase?.notaire_id),
+    permissions
+  });
+  
+  const result = getBuyerActionsInternal(status, purchaseCase, permissions, actions);
+  
+  console.log('✅ [ContextualActions] getBuyerActions résultat:', {
+    validations: result.validations?.length || 0,
+    documents: result.documents?.length || 0,
+    payments: result.payments?.length || 0,
+    appointments: result.appointments?.length || 0,
+    optional: result.optional?.length || 0
+  });
+  
+  return result;
 };
 
 /**
@@ -518,7 +535,23 @@ const getSellerActions = (purchaseCase, permissions = {}) => {
     [ACTION_CATEGORIES.VALIDATIONS]: [],
     [ACTION_CATEGORIES.OPTIONAL]: []
   };
-  return getSellerActionsInternal(status, purchaseCase, permissions, actions);
+  
+  console.log('🔍 [ContextualActions] getSellerActions appelé:', {
+    status,
+    hasNotary: !!(purchaseCase?.notary_id || purchaseCase?.notaire_id),
+    permissions
+  });
+  
+  const result = getSellerActionsInternal(status, purchaseCase, permissions, actions);
+  
+  console.log('✅ [ContextualActions] getSellerActions résultat:', {
+    validations: result.validations?.length || 0,
+    documents: result.documents?.length || 0,
+    appointments: result.appointments?.length || 0,
+    optional: result.optional?.length || 0
+  });
+  
+  return result;
 };
 
 // Export named functions for direct use

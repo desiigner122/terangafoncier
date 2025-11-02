@@ -36,6 +36,7 @@ const BuyerActionButtonsSection = ({
   loading = false
 }) => {
   if (!caseData || !currentStatus) {
+    console.log('⚠️ [BuyerActions] Missing data:', { caseData: !!caseData, currentStatus });
     return null;
   }
 
@@ -50,6 +51,17 @@ const BuyerActionButtonsSection = ({
     canPayBalance: true
   });
 
+  console.log('🎯 [BuyerActions] Actions récupérées:', {
+    status: currentStatus,
+    caseData: { id: caseData.id, status: caseData.status, notary_id: caseData.notary_id },
+    actions,
+    validations: actions.validations?.length,
+    documents: actions.documents?.length,
+    payments: actions.payments?.length,
+    appointments: actions.appointments?.length,
+    optional: actions.optional?.length
+  });
+
   // Récupérer toutes les actions disponibles
   const allActions = [
     ...(actions.validations || []),
@@ -59,7 +71,10 @@ const BuyerActionButtonsSection = ({
     ...(actions.optional || [])
   ];
 
+  console.log('📋 [BuyerActions] Total actions disponibles:', allActions.length, allActions);
+
   if (allActions.length === 0) {
+    console.log('⚠️ [BuyerActions] Aucune action disponible - composant masqué');
     return null;
   }
 

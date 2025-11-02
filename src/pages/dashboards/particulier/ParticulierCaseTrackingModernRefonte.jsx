@@ -406,14 +406,17 @@ const ParticulierCaseTrackingModernRefonte = () => {
 
   // Handler pour les actions de l'acheteur
   const handleBuyerAction = async (action) => {
-    console.log('🔔 Action acheteur:', action);
+    console.log('🔔 [BUYER HANDLER] Action reçue:', action);
+    console.log('🔔 [BUYER HANDLER] Type:', action.id);
     
     switch (action.id) {
       case 'select_notary':
+        console.log('✅ [BUYER] Ouverture NotarySelectionModal');
         setShowNotaryModal(true);
         break;
       
       case 'upload_identity':
+        console.log('✅ [BUYER] Ouverture UploadDocumentsModal (identity)');
         setUploadModalConfig({
           documentTypes: ['identity_card', 'proof_of_address'],
           action: action,
@@ -423,6 +426,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
         break;
       
       case 'pay_deposit':
+        console.log('✅ [BUYER] Ouverture PaymentModal (deposit)', { amount: action.amount });
         setPaymentModalData({
           id: `payment_deposit_${purchaseCase.id}`,
           request_type: 'deposit',
@@ -436,6 +440,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
         break;
       
       case 'pay_notary_fees':
+        console.log('✅ [BUYER] Ouverture PaymentModal (notary fees)', { amount: action.amount });
         setPaymentModalData({
           id: `payment_notary_${purchaseCase.id}`,
           request_type: 'notary_fees',
@@ -449,16 +454,19 @@ const ParticulierCaseTrackingModernRefonte = () => {
         break;
       
       case 'review_contract':
+        console.log('✅ [BUYER] Review contrat');
         toast.info('Révision du contrat - Fonctionnalité en cours d\'implémentation');
         // TODO: Ouvrir ContractGenerator ou vue de révision de contrat
         break;
       
       case 'confirm_appointment':
+        console.log('✅ [BUYER] Confirmer RDV');
         toast.info('Confirmation rendez-vous - Fonctionnalité en cours d\'implémentation');
         // TODO: Utiliser AppointmentScheduler existant
         break;
       
       case 'pay_balance':
+        console.log('✅ [BUYER] Ouverture PaymentModal (balance)');
         const depositPaid = (property?.price * 0.10) || 0;
         const notaryFeesPaid = (property?.price * 0.05) || 0;
         const balance = (property?.price || 0) - depositPaid;
@@ -476,16 +484,19 @@ const ParticulierCaseTrackingModernRefonte = () => {
         break;
       
       case 'choose_agent':
+        console.log('✅ [BUYER] Choix agent - affichage toast seulement');
         toast.info('Choix agent foncier - Fonctionnalité en cours d\'implémentation');
         // TODO: Ouvrir AgentSelectionModal
         break;
       
       case 'request_surveying':
+        console.log('✅ [BUYER] Demande bornage - affichage toast seulement');
         toast.info('Demande bornage - Fonctionnalité en cours d\'implémentation');
         // TODO: Ouvrir GeometreSelectionModal
         break;
       
       default:
+        console.warn('⚠️ [BUYER] Action non gérée:', action.id);
         toast.info('Action non implémentée: ' + action.label);
     }
   };

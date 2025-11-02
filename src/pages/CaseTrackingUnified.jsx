@@ -36,6 +36,7 @@ import {
 // Modals de sélection
 import AgentSelectionModal from '@/components/modals/AgentSelectionModal.jsx';
 import GeometreSelectionModal from '@/components/modals/GeometreSelectionModal.jsx';
+import NotarySelectionModal from '@/components/modals/NotarySelectionModal.jsx';
 
 // Composants existants
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern.jsx';
@@ -103,6 +104,7 @@ const CaseTrackingUnified = () => {
   // États des modals
   const [showAgentModal, setShowAgentModal] = useState(false);
   const [showGeometreModal, setShowGeometreModal] = useState(false);
+  const [showNotaryModal, setShowNotaryModal] = useState(false);
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [selectedPaymentRequest, setSelectedPaymentRequest] = useState(null);
 
@@ -239,13 +241,29 @@ const CaseTrackingUnified = () => {
     // Router selon l'ID de l'action
     switch (action.id) {
       case 'select_notary':
-        console.log('✅ [UNIFIED] Opening notary selection');
-        toast.info('Sélection notaire - Modal à implémenter');
+        console.log('✅ [UNIFIED] Opening notary selection modal');
+        setShowNotaryModal(true);
         break;
         
       case 'upload_identity':
+        console.log('✅ [UNIFIED] Opening upload modal (identity)');
+        // Enrichir l'action avec les types de documents requis
+        setCurrentAction({
+          ...action,
+          documentTypes: ['identity_card', 'proof_of_address'],
+          nextStatus: 'buyer_documents_submitted'
+        });
+        setShowUploadModal(true);
+        break;
+        
       case 'upload_title_deed':
-        console.log('✅ [UNIFIED] Opening upload modal');
+        console.log('✅ [UNIFIED] Opening upload modal (title deed)');
+        // Enrichir l'action avec les types de documents requis
+        setCurrentAction({
+          ...action,
+          documentTypes: ['title_deed', 'land_certificate', 'tax_receipts'],
+          nextStatus: 'seller_documents_submitted'
+        });
         setShowUploadModal(true);
         break;
         
@@ -854,6 +872,21 @@ const CaseTrackingUnified = () => {
           toast.success('Action confirmée avec succès !');
         }}
       />
+
+      {/* Modal sélection notaire */}
+      {showNotaryModal && caseData?.id && (
+        <NotarySelectionModal
+          isOpen={showNotaryModal}
+          onClose={() => setShowNotaryModal(false)}
+          caseId={caseData.id}
+          onNotarySelected={async (notary) => {
+            console.log('✅ [UNIFIED] Notaire sélectionné:', notary);
+            setShowNotaryModal(false);
+            await loadCaseData();
+            toast.success(`Notaire ${notary.profile?.full_name || notary.email} sélectionné avec succès !`);
+          }}
+        />
+      )}
     </div>
   );
 };

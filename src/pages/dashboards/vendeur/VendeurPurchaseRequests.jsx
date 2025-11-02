@@ -360,14 +360,11 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         { duration: 5000 }
       );
       
-      // 8. Recharger après un court délai pour laisser la DB se mettre à jour
-      // BUT: This won't override our persistent state
-      setTimeout(() => {
-        console.log('🔄 [ACCEPT] Rechargement des demandes après delay...');
-        loadRequests().catch(err => {
-          console.warn('⚠️ Rechargement en arrière-plan échoué:', err);
-        });
-      }, 3000); // Augmenté à 3 secondes
+      // 8. Forcer un rechargement immédiat pour s'assurer que les boutons disparaissent
+      console.log('🔄 [ACCEPT] Rechargement immédiat des demandes...');
+      await loadRequests().catch(err => {
+        console.warn('⚠️ Rechargement immédiat échoué (non bloquant):', err);
+      });
 
     } catch (error) {
       console.error('❌ [ACCEPT] Erreur:', error);

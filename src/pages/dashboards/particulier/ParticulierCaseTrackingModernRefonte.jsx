@@ -34,6 +34,7 @@ import { cn } from '@/lib/utils';
 import AppointmentScheduler from '@/components/purchase/AppointmentScheduler';
 import ContractGenerator from '@/components/purchase/ContractGenerator';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
+import BuyerActionButtonsSection from '@/components/purchase/BuyerActionButtonsSection';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
@@ -393,6 +394,59 @@ const ParticulierCaseTrackingModernRefonte = () => {
     };
   }, [purchaseCase?.request_id]);
 
+  // Handler pour les actions de l'acheteur
+  const handleBuyerAction = async (action) => {
+    console.log('🔔 Action acheteur:', action);
+    
+    switch (action.id) {
+      case 'select_notary':
+        toast.info('Sélection du notaire - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir modal de sélection de notaire
+        break;
+      
+      case 'upload_identity':
+        toast.info('Upload pièce d\'identité - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir modal d'upload de document
+        break;
+      
+      case 'pay_deposit':
+        toast.info(`Paiement acompte de ${action.amount?.toLocaleString()} FCFA - Fonctionnalité en cours d\'implémentation`);
+        // TODO: Ouvrir modal de paiement
+        break;
+      
+      case 'pay_notary_fees':
+        toast.info(`Paiement frais notaire de ${action.amount?.toLocaleString()} FCFA - Fonctionnalité en cours d\'implémentation`);
+        // TODO: Ouvrir modal de paiement
+        break;
+      
+      case 'review_contract':
+        toast.info('Révision du contrat - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir modal de révision de contrat
+        break;
+      
+      case 'confirm_appointment':
+        toast.info('Confirmation rendez-vous - Fonctionnalité en cours d\'implémentation');
+        // TODO: Ouvrir modal de confirmation de rendez-vous
+        break;
+      
+      case 'pay_balance':
+        toast.info(`Paiement solde de ${action.amount?.toLocaleString()} FCFA - Fonctionnalité en cours d\'implémentation`);
+        // TODO: Ouvrir modal de paiement
+        break;
+      
+      case 'choose_agent':
+        toast.info('Choix agent foncier - Fonctionnalité en cours d\'implémentation');
+        break;
+      
+      case 'request_surveying':
+        toast.info('Demande bornage - Fonctionnalité en cours d\'implémentation');
+        break;
+      
+      default:
+        toast.info('Action non implémentée: ' + action.label);
+    }
+  };
+
   const sendMessage = async () => {
     if (!newMessage.trim() || !purchaseCase?.id) return;
 
@@ -614,33 +668,80 @@ const ParticulierCaseTrackingModernRefonte = () => {
                 {property ? (
                   <div className="grid md:grid-cols-2 gap-6">
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">{property.title || property.name}</h3>
+                      <h3 className="font-semibold text-lg mb-2">{property.title || property.name || 'Propriété'}</h3>
+                      {/* Référence */}
+                      {property.id && (
+                        <p className="text-xs text-gray-500 font-mono mb-3">
+                          Réf: {property.id.slice(0, 8).toUpperCase()}
+                        </p>
+                      )}
                       <div className="space-y-2 text-sm">
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <MapPin className="w-4 h-4 text-green-600" />
-                          <span>{property.location || property.address || 'Non spécifié'}</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <Package className="w-4 h-4 text-green-600" />
-                          <span>Surface: {property.area || property.size || 'N/A'} m²</span>
-                        </div>
-                        <div className="flex items-center gap-2 text-gray-600">
-                          <DollarSign className="w-4 h-4 text-green-600" />
-                          <span className="font-bold text-green-700">
-                            {property.price ? `${property.price.toLocaleString()} FCFA` : 'Prix non défini'}
-                          </span>
-                        </div>
+                        {/* Localisation - support multi-format */}
+                        {(property.location || property.address || property.city) && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <MapPin className="w-4 h-4 text-green-600" />
+                            <span>{property.location || property.address || property.city}</span>
+                          </div>
+                        )}
+                        {/* Surface - support multi-format */}
+                        {(property.area || property.size || property.surface || property.superficie) && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <Package className="w-4 h-4 text-green-600" />
+                            <span>Surface: {property.area || property.size || property.surface || property.superficie} m²</span>
+                          </div>
+                        )}
+                        {/* Prix - support multi-format */}
+                        {(property.price || property.prix || purchaseCase?.purchase_price || purchaseCase?.offered_price) && (
+                          <div className="flex items-center gap-2 text-gray-600">
+                            <DollarSign className="w-4 h-4 text-green-600" />
+                            <span className="font-bold text-green-700">
+                              {(property.price || property.prix || purchaseCase?.purchase_price || purchaseCase?.offered_price).toLocaleString()} FCFA
+                            </span>
+                          </div>
+                        )}
                       </div>
                     </div>
-                    {(property.image_url || property.photo_url || property.image || property.photo) && (
-                      <div className="rounded-lg overflow-hidden shadow-md">
-                        <img
-                          src={property.image_url || property.photo_url || property.image || property.photo}
-                          alt={property.title || 'Propriété'}
-                          className="w-full h-48 object-cover"
-                        />
-                      </div>
-                    )}
+                    {(() => {
+                      // Gérer plusieurs formats d'image possibles
+                      let imageUrl = null;
+                      if (property?.image_url || property?.photo_url) {
+                        imageUrl = property.image_url || property.photo_url;
+                      } else if (property?.image || property?.photo) {
+                        imageUrl = property.image || property.photo;
+                      } else if (property?.images && Array.isArray(property.images) && property.images.length > 0) {
+                        imageUrl = property.images[0];
+                      } else if (property?.images && typeof property.images === 'string') {
+                        try {
+                          const parsed = JSON.parse(property.images);
+                          if (Array.isArray(parsed) && parsed.length > 0) {
+                            imageUrl = parsed[0];
+                          }
+                        } catch (e) {
+                          imageUrl = property.images;
+                        }
+                      }
+
+                      return imageUrl ? (
+                        <div className="rounded-lg overflow-hidden shadow-md">
+                          <img
+                            src={imageUrl}
+                            alt={property?.title || property?.name || 'Propriété'}
+                            className="w-full h-48 object-cover"
+                            onError={(e) => {
+                              e.target.style.display = 'none';
+                              e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
+                            }}
+                          />
+                          <div className="w-full h-48 rounded-lg bg-gray-100 flex items-center justify-center" style={{ display: 'none' }}>
+                            <Building2 className="w-12 h-12 text-gray-300" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="w-full h-48 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <Building2 className="w-12 h-12 text-gray-300" />
+                        </div>
+                      );
+                    })()}
                   </div>
                 ) : (
                   <div className="text-center py-8 text-gray-500">
@@ -668,6 +769,14 @@ const ParticulierCaseTrackingModernRefonte = () => {
                 />
               </CardContent>
             </Card>
+
+            {/* Section Boutons d'Actions */}
+            <BuyerActionButtonsSection
+              currentStatus={purchaseCase.status}
+              caseData={purchaseCase}
+              onActionClick={handleBuyerAction}
+              loading={false}
+            />
 
             {/* Onglets: Documents, RDV, Messages, Paiements */}
             <Card className="border-none shadow-lg">

@@ -119,6 +119,8 @@ const NotarySelectionModal = ({ isOpen, onClose, caseId, onNotarySelected }) => 
     return (
       notary.office_name?.toLowerCase().includes(query) ||
       notary.profile?.full_name?.toLowerCase().includes(query) ||
+      notary.profile?.email?.toLowerCase().includes(query) ||
+      notary.profile?.phone?.toLowerCase().includes(query) ||
       notary.office_address?.toLowerCase().includes(query)
     );
   });
@@ -151,82 +153,135 @@ const NotarySelectionModal = ({ isOpen, onClose, caseId, onNotarySelected }) => 
           {/* Infos */}
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between mb-2">
-              <div>
-                <h4 className="font-bold text-base text-gray-900 dark:text-gray-100 mb-1">
-                  {notary.profile?.full_name}
+              <div className="flex-1">
+                <h4 className="font-bold text-lg text-gray-900 dark:text-gray-100 mb-1">
+                  {notary.profile?.full_name || notary.office_name}
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
-                  <Building2 className="w-3 h-3" />
-                  {notary.office_name}
-                </p>
+                {notary.office_name && notary.office_name !== notary.profile?.full_name && (
+                  <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1">
+                    <Building2 className="w-3 h-3" />
+                    {notary.office_name}
+                  </p>
+                )}
+                {notary.profile?.role && (
+                  <Badge variant="outline" className="mt-1 text-xs">
+                    <Scale className="w-3 h-3 mr-1" />
+                    {notary.profile.role === 'notaire' ? 'Notaire' : notary.profile.role}
+                  </Badge>
+                )}
               </div>
               
               {/* Score badge */}
-              <Badge 
-                variant={notary.score >= 85 ? 'default' : 'secondary'}
-                className="flex items-center gap-1"
-              >
-                <Star className="w-3 h-3 fill-current" />
-                {notary.score}
-              </Badge>
+              {notary.score && (
+                <Badge 
+                  variant={notary.score >= 85 ? 'default' : 'secondary'}
+                  className="flex items-center gap-1"
+                >
+                  <Star className="w-3 h-3 fill-current" />
+                  {notary.score}
+                </Badge>
+              )}
+            </div>
+
+            {/* Contact principal */}
+            <div className="space-y-1 mb-3">
+              {notary.profile?.email && (
+                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <Mail className="w-4 h-4 text-gray-400" />
+                  <a 
+                    href={`mailto:${notary.profile.email}`}
+                    className="hover:text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {notary.profile.email}
+                  </a>
+                </div>
+              )}
+              {notary.profile?.phone && (
+                <div className="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
+                  <Phone className="w-4 h-4 text-gray-400" />
+                  <a 
+                    href={`tel:${notary.profile.phone}`}
+                    className="hover:text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    {notary.profile.phone}
+                  </a>
+                </div>
+              )}
             </div>
 
             {/* Localisation */}
             {notary.office_address && (
-              <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mb-2">
-                <MapPin className="w-3 h-3" />
+              <div className="flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400 mb-3">
+                <MapPin className="w-4 h-4 flex-shrink-0" />
                 <span className="truncate">{notary.office_address}</span>
                 {notary.distance && (
-                  <Badge variant="outline" className="ml-2">
+                  <Badge variant="outline" className="ml-2 flex-shrink-0">
                     {notary.distance} km
                   </Badge>
                 )}
               </div>
             )}
 
-            {/* Stats */}
-            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3">
+            {/* Stats de performance */}
+            <div className="flex items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mb-3 flex-wrap">
               <div className="flex items-center gap-1">
                 <FileText className="w-3 h-3" />
-                {notary.total_cases_completed || 0} dossiers complétés
+                <span>{notary.total_cases_completed || 0} dossiers</span>
               </div>
-              <div className="flex items-center gap-1">
-                <TrendingUp className="w-3 h-3" />
-                {notary.success_rate || 95}% de réussite
-              </div>
-            </div>
-
-            {/* Capacité */}
-            <div className="flex items-center gap-2">
-              <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
-                <div 
-                  className={`h-2 rounded-full ${
-                    notary.capacity_percentage < 70 ? 'bg-green-500' :
-                    notary.capacity_percentage < 90 ? 'bg-yellow-500' : 'bg-red-500'
-                  }`}
-                  style={{ width: `${notary.capacity_percentage}%` }}
-                />
-              </div>
-              <span className="text-xs text-gray-500 dark:text-gray-400 whitespace-nowrap">
-                {notary.available_slots} places disponibles
-              </span>
-            </div>
-
-            {/* Contact */}
-            <div className="flex items-center gap-3 mt-3 text-xs">
-              {notary.profile?.phone && (
-                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                  <Phone className="w-3 h-3" />
-                  {notary.profile.phone}
+              {notary.success_rate && (
+                <div className="flex items-center gap-1">
+                  <TrendingUp className="w-3 h-3" />
+                  <span>{notary.success_rate}% réussite</span>
                 </div>
               )}
-              {notary.profile?.email && (
-                <div className="flex items-center gap-1 text-gray-600 dark:text-gray-400">
-                  <Mail className="w-3 h-3" />
-                  {notary.profile.email}
+              {notary.current_cases_count !== undefined && (
+                <div className="flex items-center gap-1">
+                  <Scale className="w-3 h-3" />
+                  <span>{notary.current_cases_count} cas en cours</span>
                 </div>
               )}
             </div>
+
+            {/* Capacité avec barre de progression */}
+            <div className="space-y-1">
+              <div className="flex items-center justify-between text-xs">
+                <span className="text-gray-600 dark:text-gray-400">
+                  Disponibilité
+                </span>
+                <span className="font-medium text-gray-700 dark:text-gray-300">
+                  {notary.available_slots || notary.max_concurrent_cases - (notary.current_cases_count || 0)} places
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                  <div 
+                    className={`h-2 rounded-full transition-all ${
+                      notary.capacity_percentage < 70 ? 'bg-green-500' :
+                      notary.capacity_percentage < 90 ? 'bg-yellow-500' : 'bg-red-500'
+                    }`}
+                    style={{ width: `${Math.min(notary.capacity_percentage || 0, 100)}%` }}
+                  />
+                </div>
+                <span className={`text-xs font-medium ${
+                  notary.capacity_percentage < 70 ? 'text-green-600' :
+                  notary.capacity_percentage < 90 ? 'text-yellow-600' : 'text-red-600'
+                }`}>
+                  {notary.capacity_percentage || 0}%
+                </span>
+              </div>
+            </div>
+
+            {/* Statut disponibilité */}
+            {notary.is_accepting_cases && (
+              <div className="mt-2">
+                <Badge variant="success" className="text-xs bg-green-100 text-green-700 dark:bg-green-900 dark:text-green-300">
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Accepte de nouveaux dossiers
+                </Badge>
+              </div>
+            )}
           </div>
 
           {/* Checkmark si sélectionné */}
@@ -242,29 +297,37 @@ const NotarySelectionModal = ({ isOpen, onClose, caseId, onNotarySelected }) => 
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Scale className="w-5 h-5 text-indigo-600" />
-            Choisir un Notaire
+          <DialogTitle className="flex items-center gap-2 text-xl">
+            <Scale className="w-6 h-6 text-indigo-600" />
+            Choisir un Notaire pour votre dossier
           </DialogTitle>
-          <DialogDescription>
-            Sélectionnez le notaire qui suivra votre dossier. Les notaires sont classés par score de pertinence.
+          <DialogDescription className="space-y-2">
+            <p>Sélectionnez le notaire qui accompagnera votre transaction.</p>
+            <p className="text-xs text-gray-500">
+              ℹ️ Tous les notaires inscrits sur la plateforme sont affichés. Vous pouvez consulter leurs informations de contact et leur disponibilité.
+            </p>
           </DialogDescription>
         </DialogHeader>
 
-        {/* Filtres */}
+        {/* Filtres et compteur */}
         <div className="space-y-3 py-4">
-          <div>
-            <Label htmlFor="search">Rechercher</Label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                id="search"
-                placeholder="Nom du notaire ou de l'office..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10"
-              />
-            </div>
+          <div className="flex items-center justify-between">
+            <Label htmlFor="search">Rechercher un notaire</Label>
+            {!loading && notaries.length > 0 && (
+              <Badge variant="secondary" className="text-xs">
+                {filteredNotaries.length} notaire{filteredNotaries.length > 1 ? 's' : ''} trouvé{filteredNotaries.length > 1 ? 's' : ''}
+              </Badge>
+            )}
+          </div>
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              id="search"
+              placeholder="Nom du notaire, email, téléphone..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
           </div>
         </div>
 
@@ -280,9 +343,25 @@ const NotarySelectionModal = ({ isOpen, onClose, caseId, onNotarySelected }) => 
               </div>
             </div>
           ) : filteredNotaries.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12">
-              <AlertCircle className="w-12 h-12 text-gray-400 mb-4" />
-              <p className="text-gray-500 dark:text-gray-400">Aucun notaire disponible</p>
+            <div className="flex flex-col items-center justify-center py-12 text-center">
+              <AlertCircle className="w-16 h-16 text-gray-400 mb-4" />
+              <h3 className="text-lg font-semibold text-gray-700 dark:text-gray-300 mb-2">
+                {searchQuery ? 'Aucun résultat' : 'Aucun notaire trouvé'}
+              </h3>
+              <p className="text-sm text-gray-500 dark:text-gray-400 max-w-md">
+                {searchQuery 
+                  ? 'Essayez de modifier votre recherche ou d\'effacer les filtres.'
+                  : 'Aucun notaire n\'est actuellement inscrit sur la plateforme. Veuillez réessayer plus tard ou contacter le support.'}
+              </p>
+              {searchQuery && (
+                <Button 
+                  variant="outline" 
+                  onClick={() => setSearchQuery('')}
+                  className="mt-4"
+                >
+                  Effacer la recherche
+                </Button>
+              )}
             </div>
           ) : (
             <div className="space-y-3">

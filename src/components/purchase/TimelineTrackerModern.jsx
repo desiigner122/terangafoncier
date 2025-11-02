@@ -93,7 +93,20 @@ export const TimelineTracker = ({
       return financingApproved ? 'completed' : 'pending';
     }
 
-    // 1. PRIORITÉ: Utiliser les événements réels du timeline
+    // 1. Vérifier si c'est l'étape actuelle
+    if (currentStatus === stageId) {
+      return 'in_progress';
+    }
+
+    // 2. Utiliser WorkflowStatusService pour déterminer si l'étape est complétée
+    // Cela garantit que toutes les étapes avant l'étape actuelle sont marquées comme complétées
+    const completedFromService = WorkflowStatusService.getCompletedStages(currentStatus);
+    
+    if (completedFromService.includes(stageId)) {
+      return 'completed';
+    }
+
+    // 3. OPTIONNEL: Vérifier les événements réels du timeline pour plus de précision
     if (timeline && timeline.length > 0) {
       // Chercher un événement de type 'status_change' pour ce stage
       const stageEvent = timeline.find(event => {
@@ -116,21 +129,8 @@ export const TimelineTracker = ({
         return false;
       });
       
+      // Si trouvé dans timeline, marquer comme complété (override)
       if (stageEvent) {
-        return 'completed';
-      }
-    }
-
-    // 2. Vérifier si c'est l'étape actuelle
-    if (currentStatus === stageId) {
-      return 'in_progress';
-    }
-
-    // 3. FALLBACK intelligent: Utiliser le service UNIQUEMENT si pas de timeline
-    if (!timeline || timeline.length === 0) {
-      const completedFromService = WorkflowStatusService.getCompletedStages(currentStatus);
-      
-      if (completedFromService.includes(stageId)) {
         return 'completed';
       }
     }

@@ -1325,17 +1325,42 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                           <div className="flex gap-4">
                             {/* Image de la propriété */}
                             <div className="w-32 h-24 rounded-lg overflow-hidden bg-white flex-shrink-0 shadow-sm">
-                              {request.parcels?.image_url || request.parcels?.photo_url ? (
-                                <img
-                                  src={request.parcels.image_url || request.parcels.photo_url}
-                                  alt={request.parcels.title || request.parcels.name}
-                                  className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
-                                />
-                              ) : (
-                                <div className="w-full h-full flex items-center justify-center">
-                                  <Building2 className="w-8 h-8 text-slate-300" />
-                                </div>
-                              )}
+                              {(() => {
+                                // Gérer plusieurs formats d'image possibles
+                                let imageUrl = null;
+                                const parcel = request.parcels;
+                                if (parcel?.image_url || parcel?.photo_url) {
+                                  imageUrl = parcel.image_url || parcel.photo_url;
+                                } else if (parcel?.image || parcel?.photo) {
+                                  imageUrl = parcel.image || parcel.photo;
+                                } else if (parcel?.images && Array.isArray(parcel.images) && parcel.images.length > 0) {
+                                  imageUrl = parcel.images[0];
+                                } else if (parcel?.images && typeof parcel.images === 'string') {
+                                  try {
+                                    const parsed = JSON.parse(parcel.images);
+                                    if (Array.isArray(parsed) && parsed.length > 0) {
+                                      imageUrl = parsed[0];
+                                    }
+                                  } catch (e) {
+                                    imageUrl = parcel.images;
+                                  }
+                                }
+
+                                return imageUrl ? (
+                                  <img
+                                    src={imageUrl}
+                                    alt={parcel?.title || parcel?.name || 'Propriété'}
+                                    className="w-full h-full object-cover hover:scale-110 transition-transform duration-300"
+                                    onError={(e) => {
+                                      e.target.style.display = 'none';
+                                      e.target.nextSibling.style.display = 'flex';
+                                    }}
+                                  />
+                                ) : null;
+                              })()}
+                              <div className="w-full h-full flex items-center justify-center" style={{ display: request.parcels?.image_url || request.parcels?.photo_url || request.parcels?.image || request.parcels?.photo || (request.parcels?.images && request.parcels.images.length > 0) ? 'none' : 'flex' }}>
+                                <Building2 className="w-8 h-8 text-slate-300" />
+                              </div>
                             </div>
 
                             {/* Détails de la propriété */}
@@ -1352,23 +1377,25 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                                     </p>
                                   )}
                                   <div className="flex flex-wrap items-center gap-3 text-sm text-slate-600">
-                                    {request.parcels?.location && (
+                                    {/* Localisation - gérer plusieurs formats */}
+                                    {(request.parcels?.location || request.parcels?.address || request.parcels?.city) && (
                                       <span className="flex items-center gap-1">
                                         <MapPin className="w-3 h-3 text-green-600" />
-                                        {request.parcels.location}
+                                        {request.parcels.location || request.parcels.address || request.parcels.city}
                                       </span>
                                     )}
-                                    {request.parcels?.surface && (
+                                    {/* Surface - gérer plusieurs formats */}
+                                    {(request.parcels?.surface || request.parcels?.area || request.parcels?.size || request.parcels?.superficie) && (
                                       <span className="flex items-center gap-1">
                                         <Package className="w-3 h-3 text-orange-600" />
-                                        {request.parcels.surface} m²
+                                        {request.parcels.surface || request.parcels.area || request.parcels.size || request.parcels.superficie} m²
                                       </span>
                                     )}
                                     {/* Prix de vente original de la parcelle */}
-                                    {request.parcels?.price && (
+                                    {(request.parcels?.price || request.parcels?.prix) && (
                                       <span className="flex items-center gap-1">
                                         <DollarSign className="w-3 h-3 text-blue-600" />
-                                        Prix: {formatCurrency(request.parcels.price)}
+                                        Prix: {formatCurrency(request.parcels.price || request.parcels.prix)}
                                       </span>
                                     )}
                                   </div>

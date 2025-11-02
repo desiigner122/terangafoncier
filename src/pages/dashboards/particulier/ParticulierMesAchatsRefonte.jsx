@@ -871,17 +871,41 @@ const ParticulierMesAchatsRefonte = () => {
                         <div className="flex flex-col md:flex-row gap-6">
                           {/* Image de la propriété */}
                           <div className="md:w-48 h-32 rounded-lg overflow-hidden bg-gray-100 flex-shrink-0">
-                            {property?.image_url || property?.photo_url ? (
-                              <img
-                                src={property.image_url || property.photo_url}
-                                alt={property.title || property.name}
-                                className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                              />
-                            ) : (
-                              <div className="w-full h-full flex items-center justify-center">
-                                <Building2 className="w-12 h-12 text-gray-300" />
-                              </div>
-                            )}
+                            {(() => {
+                              // Gérer plusieurs formats d'image possibles
+                              let imageUrl = null;
+                              if (property?.image_url || property?.photo_url) {
+                                imageUrl = property.image_url || property.photo_url;
+                              } else if (property?.image || property?.photo) {
+                                imageUrl = property.image || property.photo;
+                              } else if (property?.images && Array.isArray(property.images) && property.images.length > 0) {
+                                imageUrl = property.images[0];
+                              } else if (property?.images && typeof property.images === 'string') {
+                                try {
+                                  const parsed = JSON.parse(property.images);
+                                  if (Array.isArray(parsed) && parsed.length > 0) {
+                                    imageUrl = parsed[0];
+                                  }
+                                } catch (e) {
+                                  imageUrl = property.images;
+                                }
+                              }
+
+                              return imageUrl ? (
+                                <img
+                                  src={imageUrl}
+                                  alt={property?.title || property?.name || 'Propriété'}
+                                  className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                                  onError={(e) => {
+                                    e.target.style.display = 'none';
+                                    e.target.nextSibling.style.display = 'flex';
+                                  }}
+                                />
+                              ) : null;
+                            })()}
+                            <div className="w-full h-full flex items-center justify-center" style={{ display: property?.image_url || property?.photo_url || property?.image || property?.photo || (property?.images && property.images.length > 0) ? 'none' : 'flex' }}>
+                              <Building2 className="w-12 h-12 text-gray-300" />
+                            </div>
                           </div>
 
                           {/* Détails du dossier */}
@@ -920,16 +944,18 @@ const ParticulierMesAchatsRefonte = () => {
                                       <span className="font-mono text-xs">Réf: {property.id.slice(0, 8).toUpperCase()}</span>
                                     </div>
                                   )}
-                                  {property?.location && (
+                                  {/* Localisation - gérer plusieurs formats */}
+                                  {(property?.location || property?.address || property?.city) && (
                                     <div className="flex items-center gap-1">
                                       <MapPin className="w-4 h-4 text-green-600" />
-                                      <span>{property.location}</span>
+                                      <span>{property.location || property.address || property.city}</span>
                                     </div>
                                   )}
-                                  {(property?.area || property?.size || property?.surface) && (
+                                  {/* Surface - gérer plusieurs formats */}
+                                  {(property?.area || property?.size || property?.surface || property?.superficie) && (
                                     <div className="flex items-center gap-1">
                                       <Package className="w-4 h-4 text-orange-600" />
-                                      <span>{property.area || property.size || property.surface} m²</span>
+                                      <span>{property.area || property.size || property.surface || property.superficie} m²</span>
                                     </div>
                                   )}
                                   <div className="flex items-center gap-1">
@@ -942,18 +968,24 @@ const ParticulierMesAchatsRefonte = () => {
 
                                 <div className="flex items-center gap-4 mb-3">
                                   <div className="text-2xl font-bold text-blue-600">
-                                    {formatPrice(caseItem.purchase_price || property?.price)}
+                                    {formatPrice(
+                                      caseItem.purchase_price || 
+                                      caseItem.offered_price ||
+                                      property?.price || 
+                                      property?.prix ||
+                                      0
+                                    )}
                                   </div>
                                   {seller && (
                                     <div className="flex items-center gap-2">
                                       <Avatar className="w-6 h-6">
                                         <AvatarImage src={seller.avatar_url} />
                                         <AvatarFallback className="text-xs">
-                                          {seller.full_name?.charAt(0) || 'V'}
+                                          {seller.full_name?.charAt(0) || seller.first_name?.charAt(0) || 'V'}
                                         </AvatarFallback>
                                       </Avatar>
                                       <span className="text-sm text-gray-600">
-                                        {seller.full_name || `${seller.first_name} ${seller.last_name}`}
+                                        {seller.full_name || `${seller.first_name || ''} ${seller.last_name || ''}`.trim() || 'Vendeur'}
                                       </span>
                                     </div>
                                   )}

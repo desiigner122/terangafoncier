@@ -32,6 +32,8 @@ const SellerActionButtonsSection = ({
   onActionClick,
   loading = false
 }) => {
+  console.log('🎬 [SellerActionButtonsSection] RENDER - onActionClick exists:', !!onActionClick);
+  
   if (!caseData || !currentStatus) {
     console.log('⚠️ [SellerActions] Missing data:', { caseData: !!caseData, currentStatus });
     return null;
@@ -122,7 +124,11 @@ const SellerActionButtonsSection = ({
 
                       {/* Bouton d'action */}
                       <Button
-                        onClick={() => onActionClick?.(action)}
+                        onClick={() => {
+                          console.log('🖱️ [SellerActions] Bouton cliqué:', action.id, action.label);
+                          console.log('🖱️ [SellerActions] onActionClick:', typeof onActionClick, !!onActionClick);
+                          onActionClick?.(action);
+                        }}
                         disabled={loading}
                         className={action.className || "w-full mt-2 bg-orange-600 hover:bg-orange-700"}
                         size="lg"
@@ -154,7 +160,11 @@ const SellerActionButtonsSection = ({
                   return (
                     <Button
                       key={action.id}
-                      onClick={() => onActionClick?.(action)}
+                      onClick={() => {
+                        console.log('🖱️ [SellerActions Regular] Bouton cliqué:', action.id, action.label);
+                        console.log('🖱️ [SellerActions Regular] onActionClick:', typeof onActionClick, !!onActionClick);
+                        onActionClick?.(action);
+                      }}
                       disabled={loading}
                       variant="outline"
                       className="justify-start"

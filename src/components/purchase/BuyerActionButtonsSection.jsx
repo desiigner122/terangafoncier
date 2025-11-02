@@ -35,6 +35,8 @@ const BuyerActionButtonsSection = ({
   onActionClick,
   loading = false
 }) => {
+  console.log('🎬 [BuyerActionButtonsSection] RENDER - onActionClick exists:', !!onActionClick);
+  
   if (!caseData || !currentStatus) {
     console.log('⚠️ [BuyerActions] Missing data:', { caseData: !!caseData, currentStatus });
     return null;
@@ -130,7 +132,11 @@ const BuyerActionButtonsSection = ({
 
                       {/* Bouton d'action */}
                       <Button
-                        onClick={() => onActionClick?.(action)}
+                        onClick={() => {
+                          console.log('🖱️ [BuyerActions] Bouton cliqué:', action.id, action.label);
+                          console.log('🖱️ [BuyerActions] onActionClick:', typeof onActionClick, !!onActionClick);
+                          onActionClick?.(action);
+                        }}
                         disabled={loading}
                         className={action.className || "w-full mt-2"}
                         size="lg"
@@ -162,7 +168,11 @@ const BuyerActionButtonsSection = ({
                   return (
                     <Button
                       key={action.id}
-                      onClick={() => onActionClick?.(action)}
+                      onClick={() => {
+                        console.log('🖱️ [BuyerActions Regular] Bouton cliqué:', action.id, action.label);
+                        console.log('🖱️ [BuyerActions Regular] onActionClick:', typeof onActionClick, !!onActionClick);
+                        onActionClick?.(action);
+                      }}
                       disabled={loading}
                       variant="outline"
                       className="justify-start"

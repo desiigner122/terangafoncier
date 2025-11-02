@@ -314,12 +314,12 @@ class NotaireAssignmentService {
       ];
       
       if (statusesRequiringNotary.includes(purchaseCase?.status)) {
-        console.log('📊 [NotaireService] Mise à jour statut purchase_case vers notary_assigned');
+        console.log('📊 [NotaireService] Mise à jour statut purchase_case vers contract_preparation');
         
         const { error: updateError } = await supabase
           .from('purchase_cases')
           .update({ 
-            status: 'notary_assigned',
+            status: 'contract_preparation',
             notaire_id: notaireId,
             updated_at: new Date().toISOString()
           })
@@ -336,10 +336,12 @@ class NotaireAssignmentService {
           .from('purchase_case_timeline')
           .insert({
             case_id: caseId,
-            event_type: 'notary_assigned',
-            event_title: 'Notaire proposé',
-            event_description: `${proposedByRole === 'buyer' ? 'L\'acheteur' : 'Le vendeur'} a proposé un notaire`,
-            created_by: proposedBy,
+            event_type: 'status_change',
+            title: 'Préparation du contrat',
+            description: `${proposedByRole === 'buyer' ? 'L\'acheteur' : 'Le vendeur'} a sélectionné un notaire. La préparation du contrat peut commencer.`,
+            triggered_by: proposedBy,
+            old_value: { status: purchaseCase?.status },
+            new_value: { status: 'contract_preparation' },
             metadata: {
               notaire_id: notaireId,
               assignment_id: assignment.id,

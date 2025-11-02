@@ -243,41 +243,94 @@ class NotaireAssignmentService {
         quotedFee = null
       } = options;
       
-      // Vérifier si déjà proposé
-      const { data: existing } = await supabase
+      // Vérifier si déjà proposé (sans .single() pour éviter erreur PGRST116)
+      const { data: existing, error: checkError } = await supabase
         .from('notaire_case_assignments')
         .select('id')
         .eq('case_id', caseId)
         .eq('notaire_id', notaireId)
-        .in('status', ['pending', 'buyer_approved', 'seller_approved', 'both_approved'])
-        .single();
+        .in('status', ['pending', 'buyer_approved', 'seller_approved', 'both_approved']);
       
-      if (existing) {
+      if (checkError) {
+        console.error('❌ [NotaireService] Erreur vérification assignment:', checkError);
+      }
+      
+      if (existing && existing.length > 0) {
+        console.log('⚠️ [NotaireService] Notaire déjà proposé, assignment existant:', existing[0].id);
         return { 
           success: false, 
           error: 'Ce notaire a déjà été proposé pour ce dossier' 
         };
       }
       
+      console.log('✅ [NotaireService] Aucun assignment existant, création nouveau...');
+      
+      const assignmentData = {
+        case_id: caseId,
+        notaire_id: notaireId,
+        proposed_by: proposedBy,
+        proposed_by_role: proposedByRole,
+        status: 'pending',
+        assignment_score: score,
+        distance_km: distance,
+        assignment_reason: reason,
+        quoted_fee: quotedFee,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24h
+      };
+      
+      console.log('📝 [NotaireService] Données assignment:', assignmentData);
+      
       // Créer l'assignment
       const { data: assignment, error } = await supabase
         .from('notaire_case_assignments')
-        .insert({
-          case_id: caseId,
-          notaire_id: notaireId,
-          proposed_by: proposedBy,
-          proposed_by_role: proposedByRole,
-          status: 'pending',
-          assignment_score: score,
-          distance_km: distance,
-          assignment_reason: reason,
-          quoted_fee: quotedFee,
-          expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24h
-        })
+        .insert(assignmentData)
         .select()
         .single();
       
-      if (error) throw error;
+      if (error) {
+        console.error('❌ [NotaireService] Erreur insertion assignment:', error);
+        throw error;
+      }
+      
+      console.log('🎉 [NotaireService] Assignment créé avec succès:', assignment);
+      
+      // Mettre à jour le statut du purchase_case si nécessaire
+      // Si c'était en attente de notaire, passer à l'étape suivante
+      const { data: purchaseCase } = await supabase
+        .from('purchase_cases')
+        .select('current_status')
+        .eq('id', caseId)
+        .single();
+      
+      if (purchaseCase?.current_status === 'buyer_documents_submitted' || 
+          purchaseCase?.current_status === 'seller_documents_submitted') {
+        console.log('📊 [NotaireService] Mise à jour statut purchase_case vers notary_assigned');
+        
+        await supabase
+          .from('purchase_cases')
+          .update({ 
+            current_status: 'notary_assigned',
+            notary_id: notaireId,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', caseId);
+        
+        // Créer événement timeline
+        await supabase
+          .from('purchase_case_timeline')
+          .insert({
+            case_id: caseId,
+            event_type: 'notary_assigned',
+            event_title: 'Notaire proposé',
+            event_description: `${proposedByRole === 'buyer' ? 'L\'acheteur' : 'Le vendeur'} a proposé un notaire`,
+            created_by: proposedBy,
+            metadata: {
+              notaire_id: notaireId,
+              assignment_id: assignment.id,
+              proposed_by_role: proposedByRole
+            }
+          });
+      }
       
       // TODO: Envoyer notification (à implémenter)
       // await NotificationService.send({...});

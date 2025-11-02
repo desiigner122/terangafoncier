@@ -28,6 +28,7 @@ import { cn } from '@/lib/utils';
 import TimelineTrackerModern from '@/components/purchase/TimelineTrackerModern';
 import BankFinancingSection from '@/components/purchase/BankFinancingSection';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
+import NotificationService from '@/services/NotificationService';
 
 const NotaireCasesModernReal = () => {
   const { user } = useAuth();
@@ -49,12 +50,28 @@ const NotaireCasesModernReal = () => {
   useEffect(() => {
     if (user) {
       loadCases();
-      setupRealtimeSubscriptions();
+      
+      // Souscrire aux assignations notaire via NotificationService
+      NotificationService.subscribeToNotaireAssignments(user.id, (payload) => {
+        console.log('🔔 [REALTIME] Assignment update:', payload);
+        
+        if (payload.eventType === 'INSERT') {
+          toast.info('Nouvelle assignation de dossier');
+        } else if (payload.eventType === 'UPDATE') {
+          toast.info('Mise à jour d\'une assignation');
+        }
+        
+        // Recharger la liste des dossiers
+        loadCases();
+      });
     }
 
     return () => {
       // Cleanup subscriptions
-      supabase.removeAllChannels();
+      if (user?.id) {
+        const channelName = `notaire-assignments:${user.id}`;
+        NotificationService.unsubscribe(channelName);
+      }
     };
   }, [user]);
 
@@ -62,77 +79,6 @@ const NotaireCasesModernReal = () => {
   useEffect(() => {
     filterCases();
   }, [searchTerm, statusFilter, cases]);
-
-  const setupRealtimeSubscriptions = () => {
-    try {
-      // 1. Subscribe to purchase_cases changes
-      const purchaseCasesChannel = supabase
-        .channel(`notaire-purchase-cases-${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: '*',
-            schema: 'public',
-            table: 'purchase_cases',
-            filter: `assigned_notary_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('🔔 [REALTIME] Changement purchase_cases pour notaire:', payload);
-            toast.info('Changement détecté dans les dossiers');
-            loadCases();
-          }
-        )
-        .subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            console.log('✅ Realtime subscription à purchase_cases activée');
-          }
-        });
-
-      // 2. Subscribe to case status updates
-      const statusUpdateChannel = supabase
-        .channel(`notaire-case-status-${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'UPDATE',
-            schema: 'public',
-            table: 'purchase_cases',
-            filter: `assigned_notary_id=eq.${user.id}`
-          },
-          (payload) => {
-            const { new: newCase, old: oldCase } = payload;
-            if (newCase.status !== oldCase?.status) {
-              console.log(`📊 [REALTIME] Statut changé: ${oldCase?.status} → ${newCase.status}`);
-              toast.info(`Dossier ${newCase.case_number}: Statut mis à jour`);
-              loadCases();
-            }
-          }
-        )
-        .subscribe();
-
-      // 3. Subscribe to new messages
-      const messagesChannel = supabase
-        .channel(`notaire-messages-${user.id}`)
-        .on(
-          'postgres_changes',
-          {
-            event: 'INSERT',
-            schema: 'public',
-            table: 'purchase_case_messages',
-            filter: `receiver_id=eq.${user.id}`
-          },
-          (payload) => {
-            console.log('💬 [REALTIME] Nouveau message:', payload);
-            toast.info('Vous avez reçu un nouveau message');
-            loadCases();
-          }
-        )
-        .subscribe();
-
-    } catch (error) {
-      console.error('Erreur setup Realtime subscriptions:', error);
-    }
-  };
 
   const loadCases = async () => {
     setIsLoading(true);

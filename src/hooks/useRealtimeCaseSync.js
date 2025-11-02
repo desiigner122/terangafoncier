@@ -134,6 +134,30 @@ export const useRealtimeCaseSync = (caseId, onDataChange, dependencies = []) => 
 
       subscriptionsRef.current.push(historyChannel);
 
+      // Subscribe to notaire_case_assignments updates (for notary workflow)
+      const assignmentChannel = supabase
+        .channel(`realtime:notaire_case_assignments:${caseId}`)
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notaire_case_assignments',
+            filter: `case_id=eq.${caseId}`
+          },
+          () => {
+            console.log('📡 Realtime: notaire_case_assignments changed');
+            onDataChange?.();
+          }
+        )
+        .subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            console.log('✅ Subscribed to notaire_case_assignments realtime');
+          }
+        });
+
+      subscriptionsRef.current.push(assignmentChannel);
+
       return () => {
         // Cleanup all subscriptions on unmount or dependency change
         subscriptionsRef.current.forEach((channel) => {

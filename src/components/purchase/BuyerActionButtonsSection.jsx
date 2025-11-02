@@ -55,7 +55,7 @@ const BuyerActionButtonsSection = ({
 
   console.log('🎯 [BuyerActions] Actions récupérées:', {
     status: currentStatus,
-    caseData: { id: caseData.id, status: caseData.status, notary_id: caseData.notary_id },
+    caseData: { id: caseData.id, status: caseData.status, notaire_id: caseData.notaire_id },
     actions,
     validations: actions.validations?.length,
     documents: actions.documents?.length,

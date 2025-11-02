@@ -643,9 +643,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     const purchaseCase = {
       id: request.id,
       status: request.caseStatus || request.status,
-      current_status: request.caseStatus || request.status,
-      notary_id: request.notary_id || request.notaire_id,
-      notaire_id: request.notary_id || request.notaire_id,
+      notaire_id: request.notaire_id, // Utiliser uniquement notaire_id (standard DB)
       hasAgent: false,
       hasSurveying: false
     };

@@ -362,7 +362,7 @@ export class WorkflowStatusService {
    * Obtenir un résumé du dossier
    */
   static getSummary(purchaseCase) {
-    const normalizedStatus = this.normalizeStatus(purchaseCase.status || purchaseCase.current_status);
+    const normalizedStatus = this.normalizeStatus(purchaseCase.status);
     return {
       currentStatus: normalizedStatus,
       currentStatusLabel: this.getLabel(normalizedStatus),

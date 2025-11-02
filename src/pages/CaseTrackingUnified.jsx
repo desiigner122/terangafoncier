@@ -571,7 +571,7 @@ const CaseTrackingUnified = () => {
 
   const roleConfig = ROLE_CONFIG[userRole] || ROLE_CONFIG.buyer;
   const RoleIcon = roleConfig.icon;
-  const statusInfo = WorkflowStatusService.getStatusInfo(caseData.status || caseData.current_status || 'initiated');
+  const statusInfo = WorkflowStatusService.getStatusInfo(caseData.status || 'initiated');
 
   // Get contextual actions
   const enrichedCaseData = {
@@ -617,7 +617,7 @@ const CaseTrackingUnified = () => {
 
           <div className="text-right">
             <Badge className={statusInfo.colorClass}>
-              {WorkflowStatusService.getLabel(caseData.status || caseData.current_status)}
+              {WorkflowStatusService.getLabel(caseData.status)}
             </Badge>
             <div className="mt-2">
               <div className="w-48 bg-gray-200 rounded-full h-2">
@@ -701,7 +701,7 @@ const CaseTrackingUnified = () => {
       {(userRole === 'buyer' || userRole === 'seller') && caseData?.id && (
         <UserActionButtonsSection
           userRole={userRole}
-          currentStatus={caseData.status || caseData.current_status}
+          currentStatus={caseData.status}
           caseData={caseData}
           userId={user.id}
           onActionClick={handleUserActionClick}

@@ -44,7 +44,7 @@ const ACTION_CATEGORIES = {
  * Get available actions for a user based on case status and role
  */
 export const getAvailableActions = (purchaseCase, userRole, permissions) => {
-  const status = purchaseCase?.status || purchaseCase?.current_status || 'initiated';
+  const status = purchaseCase?.status || 'initiated';
   const actions = {
     [ACTION_CATEGORIES.DOCUMENTS]: [],
     [ACTION_CATEGORIES.PAYMENTS]: [],
@@ -75,7 +75,7 @@ export const getAvailableActions = (purchaseCase, userRole, permissions) => {
 const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => {
   // CRITICAL: Choose notary (MUST be done before workflow can progress)
   // Available from initiated onwards if not already assigned
-  if (!purchaseCase.notary_id && !purchaseCase.notaire_id) {
+  if (!purchaseCase.notaire_id) {
     // Notaire requis pour tous les statuts avant 'completed' et 'cancelled'
     const isActiveCase = !['completed', 'cancelled', 'rejected', 'archived', 'seller_declined', 'negotiation_failed'].includes(status);
     
@@ -245,7 +245,7 @@ const getBuyerActionsInternal = (status, purchaseCase, permissions, actions) => 
 const getSellerActionsInternal = (status, purchaseCase, permissions, actions) => {
   // CRITICAL: Choose notary (MUST be done before workflow can progress)
   // Seller can also suggest/select a notary if buyer hasn't yet
-  if (!purchaseCase.notary_id && !purchaseCase.notaire_id) {
+  if (!purchaseCase.notaire_id) {
     // Notaire requis pour tous les statuts avant 'completed' et 'cancelled'
     const isActiveCase = !['completed', 'cancelled', 'rejected', 'archived', 'seller_declined', 'negotiation_failed'].includes(status);
     
@@ -520,7 +520,7 @@ const getGeometreActions = (status, purchaseCase, permissions, actions) => {
  * @returns {Object} Actions grouped by category
  */
 const getBuyerActions = (purchaseCase, permissions = {}) => {
-  const status = purchaseCase?.status || purchaseCase?.current_status || 'initiated';
+  const status = purchaseCase?.status || 'initiated';
   const actions = {
     [ACTION_CATEGORIES.DOCUMENTS]: [],
     [ACTION_CATEGORIES.PAYMENTS]: [],
@@ -531,7 +531,7 @@ const getBuyerActions = (purchaseCase, permissions = {}) => {
   
   console.log('🔍 [ContextualActions] getBuyerActions appelé:', {
     status,
-    hasNotary: !!(purchaseCase?.notary_id || purchaseCase?.notaire_id),
+    hasNotary: !!purchaseCase?.notaire_id,
     permissions
   });
   
@@ -555,7 +555,7 @@ const getBuyerActions = (purchaseCase, permissions = {}) => {
  * @returns {Object} Actions grouped by category
  */
 const getSellerActions = (purchaseCase, permissions = {}) => {
-  const status = purchaseCase?.status || purchaseCase?.current_status || 'initiated';
+  const status = purchaseCase?.status || 'initiated';
   const actions = {
     [ACTION_CATEGORIES.DOCUMENTS]: [],
     [ACTION_CATEGORIES.PAYMENTS]: [],
@@ -566,7 +566,7 @@ const getSellerActions = (purchaseCase, permissions = {}) => {
   
   console.log('🔍 [ContextualActions] getSellerActions appelé:', {
     status,
-    hasNotary: !!(purchaseCase?.notary_id || purchaseCase?.notaire_id),
+    hasNotary: !!purchaseCase?.notaire_id,
     permissions
   });
   

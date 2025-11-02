@@ -88,6 +88,8 @@ const ParticulierCaseTrackingModernRefonte = () => {
   const [property, setProperty] = useState(null);
   const [seller, setSeller] = useState(null);
   const [buyerProfile, setBuyerProfile] = useState(null);
+  const [notaire, setNotaire] = useState(null);
+  const [notaireAssignment, setNotaireAssignment] = useState(null);
   const [messages, setMessages] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -162,12 +164,11 @@ const ParticulierCaseTrackingModernRefonte = () => {
 
       console.log('📋 Dossier chargé (acheteur):', caseData);
       const normalizedCaseStatus = WorkflowStatusService.normalizeStatus(
-        caseData.status || caseData.current_status
+        caseData.status
       );
       const enhancedCaseData = {
         ...caseData,
         status: normalizedCaseStatus,
-        current_status: normalizedCaseStatus, // For backwards compatibility
       };
       setPurchaseCase(enhancedCaseData);
 
@@ -266,6 +267,34 @@ const ParticulierCaseTrackingModernRefonte = () => {
         
         if (buyerData) {
           setBuyerProfile(buyerData);
+        }
+      }
+
+      // 5b. Charger le notaire et son assignment si présent
+      if (enhancedCaseData?.notaire_id) {
+        // Charger profil notaire
+        const { data: notaireData } = await supabase
+          .from('profiles')
+          .select('id, full_name, email, phone, avatar_url')
+          .eq('id', enhancedCaseData.notaire_id)
+          .single();
+        
+        if (notaireData) {
+          console.log('⚖️ Notaire chargé:', notaireData);
+          setNotaire(notaireData);
+        }
+
+        // Charger assignment pour statut et frais
+        const { data: assignmentData } = await supabase
+          .from('notaire_case_assignments')
+          .select('*')
+          .eq('case_id', enhancedCaseData.id)
+          .eq('notaire_id', enhancedCaseData.notaire_id)
+          .maybeSingle();
+        
+        if (assignmentData) {
+          console.log('📋 Assignment notaire chargé:', assignmentData);
+          setNotaireAssignment(assignmentData);
         }
       }
 

@@ -65,6 +65,10 @@ WHERE tablename IN (
 )
 ORDER BY tablename, policyname;
 
-RAISE NOTICE 'Rollback complet terminé. Les anciennes policies sont restaurées.';
+-- Message de confirmation
+DO $$ 
+BEGIN
+    RAISE NOTICE 'Rollback complet terminé. Les anciennes policies sont restaurées.';
+END $$;
 
 -- Fin du rollback

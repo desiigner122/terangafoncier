@@ -30,9 +30,7 @@ class NotaireAssignmentService {
           *,
           parcelle:parcels(
             id,
-            title,
-            latitude,
-            longitude
+            title
           )
         `)
         .eq('id', caseId)
@@ -98,12 +96,16 @@ class NotaireAssignmentService {
       // 3. Calculer score pour chaque notaire
       const scoredNotaires = availableNotaires.map(notaire => {
         const score = this.calculateNotaireScore(notaire, purchaseCase);
-        const distance = this.calculateDistance(
-          notaire.office_latitude,
-          notaire.office_longitude,
-          purchaseCase.parcelle?.latitude,
-          purchaseCase.parcelle?.longitude
-        );
+        
+        // Calcul distance si coordonnées GPS disponibles (sinon null)
+        const distance = (purchaseCase.parcelle?.latitude && purchaseCase.parcelle?.longitude)
+          ? this.calculateDistance(
+              notaire.office_latitude,
+              notaire.office_longitude,
+              purchaseCase.parcelle.latitude,
+              purchaseCase.parcelle.longitude
+            )
+          : null;
         
         return {
           ...notaire,

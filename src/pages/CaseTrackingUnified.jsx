@@ -28,12 +28,10 @@ import ContextualActionsService from '@/services/ContextualActionsService';
 
 // Composants auxiliaires
 import {
-  RoleSpecificActions,
   DocumentsSection,
   PaymentsSection,
   MessageBubble
 } from '@/components/unified/UnifiedCaseTrackingComponents.jsx';
-import ContextualActionsPanel from '@/components/unified/ContextualActionsPanel.jsx';
 
 // Modals de sélection
 import AgentSelectionModal from '@/components/modals/AgentSelectionModal.jsx';
@@ -45,7 +43,6 @@ import AppointmentScheduler from '@/components/purchase/AppointmentScheduler.jsx
 import PurchaseCaseMessaging from '@/components/messaging/PurchaseCaseMessaging.jsx';
 
 // Composants Phase 3 - Paiements
-import AvailableActionsSection from '@/components/buyer/AvailableActionsSection.jsx';
 import PaymentModal from '@/components/modals/PaymentModal.jsx';
 
 // Composants Phase 6 - Actions Buyer/Seller
@@ -676,6 +673,13 @@ const CaseTrackingUnified = () => {
       </Card>
 
       {/* Section actions Phase 6 - Pour Buyer et Seller */}
+      {console.log('🔍 [UNIFIED] Vérification rendu UserActionButtons:', {
+        userRole,
+        isBuyerOrSeller: userRole === 'buyer' || userRole === 'seller',
+        hasCaseData: !!caseData,
+        caseId: caseData?.id,
+        shouldRender: (userRole === 'buyer' || userRole === 'seller') && caseData?.id
+      })}
       {(userRole === 'buyer' || userRole === 'seller') && caseData?.id && (
         <UserActionButtonsSection
           userRole={userRole}
@@ -687,15 +691,6 @@ const CaseTrackingUnified = () => {
           onDocumentUpload={handleUserDocumentUpload}
           onCancelClick={handleUserCancelAction}
           loading={actionLoading}
-        />
-      )}
-
-      {/* Section paiements en attente (Phase 3) - Visible uniquement pour les acheteurs */}
-      {userRole === 'buyer' && caseData?.id && (
-        <AvailableActionsSection
-          caseData={caseData}
-          user={user}
-          onPaymentClick={handlePaymentClick}
         />
       )}
 
@@ -740,14 +735,6 @@ const CaseTrackingUnified = () => {
               </div>
             </CardContent>
           </Card>
-
-          {/* Actions spécifiques au rôle - NOUVEAU PANNEAU CONTEXTUEL */}
-          <ContextualActionsPanel
-            actionsByCategory={actionsByCategory}
-            handlers={actionHandlers}
-            userRole={userRole}
-            caseStatus={caseData.status || caseData.current_status}
-          />
         </TabsContent>
 
         {/* Timeline */}

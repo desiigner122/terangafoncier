@@ -36,6 +36,7 @@ import AdvancedCaseTrackingService from '@/services/AdvancedCaseTrackingService'
 import ActionButtonsSection from '@/components/notaire/ActionButtonsSection';
 import PaymentRequestModal from '@/components/modals/PaymentRequestModal';
 import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
+import NotaireAssignmentService from '@/services/NotaireAssignmentService';
 import { toast } from 'sonner';
 
 const STATUS_META = {
@@ -129,14 +130,27 @@ const NotaireCaseDetailModern = () => {
       setLoading(true);
       console.log('🔍 Loading case details for:', caseId);
 
-      // Charger le dossier complet avec toutes les relations
+      // Charger le dossier complet avec toutes les relations et l'assignation notaire
       const { data: purchaseCase, error } = await supabase
         .from('purchase_cases')
         .select(`
           *,
           buyer:profiles!buyer_id(id, full_name, email, phone, avatar_url),
           seller:profiles!seller_id(id, full_name, email, phone, avatar_url),
-          parcelle:parcels!parcelle_id(id, title, location, surface)
+          parcelle:parcels!parcelle_id(id, title, location, surface),
+          notaire_assignment:notaire_case_assignments(
+            id,
+            status,
+            notaire_status,
+            buyer_approved,
+            seller_approved,
+            quoted_fee,
+            quoted_disbursements,
+            justification,
+            decline_reason,
+            created_at,
+            updated_at
+          )
         `)
         .eq('id', caseId)
         .single();
@@ -144,6 +158,7 @@ const NotaireCaseDetailModern = () => {
       if (error) throw error;
 
       console.log('✅ Case loaded:', purchaseCase);
+      console.log('📋 Assignment status:', purchaseCase.notaire_assignment);
       
       setCaseData(purchaseCase);
 
@@ -207,7 +222,87 @@ const NotaireCaseDetailModern = () => {
     toast.success('Demande de paiement envoyée avec succès');
   };
 
-  
+  // Handlers pour accepter/décliner l'assignation notaire
+  const [showAcceptDialog, setShowAcceptDialog] = useState(false);
+  const [showDeclineDialog, setShowDeclineDialog] = useState(false);
+  const [quotedFee, setQuotedFee] = useState('');
+  const [quotedDisbursements, setQuotedDisbursements] = useState('');
+  const [justification, setJustification] = useState('');
+  const [declineReason, setDeclineReason] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleAcceptAssignment = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const assignment = caseData?.notaire_assignment?.[0];
+      if (!assignment) {
+        toast.error('Aucune assignation trouvée');
+        return;
+      }
+
+      const result = await NotaireAssignmentService.acceptAssignment(
+        assignment.id,
+        user.id,
+        parseFloat(quotedFee) || 0,
+        parseFloat(quotedDisbursements) || 0,
+        justification
+      );
+
+      if (result.success) {
+        toast.success('Assignation acceptée avec succès');
+        setShowAcceptDialog(false);
+        setQuotedFee('');
+        setQuotedDisbursements('');
+        setJustification('');
+        await loadCaseDetails();
+      } else {
+        toast.error(result.error || 'Erreur lors de l\'acceptation');
+      }
+    } catch (error) {
+      console.error('Error accepting assignment:', error);
+      toast.error('Erreur lors de l\'acceptation de l\'assignation');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleDeclineAssignment = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const assignment = caseData?.notaire_assignment?.[0];
+      if (!assignment) {
+        toast.error('Aucune assignation trouvée');
+        return;
+      }
+
+      if (!declineReason.trim()) {
+        toast.error('Veuillez fournir une raison pour le refus');
+        return;
+      }
+
+      const result = await NotaireAssignmentService.declineAssignment(
+        assignment.id,
+        user.id,
+        declineReason
+      );
+
+      if (result.success) {
+        toast.success('Assignation refusée');
+        setShowDeclineDialog(false);
+        setDeclineReason('');
+        await loadCaseDetails();
+      } else {
+        toast.error(result.error || 'Erreur lors du refus');
+      }
+    } catch (error) {
+      console.error('Error declining assignment:', error);
+      toast.error('Erreur lors du refus de l\'assignation');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const loadDocuments = async () => {
     try {
@@ -521,6 +616,58 @@ const NotaireCaseDetailModern = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Main Content */}
           <div className="lg:col-span-2 space-y-6">
+            
+            {/* Assignment Pending Alert */}
+            {caseData?.notaire_assignment?.[0]?.notaire_status === 'pending' && (
+              <Card className="border-yellow-500 bg-yellow-50 dark:bg-yellow-950/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-yellow-800 dark:text-yellow-200">
+                    <AlertCircle className="h-5 w-5" />
+                    Nouvelle assignation en attente
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-sm text-yellow-700 dark:text-yellow-300">
+                    Ce dossier vous a été assigné. Veuillez l'accepter ou le décliner.
+                  </p>
+                  
+                  {/* Informations d'approbation */}
+                  <div className="bg-white dark:bg-gray-800 rounded-lg p-3 space-y-2">
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className={`h-4 w-4 ${caseData.notaire_assignment[0].buyer_approved ? 'text-green-500' : 'text-gray-400'}`} />
+                      <span className={caseData.notaire_assignment[0].buyer_approved ? 'text-green-700 dark:text-green-400' : 'text-gray-500'}>
+                        Approuvé par l'acheteur
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm">
+                      <CheckCircle className={`h-4 w-4 ${caseData.notaire_assignment[0].seller_approved ? 'text-green-500' : 'text-gray-400'}`} />
+                      <span className={caseData.notaire_assignment[0].seller_approved ? 'text-green-700 dark:text-green-400' : 'text-gray-500'}>
+                        Approuvé par le vendeur
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex gap-3">
+                    <Button
+                      onClick={() => setShowAcceptDialog(true)}
+                      className="flex-1 bg-green-600 hover:bg-green-700"
+                    >
+                      <CheckCircle className="h-4 w-4 mr-2" />
+                      Accepter
+                    </Button>
+                    <Button
+                      onClick={() => setShowDeclineDialog(true)}
+                      variant="outline"
+                      className="flex-1 border-red-500 text-red-600 hover:bg-red-50 dark:hover:bg-red-950/20"
+                    >
+                      <AlertCircle className="h-4 w-4 mr-2" />
+                      Décliner
+                    </Button>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             <Tabs value={activeTab} onValueChange={setActiveTab}>
               <TabsList className="grid w-full grid-cols-4">
                 <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
@@ -997,6 +1144,114 @@ const NotaireCaseDetailModern = () => {
         nextStatus={paymentModalData?.nextStatus}
         onSuccess={handlePaymentRequestSuccess}
       />
+
+      {/* Accept Assignment Dialog */}
+      <Dialog open={showAcceptDialog} onOpenChange={setShowAcceptDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Accepter l'assignation</DialogTitle>
+            <DialogDescription>
+              Veuillez fournir vos honoraires et débours pour ce dossier
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="quotedFee">Honoraires (FCFA)</Label>
+              <input
+                id="quotedFee"
+                type="number"
+                value={quotedFee}
+                onChange={(e) => setQuotedFee(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: 500000"
+                min="0"
+              />
+            </div>
+            <div>
+              <Label htmlFor="quotedDisbursements">Débours (FCFA)</Label>
+              <input
+                id="quotedDisbursements"
+                type="number"
+                value={quotedDisbursements}
+                onChange={(e) => setQuotedDisbursements(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: 50000"
+                min="0"
+              />
+            </div>
+            <div>
+              <Label htmlFor="justification">Justification (optionnel)</Label>
+              <Textarea
+                id="justification"
+                value={justification}
+                onChange={(e) => setJustification(e.target.value)}
+                placeholder="Détails des honoraires et débours..."
+                rows={3}
+              />
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowAcceptDialog(false)}
+                disabled={isSubmitting}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleAcceptAssignment}
+                disabled={isSubmitting || !quotedFee}
+                className="flex-1 bg-green-600 hover:bg-green-700"
+              >
+                {isSubmitting ? 'Envoi...' : 'Accepter'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Decline Assignment Dialog */}
+      <Dialog open={showDeclineDialog} onOpenChange={setShowDeclineDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle>Décliner l'assignation</DialogTitle>
+            <DialogDescription>
+              Veuillez indiquer la raison de votre refus
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="declineReason">Raison du refus</Label>
+              <Textarea
+                id="declineReason"
+                value={declineReason}
+                onChange={(e) => setDeclineReason(e.target.value)}
+                placeholder="Ex: Conflit d'intérêt, surcharge de travail, etc."
+                rows={4}
+                required
+              />
+            </div>
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowDeclineDialog(false)}
+                disabled={isSubmitting}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleDeclineAssignment}
+                disabled={isSubmitting || !declineReason.trim()}
+                variant="destructive"
+                className="flex-1"
+              >
+                {isSubmitting ? 'Envoi...' : 'Décliner'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };

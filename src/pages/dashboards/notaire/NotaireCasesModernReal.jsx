@@ -137,7 +137,7 @@ const NotaireCasesModernReal = () => {
   const loadCases = async () => {
     setIsLoading(true);
     try {
-      // Charger tous les dossiers assignés au notaire
+      // Charger tous les dossiers assignés au notaire via notaire_case_assignments
       const { data: casesData, error: casesError } = await supabase
         .from('purchase_cases')
         .select(`
@@ -155,17 +155,27 @@ const NotaireCasesModernReal = () => {
           financing_approved,
           agreed_price,
           purchase_price,
-          assigned_notary_id,
+          notaire_id,
           buyer:profiles!buyer_id(id, full_name, email, phone, avatar_url),
           seller:profiles!seller_id(id, full_name, email, phone, avatar_url),
-          parcel:parcels(id, title, location, surface_area, price)
+          parcel:parcels(id, title, location, surface_area, price),
+          notaire_assignment:notaire_case_assignments!inner(
+            id,
+            status,
+            notaire_status,
+            buyer_approved,
+            seller_approved,
+            quoted_fee,
+            quoted_disbursements,
+            justification
+          )
         `)
-        .eq('assigned_notary_id', user.id)
+        .eq('notaire_assignment.notaire_id', user.id)
         .order('updated_at', { ascending: false });
 
       if (casesError) throw casesError;
 
-      // Transformer les données
+      // Transformer les données avec les informations d'assignation
       const transformedCases = casesData.map(caseData => ({
         id: caseData.id,
         case_number: caseData.case_number,
@@ -180,21 +190,32 @@ const NotaireCasesModernReal = () => {
         payment_method: caseData.payment_method || 'one_time',
         financing_approved: caseData.financing_approved || false,
         price: caseData.agreed_price || caseData.purchase_price || 0,
-        workflow_stage: caseData.status
+        workflow_stage: caseData.status,
+        // Informations d'assignation notaire
+        assignment: caseData.notaire_assignment?.[0] || null,
+        notaire_status: caseData.notaire_assignment?.[0]?.notaire_status || 'pending',
+        buyer_approved: caseData.notaire_assignment?.[0]?.buyer_approved || false,
+        seller_approved: caseData.notaire_assignment?.[0]?.seller_approved || false,
+        quoted_fee: caseData.notaire_assignment?.[0]?.quoted_fee || 0,
+        quoted_disbursements: caseData.notaire_assignment?.[0]?.quoted_disbursements || 0
       }));
 
       setCases(transformedCases);
 
-      // Calculer les stats
+      // Calculer les stats avec les statuts d'assignation
       const newStats = {
         total: transformedCases.length,
         in_progress: transformedCases.filter(c => {
-          const status = c.status;
-          const completedStatuses = ['completed', 'property_transfer', 'cancelled', 'rejected'];
-          return !completedStatuses.includes(status);
+          // En cours = accepté par le notaire et pas encore complété
+          return c.notaire_status === 'accepted' && 
+                 !['completed', 'property_transfer', 'cancelled', 'rejected'].includes(c.status);
         }).length,
         completed: transformedCases.filter(c => c.status === 'completed').length,
-        blocked: transformedCases.filter(c => c.status === 'blocked' || c.status === 'legal_issues_found').length
+        blocked: transformedCases.filter(c => 
+          c.status === 'blocked' || 
+          c.status === 'legal_issues_found' ||
+          c.notaire_status === 'pending' // En attente d'acceptation
+        ).length
       };
       setStats(newStats);
 

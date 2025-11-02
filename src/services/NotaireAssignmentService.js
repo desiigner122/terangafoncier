@@ -31,8 +31,11 @@ class NotaireAssignmentService {
           parcelle:parcels(
             id,
             title,
-            region,
+            reference,
+            region_id,
             commune,
+            city,
+            location,
             latitude,
             longitude
           )

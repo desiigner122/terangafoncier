@@ -297,11 +297,11 @@ class NotaireAssignmentService {
       // Mettre à jour le statut du purchase_case si nécessaire
       const { data: purchaseCase } = await supabase
         .from('purchase_cases')
-        .select('current_status, notary_id')
+        .select('status, notary_id')
         .eq('id', caseId)
         .single();
       
-      console.log('📊 [NotaireService] Statut actuel:', purchaseCase?.current_status);
+      console.log('📊 [NotaireService] Statut actuel:', purchaseCase?.status);
       
       // Mettre à jour le notary_id et avancer le workflow si nécessaire
       const statusesRequiringNotary = [
@@ -313,13 +313,13 @@ class NotaireAssignmentService {
         'offer_accepted'
       ];
       
-      if (statusesRequiringNotary.includes(purchaseCase?.current_status)) {
+      if (statusesRequiringNotary.includes(purchaseCase?.status)) {
         console.log('📊 [NotaireService] Mise à jour statut purchase_case vers notary_assigned');
         
         const { error: updateError } = await supabase
           .from('purchase_cases')
           .update({ 
-            current_status: 'notary_assigned',
+            status: 'notary_assigned',
             notary_id: notaireId,
             updated_at: new Date().toISOString()
           })
@@ -353,7 +353,7 @@ class NotaireAssignmentService {
           console.log('✅ [NotaireService] Timeline event créé');
         }
       } else {
-        console.log('ℹ️ [NotaireService] Statut ne nécessite pas de changement:', purchaseCase?.current_status);
+        console.log('ℹ️ [NotaireService] Statut ne nécessite pas de changement:', purchaseCase?.status);
         
         // Juste mettre à jour le notary_id sans changer le statut
         await supabase

@@ -639,7 +639,95 @@ class NotaireAssignmentService {
   }
   
   /**
-   * 📋 Récupérer les assignments d'un dossier
+   * � Mettre à jour les frais notariaux (après acceptation)
+   */
+  static async updateNotaryFees(assignmentId, notaireId, quotedFee = 0, quotedDisbursements = 0, justification = '') {
+    try {
+      // 1. Get current assignment to verify notaire owns it and it's accepted
+      const { data: assignmentData, error: fetchError } = await supabase
+        .from('notaire_case_assignments')
+        .select('case_id, notaire_id, notaire_status, quoted_fee')
+        .eq('id', assignmentId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // 2. Verify ownership
+      if (assignmentData.notaire_id !== notaireId) {
+        return {
+          success: false,
+          error: 'Vous n\'êtes pas autorisé à modifier ces frais'
+        };
+      }
+      
+      // 3. Verify assignment is accepted
+      if (assignmentData.notaire_status !== 'accepted') {
+        return {
+          success: false,
+          error: 'Vous devez d\'abord accepter l\'assignation avant de modifier les frais'
+        };
+      }
+      
+      const oldFee = assignmentData.quoted_fee || 0;
+      
+      // 4. Update fees
+      const { data, error } = await supabase
+        .from('notaire_case_assignments')
+        .update({
+          quoted_fee: quotedFee,
+          quoted_disbursements: quotedDisbursements,
+          justification: justification,
+          fees_updated_at: new Date().toISOString()
+        })
+        .eq('id', assignmentId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      console.log('✅ [NotaireService] Frais mis à jour:', data);
+      
+      // 5. Create timeline event
+      const isUpdate = oldFee > 0;
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: assignmentData.case_id,
+          event_type: isUpdate ? 'notaire_fees_updated' : 'notaire_fees_set',
+          title: isUpdate ? 'Frais notariaux mis à jour' : 'Frais notariaux définis',
+          description: isUpdate 
+            ? `Le notaire a mis à jour ses honoraires de ${oldFee.toLocaleString()} FCFA à ${quotedFee.toLocaleString()} FCFA (débours: ${quotedDisbursements.toLocaleString()} FCFA).`
+            : `Le notaire a fixé ses honoraires à ${quotedFee.toLocaleString()} FCFA (débours: ${quotedDisbursements.toLocaleString()} FCFA).`,
+          triggered_by: notaireId,
+          metadata: {
+            assignment_id: assignmentId,
+            old_fee: oldFee,
+            new_fee: quotedFee,
+            quoted_disbursements: quotedDisbursements,
+            justification: justification
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      }
+      
+      // 6. Notify buyer and seller of fee changes
+      if (isUpdate) {
+        // TODO: Send notifications to buyer and seller about fee update
+        console.log('📬 [NotaireService] TODO: Notifier acheteur et vendeur de la mise à jour des frais');
+      }
+      
+      return { success: true, data };
+      
+    } catch (error) {
+      console.error('Erreur updateNotaryFees:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * �📋 Récupérer les assignments d'un dossier
    */
   static async getCaseAssignments(caseId) {
     try {

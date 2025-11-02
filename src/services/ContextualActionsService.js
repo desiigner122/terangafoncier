@@ -315,6 +315,34 @@ const getSellerActionsInternal = (status, purchaseCase, permissions, actions) =>
  * NOTAIRE ACTIONS
  */
 const getNotaireActions = (status, purchaseCase, permissions, actions) => {
+  // PAYMENTS: Set notary fees (after acceptance, before contract)
+  // Notaire doit définir ses honoraires et débours après avoir accepté le dossier
+  if ([
+    WORKFLOW_STATES.CONTRACT_PREPARATION,
+    WORKFLOW_STATES.DOCUMENT_COLLECTION,
+    WORKFLOW_STATES.TITLE_VERIFICATION,
+    'notary_assignment',
+    'document_collection',
+    'title_verification'
+  ].includes(status)) {
+    // Only show if notaire hasn't set fees yet or can update them
+    const hasSetFees = purchaseCase?.notaire_fees && purchaseCase?.notaire_fees > 0;
+    
+    actions[ACTION_CATEGORIES.PAYMENTS].push({
+      id: 'set_notary_fees',
+      label: hasSetFees ? 'Modifier frais notariaux' : '💰 Définir frais notariaux',
+      icon: 'DollarSign',
+      description: hasSetFees 
+        ? 'Mettre à jour honoraires et débours'
+        : 'REQUIS - Fixer honoraires et débours',
+      handler: 'onSetNotaryFees',
+      priority: hasSetFees ? 'normal' : 'high',
+      required: !hasSetFees,
+      variant: hasSetFees ? 'outline' : 'default',
+      className: hasSetFees ? '' : 'bg-blue-600 hover:bg-blue-700 text-white'
+    });
+  }
+
   // VALIDATIONS: Verify buyer identity
   if (status === WORKFLOW_STATES.BUYER_VERIFICATION && permissions.canVerifyDocuments) {
     actions[ACTION_CATEGORIES.VALIDATIONS].push({

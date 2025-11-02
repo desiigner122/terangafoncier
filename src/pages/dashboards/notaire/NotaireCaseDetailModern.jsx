@@ -225,6 +225,7 @@ const NotaireCaseDetailModern = () => {
   // Handlers pour accepter/décliner l'assignation notaire
   const [showAcceptDialog, setShowAcceptDialog] = useState(false);
   const [showDeclineDialog, setShowDeclineDialog] = useState(false);
+  const [showSetFeesDialog, setShowSetFeesDialog] = useState(false);
   const [quotedFee, setQuotedFee] = useState('');
   const [quotedDisbursements, setQuotedDisbursements] = useState('');
   const [justification, setJustification] = useState('');
@@ -303,6 +304,60 @@ const NotaireCaseDetailModern = () => {
       setIsSubmitting(false);
     }
   };
+
+  const handleSetNotaryFees = async () => {
+    try {
+      setIsSubmitting(true);
+
+      const assignment = caseData?.notaire_assignment?.[0];
+      if (!assignment) {
+        toast.error('Aucune assignation trouvée');
+        return;
+      }
+
+      if (!quotedFee || parseFloat(quotedFee) <= 0) {
+        toast.error('Veuillez entrer des honoraires valides');
+        return;
+      }
+
+      const result = await NotaireAssignmentService.updateNotaryFees(
+        assignment.id,
+        user.id,
+        parseFloat(quotedFee) || 0,
+        parseFloat(quotedDisbursements) || 0,
+        justification
+      );
+
+      if (result.success) {
+        const isUpdate = assignment.quoted_fee && assignment.quoted_fee > 0;
+        toast.success(isUpdate ? 'Frais mis à jour avec succès' : 'Frais définis avec succès');
+        setShowSetFeesDialog(false);
+        setQuotedFee('');
+        setQuotedDisbursements('');
+        setJustification('');
+        await loadCaseDetails();
+      } else {
+        toast.error(result.error || 'Erreur lors de la mise à jour des frais');
+      }
+    } catch (error) {
+      console.error('Error setting fees:', error);
+      toast.error('Erreur lors de la définition des frais');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleOpenSetFeesDialog = () => {
+    // Pre-fill with existing fees if any
+    const assignment = caseData?.notaire_assignment?.[0];
+    if (assignment) {
+      setQuotedFee(assignment.quoted_fee?.toString() || '');
+      setQuotedDisbursements(assignment.quoted_disbursements?.toString() || '');
+      setJustification(assignment.justification || '');
+    }
+    setShowSetFeesDialog(true);
+  };
+
 
   const loadDocuments = async () => {
     try {
@@ -664,6 +719,80 @@ const NotaireCaseDetailModern = () => {
                       Décliner
                     </Button>
                   </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Card for managing fees when notaire has accepted */}
+            {caseData.notaire_assignment?.[0]?.notaire_status === 'accepted' && (
+              <Card className="border-blue-500 bg-blue-50 dark:bg-blue-950/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2 text-blue-700 dark:text-blue-400">
+                    <DollarSign className="h-5 w-5" />
+                    Gestion des Frais Notariaux
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  {caseData.notaire_assignment[0].quoted_fee > 0 ? (
+                    <>
+                      <div className="bg-white dark:bg-gray-800 rounded-lg p-4 space-y-2">
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Honoraires notariaux:</span>
+                          <span className="font-semibold text-lg text-green-600">
+                            {new Intl.NumberFormat('fr-FR', {
+                              style: 'currency',
+                              currency: 'XOF',
+                              minimumFractionDigits: 0
+                            }).format(caseData.notaire_assignment[0].quoted_fee)}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600 dark:text-gray-400">Débours:</span>
+                          <span className="font-semibold text-green-600">
+                            {new Intl.NumberFormat('fr-FR', {
+                              style: 'currency',
+                              currency: 'XOF',
+                              minimumFractionDigits: 0
+                            }).format(caseData.notaire_assignment[0].quoted_disbursements || 0)}
+                          </span>
+                        </div>
+                        <Separator />
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm font-semibold text-gray-700 dark:text-gray-300">Total:</span>
+                          <span className="font-bold text-xl text-green-700 dark:text-green-500">
+                            {new Intl.NumberFormat('fr-FR', {
+                              style: 'currency',
+                              currency: 'XOF',
+                              minimumFractionDigits: 0
+                            }).format((caseData.notaire_assignment[0].quoted_fee || 0) + (caseData.notaire_assignment[0].quoted_disbursements || 0))}
+                          </span>
+                        </div>
+                      </div>
+                      <Button
+                        onClick={handleOpenSetFeesDialog}
+                        variant="outline"
+                        className="w-full border-blue-500 text-blue-600 hover:bg-blue-50 dark:hover:bg-blue-950/40"
+                      >
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Modifier les frais
+                      </Button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                        <p className="text-sm text-yellow-800 dark:text-yellow-200">
+                          ⚠️ <strong>Action requise:</strong> Vous devez définir vos honoraires et débours pour ce dossier.
+                        </p>
+                      </div>
+                      <Button
+                        onClick={handleOpenSetFeesDialog}
+                        className="w-full bg-blue-600 hover:bg-blue-700"
+                      >
+                        <DollarSign className="h-4 w-4 mr-2" />
+                        Définir les frais notariaux
+                      </Button>
+                    </>
+                  )}
                 </CardContent>
               </Card>
             )}
@@ -1247,6 +1376,112 @@ const NotaireCaseDetailModern = () => {
                 className="flex-1"
               >
                 {isSubmitting ? 'Envoi...' : 'Décliner'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Set/Update Notary Fees Dialog */}
+      <Dialog open={showSetFeesDialog} onOpenChange={setShowSetFeesDialog}>
+        <DialogContent className="max-w-md">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <DollarSign className="h-5 w-5 text-blue-600" />
+              {caseData?.notaire_assignment?.[0]?.quoted_fee > 0 ? 'Modifier les frais notariaux' : 'Définir les frais notariaux'}
+            </DialogTitle>
+            <DialogDescription>
+              Indiquez vos honoraires et les débours pour ce dossier
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="setQuotedFee">Honoraires notariaux (FCFA) *</Label>
+              <input
+                id="setQuotedFee"
+                type="number"
+                value={quotedFee}
+                onChange={(e) => setQuotedFee(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: 500000"
+                min="0"
+                required
+              />
+              <p className="text-xs text-gray-500 mt-1">Vos honoraires pour la préparation du contrat et l'accompagnement</p>
+            </div>
+            <div>
+              <Label htmlFor="setQuotedDisbursements">Débours (FCFA)</Label>
+              <input
+                id="setQuotedDisbursements"
+                type="number"
+                value={quotedDisbursements}
+                onChange={(e) => setQuotedDisbursements(e.target.value)}
+                className="w-full mt-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                placeholder="Ex: 50000"
+                min="0"
+              />
+              <p className="text-xs text-gray-500 mt-1">Frais d'enregistrement, timbres fiscaux, etc.</p>
+            </div>
+            <div>
+              <Label htmlFor="setJustification">Justification détaillée (optionnel)</Label>
+              <Textarea
+                id="setJustification"
+                value={justification}
+                onChange={(e) => setJustification(e.target.value)}
+                placeholder="Détails sur la composition des frais..."
+                rows={3}
+              />
+            </div>
+            {quotedFee && parseFloat(quotedFee) > 0 && (
+              <div className="bg-blue-50 dark:bg-blue-950/20 border border-blue-200 dark:border-blue-800 rounded-lg p-3">
+                <div className="flex justify-between items-center text-sm mb-1">
+                  <span className="text-gray-600 dark:text-gray-400">Honoraires:</span>
+                  <span className="font-semibold">
+                    {new Intl.NumberFormat('fr-FR', {
+                      style: 'currency',
+                      currency: 'XOF',
+                      minimumFractionDigits: 0
+                    }).format(parseFloat(quotedFee))}
+                  </span>
+                </div>
+                <div className="flex justify-between items-center text-sm mb-1">
+                  <span className="text-gray-600 dark:text-gray-400">Débours:</span>
+                  <span className="font-semibold">
+                    {new Intl.NumberFormat('fr-FR', {
+                      style: 'currency',
+                      currency: 'XOF',
+                      minimumFractionDigits: 0
+                    }).format(parseFloat(quotedDisbursements) || 0)}
+                  </span>
+                </div>
+                <Separator className="my-2" />
+                <div className="flex justify-between items-center">
+                  <span className="font-semibold text-blue-700 dark:text-blue-400">Total:</span>
+                  <span className="font-bold text-lg text-blue-700 dark:text-blue-400">
+                    {new Intl.NumberFormat('fr-FR', {
+                      style: 'currency',
+                      currency: 'XOF',
+                      minimumFractionDigits: 0
+                    }).format((parseFloat(quotedFee) || 0) + (parseFloat(quotedDisbursements) || 0))}
+                  </span>
+                </div>
+              </div>
+            )}
+            <div className="flex gap-3 pt-4">
+              <Button
+                variant="outline"
+                onClick={() => setShowSetFeesDialog(false)}
+                disabled={isSubmitting}
+                className="flex-1"
+              >
+                Annuler
+              </Button>
+              <Button
+                onClick={handleSetNotaryFees}
+                disabled={isSubmitting || !quotedFee || parseFloat(quotedFee) <= 0}
+                className="flex-1 bg-blue-600 hover:bg-blue-700"
+              >
+                {isSubmitting ? 'Enregistrement...' : caseData?.notaire_assignment?.[0]?.quoted_fee > 0 ? 'Mettre à jour' : 'Définir les frais'}
               </Button>
             </div>
           </div>

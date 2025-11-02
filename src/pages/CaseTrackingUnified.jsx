@@ -852,7 +852,9 @@ const CaseTrackingUnified = () => {
           setCurrentAction(null);
         }}
         caseData={caseData}
+        documentTypes={currentAction?.documentTypes}
         action={currentAction}
+        nextStatus={currentAction?.nextStatus}
         onSuccess={handleUserDocumentUpload}
       />
 

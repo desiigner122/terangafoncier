@@ -21,6 +21,8 @@ class NotaireAssignmentService {
     try {
       const { limit = 3, autoSelect = false } = options;
       
+      console.log('🔍 [NotaireService] Recherche notaires pour case:', caseId, 'options:', options);
+      
       // 1. Récupérer infos du dossier
       const { data: purchaseCase, error: caseError } = await supabase
         .from('purchase_cases')
@@ -38,9 +40,15 @@ class NotaireAssignmentService {
         .eq('id', caseId)
         .single();
       
-      if (caseError) throw caseError;
+      if (caseError) {
+        console.error('❌ [NotaireService] Erreur purchase_case:', caseError);
+        throw caseError;
+      }
+      
+      console.log('📦 [NotaireService] Purchase case:', purchaseCase);
       
       // 2. Récupérer tous les notaires disponibles
+      // Note: Simplifié pour éviter erreurs - on filtre manuellement après
       const { data: notaires, error: notairesError } = await supabase
         .from('notaire_profiles')
         .select(`
@@ -54,12 +62,17 @@ class NotaireAssignmentService {
           )
         `)
         .eq('is_available', true)
-        .eq('is_accepting_cases', true)
-        .lt('current_cases_count', supabase.ref('max_concurrent_cases'));
+        .eq('is_accepting_cases', true);
       
-      if (notairesError) throw notairesError;
+      if (notairesError) {
+        console.error('❌ [NotaireService] Erreur notaire_profiles:', notairesError);
+        throw notairesError;
+      }
+      
+      console.log('👔 [NotaireService] Notaires trouvés:', notaires?.length, notaires);
       
       if (!notaires || notaires.length === 0) {
+        console.warn('⚠️ [NotaireService] Aucun notaire disponible');
         return { 
           success: false, 
           error: 'Aucun notaire disponible pour le moment',
@@ -67,8 +80,25 @@ class NotaireAssignmentService {
         };
       }
       
+      // Filtrer manuellement ceux qui ont trop de cas
+      const availableNotaires = notaires.filter(n => {
+        const currentCases = n.current_cases_count || 0;
+        const maxCases = n.max_concurrent_cases || 10;
+        return currentCases < maxCases;
+      });
+      
+      console.log('✅ [NotaireService] Notaires disponibles après filtre:', availableNotaires.length);
+      
+      if (availableNotaires.length === 0) {
+        return { 
+          success: false, 
+          error: 'Tous les notaires sont actuellement occupés',
+          data: [] 
+        };
+      }
+      
       // 3. Calculer score pour chaque notaire
-      const scoredNotaires = notaires.map(notaire => {
+      const scoredNotaires = availableNotaires.map(notaire => {
         const score = this.calculateNotaireScore(notaire, purchaseCase);
         const distance = this.calculateDistance(
           notaire.office_latitude,

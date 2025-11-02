@@ -47,19 +47,29 @@ const NotarySelectionModal = ({ isOpen, onClose, caseId, onNotarySelected }) => 
   const loadNotaries = async () => {
     try {
       setLoading(true);
+      console.log('🔍 [NotaryModal] Chargement notaires pour case:', caseId);
+      
       const result = await NotaireAssignmentService.findBestNotaires(caseId, {
         limit: 20,
         autoSelect: false
       });
       
+      console.log('📊 [NotaryModal] Résultat:', result);
+      
       if (result.success) {
+        console.log('✅ [NotaryModal] Notaires chargés:', result.data?.length);
         setNotaries(result.data || []);
+        
+        if (!result.data || result.data.length === 0) {
+          toast.info('Aucun notaire disponible pour le moment');
+        }
       } else {
+        console.error('❌ [NotaryModal] Erreur:', result.error);
         toast.error(result.error || 'Erreur lors du chargement des notaires');
         setNotaries([]);
       }
     } catch (error) {
-      console.error('Erreur chargement notaires:', error);
+      console.error('❌ [NotaryModal] Exception:', error);
       toast.error('Erreur lors du chargement des notaires');
       setNotaries([]);
     } finally {

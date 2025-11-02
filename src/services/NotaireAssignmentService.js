@@ -1,4 +1,5 @@
 import { supabase } from '@/lib/supabaseClient';
+import NotificationService from './NotificationService';
 
 /**
  * 🎯 NotaireAssignmentService
@@ -353,10 +354,19 @@ class NotaireAssignmentService {
       const updateField = role === 'buyer' ? 'buyer_approved' : 'seller_approved';
       const updateDateField = role === 'buyer' ? 'buyer_approved_at' : 'seller_approved_at';
       
-      // 1. Get current assignment state
+      // 1. Get current assignment state with full case data
       const { data: currentAssignment, error: fetchError } = await supabase
         .from('notaire_case_assignments')
-        .select('*, case_id, buyer_approved, seller_approved')
+        .select(`
+          *,
+          case:case_id(
+            id,
+            buyer_id,
+            seller_id,
+            parcelle:parcelle_id(title, location)
+          ),
+          notaire:notaire_id(id, full_name)
+        `)
         .eq('id', assignmentId)
         .single();
         
@@ -406,7 +416,33 @@ class NotaireAssignmentService {
         console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
       }
       
-      // 5. If both approved, update status and notify notaire
+      // 5. Send notifications
+      const notaireName = currentAssignment.notaire?.full_name || 'le notaire';
+      const parcelleTitle = currentAssignment.case?.parcelle?.title || 'le bien';
+      
+      // Notify the other party (buyer or seller)
+      const otherPartyId = role === 'buyer' ? currentAssignment.case?.seller_id : currentAssignment.case?.buyer_id;
+      if (otherPartyId) {
+        await NotificationService.sendInAppNotification({
+          user_id: otherPartyId,
+          case_id: currentAssignment.case_id,
+          type: 'notaire_approval',
+          title: `${roleLabel} a approuvé le notaire`,
+          message: bothApproved
+            ? `${roleLabel} a approuvé ${notaireName}. Les deux parties ont approuvé. Le notaire peut maintenant accepter le dossier pour ${parcelleTitle}.`
+            : `${roleLabel} a approuvé ${notaireName} pour le dossier de ${parcelleTitle}. Votre approbation est ${role === 'buyer' ? 'déjà enregistrée' : 'maintenant requise'}.`,
+          priority: bothApproved ? 'high' : 'medium',
+          metadata: {
+            assignment_id: assignmentId,
+            buyer_approved: buyerApproved,
+            seller_approved: sellerApproved,
+            both_approved: bothApproved,
+            notaire_name: notaireName
+          }
+        });
+      }
+      
+      // If both approved, update status and notify notaire
       if (bothApproved) {
         const { error: statusError } = await supabase
           .from('notaire_case_assignments')
@@ -419,7 +455,22 @@ class NotaireAssignmentService {
           console.log('🎉 [NotaireService] Les deux parties ont approuvé - Notaire peut accepter');
         }
         
-        // TODO: Envoyer notification au notaire
+        // Notify notaire that case is ready to accept
+        await NotificationService.sendInAppNotification({
+          user_id: currentAssignment.notaire_id,
+          case_id: currentAssignment.case_id,
+          type: 'notaire_ready_to_accept',
+          title: '✅ Dossier prêt à accepter',
+          message: `Les deux parties (acheteur et vendeur) ont approuvé votre assignation pour ${parcelleTitle}. Vous pouvez maintenant accepter ce dossier et commencer la préparation du contrat.`,
+          priority: 'high',
+          metadata: {
+            assignment_id: assignmentId,
+            buyer_approved: true,
+            seller_approved: true,
+            both_approved: true,
+            parcelle_title: parcelleTitle
+          }
+        });
       }
       
       return { success: true, data, bothApproved };

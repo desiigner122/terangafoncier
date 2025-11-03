@@ -859,22 +859,24 @@ const ParticulierCaseTrackingModernRefonte = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-      {/* Header moderne avec gradient */}
+      {/* Header moderne avec gradient - Phase 6: Responsive */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-2xl">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3 sm:gap-4 w-full sm:w-auto">
               <Button
                 variant="ghost"
                 size="icon"
                 onClick={() => navigate('/dashboard/particulier')}
-                className="text-white hover:bg-white/20"
+                className="text-white hover:bg-white/20 flex-shrink-0"
               >
                 <ArrowLeft className="w-5 h-5" />
               </Button>
-              <div>
-                <div className="flex items-center gap-3">
-                  <h1 className="text-2xl font-bold">Dossier #{purchaseCase.case_number}</h1>
+              <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 sm:gap-3 flex-wrap">
+                  <h1 className="text-lg sm:text-2xl font-bold truncate">
+                    Dossier #{purchaseCase.case_number}
+                  </h1>
                   <Badge 
                     variant="secondary" 
                     className={cn(
@@ -882,17 +884,18 @@ const ParticulierCaseTrackingModernRefonte = () => {
                       statusInfo.badgeClass
                     )}
                   >
-                    <statusInfo.icon className="w-4 h-4 mr-1 inline" />
-                    {statusInfo.label}
+                    <statusInfo.icon className="w-3 h-3 sm:w-4 sm:h-4 mr-1 inline" />
+                    <span className="text-xs sm:text-sm">{statusInfo.label}</span>
                   </Badge>
                 </div>
-                <p className="text-blue-100 text-sm mt-1">
+                <p className="text-blue-100 text-xs sm:text-sm mt-1">
                   Créé le {format(new Date(purchaseCase.created_at), 'dd MMMM yyyy', { locale: fr })}
                 </p>
               </div>
             </div>
             
-            <div className="flex items-center gap-2">
+            {/* Phase 6: Badge Acheteur - caché sur mobile, visible sur tablet+ */}
+            <div className="hidden md:flex items-center gap-2">
               <Badge variant="secondary" className="bg-white/20 text-white px-4 py-2">
                 <User className="w-4 h-4 mr-2" />
                 Acheteur
@@ -900,13 +903,13 @@ const ParticulierCaseTrackingModernRefonte = () => {
             </div>
           </div>
 
-          {/* Barre de progression */}
-          <div className="mt-6">
+          {/* Barre de progression - Phase 6: Responsive */}
+          <div className="mt-4 sm:mt-6">
             <div className="flex items-center justify-between mb-2">
-              <span className="text-sm font-medium text-blue-100">Progression du dossier</span>
-              <span className="text-sm font-bold text-white">{Math.round(progress)}%</span>
+              <span className="text-xs sm:text-sm font-medium text-blue-100">Progression du dossier</span>
+              <span className="text-xs sm:text-sm font-bold text-white">{Math.round(progress)}%</span>
             </div>
-            <Progress value={progress} className="h-3 bg-white/20" />
+            <Progress value={progress} className="h-2 sm:h-3 bg-white/20" />
           </div>
         </div>
       </div>
@@ -926,33 +929,33 @@ const ParticulierCaseTrackingModernRefonte = () => {
               </CardHeader>
               <CardContent className="pt-6">
                 {property ? (
-                  <div className="grid md:grid-cols-2 gap-6">
+                  <div className="grid md:grid-cols-2 gap-4 sm:gap-6">
                     <div>
-                      <h3 className="font-semibold text-lg mb-2">{property.title || property.name || 'Propriété'}</h3>
+                      <h3 className="font-semibold text-base sm:text-lg mb-2">{property.title || property.name || 'Propriété'}</h3>
                       {/* Référence */}
-                      <p className="text-xs text-gray-500 font-mono mb-3">
+                      <p className="text-xs text-gray-500 font-mono mb-2 sm:mb-3">
                         Réf: {getPropertyReference(property)}
                       </p>
-                      <div className="space-y-2 text-sm">
+                      <div className="space-y-2 text-xs sm:text-sm">
                         {/* Localisation - support multi-format */}
                         {(property.location || property.address || property.city) && (
                           <div className="flex items-center gap-2 text-gray-600">
-                            <MapPin className="w-4 h-4 text-green-600" />
-                            <span>{property.location || property.address || property.city}</span>
+                            <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                            <span className="break-words">{property.location || property.address || property.city}</span>
                           </div>
                         )}
                         {/* Surface - utilise helper */}
                         {getPropertySurface(property) > 0 && (
                           <div className="flex items-center gap-2 text-gray-600">
-                            <Package className="w-4 h-4 text-green-600" />
+                            <Package className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
                             <span>{formatSurface(getPropertySurface(property))}</span>
                           </div>
                         )}
                         {/* Prix - utilise helper pour source de vérité */}
                         {getRealPrice(purchaseCase, purchaseRequest, property) > 0 && (
                           <div className="flex items-center gap-2 text-gray-600">
-                            <DollarSign className="w-4 h-4 text-green-600" />
-                            <span className="font-bold text-green-700">
+                            <DollarSign className="w-3 h-3 sm:w-4 sm:h-4 text-green-600 flex-shrink-0" />
+                            <span className="font-bold text-green-700 break-all">
                               {formatPrice(getRealPrice(purchaseCase, purchaseRequest, property))}
                             </span>
                           </div>
@@ -968,19 +971,19 @@ const ParticulierCaseTrackingModernRefonte = () => {
                           <img
                             src={imageUrl}
                             alt={property?.title || property?.name || 'Propriété'}
-                            className="w-full h-48 object-cover"
+                            className="w-full h-40 sm:h-48 object-cover"
                             onError={(e) => {
                               e.target.style.display = 'none';
                               e.target.nextSibling && (e.target.nextSibling.style.display = 'flex');
                             }}
                           />
-                          <div className="w-full h-48 rounded-lg bg-gray-100 flex items-center justify-center" style={{ display: 'none' }}>
-                            <Building2 className="w-12 h-12 text-gray-300" />
+                          <div className="w-full h-40 sm:h-48 rounded-lg bg-gray-100 flex items-center justify-center" style={{ display: 'none' }}>
+                            <Building2 className="w-8 h-8 sm:w-12 sm:h-12 text-gray-300" />
                           </div>
                         </div>
                       ) : (
-                        <div className="w-full h-48 rounded-lg bg-gray-100 flex items-center justify-center">
-                          <Building2 className="w-12 h-12 text-gray-300" />
+                        <div className="w-full h-40 sm:h-48 rounded-lg bg-gray-100 flex items-center justify-center">
+                          <Building2 className="w-8 h-8 sm:w-12 sm:h-12 text-gray-300" />
                         </div>
                       );
                     })()}
@@ -1034,10 +1037,12 @@ const ParticulierCaseTrackingModernRefonte = () => {
                     }
                   }}
                 >
-                  <TabsList className="grid w-full grid-cols-4 mb-6">
+                  {/* Phase 6: TabsList responsive - 2 cols sur mobile, 4 sur desktop */}
+                  <TabsList className="grid w-full grid-cols-2 md:grid-cols-4 mb-6">
                     <TabsTrigger value="messages" className="flex items-center gap-2">
                       <MessageSquare className="w-4 h-4" />
-                      Messages
+                      <span className="hidden sm:inline">Messages</span>
+                      <span className="sm:hidden">Msg</span>
                       {/* Phase 5: Badge rouge si messages non lus, gris sinon */}
                       {unreadCount > 0 ? (
                         <Badge variant="destructive" className="ml-1 bg-red-600">
@@ -1049,21 +1054,24 @@ const ParticulierCaseTrackingModernRefonte = () => {
                     </TabsTrigger>
                     <TabsTrigger value="documents" className="flex items-center gap-2">
                       <FileText className="w-4 h-4" />
-                      Documents
+                      <span className="hidden sm:inline">Documents</span>
+                      <span className="sm:hidden">Docs</span>
                       {documents.length > 0 && (
                         <Badge variant="secondary" className="ml-1">{documents.length}</Badge>
                       )}
                     </TabsTrigger>
                     <TabsTrigger value="appointments" className="flex items-center gap-2">
                       <Calendar className="w-4 h-4" />
-                      Rendez-vous
+                      <span className="hidden sm:inline">Rendez-vous</span>
+                      <span className="sm:hidden">RDV</span>
                       {appointments.length > 0 && (
                         <Badge variant="secondary" className="ml-1">{appointments.length}</Badge>
                       )}
                     </TabsTrigger>
                     <TabsTrigger value="payments" className="flex items-center gap-2">
                       <CreditCard className="w-4 h-4" />
-                      Paiements
+                      <span className="hidden sm:inline">Paiements</span>
+                      <span className="sm:hidden">€</span>
                       {payments.length > 0 && (
                         <Badge variant="secondary" className="ml-1">{payments.length}</Badge>
                       )}
@@ -1081,27 +1089,27 @@ const ParticulierCaseTrackingModernRefonte = () => {
                               initial={{ opacity: 0, y: 10 }}
                               animate={{ opacity: 1, y: 0 }}
                               className={cn(
-                                "flex gap-3 p-4 rounded-lg",
+                                "flex gap-2 sm:gap-3 p-3 sm:p-4 rounded-lg text-xs sm:text-sm",
                                 msg.sent_by === user?.id
-                                  ? "bg-blue-50 ml-8"
-                                  : "bg-gray-50 mr-8"
+                                  ? "bg-blue-50 ml-4 sm:ml-8"
+                                  : "bg-gray-50 mr-4 sm:mr-8"
                               )}
                             >
-                              <Avatar className="w-10 h-10">
+                              <Avatar className="w-8 h-8 sm:w-10 sm:h-10 flex-shrink-0">
                                 <AvatarFallback>
                                   {msg.sent_by === user?.id ? 'V' : 'A'}
                                 </AvatarFallback>
                               </Avatar>
-                              <div className="flex-1">
-                                <div className="flex items-center justify-between mb-1">
-                                  <span className="font-medium text-sm">
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center justify-between mb-1 gap-2">
+                                  <span className="font-medium text-xs sm:text-sm truncate">
                                     {msg.sent_by === user?.id ? 'Vous' : seller?.full_name || 'Vendeur'}
                                   </span>
-                                  <span className="text-xs text-gray-500">
+                                  <span className="text-xs text-gray-500 flex-shrink-0">
                                     {format(new Date(msg.created_at), 'dd/MM/yyyy HH:mm', { locale: fr })}
                                   </span>
                                 </div>
-                                <p className="text-sm text-gray-700">{msg.message}</p>
+                                <p className="text-xs sm:text-sm text-gray-700 break-words">{msg.message}</p>
                               </div>
                             </motion.div>
                           ))
@@ -1226,22 +1234,22 @@ const ParticulierCaseTrackingModernRefonte = () => {
                         <>
                           <Separator />
                           <div className="space-y-3">
-                            <h3 className="font-semibold text-sm">Rendez-vous programmés</h3>
+                            <h3 className="font-semibold text-xs sm:text-sm">Rendez-vous programmés</h3>
                             {appointments.map((apt) => (
                               <div
                                 key={apt.id}
-                                className="flex items-center justify-between p-4 border rounded-lg bg-blue-50"
+                                className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 sm:p-4 border rounded-lg bg-blue-50"
                               >
-                                <div className="flex items-center gap-3">
-                                  <Calendar className="w-6 h-6 text-blue-600" />
-                                  <div>
-                                    <p className="font-medium text-sm">{apt.title || 'Rendez-vous'}</p>
+                                <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                                  <Calendar className="w-5 h-5 sm:w-6 sm:h-6 text-blue-600 flex-shrink-0" />
+                                  <div className="min-w-0">
+                                    <p className="font-medium text-xs sm:text-sm truncate">{apt.title || 'Rendez-vous'}</p>
                                     <p className="text-xs text-gray-600">
                                       {format(new Date(apt.start_time), 'dd MMMM yyyy à HH:mm', { locale: fr })}
                                     </p>
                                   </div>
                                 </div>
-                                <Badge variant={apt.status === 'confirmed' ? 'success' : 'secondary'}>
+                                <Badge variant={apt.status === 'confirmed' ? 'success' : 'secondary'} className="flex-shrink-0">
                                   {apt.status}
                                 </Badge>
                               </div>
@@ -1307,17 +1315,17 @@ const ParticulierCaseTrackingModernRefonte = () => {
             {property && (
               <Card className="border-none shadow-lg border-l-4 border-l-green-600">
                 <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-                  <CardTitle className="flex items-center gap-2 text-green-800 text-base">
-                    <DollarSign className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 text-green-800 text-sm sm:text-base">
+                    <DollarSign className="w-4 h-4 sm:w-5 sm:h-5" />
                     Résumé financier
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="pt-4">
                   <div className="space-y-3">
                     {/* Prix de la propriété */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Prix de vente</span>
-                      <span className="font-semibold text-gray-900">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs sm:text-sm text-gray-600">Prix de vente</span>
+                      <span className="font-semibold text-gray-900 text-xs sm:text-base break-all text-right">
                         {formatPrice(getRealPrice(purchaseCase, purchaseRequest, property))}
                       </span>
                     </div>
@@ -1325,17 +1333,17 @@ const ParticulierCaseTrackingModernRefonte = () => {
                     <Separator />
                     
                     {/* Acompte (10%) */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Acompte (10%)</span>
-                      <span className="font-medium text-gray-700">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs sm:text-sm text-gray-600">Acompte (10%)</span>
+                      <span className="font-medium text-gray-700 text-xs sm:text-base break-all text-right">
                         {formatPrice((getRealPrice(purchaseCase, purchaseRequest, property) * 0.10))}
                       </span>
                     </div>
                     
                     {/* Frais notaire - PHASE 3: Vrais frais ou estimation */}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-2">
-                        <span className="text-sm text-gray-600">Frais notaire</span>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-1 sm:gap-2 flex-wrap">
+                        <span className="text-xs sm:text-sm text-gray-600">Frais notaire</span>
                         {realNotaryFees ? (
                           <Badge variant="success" className="text-xs bg-green-100 text-green-700 border-green-300">
                             Défini
@@ -1347,7 +1355,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
                         )}
                       </div>
                       <span className={cn(
-                        "font-medium",
+                        "font-medium text-xs sm:text-base break-all text-right",
                         realNotaryFees ? "text-green-700" : "text-yellow-700"
                       )}>
                         {realNotaryFees 
@@ -1368,9 +1376,9 @@ const ParticulierCaseTrackingModernRefonte = () => {
                     <Separator />
                     
                     {/* Solde */}
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Solde restant</span>
-                      <span className="font-medium text-gray-700">
+                    <div className="flex items-center justify-between gap-2">
+                      <span className="text-xs sm:text-sm text-gray-600">Solde restant</span>
+                      <span className="font-medium text-gray-700 text-xs sm:text-base break-all text-right">
                         {formatPrice(
                           getRealPrice(purchaseCase, purchaseRequest, property) 
                           - (getRealPrice(purchaseCase, purchaseRequest, property) * 0.10)
@@ -1381,9 +1389,9 @@ const ParticulierCaseTrackingModernRefonte = () => {
                     <Separator className="my-2" />
                     
                     {/* Total avec frais */}
-                    <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
-                      <span className="font-semibold text-green-900">Total à payer</span>
-                      <span className="font-bold text-lg text-green-700">
+                    <div className="flex items-center justify-between gap-2 bg-green-50 p-2 sm:p-3 rounded-lg">
+                      <span className="font-semibold text-green-900 text-xs sm:text-base">Total à payer</span>
+                      <span className="font-bold text-base sm:text-lg text-green-700 break-all text-right">
                         {formatPrice(
                           getRealPrice(purchaseCase, purchaseRequest, property) 
                           + (realNotaryFees || (getRealPrice(purchaseCase, purchaseRequest, property) * 0.05))
@@ -1399,35 +1407,35 @@ const ParticulierCaseTrackingModernRefonte = () => {
             {seller && (
               <Card className="border-none shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-orange-50 to-red-50">
-                  <CardTitle className="flex items-center gap-2 text-orange-800 text-base">
-                    <User className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 text-orange-800 text-sm sm:text-base">
+                    <User className="w-4 h-4 sm:w-5 sm:h-5" />
                     Vendeur
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6">
-                  <div className="flex items-center gap-3 mb-4">
-                    <Avatar className="w-14 h-14">
+                <CardContent className="pt-4 sm:pt-6">
+                  <div className="flex items-center gap-2 sm:gap-3 mb-3 sm:mb-4">
+                    <Avatar className="w-10 h-10 sm:w-14 sm:h-14 flex-shrink-0">
                       <AvatarImage src={seller.avatar_url} />
                       <AvatarFallback className="bg-orange-100 text-orange-700">
                         {seller.full_name?.charAt(0) || 'V'}
                       </AvatarFallback>
                     </Avatar>
-                    <div>
-                      <h3 className="font-semibold">{seller.full_name || 'Vendeur'}</h3>
-                      <p className="text-sm text-gray-500">{seller.role || 'Particulier'}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-semibold text-sm sm:text-base truncate">{seller.full_name || 'Vendeur'}</h3>
+                      <p className="text-xs sm:text-sm text-gray-500">{seller.role || 'Particulier'}</p>
                     </div>
                   </div>
                   <Separator className="my-3" />
-                  <div className="space-y-2 text-sm">
+                  <div className="space-y-2 text-xs sm:text-sm">
                     {seller.phone && (
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Phone className="w-4 h-4 text-orange-600" />
-                        <span>{seller.phone}</span>
+                        <Phone className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
+                        <span className="break-all">{seller.phone}</span>
                       </div>
                     )}
                     {seller.email && (
                       <div className="flex items-center gap-2 text-gray-600">
-                        <Mail className="w-4 h-4 text-orange-600" />
+                        <Mail className="w-3 h-3 sm:w-4 sm:h-4 text-orange-600 flex-shrink-0" />
                         <span className="truncate">{seller.email}</span>
                       </div>
                     )}
@@ -1453,12 +1461,12 @@ const ParticulierCaseTrackingModernRefonte = () => {
             {purchaseRequest?.financing_type === 'bank_loan' && (
               <Card className="border-none shadow-lg">
                 <CardHeader className="bg-gradient-to-r from-cyan-50 to-blue-50">
-                  <CardTitle className="flex items-center gap-2 text-cyan-800 text-base">
-                    <Banknote className="w-5 h-5" />
+                  <CardTitle className="flex items-center gap-2 text-cyan-800 text-sm sm:text-base">
+                    <Banknote className="w-4 h-4 sm:w-5 sm:h-5" />
                     Financement bancaire
                   </CardTitle>
                 </CardHeader>
-                <CardContent className="pt-6">
+                <CardContent className="pt-4 sm:pt-6">
                   <BankFinancingSection
                     purchaseRequestId={purchaseRequest.id}
                     financingData={purchaseRequest}
@@ -1470,12 +1478,12 @@ const ParticulierCaseTrackingModernRefonte = () => {
             {/* Génération contrat */}
             <Card className="border-none shadow-lg">
               <CardHeader className="bg-gradient-to-r from-violet-50 to-purple-50">
-                <CardTitle className="flex items-center gap-2 text-violet-800 text-base">
-                  <FileCheck className="w-5 h-5" />
+                <CardTitle className="flex items-center gap-2 text-violet-800 text-sm sm:text-base">
+                  <FileCheck className="w-4 h-4 sm:w-5 sm:h-5" />
                   Contrat de vente
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
+              <CardContent className="pt-4 sm:pt-6">
                 <ContractGenerator
                   purchaseRequestId={purchaseRequest?.id}
                   caseData={purchaseCase}

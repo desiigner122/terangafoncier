@@ -28,6 +28,7 @@ import ModernRegisterPage from '@/pages/ModernRegisterPage';
 import BlockchainRegisterPage from '@/pages/BlockchainRegisterPage';
 import MultiStepRegisterPage from '@/pages/MultiStepRegisterPage';
 import ResetPasswordPage from '@/pages/auth/ResetPasswordPage';
+import VerifyEmailPage from '@/pages/auth/VerifyEmailPage';
 import DebugDashboard from '@/pages/DebugDashboard';
 import PromoterProjectsPage from '@/pages/PromoterProjectsPage';
 import ProjectDetailPage from '@/pages/ProjectDetailPage';
@@ -407,6 +408,7 @@ function App() {
               <Route path="login" element={<BlockchainLoginPage />} />
               <Route path="forgot-password" element={<ForgotPasswordPage />} />
               <Route path="register" element={<MultiStepRegisterPage />} />
+              <Route path="verify-email" element={<VerifyEmailPage />} />
               <Route path="reset-password" element={<ResetPasswordPage />} />
               <Route path="debug-dashboard" element={<DebugDashboard />} />
               <Route path="auth-debug" element={<AuthDebugPage />} />

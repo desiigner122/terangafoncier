@@ -92,6 +92,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
   const [buyerProfile, setBuyerProfile] = useState(null);
   const [notaire, setNotaire] = useState(null);
   const [notaireAssignment, setNotaireAssignment] = useState(null);
+  const [realNotaryFees, setRealNotaryFees] = useState(null); // Phase 3: Vrais frais depuis DB
   const [messages, setMessages] = useState([]);
   const [documents, setDocuments] = useState([]);
   const [appointments, setAppointments] = useState([]);
@@ -316,6 +317,17 @@ const ParticulierCaseTrackingModernRefonte = () => {
       if (assignmentResult.data) {
         setNotaireAssignment(assignmentResult.data);
         console.log('📋 Assignment notaire chargé:', assignmentResult.data);
+        
+        // Phase 3: Charger les VRAIS frais notaire depuis quoted_fee
+        if (assignmentResult.data.quoted_fee && assignmentResult.data.quoted_fee > 0) {
+          setRealNotaryFees(assignmentResult.data.quoted_fee);
+          console.log('💰 Frais notaire réels chargés:', assignmentResult.data.quoted_fee, 'FCFA');
+        } else {
+          setRealNotaryFees(null); // Pas encore défini par le notaire
+          console.log('⚠️ Frais notaire pas encore définis (quoted_fee vide)');
+        }
+      } else {
+        setRealNotaryFees(null);
       }
       
       setMessages(messagesResult.data || []);
@@ -433,6 +445,9 @@ const ParticulierCaseTrackingModernRefonte = () => {
           }
           if (payload.new.quoted_fee && payload.new.quoted_fee !== notaireAssignment?.quoted_fee) {
             toast.info('Frais notaire mis à jour: ' + payload.new.quoted_fee.toLocaleString() + ' FCFA');
+            // Phase 3: Mettre à jour les vrais frais en temps réel
+            setRealNotaryFees(payload.new.quoted_fee);
+            console.log('💰 Frais notaire mis à jour en temps réel:', payload.new.quoted_fee, 'FCFA');
           }
         } else if (payload.eventType === 'DELETE') {
           setNotaireAssignment(null);
@@ -614,7 +629,8 @@ const ParticulierCaseTrackingModernRefonte = () => {
       case 'pay_balance':
         console.log('✅ [BUYER] Ouverture PaymentModal (balance)');
         const depositPaid = (property?.price * 0.10) || 0;
-        const notaryFeesPaid = (property?.price * 0.05) || 0;
+        // Phase 3: Utiliser vrais frais notaire au lieu de 5% hardcodé
+        const notaryFeesPaid = realNotaryFees || (property?.price * 0.05) || 0;
         const balance = (property?.price || 0) - depositPaid;
         
         setPaymentModalData({
@@ -1251,6 +1267,98 @@ const ParticulierCaseTrackingModernRefonte = () => {
 
           {/* Colonne droite: Sidebar */}
           <div className="space-y-6">
+            {/* Phase 3: Résumé financier avec vrais frais notaire */}
+            {property && (
+              <Card className="border-none shadow-lg border-l-4 border-l-green-600">
+                <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+                  <CardTitle className="flex items-center gap-2 text-green-800 text-base">
+                    <DollarSign className="w-5 h-5" />
+                    Résumé financier
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="pt-4">
+                  <div className="space-y-3">
+                    {/* Prix de la propriété */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Prix de vente</span>
+                      <span className="font-semibold text-gray-900">
+                        {formatPrice(getRealPrice(purchaseCase, purchaseRequest, property))}
+                      </span>
+                    </div>
+                    
+                    <Separator />
+                    
+                    {/* Acompte (10%) */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Acompte (10%)</span>
+                      <span className="font-medium text-gray-700">
+                        {formatPrice((getRealPrice(purchaseCase, purchaseRequest, property) * 0.10))}
+                      </span>
+                    </div>
+                    
+                    {/* Frais notaire - PHASE 3: Vrais frais ou estimation */}
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2">
+                        <span className="text-sm text-gray-600">Frais notaire</span>
+                        {realNotaryFees ? (
+                          <Badge variant="success" className="text-xs bg-green-100 text-green-700 border-green-300">
+                            Défini
+                          </Badge>
+                        ) : (
+                          <Badge variant="secondary" className="text-xs bg-yellow-100 text-yellow-700 border-yellow-300">
+                            Estimation
+                          </Badge>
+                        )}
+                      </div>
+                      <span className={cn(
+                        "font-medium",
+                        realNotaryFees ? "text-green-700" : "text-yellow-700"
+                      )}>
+                        {realNotaryFees 
+                          ? formatPrice(realNotaryFees) 
+                          : formatPrice(getRealPrice(purchaseCase, purchaseRequest, property) * 0.05)
+                        }
+                      </span>
+                    </div>
+                    
+                    {/* Info sur les frais notaire */}
+                    {!realNotaryFees && (
+                      <div className="text-xs text-yellow-600 bg-yellow-50 p-2 rounded border border-yellow-200">
+                        <Info className="w-3 h-3 inline mr-1" />
+                        En attente du devis notaire officiel
+                      </div>
+                    )}
+                    
+                    <Separator />
+                    
+                    {/* Solde */}
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm text-gray-600">Solde restant</span>
+                      <span className="font-medium text-gray-700">
+                        {formatPrice(
+                          getRealPrice(purchaseCase, purchaseRequest, property) 
+                          - (getRealPrice(purchaseCase, purchaseRequest, property) * 0.10)
+                        )}
+                      </span>
+                    </div>
+                    
+                    <Separator className="my-2" />
+                    
+                    {/* Total avec frais */}
+                    <div className="flex items-center justify-between bg-green-50 p-3 rounded-lg">
+                      <span className="font-semibold text-green-900">Total à payer</span>
+                      <span className="font-bold text-lg text-green-700">
+                        {formatPrice(
+                          getRealPrice(purchaseCase, purchaseRequest, property) 
+                          + (realNotaryFees || (getRealPrice(purchaseCase, purchaseRequest, property) * 0.05))
+                        )}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {/* Info vendeur */}
             {seller && (
               <Card className="border-none shadow-lg">

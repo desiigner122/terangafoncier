@@ -46,6 +46,8 @@ import { getPropertyImageUrl } from '@/utils/propertyImageHelpers';
 import { getRealPrice, formatPrice, getPropertySurface, formatSurface, getPropertyReference } from '@/utils/propertyDataHelpers';
 // Phase 4: Import notifications natives
 import { notifyNotaryAssigned, notifyNotaryFeesSet, notifyNewMessage } from '@/utils/nativeNotifications';
+// Phase 5: Import hook messages non lus
+import useUnreadMessages from '@/hooks/useUnreadMessages';
 
 const STATUS_META = {
   initiated: { label: 'Dossier créé', color: 'blue', icon: Clock },
@@ -112,6 +114,9 @@ const ParticulierCaseTrackingModernRefonte = () => {
 
   // Use unified realtime sync hook
   useRealtimeCaseSync(purchaseCase?.id, () => loadCaseData());
+
+  // Phase 5: Hook pour messages non lus
+  const { unreadCount, markAsRead } = useUnreadMessages(purchaseCase?.id, user?.id);
 
   useEffect(() => {
     if (user && caseIdentifier) {
@@ -1018,12 +1023,27 @@ const ParticulierCaseTrackingModernRefonte = () => {
             {/* Onglets: Documents, RDV, Messages, Paiements */}
             <Card className="border-none shadow-lg">
               <CardContent className="pt-6">
-                <Tabs defaultValue="messages" className="w-full">
+                <Tabs 
+                  defaultValue="messages" 
+                  className="w-full"
+                  onValueChange={(value) => {
+                    // Phase 5: Auto-marquer messages comme lus quand onglet Messages ouvert
+                    if (value === 'messages' && unreadCount > 0) {
+                      markAsRead();
+                      console.log('✅ Messages marqués comme lus (onglet ouvert)');
+                    }
+                  }}
+                >
                   <TabsList className="grid w-full grid-cols-4 mb-6">
                     <TabsTrigger value="messages" className="flex items-center gap-2">
                       <MessageSquare className="w-4 h-4" />
                       Messages
-                      {messages.length > 0 && (
+                      {/* Phase 5: Badge rouge si messages non lus, gris sinon */}
+                      {unreadCount > 0 ? (
+                        <Badge variant="destructive" className="ml-1 bg-red-600">
+                          {unreadCount}
+                        </Badge>
+                      ) : messages.length > 0 && (
                         <Badge variant="secondary" className="ml-1">{messages.length}</Badge>
                       )}
                     </TabsTrigger>

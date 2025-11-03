@@ -1,10 +1,21 @@
 /**
  * Service Realtime Notifications - Supabase
  * Gère les subscriptions Realtime pour les mises à jour en temps réel
+ * Phase 4: Intégration notifications natives
  * @author Teranga Foncier Team
  */
 
 import { supabase } from '@/lib/supabaseClient';
+import { 
+  sendNotification, 
+  notifyStatusChange, 
+  notifyNewMessage,
+  notifyNotaryAssigned,
+  notifyNotaryFeesSet,
+  notifyNewAppointment,
+  notifyCaseCompleted,
+  getNotificationPermission 
+} from '@/utils/nativeNotifications';
 
 class RealtimeNotificationService {
   /**
@@ -320,6 +331,84 @@ class RealtimeNotificationService {
       appointments: this.subscribeAppointments(caseId, onUpdate)
     };
     return channels;
+  }
+
+  /**
+   * Phase 4: Envoie une notification native pour un événement
+   * @param {string} eventType - Type d'événement ('status_change', 'new_message', etc.)
+   * @param {Object} data - Données de l'événement
+   */
+  static async sendNativeNotification(eventType, data) {
+    // Vérifier si permissions accordées
+    const permission = getNotificationPermission();
+    if (permission !== 'granted') {
+      console.log('⏭️ Notifications natives non autorisées, skip');
+      return;
+    }
+
+    try {
+      switch (eventType) {
+        case 'status_change':
+          await notifyStatusChange(
+            data.caseReference || `Dossier ${data.caseId?.slice(0, 8)}`,
+            data.oldStatus,
+            data.newStatus,
+            data.caseId
+          );
+          break;
+
+        case 'new_message':
+          await notifyNewMessage(
+            data.senderName || 'Quelqu\'un',
+            data.messagePreview || 'Nouveau message',
+            data.caseId
+          );
+          break;
+
+        case 'notary_assigned':
+          await notifyNotaryAssigned(
+            data.notaryName || 'Un notaire',
+            data.caseReference || `Dossier ${data.caseId?.slice(0, 8)}`,
+            data.caseId
+          );
+          break;
+
+        case 'notary_fees':
+          await notifyNotaryFeesSet(
+            data.amount || 0,
+            data.caseReference || `Dossier ${data.caseId?.slice(0, 8)}`,
+            data.caseId
+          );
+          break;
+
+        case 'new_appointment':
+          await notifyNewAppointment(
+            data.appointmentDate || 'Bientôt',
+            data.caseReference || `Dossier ${data.caseId?.slice(0, 8)}`,
+            data.caseId
+          );
+          break;
+
+        case 'case_completed':
+          await notifyCaseCompleted(
+            data.caseReference || `Dossier ${data.caseId?.slice(0, 8)}`,
+            data.caseId
+          );
+          break;
+
+        default:
+          // Notification générique
+          await sendNotification(data.title || '🔔 Mise à jour', {
+            body: data.body || 'Une mise à jour est disponible',
+            tag: `generic-${data.caseId || 'notification'}`,
+            data: { type: eventType, ...data }
+          });
+      }
+
+      console.log('✅ Notification native envoyée:', eventType, data);
+    } catch (error) {
+      console.error('❌ Erreur envoi notification native:', error);
+    }
   }
 }
 

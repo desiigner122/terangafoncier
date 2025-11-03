@@ -44,6 +44,8 @@ import RealtimeNotificationService from '@/services/RealtimeNotificationService'
 import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
 import { getPropertyImageUrl } from '@/utils/propertyImageHelpers';
 import { getRealPrice, formatPrice, getPropertySurface, formatSurface, getPropertyReference } from '@/utils/propertyDataHelpers';
+// Phase 4: Import notifications natives
+import { notifyNotaryAssigned, notifyNotaryFeesSet, notifyNewMessage } from '@/utils/nativeNotifications';
 
 const STATUS_META = {
   initiated: { label: 'Dossier créé', color: 'blue', icon: Clock },
@@ -430,6 +432,13 @@ const ParticulierCaseTrackingModernRefonte = () => {
             if (notaireData) {
               setNotaire(notaireData);
               toast.success('Notaire assigné: ' + notaireData.full_name);
+              
+              // Phase 4: Notification native pour assignation notaire
+              notifyNotaryAssigned(
+                notaireData.full_name,
+                purchaseCase?.case_number || `Dossier ${purchaseCase?.id?.slice(0, 8)}`,
+                purchaseCase?.id
+              );
             }
           }
           
@@ -448,6 +457,13 @@ const ParticulierCaseTrackingModernRefonte = () => {
             // Phase 3: Mettre à jour les vrais frais en temps réel
             setRealNotaryFees(payload.new.quoted_fee);
             console.log('💰 Frais notaire mis à jour en temps réel:', payload.new.quoted_fee, 'FCFA');
+            
+            // Phase 4: Notification native pour frais notaire
+            notifyNotaryFeesSet(
+              payload.new.quoted_fee,
+              purchaseCase?.case_number || `Dossier ${purchaseCase?.id?.slice(0, 8)}`,
+              purchaseCase?.id
+            );
           }
         } else if (payload.eventType === 'DELETE') {
           setNotaireAssignment(null);

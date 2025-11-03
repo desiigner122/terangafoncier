@@ -365,6 +365,129 @@ const ParticulierCaseTrackingModernRefonte = () => {
   };
 
   // Realtime: messages du dossier (INSERT/UPDATE/DELETE)
+  // ✅ NEW: Realtime: changements sur le purchase_case (status, notaire_id, etc.)
+  useEffect(() => {
+    if (!purchaseCase?.id) return;
+
+    const channel = supabase
+      .channel(`case-updates-${purchaseCase.id}`)
+      .on('postgres_changes', {
+        event: 'UPDATE',
+        schema: 'public',
+        table: 'purchase_cases',
+        filter: `id=eq.${purchaseCase.id}`
+      }, (payload) => {
+        console.log('📡 [REALTIME] Purchase case updated:', payload.new);
+        
+        // Normaliser le statut
+        const normalizedStatus = WorkflowStatusService.normalizeStatus(
+          payload.new.status
+        );
+        
+        // Mettre à jour l'état
+        setPurchaseCase({ ...payload.new, status: normalizedStatus });
+        
+        toast.info('Dossier mis à jour');
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [purchaseCase?.id]);
+
+  // ✅ NEW: Realtime: changements sur notaire_case_assignments
+  useEffect(() => {
+    if (!purchaseCase?.id) return;
+
+    const channel = supabase
+      .channel(`case-assignments-${purchaseCase.id}`)
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'notaire_case_assignments',
+        filter: `case_id=eq.${purchaseCase.id}`
+      }, async (payload) => {
+        console.log('📡 [REALTIME] Notaire assignment updated:', payload);
+        
+        if (payload.eventType === 'INSERT' || payload.eventType === 'UPDATE') {
+          setNotaireAssignment(payload.new);
+          
+          // Recharger le profil notaire si notaire_id a changé
+          if (payload.new.notaire_id && payload.new.notaire_id !== notaire?.id) {
+            const { data: notaireData } = await supabase
+              .from('profiles')
+              .select('id, full_name, email, phone, avatar_url')
+              .eq('id', payload.new.notaire_id)
+              .single();
+            
+            if (notaireData) {
+              setNotaire(notaireData);
+              toast.success('Notaire assigné: ' + notaireData.full_name);
+            }
+          }
+          
+          // Notifications selon l'action
+          if (payload.new.notaire_status === 'accepted') {
+            toast.success('Le notaire a accepté le dossier');
+          }
+          if (payload.new.buyer_approved && !notaireAssignment?.buyer_approved) {
+            toast.info('Approbation acheteur enregistrée');
+          }
+          if (payload.new.seller_approved && !notaireAssignment?.seller_approved) {
+            toast.info('Approbation vendeur enregistrée');
+          }
+          if (payload.new.quoted_fee && payload.new.quoted_fee !== notaireAssignment?.quoted_fee) {
+            toast.info('Frais notaire mis à jour: ' + payload.new.quoted_fee.toLocaleString() + ' FCFA');
+          }
+        } else if (payload.eventType === 'DELETE') {
+          setNotaireAssignment(null);
+          setNotaire(null);
+          toast.warning('Assignment notaire supprimé');
+        }
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [purchaseCase?.id, notaire?.id, notaireAssignment?.buyer_approved, notaireAssignment?.seller_approved, notaireAssignment?.quoted_fee]);
+
+  // ✅ NEW: Realtime: changements sur l'historique (timeline events)
+  useEffect(() => {
+    if (!purchaseCase?.id) return;
+
+    const channel = supabase
+      .channel(`case-history-${purchaseCase.id}`)
+      .on('postgres_changes', {
+        event: 'INSERT',
+        schema: 'public',
+        table: 'purchase_case_history',
+        filter: `case_id=eq.${purchaseCase.id}`
+      }, (payload) => {
+        console.log('📡 [REALTIME] New timeline event:', payload);
+        
+        const normalizedEntry = {
+          ...payload.new,
+          status: WorkflowStatusService.normalizeStatus(payload.new.status),
+          new_status: WorkflowStatusService.normalizeStatus(
+            payload.new.new_status || payload.new.status
+          ),
+        };
+        
+        setHistory((prev) => [normalizedEntry, ...prev]);
+        
+        const statusLabel = WorkflowStatusService.getLabel(normalizedEntry.new_status);
+        toast.info('Nouvel événement: ' + statusLabel);
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [purchaseCase?.id]);
+
+  // Realtime: messages du dossier (INSERT/UPDATE/DELETE)
   useEffect(() => {
     if (!purchaseCase?.id) return;
 

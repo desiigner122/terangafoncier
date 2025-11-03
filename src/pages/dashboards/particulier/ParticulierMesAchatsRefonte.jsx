@@ -143,12 +143,19 @@ const ParticulierMesAchatsRefonte = () => {
   useEffect(() => {
     if (user) {
       loadPurchaseCases();
-      setupRealtimeSubscriptions();
-    }
+      const channels = setupRealtimeSubscriptions();
 
-    return () => {
-      RealtimeNotificationService.unsubscribeAll();
-    };
+      return () => {
+        // Cleanup all channels properly
+        channels.forEach(channel => {
+          try {
+            supabase.removeChannel(channel);
+          } catch (err) {
+            console.warn('Channel cleanup error:', err);
+          }
+        });
+      };
+    }
   }, [user]);
 
   useEffect(() => {
@@ -492,16 +499,24 @@ const ParticulierMesAchatsRefonte = () => {
               seller = sellerData;
             }
 
-            // ✅ Charger les négociations pour cette demande
-            const { data: negotiations } = await supabase
+            // ✅ Charger TOUTES les négociations pour l'historique
+            const { data: allNegotiations } = await supabase
               .from('negotiations')
               .select('*')
               .eq('request_id', req.id)
               .order('created_at', { ascending: false });
 
-            // Dernière contre-offre du vendeur
-            const latestNegotiation = negotiations?.[0];
-            const hasCounterOffer = latestNegotiation && latestNegotiation.status === 'pending';
+            // ✅ Charger la dernière négociation EN ATTENTE (contre-offre active)
+            const { data: pendingNegotiations } = await supabase
+              .from('negotiations')
+              .select('*')
+              .eq('request_id', req.id)
+              .eq('status', 'pending')
+              .order('created_at', { ascending: false })
+              .limit(1);
+
+            const activeNegotiation = pendingNegotiations?.[0] || null;
+            const hasCounterOffer = !!activeNegotiation;
 
             // Créer structure similaire à purchase_case
             return {
@@ -511,6 +526,7 @@ const ParticulierMesAchatsRefonte = () => {
               seller_id: property?.owner_id || null,
               parcelle_id: req.parcel_id,
               status: req.status || 'pending',
+              caseStatus: req.status || 'pending',
               type: req.type,
               offered_price: req.offered_price,
               created_at: req.created_at,
@@ -520,9 +536,10 @@ const ParticulierMesAchatsRefonte = () => {
               seller,
               buyer: null, // Current user is buyer, already have their data
               source: 'request',
-              negotiations: negotiations || [],
-              latestNegotiation,
-              hasCounterOffer
+              negotiations: allNegotiations || [], // ✅ Toutes les negotiations pour historique
+              activeNegotiation, // ✅ LA contre-offre en attente
+              hasCounterOffer, // ✅ Flag booléen
+              latestNegotiation: allNegotiations?.[0] || null
             };
           })
         );
@@ -549,9 +566,11 @@ const ParticulierMesAchatsRefonte = () => {
   };
 
   const setupRealtimeSubscriptions = () => {
+    const channels = [];
+    
     try {
-      // Subscribe to purchase_cases changes
-      const subscription = supabase
+      // 1. Subscribe to purchase_cases changes
+      const casesChannel = supabase
         .channel('purchase_cases_changes')
         .on(
           'postgres_changes',
@@ -563,15 +582,70 @@ const ParticulierMesAchatsRefonte = () => {
           },
           (payload) => {
             console.log('📡 [REALTIME] Changement dossier:', payload);
-            toast.info('Liste mise à jour');
+            toast.info('Dossier mis à jour');
             loadPurchaseCases();
           }
         )
         .subscribe();
+      channels.push(casesChannel);
 
-      console.log('✅ Realtime subscriptions activées');
+      // 2. ✅ NEW: Subscribe to requests (pour voir les nouvelles demandes et changements de statut)
+      const requestsChannel = supabase
+        .channel('requests_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'requests',
+            filter: `user_id=eq.${user.id}`
+          },
+          (payload) => {
+            console.log('📡 [REALTIME] Changement demande:', payload);
+            toast.info('Activité sur vos demandes');
+            loadPurchaseCases();
+          }
+        )
+        .subscribe();
+      channels.push(requestsChannel);
+
+      // 3. ✅ NEW: Subscribe to negotiations (pour voir les contre-offres)
+      const negotiationsChannel = supabase
+        .channel('negotiations_changes')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'negotiations'
+          },
+          async (payload) => {
+            // Vérifier si cette négociation concerne une request de l'acheteur
+            const { data: request } = await supabase
+              .from('requests')
+              .select('id')
+              .eq('id', payload.new.request_id)
+              .eq('user_id', user.id)
+              .maybeSingle();
+            
+            if (request) {
+              console.log('📡 [REALTIME] Nouvelle contre-offre reçue!');
+              toast.info('🎉 Vous avez reçu une contre-offre!', { 
+                duration: 5000,
+                description: 'Consultez vos demandes pour la voir'
+              });
+              loadPurchaseCases();
+            }
+          }
+        )
+        .subscribe();
+      channels.push(negotiationsChannel);
+
+      console.log('✅ Realtime subscriptions activées (3 channels)');
+      return channels;
     } catch (error) {
       console.error('Erreur setup realtime:', error);
+      return channels;
     }
   };
 
@@ -991,19 +1065,19 @@ const ParticulierMesAchatsRefonte = () => {
                                 </div>
 
                                 {/* Contre-offre du vendeur */}
-                                {caseItem.hasCounterOffer && caseItem.latestNegotiation && (
-                                  <div className="mb-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500 rounded-lg">
+                                {caseItem.hasCounterOffer && caseItem.activeNegotiation && (
+                                  <div className="mb-3 p-3 bg-gradient-to-r from-purple-50 to-pink-50 border-l-4 border-purple-500 rounded-lg animate-pulse">
                                     <div className="flex items-center gap-2 mb-2">
                                       <MessageSquare className="w-4 h-4 text-purple-600" />
-                                      <span className="text-sm font-semibold text-purple-900">Contre-offre du vendeur</span>
+                                      <span className="text-sm font-semibold text-purple-900">⚡ Contre-offre en attente</span>
                                     </div>
                                     <div className="flex items-center justify-between">
                                       <div>
                                         <div className="text-lg font-bold text-purple-700">
-                                          {formatPrice(caseItem.latestNegotiation.proposed_price)}
+                                          {formatPrice(caseItem.activeNegotiation.proposed_price)}
                                         </div>
                                         <div className="text-xs text-gray-600">
-                                          Votre offre : {formatPrice(caseItem.latestNegotiation.original_price)}
+                                          Votre offre : {formatPrice(caseItem.activeNegotiation.original_price)}
                                         </div>
                                       </div>
                                       <div className="flex gap-2">
@@ -1013,7 +1087,7 @@ const ParticulierMesAchatsRefonte = () => {
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setSelectedRequest(caseItem);
-                                            setSelectedNegotiation(caseItem.latestNegotiation);
+                                            setSelectedNegotiation(caseItem.activeNegotiation);
                                             setShowCounterOfferModal(true);
                                           }}
                                         >
@@ -1027,7 +1101,7 @@ const ParticulierMesAchatsRefonte = () => {
                                           onClick={(e) => {
                                             e.stopPropagation();
                                             setSelectedRequest(caseItem);
-                                            setSelectedNegotiation(caseItem.latestNegotiation);
+                                            setSelectedNegotiation(caseItem.activeNegotiation);
                                             setShowCounterOfferModal(true);
                                           }}
                                         >

@@ -281,27 +281,8 @@ const VendeurCaseTrackingModernFixed = () => {
   };
 
   // Charger les messages du dossier (côté vendeur) - doit être au niveau racine des hooks
-  useEffect(() => {
-    const fetchMessages = async () => {
-      if (!purchaseCase?.id) {
-        setMessages([]);
-        return;
-      }
-      try {
-        const { data, error } = await supabase
-          .from('purchase_case_messages')
-          .select('*')
-          .eq('case_id', purchaseCase.id)
-          .order('created_at', { ascending: false });
-        if (!error) setMessages(data || []);
-      } catch (err) {
-        console.warn('⚠️ Erreur chargement messages (vendeur):', err);
-      }
-    };
-    fetchMessages();
-  }, [purchaseCase?.id]);
-
   // Realtime: messages (vendeur)
+  // Note: Les messages sont déjà chargés dans loadCaseData()
   useEffect(() => {
     if (!purchaseCase?.id) return;
 

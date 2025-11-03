@@ -76,34 +76,98 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
 
   console.log('🎯 [VENDEUR REQUESTS] User reçu via props:', user);
 
+  // Premier useEffect: Charger les données initiales
   useEffect(() => {
     if (user) {
       loadRequests();
-      
-      // 🔄 REALTIME: Subscribe aux requests changes pour les parcelles du vendeur
-      // Ajout d'un cooldown pour éviter des rechargements multiples successifs
-      const lastReloadAt = { current: 0 };
-      const cooldownMs = 1000;
-      const scheduleReload = () => {
-        const now = Date.now();
-        if (now - lastReloadAt.current < cooldownMs) return;
-        lastReloadAt.current = now;
-        loadRequests();
-      };
-
-      const unsubscribe = RealtimeSyncService.subscribeToVendorRequests(
-        [], // Les parcel IDs seront chargés dans loadRequests
-        () => {
-          console.log('🔄 [REALTIME] Vendor request update detected, scheduled reload');
-          scheduleReload();
-        }
-      );
-      
-      return unsubscribe;
     } else {
       console.warn('⚠️ [VENDEUR REQUESTS] Pas de user, attente...');
     }
   }, [user]);
+
+  // ✅ Deuxième useEffect: Setup realtime APRÈS chargement (avec parcel IDs corrects)
+  useEffect(() => {
+    if (!user || !requests || requests.length === 0) return;
+    
+    // Extraire les parcel IDs des requests chargées
+    const parcelIds = [...new Set(
+      requests
+        .map(r => r.parcel_id || r.parcelId)
+        .filter(Boolean)
+    )];
+    
+    if (parcelIds.length === 0) {
+      console.warn('⚠️ [REALTIME] No parcel IDs found, skipping subscription');
+      return;
+    }
+    
+    console.log('📡 [REALTIME] Subscribing to', parcelIds.length, 'parcels:', parcelIds);
+    
+    // Cooldown pour éviter rechargements multiples
+    const lastReloadAt = { current: 0 };
+    const cooldownMs = 1000;
+    const scheduleReload = () => {
+      const now = Date.now();
+      if (now - lastReloadAt.current < cooldownMs) return;
+      lastReloadAt.current = now;
+      loadRequests();
+    };
+
+    const unsubscribe = RealtimeSyncService.subscribeToVendorRequests(
+      parcelIds, // ✅ Passe les IDs réels au lieu de []
+      () => {
+        console.log('🔄 [REALTIME] Vendor request update detected, scheduled reload');
+        scheduleReload();
+      }
+    );
+    
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
+  }, [user, requests]); // ✅ Dépend de requests
+
+  // ✅ Troisième useEffect: Realtime sur negotiations
+  useEffect(() => {
+    if (!user || !requests || requests.length === 0) return;
+    
+    const requestIds = requests
+      .map(r => r.id)
+      .filter(Boolean);
+    
+    if (requestIds.length === 0) return;
+    
+    console.log('📡 [REALTIME] Subscribing to negotiations for', requestIds.length, 'requests');
+    
+    const channel = supabase
+      .channel('seller-negotiations')
+      .on('postgres_changes', {
+        event: '*',
+        schema: 'public',
+        table: 'negotiations'
+      }, async (payload) => {
+        // Vérifier si cette negotiation affecte les requests du vendeur
+        if (requestIds.includes(payload.new?.request_id)) {
+          console.log('📡 [REALTIME] Negotiation activity:', payload);
+          
+          if (payload.eventType === 'INSERT') {
+            toast.info('Nouvelle contre-offre de l\'acheteur', { duration: 5000 });
+          } else if (payload.eventType === 'UPDATE') {
+            if (payload.new.status === 'accepted') {
+              toast.success('Votre contre-offre a été acceptée!');
+            } else if (payload.new.status === 'rejected') {
+              toast.warning('Votre contre-offre a été refusée');
+            }
+          }
+          
+          await loadRequests();
+        }
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [user, requests]);
 
   // Actions sur les demandes
   // ========================================

@@ -42,6 +42,8 @@ import NotarySelectionModal from '@/components/modals/NotarySelectionModal';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
 import RealtimeNotificationService from '@/services/RealtimeNotificationService';
 import useRealtimeCaseSync from '@/hooks/useRealtimeCaseSync';
+import { getPropertyImageUrl } from '@/utils/propertyImageHelpers';
+import { getRealPrice, formatPrice, getPropertySurface, formatSurface, getPropertyReference } from '@/utils/propertyDataHelpers';
 
 const STATUS_META = {
   initiated: { label: 'Dossier créé', color: 'blue', icon: Clock },
@@ -891,11 +893,9 @@ const ParticulierCaseTrackingModernRefonte = () => {
                     <div>
                       <h3 className="font-semibold text-lg mb-2">{property.title || property.name || 'Propriété'}</h3>
                       {/* Référence */}
-                      {property.id && (
-                        <p className="text-xs text-gray-500 font-mono mb-3">
-                          Réf: {property.id.slice(0, 8).toUpperCase()}
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-500 font-mono mb-3">
+                        Réf: {getPropertyReference(property)}
+                      </p>
                       <div className="space-y-2 text-sm">
                         {/* Localisation - support multi-format */}
                         {(property.location || property.address || property.city) && (
@@ -904,43 +904,27 @@ const ParticulierCaseTrackingModernRefonte = () => {
                             <span>{property.location || property.address || property.city}</span>
                           </div>
                         )}
-                        {/* Surface - support multi-format */}
-                        {(property.area || property.size || property.surface || property.superficie) && (
+                        {/* Surface - utilise helper */}
+                        {getPropertySurface(property) > 0 && (
                           <div className="flex items-center gap-2 text-gray-600">
                             <Package className="w-4 h-4 text-green-600" />
-                            <span>Surface: {property.area || property.size || property.surface || property.superficie} m²</span>
+                            <span>{formatSurface(getPropertySurface(property))}</span>
                           </div>
                         )}
-                        {/* Prix - support multi-format */}
-                        {(property.price || property.prix || purchaseCase?.purchase_price) && (
+                        {/* Prix - utilise helper pour source de vérité */}
+                        {getRealPrice(purchaseCase, purchaseRequest, property) > 0 && (
                           <div className="flex items-center gap-2 text-gray-600">
                             <DollarSign className="w-4 h-4 text-green-600" />
                             <span className="font-bold text-green-700">
-                              {(property.price || property.prix || purchaseCase?.purchase_price).toLocaleString()} FCFA
+                              {formatPrice(getRealPrice(purchaseCase, purchaseRequest, property))}
                             </span>
                           </div>
                         )}
                       </div>
                     </div>
                     {(() => {
-                      // Gérer plusieurs formats d'image possibles
-                      let imageUrl = null;
-                      if (property?.image_url || property?.photo_url) {
-                        imageUrl = property.image_url || property.photo_url;
-                      } else if (property?.image || property?.photo) {
-                        imageUrl = property.image || property.photo;
-                      } else if (property?.images && Array.isArray(property.images) && property.images.length > 0) {
-                        imageUrl = property.images[0];
-                      } else if (property?.images && typeof property.images === 'string') {
-                        try {
-                          const parsed = JSON.parse(property.images);
-                          if (Array.isArray(parsed) && parsed.length > 0) {
-                            imageUrl = parsed[0];
-                          }
-                        } catch (e) {
-                          imageUrl = property.images;
-                        }
-                      }
+                      // Utilise helper centralisé pour les images
+                      const imageUrl = getPropertyImageUrl(property);
 
                       return imageUrl ? (
                         <div className="rounded-lg overflow-hidden shadow-md">

@@ -3,13 +3,13 @@ import { motion } from 'framer-motion';
 import {
   Zap, CheckCircle, FileText, DollarSign, Shield, FileCheck,
   Calendar, CreditCard, CheckCircle2, Info, Loader2, UserPlus,
-  Upload, Eye
+  Upload, Eye, Lock
 } from 'lucide-react';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import WorkflowStatusService from '@/services/WorkflowStatusService';
-import ContextualActionsService from '@/services/ContextualActionsService';
+import ContextualActionsService, { isActionAvailableForStep } from '@/services/ContextualActionsService';
 
 // Map des icônes Lucide
 const iconMap = {
@@ -105,13 +105,19 @@ const BuyerActionButtonsSection = ({
               <div className="space-y-2">
                 {priorityActions.map((action) => {
                   const IconComponent = iconMap[action.icon] || Zap;
+                  const isAvailable = isActionAvailableForStep(action.id, currentStatus, action.priority);
+                  const isDisabled = loading || !isAvailable;
                   
                   return (
                     <div key={action.id}>
                       {/* Carte d'action prioritaire */}
-                      <div className={`flex items-center gap-3 p-4 ${action.className?.includes('bg-red') ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'} rounded-lg border`}>
+                      <div className={`flex items-center gap-3 p-4 ${action.className?.includes('bg-red') ? 'bg-red-50 border-red-200' : 'bg-orange-50 border-orange-200'} rounded-lg border ${!isAvailable ? 'opacity-60' : ''}`}>
                         <div className={`p-3 ${action.className?.includes('bg-red') ? 'bg-red-100' : 'bg-orange-100'} rounded-xl`}>
-                          <IconComponent className={`w-6 h-6 ${action.className?.includes('bg-red') ? 'text-red-600' : 'text-orange-600'}`} />
+                          {!isAvailable ? (
+                            <Lock className={`w-6 h-6 ${action.className?.includes('bg-red') ? 'text-red-400' : 'text-orange-400'}`} />
+                          ) : (
+                            <IconComponent className={`w-6 h-6 ${action.className?.includes('bg-red') ? 'text-red-600' : 'text-orange-600'}`} />
+                          )}
                         </div>
                         <div className="flex-1">
                           <p className="font-semibold text-slate-900">
@@ -122,9 +128,15 @@ const BuyerActionButtonsSection = ({
                               {action.description}
                             </p>
                           )}
-                          {action.required && (
+                          {action.required && isAvailable && (
                             <p className="text-xs text-red-600 mt-1 font-medium">
                               ⚠️ OBLIGATOIRE pour continuer
+                            </p>
+                          )}
+                          {!isAvailable && (
+                            <p className="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                              <Lock className="w-3 h-3" />
+                              Action disponible à l'étape suivante
                             </p>
                           )}
                         </div>
@@ -137,14 +149,20 @@ const BuyerActionButtonsSection = ({
                           console.log('🖱️ [BuyerActions] onActionClick:', typeof onActionClick, !!onActionClick);
                           onActionClick?.(action);
                         }}
-                        disabled={loading}
+                        disabled={isDisabled}
                         className={action.className || "w-full mt-2"}
                         size="lg"
+                        title={!isAvailable ? 'Action disponible à une étape ultérieure du processus' : ''}
                       >
                         {loading ? (
                           <>
                             <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                             Traitement...
+                          </>
+                        ) : !isAvailable ? (
+                          <>
+                            <Lock className="w-4 h-4 mr-2" />
+                            {action.label} (Bientôt disponible)
                           </>
                         ) : (
                           <>
@@ -164,6 +182,8 @@ const BuyerActionButtonsSection = ({
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mt-4">
                 {regularActions.map((action) => {
                   const IconComponent = iconMap[action.icon] || FileText;
+                  const isAvailable = isActionAvailableForStep(action.id, currentStatus, action.priority);
+                  const isDisabled = loading || !isAvailable;
 
                   return (
                     <Button
@@ -173,11 +193,16 @@ const BuyerActionButtonsSection = ({
                         console.log('🖱️ [BuyerActions Regular] onActionClick:', typeof onActionClick, !!onActionClick);
                         onActionClick?.(action);
                       }}
-                      disabled={loading}
+                      disabled={isDisabled}
                       variant="outline"
-                      className="justify-start"
+                      className={`justify-start ${!isAvailable ? 'opacity-60' : ''}`}
+                      title={!isAvailable ? 'Action disponible à une étape ultérieure du processus' : ''}
                     >
-                      <IconComponent className="w-4 h-4 mr-2" />
+                      {!isAvailable ? (
+                        <Lock className="w-4 h-4 mr-2 text-slate-400" />
+                      ) : (
+                        <IconComponent className="w-4 h-4 mr-2" />
+                      )}
                       {action.label}
                       {action.amount && (
                         <span className="ml-auto text-xs font-semibold">

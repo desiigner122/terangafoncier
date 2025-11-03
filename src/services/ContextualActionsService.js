@@ -30,6 +30,133 @@ const WORKFLOW_STATES = {
 };
 
 /**
+ * TIMELINE-ACTIONS MAPPING (Phase 2)
+ * Map chaque étape du workflow aux actions disponibles
+ * Les actions 'priority=high' sont toujours visibles
+ */
+const TIMELINE_ACTIONS_MAP = {
+  initiated: [
+    'select_notary', 
+    'choose_agent', 
+    'upload_documents', 
+    'message_seller',
+    'cancel_request'
+  ],
+  buyer_verification: [
+    'select_notary',
+    'choose_agent',
+    'upload_documents',
+    'message_seller',
+    'cancel_request'
+  ],
+  seller_notification: [
+    'select_notary',
+    'choose_agent',
+    'message_seller',
+    'cancel_request'
+  ],
+  seller_acceptance: [
+    'select_notary',
+    'approve_notary',
+    'message_seller',
+    'message_notary',
+    'cancel_request'
+  ],
+  notary_assignment: [
+    'approve_notary',
+    'select_notary',
+    'upload_documents',
+    'message_notary',
+    'message_seller'
+  ],
+  document_collection: [
+    'upload_documents',
+    'upload_title_deed',
+    'upload_id',
+    'upload_proof_of_income',
+    'message_notary',
+    'message_seller'
+  ],
+  title_verification: [
+    'upload_title_deed',
+    'message_notary',
+    'message_seller'
+  ],
+  contract_preparation: [
+    'review_contract',
+    'message_notary',
+    'message_seller',
+    'schedule_appointment'
+  ],
+  deposit_pending: [
+    'pay_deposit',
+    'upload_proof_of_payment',
+    'message_notary',
+    'message_seller'
+  ],
+  contract_validation: [
+    'review_contract',
+    'approve_contract',
+    'schedule_appointment',
+    'message_notary',
+    'message_seller'
+  ],
+  appointment_scheduling: [
+    'schedule_appointment',
+    'confirm_appointment',
+    'message_notary',
+    'message_seller'
+  ],
+  final_payment: [
+    'pay_final',
+    'upload_proof_of_payment',
+    'message_notary',
+    'message_seller'
+  ],
+  signature: [
+    'confirm_signature',
+    'upload_signed_contract',
+    'message_notary',
+    'message_seller'
+  ],
+  registration: [
+    'message_notary',
+    'message_seller',
+    'view_registration_status'
+  ],
+  completed: [
+    'download_final_documents',
+    'rate_seller',
+    'rate_notary',
+    'message_notary',
+    'message_seller'
+  ],
+  // États d'échec/annulation - actions limitées
+  cancelled: ['view_history', 'download_documents'],
+  rejected: ['view_history', 'download_documents'],
+  seller_declined: ['message_seller', 'view_history'],
+  negotiation_failed: ['message_seller', 'view_history']
+};
+
+/**
+ * Vérifie si une action est disponible pour l'étape actuelle du workflow
+ * @param {string} actionId - ID de l'action (ex: 'pay_deposit')
+ * @param {string} currentStatus - Statut actuel du dossier
+ * @param {string} priority - Priorité de l'action ('high', 'medium', 'low')
+ * @returns {boolean}
+ */
+export const isActionAvailableForStep = (actionId, currentStatus, priority = 'medium') => {
+  // Actions critiques (priority='high') toujours visibles
+  if (priority === 'high') {
+    return true;
+  }
+  
+  // Vérifier si l'action est dans le mapping pour ce statut
+  const allowedActions = TIMELINE_ACTIONS_MAP[currentStatus] || [];
+  return allowedActions.includes(actionId);
+};
+
+/**
  * Action categories
  */
 const ACTION_CATEGORIES = {

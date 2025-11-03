@@ -206,115 +206,129 @@ const ParticulierCaseTrackingModernRefonte = () => {
         }
       }
 
-      // 3. Charger la propriété (parcelle)
-      let propertyData = null;
-  console.log('🏠 Tentative chargement propriété - parcelle_id:', enhancedCaseData?.parcelle_id);
+      // 3-10. ✅ OPTIMISÉ: Charger toutes les données en parallèle
+      const [
+        requestResult,
+        propertyResult,
+        sellerResult,
+        buyerResult,
+        notaireResult,
+        assignmentResult,
+        messagesResult,
+        documentsResult,
+        paymentsResult,
+        historyResult
+      ] = await Promise.all([
+        // 3. Request
+        enhancedCaseData?.request_id
+          ? supabase.from('requests').select('*').eq('id', enhancedCaseData.request_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        
+        // 4. Property (parcelle)
+        enhancedCaseData?.parcelle_id || enhancedCaseData?.parcel_id
+          ? supabase.from('parcels').select('*').eq('id', enhancedCaseData.parcelle_id || enhancedCaseData.parcel_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        
+        // 5. Seller profile
+        enhancedCaseData?.seller_id
+          ? supabase.from('profiles').select('*').eq('id', enhancedCaseData.seller_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        
+        // 6. Buyer profile
+        user?.id
+          ? supabase.from('profiles').select('*').eq('id', user.id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        
+        // 7. Notaire profile
+        enhancedCaseData?.notaire_id
+          ? supabase.from('profiles').select('id, full_name, email, phone, avatar_url').eq('id', enhancedCaseData.notaire_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        
+        // 8. Notaire assignment
+        enhancedCaseData?.notaire_id && enhancedCaseData?.id
+          ? supabase.from('notaire_case_assignments').select('*').eq('case_id', enhancedCaseData.id).eq('notaire_id', enhancedCaseData.notaire_id).maybeSingle()
+          : Promise.resolve({ data: null }),
+        
+        // 9. Messages
+        supabase.from('purchase_case_messages').select('*').eq('case_id', enhancedCaseData.id).order('created_at', { ascending: false }),
+        
+        // 10. Documents
+        enhancedCaseData?.request_id
+          ? supabase.from('documents_administratifs').select('*').eq('purchase_request_id', enhancedCaseData.request_id).order('created_at', { ascending: false })
+          : Promise.resolve({ data: [] }),
+        
+        // 11. Payments
+        user?.id
+          ? supabase.from('payments').select('*').eq('user_id', user.id).order('created_at', { ascending: false })
+          : Promise.resolve({ data: [] }),
+        
+        // 12. History
+        supabase.from('purchase_case_history').select('*').eq('case_id', enhancedCaseData.id).order('created_at', { ascending: false })
+      ]);
+
+      // Process request
+      if (requestResult.data) {
+        let requestMetadata = {};
+        if (requestResult.data.data) {
+          try {
+            requestMetadata = typeof requestResult.data.data === 'string' 
+              ? JSON.parse(requestResult.data.data) 
+              : requestResult.data.data;
+          } catch (err) {
+            console.warn('⚠️ Impossible de parser requests.data:', err);
+          }
+        }
+
+        const normalizedRequestStatus = WorkflowStatusService.normalizeStatus(
+          requestResult.data.status || requestMetadata.status
+        );
+
+        setPurchaseRequest({
+          ...requestResult.data,
+          normalized_status: normalizedRequestStatus,
+          metadata: requestMetadata,
+        });
+        console.log('📝 Request chargée:', requestResult.data);
+      }
+
+      // Set all states
+      if (propertyResult.data) {
+        setProperty(propertyResult.data);
+        console.log('🏠 Propriété chargée:', propertyResult.data);
+      }
       
-  const parcelIdToUse = enhancedCaseData?.parcelle_id || enhancedCaseData?.parcel_id;
-      
-      if (parcelIdToUse) {
-        const { data: pData, error: propertyError } = await supabase
-          .from('parcels')
-          .select('*')
-          .eq('id', parcelIdToUse)
-          .single();
-
-        if (!propertyError && pData) {
-          console.log('✅ Propriété chargée depuis parcelle_id:', pData);
-          propertyData = pData;
-          setProperty(pData);
-        } else {
-          console.warn('⚠️ Erreur chargement propriété par parcelle_id:', propertyError);
-        }
+      if (sellerResult.data) {
+        setSeller(sellerResult.data);
+        console.log('👤 Vendeur chargé:', sellerResult.data);
       }
       
-      // Fallback: essayer avec property_id de la request
-  if (!propertyData && requestData?.property_id) {
-        const { data: pData, error: propertyError } = await supabase
-          .from('parcels')
-          .select('*')
-          .eq('id', requestData.property_id)
-          .single();
-
-        if (!propertyError && pData) {
-          console.log('✅ Propriété chargée depuis property_id:', pData);
-          propertyData = pData;
-          setProperty(pData);
-        }
+      if (buyerResult.data) {
+        setBuyerProfile(buyerResult.data);
       }
-
-      // 4. Charger le profil du vendeur
-      if (enhancedCaseData?.seller_id) {
-        const { data: sellerData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', enhancedCaseData.seller_id)
-          .single();
-        
-        if (sellerData) {
-          console.log('👤 Vendeur chargé:', sellerData);
-          setSeller(sellerData);
-        }
+      
+      if (notaireResult.data) {
+        setNotaire(notaireResult.data);
+        console.log('⚖️ Notaire chargé:', notaireResult.data);
       }
-
-      // 5. Charger le profil acheteur (l'utilisateur actuel)
-      if (user?.id) {
-        const { data: buyerData } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', user.id)
-          .single();
-        
-        if (buyerData) {
-          setBuyerProfile(buyerData);
-        }
+      
+      if (assignmentResult.data) {
+        setNotaireAssignment(assignmentResult.data);
+        console.log('📋 Assignment notaire chargé:', assignmentResult.data);
       }
+      
+      setMessages(messagesResult.data || []);
+      setDocuments(documentsResult.data || []);
+      setPayments(paymentsResult.data || []);
+      
+      // Normalize history
+      const normalizedHistory = (historyResult.data || []).map((entry) => ({
+        ...entry,
+        status: WorkflowStatusService.normalizeStatus(entry.status),
+        new_status: WorkflowStatusService.normalizeStatus(entry.new_status || entry.status),
+      }));
+      setHistory(normalizedHistory);
 
-      // 5b. Charger le notaire et son assignment si présent
-      if (enhancedCaseData?.notaire_id) {
-        // Charger profil notaire
-        const { data: notaireData } = await supabase
-          .from('profiles')
-          .select('id, full_name, email, phone, avatar_url')
-          .eq('id', enhancedCaseData.notaire_id)
-          .single();
-        
-        if (notaireData) {
-          console.log('⚖️ Notaire chargé:', notaireData);
-          setNotaire(notaireData);
-        }
-
-        // Charger assignment pour statut et frais
-        const { data: assignmentData } = await supabase
-          .from('notaire_case_assignments')
-          .select('*')
-          .eq('case_id', enhancedCaseData.id)
-          .eq('notaire_id', enhancedCaseData.notaire_id)
-          .maybeSingle();
-        
-        if (assignmentData) {
-          console.log('📋 Assignment notaire chargé:', assignmentData);
-          setNotaireAssignment(assignmentData);
-        }
-      }
-
-      // 6. Charger les messages
-      const { data: messagesData } = await supabase
-        .from('purchase_case_messages')
-        .select('*')
-        .eq('case_id', enhancedCaseData.id)
-        .order('created_at', { ascending: false });
-      setMessages(messagesData || []);
-
-      // 7. Charger les documents
-      const { data: documentsData } = await supabase
-        .from('documents_administratifs')
-        .select('*')
-        .eq('purchase_request_id', enhancedCaseData.request_id)
-        .order('created_at', { ascending: false });
-      setDocuments(documentsData || []);
-
-      // 8. Charger les rendez-vous (avec gestion d'erreur si colonne manquante)
+      // Load appointments separately (with error handling)
       try {
         const { data: appointmentsData, error: appointmentsError } = await supabase
           .from('calendar_appointments')
@@ -325,7 +339,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
         if (!appointmentsError) {
           setAppointments(appointmentsData || []);
         } else {
-          console.warn('⚠️ Erreur chargement rendez-vous (colonne manquante?):', appointmentsError);
+          console.warn('⚠️ Erreur chargement rendez-vous:', appointmentsError);
           setAppointments([]);
         }
       } catch (err) {
@@ -333,29 +347,7 @@ const ParticulierCaseTrackingModernRefonte = () => {
         setAppointments([]);
       }
 
-      // 9. Charger les paiements (user_id de l'acheteur)
-      if (user?.id) {
-        const { data: paymentsData } = await supabase
-          .from('payments')
-          .select('*')
-          .eq('user_id', user.id)
-          .order('created_at', { ascending: false });
-        setPayments(paymentsData || []);
-      }
-
-      // 10. Charger l'historique
-      const { data: historyData } = await supabase
-        .from('purchase_case_history')
-        .select('*')
-        .eq('case_id', enhancedCaseData.id)
-        .order('created_at', { ascending: false });
-      const normalizedHistory = (historyData || []).map((entry) => ({
-        ...entry,
-        status: WorkflowStatusService.normalizeStatus(entry.status),
-        new_status: WorkflowStatusService.normalizeStatus(entry.new_status || entry.status),
-      }));
-      setHistory(normalizedHistory);
-
+      console.log('✅ Toutes les données chargées en parallèle');
       setLoading(false);
     } catch (error) {
       console.error('❌ Erreur globale loadCaseData:', error);

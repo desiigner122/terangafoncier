@@ -893,7 +893,12 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         console.log('✅ [VENDEUR] Case map created with', Object.keys(requestCaseMap).length, 'entries');
       }
 
-      // ✅ CORRECTION 6: Transformer et enrichir toutes les demandes
+      // ✅ CORRECTION 6: Créer des Maps pour lookup O(1)
+      const profilesMap = new Map((profilesData || []).map(p => [p.id, p]));
+      const parcelsMap = new Map((parcelsData || []).map(p => [p.id, p]));
+      console.log('🗺️ [VENDEUR] Maps créées - Profiles:', profilesMap.size, 'Parcels:', parcelsMap.size);
+      
+      // ✅ CORRECTION 7: Transformer et enrichir toutes les demandes (optimisé)
       const enrichedRequests = allDemandes.map(demande => {
         const isFromRequests = demande.source === 'requests';
         const isFromTransactions = demande.source === 'transactions';
@@ -904,8 +909,9 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
         const parcelId = demande.parcel_id;
         const requestId = isFromRequests ? demande.id : demande.request_id;
         
-        const buyer = profilesData?.find(p => p.id === buyerId);
-        const parcel = parcelsData?.find(p => p.id === parcelId);
+        // O(1) lookup au lieu de O(n) find
+        const buyer = profilesMap.get(buyerId);
+        const parcel = parcelsMap.get(parcelId);
         const buyerInfo = demande.buyer_info || {};
         
         // Vérifier si un purchase_case existe

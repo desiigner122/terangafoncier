@@ -411,138 +411,117 @@ const ParticulierMesAchatsRefonte = () => {
         return;
       }
 
-      // ✅ 3. Enrichir purchase_cases avec relations
+      // ✅ 3. Enrichir purchase_cases avec relations (OPTIMISÉ - batch queries)
       let enrichedCases = [];
       if (casesData && casesData.length > 0) {
-        enrichedCases = await Promise.all(
-          casesData.map(async (caseItem) => {
-            // Charger la request
-            let request = null;
-            if (caseItem.request_id) {
-              const { data: reqData } = await supabase
-                .from('requests')
-                .select('*')
-                .eq('id', caseItem.request_id)
-                .single();
-              request = reqData;
-            }
+        // Collecter tous les IDs uniques
+        const requestIds = [...new Set(casesData.map(c => c.request_id).filter(Boolean))];
+        const parcelIds = [...new Set(casesData.map(c => c.parcelle_id).filter(Boolean))];
+        const sellerIds = [...new Set(casesData.map(c => c.seller_id).filter(Boolean))];
+        const buyerIds = [...new Set(casesData.map(c => c.buyer_id).filter(Boolean))];
 
-            // Charger la propriété (parcels)
-            let property = null;
-            if (caseItem.parcelle_id) {
-              const { data: propData } = await supabase
-                .from('parcels')
-                .select('*')
-                .eq('id', caseItem.parcelle_id)
-                .single();
-              property = propData;
-            }
+        // Charger TOUTES les relations en parallèle (4 requêtes au lieu de N*4)
+        const [
+          { data: requests },
+          { data: parcels },
+          { data: sellers },
+          { data: buyers }
+        ] = await Promise.all([
+          requestIds.length > 0 ? supabase.from('requests').select('*').in('id', requestIds) : Promise.resolve({ data: [] }),
+          parcelIds.length > 0 ? supabase.from('parcels').select('*').in('id', parcelIds) : Promise.resolve({ data: [] }),
+          sellerIds.length > 0 ? supabase.from('profiles').select('*').in('id', sellerIds) : Promise.resolve({ data: [] }),
+          buyerIds.length > 0 ? supabase.from('profiles').select('*').in('id', buyerIds) : Promise.resolve({ data: [] })
+        ]);
 
-            // Charger le vendeur (profiles)
-            let seller = null;
-            if (caseItem.seller_id) {
-              const { data: sellerData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', caseItem.seller_id)
-                .single();
-              seller = sellerData;
-            }
+        // Créer des Maps pour lookup O(1)
+        const requestsMap = new Map(requests?.map(r => [r.id, r]) || []);
+        const parcelsMap = new Map(parcels?.map(p => [p.id, p]) || []);
+        const sellersMap = new Map(sellers?.map(s => [s.id, s]) || []);
+        const buyersMap = new Map(buyers?.map(b => [b.id, b]) || []);
 
-            // Charger l'acheteur (profiles)
-            let buyer = null;
-            if (caseItem.buyer_id) {
-              const { data: buyerData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', caseItem.buyer_id)
-                .single();
-              buyer = buyerData;
-            }
+        // Enrichir en O(n) au lieu de O(n²)
+        enrichedCases = casesData.map(caseItem => ({
+          ...caseItem,
+          request: requestsMap.get(caseItem.request_id) || null,
+          property: parcelsMap.get(caseItem.parcelle_id) || null,
+          seller: sellersMap.get(caseItem.seller_id) || null,
+          buyer: buyersMap.get(caseItem.buyer_id) || null,
+          source: 'purchase_case'
+        }));
 
-            return {
-              ...caseItem,
-              request,
-              property,
-              seller,
-              buyer,
-              source: 'purchase_case'
-            };
-          })
-        );
+        console.log('✅ Purchase cases enrichis:', enrichedCases.length, 'avec', requests?.length || 0, 'requests,', parcels?.length || 0, 'parcels');
       }
 
-      // ✅ 4. Enrichir requests avec données parcelles/vendeur + negotiations
+      // ✅ 4. Enrichir requests avec données parcelles/vendeur + negotiations (OPTIMISÉ)
       let enrichedRequests = [];
       if (requestsData && requestsData.length > 0) {
-        enrichedRequests = await Promise.all(
-          requestsData.map(async (req) => {
-            // Charger la propriété
-            let property = null;
-            if (req.parcel_id) {
-              const { data: propData } = await supabase
-                .from('parcels')
-                .select('*')
-                .eq('id', req.parcel_id)
-                .single();
-              property = propData;
-            }
+        // Collecter tous les IDs
+        const parcelIds = [...new Set(requestsData.map(r => r.parcel_id).filter(Boolean))];
+        const requestIds = requestsData.map(r => r.id);
 
-            // Charger le vendeur depuis la parcelle
-            let seller = null;
-            if (property?.owner_id) {
-              const { data: sellerData } = await supabase
-                .from('profiles')
-                .select('*')
-                .eq('id', property.owner_id)
-                .single();
-              seller = sellerData;
-            }
+        // Charger parcels et negotiations en parallèle
+        const [
+          { data: parcels },
+          { data: allNegotiations }
+        ] = await Promise.all([
+          parcelIds.length > 0 ? supabase.from('parcels').select('*').in('id', parcelIds) : Promise.resolve({ data: [] }),
+          requestIds.length > 0 ? supabase.from('negotiations').select('*').in('request_id', requestIds).order('created_at', { ascending: false }) : Promise.resolve({ data: [] })
+        ]);
 
-            // ✅ Charger TOUTES les négociations pour l'historique
-            const { data: allNegotiations } = await supabase
-              .from('negotiations')
-              .select('*')
-              .eq('request_id', req.id)
-              .order('created_at', { ascending: false });
+        // Créer Maps
+        const parcelsMap = new Map(parcels?.map(p => [p.id, p]) || []);
+        
+        // Grouper negotiations par request_id
+        const negotiationsByRequest = {};
+        allNegotiations?.forEach(neg => {
+          if (!negotiationsByRequest[neg.request_id]) {
+            negotiationsByRequest[neg.request_id] = [];
+          }
+          negotiationsByRequest[neg.request_id].push(neg);
+        });
 
-            // ✅ Charger la dernière négociation EN ATTENTE (contre-offre active)
-            const { data: pendingNegotiations } = await supabase
-              .from('negotiations')
-              .select('*')
-              .eq('request_id', req.id)
-              .eq('status', 'pending')
-              .order('created_at', { ascending: false })
-              .limit(1);
+        // Extraire owner IDs des parcelles
+        const ownerIds = [...new Set(parcels?.map(p => p.owner_id).filter(Boolean) || [])];
+        
+        // Charger tous les sellers en une requête
+        const { data: sellers } = ownerIds.length > 0 
+          ? await supabase.from('profiles').select('*').in('id', ownerIds)
+          : { data: [] };
+        
+        const sellersMap = new Map(sellers?.map(s => [s.id, s]) || []);
 
-            const activeNegotiation = pendingNegotiations?.[0] || null;
-            const hasCounterOffer = !!activeNegotiation;
+        // Enrichir
+        enrichedRequests = requestsData.map(req => {
+          const property = parcelsMap.get(req.parcel_id) || null;
+          const seller = property?.owner_id ? sellersMap.get(property.owner_id) : null;
+          const reqNegotiations = negotiationsByRequest[req.id] || [];
+          const activeNegotiation = reqNegotiations.find(n => n.status === 'pending') || null;
 
-            // Créer structure similaire à purchase_case
-            return {
-              id: req.id,
-              case_number: `REQ-${req.id.slice(0, 8).toUpperCase()}`,
-              buyer_id: req.user_id,
-              seller_id: property?.owner_id || null,
-              parcelle_id: req.parcel_id,
-              status: req.status || 'pending',
-              caseStatus: req.status || 'pending',
-              type: req.type,
-              offered_price: req.offered_price,
-              created_at: req.created_at,
-              updated_at: req.updated_at,
-              request: req,
-              property,
-              seller,
-              buyer: null, // Current user is buyer, already have their data
-              source: 'request',
-              negotiations: allNegotiations || [], // ✅ Toutes les negotiations pour historique
-              activeNegotiation, // ✅ LA contre-offre en attente
-              hasCounterOffer, // ✅ Flag booléen
-              latestNegotiation: allNegotiations?.[0] || null
-            };
-          })
-        );
+          return {
+            id: req.id,
+            case_number: `REQ-${req.id.slice(0, 8).toUpperCase()}`,
+            buyer_id: req.user_id,
+            seller_id: property?.owner_id || null,
+            parcelle_id: req.parcel_id,
+            status: req.status || 'pending',
+            caseStatus: req.status || 'pending',
+            type: req.type,
+            offered_price: req.offered_price,
+            created_at: req.created_at,
+            updated_at: req.updated_at,
+            request: req,
+            property,
+            seller,
+            buyer: null, // Current user is buyer
+            source: 'request',
+            negotiations: reqNegotiations, // Toutes les negotiations
+            activeNegotiation, // LA contre-offre en attente
+            hasCounterOffer: !!activeNegotiation,
+            latestNegotiation: reqNegotiations[0] || null
+          };
+        });
+
+        console.log('✅ Requests enrichies:', enrichedRequests.length, 'avec', allNegotiations?.length || 0, 'negotiations');
       }
 
       // ✅ 5. Combiner les deux sources

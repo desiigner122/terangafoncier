@@ -123,6 +123,8 @@ import PurchaseProcessPage from '@/pages/PurchaseProcessPage';
 // Pages IA et Analytics
 import TerangaAIPage from '@/pages/TerangaAIPage';
 import AIAnalyticsDashboard from '@/components/analytics/AIAnalyticsDashboard';
+import AIFraudDashboard from '@/pages/admin/AIFraudDashboard';
+import AIAnalyticsDashboardPage from '@/pages/admin/AIAnalyticsDashboard';
 
 // Pages communes nouvelles
 import MessagesPageNew from '@/pages/common/MessagesPage';
@@ -721,6 +723,10 @@ function App() {
                 <Route path="transactions" element={<ModernTransactionsPage />} />
                 <Route path="analytics" element={<ModernAnalyticsPage />} />
                 <Route path="settings" element={<ModernSettingsPage />} />
+                
+                {/* DASHBOARDS IA - WEEK 3 */}
+                <Route path="ai-analytics" element={<AIAnalyticsDashboardPage />} />
+                <Route path="fraud-detection" element={<AIFraudDashboard />} />
                 
                 {/* PAGES SPÉCIALISÉES */}
                 <Route path="validation" element={<AdminPropertyValidation />} />

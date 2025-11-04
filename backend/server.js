@@ -17,9 +17,12 @@ import transactionsRoutes from './routes/transactions.js';
 import documentsRoutes from './routes/documents.js';
 import blockchainRoutes from './routes/blockchain.js';
 import aiRoutes from './routes/ai.js';
+import aiRoutesNew from './routes/aiRoutes.js'; // SEMAINE 3: Nouvelles routes IA
 import notificationsRoutes from './routes/notifications.js';
 import dashboardRoutes from './routes/dashboard.js';
 import paymentsRoutes from './routes/payments.js';
+import paymentRoutesNew from './routes/paymentRoutes.js'; // SEMAINE 2: Nouvelles routes paiements
+import docusignRoutes from './routes/docusignRoutes.js'; // SEMAINE 2: Routes DocuSign
 import mapsRoutes from './routes/maps.js';
 
 // Import admin routes - NOUVELLES ROUTES ADMIN
@@ -71,10 +74,13 @@ app.use('/api/users', usersRoutes);
 app.use('/api/transactions', transactionsRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/blockchain', blockchainRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/ai', aiRoutes); // Routes IA existantes
+app.use('/api/ai', aiRoutesNew); // SEMAINE 3: Nouvelles routes IA (validation, fraude, recommandations)
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/payments', paymentsRoutes);
+app.use('/api/payments', paymentsRoutes); // Routes paiements existantes
+app.use('/api/payments', paymentRoutesNew); // SEMAINE 2: Nouvelles routes Wave/Orange Money
+app.use('/api/docusign', docusignRoutes); // SEMAINE 2: Routes DocuSign e-signature
 app.use('/api/maps', mapsRoutes);
 
 // Routes administrateur - NOUVELLES FONCTIONNALITÉS

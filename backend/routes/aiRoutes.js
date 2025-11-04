@@ -5,15 +5,13 @@
  * @week 3 - Day 1-5
  */
 
-const express = require('express');
-const router = express.Router();
-const { authenticateToken } = require('../middleware/auth');
-const { createClient } = require('@supabase/supabase-js');
+import express from 'express';
+import { authenticateToken, requireRole } from '../middleware/auth.js';
+import { createClient } from '@supabase/supabase-js';
+import { analyzeDocumentAI, evaluatePropertyAI } from '../config/ai.js';
+import db from '../config/database.js';
 
-// Import services IA existants
-const TerangaAIService = require('../services/ai/TerangaAIService');
-const FraudDetectionAI = require('../services/ai/FraudDetectionAI');
-const RecommendationEngine = require('../services/ai/RecommendationEngine');
+const router = express.Router();
 
 const supabase = createClient(
   process.env.SUPABASE_URL,
@@ -426,4 +424,4 @@ router.post('/evaluate-property', authenticateToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+export default router;

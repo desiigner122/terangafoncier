@@ -28,6 +28,10 @@ import mapsRoutes from './routes/maps.js';
 // Import admin routes - NOUVELLES ROUTES ADMIN
 import adminRoutes from './routes/admin.js';
 
+// Import workflows - SEMAINE 3: Auto-validation & Fraud detection
+import { setupDocumentValidationTrigger } from './workflows/autoValidateDocuments.js';
+import { setupFraudDetectionTrigger } from './workflows/autoFraudDetection.js';
+
 dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
@@ -97,10 +101,21 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use(globalErrorHandler);
 
-app.listen(PORT, () => {
+// Start server and initialize workflows
+app.listen(PORT, async () => {
   console.log(`🚀 Serveur Teranga Foncier démarré sur le port ${PORT}`);
-  console.log(`� Health check: http://localhost:${PORT}/health`);
+  console.log(`💚 Health check: http://localhost:${PORT}/health`);
   console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
+  
+  // Initialize autonomous workflows
+  try {
+    console.log('\n🤖 Initializing autonomous workflows...');
+    await setupDocumentValidationTrigger();
+    await setupFraudDetectionTrigger();
+    console.log('✅ All workflows initialized successfully\n');
+  } catch (error) {
+    console.error('❌ Failed to initialize workflows:', error);
+  }
 });
 
 export default app;

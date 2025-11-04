@@ -98,6 +98,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
+import NotificationBell from '@/components/notifications/NotificationBell';
 // import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 
@@ -250,6 +251,26 @@ const CompleteSidebarAdminDashboard = () => {
       description: 'Statistiques et graphiques avancés',
       isInternal: true,
       route: '/admin/dashboard'
+    },
+    {
+      id: 'ai-analytics',
+      label: '🤖 Analytics IA',
+      icon: Activity,
+      description: 'Performance de l\'IA - Validation & Prix',
+      badge: 'IA',
+      badgeColor: 'bg-violet-500',
+      isInternal: true,
+      route: '/admin/ai-analytics'
+    },
+    {
+      id: 'fraud-detection',
+      label: '🛡️ Surveillance Fraude',
+      icon: Shield,
+      description: 'Détection et analyse des fraudes',
+      badge: 'IA',
+      badgeColor: 'bg-red-500',
+      isInternal: true,
+      route: '/admin/fraud-detection'
     },
     
     // ========================================
@@ -1202,55 +1223,8 @@ const CompleteSidebarAdminDashboard = () => {
                   )}
                 </div>
 
-                {/* Notifications avec aperçu */}
-                <div className="relative">
-                  <Button 
-                    variant="ghost" 
-                    size="sm" 
-                    className="relative hover:bg-gray-100"
-                    onClick={() => setShowNotifications(!showNotifications)}
-                  >
-                    <Bell className="h-5 w-5 text-gray-600" />
-                    {headerNotifications.filter(n => n.unread).length > 0 && (
-                      <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {headerNotifications.filter(n => n.unread).length}
-                      </span>
-                    )}
-                  </Button>
-
-                  {/* Dropdown Notifications */}
-                  {showNotifications && (
-                    <div className="absolute right-0 top-full mt-2 w-80 bg-white rounded-lg shadow-lg border z-50">
-                      <div className="p-4 border-b">
-                        <h3 className="font-semibold text-gray-900">Notifications</h3>
-                      </div>
-                      <div className="max-h-64 overflow-y-auto">
-                        {headerNotifications.map((notification) => (
-                          <div key={notification.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${notification.unread ? 'bg-red-50' : ''}`}>
-                            <div className="flex items-start space-x-3">
-                              <div className={`w-2 h-2 mt-2 rounded-full ${
-                                notification.priority === 'high' ? 'bg-red-500' :
-                                notification.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
-                              }`}></div>
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-sm ${notification.unread ? 'font-semibold' : 'font-medium'} text-gray-900`}>
-                                  {notification.title}
-                                </p>
-                                <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
-                                <span className="text-xs text-gray-400">{notification.time}</span>
-                              </div>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="p-3 border-t">
-                        <Link to="/admin/notifications" className="text-sm text-blue-600 hover:text-blue-800">
-                          Voir toutes les notifications →
-                        </Link>
-                      </div>
-                    </div>
-                  )}
-                </div>
+                {/* Notifications avec aperçu - REMPLACÉ PAR NOTIFICATIONBELL */}
+                <NotificationBell userId={user?.id} />
 
                 {/* Menu Profil */}
                 <DropdownMenu>

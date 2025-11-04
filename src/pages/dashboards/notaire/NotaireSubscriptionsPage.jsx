@@ -21,6 +21,7 @@ const NotaireSubscriptionsPage = () => {
   const [currentPlan, setCurrentPlan] = useState('pro');
   const [plans, setPlans] = useState([]);
   const [userSubscription, setUserSubscription] = useState(null);
+  const [invoices, setInvoices] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   
   // ✅ DONNÉES RÉELLES - Chargement depuis Supabase
@@ -45,16 +46,22 @@ const NotaireSubscriptionsPage = () => {
         setUserSubscription(subResult.data);
         setCurrentPlan(subResult.data.plan_id || 'pro');
       }
+
+      // Charger les factures
+      const invoicesResult = await NotaireSupabaseService.getInvoices(user.id);
+      if (invoicesResult.success) {
+        setInvoices(invoicesResult.data || []);
+      }
     } catch (error) {
       console.error('Erreur chargement abonnements:', error);
       setPlans([]);
+      setInvoices([]);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Plans chargés via Supabase
-  // Invoices chargés via Supabase (à implémenter)
+  // Usage data from subscription
   const usage = userSubscription?.usage || {
     actes: { current: 0, max: 0, label: 'Actes ce mois' },
     storage: { current: 0, max: 0, label: 'Stockage (Go)' },

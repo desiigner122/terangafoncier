@@ -59,8 +59,8 @@ const AdminPagesList = () => {
 
   // Filtrer pages
   const filteredPages = pages.filter(page => {
-    const matchSearch = page.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                       page.slug.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchSearch = (page.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                       (page.slug || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchStatus = statusFilter === 'all' || page.status === statusFilter;
     return matchSearch && matchStatus;
   });

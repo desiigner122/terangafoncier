@@ -1,4 +1,4 @@
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, Suspense, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useLocation, useNavigate, Outlet, useParams } from 'react-router-dom';
 import { 
@@ -25,6 +25,7 @@ import {
   Clock,
   CheckCircle,
   AlertTriangle,
+  AlertCircle,
   Star,
   Share2,
   Download,
@@ -68,6 +69,7 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -88,7 +90,7 @@ const VendeurPhotos = React.lazy(() => import('./VendeurPhotosRealData'));
 const VendeurAnalytics = React.lazy(() => import('./VendeurAnalyticsRealData'));
 const VendeurAI = React.lazy(() => import('./VendeurAIRealData'));
 const VendeurBlockchain = React.lazy(() => import('./VendeurBlockchainRealData'));
-const VendeurMessages = React.lazy(() => import('./VendeurMessagesRealData'));
+const VendeurMessages = React.lazy(() => import('./VendeurMessagesModern'));
 const VendeurSupport = React.lazy(() => import('./VendeurSupport'));
 const VendeurSettings = React.lazy(() => import('./VendeurSettingsRealData'));
 
@@ -135,11 +137,12 @@ const CompleteSidebarVendeurDashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
   
+  // Real-time unread counts
+  const { unreadMessagesCount, unreadNotificationsCount, reload: reloadUnread } = useUnreadCounts({ scope: 'vendor' });
+  
   // États pour données réelles
   const [notifications, setNotifications] = useState([]);
   const [messages, setMessages] = useState([]);
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [dashboardStats, setDashboardStats] = useState({
     totalProperties: 0,
     activeListings: 0,
@@ -155,13 +158,129 @@ const CompleteSidebarVendeurDashboard = () => {
     blockchainVerified: 0,
   });
 
+  const formatStatusLabel = (status) => {
+    const normalized = String(status || '').toLowerCase();
+    const mapping = {
+      pending: 'en attente',
+      waiting_response: 'en attente',
+      negotiation: 'en négociation',
+      in_progress: 'en cours',
+      accepted: 'acceptée',
+      approved: 'acceptée',
+      rejected: 'refusée',
+      declined: 'refusée',
+      cancelled: 'annulée',
+      canceled: 'annulée',
+      completed: 'finalisée',
+      finalized: 'finalisée',
+    };
+
+    return mapping[normalized] || normalized || 'mise à jour';
+  };
+
+  const buildFallbackNotifications = async () => {
+    try {
+      // ✅ CORRECTION: Charger depuis requests (source stable) au lieu de purchase_requests
+      // Les noms sont dans la table 'profiles', pas 'users'
+      const { data: requestsData, error: requestsError } = await supabase
+        .from('requests')
+        .select(`
+          id,
+          status,
+          created_at,
+          updated_at,
+          user_id,
+          parcel_id
+        `)
+        .order('updated_at', { ascending: false })
+        .limit(25);
+
+      if (requestsError) {
+        if (!['PGRST204', '42P01', 'PGRST200'].includes(requestsError.code)) {
+          console.warn('⚠️ Erreur fallback notifications (requests):', requestsError.code);
+        }
+        return [];
+      }
+
+      if (!requestsData || requestsData.length === 0) {
+        return [];
+      }
+
+      // Charger les parcelles (properties) pour les requests
+      const parcelIds = [...new Set(requestsData.map(r => r.parcel_id).filter(Boolean))];
+      let parcelMap = {};
+      
+      if (parcelIds.length > 0) {
+        const { data: parcelsData, error: parcelsError } = await supabase
+          .from('parcels')
+          .select('id, title, location, seller_id')
+          .in('id', parcelIds);
+        
+        if (!parcelsError && parcelsData) {
+          parcelsData.forEach(p => {
+            parcelMap[p.id] = p;
+          });
+        }
+      }
+
+      // Charger les profiles des acheteurs
+      const buyerIds = [...new Set(requestsData.map(r => r.user_id).filter(Boolean))];
+      let buyerMap = {};
+      
+      if (buyerIds.length > 0) {
+        const { data: profilesData, error: profilesError } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name')
+          .in('id', buyerIds);
+        
+        if (!profilesError && profilesData) {
+          profilesData.forEach(p => {
+            buyerMap[p.id] = p;
+          });
+        }
+      }
+
+      // Filtrer les demandes du vendeur et les transformer
+      const notifications = requestsData
+        .filter((item) => {
+          const parcel = parcelMap[item.parcel_id];
+          return parcel && parcel.seller_id === user?.id;
+        })
+        .map((item) => {
+          const parcel = parcelMap[item.parcel_id];
+          const buyer = buyerMap[item.user_id];
+          
+          return {
+            id: `fallback-${item.id}`,
+            title: `Demande ${formatStatusLabel(item.status)}`,
+            message: `${buyer?.first_name || 'Acheteur'} ${buyer?.last_name || ''} — ${
+              parcel?.title || 'Propriété'
+            } (${formatStatusLabel(item.status)})`,
+            created_at: item.updated_at || item.created_at,
+            status: item.status,
+            type: 'purchase_request',
+          };
+        })
+        .slice(0, 10);
+
+      return notifications;
+    } catch (error) {
+      console.warn('⚠️ Erreur construction fallback notifications:', error);
+      return [];
+    }
+  };
+
   // Navigation Items Configuration pour Vendeur - CRM + Anti-Fraude
   const navigationItems = [
     {
       id: 'overview',
       label: 'Vue d\'ensemble',
       icon: Home,
-      description: 'Dashboard CRM + Anti-Fraude'
+      description: 'Dashboard CRM + Anti-Fraude',
+      // Affiche le total des éléments non lus (messages + notifications)
+      badge: (unreadMessagesCount + unreadNotificationsCount) > 0 
+        ? (unreadMessagesCount + unreadNotificationsCount).toString() 
+        : undefined
     },
     {
       id: 'crm',
@@ -285,10 +404,112 @@ const CompleteSidebarVendeurDashboard = () => {
     };
     
     loadDashboardData();
+
+    // Setup realtime subscriptions for live updates
+    if (user) {
+      // Debounce guards to avoid over-fetching on bursts
+      const lastMsgReloadAt = { current: 0 };
+      const lastNotifReloadAt = { current: 0 };
+      const cooldownMs = 1000;
+      const scheduleMessagesReload = async () => {
+        const now = Date.now();
+        if (now - lastMsgReloadAt.current < cooldownMs) return;
+        lastMsgReloadAt.current = now;
+        await loadMessages();
+      };
+      const scheduleNotificationsReload = async () => {
+        const now = Date.now();
+        if (now - lastNotifReloadAt.current < cooldownMs) return;
+        lastNotifReloadAt.current = now;
+        await loadNotifications();
+        if (typeof reloadUnread === 'function') reloadUnread();
+      };
+
+      // Subscribe to conversations updates (new messages, status changes)
+      const conversationSubscription = supabase
+        .channel('public:conversations')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'conversations',
+            filter: `vendor_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('🔔 [REALTIME] Conversation update:', payload);
+            await scheduleMessagesReload();
+          }
+        )
+        .subscribe();
+
+      // Subscribe to conversation_messages for new messages
+      const messagesSubscription = supabase
+        .channel('public:conversation_messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'conversation_messages'
+          },
+          async (payload) => {
+            console.log('💬 [REALTIME] New message:', payload);
+            await scheduleMessagesReload();
+          }
+        )
+        .subscribe();
+
+      // Subscribe to notifications changes for this user
+      const notificationsSubscription = supabase
+        .channel('public:notifications')
+        .on(
+          'postgres_changes',
+          {
+            event: '*',
+            schema: 'public',
+            table: 'notifications',
+            filter: `user_id=eq.${user.id}`
+          },
+          async (payload) => {
+            console.log('🔔 [REALTIME] Notification change:', payload);
+            await scheduleNotificationsReload();
+          }
+        )
+        .subscribe();
+
+      return () => {
+        supabase.removeChannel(conversationSubscription);
+        supabase.removeChannel(messagesSubscription);
+        supabase.removeChannel(notificationsSubscription);
+      };
+    }
   }, [user]);
+
+  // Auto-clear notification badges when landing on the notifications page
+  useEffect(() => {
+    if (!user?.id) return;
+    if (location.pathname.startsWith('/vendeur/purchase-requests')) {
+      (async () => {
+        try {
+          await supabase
+            .from('notifications')
+            .update({ is_read: true, read_at: new Date().toISOString() })
+            .eq('user_id', user.id)
+            .eq('is_read', false);
+          if (typeof reloadUnread === 'function') reloadUnread();
+          await loadNotifications();
+        } catch (e) {
+          console.warn('Failed to auto-clear notifications on page visit', e);
+        }
+      })();
+    }
+  }, [location.pathname, user?.id]);
 
   // Charger les notifications depuis Supabase
   const loadNotifications = async () => {
+    let fetchedNotifications = [];
+
     try {
       const { data, error } = await supabase
         .from('notifications')
@@ -298,45 +519,142 @@ const CompleteSidebarVendeurDashboard = () => {
         .order('created_at', { ascending: false })
         .limit(10);
 
-      if (!error && data) {
-        setNotifications(data);
-        setUnreadNotificationsCount(data.length);
+      if (error) {
+        if (!['PGRST204', '42P01'].includes(error.code)) {
+          console.error('Erreur chargement notifications:', error);
+        }
+      } else if (data?.length) {
+        fetchedNotifications = data;
       }
     } catch (error) {
       console.error('Erreur chargement notifications:', error);
     }
+
+    if (!fetchedNotifications.length) {
+      const fallback = await buildFallbackNotifications();
+      fetchedNotifications = fallback;
+    }
+
+    // Enrichir les notifications de type message avec le nom de l'acheteur
+    try {
+      const convIds = (fetchedNotifications || [])
+        .map(n => n.conversation_id || n?.data?.conversation_id || n?.metadata?.conversation_id)
+        .filter(Boolean);
+      if (convIds.length > 0) {
+        const { data: convs } = await supabase
+          .from('conversations')
+          .select('id, buyer_id')
+          .in('id', convIds);
+        const buyerIds = [...new Set((convs || []).map(c => c.buyer_id).filter(Boolean))];
+        let buyerMap = {};
+        if (buyerIds.length > 0) {
+          const { data: buyers } = await supabase
+            .from('profiles')
+            .select('id, first_name, last_name')
+            .in('id', buyerIds);
+          (buyers || []).forEach(b => {
+            buyerMap[b.id] = `${b.first_name || ''} ${b.last_name || ''}`.trim();
+          });
+        }
+
+        fetchedNotifications = (fetchedNotifications || []).map(n => {
+          const convId = n.conversation_id || n?.data?.conversation_id || n?.metadata?.conversation_id;
+          if ((n.type === 'message' || n.type === 'chat') && convId) {
+            const buyerName = (() => {
+              const conv = (convs || []).find(c => c.id === convId);
+              return conv ? buyerMap[conv.buyer_id] : undefined;
+            })();
+            return {
+              ...n,
+              title: n.title || (buyerName ? `Message de ${buyerName}` : 'Nouveau message'),
+              message: n.message || 'Vous avez reçu un nouveau message'
+            };
+          }
+          return n;
+        });
+      }
+    } catch (e) {
+      console.warn('⚠️ Enrichissement notifications (vendeur) échoué:', e);
+    }
+
+    setNotifications(fetchedNotifications);
   };
 
   // Charger les messages depuis Supabase
   const loadMessages = async () => {
     try {
-      // Charger les conversations du vendeur puis les messages récents
+      // Charger les conversations du vendeur avec les détails des acheteurs
       const { data: conversations, error: convError } = await supabase
         .from('conversations')
-        .select('id')
+        .select(`
+          id,
+          buyer_id,
+          property_id,
+          updated_at,
+          unread_count_vendor
+        `)
         .eq('vendor_id', user.id)
+        .order('updated_at', { ascending: false })
         .limit(20);
 
       if (convError || !conversations || conversations.length === 0) {
         console.log('Aucune conversation trouvée');
+        setMessages([]);
         return;
       }
 
-      const conversationIds = conversations.map(c => c.id);
-
-      // Charger les messages récents de ces conversations
-      const { data, error } = await supabase
-        .from('messages')
-        .select('*')
-        .in('thread_id', conversationIds)
-        .order('created_at', { ascending: false })
-        .limit(10);
-
-      if (!error && data) {
-        setMessages(data);
-        // Compter non lus où recipient_id = user.id
-        setUnreadMessagesCount(data.filter(m => !m.read_at && m.recipient_id === user.id).length);
+      // Charger les profils des acheteurs ET les propriétés
+      const buyerIds = conversations.map(c => c.buyer_id).filter(Boolean);
+      const propertyIds = conversations.map(c => c.property_id).filter(Boolean);
+      let buyerMap = {};
+      let propertyMap = {};
+      
+      if (buyerIds.length > 0) {
+        const { data: buyers } = await supabase
+          .from('profiles')
+          .select('id, first_name, last_name, avatar_url')
+          .in('id', buyerIds);
+        
+        if (buyers) {
+          buyers.forEach(b => {
+            buyerMap[b.id] = b;
+          });
+        }
       }
+
+      // Charger les propriétés (parcels) pour afficher le titre
+      if (propertyIds.length > 0) {
+        const { data: properties } = await supabase
+          .from('parcels')
+          .select('id, title')
+          .in('id', propertyIds);
+        
+        if (properties) {
+          properties.forEach(p => {
+            propertyMap[p.id] = p;
+          });
+        }
+      }
+
+      // Transformer les conversations en messages avec infos acheteur et propriété
+      const messagesList = conversations.map(conv => ({
+        id: conv.id,
+        conversation_id: conv.id,
+        buyer_id: conv.buyer_id,
+        buyer_name: buyerMap[conv.buyer_id] ? 
+          `${buyerMap[conv.buyer_id].first_name} ${buyerMap[conv.buyer_id].last_name}`.trim() || 'Acheteur' : 
+          'Acheteur',
+        property_title: propertyMap[conv.property_id]?.title || 'Propriété',
+        buyer_avatar: buyerMap[conv.buyer_id]?.avatar_url,
+        content: 'Voir la conversation',
+  // Vendeur voit ses propres non-lus: utiliser unread_count_vendor
+  unread: (conv.unread_count_vendor || 0) > 0,
+        created_at: conv.updated_at,
+        timestamp: new Date(conv.updated_at).toLocaleDateString('fr-FR')
+      }));
+
+      console.log('✅ [MESSAGES] Chargées:', messagesList.length, messagesList.map(m => m.buyer_name));
+      setMessages(messagesList);
     } catch (error) {
       console.error('Erreur chargement messages:', error);
     }
@@ -485,8 +803,8 @@ const CompleteSidebarVendeurDashboard = () => {
     console.log('📍 [RENDER] User disponible:', user ? `✅ ID: ${user.id}` : '❌ undefined');
     
     // Vérifier si c'est une route dynamique avec paramètres
-    if (activeTab.includes('edit-property')) {
-      console.log('📍 [RENDER] Route dynamique détectée (edit-property), rendu via <Outlet />');
+    if (activeTab.includes('edit-property') || activeTab.includes('cases')) {
+      console.log('📍 [RENDER] Route dynamique détectée (edit-property ou cases), rendu via <Outlet />');
       return <Outlet />;
     }
     
@@ -514,14 +832,15 @@ const CompleteSidebarVendeurDashboard = () => {
     console.log('📍 [RENDER] ActiveComponent trouvé:', ActiveComponent ? '✅' : '❌', 'pour tab:', activeTab);
     
     if (!ActiveComponent) {
+      console.error('❌ [ERROR] ActiveComponent is undefined for tab:', activeTab);
       return (
         <div className="text-center py-12">
-          <Building2 className="h-16 w-16 text-gray-400 mx-auto mb-4" />
+          <AlertCircle className="h-16 w-16 text-red-400 mx-auto mb-4" />
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
-            Page en développement
+            Erreur: Page non trouvée
           </h3>
           <p className="text-gray-600">
-            Cette fonctionnalité sera bientôt disponible.
+            La page demandée n'existe pas.
           </p>
         </div>
       );
@@ -542,7 +861,7 @@ const CompleteSidebarVendeurDashboard = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-[60vh] sm:min-h-screen bg-gray-50 flex items-center justify-center p-4">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-purple-600 mx-auto mb-4"></div>
           <h3 className="text-lg font-semibold text-gray-900 mb-2">
@@ -557,24 +876,36 @@ const CompleteSidebarVendeurDashboard = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <div className={`bg-white shadow-lg transition-all duration-300 ${
-        sidebarCollapsed ? 'w-20' : 'w-80'
-      } ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} 
-      fixed lg:relative lg:translate-x-0 h-full z-30`}>
+    <div className="min-h-screen bg-gradient-to-br from-gray-50 via-white to-blue-50/20 flex">
+      {/* Overlay mobile menu */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/40 z-20 lg:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar - Responsive Layout */}
+      <div className={`
+        bg-white shadow-lg transition-all duration-300
+        ${sidebarCollapsed ? 'w-20' : 'w-72 sm:w-80'}
+        ${mobileMenuOpen ? 'translate-x-0' : '-translate-x-full'}
+        fixed lg:relative lg:translate-x-0
+        h-full z-40 lg:z-10
+        overflow-y-auto
+      `}>
         
         {/* Header Sidebar */}
-        <div className="p-6 border-b border-gray-200">
+        <div className="p-4 sm:p-6 border-b border-gray-200 sticky top-0 bg-white/95 backdrop-blur-sm z-50">
           <div className="flex items-center justify-between">
             {!sidebarCollapsed && (
               <div className="flex items-center space-x-3">
                 <div className="bg-gradient-to-r from-purple-500 to-indigo-600 p-2 rounded-lg">
-                  <Building2 className="h-6 w-6 text-white" />
+                  <Building2 className="h-5 sm:h-6 w-5 sm:w-6 text-white" />
                 </div>
                 <div>
-                  <h2 className="text-lg font-bold text-gray-900">Vendeur Pro</h2>
-                  <p className="text-sm text-gray-600">Dashboard IA</p>
+                  <h2 className="text-base sm:text-lg font-bold text-gray-900">Vendeur Pro</h2>
+                  <p className="text-xs sm:text-sm text-gray-600">Dashboard IA</p>
                 </div>
               </div>
             )}
@@ -582,7 +913,7 @@ const CompleteSidebarVendeurDashboard = () => {
               variant="ghost"
               size="sm"
               onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
-              className="lg:flex hidden"
+              className="hidden lg:flex"
             >
               {sidebarCollapsed ? <ChevronRight className="h-4 w-4" /> : <ChevronLeft className="h-4 w-4" />}
             </Button>
@@ -599,33 +930,33 @@ const CompleteSidebarVendeurDashboard = () => {
 
         {/* Stats rapides CRM + Anti-Fraude */}
         {!sidebarCollapsed && (
-          <div className="p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
-            <div className="grid grid-cols-2 gap-3 mb-3">
+          <div className="p-3 sm:p-4 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-indigo-50">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3 mb-3">
               <div className="text-center">
-                <div className="text-xl font-bold text-purple-600">
+                <div className="text-lg sm:text-xl font-bold text-purple-600">
                   {dashboardStats.activeProspects}
                 </div>
-                <div className="text-xs text-gray-600">Prospects</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">Prospects</div>
               </div>
               <div className="text-center">
-                <div className="text-xl font-bold text-green-600">
+                <div className="text-lg sm:text-xl font-bold text-green-600">
                   {dashboardStats.securityScore}%
                 </div>
-                <div className="text-xs text-gray-600">Sécurité</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">Sécurité</div>
               </div>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-2 sm:gap-3">
               <div className="text-center">
-                <div className="text-lg font-bold text-blue-600">
+                <div className="text-base sm:text-lg font-bold text-blue-600">
                   {dashboardStats.verifiedTitles}
                 </div>
-                <div className="text-xs text-gray-600">Titres vérifiés</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">Titres</div>
               </div>
               <div className="text-center">
-                <div className="text-lg font-bold text-orange-600">
+                <div className="text-base sm:text-lg font-bold text-orange-600">
                   {dashboardStats.conversionRate}%
                 </div>
-                <div className="text-xs text-gray-600">Conversion</div>
+                <div className="text-[10px] sm:text-xs text-gray-600">Conversion</div>
               </div>
             </div>
           </div>
@@ -660,12 +991,13 @@ const CompleteSidebarVendeurDashboard = () => {
                     </div>
                     {item.badge && (
                       <Badge 
-                        className={`text-xs ${
+                        className={`text-xs font-bold ${
                           item.badge === 'NOUVEAU' ? 'bg-green-100 text-green-800' :
                           item.badge === 'IA' ? 'bg-purple-100 text-purple-800' :
                           item.badge === 'SÉCURISÉ' ? 'bg-green-100 text-green-800' :
                           item.badge === 'DIGITAL' ? 'bg-blue-100 text-blue-800' :
-                          'bg-blue-100 text-blue-800'
+                          // Nombre (compteur non-lus)
+                          'bg-red-500 text-white'
                         }`}
                       >
                         {item.badge}
@@ -714,68 +1046,112 @@ const CompleteSidebarVendeurDashboard = () => {
       </div>
 
       {/* Main Content */}
-      <div className="flex-1 flex flex-col">
-        {/* Top Header */}
-        <header className="bg-white shadow-sm border-b border-gray-200 px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-4">
+      <div className="flex-1 flex flex-col min-w-0 min-h-0">
+        {/* Top Header - Responsive */}
+        <header className="bg-white shadow-sm border-b border-gray-200 px-4 sm:px-6 py-3 sm:py-4 sticky top-0 z-20">
+          <div className="flex items-center justify-between gap-3 sm:gap-4">
+            <div className="flex items-center gap-2 sm:gap-4 min-w-0">
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={() => setMobileMenuOpen(true)}
-                className="lg:hidden"
+                className="lg:hidden flex-shrink-0"
               >
                 <Menu className="h-5 w-5" />
               </Button>
               
-              <div>
-                <h1 className="text-2xl font-bold text-gray-900">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl lg:text-2xl font-bold text-gray-900 truncate">
                   {navigationItems.find(item => item.id === activeTab)?.label || 'Dashboard Vendeur'}
                 </h1>
-                <p className="text-sm text-gray-600">
+                <p className="text-xs sm:text-sm text-gray-600 truncate hidden sm:block">
                   {navigationItems.find(item => item.id === activeTab)?.description}
                 </p>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center gap-2 sm:gap-3 flex-shrink-0">
               {/* Messages */}
               <DropdownMenu open={showMessages} onOpenChange={setShowMessages}>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="sm" className="relative" onClick={() => navigate('/vendeur/messages')}>
+                  <Button variant="ghost" size="sm" className="relative">
                     <MessageSquare className="h-5 w-5" />
-                    <Badge className="absolute -top-2 -right-2 bg-blue-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      3
-                    </Badge>
+                    {unreadMessagesCount > 0 && (
+                      <Badge 
+                        onClick={(e) => { e.stopPropagation(); navigate('/vendeur/messages'); }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0 font-bold cursor-pointer"
+                      >
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="w-80">
+                <DropdownMenuContent className="w-64 sm:w-80">
                   <DropdownMenuLabel>Messages récents</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-green-100 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Marie Diallo</p>
-                        <p className="text-sm text-gray-600">Intéressée par la villa Almadies</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Users className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Amadou Ba</p>
-                        <p className="text-sm text-gray-600">Question sur le financement</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
+                  {messages && messages.length > 0 ? (
+                    messages.slice(0, 5).map((msg, idx) => (
+                      <DropdownMenuItem 
+                        key={idx}
+                        onClick={async () => {
+                          // Mark conversation as read immediately for better UX
+                          if (msg.conversation_id && msg.unread) {
+                            try {
+                              await supabase
+                                .from('conversations')
+                                .update({ unread_count_vendor: 0 })
+                                .eq('id', msg.conversation_id);
+                              
+                              // Update local state immediately
+                              setMessages(prev => 
+                                prev.map(m => 
+                                  m.conversation_id === msg.conversation_id 
+                                    ? { ...m, unread: false }
+                                    : m
+                                )
+                              );
+                              console.log('✅ Message marqué comme lu:', msg.conversation_id);
+                              // Refresh header counters
+                              if (typeof reloadUnread === 'function') reloadUnread();
+                            } catch (error) {
+                              console.error('❌ Erreur marquage message lu:', error);
+                            }
+                          }
+                          
+                          navigate(`/vendeur/messages?conversation=${msg.conversation_id}`);
+                          setShowMessages(false);
+                        }}
+                      >
+                        <div className="flex items-center space-x-3 w-full cursor-pointer">
+                          <Avatar className="h-8 w-8 flex-shrink-0">
+                            <AvatarImage src={msg.buyer_avatar} alt={msg.buyer_name} />
+                            <AvatarFallback className="bg-blue-100 text-blue-600 text-xs">
+                              {msg.buyer_name?.charAt(0) || 'A'}
+                            </AvatarFallback>
+                          </Avatar>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                              <p className="font-medium text-sm truncate">{msg.buyer_name}</p>
+                              {msg.unread && (
+                                <div className="h-2 w-2 bg-blue-500 rounded-full flex-shrink-0"></div>
+                              )}
+                            </div>
+                            <p className="text-xs text-gray-600 truncate">{msg.property_title || msg.content}</p>
+                            <p className="text-xs text-gray-400 mt-0.5">{msg.timestamp}</p>
+                          </div>
+                        </div>
+                      </DropdownMenuItem>
+                    ))
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <div className="text-sm text-gray-500">Aucun message récent</div>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={() => navigate('/vendeur/messages')}>
+                  <DropdownMenuItem onClick={() => {
+                    navigate('/vendeur/messages');
+                    setShowMessages(false);
+                  }}>
                     <MessageSquare className="mr-2 h-4 w-4" />
                     <span>Voir tous les messages</span>
                   </DropdownMenuItem>
@@ -787,36 +1163,96 @@ const CompleteSidebarVendeurDashboard = () => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative">
                     <Bell className="h-5 w-5" />
-                    <Badge className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0">
-                      {dashboardStats.pendingInquiries}
-                    </Badge>
+                    {unreadNotificationsCount > 0 && (
+                      <Badge 
+                        onClick={(e) => { e.stopPropagation(); navigate('/vendeur/purchase-requests'); }}
+                        className="absolute -top-2 -right-2 bg-red-500 text-white text-xs min-w-[18px] h-[18px] flex items-center justify-center p-0 cursor-pointer"
+                      >
+                        {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                      </Badge>
+                    )}
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent className="w-80">
-                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuLabel>Notifications ({notifications.length})</DropdownMenuLabel>
                   <DropdownMenuSeparator />
-                  <DropdownMenuItem>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-blue-100 p-2 rounded-full">
-                        <Eye className="h-4 w-4 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Nouvelle vue</p>
-                        <p className="text-sm text-gray-600">Villa Almadies - 15 vues aujourd'hui</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
-                  <DropdownMenuItem>
-                    <div className="flex items-center space-x-3">
-                      <div className="bg-orange-100 p-2 rounded-full">
-                        <TrendingUp className="h-4 w-4 text-orange-600" />
-                      </div>
-                      <div>
-                        <p className="font-medium">Performance IA</p>
-                        <p className="text-sm text-gray-600">6 propriétés optimisées cette semaine</p>
-                      </div>
-                    </div>
-                  </DropdownMenuItem>
+                  {notifications && notifications.length > 0 ? (
+                    notifications.slice(0, 5).map((notif, idx) => {
+                      // Déterminer la route basée sur le type de notification
+                      const getNotificationRoute = (notification) => {
+                        if (!notification) return '/vendeur/overview';
+                        
+                        // Si c'est une demande d'achat
+                        if (notification.type === 'purchase_request' || notification.type === 'demand') {
+                          return '/vendeur/purchase-requests';
+                        }
+                        
+                        // Si c'est un message
+                        if (notification.type === 'message' || notification.type === 'chat') {
+                          const convId = notification.conversation_id || notification?.data?.conversation_id || notification?.metadata?.conversation_id;
+                          if (convId) return `/vendeur/messages?conversation=${convId}`;
+                          return '/vendeur/messages';
+                        }
+                        
+                        // Si c'est lié à une propriété
+                        if (notification.type === 'property') {
+                          return '/vendeur/properties';
+                        }
+                        
+                        // Si c'est un dossier/case
+                        if (notification.type === 'case' && notification.case_id) {
+                          return `/vendeur/dossier/${notification.case_id}`;
+                        }
+                        
+                        // Par défaut à overview
+                        return '/vendeur/overview';
+                      };
+
+                      return (
+                        <DropdownMenuItem 
+                          key={idx}
+                          onClick={async () => {
+                            // Mark notification as read
+                            try {
+                              await supabase
+                                .from('notifications')
+                                .update({ is_read: true, read_at: new Date().toISOString() })
+                                .eq('id', notif.id);
+                              
+                              // Remove from local notifications list
+                              setNotifications(prev => prev.filter(n => n.id !== notif.id));
+                              console.log('✅ Notification marquée comme lue:', notif.id);
+                              // Refresh header counters
+                              if (typeof reloadUnread === 'function') reloadUnread();
+                            } catch (error) {
+                              console.error('❌ Erreur marquage notification:', error);
+                            }
+                            
+                            navigate(getNotificationRoute(notif));
+                            setShowNotifications(false);
+                          }}
+                          className="cursor-pointer"
+                        >
+                          <div className="flex items-center space-x-3 w-full">
+                            <div className="bg-blue-100 p-2 rounded-full flex-shrink-0">
+                              <Bell className="h-4 w-4 text-blue-600" />
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium truncate text-sm">{notif.title || 'Notification'}</p>
+                              <p className="text-xs text-gray-600 truncate">{notif.message || 'Aucun message'}</p>
+                              <p className="text-xs text-gray-400 mt-1">
+                                {new Date(notif.created_at).toLocaleDateString('fr-FR')}
+                              </p>
+                            </div>
+                          </div>
+                        </DropdownMenuItem>
+                      );
+                    })
+                  ) : (
+                    <DropdownMenuItem disabled>
+                      <p className="text-sm text-gray-600">Aucune notification</p>
+                    </DropdownMenuItem>
+                  )}
                 </DropdownMenuContent>
               </DropdownMenu>
 
@@ -867,7 +1303,7 @@ const CompleteSidebarVendeurDashboard = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 p-6 overflow-auto">
+  <main className="flex-1 p-3 sm:p-4 lg:p-6 overflow-auto">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

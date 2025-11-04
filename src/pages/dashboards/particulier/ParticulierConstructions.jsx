@@ -84,7 +84,15 @@ const ParticulierConstructions = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (error) {
+        if (['PGRST205', '42P01'].includes(error.code)) {
+          console.warn('⚠️ Table demandes_construction manquante - affichage vide');
+          setDemandesConstruction({ enCours: [], terminees: [], rejettees: [] });
+          setLoading(false);
+          return;
+        }
+        throw error;
+      }
 
       // Organiser par statut
       const enCours = data?.filter(d => 
@@ -130,7 +138,13 @@ const ParticulierConstructions = () => {
           statut: 'en_attente'
         }]);
 
-      if (error) throw error;
+      if (error) {
+        if (['PGRST205', '42P01'].includes(error.code)) {
+          toast.error('Cette fonctionnalité n\'est pas disponible pour le moment');
+          return;
+        }
+        throw error;
+      }
 
       toast.success('Demande de construction soumise avec succès');
       setShowNewDemande(false);

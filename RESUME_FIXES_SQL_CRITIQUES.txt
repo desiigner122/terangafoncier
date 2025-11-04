@@ -1,0 +1,187 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                    🚨 CORRECTIONS SQL CRITIQUES - RÉSUMÉ                   ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+📅 Date: 28 Octobre 2025
+⏱️  Durée totale: ~10 minutes
+🔴 Priorité: CRITIQUE - BLOQUANT
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                         3 PROBLÈMES IDENTIFIÉS                            ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+❌ PROBLÈME 1: PGRST204 - Colonne message_type manquante
+   Table: purchase_case_messages
+   Impact: Messages ne s'envoient pas
+   Erreur: "Could not find the 'message_type' column"
+
+❌ PROBLÈME 2: 42703 - Colonne appointment_date manquante  
+   Table: calendar_appointments
+   Impact: Page de suivi dossier ne charge pas
+   Erreur: "column calendar_appointments.appointment_date does not exist"
+
+❌ PROBLÈME 3: RLS Policy Violation
+   Bucket: storage.objects (documents)
+   Impact: Upload de documents bloqué
+   Erreur: "new row violates row-level security policy"
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                      SOLUTION EN 3 ÉTAPES SIMPLES                         ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+┌─ ÉTAPE 1 ──────────────────────────────────────────────────────────────┐
+│ 📝 Migration SQL principale                                            │
+│ Fichier: QUICK_FIX_CALENDAR_APPOINTMENTS.sql                           │
+│ Durée: 3 minutes                                                       │
+│                                                                         │
+│ Actions:                                                                │
+│ 1. Ouvrir Supabase Console → SQL Editor                               │
+│ 2. Sélectionner rôle: service_role ⚠️ IMPORTANT                       │
+│ 3. Copier/Coller contenu du fichier SQL                               │
+│ 4. Exécuter (Ctrl+Entrée)                                             │
+│                                                                         │
+│ Corrige:                                                                │
+│ ✅ Ajoute start_time dans calendar_appointments                        │
+│ ✅ Ajoute message_type dans purchase_case_messages                     │
+│ ✅ Crée FK constraints                                                  │
+│ ✅ Crée indexes de performance                                          │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─ ÉTAPE 2 ──────────────────────────────────────────────────────────────┐
+│ 🔒 Configuration RLS Policies                                          │
+│ Fichier: FIX_RLS_POLICIES.sql                                          │
+│ Durée: 3 minutes                                                       │
+│                                                                         │
+│ Actions:                                                                │
+│ 1. Nouvelle Query dans SQL Editor                                     │
+│ 2. Rôle: service_role                                                  │
+│ 3. Copier/Coller contenu du fichier SQL                               │
+│ 4. Exécuter (Ctrl+Entrée)                                             │
+│ 5. ⚠️ Ignorer erreurs sur storage.objects (normal)                    │
+│                                                                         │
+│ Corrige:                                                                │
+│ ✅ RLS policies pour purchase_case_messages                            │
+│ ✅ RLS policies pour purchase_case_documents                           │
+│ ✅ Permissions buyer/seller dans dossiers                              │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┌─ ÉTAPE 3 ──────────────────────────────────────────────────────────────┐
+│ 📦 Storage Policies (via Dashboard)                                    │
+│ Durée: 2 minutes                                                       │
+│                                                                         │
+│ Actions:                                                                │
+│ 1. Dashboard → Storage → Bucket "documents"                            │
+│ 2. Onglet Policies                                                     │
+│ 3. Vérifier policy INSERT existe                                      │
+│ 4. Si manquante, créer:                                               │
+│    - Name: Authenticated users can upload                             │
+│    - Command: INSERT                                                   │
+│    - Roles: authenticated                                              │
+│    - Definition: bucket_id = 'documents'::text                        │
+│                                                                         │
+│ Corrige:                                                                │
+│ ✅ Upload de documents autorisé                                        │
+└─────────────────────────────────────────────────────────────────────────┘
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                         TESTS DE VALIDATION                               ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+✓ Test 1: Vérifier colonnes créées (SQL)
+  → start_time existe dans calendar_appointments
+  → message_type existe dans purchase_case_messages
+
+✓ Test 2: Envoyer message (Frontend)
+  → Ouvrir dossier → Onglet Messages
+  → Écrire + Envoyer
+  → ✅ Pas d'erreur PGRST204 dans console (F12)
+
+✓ Test 3: Uploader document (Frontend)  
+  → Onglet Documents → Ajouter fichier
+  → ✅ Pas d'erreur RLS
+
+✓ Test 4: Charger rendez-vous (Frontend)
+  → Page suivi dossier
+  → ✅ Pas d'erreur 42703
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                        CHECKLIST D'EXÉCUTION                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+[ ] 1. ÉTAPE 1 exécutée - Migration QUICK_FIX_CALENDAR_APPOINTMENTS.sql
+[ ] 2. ÉTAPE 2 exécutée - RLS policies FIX_RLS_POLICIES.sql
+[ ] 3. ÉTAPE 3 exécutée - Storage policies via Dashboard
+[ ] 4. Test 1 validé - Colonnes start_time et message_type existent
+[ ] 5. Test 2 validé - Message s'envoie sans PGRST204
+[ ] 6. Test 3 validé - Document s'upload sans RLS error
+[ ] 7. Test 4 validé - Page charge sans erreur 42703
+[ ] 8. Console (F12) - Aucune erreur rouge
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                         RÉSULTATS ATTENDUS                                ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+AVANT les corrections:
+❌ PGRST204: Could not find 'message_type' column
+❌ 42703: column appointment_date does not exist
+❌ RLS: new row violates row-level security policy
+❌ Messages ne s'envoient pas
+❌ Documents upload bloqué
+❌ Page de suivi ne charge pas
+
+APRÈS les corrections:
+✅ Colonne message_type existe
+✅ Colonne start_time existe (pas appointment_date)
+✅ RLS policies configurées
+✅ Messages s'envoient correctement
+✅ Documents s'uploadent
+✅ Page de suivi charge complètement
+✅ Console sans erreurs
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                         FICHIERS DISPONIBLES                              ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+📄 QUICK_FIX_CALENDAR_APPOINTMENTS.sql    [✅ Prêt à exécuter]
+   → Corrige calendar_appointments + purchase_case_messages
+   → Crée indexes de performance
+
+📄 FIX_RLS_POLICIES.sql                   [✅ Prêt à exécuter]
+   → Configure RLS pour messages et documents
+   → Permissions buyer/seller
+
+📖 GUIDE_EXECUTION_FIXES_CRITIQUES.md     [📚 Documentation]
+   → Guide détaillé étape par étape
+   → Section dépannage complète
+   → Tests de validation
+
+📋 ACTION_IMMEDIATE_*.md                   [📖 Analyse]
+   → PGRST204_MESSAGE_TYPE.md
+   → FIX_CALENDAR_APPOINTMENTS.md
+   → Analyse détaillée des problèmes
+
+┏━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┓
+┃                          ACTION IMMÉDIATE                                 ┃
+┗━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━┛
+
+1. Ouvrir: https://app.supabase.com
+2. Projet: terangafoncier (ndenqikcogzrkrjnlvns)
+3. SQL Editor → New Query
+4. Rôle: service_role ⚠️
+5. Copier QUICK_FIX_CALENDAR_APPOINTMENTS.sql
+6. Exécuter → Attendre 30 secondes
+7. Copier FIX_RLS_POLICIES.sql (nouvelle query)
+8. Exécuter
+9. Dashboard → Storage → Policies
+10. Tester l'application
+
+⏱️  Temps total: ~10 minutes
+🔴 Priorité: CRITIQUE
+📊 Impact: Débloquer messages, documents, et suivi dossiers
+
+═══════════════════════════════════════════════════════════════════════════
+
+Pour plus de détails, consulter:
+→ GUIDE_EXECUTION_FIXES_CRITIQUES.md
+
+Dernière mise à jour: 28 Octobre 2025

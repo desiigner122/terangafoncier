@@ -181,11 +181,11 @@ const NotaireAuthenticationModernized = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* En-tête */}
       <div className="flex items-center justify-between">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Authentification Blockchain</h2>
+          <h2 className="text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Authentification Blockchain</h2>
           <p className="text-gray-600">Authentification sécurisée des documents notariaux</p>
         </div>
         <Button onClick={loadAuthenticationData} variant="outline">
@@ -195,83 +195,83 @@ const NotaireAuthenticationModernized = () => {
       </div>
 
       {/* Statistiques d'authentification */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Total Documents</p>
-                <p className="text-2xl font-bold text-gray-900">{documents.length}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Total Documents</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{documents.length}</p>
               </div>
-              <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                <FileText className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Authentifiés</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Authentifiés</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {authentications.filter(a => a.verification_status === 'verified').length}
                 </p>
               </div>
-              <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <CheckCircle className="h-6 w-6 text-green-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <CheckCircle className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">En attente</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">En attente</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {authentications.filter(a => a.verification_status === 'pending').length}
                 </p>
               </div>
-              <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Taux de succès</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Taux de succès</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {authentications.length > 0 
                     ? Math.round((authentications.filter(a => a.verification_status === 'verified').length / authentications.length) * 100)
                     : 0
                   }%
                 </p>
               </div>
-              <div className="h-12 w-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                <Award className="h-6 w-6 text-purple-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                <Award className="h-5 w-5 sm:h-6 sm:w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Coût Total</p>
-                <p className="text-2xl font-bold text-gray-900">
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Coût Total</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">
                   {formatCurrency(authentications.reduce((sum, a) => sum + (a.total_cost || 0), 0))}
                 </p>
               </div>
-              <div className="h-12 w-12 bg-amber-100 rounded-lg flex items-center justify-center">
-                <Zap className="h-6 w-6 text-amber-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-amber-100 rounded-lg flex items-center justify-center">
+                <Zap className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600" />
               </div>
             </div>
           </CardContent>
@@ -289,8 +289,8 @@ const NotaireAuthenticationModernized = () => {
 
       {/* Filtres */}
       <Card>
-        <CardContent className="p-6">
-          <div className="flex flex-col sm:flex-row gap-4">
+        <CardContent className="p-3 sm:p-4 lg:p-6">
+          <div className="flex flex-col sm:flex-row gap-3 sm:gap-4">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               <Input
@@ -316,16 +316,16 @@ const NotaireAuthenticationModernized = () => {
       </Card>
 
       {/* Contenu principal avec onglets */}
-      <Tabs defaultValue="authentications" className="space-y-6">
-        <TabsList className="grid w-full grid-cols-2">
+      <Tabs defaultValue="authentications" className="space-y-4 sm:space-y-6">
+        <TabsList className="grid w-full grid-cols-2 h-auto">
           <TabsTrigger value="authentications">Authentifications ({filteredAuthentications.length})</TabsTrigger>
           <TabsTrigger value="documents">Documents ({documents.length})</TabsTrigger>
         </TabsList>
 
         {/* Onglet Authentifications */}
-        <TabsContent value="authentications" className="space-y-6">
+        <TabsContent value="authentications" className="space-y-4 sm:space-y-6">
           {/* Simulateur de coût et statistiques blockchain */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2">
@@ -337,7 +337,7 @@ const NotaireAuthenticationModernized = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div>
                     <Label className="text-sm font-medium">Type de document</Label>
                     <Select defaultValue="acte-vente">
@@ -479,7 +479,7 @@ const NotaireAuthenticationModernized = () => {
             <CardContent>
               {filteredAuthentications.length === 0 ? (
                 <div className="text-center py-12">
-                  <Stamp className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <Stamp className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune authentification trouvée</h3>
                   <p className="text-gray-600">
                     {authentications.length === 0
@@ -586,17 +586,17 @@ const NotaireAuthenticationModernized = () => {
             <CardContent>
               {documents.length === 0 ? (
                 <div className="text-center py-12">
-                  <FileText className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <FileText className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-4" />
                   <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun document disponible</h3>
                   <p className="text-gray-600">
                     Aucun document n'est disponible pour l'authentification.
                   </p>
                 </div>
               ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
                   {documents.map((doc) => (
                     <Card key={doc.id} className="hover:shadow-lg transition-shadow">
-                      <CardContent className="p-6">
+                      <CardContent className="p-3 sm:p-4 lg:p-6">
                         <div className="flex items-start justify-between mb-4">
                           <div className="flex items-center space-x-3">
                             <div className="h-10 w-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -652,8 +652,8 @@ const NotaireAuthenticationModernized = () => {
         </TabsContent>
 
         {/* Onglet Analytics */}
-        <TabsContent value="analytics" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <TabsContent value="analytics" className="space-y-4 sm:space-y-6">
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-6">
             {/* Graphique des authentifications par mois */}
             <Card>
               <CardHeader>
@@ -739,13 +739,13 @@ const NotaireAuthenticationModernized = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
                   <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">2,450 FCFA</div>
+                    <div className="text-xl sm:text-2xl font-bold text-green-600">2,450 FCFA</div>
                     <div className="text-sm text-green-700">Économisé ce mois</div>
                   </div>
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">8,750 FCFA</div>
+                    <div className="text-xl sm:text-2xl font-bold text-blue-600">8,750 FCFA</div>
                     <div className="text-sm text-blue-700">Coût total</div>
                   </div>
                 </div>

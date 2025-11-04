@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import supabase from '../services/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const AuthContext = createContext();
 
@@ -40,19 +40,21 @@ export const AuthProvider = ({ children }) => {
 
     const fetchProfile = async (userId) => {
         try {
-            const { data, error, status } = await supabase
+            const { data, error } = await supabase
                 .from('profiles')
-                .select(`full_name, avatar_url, role`)
+                .select('full_name, avatar_url, role')
                 .eq('id', userId)
-                .single();
+                .maybeSingle();
 
-            if (error && status !== 406) {
+            if (error) {
                 console.error('Error fetching profile:', error.message);
                 return;
             }
 
             if (data) {
                 setProfile(data);
+            } else {
+                setProfile(null);
             }
         } catch (error) {
             console.error('Catastrophic error fetching profile:', error.message);

@@ -109,58 +109,134 @@ const DashboardParticulierHome = () => {
         return;
       }
 
-      // Charger les vraies données
-      const [
-        messagesResult,
-        notificationsResult,
-        ticketsResult,
-        demandesResult,
-        documentsResult,
-        favorisResult
-      ] = await Promise.allSettled([
-  supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
-  supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0),
-  supabase.from('support_tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
-  supabase.from('demandes_terrains_communaux').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  supabase.from('user_documents').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  // use the 'favorites' table (English) which is the correct table used across the app
-  // wrap in try/catch via Promise.allSettled in the caller; this just ensures the table name is correct
-  supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
-      ]);
+      // Charger les vraies données depuis les tables existantes
+      
+      // 1. Récupérer les cases de l'utilisateur (en tant qu'acheteur)
+      const { data: userCases } = await supabase
+        .from('purchase_cases')
+        .select('id')
+        .eq('buyer_id', user.id);
+      
+      const caseIds = userCases?.map(c => c.id) || [];
+      
+      // 2. Compter les messages non lus dans ces cases
+      let messagesCount = 0;
+      if (caseIds.length > 0) {
+        const { count } = await supabase
+          .from('purchase_case_messages')
+          .select('*', { count: 'exact', head: true })
+          .in('case_id', caseIds)
+          .neq('sent_by', user.id)
+          .is('read_at', null);
+        messagesCount = count || 0;
+      }
+      
+      // 3. Compter les messages administratifs non lus
+      const { count: adminMessagesCount } = await supabase
+        .from('messages_administratifs')
+        .select('*', { count: 'exact', head: true })
+        .eq('destinataire_id', user.id)
+        .eq('statut', 'non_lu');
+      
+      // 4. Compter les notifications (notifications table ou notifications_system)
+      const { count: notificationsCount } = await supabase
+        .from('notifications')
+        .select('*', { count: 'exact', head: true })
+        .eq('user_id', user.id)
+        .is('read_at', null)
+        .limit(0);
+      
+      // 5. Compter les demandes/cases actifs
+      const { count: demandesCount } = await supabase
+        .from('purchase_cases')
+        .select('*', { count: 'exact', head: true })
+        .eq('buyer_id', user.id);
 
       setStats({
-        messages: messagesResult.value?.count || 0,
-        notifications: notificationsResult.value?.count || 0,
-        tickets: ticketsResult.value?.count || 0,
-        demandes: demandesResult.value?.count || 0,
-        documents: documentsResult.value?.count || 0,
-        favoris: favorisResult.value?.count || 0
+        messages: (messagesCount || 0) + (adminMessagesCount || 0),
+        notifications: notificationsCount || 0,
+        tickets: 0, // Table support_tickets n'existe pas encore
+        demandes: demandesCount || 0,
+        documents: 0, // Table documents pas encore créée
+        favoris: 0 // Table favoris pas encore créée
       });
 
-      // Charger activité récente
-      const { data: messages } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('recipient_id', user.id)
-        .order('created_at', { ascending: false })
-        .limit(3);
+      // Charger activité récente - Messages des cases
+      const activities = [];
+      
+      if (caseIds.length > 0) {
+        const { data: recentMessages } = await supabase
+          .from('purchase_case_messages')
+          .select(`
+            id,
+            message,
+            created_at,
+            read_at,
+            sent_by,
+            case_id,
+            purchase_cases!inner(
+              reference,
+              seller_id
+            )
+          `)
+          .in('case_id', caseIds)
+          .neq('sent_by', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
 
-      if (messages) {
-        const messageActivity = messages.map(msg => ({
-          id: msg.id,
-          type: 'message',
-          title: msg.subject,
+        if (recentMessages) {
+          const messageActivities = recentMessages.map(msg => ({
+            id: msg.id,
+            type: 'message',
+            title: `Message sur ${msg.purchase_cases?.reference || 'votre dossier'}`,
+            description: msg.message.substring(0, 100) + '...',
+            time: msg.created_at,
+            status: msg.read_at ? 'lu' : 'nouveau',
+            icon: MessageSquare,
+            color: 'blue'
+          }));
+          activities.push(...messageActivities);
+        }
+      }
+      
+      // Charger messages administratifs récents
+      const { data: adminMessages } = await supabase
+        .from('messages_administratifs')
+        .select('*')
+        .eq('destinataire_id', user.id)
+        .order('created_at', { ascending: false })
+        .limit(2);
+      
+      if (adminMessages) {
+        const adminActivities = adminMessages.map(msg => ({
+          id: `admin-${msg.id}`,
+          type: 'admin',
+          title: msg.objet || 'Message administratif',
           description: msg.message.substring(0, 100) + '...',
           time: msg.created_at,
-          status: msg.read_at ? 'lu' : 'nouveau',
-          icon: MessageSquare,
-          color: 'blue'
+          status: msg.statut === 'non_lu' ? 'nouveau' : 'lu',
+          icon: Bell,
+          color: 'orange'
         }));
-        setRecentActivity(messageActivity);
+        activities.push(...adminActivities);
       }
+      
+      setRecentActivity(activities.sort((a, b) => 
+        new Date(b.time) - new Date(a.time)
+      ).slice(0, 5));
 
     } catch (error) {
-      console.error('Erreur chargement dashboard:', error);
+      console.error('Erreur chargement stats:', error);
+      // En cas d'erreur réseau, utiliser des valeurs par défaut
+      setStats({
+        messages: 0,
+        notifications: 0,
+        tickets: 0,
+        demandes: 0,
+        documents: 0,
+        favoris: 0
+      });
+      setRecentActivity([]);
     } finally {
       setLoading(false);
     }
@@ -280,12 +356,12 @@ const DashboardParticulierHome = () => {
 
   if (loading) {
     return (
-      <div className="p-6">
-        <div className="animate-pulse space-y-6">
-          <div className="h-8 bg-gray-200 rounded w-1/3"></div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="p-3 sm:p-4 lg:p-6">
+        <div className="animate-pulse space-y-4 sm:space-y-6">
+          <div className="h-6 sm:h-8 bg-gray-200 rounded w-1/2 sm:w-1/3"></div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
             {[1,2,3,4,5,6].map(i => (
-              <div key={i} className="h-32 bg-gray-200 rounded-xl"></div>
+              <div key={i} className="h-28 sm:h-32 bg-gray-200 rounded-xl"></div>
             ))}
           </div>
         </div>
@@ -294,35 +370,35 @@ const DashboardParticulierHome = () => {
   }
 
   return (
-    <div className="p-6 space-y-8">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 lg:space-y-8">
       {/* Header de bienvenue */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-2xl p-8 text-white"
+        className="bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 rounded-xl sm:rounded-2xl p-4 sm:p-6 lg:p-8 text-white"
       >
-        <div className="flex items-center justify-between">
-          <div>
-            <h2 className="text-3xl font-bold mb-2">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex-1">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold mb-1 sm:mb-2 break-words">
               Bienvenue, {profile?.full_name?.split(' ')[0] || user?.email?.split('@')[0] || 'Particulier'} ! 👋
             </h2>
-            <p className="text-blue-100 text-lg">
+            <p className="text-blue-100 text-sm sm:text-base lg:text-lg">
               Gérez vos dossiers immobiliers en toute simplicité
             </p>
-            <div className="flex items-center gap-4 mt-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-300" />
-                <span className="text-sm">Compte vérifié</span>
+            <div className="flex flex-wrap items-center gap-2 sm:gap-4 mt-2 sm:mt-4">
+              <div className="flex items-center gap-1 sm:gap-2">
+                <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-300" />
+                <span className="text-xs sm:text-sm">Compte vérifié</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-yellow-300" />
-                <span className="text-sm">Membre depuis 2025</span>
+              <div className="flex items-center gap-1 sm:gap-2">
+                <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 text-yellow-300" />
+                <span className="text-xs sm:text-sm">Membre depuis 2025</span>
               </div>
             </div>
           </div>
           <div className="hidden lg:block">
-            <div className="w-32 h-32 bg-white/10 rounded-full flex items-center justify-center">
-              <Activity className="h-16 w-16 text-white/80" />
+            <div className="w-24 h-24 lg:w-32 lg:h-32 bg-white/10 rounded-full flex items-center justify-center">
+              <Activity className="h-12 w-12 lg:h-16 lg:w-16 text-white/80" />
             </div>
           </div>
         </div>
@@ -334,8 +410,8 @@ const DashboardParticulierHome = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.1 }}
       >
-        <h3 className="text-xl font-bold text-slate-900 mb-6">Vue d'ensemble</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">Vue d'ensemble</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6">
           {statsCards.map((stat, index) => {
             const Icon = stat.icon;
             return (
@@ -349,15 +425,15 @@ const DashboardParticulierHome = () => {
                   className="hover:shadow-lg transition-all duration-200 cursor-pointer group"
                   onClick={() => navigate(stat.path)}
                 >
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <p className="text-sm font-medium text-slate-600">{stat.title}</p>
-                        <p className="text-3xl font-bold text-slate-900 mt-1">{stat.value}</p>
-                        <p className="text-xs text-slate-500 mt-1">{stat.change}</p>
+                  <CardContent className="p-3 sm:p-4 lg:p-6">
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-0">
+                      <div className="flex-1 min-w-0">
+                        <p className="text-xs sm:text-sm font-medium text-slate-600 truncate">{stat.title}</p>
+                        <p className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900 mt-0.5 sm:mt-1">{stat.value}</p>
+                        <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1 truncate">{stat.change}</p>
                       </div>
                       <div className={`
-                        p-3 rounded-xl transition-all duration-200 group-hover:scale-110
+                        p-2 sm:p-3 rounded-lg sm:rounded-xl transition-all duration-200 group-hover:scale-110 self-end sm:self-auto
                         ${stat.color === 'blue' ? 'bg-blue-100 text-blue-600' : ''}
                         ${stat.color === 'yellow' ? 'bg-yellow-100 text-yellow-600' : ''}
                         ${stat.color === 'red' ? 'bg-red-100 text-red-600' : ''}
@@ -365,7 +441,7 @@ const DashboardParticulierHome = () => {
                         ${stat.color === 'purple' ? 'bg-purple-100 text-purple-600' : ''}
                         ${stat.color === 'orange' ? 'bg-orange-100 text-orange-600' : ''}
                       `}>
-                        <Icon className="h-6 w-6" />
+                        <Icon className="h-4 w-4 sm:h-5 sm:w-5 lg:h-6 lg:w-6" />
                       </div>
                     </div>
                   </CardContent>
@@ -382,8 +458,8 @@ const DashboardParticulierHome = () => {
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.2 }}
       >
-        <h3 className="text-xl font-bold text-slate-900 mb-6">Actions rapides</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <h3 className="text-lg sm:text-xl font-bold text-slate-900 mb-4 sm:mb-6">Actions rapides</h3>
+        <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {quickActionItems.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -397,18 +473,18 @@ const DashboardParticulierHome = () => {
                   className="hover:shadow-lg transition-all duration-200 cursor-pointer group border-2 border-transparent hover:border-blue-200"
                   onClick={() => navigate(action.path)}
                 >
-                  <CardContent className="p-4 text-center">
+                  <CardContent className="p-3 sm:p-4 text-center">
                     <div className={`
-                      w-12 h-12 mx-auto mb-3 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110
+                      w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-2 sm:mb-3 rounded-lg sm:rounded-xl flex items-center justify-center transition-all duration-200 group-hover:scale-110
                       ${action.color === 'blue' ? 'bg-blue-100 text-blue-600' : ''}
                       ${action.color === 'red' ? 'bg-red-100 text-red-600' : ''}
                       ${action.color === 'green' ? 'bg-green-100 text-green-600' : ''}
                       ${action.color === 'purple' ? 'bg-purple-100 text-purple-600' : ''}
                     `}>
-                      <Icon className="h-6 w-6" />
+                      <Icon className="h-5 w-5 sm:h-6 sm:w-6" />
                     </div>
-                    <h4 className="font-semibold text-slate-900 text-sm mb-1">{action.title}</h4>
-                    <p className="text-xs text-slate-500">{action.description}</p>
+                    <h4 className="font-semibold text-slate-900 text-xs sm:text-sm mb-0.5 sm:mb-1 line-clamp-2">{action.title}</h4>
+                    <p className="text-[10px] sm:text-xs text-slate-500 line-clamp-2">{action.description}</p>
                   </CardContent>
                 </Card>
               </motion.div>
@@ -422,41 +498,41 @@ const DashboardParticulierHome = () => {
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.3 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-8"
+        className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 lg:gap-8"
       >
         {/* Activités */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Activity className="h-5 w-5 text-blue-600" />
+          <CardHeader className="p-3 sm:p-4 lg:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Activity className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600" />
               Activité récente
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Vos dernières interactions et mises à jour
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
+          <CardContent className="space-y-3 sm:space-y-4 p-3 sm:p-4 lg:p-6 pt-0">
             {recentActivity.length > 0 ? (
               recentActivity.map((activity) => {
                 const Icon = activity.icon;
                 return (
-                  <div key={activity.id} className="flex items-start gap-3 p-3 hover:bg-slate-50 rounded-lg transition-colors">
+                  <div key={activity.id} className="flex items-start gap-2 sm:gap-3 p-2 sm:p-3 hover:bg-slate-50 rounded-lg transition-colors">
                     <div className={`
-                      p-2 rounded-lg
+                      p-1.5 sm:p-2 rounded-lg flex-shrink-0
                       ${activity.color === 'blue' ? 'bg-blue-100 text-blue-600' : ''}
                       ${activity.color === 'green' ? 'bg-green-100 text-green-600' : ''}
                       ${activity.color === 'orange' ? 'bg-orange-100 text-orange-600' : ''}
                     `}>
-                      <Icon className="h-4 w-4" />
+                      <Icon className="h-3 w-3 sm:h-4 sm:w-4" />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-sm font-medium text-slate-900">{activity.title}</p>
-                      <p className="text-xs text-slate-500 mt-1">{activity.description}</p>
-                      <div className="flex items-center gap-2 mt-2">
-                        <Badge className={getStatusColor(activity.status)}>
+                      <p className="text-xs sm:text-sm font-medium text-slate-900 line-clamp-2">{activity.title}</p>
+                      <p className="text-[10px] sm:text-xs text-slate-500 mt-0.5 sm:mt-1 line-clamp-2">{activity.description}</p>
+                      <div className="flex items-center gap-1 sm:gap-2 mt-1 sm:mt-2 flex-wrap">
+                        <Badge className={`text-[10px] sm:text-xs ${getStatusColor(activity.status)}`}>
                           {activity.status}
                         </Badge>
-                        <span className="text-xs text-slate-400">
+                        <span className="text-[10px] sm:text-xs text-slate-400">
                           il y a {getTimeAgo(activity.time)}
                         </span>
                       </div>
@@ -465,9 +541,9 @@ const DashboardParticulierHome = () => {
                 );
               })
             ) : (
-              <div className="text-center py-8">
-                <Clock className="h-12 w-12 text-slate-300 mx-auto mb-4" />
-                <p className="text-slate-500">Aucune activité récente</p>
+              <div className="text-center py-6 sm:py-8">
+                <Clock className="h-10 w-10 sm:h-12 sm:w-12 text-slate-300 mx-auto mb-3 sm:mb-4" />
+                <p className="text-xs sm:text-sm text-slate-500">Aucune activité récente</p>
               </div>
             )}
           </CardContent>
@@ -475,52 +551,52 @@ const DashboardParticulierHome = () => {
 
         {/* Progression et objectifs */}
         <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Target className="h-5 w-5 text-green-600" />
+          <CardHeader className="p-3 sm:p-4 lg:p-6">
+            <CardTitle className="flex items-center gap-2 text-base sm:text-lg">
+              <Target className="h-4 w-4 sm:h-5 sm:w-5 text-green-600" />
               Vos objectifs
             </CardTitle>
-            <CardDescription>
+            <CardDescription className="text-xs sm:text-sm">
               Suivi de vos démarches immobilières
             </CardDescription>
           </CardHeader>
-          <CardContent className="space-y-6">
+          <CardContent className="space-y-4 sm:space-y-6 p-3 sm:p-4 lg:p-6 pt-0">
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Profil complet</span>
-                <span className="text-sm text-slate-500">85%</span>
+              <div className="flex justify-between items-center mb-1.5 sm:mb-2">
+                <span className="text-xs sm:text-sm font-medium">Profil complet</span>
+                <span className="text-xs sm:text-sm text-slate-500">85%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+              <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
+                <div className="bg-blue-600 h-1.5 sm:h-2 rounded-full" style={{ width: '85%' }}></div>
               </div>
             </div>
             
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Documents validés</span>
-                <span className="text-sm text-slate-500">60%</span>
+              <div className="flex justify-between items-center mb-1.5 sm:mb-2">
+                <span className="text-xs sm:text-sm font-medium">Documents validés</span>
+                <span className="text-xs sm:text-sm text-slate-500">60%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: '60%' }}></div>
+              <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
+                <div className="bg-green-600 h-1.5 sm:h-2 rounded-full" style={{ width: '60%' }}></div>
               </div>
             </div>
             
             <div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm font-medium">Demandes actives</span>
-                <span className="text-sm text-slate-500">75%</span>
+              <div className="flex justify-between items-center mb-1.5 sm:mb-2">
+                <span className="text-xs sm:text-sm font-medium">Demandes actives</span>
+                <span className="text-xs sm:text-sm text-slate-500">75%</span>
               </div>
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: '75%' }}></div>
+              <div className="w-full bg-slate-200 rounded-full h-1.5 sm:h-2">
+                <div className="bg-orange-600 h-1.5 sm:h-2 rounded-full" style={{ width: '75%' }}></div>
               </div>
             </div>
 
-            <div className="bg-blue-50 rounded-lg p-4 mt-4">
-              <div className="flex items-center gap-2">
-                <Award className="h-5 w-5 text-blue-600" />
-                <span className="font-medium text-blue-900">Prochain objectif</span>
+            <div className="bg-blue-50 rounded-lg p-3 sm:p-4 mt-3 sm:mt-4">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <Award className="h-4 w-4 sm:h-5 sm:w-5 text-blue-600 flex-shrink-0" />
+                <span className="font-medium text-blue-900 text-xs sm:text-sm">Prochain objectif</span>
               </div>
-              <p className="text-sm text-blue-700 mt-1">
+              <p className="text-xs sm:text-sm text-blue-700 mt-1">
                 Compléter la validation de vos documents pour accélérer vos demandes
               </p>
             </div>

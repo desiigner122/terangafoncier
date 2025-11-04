@@ -277,27 +277,27 @@ const NotaireCommunicationModernized = () => {
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4 sm:space-y-6">
       {/* En-tête */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h2 className="text-3xl font-bold text-gray-900">Communication Tripartite</h2>
-          <p className="text-gray-600">Interface de communication Notaire-Banque-Client</p>
+          <h2 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900">Communication Tripartite</h2>
+          <p className="text-sm sm:text-base text-gray-600">Interface de communication Notaire-Banque-Client</p>
         </div>
-        <Button onClick={loadCommunications} variant="outline">
-          <RefreshCw className="h-4 w-4 mr-2" />
+        <Button onClick={loadCommunications} variant="outline" className="w-full sm:w-auto text-xs sm:text-sm h-8 sm:h-10">
+          <RefreshCw className="h-3 w-3 sm:h-4 sm:w-4 mr-1.5 sm:mr-2" />
           Actualiser
         </Button>
       </div>
 
       {/* Statistiques de communication */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Conversations</p>
-                <p className="text-2xl font-bold text-gray-900">{conversations.length}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Conversations</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{conversations.length}</p>
               </div>
               <div className="h-12 w-12 bg-blue-100 rounded-lg flex items-center justify-center">
                 <MessageSquare className="h-6 w-6 text-blue-600" />
@@ -307,42 +307,42 @@ const NotaireCommunicationModernized = () => {
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Messages non lus</p>
-                <p className="text-2xl font-bold text-gray-900">{communicationStats.unreadMessages}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Messages non lus</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{communicationStats.unreadMessages}</p>
               </div>
-              <div className="h-12 w-12 bg-red-100 rounded-lg flex items-center justify-center">
-                <Mail className="h-6 w-6 text-red-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-red-100 rounded-lg flex items-center justify-center">
+                <Mail className="h-5 w-5 sm:h-6 sm:w-6 text-red-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">Threads actifs</p>
-                <p className="text-2xl font-bold text-gray-900">{communicationStats.activeThreads}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">Threads actifs</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{communicationStats.activeThreads}</p>
               </div>
-              <div className="h-12 w-12 bg-green-100 rounded-lg flex items-center justify-center">
-                <Users className="h-6 w-6 text-green-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-green-100 rounded-lg flex items-center justify-center">
+                <Users className="h-5 w-5 sm:h-6 sm:w-6 text-green-600" />
               </div>
             </div>
           </CardContent>
         </Card>
 
         <Card>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600">En attente de réponse</p>
-                <p className="text-2xl font-bold text-gray-900">{communicationStats.pendingResponses}</p>
+                <p className="text-xs sm:text-sm font-medium text-gray-600">En attente de réponse</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900">{communicationStats.pendingResponses}</p>
               </div>
-              <div className="h-12 w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                <Clock className="h-6 w-6 text-yellow-600" />
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                <Clock className="h-5 w-5 sm:h-6 sm:w-6 text-yellow-600" />
               </div>
             </div>
           </CardContent>
@@ -350,34 +350,35 @@ const NotaireCommunicationModernized = () => {
       </div>
 
       {/* Interface de messagerie */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[600px]">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6 h-auto lg:h-[600px]">
         {/* Liste des conversations */}
         <div className="lg:col-span-1">
           <Card className="h-full">
-            <CardHeader className="pb-3">
+            <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2 sm:pb-3">
               <div className="flex items-center justify-between">
-                <CardTitle className="text-lg">Conversations</CardTitle>
-                <div className="flex space-x-2">
+                <CardTitle className="text-base sm:text-lg">Conversations</CardTitle>
+                <div className="flex space-x-1 sm:space-x-2">
                   <Button 
                     size="sm" 
                     variant="outline"
+                    className="h-7 sm:h-8 w-7 sm:w-8 p-0"
                     onClick={() => setShowAdvancedSearch(!showAdvancedSearch)}
                   >
-                    <Filter className="h-4 w-4" />
+                    <Filter className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
-                  <Button size="sm" variant="outline">
-                    <Plus className="h-4 w-4" />
+                  <Button size="sm" variant="outline" className="h-7 sm:h-8 w-7 sm:w-8 p-0">
+                    <Plus className="h-3 w-3 sm:h-4 sm:w-4" />
                   </Button>
                 </div>
               </div>
-              <div className="space-y-2">
+              <div className="space-y-2 mt-2 sm:mt-3">
                 <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
+                  <Search className="absolute left-2 sm:left-3 top-2 sm:top-3 h-3 w-3 sm:h-4 sm:w-4 text-gray-400" />
                   <Input
                     placeholder="Rechercher conversations, messages..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-10"
+                    className="pl-8 sm:pl-10 h-8 sm:h-10 text-xs sm:text-sm"
                   />
                 </div>
                 
@@ -442,18 +443,18 @@ const NotaireCommunicationModernized = () => {
               </div>
             </CardHeader>
             <CardContent className="p-0">
-              <ScrollArea className="h-[450px]">
+              <ScrollArea className="h-[300px] sm:h-[350px] lg:h-[450px]">
                 {filteredConversations.length === 0 ? (
-                  <div className="p-6 text-center">
-                    <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                    <p className="text-gray-600">Aucune conversation trouvée</p>
+                  <div className="p-4 sm:p-6 text-center">
+                    <MessageSquare className="h-10 w-10 sm:h-12 sm:w-12 text-gray-400 mx-auto mb-3 sm:mb-4" />
+                    <p className="text-sm sm:text-base text-gray-600">Aucune conversation trouvée</p>
                   </div>
                 ) : (
-                  <div className="space-y-2 p-2">
+                  <div className="space-y-1 sm:space-y-2 p-1 sm:p-2">
                     {filteredConversations.map((conversation) => (
                       <motion.div
                         key={conversation.id}
-                        className={`p-4 rounded-lg cursor-pointer transition-colors ${
+                        className={`p-2 sm:p-3 lg:p-4 rounded-lg cursor-pointer transition-colors ${
                           selectedConversation?.id === conversation.id
                             ? 'bg-amber-50 border-2 border-amber-200'
                             : 'hover:bg-gray-50 border-2 border-transparent'
@@ -462,35 +463,35 @@ const NotaireCommunicationModernized = () => {
                         whileHover={{ scale: 1.02 }}
                         whileTap={{ scale: 0.98 }}
                       >
-                        <div className="flex items-start justify-between mb-2">
-                          <h4 className="font-medium text-sm text-gray-900 truncate">
+                        <div className="flex items-start justify-between mb-1 sm:mb-2">
+                          <h4 className="font-medium text-xs sm:text-sm text-gray-900 truncate">
                             {conversation.subject || 'Sans objet'}
                           </h4>
                           {conversation.unread > 0 && (
-                            <Badge className="bg-red-500 text-white text-xs">
+                            <Badge className="bg-red-500 text-white text-[10px] sm:text-xs px-1 sm:px-2 py-0.5">
                               {conversation.unread}
                             </Badge>
                           )}
                         </div>
                         
-                        <div className="flex items-center space-x-1 mb-2">
+                        <div className="flex items-center space-x-1 mb-1 sm:mb-2">
                           {conversation.participants?.slice(0, 3).map((participant, index) => (
-                            <div key={index} className={`px-2 py-1 rounded text-xs ${getParticipantColor(participant.role)}`}>
+                            <div key={index} className={`px-1 sm:px-2 py-0.5 sm:py-1 rounded text-[10px] sm:text-xs ${getParticipantColor(participant.role)}`}>
                               {participant.role}
                             </div>
                           ))}
                         </div>
                         
-                        <p className="text-xs text-gray-600 truncate mb-2">
+                        <p className="text-[10px] sm:text-xs text-gray-600 truncate mb-1 sm:mb-2">
                           {conversation.lastMessage || 'Aucun message'}
                         </p>
                         
-                        <div className="flex items-center justify-between text-xs">
+                        <div className="flex items-center justify-between text-[10px] sm:text-xs">
                           <span className="text-gray-500">
                             {conversation.timestamp && formatTime(conversation.timestamp)}
                           </span>
                           {conversation.priority && (
-                            <Badge className={`text-xs ${getPriorityColor(conversation.priority)}`}>
+                            <Badge className={`text-[10px] sm:text-xs ${getPriorityColor(conversation.priority)}`}>
                               {conversation.priority}
                             </Badge>
                           )}
@@ -510,22 +511,22 @@ const NotaireCommunicationModernized = () => {
             {selectedConversation ? (
               <>
                 {/* En-tête de conversation */}
-                <CardHeader className="pb-3">
+                <CardHeader className="p-3 sm:p-4 lg:p-6 pb-2 sm:pb-3">
                   <div className="flex items-center justify-between">
-                    <div>
-                      <CardTitle className="text-lg">
+                    <div className="flex-1 min-w-0">
+                      <CardTitle className="text-base sm:text-lg truncate">
                         {selectedConversation.subject || 'Conversation'}
                       </CardTitle>
-                      <div className="flex items-center space-x-4 mt-1">
+                      <div className="flex items-center space-x-2 sm:space-x-4 mt-1 overflow-x-auto">
                         <div className="flex items-center space-x-1">
                           {selectedConversation.participants?.map((participant, index) => (
                             <div key={index} className="flex items-center space-x-1">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback className="text-xs">
+                              <Avatar className="h-5 w-5 sm:h-6 sm:w-6">
+                                <AvatarFallback className="text-[10px] sm:text-xs">
                                   {participant.name?.charAt(0) || participant.role?.charAt(0)}
                                 </AvatarFallback>
                               </Avatar>
-                              <span className="text-sm text-gray-600">
+                              <span className="text-xs sm:text-sm text-gray-600 whitespace-nowrap">
                                 {participant.name} ({participant.role})
                               </span>
                             </div>
@@ -533,15 +534,15 @@ const NotaireCommunicationModernized = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-2">
-                      <Button size="sm" variant="outline">
-                        <Phone className="h-4 w-4" />
+                    <div className="flex items-center space-x-1 sm:space-x-2 ml-2">
+                      <Button size="sm" variant="outline" className="h-7 sm:h-8 w-7 sm:w-8 p-0">
+                        <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
-                        <Video className="h-4 w-4" />
+                      <Button size="sm" variant="outline" className="h-7 sm:h-8 w-7 sm:w-8 p-0 hidden sm:inline-flex">
+                        <Video className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
-                      <Button size="sm" variant="outline">
-                        <MoreVertical className="h-4 w-4" />
+                      <Button size="sm" variant="outline" className="h-7 sm:h-8 w-7 sm:w-8 p-0">
+                        <MoreVertical className="h-3 w-3 sm:h-4 sm:w-4" />
                       </Button>
                     </div>
                   </div>
@@ -550,20 +551,20 @@ const NotaireCommunicationModernized = () => {
                 <Separator />
 
                 {/* Messages */}
-                <CardContent className="flex-1 p-4">
-                  <ScrollArea className="h-[300px] mb-4">
+                <CardContent className="flex-1 p-2 sm:p-3 lg:p-4">
+                  <ScrollArea className="h-[250px] sm:h-[280px] lg:h-[300px] mb-3 sm:mb-4">
                     {messages[selectedConversation.id]?.length > 0 ? (
-                      <div className="space-y-4">
+                      <div className="space-y-2 sm:space-y-3 lg:space-y-4">
                         {messages[selectedConversation.id].map((message) => (
                           <div
                             key={message.id}
                             className={`flex ${message.isNotaire ? 'justify-end' : 'justify-start'} group`}
                           >
-                            <div className={`max-w-[70%] ${
+                            <div className={`max-w-[85%] sm:max-w-[75%] lg:max-w-[70%] ${
                               message.isNotaire 
                                 ? 'bg-amber-100 text-amber-900' 
                                 : 'bg-gray-100 text-gray-900'
-                            } rounded-lg p-3 relative`}>
+                            } rounded-lg p-2 sm:p-3 relative`}>
                               {/* Actions hover */}
                               <div className="absolute -top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity flex space-x-1">
                                 <Button
@@ -709,13 +710,13 @@ const NotaireCommunicationModernized = () => {
                     )}
 
                     {/* Zone de saisie principale */}
-                    <div className="flex items-end space-x-2">
-                      <div className="flex-1">
+                    <div className="flex flex-col sm:flex-row items-end space-y-2 sm:space-y-0 sm:space-x-2">
+                      <div className="flex-1 w-full">
                         <Textarea
                           placeholder="Tapez votre message... (Shift+Entrée pour un saut de ligne)"
                           value={messageText}
                           onChange={(e) => setMessageText(e.target.value)}
-                          className="min-h-[80px] resize-none"
+                          className="min-h-[60px] sm:min-h-[80px] resize-none text-xs sm:text-sm"
                           onKeyDown={(e) => {
                             if (e.key === 'Enter' && !e.shiftKey) {
                               e.preventDefault();
@@ -725,8 +726,8 @@ const NotaireCommunicationModernized = () => {
                         />
                         
                         {/* Barre d'outils */}
-                        <div className="flex items-center justify-between mt-2 px-2">
-                          <div className="flex items-center space-x-2">
+                        <div className="flex items-center justify-between mt-1 sm:mt-2 px-1 sm:px-2">
+                          <div className="flex items-center space-x-1 sm:space-x-2">
                             <input
                               type="file"
                               id="file-upload"
@@ -739,42 +740,42 @@ const NotaireCommunicationModernized = () => {
                               size="sm"
                               variant="ghost"
                               onClick={() => document.getElementById('file-upload').click()}
-                              className="h-8 w-8 p-0"
+                              className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                             >
-                              <Paperclip className="h-4 w-4" />
+                              <Paperclip className="h-3 w-3 sm:h-4 sm:w-4" />
                             </Button>
                             <div className="relative">
                               <Button
                                 size="sm"
                                 variant="ghost"
                                 onClick={() => setShowEmojiPicker(!showEmojiPicker)}
-                                className="h-8 w-8 p-0"
+                                className="h-7 w-7 sm:h-8 sm:w-8 p-0"
                               >
-                                <Smile className="h-4 w-4" />
+                                <Smile className="h-3 w-3 sm:h-4 sm:w-4" />
                               </Button>
                               {showEmojiPicker && (
                                 <motion.div
                                   initial={{ opacity: 0, y: -10 }}
                                   animate={{ opacity: 1, y: 0 }}
-                                  className="absolute bottom-full left-0 mb-2 p-3 bg-white rounded-lg shadow-xl border z-50 w-64"
+                                  className="absolute bottom-full left-0 mb-2 p-2 sm:p-3 bg-white rounded-lg shadow-xl border z-50 w-56 sm:w-64"
                                 >
                                   <div className="flex justify-between items-center mb-2">
-                                    <span className="text-xs font-medium text-gray-700">Émojis fréquents</span>
+                                    <span className="text-[10px] sm:text-xs font-medium text-gray-700">Émojis fréquents</span>
                                     <Button
                                       size="sm"
                                       variant="ghost"
                                       onClick={() => setShowEmojiPicker(false)}
-                                      className="h-6 w-6 p-0"
+                                      className="h-5 w-5 sm:h-6 sm:w-6 p-0"
                                     >
-                                      <X className="h-3 w-3" />
+                                      <X className="h-2 w-2 sm:h-3 sm:w-3" />
                                     </Button>
                                   </div>
-                                  <div className="grid grid-cols-8 gap-1">
+                                  <div className="grid grid-cols-7 sm:grid-cols-8 gap-0.5 sm:gap-1">
                                     {commonEmojis.map((emoji, index) => (
                                       <button
                                         key={index}
                                         onClick={() => handleEmojiSelect(emoji)}
-                                        className="text-xl hover:bg-gray-100 rounded p-1 transition-colors"
+                                        className="text-base sm:text-xl hover:bg-gray-100 rounded p-0.5 sm:p-1 transition-colors"
                                       >
                                         {emoji}
                                       </button>
@@ -785,30 +786,31 @@ const NotaireCommunicationModernized = () => {
                             </div>
                           </div>
                           
-                          <div className="flex items-center space-x-2 text-xs text-gray-500">
+                          <div className="flex items-center space-x-1 sm:space-x-2 text-[10px] sm:text-xs text-gray-500">
                             <span>{messageText.length}/1000</span>
                             {attachments.length > 0 && (
-                              <span>• {attachments.length} fichier(s)</span>
+                              <span className="hidden sm:inline">• {attachments.length} fichier(s)</span>
                             )}
                           </div>
                         </div>
                       </div>
                       
-                      <div className="flex flex-col space-y-2">
+                      <div className="flex flex-row sm:flex-col space-x-2 sm:space-x-0 sm:space-y-2 w-full sm:w-auto">
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleInitiateCall('audio')}
                           title="Démarrer un appel vocal"
+                          className="flex-1 sm:flex-none h-8 sm:h-9"
                         >
-                          <Phone className="h-4 w-4" />
+                          <Phone className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                         <Button 
                           onClick={sendMessage}
                           disabled={!messageText.trim() && attachments.length === 0}
-                          className="bg-amber-600 hover:bg-amber-700"
+                          className="bg-amber-600 hover:bg-amber-700 flex-1 sm:flex-none h-8 sm:h-9"
                         >
-                          <Send className="h-4 w-4" />
+                          <Send className="h-3 w-3 sm:h-4 sm:w-4" />
                         </Button>
                       </div>
                     </div>

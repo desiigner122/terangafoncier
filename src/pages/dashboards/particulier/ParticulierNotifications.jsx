@@ -40,128 +40,64 @@ const ParticulierNotifications = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedNotifications, setSelectedNotifications] = useState([]);
   const [activeTab, setActiveTab] = useState('toutes');
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Notifications administratives - SUIVI DES DOSSIERS
-  const [notifications] = useState([
-    {
-      id: 'NOT-001',
-      dossierRef: 'DT-2024-001',
-      type: 'validation',
-      priority: 'urgent',
-      title: 'Validation commission technique - DT-2024-001',
-      message: 'Votre demande de terrain communal a été approuvée par la commission technique de Thiès. Prochaine étape : validation du maire.',
-      timestamp: '2024-02-02T14:30:00Z',
-      read: false,
-      actionUrl: '/dashboard/acheteur/municipal-applications',
-      icon: CheckCircle,
-      color: 'green',
-      source: 'Commission Technique - Thiès'
-    },
-    {
-      id: 'NOT-002',
-      dossierRef: 'PC-2024-007',
-      type: 'document_manquant',
-      priority: 'high',
-      title: 'Documents manquants - PC-2024-007',
-      message: 'Échéance dans 3 jours : Fournir l\'étude géotechnique et le plan de fondation pour votre permis de construire.',
-      timestamp: '2024-02-02T09:15:00Z',
-      read: false,
-      actionUrl: '/dashboard/acheteur/my-documents',
-      icon: AlertTriangle,
-      color: 'red',
-      source: 'Service des Permis - Dakar',
-      echeance: '2024-02-05'
-    },
-    {
-      id: 'NOT-003',
-      dossierRef: 'CP-2024-003',
-      type: 'rendez_vous',
-      priority: 'high',
-      title: 'Convocation entretien final - CP-2024-003',
-      message: 'TERANGA CONSTRUCTION vous convoque pour l\'entretien final le 16 février 2024 à 10h00. Lieu : Siège social VDN.',
-      timestamp: '2024-02-01T16:45:00Z',
-      read: true,
-      actionUrl: '/dashboard/acheteur/appointments',
-      icon: Calendar,
-      color: 'blue',
-      source: 'TERANGA CONSTRUCTION',
-      rdv: {
-        date: '2024-02-16',
-        heure: '10:00',
-        lieu: 'Siège TERANGA CONSTRUCTION'
+  // Charger les notifications réelles (fallback aux mocks si la table est vide)
+  const loadNotifications = async (userId) => {
+    try {
+      setLoading(true);
+      // Tenter de lire la table notifications si elle existe
+      const { data, error } = await (await import('@/lib/supabaseClient')).supabase
+        .from('notifications')
+        .select('*')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(200);
+
+      if (!error && data && data.length > 0) {
+        setNotifications(data.map(n => ({
+          id: n.id,
+          dossierRef: n.case_ref || 'General',
+          type: n.type || 'system',
+          priority: n.priority || 'medium',
+          title: n.title || n.message?.slice(0, 60) || 'Notification',
+          message: n.message || n.body || '',
+          timestamp: n.created_at || n.created_at,
+          read: !!n.read_at,
+          actionUrl: n.action_url || null,
+          icon: n.icon || Bell,
+          color: n.color || 'blue',
+          source: n.source || 'Système'
+        })));
+      } else {
+        // Fallback vers les mocks si absence de table ou données
+        console.warn('Aucune notification réelle trouvée, utilisation des mocks');
+        // laisser la variable notifications telle qu'elle était initialisée par le mock ci-dessous
+        setNotifications(prev => prev);
       }
-    },
-    {
-      id: 'NOT-004',
-      dossierRef: 'General',
-      type: 'rappel_systeme',
-      priority: 'medium',
-      title: 'Rappel échéances multiples',
-      message: 'Vous avez 3 dossiers avec des échéances dans les 7 prochains jours. Consultez votre tableau de bord pour plus de détails.',
-      timestamp: '2024-02-02T08:00:00Z',
-      read: false,
-      actionUrl: '/dashboard/acheteur',
-      icon: Bell,
-      color: 'orange',
-      source: 'Système TERANGA FONCIER'
-    },
-    {
-      id: 'NOT-005',
-      dossierRef: 'DT-2024-001',
-      type: 'status_update',
-      priority: 'medium',
-      title: 'Changement de statut - DT-2024-001',
-      message: 'Votre demande de terrain est passée au statut "En instruction" après validation des documents d\'identité.',
-      timestamp: '2024-01-30T11:20:00Z',
-      read: true,
-      actionUrl: '/dashboard/acheteur/municipal-applications',
-      icon: Activity,
-      color: 'blue',
-      source: 'Service Foncier - Thiès'
-    },
-    {
-      id: 'NOT-006',
-      dossierRef: 'CP-2024-003',
-      type: 'acceptation',
-      priority: 'high',
-      title: 'Pré-sélection candidature - CP-2024-003',
-      message: 'Félicitations ! Vous avez été pré-sélectionné pour la Résidence Les Palmiers. Entretien final programmé.',
-      timestamp: '2024-01-28T15:30:00Z',
-      read: true,
-      actionUrl: '/dashboard/acheteur/promoter-reservations',
-      icon: Star,
-      color: 'green',
-      source: 'TERANGA CONSTRUCTION'
-    },
-    {
-      id: 'NOT-007',
-      dossierRef: 'PC-2024-007',
-      type: 'soumission',
-      priority: 'low',
-      title: 'Dossier soumis avec succès - PC-2024-007',
-      message: 'Votre demande de permis de construire a été soumise avec succès. Référence : PC-2024-007. Délai d\'instruction : 2 mois.',
-      timestamp: '2024-01-25T14:15:00Z',
-      read: true,
-      actionUrl: '/dashboard/acheteur/my-documents',
-      icon: FileText,
-      color: 'blue',
-      source: 'Mairie de Dakar'
-    },
-    {
-      id: 'NOT-008',
-      dossierRef: 'General',
-      type: 'maintenance',
-      priority: 'low',
-      title: 'Maintenance programmée',
-      message: 'Maintenance de la plateforme prévue le dimanche 4 février de 2h à 6h. Les services seront temporairement indisponibles.',
-      timestamp: '2024-01-25T10:00:00Z',
-      read: false,
-      actionUrl: null,
-      icon: Settings,
-      color: 'gray',
-      source: 'Équipe Technique TERANGA'
+    } catch (err) {
+      console.error('Erreur chargement notifications:', err);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  };
+
+  // load on mount using user id from global outlet context if present
+  // NOTE: we rely on parent route providing user via outlet context; otherwise manual refresh
+  React.useEffect(() => {
+    // Attempt to get user from global auth context
+    (async () => {
+      try {
+        const { supabase } = await import('@/lib/supabaseClient');
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user?.id) await loadNotifications(user.id);
+      } catch (e) {
+        console.warn('Impossible de charger user pour notifications:', e.message || e);
+        setLoading(false);
+      }
+    })();
+  }, []);
 
   const getNotificationIcon = (notification) => {
     const IconComponent = notification.icon;
@@ -262,6 +198,18 @@ const ParticulierNotifications = () => {
     unread: notifications.filter(n => !n.read).length,
     urgent: notifications.filter(n => n.priority === 'urgent' || n.priority === 'high').length,
     dossiers: notifications.filter(n => n.dossierRef !== 'General').length
+  };
+
+  const markNotificationAsRead = async (notificationId) => {
+    try {
+      // Update local state immediately
+      setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, read: true } : n));
+      const { supabase } = await import('@/lib/supabaseClient');
+      const { error } = await supabase.from('notifications').update({ read_at: new Date().toISOString() }).eq('id', notificationId);
+      if (error) console.warn('Erreur marquage notification lu:', error.message || error);
+    } catch (err) {
+      console.error('Erreur marquage notification lu:', err);
+    }
   };
 
   const toggleNotificationSelection = (id) => {

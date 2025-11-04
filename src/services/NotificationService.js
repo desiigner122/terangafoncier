@@ -240,19 +240,26 @@ export class NotificationService {
 
       // Insérer les notifications en base
       if (notifications.length > 0) {
-        const { error: insertError } = await supabase
-          .from('purchase_case_notifications')
-          .insert(notifications)
-          .catch(err => {
-            // Si la table n'existe pas, ignorer l'erreur (non bloquante)
-            if (err.code === 'PGRST205' || err.message?.includes('Could not find the table')) {
-              console.warn('⚠️ Table purchase_case_notifications non disponible - notifications stockées localement');
-              return { error: null };
-            }
-            throw err;
-          });
+        try {
+          const { error: insertError } = await supabase
+            .from('purchase_case_notifications')
+            .insert(notifications);
 
-        if (insertError && !insertError.suppressed) throw insertError;
+          if (insertError && insertError.code !== 'PGRST205') {
+            throw insertError;
+          }
+          
+          if (insertError) {
+            console.warn('⚠️ Table purchase_case_notifications non disponible - notifications stockées localement');
+          }
+        } catch (err) {
+          // Si la table n'existe pas, ignorer l'erreur (non bloquante)
+          if (err.code === 'PGRST205' || err.message?.includes('Could not find the table')) {
+            console.warn('⚠️ Table purchase_case_notifications non disponible - notifications stockées localement');
+          } else {
+            throw err;
+          }
+        }
 
         // Traiter l'envoi sur chaque canal
         for (const notification of notifications) {
@@ -671,6 +678,233 @@ export class NotificationService {
       console.error('❌ Erreur envoi notification négociation:', error);
       return { success: false, error: error.message };
     }
+  }
+
+  // ==================== REALTIME SUBSCRIPTIONS ====================
+
+  /**
+   * Map pour stocker les souscriptions actives
+   */
+  static activeSubscriptions = new Map();
+
+  /**
+   * 🔔 Souscrire aux notifications realtime pour un utilisateur
+   */
+  static subscribeToUserNotifications(userId, callback) {
+    if (!userId) {
+      console.error('❌ [NotificationService] userId requis');
+      return null;
+    }
+
+    const channelName = `user-notifications:${userId}`;
+    
+    // Vérifier si déjà souscrit
+    if (this.activeSubscriptions.has(channelName)) {
+      console.log('⚠️ [NotificationService] Déjà souscrit:', channelName);
+      return this.activeSubscriptions.get(channelName);
+    }
+
+    console.log('📡 [NotificationService] Souscription notifications pour:', userId);
+
+    // Créer le channel Supabase Realtime
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `recipient_id=eq.${userId}`
+        },
+        (payload) => {
+          console.log('🔔 [NotificationService] Nouvelle notification:', payload.new);
+          callback(payload.new);
+        }
+      )
+      .subscribe((status) => {
+        console.log(`📡 [NotificationService] Statut souscription: ${status}`);
+      });
+
+    this.activeSubscriptions.set(channelName, channel);
+    return channel;
+  }
+
+  /**
+   * 📋 Souscrire aux changements d'un dossier (timeline, messages, statut)
+   */
+  static subscribeToCaseUpdates(caseId, callbacks = {}) {
+    if (!caseId) {
+      console.error('❌ [NotificationService] caseId requis');
+      return null;
+    }
+
+    const channelName = `case-updates:${caseId}`;
+    
+    if (this.activeSubscriptions.has(channelName)) {
+      console.log('⚠️ [NotificationService] Déjà souscrit au dossier:', channelName);
+      return this.activeSubscriptions.get(channelName);
+    }
+
+    console.log('📡 [NotificationService] Souscription dossier:', caseId);
+
+    const channel = supabase.channel(channelName);
+
+    // Timeline events
+    if (callbacks.onTimelineUpdate) {
+      channel.on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'purchase_case_timeline',
+          filter: `case_id=eq.${caseId}`
+        },
+        (payload) => {
+          console.log('📊 [NotificationService] Timeline update:', payload);
+          callbacks.onTimelineUpdate(payload);
+        }
+      );
+    }
+
+    // Messages
+    if (callbacks.onMessageReceived) {
+      channel.on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'purchase_case_messages',
+          filter: `case_id=eq.${caseId}`
+        },
+        (payload) => {
+          console.log('💬 [NotificationService] Nouveau message:', payload.new);
+          callbacks.onMessageReceived(payload.new);
+        }
+      );
+    }
+
+    // Status changes
+    if (callbacks.onStatusChange) {
+      channel.on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'purchase_cases',
+          filter: `id=eq.${caseId}`
+        },
+        (payload) => {
+          console.log('🔄 [NotificationService] Statut changé:', payload.new);
+          callbacks.onStatusChange(payload.new, payload.old);
+        }
+      );
+    }
+
+    // Documents
+    if (callbacks.onDocumentAdded) {
+      channel.on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'purchase_case_documents',
+          filter: `case_id=eq.${caseId}`
+        },
+        (payload) => {
+          console.log('📄 [NotificationService] Nouveau document:', payload.new);
+          callbacks.onDocumentAdded(payload.new);
+        }
+      );
+    }
+
+    // Notaire assignments
+    if (callbacks.onAssignmentUpdate) {
+      channel.on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notaire_case_assignments',
+          filter: `case_id=eq.${caseId}`
+        },
+        (payload) => {
+          console.log('👨‍⚖️ [NotificationService] Assignment update:', payload);
+          callbacks.onAssignmentUpdate(payload);
+        }
+      );
+    }
+
+    channel.subscribe((status) => {
+      console.log(`📡 [NotificationService] Souscription dossier ${caseId}: ${status}`);
+    });
+
+    this.activeSubscriptions.set(channelName, channel);
+    return channel;
+  }
+
+  /**
+   * 🏠 Souscrire aux assignations notaire pour un notaire
+   */
+  static subscribeToNotaireAssignments(notaireId, callback) {
+    if (!notaireId) {
+      console.error('❌ [NotificationService] notaireId requis');
+      return null;
+    }
+
+    const channelName = `notaire-assignments:${notaireId}`;
+    
+    if (this.activeSubscriptions.has(channelName)) {
+      console.log('⚠️ [NotificationService] Déjà souscrit:', channelName);
+      return this.activeSubscriptions.get(channelName);
+    }
+
+    console.log('📡 [NotificationService] Souscription assignations notaire:', notaireId);
+
+    const channel = supabase
+      .channel(channelName)
+      .on(
+        'postgres_changes',
+        {
+          event: '*',
+          schema: 'public',
+          table: 'notaire_case_assignments',
+          filter: `notaire_id=eq.${notaireId}`
+        },
+        (payload) => {
+          console.log('👨‍⚖️ [NotificationService] Assignation update:', payload);
+          callback(payload);
+        }
+      )
+      .subscribe((status) => {
+        console.log(`📡 [NotificationService] Statut souscription assignations: ${status}`);
+      });
+
+    this.activeSubscriptions.set(channelName, channel);
+    return channel;
+  }
+
+  /**
+   * 🔕 Se désabonner d'un channel
+   */
+  static unsubscribe(channelName) {
+    const channel = this.activeSubscriptions.get(channelName);
+    if (channel) {
+      console.log('🔕 [NotificationService] Désinscription:', channelName);
+      supabase.removeChannel(channel);
+      this.activeSubscriptions.delete(channelName);
+    }
+  }
+
+  /**
+   * 🔕 Se désabonner de tous les channels
+   */
+  static unsubscribeAll() {
+    console.log('🔕 [NotificationService] Désinscription de tous les channels');
+    this.activeSubscriptions.forEach((channel, channelName) => {
+      supabase.removeChannel(channel);
+    });
+    this.activeSubscriptions.clear();
   }
 }
 

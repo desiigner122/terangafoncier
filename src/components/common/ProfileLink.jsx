@@ -48,8 +48,12 @@ const ProfileLink = ({
     municipalite: 'municipality'
   };
 
-  // Normaliser le type
-  const normalizedType = type.toLowerCase().replace(/[^a-z-]/g, '');
+  // Normaliser le type (garder robuste si undefined/null)
+  const normalizedType = String(type || '')
+    .toLowerCase()
+    .trim()
+    .replace(/\s+/g, '-') // espaces -> tirets
+    .replace(/[^a-z-]/g, '');
   const profileType = routeMap[normalizedType];
 
   if (!profileType) {

@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import { unifiedAuth } from '@/services/UnifiedAuthService';
+import { requestNotificationPermission, getNotificationPermission } from '@/utils/nativeNotifications'; // Phase 4
 
 const AuthContext = createContext(undefined);
 
@@ -71,6 +72,20 @@ export const AuthProvider = ({ children }) => {
         if (session) {
           setUser(session.user);
           setSession(session);
+          
+          // Phase 4: Demander permission notifications au login (si pas déjà fait)
+          const permission = getNotificationPermission();
+          if (permission === 'default') {
+            // Attendre 2 secondes après le login pour demander (meilleure UX)
+            setTimeout(async () => {
+              const result = await requestNotificationPermission();
+              if (result === 'granted') {
+                console.log('✅ Notifications natives activées');
+              } else {
+                console.log('⏭️ Notifications natives refusées par l\'utilisateur');
+              }
+            }, 2000);
+          }
         }
         
         setLoading(false);

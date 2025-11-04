@@ -61,21 +61,40 @@ const VendeurAntiFraudeRealData = () => {
   const loadFraudChecks = async () => {
     try {
       setLoading(true);
-      // Fetch fraud checks first, then fetch related properties separately
+      // Charger les vérifications anti-fraude
       const { data: checksData, error } = await supabase
         .from('fraud_checks')
-        .select('*')
-        .eq('vendor_id', user.id)
+        .select('id, user_id, property_id, check_type, status, risk_level, details, recommendation, created_at, completed_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
 
-      const checks = checksData || [];
+      const checksWithDetails = (checksData || []).map(entry => {
+        const detailsPayload = entry?.details || {};
+        const fraudScore =
+          entry?.fraud_score ??
+          detailsPayload.fraud_score ??
+          detailsPayload.overall_score ??
+          0;
 
-      // Batch load related properties to avoid PostgREST FK embed errors
-      const propertyIds = Array.from(new Set(checks
-        .map(c => c.property_id)
-        .filter(Boolean)));
+        return {
+          ...entry,
+          fraud_score: fraudScore,
+          overall_score: detailsPayload.overall_score ?? fraudScore,
+          ocr_results: entry?.ocr_results || detailsPayload.ocr_results,
+          gps_results: entry?.gps_results || detailsPayload.gps_results,
+          price_results: entry?.price_results || detailsPayload.price_results,
+          ai_analysis: entry?.ai_analysis || detailsPayload.ai_analysis,
+          alerts: entry?.alerts || detailsPayload.alerts || [],
+          details: detailsPayload
+        };
+      });
+
+      // Charger les propriétés associées
+      const propertyIds = Array.from(new Set(
+        checksWithDetails.map(c => c.property_id).filter(Boolean)
+      ));
 
       let propertiesMap = {};
       if (propertyIds.length > 0) {
@@ -87,28 +106,36 @@ const VendeurAntiFraudeRealData = () => {
         if (propsError) {
           console.error('Erreur chargement propriétés liées:', propsError);
         } else if (propsData) {
-          propertiesMap = propsData.reduce((acc, p) => {
-            acc[p.id] = p; return acc;
+          propertiesMap = propsData.reduce((acc, property) => {
+            acc[property.id] = property;
+            return acc;
           }, {});
         }
       }
 
-      const enrichedChecks = checks.map(c => ({
-        ...c,
-        properties: propertiesMap[c.property_id] || null
+      const enrichedChecks = checksWithDetails.map(check => ({
+        ...check,
+        properties: propertiesMap[check.property_id] || null,
+        ai_analysis: check.ai_analysis || {
+          ocr: check.ocr_results,
+          gps: check.gps_results,
+          price: check.price_results,
+          confidence: Math.max(0, 100 - (check.fraud_score || 0))
+        }
       }));
 
       setFraudChecks(enrichedChecks);
-      
+
       // Calculer stats
-  const verified = enrichedChecks?.filter(c => c.status === 'verified').length || 0;
-  const suspicious = enrichedChecks?.filter(c => c.status === 'suspicious').length || 0;
-  const pending = enrichedChecks?.filter(c => c.status === 'pending').length || 0;
-  const totalScore = enrichedChecks?.reduce((sum, c) => sum + (c.fraud_score || 0), 0) || 0;
-  const averageScore = enrichedChecks?.length ? Math.round(totalScore / enrichedChecks.length) : 0;
+      const normalizedStatus = statusValue => (statusValue || '').toLowerCase();
+      const verified = enrichedChecks.filter(c => normalizedStatus(c.status) === 'verified').length;
+      const suspicious = enrichedChecks.filter(c => normalizedStatus(c.status) === 'suspicious').length;
+      const pending = enrichedChecks.filter(c => normalizedStatus(c.status) === 'pending').length;
+      const totalScore = enrichedChecks.reduce((sum, c) => sum + (c.fraud_score || 0), 0);
+      const averageScore = enrichedChecks.length > 0 ? Math.round(totalScore / enrichedChecks.length) : 0;
 
       setStats({
-        totalScans: data?.length || 0,
+        totalScans: enrichedChecks.length,
         verified,
         suspicious,
         pending,
@@ -150,24 +177,35 @@ const VendeurAntiFraudeRealData = () => {
       const riskLevel = fraudScore < 20 ? 'low' : fraudScore < 40 ? 'medium' : 'high';
       const status = fraudScore < 30 ? 'verified' : fraudScore < 60 ? 'suspicious' : 'rejected';
 
+      const alerts = generateAlerts(fraudScore, ocrResults, gpsResults, priceResults);
+      const recommendation = buildRecommendation(status, alerts);
+      const detailsPayload = {
+        fraud_score: fraudScore,
+        overall_score: fraudScore,
+        ai_analysis: {
+          ocr: ocrResults,
+          gps: gpsResults,
+          price: priceResults,
+          confidence: Math.max(0, 100 - fraudScore)
+        },
+        ocr_results: ocrResults,
+        gps_results: gpsResults,
+        price_results: priceResults,
+        alerts
+      };
+
       // 4. Créer vérification anti-fraude
       const { data: newCheck, error } = await supabase
         .from('fraud_checks')
         .insert({
-          vendor_id: user.id,
+          user_id: user.id,
           property_id: propertyId,
-          verified_at: new Date().toISOString(),
-          overall_score: fraudScore,
-          ocr_score: ocrResults.score || 0,
-          gps_score: gpsResults.score || 0,
-          price_score: priceResults.score || 0,
+          check_type: 'automated_scan',
+          status,
           risk_level: riskLevel,
-          status: status,
-          ocr_results: ocrResults,
-          gps_results: gpsResults,
-          price_results: priceResults,
-          is_approved: status === 'verified',
-          alerts: generateAlerts(fraudScore, ocrResults, gpsResults, priceResults)
+          details: detailsPayload,
+          recommendation,
+          completed_at: new Date().toISOString()
         })
         .select()
         .single();
@@ -238,6 +276,27 @@ const VendeurAntiFraudeRealData = () => {
     if (fraudScore > 60) alerts.push('High fraud risk detected');
     
     return alerts;
+  };
+
+  const buildRecommendation = (status, alerts) => {
+    const normalized = (status || '').toLowerCase();
+
+    if (normalized === 'verified') {
+      return 'Aucune anomalie critique détectée. Vous pouvez publier cette annonce en toute sécurité.';
+    }
+
+    if (normalized === 'suspicious') {
+      const alertSummary = alerts && alerts.length > 0
+        ? alerts.slice(0, 3).join(', ')
+        : 'revue manuelle recommandée';
+      return `Points de vigilance détectés : ${alertSummary}. Veuillez valider les documents avant publication.`;
+    }
+
+    if (normalized === 'rejected' || normalized === 'high') {
+      return 'Risque élevé détecté. Merci de contacter l’équipe conformité avant toute action.';
+    }
+
+    return 'Analyse complémentaire requise. Vérifiez les informations et confirmez manuellement.';
   };
 
   const handleRecheck = async (checkId) => {

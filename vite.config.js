@@ -1,6 +1,7 @@
 import path from 'node:path';
 import react from '@vitejs/plugin-react';
 import { createLogger, defineConfig } from 'vite';
+import { VitePWA } from 'vite-plugin-pwa';
 
 const isDev = process.env.NODE_ENV !== 'production';
 let inlineEditPlugin = null, editModeDevPlugin = null;
@@ -196,7 +197,38 @@ export default defineConfig({
 		// TEMPORARILY DISABLED: Visual editor plugins causing dashboard access issues
 		// ...(isDev ? [inlineEditPlugin(), editModeDevPlugin()] : []),
 		react(),
-		addTransformIndexHtml
+		addTransformIndexHtml,
+		VitePWA({
+			// We already register SW manually in src/main.jsx; avoid double injection
+			injectRegister: 'none',
+			registerType: 'autoUpdate',
+					workbox: {
+						globPatterns: ['**/*.{js,css,html,ico,png,svg,jpg,jpeg}'],
+						navigateFallback: '/index.html',
+						maximumFileSizeToCacheInBytes: 10 * 1024 * 1024 // 10MB to include large bundles/assets
+					},
+			includeAssets: [
+				'favicon.ico',
+				'favicon.svg',
+				'teranga-foncier-logo.png',
+				'teranga-foncier-logo.svg'
+			],
+			// Use a minimal manifest here; index.html also links to public/manifest.json
+			// This ensures PWA metadata exists even if the link tag is omitted in some flows
+			manifest: {
+				name: 'Teranga Foncier',
+				short_name: 'Teranga',
+				start_url: '/',
+				display: 'standalone',
+				background_color: '#ffffff',
+				theme_color: '#e67e22',
+				icons: [
+					{ src: '/teranga-foncier-logo.png', sizes: '192x192', type: 'image/png' },
+					{ src: '/teranga-foncier-logo.png', sizes: '512x512', type: 'image/png' },
+					{ src: '/teranga-foncier-logo.png', sizes: '512x512', type: 'image/png', purpose: 'any maskable' }
+				]
+			}
+		})
 	],
 	server: {
 		host: 'localhost',
@@ -224,6 +256,7 @@ export default defineConfig({
 		'process.env': process.env
 	},
 	build: {
+		sourcemap: true,
 		rollupOptions: {
 			external: [
 				'@babel/parser',

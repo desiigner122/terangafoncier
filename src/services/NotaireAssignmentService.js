@@ -1,0 +1,921 @@
+import { supabase } from '@/lib/supabaseClient';
+import NotificationService from './NotificationService';
+
+/**
+ * 🎯 NotaireAssignmentService
+ * Service pour gérer l'attribution des notaires aux dossiers de vente
+ * 
+ * Workflow:
+ * 1. Acheteur/Vendeur propose un notaire (ou système auto)
+ * 2. Les 2 parties doivent approuver le choix
+ * 3. Notaire a 24h pour accepter/refuser
+ * 4. Si accepté → Notaire assigné au dossier
+ */
+
+class NotaireAssignmentService {
+  
+  /**
+   * 🔍 Trouver les meilleurs notaires pour un dossier
+   * Algorithme de scoring intelligent
+   */
+  static async findBestNotaires(caseId, options = {}) {
+    try {
+      const { limit = 3, autoSelect = false } = options;
+      
+      console.log('🔍 [NotaireService] Recherche notaires pour case:', caseId, 'options:', options);
+      
+      // 1. Récupérer infos du dossier
+      const { data: purchaseCase, error: caseError } = await supabase
+        .from('purchase_cases')
+        .select(`
+          *,
+          parcelle:parcels(
+            id,
+            title
+          )
+        `)
+        .eq('id', caseId)
+        .single();
+      
+      if (caseError) {
+        console.error('❌ [NotaireService] Erreur purchase_case:', caseError);
+        throw caseError;
+      }
+      
+      console.log('📦 [NotaireService] Purchase case:', purchaseCase);
+      
+      // 2. Récupérer tous les utilisateurs avec le rôle "notaire"
+      // Recherche dans profiles avec role='notaire' au lieu de notaire_profiles
+      const { data: notaireProfiles, error: notairesError } = await supabase
+        .from('profiles')
+        .select(`
+          id,
+          email,
+          full_name,
+          avatar_url,
+          phone,
+          role
+        `)
+        .eq('role', 'notaire');
+      
+      if (notairesError) {
+        console.error('❌ [NotaireService] Erreur profiles notaires:', notairesError);
+        throw notairesError;
+      }
+      
+      console.log('👔 [NotaireService] Notaires trouvés:', notaireProfiles?.length, notaireProfiles);
+      
+      if (!notaireProfiles || notaireProfiles.length === 0) {
+        console.warn('⚠️ [NotaireService] Aucun notaire inscrit sur la plateforme');
+        return { 
+          success: false, 
+          error: 'Aucun notaire inscrit pour le moment. Veuillez réessayer plus tard.',
+          data: [] 
+        };
+      }
+      
+      // Convertir en format attendu (simuler notaire_profiles)
+      const availableNotaires = notaireProfiles.map(profile => ({
+        id: profile.id,
+        user_id: profile.id,
+        profile: profile,
+        office_name: profile.full_name || profile.email,
+        current_cases_count: 0, // Par défaut
+        max_concurrent_cases: 10,
+        is_available: true,
+        is_accepting_cases: true,
+        office_latitude: null,
+        office_longitude: null
+      }));
+      
+      console.log('✅ [NotaireService] Notaires disponibles:', availableNotaires.length);
+      
+      // 3. Calculer score pour chaque notaire
+      const scoredNotaires = availableNotaires.map(notaire => {
+        const score = this.calculateNotaireScore(notaire, purchaseCase);
+        
+        // Calcul distance si coordonnées GPS disponibles (sinon null)
+        const distance = (purchaseCase.parcelle?.latitude && purchaseCase.parcelle?.longitude)
+          ? this.calculateDistance(
+              notaire.office_latitude,
+              notaire.office_longitude,
+              purchaseCase.parcelle.latitude,
+              purchaseCase.parcelle.longitude
+            )
+          : null;
+        
+        return {
+          ...notaire,
+          score,
+          distance: distance ? parseFloat(distance.toFixed(2)) : null,
+          capacity_percentage: (notaire.current_cases_count / notaire.max_concurrent_cases * 100).toFixed(0),
+          available_slots: notaire.max_concurrent_cases - notaire.current_cases_count
+        };
+      });
+      
+      // 4. Trier par score décroissant
+      const bestNotaires = scoredNotaires
+        .sort((a, b) => b.score - a.score)
+        .slice(0, limit);
+      
+      // 5. Si auto-select demandé, proposer directement le meilleur
+      if (autoSelect && bestNotaires.length > 0) {
+        await this.proposeNotaire(caseId, bestNotaires[0].id, {
+          proposedBy: 'system',
+          score: bestNotaires[0].score,
+          distance: bestNotaires[0].distance,
+          reason: 'Attribution automatique - Meilleur score'
+        });
+      }
+      
+      return { success: true, data: bestNotaires };
+      
+    } catch (error) {
+      console.error('Erreur findBestNotaires:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * 🧮 Calculer le score d'un notaire (0-100)
+   */
+  static calculateNotaireScore(notaire, purchaseCase) {
+    let score = 100;
+    
+    // 1. DISTANCE (-2 points par km, max -50 points)
+    if (notaire.office_latitude && notaire.office_longitude && 
+        purchaseCase.parcelle?.latitude && purchaseCase.parcelle?.longitude) {
+      const distance = this.calculateDistance(
+        notaire.office_latitude,
+        notaire.office_longitude,
+        purchaseCase.parcelle.latitude,
+        purchaseCase.parcelle.longitude
+      );
+      score -= Math.min(distance * 2, 50);
+    }
+    
+    // 2. CHARGE DE TRAVAIL (-30 points si saturé)
+    const loadPercentage = notaire.current_cases_count / notaire.max_concurrent_cases;
+    score -= loadPercentage * 30;
+    
+    // 3. RATING (+20 si ≥4.5 étoiles)
+    if (notaire.rating >= 4.5) {
+      score += 20;
+    } else if (notaire.rating >= 4.0) {
+      score += 10;
+    } else if (notaire.rating >= 3.5) {
+      score += 5;
+    }
+    
+    // 4. EXPÉRIENCE (+15 si >30 jours moyenne)
+    if (notaire.average_completion_days && notaire.average_completion_days <= 30) {
+      score += 15;
+    } else if (notaire.average_completion_days && notaire.average_completion_days <= 45) {
+      score += 8;
+    }
+    
+    // 5. SPÉCIALISATION (+10 si spécialiste terrain)
+    if (notaire.specializations && notaire.specializations.includes('terrain')) {
+      score += 10;
+    }
+    
+    // 6. NOMBRE DE DOSSIERS COMPLÉTÉS (+10 si >50)
+    if (notaire.total_cases_completed > 50) {
+      score += 10;
+    } else if (notaire.total_cases_completed > 20) {
+      score += 5;
+    }
+    
+    // 7. VÉRIFICATION (+5 si vérifié)
+    if (notaire.is_verified) {
+      score += 5;
+    }
+    
+    // 8. RÉGION (+15 si même région)
+    if (notaire.office_region === purchaseCase.parcelle?.region) {
+      score += 15;
+    }
+    
+    // 9. TEMPS DE RÉPONSE (+10 si <6h moyenne)
+    if (notaire.average_response_hours && notaire.average_response_hours <= 6) {
+      score += 10;
+    }
+    
+    return Math.max(0, Math.round(score));
+  }
+  
+  /**
+   * 📐 Calculer distance entre 2 points GPS (formule Haversine)
+   * Retourne la distance en kilomètres
+   */
+  static calculateDistance(lat1, lon1, lat2, lon2) {
+    if (!lat1 || !lon1 || !lat2 || !lon2) return null;
+    
+    const R = 6371; // Rayon de la Terre en km
+    const dLat = this.deg2rad(lat2 - lat1);
+    const dLon = this.deg2rad(lon2 - lon1);
+    
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(this.deg2rad(lat1)) * Math.cos(this.deg2rad(lat2)) *
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    
+    return distance;
+  }
+  
+  static deg2rad(deg) {
+    return deg * (Math.PI / 180);
+  }
+  
+  /**
+   * 📤 Proposer un notaire pour un dossier
+   */
+  static async proposeNotaire(caseId, notaireId, options = {}) {
+    try {
+      const { 
+        proposedBy = null, 
+        proposedByRole = 'system',
+        score = null,
+        distance = null,
+        reason = '',
+        quotedFee = null
+      } = options;
+      
+      // Vérifier si déjà proposé (sans .single() pour éviter erreur PGRST116)
+      const { data: existing, error: checkError } = await supabase
+        .from('notaire_case_assignments')
+        .select('id')
+        .eq('case_id', caseId)
+        .eq('notaire_id', notaireId)
+        .in('status', ['pending', 'buyer_approved', 'seller_approved', 'both_approved']);
+      
+      if (checkError) {
+        console.error('❌ [NotaireService] Erreur vérification assignment:', checkError);
+      }
+      
+      if (existing && existing.length > 0) {
+        console.log('⚠️ [NotaireService] Notaire déjà proposé, assignment existant:', existing[0].id);
+        return { 
+          success: false, 
+          error: 'Ce notaire a déjà été proposé pour ce dossier' 
+        };
+      }
+      
+      console.log('✅ [NotaireService] Aucun assignment existant, création nouveau...');
+      
+      const assignmentData = {
+        case_id: caseId,
+        notaire_id: notaireId,
+        proposed_by: proposedBy,
+        proposed_by_role: proposedByRole,
+        status: 'pending',
+        assignment_score: score,
+        distance_km: distance,
+        assignment_reason: reason,
+        quoted_fee: quotedFee,
+        expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24h
+      };
+      
+      console.log('📝 [NotaireService] Données assignment:', assignmentData);
+      
+      // Créer l'assignment
+      const { data: assignment, error } = await supabase
+        .from('notaire_case_assignments')
+        .insert(assignmentData)
+        .select()
+        .single();
+      
+      if (error) {
+        console.error('❌ [NotaireService] Erreur insertion assignment:', error);
+        throw error;
+      }
+      
+      console.log('🎉 [NotaireService] Assignment créé avec succès:', assignment);
+      
+      // Ne PAS mettre à jour le statut du purchase_case - attendre l'acceptation du notaire
+      // On met seulement à jour le notaire_id pour référence
+      const { error: updateError } = await supabase
+        .from('purchase_cases')
+        .update({ 
+          notaire_id: notaireId,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', caseId);
+      
+      if (updateError) {
+        console.error('❌ [NotaireService] Erreur mise à jour notaire_id:', updateError);
+      } else {
+        console.log('✅ [NotaireService] Notaire_id assigné, en attente d\'acceptation');
+      }
+      
+      // Créer événement timeline pour la proposition (pas le changement de statut)
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: caseId,
+          event_type: 'notaire_proposed',
+          title: 'Notaire proposé',
+          description: `${proposedByRole === 'buyer' ? 'L\'acheteur' : proposedByRole === 'seller' ? 'Le vendeur' : 'Le système'} a proposé un notaire pour ce dossier. En attente d'acceptation.`,
+          triggered_by: proposedBy,
+          metadata: {
+            notaire_id: notaireId,
+            assignment_id: assignment.id,
+            proposed_by_role: proposedByRole,
+            status: 'pending'
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      } else {
+        console.log('✅ [NotaireService] Timeline event créé');
+      }
+      
+      // TODO: Envoyer notification au notaire (à implémenter)
+      // await NotificationService.send({...});
+      
+      return { success: true, data: assignment };
+      
+    } catch (error) {
+      console.error('Erreur proposeNotaire:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * ✅ Acheteur/Vendeur approuve un notaire
+   */
+  static async approveNotaire(assignmentId, userId, role) {
+    try {
+      // role = 'buyer' ou 'seller'
+      const updateField = role === 'buyer' ? 'buyer_approved' : 'seller_approved';
+      const updateDateField = role === 'buyer' ? 'buyer_approved_at' : 'seller_approved_at';
+      
+      // 1. Get current assignment state with full case data
+      const { data: currentAssignment, error: fetchError } = await supabase
+        .from('notaire_case_assignments')
+        .select(`
+          *,
+          case:case_id(
+            id,
+            buyer_id,
+            seller_id,
+            parcelle:parcelle_id(title, location)
+          ),
+          notaire:notaire_id(id, full_name)
+        `)
+        .eq('id', assignmentId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // 2. Update approval
+      const { data, error } = await supabase
+        .from('notaire_case_assignments')
+        .update({
+          [updateField]: true,
+          [updateDateField]: new Date().toISOString()
+        })
+        .eq('id', assignmentId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      console.log(`✅ [NotaireService] ${role} a approuvé l'assignation:`, data);
+      
+      // 3. Check if both have approved
+      const buyerApproved = role === 'buyer' ? true : currentAssignment.buyer_approved;
+      const sellerApproved = role === 'seller' ? true : currentAssignment.seller_approved;
+      const bothApproved = buyerApproved && sellerApproved;
+      
+      // 4. Create timeline event
+      const roleLabel = role === 'buyer' ? 'L\'acheteur' : 'Le vendeur';
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: currentAssignment.case_id,
+          event_type: `notaire_approved_by_${role}`,
+          title: `${roleLabel} a approuvé le notaire`,
+          description: bothApproved 
+            ? `${roleLabel} a approuvé le notaire proposé. Les deux parties ont maintenant approuvé. Le notaire peut accepter le dossier.`
+            : `${roleLabel} a approuvé le notaire proposé. En attente de l'approbation de ${role === 'buyer' ? 'du vendeur' : 'de l\'acheteur'}.`,
+          triggered_by: userId,
+          metadata: {
+            assignment_id: assignmentId,
+            buyer_approved: buyerApproved,
+            seller_approved: sellerApproved,
+            both_approved: bothApproved
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      }
+      
+      // 5. Send notifications
+      const notaireName = currentAssignment.notaire?.full_name || 'le notaire';
+      const parcelleTitle = currentAssignment.case?.parcelle?.title || 'le bien';
+      
+      // Notify the other party (buyer or seller)
+      const otherPartyId = role === 'buyer' ? currentAssignment.case?.seller_id : currentAssignment.case?.buyer_id;
+      if (otherPartyId) {
+        await NotificationService.sendInAppNotification({
+          user_id: otherPartyId,
+          case_id: currentAssignment.case_id,
+          type: 'notaire_approval',
+          title: `${roleLabel} a approuvé le notaire`,
+          message: bothApproved
+            ? `${roleLabel} a approuvé ${notaireName}. Les deux parties ont approuvé. Le notaire peut maintenant accepter le dossier pour ${parcelleTitle}.`
+            : `${roleLabel} a approuvé ${notaireName} pour le dossier de ${parcelleTitle}. Votre approbation est ${role === 'buyer' ? 'déjà enregistrée' : 'maintenant requise'}.`,
+          priority: bothApproved ? 'high' : 'medium',
+          metadata: {
+            assignment_id: assignmentId,
+            buyer_approved: buyerApproved,
+            seller_approved: sellerApproved,
+            both_approved: bothApproved,
+            notaire_name: notaireName
+          }
+        });
+      }
+      
+      // If both approved, update status and notify notaire
+      if (bothApproved) {
+        const { error: statusError } = await supabase
+          .from('notaire_case_assignments')
+          .update({ status: 'both_approved' })
+          .eq('id', assignmentId);
+          
+        if (statusError) {
+          console.error('❌ [NotaireService] Erreur mise à jour statut:', statusError);
+        } else {
+          console.log('🎉 [NotaireService] Les deux parties ont approuvé - Notaire peut accepter');
+        }
+        
+        // Notify notaire that case is ready to accept
+        await NotificationService.sendInAppNotification({
+          user_id: currentAssignment.notaire_id,
+          case_id: currentAssignment.case_id,
+          type: 'notaire_ready_to_accept',
+          title: '✅ Dossier prêt à accepter',
+          message: `Les deux parties (acheteur et vendeur) ont approuvé votre assignation pour ${parcelleTitle}. Vous pouvez maintenant accepter ce dossier et commencer la préparation du contrat.`,
+          priority: 'high',
+          metadata: {
+            assignment_id: assignmentId,
+            buyer_approved: true,
+            seller_approved: true,
+            both_approved: true,
+            parcelle_title: parcelleTitle
+          }
+        });
+      }
+      
+      return { success: true, data, bothApproved };
+      
+    } catch (error) {
+      console.error('Erreur approveNotaire:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * ✅ Notaire accepte le dossier
+   */
+  static async acceptAssignment(assignmentId, notaireId, quotedFee = 0, quotedDisbursements = 0, justification = '') {
+    try {
+      // 1. Get assignment data first and verify approvals
+      const { data: assignmentData, error: fetchError } = await supabase
+        .from('notaire_case_assignments')
+        .select('case_id, status, buyer_approved, seller_approved')
+        .eq('id', assignmentId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // 2. Vérifier que les deux parties ont approuvé
+      if (!assignmentData.buyer_approved || !assignmentData.seller_approved) {
+        console.error('❌ [NotaireService] Approbations incomplètes:', {
+          buyer_approved: assignmentData.buyer_approved,
+          seller_approved: assignmentData.seller_approved
+        });
+        return {
+          success: false,
+          error: 'Le notaire ne peut accepter que si les deux parties (acheteur et vendeur) ont approuvé l\'assignation.'
+        };
+      }
+      
+      console.log('✅ [NotaireService] Approbations vérifiées - Acceptation autorisée');
+      
+      // 3. Mettre à jour l'assignment
+      const { data: assignment, error: updateError } = await supabase
+        .from('notaire_case_assignments')
+        .update({ 
+          notaire_status: 'accepted',
+          notaire_responded_at: new Date().toISOString(),
+          quoted_fee: quotedFee,
+          quoted_disbursements: quotedDisbursements,
+          justification: justification
+        })
+        .eq('id', assignmentId)
+        .eq('notaire_id', notaireId)
+        .select()
+        .single();
+      
+      if (updateError) throw updateError;
+      
+      console.log('✅ [NotaireService] Assignment accepté:', assignment);
+      
+      // 4. Mettre à jour le statut du purchase_case vers contract_preparation
+      const { data: purchaseCase, error: caseUpdateError } = await supabase
+        .from('purchase_cases')
+        .update({
+          status: 'contract_preparation',
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', assignmentData.case_id)
+        .select('status')
+        .single();
+      
+      if (caseUpdateError) throw caseUpdateError;
+      
+      console.log('✅ [NotaireService] Purchase case statut mis à jour:', purchaseCase);
+      
+      // 5. Créer événement timeline pour l'acceptation
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: assignmentData.case_id,
+          event_type: 'notaire_accepted',
+          title: 'Notaire a accepté le dossier',
+          description: `Le notaire a accepté le dossier et fixé ses honoraires à ${quotedFee.toLocaleString()} FCFA. La préparation du contrat peut commencer.`,
+          triggered_by: notaireId,
+          metadata: {
+            assignment_id: assignmentId,
+            quoted_fee: quotedFee,
+            quoted_disbursements: quotedDisbursements,
+            old_status: 'pending',
+            new_status: 'contract_preparation'
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      } else {
+        console.log('✅ [NotaireService] Timeline event créé');
+      }
+      
+      // TODO: Envoyer notifications aux parties (acheteur et vendeur)
+      
+      return { success: true, data: assignment };
+      
+    } catch (error) {
+      console.error('Erreur acceptAssignment:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * ❌ Notaire refuse le dossier
+   */
+  static async declineAssignment(assignmentId, notaireId, reason = '') {
+    try {
+      // 1. Get assignment data first
+      const { data: assignmentData, error: fetchError } = await supabase
+        .from('notaire_case_assignments')
+        .select('case_id')
+        .eq('id', assignmentId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // 2. Update assignment with decline
+      const { data, error } = await supabase
+        .from('notaire_case_assignments')
+        .update({ 
+          notaire_status: 'declined',
+          notaire_responded_at: new Date().toISOString(),
+          decline_reason: reason
+        })
+        .eq('id', assignmentId)
+        .eq('notaire_id', notaireId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      console.log('✅ [NotaireService] Assignment refusé:', data);
+      
+      // 3. Créer événement timeline
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: assignmentData.case_id,
+          event_type: 'notaire_declined',
+          title: 'Notaire a refusé le dossier',
+          description: `Le notaire a refusé le dossier. Raison: ${reason}`,
+          triggered_by: notaireId,
+          metadata: {
+            assignment_id: assignmentId,
+            decline_reason: reason
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      }
+      
+      // TODO: Suggérer un autre notaire automatiquement
+      // TODO: Envoyer notifications aux parties
+      
+      return { success: true, data };
+      
+    } catch (error) {
+      console.error('Erreur declineAssignment:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * � Mettre à jour les frais notariaux (après acceptation)
+   */
+  static async updateNotaryFees(assignmentId, notaireId, quotedFee = 0, quotedDisbursements = 0, justification = '') {
+    try {
+      // 1. Get current assignment to verify notaire owns it and it's accepted
+      const { data: assignmentData, error: fetchError } = await supabase
+        .from('notaire_case_assignments')
+        .select('case_id, notaire_id, notaire_status, quoted_fee')
+        .eq('id', assignmentId)
+        .single();
+        
+      if (fetchError) throw fetchError;
+      
+      // 2. Verify ownership
+      if (assignmentData.notaire_id !== notaireId) {
+        return {
+          success: false,
+          error: 'Vous n\'êtes pas autorisé à modifier ces frais'
+        };
+      }
+      
+      // 3. Verify assignment is accepted
+      if (assignmentData.notaire_status !== 'accepted') {
+        return {
+          success: false,
+          error: 'Vous devez d\'abord accepter l\'assignation avant de modifier les frais'
+        };
+      }
+      
+      const oldFee = assignmentData.quoted_fee || 0;
+      
+      // 4. Update fees
+      const { data, error } = await supabase
+        .from('notaire_case_assignments')
+        .update({
+          quoted_fee: quotedFee,
+          quoted_disbursements: quotedDisbursements,
+          justification: justification,
+          fees_updated_at: new Date().toISOString()
+        })
+        .eq('id', assignmentId)
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      console.log('✅ [NotaireService] Frais mis à jour:', data);
+      
+      // 5. Create timeline event
+      const isUpdate = oldFee > 0;
+      const { error: timelineError } = await supabase
+        .from('purchase_case_timeline')
+        .insert({
+          case_id: assignmentData.case_id,
+          event_type: isUpdate ? 'notaire_fees_updated' : 'notaire_fees_set',
+          title: isUpdate ? 'Frais notariaux mis à jour' : 'Frais notariaux définis',
+          description: isUpdate 
+            ? `Le notaire a mis à jour ses honoraires de ${oldFee.toLocaleString()} FCFA à ${quotedFee.toLocaleString()} FCFA (débours: ${quotedDisbursements.toLocaleString()} FCFA).`
+            : `Le notaire a fixé ses honoraires à ${quotedFee.toLocaleString()} FCFA (débours: ${quotedDisbursements.toLocaleString()} FCFA).`,
+          triggered_by: notaireId,
+          metadata: {
+            assignment_id: assignmentId,
+            old_fee: oldFee,
+            new_fee: quotedFee,
+            quoted_disbursements: quotedDisbursements,
+            justification: justification
+          }
+        });
+      
+      if (timelineError) {
+        console.error('❌ [NotaireService] Erreur création timeline:', timelineError);
+      }
+      
+      // 6. Notify buyer and seller of fee changes
+      if (isUpdate) {
+        // TODO: Send notifications to buyer and seller about fee update
+        console.log('📬 [NotaireService] TODO: Notifier acheteur et vendeur de la mise à jour des frais');
+      }
+      
+      return { success: true, data };
+      
+    } catch (error) {
+      console.error('Erreur updateNotaryFees:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * �📋 Récupérer les assignments d'un dossier
+   */
+  static async getCaseAssignments(caseId) {
+    try {
+      const { data, error } = await supabase
+        .from('notaire_case_assignments')
+        .select(`
+          *,
+          notaire:profiles!notaire_case_assignments_notaire_id_fkey(
+            id,
+            full_name,
+            email,
+            avatar_url
+          ),
+          notaire_profile:notaire_profiles(
+            office_name,
+            office_region,
+            office_address,
+            rating,
+            reviews_count,
+            specializations
+          )
+        `)
+        .eq('case_id', caseId)
+        .order('created_at', { ascending: false });
+      
+      if (error) throw error;
+      
+      return { success: true, data: data || [] };
+      
+    } catch (error) {
+      console.error('Erreur getCaseAssignments:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * 📋 Récupérer les assignments en attente pour un notaire
+   */
+  static async getPendingAssignments(notaireId) {
+    try {
+      const { data, error } = await supabase
+        .from('notaire_case_assignments')
+        .select(`
+          *,
+          purchase_case:purchase_cases(
+            id,
+            case_number,
+            purchase_price,
+            status,
+            buyer:profiles!purchase_cases_buyer_id_fkey(id, full_name, email),
+            seller:profiles!purchase_cases_seller_id_fkey(id, full_name, email),
+            parcelle:parcels(id, title, region, commune, surface)
+          )
+        `)
+        .eq('notaire_id', notaireId)
+        .eq('status', 'both_approved')
+        .eq('notaire_status', 'pending')
+        .gt('expires_at', new Date().toISOString())
+        .order('created_at', { ascending: true });
+      
+      if (error) throw error;
+      
+      return { success: true, data: data || [] };
+      
+    } catch (error) {
+      console.error('Erreur getPendingAssignments:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * ⭐ Créer une review pour un notaire
+   */
+  static async createReview(caseId, notaireId, reviewerId, reviewData) {
+    try {
+      const { data, error } = await supabase
+        .from('notaire_reviews')
+        .insert({
+          case_id: caseId,
+          notaire_id: notaireId,
+          reviewer_id: reviewerId,
+          reviewer_role: reviewData.reviewer_role, // 'buyer' ou 'seller'
+          rating: reviewData.rating,
+          professionalism_rating: reviewData.professionalism_rating,
+          communication_rating: reviewData.communication_rating,
+          speed_rating: reviewData.speed_rating,
+          expertise_rating: reviewData.expertise_rating,
+          comment: reviewData.comment,
+          would_recommend: reviewData.would_recommend,
+          status: 'published'
+        })
+        .select()
+        .single();
+      
+      if (error) throw error;
+      
+      // Le trigger va auto-update la note moyenne du notaire
+      
+      return { success: true, data };
+      
+    } catch (error) {
+      console.error('Erreur createReview:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * 📊 Récupérer les reviews d'un notaire
+   */
+  static async getNotaireReviews(notaireId, limit = 10) {
+    try {
+      const { data, error } = await supabase
+        .from('notaire_reviews')
+        .select(`
+          *,
+          reviewer:profiles!notaire_reviews_reviewer_id_fkey(
+            id,
+            full_name,
+            avatar_url
+          ),
+          case:purchase_cases(
+            case_number,
+            completed_at
+          )
+        `)
+        .eq('notaire_id', notaireId)
+        .eq('status', 'published')
+        .order('created_at', { ascending: false })
+        .limit(limit);
+      
+      if (error) throw error;
+      
+      return { success: true, data: data || [] };
+      
+    } catch (error) {
+      console.error('Erreur getNotaireReviews:', error);
+      return { success: false, error: error.message };
+    }
+  }
+  
+  /**
+   * 🔍 Rechercher des notaires avec filtres
+   */
+  static async searchNotaires(filters = {}) {
+    try {
+      let query = supabase
+        .from('profiles')
+        .select('*')
+        .eq('role', 'notaire');
+      
+      // Les filtres suivants ne fonctionneront que si ces colonnes existent dans profiles
+      // Sinon ils seront simplement ignorés
+      
+      if (filters.region) {
+        query = query.eq('office_region', filters.region);
+      }
+      
+      if (filters.minRating) {
+        query = query.gte('rating', filters.minRating);
+      }
+      
+      if (filters.hasAvailableSlots) {
+        // Ignorer ce filtre si les colonnes n'existent pas
+        // query = query.lt('current_cases_count', supabase.ref('max_concurrent_cases'));
+      }
+      
+      if (filters.specialization) {
+        query = query.contains('specializations', [filters.specialization]);
+      }
+      
+      query = query.order('rating', { ascending: false })
+                   .order('reviews_count', { ascending: false });
+      
+      if (filters.limit) {
+        query = query.limit(filters.limit);
+      }
+      
+      const { data, error } = await query;
+      
+      if (error) throw error;
+      
+      return { success: true, data: data || [] };
+      
+    } catch (error) {
+      console.error('Erreur searchNotaires:', error);
+      return { success: false, error: error.message };
+    }
+  }
+}
+
+export default NotaireAssignmentService;

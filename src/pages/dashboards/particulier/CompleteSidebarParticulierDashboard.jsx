@@ -46,6 +46,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { useUnreadCounts } from '@/hooks/useUnreadCounts';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
 import TerangaLogo from '@/components/ui/TerangaLogo';
@@ -59,59 +60,9 @@ const CompleteSidebarParticulierDashboard = () => {
   
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
-  const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
-
-  // Charger les compteurs au chargement
-  React.useEffect(() => {
-    if (user) {
-      loadUnreadCounts();
-      
-      // Souscription aux changements en temps réel
-      const messagesSubscription = supabase
-        .channel('messages_changes')
-        .on('postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${user.id}` },
-          () => loadUnreadCounts()
-        )
-        .subscribe();
-
-      const notificationsSubscription = supabase
-        .channel('notifications_changes')
-        .on('postgres_changes',
-          { event: 'INSERT', schema: 'public', table: 'notifications', filter: `user_id=eq.${user.id}` },
-          () => loadUnreadCounts()
-        )
-        .subscribe();
-
-      return () => {
-        messagesSubscription.unsubscribe();
-        notificationsSubscription.unsubscribe();
-      };
-    }
-  }, [user]);
-
-  const loadUnreadCounts = async () => {
-    try {
-      const { count: messagesCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .is('read_at', null);
-      
-      setUnreadMessagesCount(messagesCount || 0);
-
-      const { count: notificationsCount } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-      
-      setUnreadNotificationsCount(notificationsCount || 0);
-    } catch (error) {
-      console.error('Erreur chargement compteurs:', error);
-    }
-  };
+  
+  // Use the real-time unread counts hook
+  const { unreadMessagesCount, unreadNotificationsCount } = useUnreadCounts();
 
   // Fonction de déconnexion
   const handleLogout = async () => {
@@ -408,35 +359,63 @@ const CompleteSidebarParticulierDashboard = () => {
 
             {/* Actions et Profil */}
             <div className="flex items-center gap-2">
-              {/* Notifications */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/acheteur/notifications')}
-                className="relative"
-              >
-                <Bell className="h-4 w-4" />
-                {unreadNotificationsCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
-                    {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
-                  </span>
-                )}
-              </Button>
+              {/* Notifications dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="relative"
+                  >
+                    <Bell className="h-4 w-4" />
+                    {unreadNotificationsCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full text-xs text-white flex items-center justify-center">
+                        {unreadNotificationsCount > 9 ? '9+' : unreadNotificationsCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="px-3 py-2 font-medium">Notifications</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled>
+                    <span className="text-sm text-slate-600">Aucune notification récente</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/acheteur/notifications')}>
+                    Voir toutes les notifications
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
-              {/* Messages avec notification */}
-              <Button 
-                variant="ghost" 
-                size="sm"
-                onClick={() => navigate('/acheteur/messages')}
-                className="relative"
-              >
-                <MessageSquare className="h-4 w-4" />
-                {unreadMessagesCount > 0 && (
-                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full text-xs text-white flex items-center justify-center">
-                    {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
-                  </span>
-                )}
-              </Button>
+              {/* Messages dropdown */}
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="relative"
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    {unreadMessagesCount > 0 && (
+                      <span className="absolute -top-1 -right-1 w-5 h-5 bg-blue-500 rounded-full text-xs text-white flex items-center justify-center">
+                        {unreadMessagesCount > 9 ? '9+' : unreadMessagesCount}
+                      </span>
+                    )}
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-80">
+                  <div className="px-3 py-2 font-medium">Messages récents</div>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem disabled>
+                    <span className="text-sm text-slate-600">Aucun message récent</span>
+                  </DropdownMenuItem>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={() => navigate('/acheteur/messages')}>
+                    Voir tous les messages
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
 
               {/* Calendrier */}
               <Button 
@@ -480,7 +459,7 @@ const CompleteSidebarParticulierDashboard = () => {
         </header>
 
         {/* Page Content */}
-        <main className="flex-1 overflow-auto bg-slate-50/50">
+  <main className="flex-1 overflow-auto bg-slate-50/50 p-3 sm:p-4 lg:p-6">
           <Suspense 
             fallback={
               <div className="flex items-center justify-center h-64">

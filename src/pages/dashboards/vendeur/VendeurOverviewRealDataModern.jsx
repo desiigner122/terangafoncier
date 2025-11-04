@@ -354,16 +354,17 @@ const VendeurOverviewRealDataModern = () => {
   }
 
   return (
-    <div className="space-y-6 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50/20">
+      <div className="px-4 sm:px-6 md:px-8 py-4 sm:py-6 space-y-6 max-w-7xl mx-auto">
       {/* 🎯 HEADER MODERNE */}
-      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+  <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Tableau de Bord</h1>
-          <p className="text-gray-600 mt-1">
+          <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Tableau de Bord</h1>
+          <p className="text-sm sm:text-base text-gray-600 mt-1">
             Bienvenue {user?.user_metadata?.full_name || user?.email} 👋
           </p>
         </div>
-        <div className="flex gap-3">
+  <div className="flex gap-2 sm:gap-3 flex-wrap">
           <Button 
             variant="outline" 
             onClick={handleRefresh}
@@ -382,7 +383,7 @@ const VendeurOverviewRealDataModern = () => {
         </div>
       </div>
 
-      {/* 🔔 ALERTES IMPORTANTES */}
+  {/* 🔔 ALERTES IMPORTANTES */}
       {alerts.length > 0 && (
         <div className="grid grid-cols-1 gap-3">
           {alerts.map((alert, idx) => (
@@ -400,12 +401,12 @@ const VendeurOverviewRealDataModern = () => {
                 }`}
                 onClick={alert.action}
               >
-                <CardContent className="flex items-center justify-between p-4">
-                  <div className="flex items-center gap-3">
-                    <alert.icon className="h-5 w-5 text-gray-700" />
-                    <span className="text-sm font-medium text-gray-800">{alert.message}</span>
+                <CardContent className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 gap-2">
+                  <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                    <alert.icon className="h-4 w-4 sm:h-5 sm:w-5 text-gray-700 flex-shrink-0" />
+                    <span className="text-xs sm:text-sm font-medium text-gray-800 break-words">{alert.message}</span>
                   </div>
-                  <Button size="sm" variant="ghost">
+                  <Button size="sm" variant="ghost" className="self-end sm:self-auto flex-shrink-0">
                     Voir <ExternalLink className="h-3 w-3 ml-1" />
                   </Button>
                 </CardContent>
@@ -415,8 +416,8 @@ const VendeurOverviewRealDataModern = () => {
         </div>
       )}
 
-      {/* 📊 STATS CARDS PRINCIPALES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  {/* 📊 STATS CARDS PRINCIPALES */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Propriétés Actives"
           value={dashboardStats.activeProperties}
@@ -449,8 +450,8 @@ const VendeurOverviewRealDataModern = () => {
         />
       </div>
 
-      {/* 📈 STATS SECONDAIRES */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+  {/* 📈 STATS SECONDAIRES */}
+  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
         <StatsCard
           title="Revenus Total"
           value={`${(dashboardStats.totalRevenue / 1000000).toFixed(1)}M`}
@@ -484,7 +485,7 @@ const VendeurOverviewRealDataModern = () => {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+  <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
         {/* 🏆 TOP PROPRIÉTÉS */}
         <Card className="lg:col-span-2">
           <CardHeader>
@@ -509,21 +510,21 @@ const VendeurOverviewRealDataModern = () => {
                     className="flex items-center justify-between p-3 bg-gray-50 rounded-lg hover:bg-gray-100 transition-colors cursor-pointer"
                     onClick={() => navigate(`/parcelle/${generatePropertySlug(property.title || '')}`)}
                   >
-                    <div className="flex items-center gap-3 flex-1">
+                    <div className="flex items-center gap-3">
                       {property.image ? (
-                        <img 
-                          src={property.image} 
+                        <img
+                          src={property.image}
                           alt={property.title}
-                          className="h-12 w-12 rounded object-cover"
+                          className="h-10 w-10 sm:h-12 sm:w-12 rounded object-cover flex-shrink-0"
                         />
                       ) : (
-                        <div className="h-12 w-12 rounded bg-gray-200 flex items-center justify-center">
-                          <Building2 className="h-6 w-6 text-gray-400" />
+                        <div className="h-10 w-10 sm:h-12 sm:w-12 rounded bg-gray-200 flex items-center justify-center flex-shrink-0">
+                          <Building2 className="h-5 w-5 sm:h-6 sm:w-6 text-gray-400" />
                         </div>
                       )}
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{property.title}</p>
-                        <div className="flex items-center gap-2 mt-1">
+                        <p className="font-medium text-xs sm:text-sm truncate">{property.title}</p>
+                        <div className="flex items-center gap-2 mt-1 flex-wrap">
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
                             <Eye className="h-3 w-3" /> {property.views}
                           </span>
@@ -533,17 +534,17 @@ const VendeurOverviewRealDataModern = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
                       {property.aiOptimized && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs px-1 sm:px-2">
                           <Brain className="h-3 w-3 mr-1" />
-                          IA
+                          <span className="hidden sm:inline">IA</span>
                         </Badge>
                       )}
                       {property.blockchainVerified && (
-                        <Badge variant="secondary" className="text-xs">
+                        <Badge variant="secondary" className="text-xs px-1 sm:px-2">
                           <Shield className="h-3 w-3 mr-1" />
-                          BC
+                          <span className="hidden sm:inline">BC</span>
                         </Badge>
                       )}
                     </div>
@@ -603,45 +604,46 @@ const VendeurOverviewRealDataModern = () => {
       {/* 🚀 ACTIONS RAPIDES */}
       <Card>
         <CardHeader>
-          <CardTitle>Actions Rapides</CardTitle>
+          <CardTitle className="text-base sm:text-lg">Actions Rapides</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
             <Button 
               variant="outline" 
-              className="h-auto flex-col gap-2 py-4"
+              className="h-auto flex-col gap-1 sm:gap-2 py-3 sm:py-4 text-xs sm:text-sm"
               onClick={() => navigate('/vendeur/properties')}
             >
-              <Building2 className="h-6 w-6" />
-              <span className="text-sm">Mes Propriétés</span>
+              <Building2 className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="truncate w-full text-center">Mes Propriétés</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto flex-col gap-2 py-4"
+              className="h-auto flex-col gap-1 sm:gap-2 py-3 sm:py-4 text-xs sm:text-sm"
               onClick={() => navigate('/vendeur/crm')}
             >
-              <Users className="h-6 w-6" />
-              <span className="text-sm">CRM</span>
+              <Users className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="truncate w-full text-center">CRM</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto flex-col gap-2 py-4"
+              className="h-auto flex-col gap-1 sm:gap-2 py-3 sm:py-4 text-xs sm:text-sm"
               onClick={() => navigate('/vendeur/analytics')}
             >
-              <BarChart3 className="h-6 w-6" />
-              <span className="text-sm">Analytics</span>
+              <BarChart3 className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="truncate w-full text-center">Analytics</span>
             </Button>
             <Button 
               variant="outline" 
-              className="h-auto flex-col gap-2 py-4"
+              className="h-auto flex-col gap-1 sm:gap-2 py-3 sm:py-4 text-xs sm:text-sm"
               onClick={() => navigate('/vendeur/ai-assistant')}
             >
-              <Brain className="h-6 w-6" />
-              <span className="text-sm">IA</span>
+              <Brain className="h-5 w-5 sm:h-6 sm:w-6" />
+              <span className="truncate w-full text-center">IA</span>
             </Button>
           </div>
         </CardContent>
       </Card>
+    </div>
     </div>
   );
 };

@@ -94,74 +94,99 @@ const ParticulierMesAchats = () => {
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (requestsError) throw requestsError;
-      console.log('✅ [LOAD] Requests loaded:', requestsData?.length);
+      if (requestsError) {
+        console.error('❌ [LOAD] Erreur chargement requests:', requestsError);
+        throw requestsError;
+      }
+      
+      console.log('✅ [LOAD] Requests loaded:', requestsData?.length || 0);
+      
+      if (!requestsData || requestsData.length === 0) {
+        console.log('ℹ️ [LOAD] Aucune demande d\'achat trouvée pour cet utilisateur');
+        setRequests([]);
+        setLoading(false);
+        return;
+      }
+
+      // Log details of each request
+      requestsData.forEach((req, idx) => {
+        console.log(`   ${idx + 1}. ID: ${req.id}, Status: ${req.status}, Parcel: ${req.parcels?.title || req.parcels?.name || 'N/A'}`);
+      });
 
       // Charger les transactions pour chaque request
-      if (requestsData && requestsData.length > 0) {
-        const requestIds = requestsData.map(r => r.id);
-        console.log('   Request IDs:', requestIds);
-        
-        // 🔥 FIX: Charger aussi les purchase_cases
-        const { data: transactionsData } = await supabase
-          .from('transactions')
-          .select('*')
-          .in('request_id', requestIds);
+      const requestIds = requestsData.map(r => r.id);
+      console.log('   Request IDs:', requestIds);
+      
+      // 🔥 FIX: Charger aussi les purchase_cases
+      const { data: transactionsData, error: transError } = await supabase
+        .from('transactions')
+        .select('*')
+        .in('request_id', requestIds);
 
-        console.log('✅ [LOAD] Transactions loaded:', transactionsData?.length);
-        transactionsData?.forEach(t => {
-          console.log(`   - TX: ${t.id}, Status: ${t.status}, Request: ${t.request_id}`);
-        });
-
-        const { data: purchaseCasesData } = await supabase
-          .from('purchase_cases')
-          .select('id, request_id, case_number, status, created_at, updated_at')
-          .in('request_id', requestIds);
-
-        console.log('✅ [LOAD] Purchase cases loaded:', purchaseCasesData?.length);
-        purchaseCasesData?.forEach(pc => {
-          console.log(`   - PC: ${pc.id}, Case#: ${pc.case_number}, Status: ${pc.status}, RequestID: ${pc.request_id}`);
-        });
-
-        // Créer une map des purchase_cases par request_id
-        const purchaseCaseMap = {};
-        purchaseCasesData?.forEach(pc => {
-          purchaseCaseMap[pc.request_id] = {
-            caseId: pc.id,
-            caseNumber: pc.case_number,
-            caseStatus: pc.status,
-            caseCreatedAt: pc.created_at,
-            caseUpdatedAt: pc.updated_at
-          };
-        });
-
-        console.log('📊 [LOAD] Purchase case map:', purchaseCaseMap);
-
-        // Associer les transactions et purchase_cases aux requests
-        const requestsWithData = requestsData.map(request => {
-          const hasCase = !!purchaseCaseMap[request.id];
-          const caseStatus = purchaseCaseMap[request.id]?.caseStatus;
-          console.log(`   🔗 Request ${request.id}: hasCase=${hasCase}, caseStatus=${caseStatus}`);
-          
-          return {
-            ...request,
-            transactions: transactionsData?.filter(t => t.request_id === request.id) || [],
-            purchaseCase: purchaseCaseMap[request.id] || null,
-            // Pour l'affichage: utiliser le status du purchase_case si existe, sinon du request
-            displayStatus: purchaseCaseMap[request.id]?.caseStatus || request.status
-          };
-        });
-
-        setRequests(requestsWithData);
-        console.log('✅ [LOAD] FINAL requests set:', requestsWithData.length);
-        console.log('   Stats:');
-        requestsWithData.forEach(r => {
-          console.log(`     - ID: ${r.id}, Status: ${r.status}, HasCase: ${!!r.purchaseCase}, CaseStatus: ${r.purchaseCase?.caseStatus}`);
-        });
-      } else {
-        setRequests([]);
-        console.log('✅ [LOAD] Aucune demande d\'achat trouvée');
+      if (transError) {
+        console.warn('⚠️ [LOAD] Erreur chargement transactions:', transError);
+        // Continue sans transactions
       }
+
+      console.log('✅ [LOAD] Transactions loaded:', transactionsData?.length || 0);
+      transactionsData?.forEach(t => {
+        console.log(`   - TX: ${t.id}, Status: ${t.status}, Request: ${t.request_id}`);
+      });
+
+      const { data: purchaseCasesData, error: casesError } = await supabase
+        .from('purchase_cases')
+        .select('id, request_id, case_number, status, created_at, updated_at')
+        .in('request_id', requestIds);
+
+      if (casesError) {
+        console.warn('⚠️ [LOAD] Erreur chargement purchase_cases:', casesError);
+        // Continue sans purchase cases
+      }
+
+      console.log('✅ [LOAD] Purchase cases loaded:', purchaseCasesData?.length || 0);
+      purchaseCasesData?.forEach(pc => {
+        console.log(`   - PC: ${pc.id}, Case#: ${pc.case_number}, Status: ${pc.status}, RequestID: ${pc.request_id}`);
+      });
+
+      // Créer une map des purchase_cases par request_id
+      const purchaseCaseMap = {};
+      purchaseCasesData?.forEach(pc => {
+        purchaseCaseMap[pc.request_id] = {
+          caseId: pc.id,
+          caseNumber: pc.case_number,
+          caseStatus: pc.status,
+          caseCreatedAt: pc.created_at,
+          caseUpdatedAt: pc.updated_at
+        };
+      });
+
+      console.log('📊 [LOAD] Purchase case map:', purchaseCaseMap);
+
+      // Associer les transactions et purchase_cases aux requests
+      const requestsWithData = requestsData.map(request => {
+        const caseMeta = purchaseCaseMap[request.id];
+        const hasCase = !!caseMeta;
+        const caseStatus = caseMeta?.caseStatus;
+        console.log(`   🔗 Request ${request.id}: hasCase=${hasCase}, caseStatus=${caseStatus}`);
+        
+        return {
+          ...request,
+          transactions: transactionsData?.filter(t => t.request_id === request.id) || [],
+          purchaseCase: caseMeta || null,
+          hasCase,
+          caseNumber: caseMeta?.caseNumber,
+          caseStatus: caseMeta?.caseStatus,
+          // Pour l'affichage: utiliser le status du purchase_case si existe, sinon du request
+          displayStatus: caseStatus || request.status
+        };
+      });
+
+      setRequests(requestsWithData);
+      console.log('✅ [LOAD] FINAL requests set:', requestsWithData.length);
+      console.log('   Stats:');
+      requestsWithData.forEach(r => {
+        console.log(`     - ID: ${r.id}, Status: ${r.status}, HasCase: ${!!r.purchaseCase}, CaseStatus: ${r.purchaseCase?.caseStatus}`);
+      });
     } catch (error) {
       console.error('🔴 [LOAD] Error:', error);
       window.safeGlobalToast({
@@ -179,14 +204,30 @@ const ParticulierMesAchats = () => {
   };
 
   const getStatusBadge = (status) => {
+    const statusKey = status || 'pending';
     const statusConfig = {
       pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
-      approved: { label: 'Approuvée', color: 'bg-green-100 text-green-800 border-green-300' },
+      initiated: { label: 'Initiée', color: 'bg-yellow-100 text-yellow-800 border-yellow-300' },
+      accepted: { label: 'Acceptée', color: 'bg-green-100 text-green-800 border-green-300' },
+      buyer_verification: { label: 'Vérification acheteur', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+      seller_notification: { label: 'Notification vendeur', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+      negotiation: { label: 'Négociation', color: 'bg-purple-100 text-purple-800 border-purple-300' },
+      preliminary_agreement: { label: 'Accord préliminaire', color: 'bg-indigo-100 text-indigo-800 border-indigo-300' },
+      contract_preparation: { label: 'Contrat en préparation', color: 'bg-sky-100 text-sky-800 border-sky-300' },
+      legal_verification: { label: 'Vérification légale', color: 'bg-sky-100 text-sky-800 border-sky-300' },
+      document_audit: { label: 'Audit documents', color: 'bg-sky-100 text-sky-800 border-sky-300' },
+      property_evaluation: { label: 'Évaluation terrain', color: 'bg-sky-100 text-sky-800 border-sky-300' },
+      notary_appointment: { label: 'Notaire planifié', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+      signing_process: { label: 'Signature en cours', color: 'bg-blue-100 text-blue-800 border-blue-300' },
+      payment_processing: { label: 'Paiement en cours', color: 'bg-amber-100 text-amber-800 border-amber-300' },
+      completed: { label: 'Terminée', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' },
       rejected: { label: 'Refusée', color: 'bg-red-100 text-red-800 border-red-300' },
-      processing: { label: 'En cours', color: 'bg-blue-100 text-blue-800 border-blue-300' },
-      completed: { label: 'Terminée', color: 'bg-emerald-100 text-emerald-800 border-emerald-300' }
+      cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-800 border-red-300' }
     };
-    const config = statusConfig[status] || statusConfig.pending;
+    const config = statusConfig[statusKey] || {
+      label: statusKey.replace(/_/g, ' ').toUpperCase(),
+      color: 'bg-slate-100 text-slate-800 border-slate-300'
+    };
     return (
       <Badge className={`${config.color} border`}>
         {config.label}
@@ -234,24 +275,24 @@ const ParticulierMesAchats = () => {
       matchesTab = true;
       console.log(`📋 [FILTER] ALL: ${request.id} matches`);
     } else if (activeTab === 'pending') {
-      // Demandes en attente: pas de purchase_case OU pas d'acceptation
-      matchesTab = !request.purchaseCase && request.status === 'pending';
-      if (matchesTab) console.log(`📋 [FILTER] PENDING: ${request.id} matches (hasCase=${!!request.purchaseCase})`);
+      // Demandes en attente: pas de dossier ou statut initial
+      matchesTab = !request.hasCase && ['pending', 'initiated'].includes(request.displayStatus ?? request.status);
+      if (matchesTab) console.log(`📋 [FILTER] PENDING: ${request.id} matches (hasCase=${request.hasCase})`);
     } else if (activeTab === 'accepted') {
-      // Demandes acceptées: purchase_case existe (vendeur a accepté)
-      matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'preliminary_agreement';
-      if (matchesTab) console.log(`📋 [FILTER] ACCEPTED: ${request.id} matches (caseStatus=${request.purchaseCase?.caseStatus})`);
+      // Demandes acceptées: un dossier existe et avance dans le workflow
+      matchesTab = request.hasCase && ['preliminary_agreement', 'accepted', 'buyer_verification', 'seller_notification'].includes(request.displayStatus);
+      if (matchesTab) console.log(`📋 [FILTER] ACCEPTED: ${request.id} matches (status=${request.displayStatus})`);
     } else if (activeTab === 'processing') {
-      // En cours: purchase_case en cours de traitement
-      matchesTab = !!request.purchaseCase && ['contract_preparation', 'legal_verification', 'document_audit', 'payment_processing'].includes(request.purchaseCase.caseStatus);
-      if (matchesTab) console.log(`📋 [FILTER] PROCESSING: ${request.id} matches`);
+      // En cours: étapes post-accord
+      matchesTab = request.hasCase && ['contract_preparation', 'legal_verification', 'document_audit', 'property_evaluation', 'notary_appointment', 'signing_process', 'payment_processing'].includes(request.displayStatus);
+      if (matchesTab) console.log(`📋 [FILTER] PROCESSING: ${request.id} matches (status=${request.displayStatus})`);
     } else if (activeTab === 'completed') {
-      // Complétées: purchase_case terminé
-      matchesTab = !!request.purchaseCase && request.purchaseCase.caseStatus === 'completed';
+      // Complétées: workflow achevé
+      matchesTab = request.hasCase && request.displayStatus === 'completed';
       if (matchesTab) console.log(`📋 [FILTER] COMPLETED: ${request.id} matches`);
     } else if (activeTab === 'rejected') {
-      // Refusées: transaction status = 'rejected'
-      matchesTab = request.status === 'rejected';
+      // Refusées / annulées
+      matchesTab = ['rejected', 'cancelled'].includes(request.displayStatus ?? request.status);
       if (matchesTab) console.log(`📋 [FILTER] REJECTED: ${request.id} matches`);
     }
     
@@ -266,11 +307,11 @@ const ParticulierMesAchats = () => {
 
   const stats = {
     total: requests.length,
-    pending: requests.filter(r => !r.purchaseCase && r.status === 'pending').length,
-    accepted: requests.filter(r => !!r.purchaseCase && r.purchaseCase.caseStatus === 'preliminary_agreement').length,
-    processing: requests.filter(r => !!r.purchaseCase && ['contract_preparation', 'legal_verification', 'document_audit', 'payment_processing'].includes(r.purchaseCase.caseStatus)).length,
-    completed: requests.filter(r => !!r.purchaseCase && r.purchaseCase.caseStatus === 'completed').length,
-    rejected: requests.filter(r => r.status === 'rejected').length
+    pending: requests.filter(r => !r.hasCase && ['pending', 'initiated'].includes(r.displayStatus ?? r.status)).length,
+    accepted: requests.filter(r => r.hasCase && ['preliminary_agreement', 'accepted', 'buyer_verification', 'seller_notification'].includes(r.displayStatus)).length,
+    processing: requests.filter(r => r.hasCase && ['contract_preparation', 'legal_verification', 'document_audit', 'property_evaluation', 'notary_appointment', 'signing_process', 'payment_processing'].includes(r.displayStatus)).length,
+    completed: requests.filter(r => r.hasCase && r.displayStatus === 'completed').length,
+    rejected: requests.filter(r => ['rejected', 'cancelled'].includes(r.displayStatus ?? r.status)).length
   };
 
   return (
@@ -441,14 +482,14 @@ const ParticulierMesAchats = () => {
                             {request.parcels?.title || request.parcels?.name || 'Terrain sans titre'}
                           </h3>
                           {/* Afficher le numéro du dossier si accepté */}
-                          {request.purchaseCase && (
+                          {request.hasCase && request.caseNumber && (
                             <Badge className="bg-purple-100 text-purple-800 border border-purple-300">
-                              Dossier #{request.purchaseCase.caseNumber}
+                              Dossier #{request.caseNumber}
                             </Badge>
                           )}
                           {/* Afficher le status de la demande/dossier */}
-                          {getStatusBadge(request.purchaseCase?.caseStatus || request.status)}
-                          {getPaymentTypeBadge(request.type || request.payment_type)}
+                          {getStatusBadge(request.displayStatus)}
+                          {getPaymentTypeBadge(getPaymentType(request))}
                         </div>
 
                         {/* Double Suivi pour financement bancaire */}
@@ -476,7 +517,7 @@ const ParticulierMesAchats = () => {
                                 <div className="text-xs text-amber-600 font-medium mb-1">
                                   CÔTÉ VENDEUR
                                 </div>
-                                {getVendorStatusBadge(request.status || 'pending')}
+                                {getVendorStatusBadge(request.displayStatus || request.status || 'pending')}
                               </div>
                             </div>
                           </div>
@@ -554,17 +595,17 @@ const ParticulierMesAchats = () => {
                           <Eye className="w-4 h-4 mr-1" />
                           Détails
                         </Button>
-                        {request.purchaseCase && (
+                        {request.hasCase && request.caseNumber && (
                           <Button
                             size="sm"
                             className="whitespace-nowrap bg-blue-600 hover:bg-blue-700"
-                            onClick={() => navigate(`/acheteur/cases/${request.purchaseCase.case_number}`)}
+                            onClick={() => navigate(`/acheteur/cases/${request.caseNumber}`)}
                           >
                             <ArrowRight className="w-4 h-4 mr-1" />
                             Suivi dossier
                           </Button>
                         )}
-                        {request.status === 'pending' && (
+                        {request.displayStatus === 'pending' && (
                           <Button
                             variant="outline"
                             className="whitespace-nowrap text-red-600 hover:text-red-700"
@@ -608,18 +649,7 @@ const ParticulierMesAchats = () => {
                   <div>
                     <Label className="text-gray-600">Statut</Label>
                     <div className="mt-1">
-                      <Badge className={`
-                        ${selectedRequest.status === 'approved' ? 'bg-green-500' : ''}
-                        ${selectedRequest.status === 'pending' ? 'bg-yellow-500' : ''}
-                        ${selectedRequest.status === 'rejected' ? 'bg-red-500' : ''}
-                        ${selectedRequest.status === 'in_progress' ? 'bg-blue-500' : ''}
-                      `}>
-                        {selectedRequest.status === 'approved' && 'Approuvée'}
-                        {selectedRequest.status === 'pending' && 'En attente'}
-                        {selectedRequest.status === 'rejected' && 'Rejetée'}
-                        {selectedRequest.status === 'in_progress' && 'En cours'}
-                        {selectedRequest.status === 'completed' && 'Complétée'}
-                      </Badge>
+                      {getStatusBadge(selectedRequest.displayStatus || selectedRequest.status)}
                     </div>
                   </div>
                   <div>
@@ -797,7 +827,7 @@ const ParticulierMesAchats = () => {
                     </div>
                   )}
 
-                  {selectedRequest.status === 'approved' && (
+                  {selectedRequest.displayStatus === 'approved' && (
                     <div className="p-3 bg-green-50 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <CheckCircle className="w-4 h-4 text-green-600" />
@@ -809,7 +839,7 @@ const ParticulierMesAchats = () => {
                     </div>
                   )}
 
-                  {selectedRequest.status === 'rejected' && (
+                  {selectedRequest.displayStatus === 'rejected' && (
                     <div className="p-3 bg-red-50 rounded-lg">
                       <div className="flex items-center gap-2 mb-2">
                         <XCircle className="w-4 h-4 text-red-600" />

@@ -171,22 +171,76 @@ const VendeurSupport = () => {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
+      // 1) Charger les tickets depuis la table standard, sinon fallback notaire_
+      let loadError = null;
+      let ticketsRes = await supabase
         .from('support_tickets')
-        .select(`
-          *,
-          responses:support_responses(count)
-        `)
+        .select('*')
         .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      if (ticketsRes.error) {
+        loadError = ticketsRes.error;
+        // Fallback si la table standard n'existe pas dans ce projet
+        ticketsRes = await supabase
+          .from('notaire_support_tickets')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+      }
 
-      setTickets(data || []);
-      calculateStats(data || []);
+      if (ticketsRes.error) throw ticketsRes.error;
+
+      const baseTickets = ticketsRes.data || [];
+
+      // 2) Calculer le nombre de réponses par ticket via requête séparée
+      const ticketIds = baseTickets.map(t => t.id).filter(Boolean);
+      let countsByTicket = {};
+      if (ticketIds.length > 0) {
+        // Essayer d'abord la table standard des réponses
+        let respRes = await supabase
+          .from('support_responses')
+          .select('id, ticket_id')
+          .in('ticket_id', ticketIds);
+
+        if (respRes.error) {
+          // Fallback table notaire_
+          respRes = await supabase
+            .from('notaire_support_responses')
+            .select('id, ticket_id')
+            .in('ticket_id', ticketIds);
+        }
+
+        if (!respRes.error && respRes.data) {
+          countsByTicket = respRes.data.reduce((acc, row) => {
+            const tid = row.ticket_id;
+            acc[tid] = (acc[tid] || 0) + 1;
+            return acc;
+          }, {});
+        }
+      }
+
+      // 3) Attacher responses_count pour l'affichage
+      const withCounts = baseTickets.map(t => ({
+        ...t,
+        responses_count: countsByTicket[t.id] || 0,
+      }));
+
+      setTickets(withCounts);
+      calculateStats(withCounts);
+
+      // Information si fallback utilisé
+      if (loadError && window?.safeGlobalToast) {
+        window.safeGlobalToast({
+          title: 'Mode compatibilité support',
+          description: "Tables 'notaire_' utilisées pour les tickets de support.",
+        });
+      }
     } catch (error) {
       console.error('Erreur chargement tickets:', error);
       toast.error('Erreur lors du chargement des tickets');
+      setTickets([]);
+      calculateStats([]);
     } finally {
       setLoading(false);
     }
@@ -248,8 +302,8 @@ const VendeurSupport = () => {
 
     try {
       const ticketNumber = `TK-${Date.now().toString().slice(-6)}`;
-
-      const { error } = await supabase
+      // Essayer d'abord la table standard, sinon fallback notaire_
+      let ins = await supabase
         .from('support_tickets')
         .insert({
           user_id: user.id,
@@ -262,7 +316,22 @@ const VendeurSupport = () => {
           created_at: new Date().toISOString()
         });
 
-      if (error) throw error;
+      if (ins.error) {
+        ins = await supabase
+          .from('notaire_support_tickets')
+          .insert({
+            user_id: user.id,
+            ticket_number: ticketNumber,
+            subject: newTicket.subject,
+            type: newTicket.type,
+            priority: newTicket.priority,
+            description: newTicket.description,
+            status: 'open',
+            created_at: new Date().toISOString()
+          });
+      }
+
+      if (ins.error) throw ins.error;
 
       toast.success('✅ Ticket créé ! Notre équipe vous répondra sous 24h.');
       setShowNewTicketDialog(false);
@@ -586,10 +655,10 @@ const VendeurSupport = () => {
                               <Clock className="h-3 w-3" />
                               {new Date(ticket.created_at).toLocaleDateString('fr-FR')}
                             </span>
-                            {ticket.responses?.[0]?.count > 0 && (
+                            {ticket.responses_count > 0 && (
                               <span className="flex items-center gap-1">
                                 <MessageCircle className="h-3 w-3" />
-                                {ticket.responses[0].count} réponse(s)
+                                {ticket.responses_count} réponse(s)
                               </span>
                             )}
                           </div>

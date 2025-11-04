@@ -654,65 +654,70 @@ const ParticulierProprietes = () => {
   );
 
   return (
-    <div className="p-6 space-y-6">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       {/* Header avec options de paiement */}
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Acheter Propriétés & Terrains</h1>
-          <p className="text-slate-600 mt-1 mb-3">{filteredProperties.length} biens avec options de paiement flexibles</p>
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+        <div className="flex-1">
+          <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-slate-900">Acheter Propriétés & Terrains</h1>
+          <p className="text-xs sm:text-sm text-slate-600 mt-1 mb-2 sm:mb-3">{filteredProperties.length} biens avec options de paiement flexibles</p>
           
           {/* Options de paiement disponibles */}
-          <div className="flex flex-wrap gap-2">
-            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300">
-              <Banknote className="w-3 h-3 mr-1" />
-              Paiement Direct (-5%)
+          <div className="flex flex-wrap gap-1.5 sm:gap-2">
+            <Badge variant="outline" className="bg-green-50 text-green-700 border-green-300 text-[10px] sm:text-xs px-1.5 sm:px-2">
+              <Banknote className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
+              <span className="hidden sm:inline">Paiement Direct (-5%)</span>
+              <span className="sm:hidden">Direct</span>
             </Badge>
-            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300">
-              <Calendar className="w-3 h-3 mr-1" />
-              Paiement Échelonné (5 ans)
+            <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-300 text-[10px] sm:text-xs px-1.5 sm:px-2">
+              <Calendar className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
+              <span className="hidden sm:inline">Paiement Échelonné (5 ans)</span>
+              <span className="sm:hidden">Échelonné</span>
             </Badge>
-            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300">
-              <Landmark className="w-3 h-3 mr-1" />
-              Financement Bancaire (25 ans)
+            <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-300 text-[10px] sm:text-xs px-1.5 sm:px-2">
+              <Landmark className="w-2.5 h-2.5 sm:w-3 sm:h-3 mr-0.5 sm:mr-1" />
+              <span className="hidden sm:inline">Financement Bancaire (25 ans)</span>
+              <span className="sm:hidden">Banque</span>
             </Badge>
           </div>
         </div>
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2 self-end sm:self-auto">
           <Button
             variant={viewMode === 'grid' ? "default" : "outline"}
             size="sm"
             onClick={() => setViewMode('grid')}
+            className="px-2 sm:px-3"
           >
-            <Grid3X3 className="w-4 h-4" />
+            <Grid3X3 className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
           <Button
             variant={viewMode === 'list' ? "default" : "outline"}
             size="sm"
             onClick={() => setViewMode('list')}
+            className="px-2 sm:px-3"
           >
-            <List className="w-4 h-4" />
+            <List className="w-3.5 h-3.5 sm:w-4 sm:h-4" />
           </Button>
         </div>
       </div>
 
       {/* Search and Filters */}
       <Card>
-        <CardContent className="p-4">
-          <div className="flex flex-wrap items-center gap-4 mb-4">
-            <div className="flex-1 min-w-64">
+        <CardContent className="p-3 sm:p-4">
+          <div className="flex flex-wrap items-center gap-2 sm:gap-3 lg:gap-4 mb-3 sm:mb-4">
+            <div className="flex-1 min-w-full sm:min-w-64">
               <div className="relative">
-                <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
+                <Search className="w-3.5 h-3.5 sm:w-4 sm:h-4 absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-slate-400" />
                 <Input
-                  placeholder="Rechercher par titre, localisation ou agent..."
+                  placeholder="Rechercher..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-10"
+                  className="pl-8 sm:pl-10 text-xs sm:text-sm"
                 />
               </div>
             </div>
             
             <Select value={filters.type} onValueChange={(value) => setFilters({...filters, type: value})}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-40 lg:w-48 text-xs sm:text-sm">
                 <SelectValue placeholder="Type de bien" />
               </SelectTrigger>
               <SelectContent>
@@ -727,7 +732,7 @@ const ParticulierProprietes = () => {
             </Select>
             
             <Select value={sortBy} onValueChange={setSortBy}>
-              <SelectTrigger className="w-48">
+              <SelectTrigger className="w-full sm:w-40 lg:w-48 text-xs sm:text-sm">
                 <SelectValue placeholder="Trier par" />
               </SelectTrigger>
               <SelectContent>
@@ -742,9 +747,12 @@ const ParticulierProprietes = () => {
             <Button 
               variant="outline"
               onClick={() => setIsFilterOpen(!isFilterOpen)}
+              size="sm"
+              className="w-full sm:w-auto text-xs sm:text-sm"
             >
-              <SlidersHorizontal className="w-4 h-4 mr-2" />
-              Filtres avancés
+              <SlidersHorizontal className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-1 sm:mr-2" />
+              <span className="hidden sm:inline">Filtres avancés</span>
+              <span className="sm:hidden">Filtres</span>
             </Button>
           </div>
           
@@ -871,8 +879,8 @@ const ParticulierProprietes = () => {
       ) : (
         <div className={
           viewMode === 'grid' 
-            ? "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            : "space-y-4"
+            ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4 lg:gap-6"
+            : "space-y-3 sm:space-y-4"
         }>
           {filteredProperties.map((property) => 
             viewMode === 'grid' 
@@ -885,29 +893,29 @@ const ParticulierProprietes = () => {
       {/* Summary Stats */}
       {filteredProperties.length > 0 && (
         <Card>
-          <CardContent className="p-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+          <CardContent className="p-3 sm:p-4 lg:p-6">
+            <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
               <div className="text-center">
-                <p className="text-2xl font-bold text-blue-600">{filteredProperties.length}</p>
-                <p className="text-sm text-slate-600">Biens disponibles</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-600">{filteredProperties.length}</p>
+                <p className="text-xs sm:text-sm text-slate-600">Biens disponibles</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-green-600">
+                <p className="text-xl sm:text-2xl font-bold text-green-600">
                   {formatPrice(Math.round(filteredProperties.reduce((acc, p) => acc + p.price, 0) / filteredProperties.length))}
                 </p>
-                <p className="text-sm text-slate-600">Prix moyen</p>
+                <p className="text-xs sm:text-sm text-slate-600">Prix moyen</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-purple-600">
+                <p className="text-xl sm:text-2xl font-bold text-purple-600">
                   {Math.round(filteredProperties.reduce((acc, p) => acc + p.rating, 0) / filteredProperties.length * 10) / 10}
                 </p>
-                <p className="text-sm text-slate-600">Note moyenne</p>
+                <p className="text-xs sm:text-sm text-slate-600">Note moyenne</p>
               </div>
               <div className="text-center">
-                <p className="text-2xl font-bold text-orange-600">
+                <p className="text-xl sm:text-2xl font-bold text-orange-600">
                   {new Set(filteredProperties.map(p => p.location.split(',')[1]?.trim())).size}
                 </p>
-                <p className="text-sm text-slate-600">Zones couvertes</p>
+                <p className="text-xs sm:text-sm text-slate-600">Zones couvertes</p>
               </div>
             </div>
           </CardContent>

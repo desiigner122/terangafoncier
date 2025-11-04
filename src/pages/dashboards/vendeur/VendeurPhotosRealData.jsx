@@ -479,61 +479,64 @@ const VendeurPhotosRealData = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Camera className="w-8 h-8 text-purple-600" />
-            Gestion Photos
-            <Badge className="bg-purple-100 text-purple-700">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Camera className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
+            <span>Gestion Photos</span>
+            <Badge className="bg-purple-100 text-purple-700 text-xs">
               <Brain className="w-3 h-3 mr-1" />
               IA Optimisé
             </Badge>
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
             Upload et optimisation automatique par IA
           </p>
         </div>
 
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <Button
             onClick={handleDownloadGPSReport}
             variant="outline"
+            size="sm"
+            className="flex-1 sm:flex-none"
             disabled={filteredPhotos.filter(p => p.latitude && p.longitude).length === 0}
           >
-            <FileDown className="w-4 h-4 mr-2" />
-            Rapport GPS
+            <FileDown className="w-4 h-4 sm:mr-2" />
+            <span className="hidden sm:inline">Rapport GPS</span>
           </Button>
           <Button
             onClick={() => setShowUploadDialog(true)}
-            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+            size="sm"
+            className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 flex-1 sm:flex-none"
           >
             <Upload className="w-4 h-4 mr-2" />
-            Uploader Photos
+            Uploader
           </Button>
         </div>
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <Card className="border-l-4 border-l-purple-500">
-            <CardContent className="p-4">
+            <CardContent className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Photos</p>
-                  <p className="text-2xl font-bold">{stats.totalPhotos}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Total Photos</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.totalPhotos}</p>
                 </div>
-                <ImageIcon className="w-8 h-8 text-purple-600" />
+                <ImageIcon className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-purple-600 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -545,7 +548,7 @@ const VendeurPhotosRealData = () => {
           transition={{ delay: 0.2 }}
         >
           <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
+            <CardContent className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Propriétés</p>
@@ -713,7 +716,7 @@ const VendeurPhotosRealData = () => {
           </CardContent>
         </Card>
       ) : (
-        <div className={viewMode === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4' : 'space-y-4'}>
+        <div className={viewMode === 'grid' ? 'grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 sm:gap-4' : 'space-y-3 sm:space-y-4'}>
           <AnimatePresence>
             {filteredPhotos.map((photo, index) => (
               <motion.div

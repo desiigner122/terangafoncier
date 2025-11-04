@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
   Briefcase, Plus, Search, Filter, Eye, Edit2, Trash2, 
   FileText, Calendar, Clock, User, Users, MapPin, 
   TrendingUp, AlertCircle, CheckCircle, XCircle, 
   ArrowRight, Download, Upload, Phone, Mail, Home,
-  DollarSign, Percent, Shield, Link2, BookOpen
+  DollarSign, Percent, Shield, Link2, BookOpen, FolderOpen
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
@@ -29,6 +30,7 @@ import { NotaireSupabaseService } from '@/services/NotaireSupabaseService';
 
 export default function NotaireCasesModernized() {
   const { user } = useAuth();
+  const navigate = useNavigate();
 
   // États principaux
   const [cases, setCases] = useState([]);
@@ -76,11 +78,46 @@ export default function NotaireCasesModernized() {
   const loadCases = async () => {
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.getCases(user.id);
+      console.log('📋 Loading cases for notaire:', user.id);
+      
+      // Use getAssignedCases which queries purchase_cases via purchase_case_participants
+      const result = await NotaireSupabaseService.getAssignedCases(user.id);
+      
+      console.log('📊 Result:', result);
+      console.log('📊 First case data:', result.data?.[0]);
+      
       if (result.success) {
-        setCases(result.data);
-        setFilteredCases(result.data);
+        // Transform purchase_cases data to match expected case format
+        const transformedCases = result.data.map(purchaseCase => {
+          return {
+            id: purchaseCase.id,
+            case_number: purchaseCase.case_number,
+            title: `Vente ${purchaseCase.parcelle?.title || 'Terrain'} - ${purchaseCase.parcelle?.location || 'Location'}`,
+            case_type: 'vente_terrain',
+            status: purchaseCase.status || 'open',
+            priority: purchaseCase.priority || 'medium',
+            progress: calculateProgress(purchaseCase.status),
+            opened_date: purchaseCase.created_at,
+            due_date: purchaseCase.estimated_completion_date,
+            last_activity: purchaseCase.updated_at || purchaseCase.created_at,
+            buyer_name: purchaseCase.buyer?.full_name || 'Acheteur',
+            seller_name: purchaseCase.seller?.full_name || 'Vendeur',
+            property_address: purchaseCase.parcelle?.location || 'N/A',
+            property_value: purchaseCase.purchase_price || 0,
+            notary_fees: purchaseCase.notaire_fees || 0,
+            next_action: getNextAction(purchaseCase.status),
+            documents_count: 0,
+            completed_documents: 0,
+            // Keep original data for details
+            _original: purchaseCase
+          };
+        });
+        
+        console.log('✅ Transformed cases:', transformedCases.length);
+        setCases(transformedCases);
+        setFilteredCases(transformedCases);
       } else {
+        console.error('❌ Error loading cases:', result.error);
         window.safeGlobalToast?.({
           title: "Erreur de chargement",
           description: result.error || "Impossible de charger les dossiers",
@@ -88,7 +125,7 @@ export default function NotaireCasesModernized() {
         });
       }
     } catch (error) {
-      console.error('Erreur chargement dossiers:', error);
+      console.error('❌ Exception loading cases:', error);
       window.safeGlobalToast?.({
         title: "Erreur système",
         description: "Une erreur est survenue lors du chargement",
@@ -97,6 +134,46 @@ export default function NotaireCasesModernized() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper: Calculate progress percentage based on status
+  const calculateProgress = (status) => {
+    const progressMap = {
+      'initiated': 10,
+      'buyer_verification': 20,
+      'seller_notification': 30,
+      'document_collection': 40,
+      'title_verification': 50,
+      'contract_preparation': 60,
+      'deposit_pending': 70,
+      'contract_validation': 75,
+      'appointment_scheduling': 80,
+      'final_payment': 85,
+      'signature': 90,
+      'registration': 95,
+      'completed': 100
+    };
+    return progressMap[status] || 0;
+  };
+
+  // Helper: Get next action based on status
+  const getNextAction = (status) => {
+    const actionsMap = {
+      'initiated': 'Vérifier nouveau dossier',
+      'buyer_verification': 'Vérifier identité acheteur',
+      'seller_notification': 'Attendre confirmation vendeur',
+      'document_collection': 'Collecter documents',
+      'title_verification': 'Vérifier titre au cadastre',
+      'contract_preparation': 'Préparer acte de vente',
+      'deposit_pending': 'Attendre paiement acompte',
+      'contract_validation': 'Valider contrat',
+      'appointment_scheduling': 'Planifier RDV signature',
+      'final_payment': 'Attendre paiement solde',
+      'signature': 'Procéder à la signature',
+      'registration': 'Enregistrer aux impôts',
+      'completed': 'Dossier clôturé'
+    };
+    return actionsMap[status] || 'En attente';
   };
 
   /**
@@ -322,7 +399,7 @@ export default function NotaireCasesModernized() {
   };
 
   return (
-    <div className="p-6 space-y-6 max-w-[1600px] mx-auto">
+    <div className="p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6 max-w-[1600px] mx-auto">
       {/* En-tête avec statistiques */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
@@ -331,7 +408,7 @@ export default function NotaireCasesModernized() {
       >
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
+            <h1 className="text-xl sm:text-2xl lg:text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 dark:text-white flex items-center gap-3">
               <Briefcase className="h-8 w-8 text-indigo-600" />
               Gestion des Dossiers
             </h1>
@@ -349,12 +426,12 @@ export default function NotaireCasesModernized() {
         </div>
 
         {/* Statistiques rapides */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
           <Card className="p-4 bg-gradient-to-br from-blue-50 to-blue-100 dark:from-blue-900/20 dark:to-blue-800/20 border-blue-200 dark:border-blue-800">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Total</p>
-                <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.total}</p>
+                <p className="text-xl sm:text-2xl font-bold text-blue-700 dark:text-blue-300">{stats.total}</p>
               </div>
               <Briefcase className="h-8 w-8 text-blue-500" />
             </div>
@@ -364,7 +441,7 @@ export default function NotaireCasesModernized() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-yellow-600 dark:text-yellow-400 font-medium">En cours</p>
-                <p className="text-2xl font-bold text-yellow-700 dark:text-yellow-300">{stats.active}</p>
+                <p className="text-xl sm:text-2xl font-bold text-yellow-700 dark:text-yellow-300">{stats.active}</p>
               </div>
               <ArrowRight className="h-8 w-8 text-yellow-500" />
             </div>
@@ -374,7 +451,7 @@ export default function NotaireCasesModernized() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">En attente</p>
-                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{stats.pending}</p>
+                <p className="text-xl sm:text-2xl font-bold text-orange-700 dark:text-orange-300">{stats.pending}</p>
               </div>
               <Clock className="h-8 w-8 text-orange-500" />
             </div>
@@ -384,7 +461,7 @@ export default function NotaireCasesModernized() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-green-600 dark:text-green-400 font-medium">Terminés</p>
-                <p className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.completed}</p>
+                <p className="text-xl sm:text-2xl font-bold text-green-700 dark:text-green-300">{stats.completed}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
             </div>
@@ -394,7 +471,7 @@ export default function NotaireCasesModernized() {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-red-600 dark:text-red-400 font-medium">Priorité haute</p>
-                <p className="text-2xl font-bold text-red-700 dark:text-red-300">{stats.highPriority}</p>
+                <p className="text-xl sm:text-2xl font-bold text-red-700 dark:text-red-300">{stats.highPriority}</p>
               </div>
               <AlertCircle className="h-8 w-8 text-red-500" />
             </div>
@@ -415,8 +492,8 @@ export default function NotaireCasesModernized() {
       </motion.div>
 
       {/* Barre de filtres et recherche */}
-      <Card className="p-6">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+      <Card className="p-3 sm:p-4 lg:p-6">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-3 sm:gap-4">
           <div className="relative">
             <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
             <Input
@@ -506,7 +583,7 @@ export default function NotaireCasesModernized() {
                   transition={{ delay: index * 0.05 }}
                 >
                   <Card className="p-6 hover:shadow-lg transition-all duration-200 border-l-4" style={{ borderLeftColor: statusConfig.color.replace('bg-', '#').replace('-500', '') }}>
-                    <div className="flex items-start justify-between gap-4">
+                    <div className="flex items-start justify-between gap-3 sm:gap-4">
                       {/* Informations principales */}
                       <div className="flex-1 space-y-3">
                         <div className="flex items-start gap-3">
@@ -564,7 +641,7 @@ export default function NotaireCasesModernized() {
                             {/* Progression */}
                             <div className="mt-3">
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">Progression</span>
+                                <span className="text-[10px] sm:text-xs text-gray-500 dark:text-gray-400">Progression</span>
                                 <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
                                   {caseItem.progress || 0}%
                                 </span>
@@ -573,7 +650,7 @@ export default function NotaireCasesModernized() {
                             </div>
 
                             {/* Informations supplémentaires */}
-                            <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-3">
+                            <div className="flex flex-wrap items-center gap-4 text-[10px] sm:text-xs text-gray-500 dark:text-gray-400 mt-3">
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
                                 Ouvert: {formatDate(caseItem.opened_date)}
@@ -618,6 +695,14 @@ export default function NotaireCasesModernized() {
                       <div className="flex flex-col gap-2">
                         <Button
                           size="sm"
+                          onClick={() => navigate(`/notaire/cases/${caseItem.id}`)}
+                          className="gap-2"
+                        >
+                          <FolderOpen className="h-4 w-4" />
+                          Ouvrir
+                        </Button>
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => {
                             setSelectedCase(caseItem);
@@ -625,7 +710,7 @@ export default function NotaireCasesModernized() {
                           }}
                         >
                           <Eye className="h-4 w-4 mr-1" />
-                          Détails
+                          Aperçu
                         </Button>
                         <select
                           value={caseItem.status}
@@ -727,7 +812,7 @@ export default function NotaireCasesModernized() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="case_type">Type de dossier</Label>
                 <select
@@ -760,7 +845,7 @@ export default function NotaireCasesModernized() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="buyer_name">Nom de l'acheteur *</Label>
                 <Input
@@ -792,7 +877,7 @@ export default function NotaireCasesModernized() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4">
               <div>
                 <Label htmlFor="property_value">Valeur (FCFA)</Label>
                 <Input
@@ -854,14 +939,14 @@ export default function NotaireCasesModernized() {
           {selectedCase && (
             <ScrollArea className="max-h-[70vh] pr-4">
               <Tabs defaultValue="general" className="w-full">
-                <TabsList className="grid w-full grid-cols-3">
+                <TabsList className="grid w-full grid-cols-2 sm:grid-cols-3 h-auto">
                   <TabsTrigger value="general">Général</TabsTrigger>
                   <TabsTrigger value="parties">Parties</TabsTrigger>
                   <TabsTrigger value="property">Propriété</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="general" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-3 sm:gap-4">
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Statut</p>
                       <Badge className={getStatusConfig(selectedCase.status).color}>
@@ -917,7 +1002,7 @@ export default function NotaireCasesModernized() {
                 </TabsContent>
 
                 <TabsContent value="property" className="space-y-4 mt-4">
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="grid grid-cols-1 gap-3 sm:gap-4">
                     {selectedCase.property_address && (
                       <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                         <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">

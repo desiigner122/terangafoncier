@@ -17,13 +17,20 @@ import transactionsRoutes from './routes/transactions.js';
 import documentsRoutes from './routes/documents.js';
 import blockchainRoutes from './routes/blockchain.js';
 import aiRoutes from './routes/ai.js';
+import aiRoutesNew from './routes/aiRoutes.js'; // SEMAINE 3: Nouvelles routes IA
 import notificationsRoutes from './routes/notifications.js';
 import dashboardRoutes from './routes/dashboard.js';
 import paymentsRoutes from './routes/payments.js';
+import paymentRoutesNew from './routes/paymentRoutes.js'; // SEMAINE 2: Nouvelles routes paiements
+import docusignRoutes from './routes/docusignRoutes.js'; // SEMAINE 2: Routes DocuSign
 import mapsRoutes from './routes/maps.js';
 
 // Import admin routes - NOUVELLES ROUTES ADMIN
 import adminRoutes from './routes/admin.js';
+
+// Import workflows - SEMAINE 3: Auto-validation & Fraud detection
+import { setupDocumentValidationTrigger } from './workflows/autoValidateDocuments.js';
+import { setupFraudDetectionTrigger } from './workflows/autoFraudDetection.js';
 
 dotenv.config();
 
@@ -71,10 +78,13 @@ app.use('/api/users', usersRoutes);
 app.use('/api/transactions', transactionsRoutes);
 app.use('/api/documents', documentsRoutes);
 app.use('/api/blockchain', blockchainRoutes);
-app.use('/api/ai', aiRoutes);
+app.use('/api/ai', aiRoutes); // Routes IA existantes
+app.use('/api/ai', aiRoutesNew); // SEMAINE 3: Nouvelles routes IA (validation, fraude, recommandations)
 app.use('/api/notifications', notificationsRoutes);
 app.use('/api/dashboard', dashboardRoutes);
-app.use('/api/payments', paymentsRoutes);
+app.use('/api/payments', paymentsRoutes); // Routes paiements existantes
+app.use('/api/payments', paymentRoutesNew); // SEMAINE 2: Nouvelles routes Wave/Orange Money
+app.use('/api/docusign', docusignRoutes); // SEMAINE 2: Routes DocuSign e-signature
 app.use('/api/maps', mapsRoutes);
 
 // Routes administrateur - NOUVELLES FONCTIONNALITÉS
@@ -91,10 +101,21 @@ app.use('*', (req, res) => {
 // Error handling middleware
 app.use(globalErrorHandler);
 
-app.listen(PORT, () => {
+// Start server and initialize workflows
+app.listen(PORT, async () => {
   console.log(`🚀 Serveur Teranga Foncier démarré sur le port ${PORT}`);
-  console.log(`� Health check: http://localhost:${PORT}/health`);
+  console.log(`💚 Health check: http://localhost:${PORT}/health`);
   console.log(`🌐 API Base URL: http://localhost:${PORT}/api`);
+  
+  // Initialize autonomous workflows
+  try {
+    console.log('\n🤖 Initializing autonomous workflows...');
+    await setupDocumentValidationTrigger();
+    await setupFraudDetectionTrigger();
+    console.log('✅ All workflows initialized successfully\n');
+  } catch (error) {
+    console.error('❌ Failed to initialize workflows:', error);
+  }
 });
 
 export default app;

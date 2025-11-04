@@ -86,7 +86,8 @@ const ModernRegisterPage = () => {
                 className: "bg-green-500 text-white",
             });
 
-            navigate('/login');
+            // Redirection vers page de vérification email
+            navigate('/verify-email');
             
         } catch (err) {
             console.error("Registration error:", err);

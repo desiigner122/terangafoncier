@@ -114,7 +114,7 @@ const MapPage = () => {
   useEffect(() => {
     const loadFavorites = async () => {
       if (!user) { setFavoriteIds([]); return; }
-      const { data: profile } = await supabase.from('users').select('favorites').eq('id', user.id).single();
+      const { data: profile } = await supabase.from('profiles').select('favorites').eq('id', user.id).single();
       setFavoriteIds(Array.isArray(profile?.favorites) ? profile.favorites : []);
     };
     loadFavorites();
@@ -157,7 +157,7 @@ const MapPage = () => {
     const isFav = favoriteIds.includes(parcelId);
     const next = isFav ? favoriteIds.filter(id => id !== parcelId) : [...favoriteIds, parcelId];
     setFavoriteIds(next);
-    const { error } = await supabase.from('users').update({ favorites: next }).eq('id', user.id);
+    const { error } = await supabase.from('profiles').update({ favorites: next }).eq('id', user.id);
     if (error) {
       setFavoriteIds(favoriteIds);
       window.safeGlobalToast?.({ title: 'Erreur', description: "Impossible de mettre à jour vos favoris.", variant: 'destructive' });

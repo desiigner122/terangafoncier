@@ -268,7 +268,7 @@ export class PurchaseWorkflowService {
         .from('purchase_cases')
         .select('id')
         .eq('request_id', purchaseData.request_id)
-        .single();
+        .maybeSingle();
 
       if (!checkError && existingCase) {
         return { success: false, error: 'Un dossier existe déjà pour cette demande' };
@@ -319,7 +319,7 @@ export class PurchaseWorkflowService {
       }
 
       // Créer l'entrée historique initiale
-      await this.addWorkflowHistory(newCase.id, 'initiated', 'System', 'Dossier d\'achat créé automatiquement');
+      await this.addWorkflowHistory(newCase.id, 'initiated', null, 'Dossier d\'achat créé automatiquement');
 
       // Déclencher les étapes automatiques
       await this.processAutomatedSteps(newCase.id);
@@ -336,6 +336,12 @@ export class PurchaseWorkflowService {
    */
   static async updateCaseStatus(caseId, newStatus, updatedBy, notes = '', attachments = []) {
     try {
+      // Si newStatus est undefined, on ne fait rien (action sans changement de statut)
+      if (!newStatus) {
+        console.log('⚠️ Pas de changement de statut pour cette action');
+        return { success: true, message: 'Action effectuée sans changement de statut' };
+      }
+
       const statusInfo = this.WORKFLOW_STATUSES[newStatus.toUpperCase()];
       if (!statusInfo) {
         throw new Error(`Statut invalide: ${newStatus}`);
@@ -450,42 +456,42 @@ export class PurchaseWorkflowService {
         case 'initiated':
           // Passer automatiquement à la vérification de l'acheteur
           setTimeout(() => {
-            this.updateCaseStatus(caseId, 'buyer_verification', 'System', 'Vérification automatique de l\'acheteur initiée');
+            this.updateCaseStatus(caseId, 'buyer_verification', null, 'Vérification automatique de l\'acheteur initiée');
           }, 2000);
           break;
 
         case 'buyer_verification':
           // Simuler la vérification (en réalité, cela devrait être plus complexe)
           setTimeout(() => {
-            this.updateCaseStatus(caseId, 'seller_notification', 'System', 'Vérification acheteur réussie, notification du vendeur');
+            this.updateCaseStatus(caseId, 'seller_notification', null, 'Vérification acheteur réussie, notification du vendeur');
           }, 5000);
           break;
 
         case 'seller_notification':
           // Notification automatique au vendeur
           setTimeout(() => {
-            this.updateCaseStatus(caseId, 'negotiation', 'System', 'Vendeur informé, négociation ouverte');
+            this.updateCaseStatus(caseId, 'negotiation', null, 'Vendeur informé, négociation ouverte');
           }, 1000);
           break;
 
         case 'contract_preparation':
           // Génération automatique du contrat
           setTimeout(() => {
-            this.updateCaseStatus(caseId, 'legal_verification', 'System', 'Contrat généré, début des vérifications juridiques');
+            this.updateCaseStatus(caseId, 'legal_verification', null, 'Contrat généré, début des vérifications juridiques');
           }, 10000);
           break;
 
         case 'payment_processing':
           // Traitement automatique du paiement
           setTimeout(() => {
-            this.updateCaseStatus(caseId, 'property_transfer', 'System', 'Paiement traité avec succès');
+            this.updateCaseStatus(caseId, 'property_transfer', null, 'Paiement traité avec succès');
           }, 5000);
           break;
 
         case 'property_transfer':
           // Finalisation automatique
           setTimeout(() => {
-            this.updateCaseStatus(caseId, 'completed', 'System', 'Transfert de propriété finalisé');
+            this.updateCaseStatus(caseId, 'completed', null, 'Transfert de propriété finalisé');
           }, 3000);
           break;
       }

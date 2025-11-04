@@ -436,43 +436,43 @@ const VendeurAIRealData = () => {
   }
 
   return (
-    <div className="container mx-auto p-6 space-y-6">
+    <div className="container mx-auto p-3 sm:p-4 lg:p-6 space-y-4 sm:space-y-6">
       {/* Header */}
       <motion.div
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex items-center justify-between"
+        className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
       >
         <div>
-          <h1 className="text-3xl font-bold flex items-center gap-3">
-            <Brain className="w-8 h-8 text-purple-600" />
-            Analyses IA
-            <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+          <h1 className="text-2xl sm:text-3xl font-bold flex items-center gap-2 sm:gap-3 flex-wrap">
+            <Brain className="w-6 h-6 sm:w-8 sm:h-8 text-purple-600 flex-shrink-0" />
+            <span>Analyses IA</span>
+            <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-xs">
               <Sparkles className="w-3 h-3 mr-1" />
               Powered by GPT-4
             </Badge>
           </h1>
-          <p className="text-gray-600 mt-2">
+          <p className="text-sm sm:text-base text-gray-600 mt-1 sm:mt-2">
             Intelligence artificielle pour optimiser vos ventes
           </p>
         </div>
       </motion.div>
 
       {/* Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-4">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1 }}
         >
           <Card className="border-l-4 border-l-purple-500">
-            <CardContent className="p-4">
+            <CardContent className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Total Analyses</p>
-                  <p className="text-2xl font-bold">{stats.totalAnalyses}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Total Analyses</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.totalAnalyses}</p>
                 </div>
-                <Brain className="w-8 h-8 text-purple-600" />
+                <Brain className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-purple-600 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -484,13 +484,13 @@ const VendeurAIRealData = () => {
           transition={{ delay: 0.2 }}
         >
           <Card className="border-l-4 border-l-green-500">
-            <CardContent className="p-4">
+            <CardContent className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Confiance Moy.</p>
-                  <p className="text-2xl font-bold">{stats.avgConfidence}%</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Confiance Moy.</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.avgConfidence}%</p>
                 </div>
-                <Award className="w-8 h-8 text-green-600" />
+                <Award className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-green-600 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -502,13 +502,13 @@ const VendeurAIRealData = () => {
           transition={{ delay: 0.3 }}
         >
           <Card className="border-l-4 border-l-blue-500">
-            <CardContent className="p-4">
+            <CardContent className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Tokens Utilisés</p>
-                  <p className="text-2xl font-bold">{(stats.totalTokens / 1000).toFixed(1)}K</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Tokens Utilisés</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{(stats.totalTokens / 1000).toFixed(1)}K</p>
                 </div>
-                <Activity className="w-8 h-8 text-blue-600" />
+                <Activity className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-blue-600 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -520,13 +520,13 @@ const VendeurAIRealData = () => {
           transition={{ delay: 0.4 }}
         >
           <Card className="border-l-4 border-l-orange-500">
-            <CardContent className="p-4">
+            <CardContent className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Coût Total</p>
-                  <p className="text-2xl font-bold">${stats.totalCost}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Coût Total</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">${stats.totalCost}</p>
                 </div>
-                <DollarSign className="w-8 h-8 text-orange-600" />
+                <DollarSign className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-orange-600 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -538,13 +538,13 @@ const VendeurAIRealData = () => {
           transition={{ delay: 0.5 }}
         >
           <Card className="border-l-4 border-l-pink-500">
-            <CardContent className="p-4">
+            <CardContent className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Analyses Prix</p>
-                  <p className="text-2xl font-bold">{stats.priceAnalyses}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Analyses Prix</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.priceAnalyses}</p>
                 </div>
-                <TrendingUp className="w-8 h-8 text-pink-600" />
+                <TrendingUp className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-pink-600 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>
@@ -556,13 +556,13 @@ const VendeurAIRealData = () => {
           transition={{ delay: 0.6 }}
         >
           <Card className="border-l-4 border-l-indigo-500">
-            <CardContent className="p-4">
+            <CardContent className="p-2 sm:p-3 lg:p-4">
               <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-gray-600">Descriptions</p>
-                  <p className="text-2xl font-bold">{stats.descriptionGenerated}</p>
+                <div className="min-w-0 flex-1">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">Descriptions</p>
+                  <p className="text-lg sm:text-xl lg:text-2xl font-bold">{stats.descriptionGenerated}</p>
                 </div>
-                <FileText className="w-8 h-8 text-indigo-600" />
+                <FileText className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-indigo-600 flex-shrink-0" />
               </div>
             </CardContent>
           </Card>

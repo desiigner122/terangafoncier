@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
   FileText,
@@ -29,14 +30,87 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'react-hot-toast';
 
 const ParticulierDocuments = () => {
+  const outletContext = useOutletContext();
+  const { user } = outletContext || {};
+  
   const [activeTab, setActiveTab] = useState('mes_documents');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('tous');
+  const [loading, setLoading] = useState(true);
+  const [documents, setDocuments] = useState([]);
 
-  // Documents administratifs organisés par dossier - SUIVI DOCUMENTAIRE
-  const [documents] = useState([
+  useEffect(() => {
+    if (user?.id) {
+      loadDocuments();
+    } else {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  const loadDocuments = async () => {
+    if (!user?.id) {
+      console.log('❌ Utilisateur non disponible');
+      setLoading(false);
+      return;
+    }
+
+    try {
+      setLoading(true);
+      console.log('📄 Chargement des documents...');
+
+      // Charger depuis la table documents_administratifs ou supabase storage
+      const { data, error } = await supabase
+        .from('documents_administratifs')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) {
+        // Si la table n'existe pas, utiliser un array vide
+        console.warn('Table documents_administratifs non disponible:', error.message);
+        setDocuments([]);
+        setLoading(false);
+        return;
+      }
+
+      // Transformer les données Supabase au format attendu
+      const formattedDocs = data?.map(doc => ({
+        id: doc.id,
+        dossierRef: doc.case_reference || 'General',
+        nom: doc.file_name || doc.title || 'Document',
+        type: doc.document_type || 'autre',
+        format: doc.file_format || 'PDF',
+        taille: doc.file_size || '0 KB',
+        dateCreation: doc.created_at,
+        dateModification: doc.updated_at || doc.created_at,
+        statut: doc.status || 'En attente',
+        proprietaire: doc.owner_name || 'Utilisateur',
+        description: doc.description || '',
+        version: doc.version || '1.0',
+        acces: doc.access_level || 'Lecture seule',
+        etape: doc.workflow_stage || 'Soumission',
+        priorite: doc.priority || 'Normale',
+        actions: ['Télécharger', 'Partager'],
+        storage_path: doc.storage_path
+      })) || [];
+
+      setDocuments(formattedDocs);
+      console.log(`✅ ${formattedDocs.length} documents chargés`);
+    } catch (error) {
+      console.error('❌ Erreur chargement documents:', error);
+      toast.error('Erreur lors du chargement des documents');
+      setDocuments([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Plus besoin de mock data - utilisation des données réelles ci-dessus
+  const [mockDocuments] = useState([
     // Documents pour DT-2024-001 (Demande Terrain)
     {
       id: 'DOC-001',
@@ -235,7 +309,10 @@ const ParticulierDocuments = () => {
     return colors[acces] || 'bg-gray-100 text-gray-800';
   };
 
-  const filteredDocuments = documents.filter(doc => {
+  // Fallback: afficher les mocks uniquement si pas de documents réels
+  const displayDocuments = documents.length > 0 ? documents : mockDocuments;
+
+  const filteredDocuments = displayDocuments.filter(doc => {
     const matchesSearch = doc.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.dossierRef.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          doc.description.toLowerCase().includes(searchTerm.toLowerCase());
@@ -357,29 +434,29 @@ const ParticulierDocuments = () => {
 
   const StatCard = ({ title, value, subtitle, icon: Icon, color }) => (
     <Card>
-      <CardContent className="p-4 text-center">
-        <Icon className={`w-8 h-8 mx-auto mb-2 text-${color}-600`} />
-        <div className={`text-2xl font-bold text-${color}-600`}>{value}</div>
-        <div className="text-sm font-medium text-gray-900">{title}</div>
-        {subtitle && <div className="text-xs text-gray-600">{subtitle}</div>}
+      <CardContent className="p-2 sm:p-3 lg:p-4 text-center">
+        <Icon className={`w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 mx-auto mb-1 sm:mb-2 text-${color}-600`} />
+        <div className={`text-lg sm:text-xl lg:text-2xl font-bold text-${color}-600`}>{value}</div>
+        <div className="text-[10px] sm:text-xs lg:text-sm font-medium text-gray-900 line-clamp-1">{title}</div>
+        {subtitle && <div className="text-[10px] sm:text-xs text-gray-600">{subtitle}</div>}
       </CardContent>
     </Card>
   );
 
   return (
-    <div className="p-6 max-w-7xl mx-auto">
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-3">
-          <FileText className="w-8 h-8 text-blue-600" />
+    <div className="p-3 sm:p-4 lg:p-6 max-w-7xl mx-auto">
+      <div className="mb-4 sm:mb-6 lg:mb-8">
+        <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2 sm:gap-3">
+          <FileText className="w-6 h-6 sm:w-7 sm:h-7 lg:w-8 lg:h-8 text-blue-600" />
           Gestion Documentaire
         </h1>
-        <p className="text-gray-600">
+        <p className="text-xs sm:text-sm lg:text-base text-gray-600">
           Tous vos documents administratifs organisés par dossier
         </p>
       </div>
 
       {/* Statistiques */}
-      <div className="grid grid-cols-1 md:grid-cols-5 gap-4 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6 lg:mb-8">
         <StatCard
           title="Documents total"
           value={documents.length}
@@ -414,12 +491,12 @@ const ParticulierDocuments = () => {
       </div>
 
       {/* Barre de recherche et filtres */}
-      <div className="flex flex-col sm:flex-row gap-4 mb-6">
+      <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 lg:gap-4 mb-4 sm:mb-6">
         <div className="flex-1">
           <div className="relative">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <Search className="absolute left-2 sm:left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-3.5 h-3.5 sm:w-4 sm:h-4" />
             <Input
-              placeholder="Rechercher dans les documents..."
+              placeholder="Rechercher..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="pl-10"

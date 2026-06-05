@@ -184,50 +184,44 @@ const CompleteSidebarAdminDashboard = () => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
 
-  // Initialisation des données dashboard
+  // Initialisation des données dashboard (valeurs neutres - aucune donnée démo)
+  // Tout est chargé depuis Supabase via loadRealData()
   const [dashboardData, setDashboardData] = useState({
     stats: {
-      totalUsers: 47,
-      activeUsers: 32,
-      totalProperties: 156,
-      totalTransactions: 89,
-      systemUptime: 99.8,
-      monthlyRevenue: 8750000,
-      pendingReports: 7,
-      systemHealth: 98,
-      totalBlogs: 12,
-      publishedBlogs: 8,
-      auditLogs: 234,
-      notifications: 18,
-      totalCommissions: 437500,
-      pendingPayments: 3
+      totalUsers: 0,
+      activeUsers: 0,
+      totalProperties: 0,
+      totalTransactions: 0,
+      systemUptime: null,
+      monthlyRevenue: 0,
+      pendingReports: 0,
+      systemHealth: null,
+      totalBlogs: 0,
+      publishedBlogs: 0,
+      auditLogs: 0,
+      notifications: 0,
+      totalCommissions: 0,
+      pendingPayments: 0
     },
-    systemHealth: {
-      server: {
-        cpu: 45,
-        memory: 68,
-        disk: 72,
-        network: 95
-      },
-      database: {
-        connections: 128,
-        maxConnections: 200,
-        queryTime: 15,
-        uptime: 99.9
-      },
-      apis: {
-        supabase: 'online',
-        payments: 'online',
-        blockchain: 'maintenance',
-        ai: 'online'
-      }
-    },
+    // Santé système : nécessite une vraie intégration de monitoring.
+    // null tant qu'aucune source réelle n'est branchée (l'UI affiche "N/D").
+    systemHealth: null,
     financial: {
-      monthlyRevenue: 8750000,
-      totalTransactions: 89,
-      avgTransactionValue: 98314,
-      revenueGrowth: 12.5
-    }
+      monthlyRevenue: 0,
+      totalTransactions: 0,
+      avgTransactionValue: 0,
+      revenueGrowth: null
+    },
+    users: [],
+    properties: [],
+    transactions: [],
+    blogPosts: [],
+    auditLogs: [],
+    systemAlerts: [],
+    support: [],
+    reports: [],
+    recentActivity: [],
+    geography: []
   });
 
   // Navigation Items Configuration - ⭐ RÉORGANISÉE ET SANS DOUBLONS
@@ -657,9 +651,55 @@ const CompleteSidebarAdminDashboard = () => {
         supabase.from('blockchain_transactions').select('*').order('created_at', { ascending: false }).limit(100)
       ]);
 
-      // Calcul du revenu mensuel RÉEL - temporairement désactivé car colonne amount n'existe pas
-      const monthlyRevenue = 0; // revenueData?.reduce((sum, t) => sum + (parseFloat(t.amount) || 0), 0) || 0;
-      
+      // Calcul du revenu mensuel RÉEL à partir des transactions du mois en cours.
+      // Défensif : tolère plusieurs noms de colonne (amount / montant / price) selon le schéma.
+      const sumAmount = (rows) => (rows || []).reduce((sum, t) => {
+        const v = parseFloat(t?.amount ?? t?.montant ?? t?.price ?? 0);
+        return sum + (Number.isFinite(v) ? v : 0);
+      }, 0);
+      const monthlyRevenue = sumAmount(revenueData);
+
+      // Construction d'un flux d'activité récente RÉEL (users + propriétés + transactions)
+      const recentActivity = [
+        ...(usersData || []).slice(0, 10).map((u) => ({
+          type: 'user',
+          label: u.full_name || u.email || 'Nouvel utilisateur',
+          action: 'a rejoint la plateforme',
+          created_at: u.created_at
+        })),
+        ...(propertiesData || []).slice(0, 10).map((p) => ({
+          type: 'property',
+          label: p.title || p.name || 'Nouveau bien',
+          action: 'a été publié(e)',
+          created_at: p.created_at
+        })),
+        ...(transactionsData || []).slice(0, 10).map((t) => ({
+          type: 'transaction',
+          label: t.transaction_type || 'Transaction',
+          action: 'a été enregistrée',
+          created_at: t.created_at
+        }))
+      ]
+        .filter((a) => a.created_at)
+        .sort((a, b) => new Date(b.created_at) - new Date(a.created_at))
+        .slice(0, 8);
+
+      // Répartition géographique RÉELLE (regroupement des propriétés par région/localité)
+      const geoCounts = {};
+      (propertiesData || []).forEach((p) => {
+        const region = p.region || p.location || p.city || p.commune || 'Non renseigné';
+        geoCounts[region] = (geoCounts[region] || 0) + 1;
+      });
+      const geoTotal = Object.values(geoCounts).reduce((s, n) => s + n, 0);
+      const geography = Object.entries(geoCounts)
+        .map(([region, count]) => ({
+          region,
+          count,
+          percent: geoTotal ? Math.round((count / geoTotal) * 100) : 0
+        }))
+        .sort((a, b) => b.count - a.count)
+        .slice(0, 6);
+
       setDashboardData({
         stats: {
           totalUsers: totalUsers || 0,
@@ -671,8 +711,8 @@ const CompleteSidebarAdminDashboard = () => {
           monthlyRevenue: monthlyRevenue,
           totalCommissions: monthlyRevenue * 0.05, // 5% de commission
           pendingPayments: 0,
-          systemUptime: 99.8,
-          systemHealth: 98,
+          systemUptime: null,
+          systemHealth: null,
           totalBlogs: 0,
           publishedBlogs: 0,
           auditLogs: 0,
@@ -680,61 +720,38 @@ const CompleteSidebarAdminDashboard = () => {
           pendingReports: pendingReports || 0,
           activeSubscriptions: activeSubscriptions || 0
         },
-        // DONNÉES COMPLÈTES RÉELLES (pas de mock)
-        users: usersData || [
-          { id: '1', email: 'mamadou.diallo@gmail.com', role: 'vendeur', status: 'active', created_at: '2025-10-05T10:30:00Z' },
-          { id: '2', email: 'fatou.sarr@outlook.com', role: 'particulier', status: 'active', created_at: '2025-10-07T14:20:00Z' },
-          { id: '3', email: 'abdoulaye.ba@hotmail.com', role: 'investisseur', status: 'active', created_at: '2025-10-08T09:15:00Z' },
-          { id: '4', email: 'awa.ndiaye@yahoo.fr', role: 'particulier', status: 'active', created_at: '2025-10-09T16:45:00Z' },
-          { id: '5', email: 'notaire.fall@cabinet.sn', role: 'notaire', status: 'active', created_at: '2025-10-10T08:30:00Z' }
-        ],
-        properties: propertiesData || [
-          { id: '1', title: 'Villa moderne Almadies', price: 125000000, location: 'Almadies, Dakar', verification_status: 'verified', status: 'active', created_at: '2025-10-05T12:00:00Z' },
-          { id: '2', title: 'Appartement Point E', price: 75000000, location: 'Point E, Dakar', verification_status: 'pending', status: 'active', created_at: '2025-10-07T15:30:00Z' },
-          { id: '3', title: 'Terrain Parcelles Assainies', price: 35000000, location: 'Parcelles Assainies', verification_status: 'verified', status: 'active', created_at: '2025-10-08T11:20:00Z' },
-          { id: '4', title: 'Bureau Plateau', price: 95000000, location: 'Plateau, Dakar', verification_status: 'pending', status: 'reported', created_at: '2025-10-09T13:45:00Z' }
-        ],
-        transactions: transactionsData || [
-          { id: '1', user_id: '2', property_id: '1', amount: 125000000, status: 'completed', transaction_type: 'purchase', created_at: '2025-10-09T14:30:00Z' },
-          { id: '2', user_id: '3', property_id: '3', amount: 35000000, status: 'completed', transaction_type: 'purchase', created_at: '2025-10-08T16:20:00Z' },
-          { id: '3', user_id: '4', property_id: '2', amount: 75000000, status: 'pending', transaction_type: 'reservation', created_at: '2025-10-10T10:15:00Z' }
-        ],
-        blogPosts: [
-          { id: '1', title: 'Guide immobilier Dakar 2025', author: 'Admin', status: 'published', created_at: '2025-10-01T09:00:00Z' },
-          { id: '2', title: 'Investir dans l\'immobilier au Sénégal', author: 'Expert', status: 'draft', created_at: '2025-10-03T14:30:00Z' }
-        ],
-        auditLogs: [
-          { id: '1', action: 'user_login', user_id: '1', details: 'Connexion réussie', created_at: '2025-10-11T08:30:00Z' },
-          { id: '2', action: 'property_validated', user_id: '5', target_id: '1', created_at: '2025-10-10T15:20:00Z' }
-        ],
-        systemAlerts: [
-          { id: '1', type: 'warning', message: 'Espace disque faible', status: 'active' },
-          { id: '2', type: 'info', message: 'Sauvegarde programmée à 02:00', status: 'active' }
-        ],
-        support: [
-          { id: '1', title: 'Problème de connexion', status: 'open', priority: 'high', user_id: '2', created_at: '2025-10-10T16:45:00Z' },
-          { id: '2', title: 'Question validation', status: 'in_progress', priority: 'medium', user_id: '4', created_at: '2025-10-09T11:30:00Z' }
-        ],
-        reports: [
-          { id: '1', property_id: '4', reporter_id: '3', reason: 'Informations erronées', status: 'pending', created_at: '2025-10-09T17:20:00Z' }
-        ],
-        systemHealth: {
-          server: { cpu: 45, memory: 68, disk: 72, network: 95 },
-          database: { connections: 128, maxConnections: 200, queryTime: 15, uptime: 99.9 },
-          apis: { supabase: 'online', payments: 'online', blockchain: 'online', ai: 'online' }
-        }
+        // DONNÉES 100% RÉELLES (aucun fallback démo : tableau vide si rien en base)
+        users: usersData || [],
+        properties: propertiesData || [],
+        transactions: transactionsData || [],
+        blogPosts: [],
+        auditLogs: [],
+        systemAlerts: [],
+        support: [],
+        reports: [],
+        recentActivity,
+        geography,
+        financial: {
+          monthlyRevenue,
+          totalTransactions: totalTransactions || 0,
+          avgTransactionValue: (totalTransactions ? Math.round(monthlyRevenue / totalTransactions) : 0),
+          revenueGrowth: null
+        },
+        // Santé système : null tant qu'aucun monitoring réel n'est branché (UI -> "N/D")
+        systemHealth: null
       });
-      
+
       console.log('✅ Données RÉELLES chargées depuis Supabase');
       console.log('📊 Stats:', { totalUsers, totalProperties, totalTransactions, monthlyRevenue });
-      
-      // Stats additionnelles
+
+      // Stats additionnelles : uniquement des valeurs réelles dérivées des comptes.
+      // (Vues / IP / disque / sauvegarde nécessitent une vraie source de monitoring.)
       setAdditionalStats({
-        totalViews: (totalUsers || 0) * 15,
-        todayActions: Math.floor(Math.random() * 50),
-        uniqueIPs: Math.floor((totalUsers || 0) * 0.8),
-        diskUsage: Math.floor((totalUsers || 0) * 0.1),
-        backupSize: `${((totalUsers || 0) * 0.05).toFixed(1)} GB`
+        totalViews: null,
+        todayActions: null,
+        uniqueIPs: null,
+        diskUsage: null,
+        backupSize: null
       });
 
     } catch (error) {

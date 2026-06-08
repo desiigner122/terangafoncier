@@ -156,7 +156,7 @@ const NotaireCommunicationModernized = () => {
   const handleFileUpload = (event) => {
     const files = Array.from(event.target.files);
     const newAttachments = files.map(file => ({
-      id: Date.now() + Math.random(),
+      id: Date.now() + 0,
       name: file.name,
       size: file.size,
       type: file.type,

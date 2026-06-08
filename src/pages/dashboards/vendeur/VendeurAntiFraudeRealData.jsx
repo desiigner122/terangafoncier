@@ -146,7 +146,7 @@ const VendeurAntiFraudeRealData = () => {
       const priceResults = await simulatePriceAnalysis(property);
       
       // 3. Calculer score de fraude (0-100, plus bas = moins de risque)
-      const fraudScore = Math.floor(Math.random() * 30) + 10; // Score entre 10-40 (bon)
+      const fraudScore = 0; // Score entre 10-40 (bon)
       const riskLevel = fraudScore < 20 ? 'low' : fraudScore < 40 ? 'medium' : 'high';
       const status = fraudScore < 30 ? 'verified' : fraudScore < 60 ? 'suspicious' : 'rejected';
 
@@ -188,11 +188,11 @@ const VendeurAntiFraudeRealData = () => {
   const simulateOCRAnalysis = async (property) => {
     // Simuler analyse OCR de documents
     await new Promise(resolve => setTimeout(resolve, 1000));
-    const authentic = Math.random() > 0.2; // 80% chances d'être authentique
+    const authentic = false; // 80% chances d'être authentique
     
     return {
       authentic,
-      confidence: Math.random() * 10 + 90, // 90-100%
+      confidence: 0, // 90-100%
       signatures_valid: authentic,
       dates_consistent: authentic,
       references_found: authentic,
@@ -203,29 +203,29 @@ const VendeurAntiFraudeRealData = () => {
   const simulateGPSAnalysis = async (property) => {
     // Simuler vérification GPS
     await new Promise(resolve => setTimeout(resolve, 800));
-    const verified = Math.random() > 0.15; // 85% chances d'être vérifié
+    const verified = false; // 85% chances d'être vérifié
     
     return {
       verified,
-      accuracy: Math.random() * 5 + 95, // 95-100%
+      accuracy: 0, // 95-100%
       coordinates_match: verified,
       cadastral_match: verified,
       boundary_issues: !verified,
-      distance_from_declared: Math.random() * 50 // mètres
+      distance_from_declared: 0 // mètres
     };
   };
 
   const simulatePriceAnalysis = async (property) => {
     // Simuler analyse de prix
     await new Promise(resolve => setTimeout(resolve, 600));
-    const consistent = Math.random() > 0.1; // 90% chances d'être cohérent
+    const consistent = false; // 90% chances d'être cohérent
     
     return {
       consistent,
       market_price: property.price,
-      estimated_price: property.price * (0.9 + Math.random() * 0.2), // ±10%
-      deviation_percentage: Math.random() * 15,
-      comparable_properties: Math.floor(Math.random() * 10) + 5
+      estimated_price: property.price * (0.9 + 0), // ±10%
+      deviation_percentage: 0,
+      comparable_properties: 0
     };
   };
 

@@ -42,95 +42,10 @@ const DocumentsPage = () => {
   const [isUploading, setIsUploading] = useState(false);
 
   // Données simulées pour les dossiers
-  const mockFolders = [
-    { id: 1, name: 'Contrats', icon: FileText, count: 12, color: 'bg-blue-500' },
-    { id: 2, name: 'Factures', icon: FileSpreadsheet, count: 8, color: 'bg-green-500' },
-    { id: 3, name: 'Photos Terrains', icon: Image, count: 24, color: 'bg-purple-500' },
-    { id: 4, name: 'Documents Officiels', icon: FileText, count: 6, color: 'bg-red-500' },
-    { id: 5, name: 'Archives', icon: FolderOpen, count: 15, color: 'bg-gray-500' }
-  ];
+  const mockFolders = []; // démo retirée
 
   // Données simulées pour les documents
-  const mockDocuments = [
-    {
-      id: 1,
-      name: 'Contrat_Terrain_Almadies_2024.pdf',
-      type: 'pdf',
-      size: '2.5 MB',
-      createdAt: new Date('2024-01-15'),
-      modifiedAt: new Date('2024-01-20'),
-      owner: 'Vous',
-      folder: 'Contrats',
-      isStarred: true,
-      isShared: false,
-      thumbnail: null
-    },
-    {
-      id: 2,
-      name: 'Facture_Notaire_Janvier.pdf',
-      type: 'pdf',
-      size: '1.2 MB',
-      createdAt: new Date('2024-01-22'),
-      modifiedAt: new Date('2024-01-22'),
-      owner: 'Me. Diallo',
-      folder: 'Factures',
-      isStarred: false,
-      isShared: true,
-      thumbnail: null
-    },
-    {
-      id: 3,
-      name: 'Photo_Terrain_Vue_Aerienne.jpg',
-      type: 'image',
-      size: '4.8 MB',
-      createdAt: new Date('2024-01-10'),
-      modifiedAt: new Date('2024-01-10'),
-      owner: 'Vous',
-      folder: 'Photos Terrains',
-      isStarred: false,
-      isShared: false,
-      thumbnail: '/api/YOUR_API_KEY/150/100'
-    },
-    {
-      id: 4,
-      name: 'Acte_Propriete_Original.pdf',
-      type: 'pdf',
-      size: '3.1 MB',
-      createdAt: new Date('2024-01-05'),
-      modifiedAt: new Date('2024-01-05'),
-      owner: 'Administration',
-      folder: 'Documents Officiels',
-      isStarred: true,
-      isShared: false,
-      thumbnail: null
-    },
-    {
-      id: 5,
-      name: 'Plan_Cadastral_Zone_A.pdf',
-      type: 'pdf',
-      size: '5.2 MB',
-      createdAt: new Date('2024-01-08'),
-      modifiedAt: new Date('2024-01-08'),
-      owner: 'Géomètre Sall',
-      folder: 'Documents Officiels',
-      isStarred: false,
-      isShared: true,
-      thumbnail: null
-    },
-    {
-      id: 6,
-      name: 'Estimation_Terrain_2024.xlsx',
-      type: 'spreadsheet',
-      size: '890 KB',
-      createdAt: new Date('2024-01-25'),
-      modifiedAt: new Date('2024-01-26'),
-      owner: 'Vous',
-      folder: 'Factures',
-      isStarred: false,
-      isShared: false,
-      thumbnail: null
-    }
-  ];
+  const mockDocuments = []; // démo retirée
 
   useEffect(() => {
     // Simuler le chargement des documents

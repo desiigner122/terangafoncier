@@ -6,50 +6,7 @@ const NotaireMultiOfficePage = () => {
   const [selectedOffice, setSelectedOffice] = useState(null);
   const [showCreateModal, setShowCreateModal] = useState(false);
 
-  const offices = [
-    {
-      id: 1,
-      name: 'Bureau Principal - Dakar Plateau',
-      address: 'Avenue Léopold Sédar Senghor, Dakar',
-      manager: 'Me. Amadou BA',
-      staff: 12,
-      active: true,
-      stats: {
-        transactions: 45,
-        revenue: 8500000,
-        clients: 234,
-        growth: '+18%'
-      }
-    },
-    {
-      id: 2,
-      name: 'Succursale Almadies',
-      address: 'Route des Almadies, Dakar',
-      manager: 'Me. Fatou SENE',
-      staff: 8,
-      active: true,
-      stats: {
-        transactions: 32,
-        revenue: 6200000,
-        clients: 156,
-        growth: '+12%'
-      }
-    },
-    {
-      id: 3,
-      name: 'Agence Thiès',
-      address: 'Avenue Lamine Guèye, Thiès',
-      manager: 'Me. Moussa DIALLO',
-      staff: 6,
-      active: true,
-      stats: {
-        transactions: 18,
-        revenue: 3800000,
-        clients: 89,
-        growth: '+8%'
-      }
-    }
-  ];
+  const offices = []; // démo retirée
 
   const globalStats = {
     totalOffices: offices.length,

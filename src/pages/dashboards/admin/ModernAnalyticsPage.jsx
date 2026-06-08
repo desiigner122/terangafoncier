@@ -161,32 +161,17 @@ const ModernAnalyticsPage = () => {
     return ((transactionData.monthlyRevenue - transactionData.previousMonthRevenue) / transactionData.previousMonthRevenue * 100);
   };
 
+  // Séries temporelles : nécessitent un historique réel (transactions horodatées
+  // agrégées par jour). Tant que la source ne fournit pas ces données brutes,
+  // on renvoie une série vide plutôt que des valeurs aléatoires.
   const generateTransactionTrends = (transactionData) => {
-    const last30Days = Array.from({ length: 30 }, (_, i) => {
-      const date = new Date();
-      date.setDate(date.getDate() - (29 - i));
-      return {
-        date: date.toISOString().split('T')[0],
-        day: date.toLocaleDateString('fr-FR', { weekday: 'short' }),
-        transactions: Math.floor(Math.random() * (transactionData?.dailyAverage || 10)) + 1,
-        revenue: Math.floor(Math.random() * (transactionData?.dailyRevenue || 1000000)) + 100000
-      };
-    });
-    return last30Days;
+    if (Array.isArray(transactionData?.dailyTrends)) return transactionData.dailyTrends;
+    return [];
   };
 
   const generateUserGrowthData = (userData) => {
-    const last12Months = Array.from({ length: 12 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() - (11 - i));
-      return {
-        month: date.toLocaleDateString('fr-FR', { month: 'short' }),
-        nouveaux: Math.floor(Math.random() * (userData?.monthlyGrowth || 50)) + 10,
-        actifs: Math.floor(Math.random() * (userData?.activeUsers || 200)) + 50,
-        total: (userData?.totalUsers || 100) + (i * 20)
-      };
-    });
-    return last12Months;
+    if (Array.isArray(userData?.monthlyTrends)) return userData.monthlyTrends;
+    return [];
   };
 
   const generatePropertyAnalytics = (propertiesData) => {
@@ -206,25 +191,18 @@ const ModernAnalyticsPage = () => {
   };
 
   const generateRevenueData = (transactionData) => {
-    const last6Months = Array.from({ length: 6 }, (_, i) => {
-      const date = new Date();
-      date.setMonth(date.getMonth() - (5 - i));
-      return {
-        month: date.toLocaleDateString('fr-FR', { month: 'long' }),
-        revenue: (transactionData?.monthlyRevenue || 5000000) * (0.7 + Math.random() * 0.6),
-        transactions: Math.floor((transactionData?.monthlyTransactions || 100) * (0.7 + Math.random() * 0.6)),
-        growth: (Math.random() - 0.5) * 20
-      };
-    });
-    return last6Months;
+    if (Array.isArray(transactionData?.monthlyTrends)) return transactionData.monthlyTrends;
+    return [];
   };
 
+  // Métriques de croissance : valeurs réelles si disponibles, sinon null
+  // (l'UI affiche alors "N/D" au lieu d'un pourcentage inventé).
   const generateGrowthMetrics = (dashboardData) => {
     return {
-      userGrowth: dashboardData?.userGrowth || (Math.random() * 30 + 5),
-      revenueGrowth: dashboardData?.revenueGrowth || (Math.random() * 40 + 10),
-      transactionGrowth: dashboardData?.transactionGrowth || (Math.random() * 25 + 8),
-      propertyGrowth: dashboardData?.propertyGrowth || (Math.random() * 20 + 5)
+      userGrowth: dashboardData?.userGrowth ?? null,
+      revenueGrowth: dashboardData?.revenueGrowth ?? null,
+      transactionGrowth: dashboardData?.transactionGrowth ?? null,
+      propertyGrowth: dashboardData?.propertyGrowth ?? null
     };
   };
 
@@ -268,13 +246,14 @@ const ModernAnalyticsPage = () => {
       
       setAiInsights(insights);
 
-      // Générer analytics prédictives
+      // Analytics prédictives : projections simples basées sur les vraies données.
+      // riskScore / opportunityScore nécessitent un vrai modèle -> null (UI "N/D").
       setPredictiveAnalytics({
-        nextMonthRevenue: data.overview.totalRevenue * 1.15,
-        nextMonthUsers: data.overview.totalUsers * 1.08,
-        nextMonthTransactions: data.overview.totalTransactions * 1.12,
-        riskScore: Math.floor(Math.random() * 30) + 10,
-        opportunityScore: Math.floor(Math.random() * 40) + 60
+        nextMonthRevenue: (data.overview.totalRevenue || 0) * 1.15,
+        nextMonthUsers: (data.overview.totalUsers || 0) * 1.08,
+        nextMonthTransactions: (data.overview.totalTransactions || 0) * 1.12,
+        riskScore: null,
+        opportunityScore: null
       });
 
     } catch (error) {

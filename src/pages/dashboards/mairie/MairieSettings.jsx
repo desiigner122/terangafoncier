@@ -121,7 +121,7 @@ const MairieSettings = ({ dashboardStats }) => {
   // Paramètres généraux
   const [generalSettings, setGeneralSettings] = useState({
     municipalityName: 'Commune de Teranga',
-    mayorName: 'Abdoulaye SARR',
+    mayorName: '',
     address: 'Avenue Léopold Sédar Senghor, Dakar',
     phone: '+221 33 123 45 67',
     email: 'mairie@teranga.sn',
@@ -132,38 +132,7 @@ const MairieSettings = ({ dashboardStats }) => {
   });
 
   // Utilisateurs et rôles
-  const [users, setUsers] = useState([
-    {
-      id: 'user-001',
-      name: 'Aminata DIOP',
-      email: 'aminata.diop@teranga.sn',
-      role: 'Chef Service Urbanisme',
-      permissions: ['view_all', 'edit_urban_planning', 'approve_permits'],
-      status: 'Actif',
-      lastLogin: '2024-01-22 09:30',
-      avatar: null
-    },
-    {
-      id: 'user-002',
-      name: 'Moussa FALL',
-      email: 'moussa.fall@teranga.sn',
-      role: 'Agent Foncier',
-      permissions: ['view_requests', 'edit_land_records', 'create_nft'],
-      status: 'Actif',
-      lastLogin: '2024-01-22 14:15',
-      avatar: null
-    },
-    {
-      id: 'user-003',
-      name: 'Fatou NDIAYE',
-      email: 'fatou.ndiaye@teranga.sn',
-      role: 'Secrétaire Général',
-      permissions: ['view_all', 'user_management', 'system_config'],
-      status: 'Inactif',
-      lastLogin: '2024-01-20 16:45',
-      avatar: null
-    }
-  ]);
+  const [users, setUsers] = useState([]); // démo retirée
 
   // Paramètres système
   const [systemSettings, setSystemSettings] = useState({

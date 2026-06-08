@@ -44,122 +44,13 @@ const PromoterProfilePage = () => {
   }, [promoterId]);
 
   const loadPromoterProfile = async () => {
-    const mockPromoter = {
-      id: promoterId,
-      name: 'Teranga Construction SARL',
-      type: 'Promoteur Immobilier',
-      avatar: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=150&h=150&fit=crop',
-      coverImage: 'https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&h=300&fit=crop',
-      location: 'Almadies, Dakar',
-      foundedYear: 2015,
-      isVerified: true,
-      rating: 4.9,
-      reviewCount: 127,
-      description: 'Promoteur immobilier de référence au Sénégal depuis 2015. Nous développons des projets résidentiels et commerciaux haut de gamme avec les dernières technologies et un engagement fort pour la durabilité.',
-      phone: '+221 33 865 12 34',
-      email: 'contact@teranga-construction.com',
-      website: 'www.teranga-construction.com',
-      specialties: [
-        'Résidences Haut Standing',
-        'Complexes Commerciaux', 
-        'Bâtiments Intelligents',
-        'Construction Durable',
-        'Architecture Moderne'
-      ],
-      stats: {
-        totalProjects: 24,
-        completedProjects: 18,
-        ongoingProjects: 6,
-        totalUnits: 450,
-        totalInvestment: '45 Milliards FCFA',
-        employees: 125,
-        averageDeliveryTime: '18 mois',
-        clientSatisfaction: '96%'
-      },
-      certifications: [
-        'Promoteur Agréé État du Sénégal',
-        'ISO 9001:2015 Qualité',
-        'Certification Environnementale',
-        'Prix Innovation 2023',
-        'Entreprise Responsable'
-      ],
-      services: [
-        'Développement Immobilier',
-        'Construction Clés en Main',
-        'Financement de Projets',
-        'Gestion de Patrimoine',
-        'Conseil en Investissement'
-      ],
-      team: [
-        {
-          name: 'Moussa Fall',
-          role: 'Directeur Général',
-          avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-          experience: '15 ans'
-        },
-        {
-          name: 'Fatou Sow',
-          role: 'Architecte Principal',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616c88d3b0e?w=100&h=100&fit=crop&crop=face',
-          experience: '12 ans'
-        },
-        {
-          name: 'Omar Diop',
-          role: 'Chef de Projet',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-          experience: '10 ans'
-        }
-      ]
-    };
+    const mockPromoter = {}; // démo retirée
     setPromoter(mockPromoter);
     setLoading(false);
   };
 
   const loadPromoterProjects = async () => {
-    const mockProjects = [
-      {
-        id: 1,
-        name: 'Résidence Almadies Premium',
-        type: 'Résidentiel',
-        location: 'Almadies, Dakar',
-        status: 'En cours',
-        progress: 75,
-        units: 24,
-        priceRange: '150M - 300M FCFA',
-        deliveryDate: '2024-12-15',
-        image: 'https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=300&fit=crop',
-        description: 'Résidence haut standing avec vue sur mer, équipements modernes et espaces verts.',
-        features: ['Vue mer', 'Piscine', 'Sécurité 24h', 'Parking', 'Espaces verts']
-      },
-      {
-        id: 2,
-        name: 'Centre Commercial Liberté',
-        type: 'Commercial',
-        location: 'Liberté 6, Dakar',
-        status: 'Planifié',
-        progress: 15,
-        units: 45,
-        priceRange: '80M - 200M FCFA',
-        deliveryDate: '2025-06-30',
-        image: 'https://images.unsplash.com/photo-1441986300917-64674bd600d8?w=400&h=300&fit=crop',
-        description: 'Centre commercial moderne avec espaces de vente, restaurants et divertissement.',
-        features: ['Parking 3 niveaux', 'Climatisation', 'Ascenseurs', 'Sécurité']
-      },
-      {
-        id: 3,
-        name: 'Villas Mermoz Gardens',
-        type: 'Résidentiel',
-        location: 'Mermoz, Dakar',
-        status: 'Terminé',
-        progress: 100,
-        units: 12,
-        priceRange: '200M - 400M FCFA',
-        deliveryDate: '2024-03-30',
-        image: 'https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop',
-        description: 'Villas de luxe avec jardins privés dans un quartier résidentiel calme.',
-        features: ['Jardin privé', 'Garage 2 voitures', 'Terrasse', 'Système solaire']
-      }
-    ];
+    const mockProjects = []; // démo retirée
     setProjects(mockProjects);
   };
 

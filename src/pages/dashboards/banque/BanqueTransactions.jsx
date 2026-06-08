@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   CreditCard, 
@@ -47,118 +48,41 @@ const BanqueTransactions = () => {
 
   // Simulation des données de transactions
   useEffect(() => {
-    const mockTransactions = [
-      {
-        id: 'TXN-2024-001',
-        type: 'credit',
-        amount: 2500000,
-        currency: 'XOF',
-        description: 'Virement diaspora - Fatou Sene',
-        fromAccount: 'FR7630006000011234567890189',
-        toAccount: 'SN1234567890123456789012345',
-        clientName: 'Fatou Sene',
-        status: 'completed',
-        category: 'diaspora',
-        date: new Date('2024-09-26T10:30:00'),
-        fees: 12500,
-        exchangeRate: null,
-        reference: 'REF-FR-001',
-        channel: 'online',
-        location: 'Paris, France'
-      },
-      {
-        id: 'TXN-2024-002',
-        type: 'debit',
-        amount: 850000,
-        currency: 'XOF',
-        description: 'Retrait ATM - Amadou Diallo',
-        fromAccount: 'SN1234567890123456789012345',
-        toAccount: null,
-        clientName: 'Amadou Diallo',
-        status: 'completed',
-        category: 'withdrawal',
-        date: new Date('2024-09-26T14:15:00'),
-        fees: 2500,
-        exchangeRate: null,
-        reference: 'ATM-DK-045',
-        channel: 'atm',
-        location: 'Dakar, Sénégal'
-      },
-      {
-        id: 'TXN-2024-003',
-        type: 'credit',
-        amount: 15000000,
-        currency: 'XOF',
-        description: 'Remboursement crédit immobilier - Omar Fall',
-        fromAccount: 'US1234567890123456789012345',
-        toAccount: 'SN9876543210987654321098765',
-        clientName: 'Omar Fall',
-        status: 'pending',
-        category: 'loan_payment',
-        date: new Date('2024-09-26T16:45:00'),
-        fees: 75000,
-        exchangeRate: 1.2,
-        reference: 'LOAN-US-012',
-        channel: 'swift',
-        location: 'New York, USA'
-      },
-      {
-        id: 'TXN-2024-004',
-        type: 'transfer',
-        amount: 3200000,
-        currency: 'XOF',
-        description: 'Virement entreprise - Industries Ba',
-        fromAccount: 'SN1111222233334444555566667',
-        toAccount: 'SN7777888899990000111122223',
-        clientName: 'Moussa Ba',
-        status: 'completed',
-        category: 'business',
-        date: new Date('2024-09-25T09:20:00'),
-        fees: 16000,
-        exchangeRate: null,
-        reference: 'BUS-SN-078',
-        channel: 'online',
-        location: 'Thiès, Sénégal'
-      },
-      {
-        id: 'TXN-2024-005',
-        type: 'debit',
-        amount: 125000,
-        currency: 'XOF',
-        description: 'Paiement mobile - Aissatou Ndiaye',
-        fromAccount: 'SN5555666677778888999900001',
-        toAccount: null,
-        clientName: 'Aissatou Ndiaye',
-        status: 'failed',
-        category: 'mobile_payment',
-        date: new Date('2024-09-25T18:30:00'),
-        fees: 1250,
-        exchangeRate: null,
-        reference: 'MOB-SN-234',
-        channel: 'mobile',
-        location: 'Dakar, Sénégal'
-      },
-      {
-        id: 'TXN-2024-006',
-        type: 'credit',
-        amount: 8750000,
-        currency: 'XOF',
-        description: 'Investissement TerangaChain NFT',
-        fromAccount: 'BLOCKCHAIN-WALLET-001',
-        toAccount: 'SN1234567890123456789012345',
-        clientName: 'Amadou Diallo',
-        status: 'completed',
-        category: 'investment',
-        date: new Date('2024-09-24T12:00:00'),
-        fees: 43750,
-        exchangeRate: null,
-        reference: 'NFT-TG-567',
-        channel: 'blockchain',
-        location: 'TerangaChain Network'
+    let active = true;
+    const loadTransactions = async () => {
+      try {
+        // Transactions RÉELLES depuis Supabase (table financial_transactions)
+        const { data, error } = await supabase
+          .from('financial_transactions')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        const mapped = (data || []).map((t) => ({
+          id: t.id,
+          type: t.type || t.transaction_type || 'credit',
+          amount: parseFloat(t.amount) || 0,
+          currency: t.currency || 'XOF',
+          description: t.description || '',
+          fromAccount: t.from_account || '',
+          toAccount: t.to_account || '',
+          clientName: t.client_name || '',
+          status: t.status || 'completed',
+          category: t.category || '',
+          date: t.created_at ? new Date(t.created_at) : null,
+          fees: parseFloat(t.fees) || 0,
+          exchangeRate: t.exchange_rate ?? null,
+          reference: t.reference || '',
+          channel: t.channel || '',
+          location: t.location || ''
+        }));
+        if (active) { setTransactions(mapped); setFilteredTransactions(mapped); }
+      } catch (err) {
+        console.warn('Transactions banque indisponibles:', err?.message);
+        if (active) { setTransactions([]); setFilteredTransactions([]); }
       }
-    ];
-    setTransactions(mockTransactions);
-    setFilteredTransactions(mockTransactions);
+    };
+    loadTransactions();
+    return () => { active = false; };
   }, []);
 
   // Filtrage des transactions

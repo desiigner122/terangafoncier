@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MapPin, 
@@ -61,92 +62,18 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
   });
 
   // Données des propriétés à vérifier (garanties bancaires)
-  const [properties, setProperties] = useState([
-    {
-      id: 1,
-      reference: 'GAR-001-2024',
-      owner: 'M. Amadou Diallo',
-      address: 'Villa Almadies, Parcelle VDN 47',
-      coordinates: {
-        latitude: 14.7167,
-        longitude: -17.4677,
-        precision: 1.2 // mètres
-      },
-      status: 'verified',
-      area: 450, // m²
-      lastVerified: '2024-01-20',
-      conflicts: [],
-      riskLevel: 'low',
-      satelliteImageDate: '2024-01-15',
-      creditAmount: 25000000,
-      propertyValue: 45000000,
-      mortgageRatio: 55.6, // %
-      propertyType: 'Villa'
-    },
-    {
-      id: 2,
-      reference: 'GAR-002-2024',
-      owner: 'Société Immobilière Sénégal',
-      address: 'Complexe Commercial Diamniadio, Lot 12-15',
-      coordinates: {
-        latitude: 14.7200,
-        longitude: -17.4700,
-        precision: 2.1
-      },
-      status: 'conflict_detected',
-      area: 2450,
-      lastVerified: '2024-01-19',
-      conflicts: ['Limite contestée', 'Construction non autorisée'],
-      riskLevel: 'high',
-      satelliteImageDate: '2024-01-10',
-      creditAmount: 150000000,
-      propertyValue: 285000000,
-      mortgageRatio: 52.6,
-      propertyType: 'Commercial'
-    },
-    {
-      id: 3,
-      reference: 'GAR-003-2024',
-      owner: 'Coopérative Habitat Solidaire',
-      address: 'Zone Habitat Social Rufisque, Bloc A-23',
-      coordinates: {
-        latitude: 14.7100,
-        longitude: -17.4750,
-        precision: 1.8
-      },
-      status: 'pending',
-      area: 1200,
-      lastVerified: null,
-      conflicts: [],
-      riskLevel: 'medium',
-      satelliteImageDate: '2024-01-18',
-      creditAmount: 75000000,
-      propertyValue: 135000000,
-      mortgageRatio: 55.6,
-      propertyType: 'Collectif'
-    },
-    {
-      id: 4,
-      reference: 'GAR-004-2024',
-      owner: 'Mme Fatou Mbaye',
-      address: 'Appartement Parcelles Assainies, U15-89',
-      coordinates: {
-        latitude: 14.7180,
-        longitude: -17.4650,
-        precision: 1.5
-      },
-      status: 'verified',
-      area: 85,
-      lastVerified: '2024-01-20',
-      conflicts: [],
-      riskLevel: 'low',
-      satelliteImageDate: '2024-01-16',
-      creditAmount: 12000000,
-      propertyValue: 22000000,
-      mortgageRatio: 54.5,
-      propertyType: 'Appartement'
-    }
-  ]);
+  const [properties, setProperties] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setProperties(data || []);
+      } catch (err) { if (active) setProperties([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Simulation de vérification GPS
   const handleGPSVerification = async (property) => {
@@ -155,7 +82,7 @@ const BanqueGPSVerification = ({ dashboardStats }) => {
     
     // Simulation du processus de vérification bancaire
     setTimeout(() => {
-      const hasConflict = Math.random() > 0.85;
+      const hasConflict = false;
       const updatedProperties = properties.map(p => 
         p.id === property.id 
           ? {

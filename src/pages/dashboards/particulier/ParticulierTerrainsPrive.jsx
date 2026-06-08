@@ -47,7 +47,7 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
       description: 'Terrain viabilisé avec vue sur mer, idéal pour villa haut standing',
       caracteristiques: ['Viabilisé', 'Vue mer', 'Titre foncier', 'Accès goudronné'],
       contact: {
-        nom: 'Amadou DIALLO',
+        nom: '',
         telephone: '+221 77 123 45 67',
         email: 'a.diallo@senegalimmobilier.sn'
       },
@@ -69,7 +69,7 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
       description: 'Terrain commercial au cœur du Plateau, parfait pour immeuble',
       caracteristiques: ['Zone commerciale', 'Proche métro', 'Services publics', 'Parking'],
       contact: {
-        nom: 'Cheikh NDIAYE',
+        nom: '',
         telephone: '+221 76 987 65 43',
         email: 'cheikh.ndiaye@gmail.com'
       },
@@ -91,7 +91,7 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
       description: 'Grand terrain agricole fertile, idéal pour projet agro-pastoral',
       caracteristiques: ['Sol fertile', 'Point d\'eau', 'Accès route', 'Électricité proche'],
       contact: {
-        nom: 'Fatou SARR',
+        nom: '',
         telephone: '+221 78 234 56 78',
         email: 'fatou.sarr@bokkjekk.sn'
       },

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Building, 
@@ -34,80 +35,22 @@ const ConstructionPage = () => {
   const [liveFeeds, setLiveFeeds] = useState([]);
 
   // Données mockées des projets en construction avec suivi à distance
-  const constructionProjects = [
-    {
-      id: 1,
-      clientName: 'Aminata FALL',
-      projectName: 'Villa R+1 Liberté 6',
-      location: 'Liberté 6, Dakar',
-      startDate: '2024-01-15',
-      expectedEnd: '2025-06-30',
-      progress: 45,
-      phase: 'Gros œuvre',
-      budget: 45000000,
-      spent: 20250000,
-      cameras: 4,
-      lastUpdate: '2024-01-20 14:30',
-      status: 'En cours',
-      alerts: 1,
-      satisfaction: 4.8,
-      contractor: 'TERANGA Construction SARL',
-      iot: {
-        humidity: 65,
-        temperature: 28,
-        noiseLevel: 75,
-        airQuality: 'Bon'
+  // constructionProjects RÉEL depuis Supabase (aucune donnée fictive)
+  const [constructionProjects, setConstructionProjects] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('developer_projects').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setConstructionProjects(data || []);
+      } catch (err) {
+        console.warn('constructionProjects indisponible:', err?.message);
+        if (active) setConstructionProjects([]);
       }
-    },
-    {
-      id: 2,
-      clientName: 'Moussa DIENG',
-      projectName: 'Maison Familiale Grand Yoff',
-      location: 'Grand Yoff, Dakar',
-      startDate: '2024-02-01',
-      expectedEnd: '2025-04-15',
-      progress: 60,
-      phase: 'Finitions',
-      budget: 28000000,
-      spent: 16800000,
-      cameras: 3,
-      lastUpdate: '2024-01-20 16:45',
-      status: 'En cours',
-      alerts: 0,
-      satisfaction: 4.9,
-      contractor: 'TERANGA Construction SARL',
-      iot: {
-        humidity: 58,
-        temperature: 26,
-        noiseLevel: 68,
-        airQuality: 'Excellent'
-      }
-    },
-    {
-      id: 3,
-      clientName: 'Fatou SARR',
-      projectName: 'Duplex Moderne Pikine',
-      location: 'Pikine, Dakar',
-      startDate: '2024-03-10',
-      expectedEnd: '2025-08-20',
-      progress: 25,
-      phase: 'Fondations',
-      budget: 35000000,
-      spent: 8750000,
-      cameras: 2,
-      lastUpdate: '2024-01-20 11:20',
-      status: 'En cours',
-      alerts: 2,
-      satisfaction: 4.6,
-      contractor: 'TERANGA Construction SARL',
-      iot: {
-        humidity: 72,
-        temperature: 31,
-        noiseLevel: 85,
-        airQuality: 'Moyen'
-      }
-    }
-  ];
+    })();
+    return () => { active = false; };
+  }, []);
 
   return (
     <div className="space-y-6">

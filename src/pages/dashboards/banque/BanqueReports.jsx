@@ -52,61 +52,7 @@ const BanqueReports = () => {
 
   // Données simulées pour les rapports
   useEffect(() => {
-    const mockData = {
-      monthlyRevenue: [
-        { month: 'Jan', revenue: 45000000, transactions: 1250, clients: 890 },
-        { month: 'Fév', revenue: 52000000, transactions: 1420, clients: 945 },
-        { month: 'Mar', revenue: 48000000, transactions: 1380, clients: 920 },
-        { month: 'Avr', revenue: 61000000, transactions: 1650, clients: 1080 },
-        { month: 'Mai', revenue: 58000000, transactions: 1580, clients: 1120 },
-        { month: 'Jun', revenue: 67000000, transactions: 1750, clients: 1250 },
-        { month: 'Jul', revenue: 72000000, transactions: 1890, clients: 1340 },
-        { month: 'Aoû', revenue: 69000000, transactions: 1820, clients: 1380 },
-        { month: 'Sep', revenue: 75000000, transactions: 1950, clients: 1450 }
-      ],
-      clientSegments: [
-        { name: 'Premium', value: 25, color: '#8B5CF6' },
-        { name: 'Business', value: 35, color: '#3B82F6' },
-        { name: 'Diaspora', value: 20, color: '#10B981' },
-        { name: 'Standard', value: 20, color: '#F59E0B' }
-      ],
-      transactionTypes: [
-        { type: 'Virements', amount: 45000000, count: 450, percentage: 35 },
-        { type: 'Crédits', amount: 38000000, count: 125, percentage: 30 },
-        { type: 'Diaspora', amount: 25000000, count: 280, percentage: 20 },
-        { type: 'Mobile', amount: 12000000, count: 680, percentage: 10 },
-        { type: 'ATM', amount: 6000000, count: 320, percentage: 5 }
-      ],
-      performanceMetrics: {
-        totalRevenue: 128500000,
-        revenueGrowth: 15.8,
-        totalClients: 1450,
-        clientGrowth: 12.3,
-        totalTransactions: 1950,
-        transactionGrowth: 8.7,
-        averageTransactionValue: 65897,
-        portfolioValue: 2800000000,
-        portfolioGrowth: 22.1,
-        creditPortfolio: 1200000000,
-        creditGrowth: 18.5,
-        riskRatio: 2.3,
-        complianceScore: 98.7
-      },
-      channelPerformance: [
-        { channel: 'Online Banking', users: 850, transactions: 1250, revenue: 45000000 },
-        { channel: 'Mobile App', users: 720, transactions: 980, revenue: 32000000 },
-        { channel: 'Agences', users: 450, transactions: 560, revenue: 28000000 },
-        { channel: 'ATM', users: 380, transactions: 320, revenue: 8000000 },
-        { channel: 'Call Center', users: 125, transactions: 95, revenue: 3500000 }
-      ],
-      riskAnalysis: [
-        { category: 'Crédit Immobilier', exposure: 450000000, risk: 'Faible', score: 85 },
-        { category: 'Crédit Commercial', exposure: 320000000, risk: 'Modéré', score: 72 },
-        { category: 'Crédit Personnel', exposure: 180000000, risk: 'Modéré', score: 68 },
-        { category: 'Découvert', exposure: 45000000, risk: 'Élevé', score: 45 },
-        { category: 'Crédit Auto', exposure: 205000000, risk: 'Faible', score: 78 }
-      ]
-    };
+    const mockData = {}; // démo retirée
     setReportData(mockData);
   }, []);
 

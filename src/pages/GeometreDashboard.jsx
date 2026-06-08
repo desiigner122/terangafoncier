@@ -90,47 +90,7 @@ const GeometreDashboard = () => {
   });
 
   // Missions actives du géomètre
-  const [activeMissions, setActiveMissions] = useState([
-    {
-      id: 'GEO-001',
-      type: 'Bornage',
-      client: 'M. Amadou Diop',
-      location: 'Almadies, Dakar',
-      surface: '2.5 hectares',
-      status: 'in_progress',
-      progress: 75,
-      deadline: '2024-03-15',
-      priority: 'high',
-      revenue: 450000,
-      coordinates: { lat: 14.7167, lng: -17.4677 }
-    },
-    {
-      id: 'GEO-002', 
-      type: 'Lotissement',
-      client: 'Société IMMODA',
-      location: 'Diamniadio',
-      surface: '15 hectares',
-      status: 'planning',
-      progress: 25,
-      deadline: '2024-04-30',
-      priority: 'medium',
-      revenue: 2250000,
-      coordinates: { lat: 14.7206, lng: -17.1847 }
-    },
-    {
-      id: 'GEO-003',
-      type: 'Topographie',
-      client: 'Mairie de Rufisque',
-      location: 'Centre-ville Rufisque',
-      surface: '8.2 hectares',
-      status: 'survey',
-      progress: 60,
-      deadline: '2024-03-25',
-      priority: 'high',
-      revenue: 820000,
-      coordinates: { lat: 14.7167, lng: -17.2667 }
-    }
-  ]);
+  const [activeMissions, setActiveMissions] = useState([]); // démo retirée
 
   // Équipements techniques
   const [equipments, setEquipments] = useState([

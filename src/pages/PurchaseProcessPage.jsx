@@ -59,7 +59,7 @@ const PurchaseProcessPage = () => {
     ],
     features: ['Viabilisé', 'Titre foncier', 'Proche des commodités'],
     seller: {
-      name: 'Amadou Ndiaye',
+      name: '',
       phone: '+221 77 123 45 67',
       verified: true
     }

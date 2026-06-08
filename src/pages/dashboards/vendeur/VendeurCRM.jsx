@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import {
   Users,
@@ -27,102 +28,49 @@ const VendeurCRM = () => {
   const [selectedProspect, setSelectedProspect] = useState(null);
 
   // Données CRM
-  const crmData = {
+  // Données CRM RÉELLES depuis Supabase (aucune donnée fictive)
+  const [crmData, setCrmData] = useState({
     stats: {
-      totalProspects: 89,
-      hotProspects: 12,
-      coldProspects: 28,
-      convertedToday: 3,
-      averageScore: 67,
-      conversionRate: 18.5,
-      monthlyRevenue: 125000000,
-      avgDealSize: 75000000
+      totalProspects: 0, hotProspects: 0, coldProspects: 0, convertedToday: 0,
+      averageScore: 0, conversionRate: null, monthlyRevenue: 0, avgDealSize: 0
     },
-    prospects: [
-      {
-        id: 1,
-        name: 'Fatou Sall',
-        email: 'fatou.sall@gmail.com',
-        phone: '+221 77 234 56 78',
-        avatar: 'https://images.unsplash.com/photo-1494790108755-2616b9c3e9a3?w=100&h=100&fit=crop&crop=face',
-        company: 'Entreprise Sall & Fils',
-        position: 'Directrice Générale',
-        status: 'Chaud',
-        score: 92,
-        budget: '100-150M FCFA',
-        interestedProperty: 'Villa Moderne Almadies',
-        source: 'Site web',
-        lastContact: '2024-03-20',
-        nextAction: 'Visite programmée demain',
-        notes: 'Très intéressée, budget confirmé, décision prévue fin de semaine',
-        priority: 'high',
-        tags: ['Budget confirmé', 'Decision maker', 'Urgent']
-      },
-      {
-        id: 2,
-        name: 'Moussa Diop',
-        email: 'moussa.diop@outlook.com',
-        phone: '+221 76 345 67 89',
-        avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=100&h=100&fit=crop&crop=face',
-        company: 'Cabinet Diop Associés',
-        position: 'Avocat Principal',
-        status: 'Tiède',
-        score: 74,
-        budget: '80-120M FCFA',
-        interestedProperty: 'Appartement Standing Plateau',
-        source: 'Recommandation',
-        lastContact: '2024-03-18',
-        nextAction: 'Rappel négociation prix',
-        notes: 'Intéressé mais souhaite négocier le prix',
-        priority: 'medium',
-        tags: ['Négociation', 'Prix sensible']
-      },
-      {
-        id: 3,
-        name: 'Aïssa Ndiaye',
-        email: 'aissa.ndiaye@gmail.com',
-        phone: '+221 78 456 78 90',
-        avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=100&h=100&fit=crop&crop=face',
-        company: 'Boutique Mode Aïssa',
-        position: 'Propriétaire',
-        status: 'Nouveau',
-        score: 58,
-        budget: '60-90M FCFA',
-        interestedProperty: 'Terrain Commercial Liberté 6',
-        source: 'Facebook Ads',
-        lastContact: '2024-03-19',
-        nextAction: 'Première prise de contact',
-        notes: 'Nouveau prospect, à qualifier rapidement',
-        priority: 'medium',
-        tags: ['Nouveau', 'À qualifier']
-      },
-      {
-        id: 4,
-        name: 'Ibrahima Fall',
-        email: 'ibrahim.fall@tech.sn',
-        phone: '+221 77 111 22 33',
-        avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=100&h=100&fit=crop&crop=face',
-        company: 'TechSen Solutions',
-        position: 'CEO',
-        status: 'Froid',
-        score: 34,
-        budget: '50-80M FCFA',
-        interestedProperty: 'Bureau Moderne Plateau',
-        source: 'LinkedIn',
-        lastContact: '2024-03-15',
-        nextAction: 'Relance nécessaire',
-        notes: 'Peu réactif, à relancer avec une nouvelle approche',
-        priority: 'low',
-        tags: ['Relance', 'Peu réactif']
+    prospects: [],
+    activities: []
+  });
+
+  useEffect(() => {
+    let active = true;
+    const loadCRM = async () => {
+      try {
+        const [{ data: contacts }, { data: activities }] = await Promise.all([
+          supabase.from('crm_contacts').select('*').order('created_at', { ascending: false }),
+          supabase.from('crm_activities').select('*').order('created_at', { ascending: false }).limit(20)
+        ]);
+        const prospects = contacts || [];
+        const acts = activities || [];
+        if (active) {
+          setCrmData({
+            stats: {
+              totalProspects: prospects.length,
+              hotProspects: prospects.filter((p) => (p.status || p.temperature) === 'hot').length,
+              coldProspects: prospects.filter((p) => (p.status || p.temperature) === 'cold').length,
+              convertedToday: 0,
+              averageScore: prospects.length ? Math.round(prospects.reduce((s, p) => s + (p.score || 0), 0) / prospects.length) : 0,
+              conversionRate: null,
+              monthlyRevenue: 0,
+              avgDealSize: 0
+            },
+            prospects,
+            activities: acts
+          });
+        }
+      } catch (err) {
+        console.warn('CRM indisponible:', err?.message);
       }
-    ],
-    activities: [
-      { type: 'call', prospect: 'Fatou Sall', time: '1h', action: 'Appel de suivi très positif' },
-      { type: 'email', prospect: 'Moussa Diop', time: '2h', action: 'Envoi nouvelle proposition' },
-      { type: 'meeting', prospect: 'Aïssa Ndiaye', time: '4h', action: 'Rendez-vous programmé' },
-      { type: 'note', prospect: 'Ibrahima Fall', time: '6h', action: 'Note de suivi ajoutée' }
-    ]
-  };
+    };
+    loadCRM();
+    return () => { active = false; };
+  }, []);
 
   const getStatusColor = (status) => {
     const colors = {

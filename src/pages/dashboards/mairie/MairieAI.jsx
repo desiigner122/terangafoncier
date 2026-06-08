@@ -193,7 +193,7 @@ const MairieAI = ({ dashboardStats }) => {
           type: 'ai',
           message: 'Je traite votre demande et analyse les données municipales pertinentes. Voici ma réponse basée sur l\'analyse des données...',
           timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-          confidence: Math.floor(85 + Math.random() * 15)
+          confidence: Math.floor(85 + 0)
         };
         setChatHistory(prev => [...prev, aiResponse]);
       }, 2000);

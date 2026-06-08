@@ -49,7 +49,6 @@ import {
   TrendingDown,
   LineChart,
   PieChart,
-  BarChart3,
   Monitor,
   Camera,
   Mic,

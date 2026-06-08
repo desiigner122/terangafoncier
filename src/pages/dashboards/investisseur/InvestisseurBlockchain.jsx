@@ -38,53 +38,7 @@ const InvestisseurBlockchain = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   // Certificats blockchain
-  const blockchainCertificates = [
-    {
-      id: 'cert-001',
-      title: 'Résidence Les Almadies',
-      type: 'Propriété',
-      status: 'Validé',
-      blockHash: '0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c2eb7b11a91385',
-      transactionHash: '0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
-      timestamp: '2024-01-15T10:30:00Z',
-      value: 450000,
-      location: 'Almadies, Dakar',
-      validatedBy: 'Notaire Maître Diop',
-      validationDate: '2024-01-15',
-      gasUsed: 0.0023,
-      confirmations: 1247
-    },
-    {
-      id: 'cert-002',
-      title: 'Centre Commercial Liberté 6',
-      type: 'Investissement Commercial',
-      status: 'Validé',
-      blockHash: '0x8e0cade2d1e68b8bf77bc5fbe80cade2d1e68b8bf77bc5fbe8d3d3fc8c22a0296',
-      transactionHash: '0xb2c3d4e5f6789012345678901234567890abcdef1234567890abcdef12345678',
-      timestamp: '2023-08-10T14:20:00Z',
-      value: 800000,
-      location: 'Liberté 6, Dakar',
-      validatedBy: 'Géomètre Expert Sy',
-      validationDate: '2023-08-10',
-      gasUsed: 0.0031,
-      confirmations: 4382
-    },
-    {
-      id: 'cert-003',
-      title: 'Lotissement Diamaguène',
-      type: 'Terrain',
-      status: 'En cours',
-      blockHash: 'Pending...',
-      transactionHash: '0xc3d4e5f6789012345678901234567890abcdef1234567890abcdef123456789',
-      timestamp: '2024-12-15T09:15:00Z',
-      value: 320000,
-      location: 'Diamaguène, Sicap',
-      validatedBy: 'En attente validation',
-      validationDate: null,
-      gasUsed: 0.0019,
-      confirmations: 12
-    }
-  ];
+  const blockchainCertificates = []; // démo retirée
 
   // Historique des transactions
   const transactionHistory = [

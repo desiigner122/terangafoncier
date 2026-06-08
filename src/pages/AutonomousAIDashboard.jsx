@@ -723,9 +723,9 @@ const AutonomousAIDashboard = () => {
 
   function generateCreditRequests() {
     return [
-      { applicant: "Amadou Diop", amount: "25,000,000", aiScore: 92, aiStatus: "approved" },
-      { applicant: "Fatou Sall", amount: "18,000,000", aiScore: 87, aiStatus: "approved" },
-      { applicant: "Ousmane Fall", amount: "35,000,000", aiScore: 65, aiStatus: "pending" }
+      { applicant: "", amount: "25,000,000", aiScore: 92, aiStatus: "approved" },
+      { applicant: "", amount: "18,000,000", aiScore: 87, aiStatus: "approved" },
+      { applicant: "", amount: "35,000,000", aiScore: 65, aiStatus: "pending" }
     ];
   }
 

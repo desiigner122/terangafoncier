@@ -161,32 +161,7 @@ const NotairesPage = () => {
     }
   ];
 
-  const successStories = [
-    {
-      notaire: "Me. Fatou Diop",
-      location: "Dakar Plateau",
-      results: "+240% d'actes immobiliers en 8 mois",
-      details: "Spécialisation diaspora européenne",
-      growth: "+240%",
-      volume: "180 actes/mois"
-    },
-    {
-      notaire: "Me. Mamadou Kane",
-      location: "Almadies",
-      results: "€450K d'honoraires additionnels/an",
-      details: "Focus clientèle Amérique du Nord",
-      growth: "+189%",
-      volume: "125 actes/mois"
-    },
-    {
-      notaire: "Me. Aissatou Sy",
-      location: "Guédiawaye",
-      results: "950 nouveaux clients diaspora",
-      details: "Couverture Afrique de l'Ouest",
-      growth: "+156%",
-      volume: "95 actes/mois"
-    }
-  ];
+  const successStories = []; // démo retirée
 
   const packages = [
     {

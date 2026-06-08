@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Star,
@@ -54,68 +55,22 @@ const ParticulierAvis = () => {
   };
 
   // Avis récents des utilisateurs
-  const recentReviews = [
-    {
-      id: 1,
-      user: "Fatou D.",
-      userType: "Acheteur Vérifié",
-      rating: 5,
-      title: "Excellent service pour l'achat de mon terrain",
-      review: "J'ai acheté un terrain à Saly via la plateforme. Le processus était transparent, les documents vérifiés et le paiement échelonné m'a beaucoup aidé. Je recommande vivement !",
-      date: "2024-03-20",
-      category: "Achat Terrain",
-      helpful: 23,
-      verified: true
-    },
-    {
-      id: 2,
-      user: "Mamadou S.",
-      userType: "Diaspora - France",
-      rating: 5,
-      title: "Parfait pour acheter depuis l'étranger",
-      review: "Vivant en France, j'ai pu acheter ma parcelle au Sénégal en toute sécurité. La blockchain et les vérifications notariales donnent une vraie confiance.",
-      date: "2024-03-18",
-      category: "Diaspora",
-      helpful: 18,
-      verified: true
-    },
-    {
-      id: 3,
-      user: "Aissatou N.",
-      userType: "Première Acheteuse",
-      rating: 4,
-      title: "Interface intuitive, accompagnement au top",
-      review: "Premier achat immobilier et l'équipe m'a accompagnée à chaque étape. L'IA m'a aidé à choisir le bon terrain selon mon budget.",
-      date: "2024-03-15",
-      category: "Expérience Utilisateur",
-      helpful: 15,
-      verified: true
-    },
-    {
-      id: 4,
-      user: "Ibrahima F.",
-      userType: "Investisseur",
-      rating: 5,
-      title: "Transparence et sécurité blockchain",
-      review: "Les NFTs des terrains et la traçabilité blockchain offrent une sécurité inégalée. J'ai acheté 3 parcelles pour mon portefeuille d'investissement.",
-      date: "2024-03-12",
-      category: "Blockchain",
-      helpful: 21,
-      verified: true
-    },
-    {
-      id: 5,
-      user: "Aminata B.",
-      userType: "Utilisatrice Mobile",
-      rating: 4,
-      title: "Application mobile très pratique",
-      review: "L'app mobile permet de suivre les annonces, recevoir des alertes et même visiter en réalité augmentée. Très innovant !",
-      date: "2024-03-10",
-      category: "Application Mobile",
-      helpful: 12,
-      verified: true
-    }
-  ];
+  // recentReviews RÉEL depuis Supabase (aucune donnée fictive)
+  const [recentReviews, setRecentReviews] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('reviews').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setRecentReviews(data || []);
+      } catch (err) {
+        console.warn('recentReviews indisponible:', err?.message);
+        if (active) setRecentReviews([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const handleSubmitReview = () => {
     if (rating === 0 || !reviewForm.title || !reviewForm.review) {

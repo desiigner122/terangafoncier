@@ -168,32 +168,7 @@ const AgentsFonciersPage = () => {
     }
   ];
 
-  const successStories = [
-    {
-      agent: "Fatima Ndiaye",
-      specialite: "Almadies & Ngor",
-      results: "+340% commissions en 12 mois",
-      details: "Focus clientèle diaspora Europe",
-      growth: "+340%",
-      volume: "€2.8M vendus/mois"
-    },
-    {
-      agent: "Moussa Diallo", 
-      specialite: "Diamniadio & Lac Rose",
-      results: "€950K commissions/an",
-      details: "Spécialiste terrains + construction",
-      growth: "+256%",
-      volume: "€4.1M vendus/mois"
-    },
-    {
-      agent: "Aïssatou Ba",
-      specialite: "Dakar Plateau",
-      results: "1,200 clients diaspora acquis",
-      details: "Expert immobilier commercial",
-      growth: "+189%",
-      volume: "€1.9M vendus/mois"
-    }
-  ];
+  const successStories = []; // démo retirée
 
   const packages = [
     {

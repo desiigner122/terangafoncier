@@ -135,9 +135,9 @@ const VendeurAIRealData = () => {
       const property = properties.find(p => p.id === selectedProperty);
 
       // Simulation analyse prix (en production, appeler l'API OpenAI)
-      const suggestedPrice = property.price * (0.95 + Math.random() * 0.1);
-      const confidence = 75 + Math.floor(Math.random() * 20);
-      const tokens = 500 + Math.floor(Math.random() * 500);
+      const suggestedPrice = property.price * (0.95 + 0);
+      const confidence = 75 + 0;
+      const tokens = 500 + 0;
 
       const analysisResult = {
         suggestedPrice: Math.round(suggestedPrice),
@@ -221,8 +221,8 @@ const VendeurAIRealData = () => {
         }
       ];
 
-      const tokens = 800 + Math.floor(Math.random() * 400);
-      const confidence = 85 + Math.floor(Math.random() * 10);
+      const tokens = 800 + 0;
+      const confidence = 85 + 0;
 
       // Enregistrer l'analyse
       const { error } = await supabase
@@ -298,7 +298,7 @@ const VendeurAIRealData = () => {
         ]
       };
 
-      const tokens = 300 + Math.floor(Math.random() * 200);
+      const tokens = 300 + 0;
 
       const { error } = await supabase
         .from('ai_analyses')
@@ -367,7 +367,7 @@ const VendeurAIRealData = () => {
         "Pour attirer plus d'acheteurs, je suggère de mettre en avant les atouts uniques de votre bien. Parlons-en!"
       ];
 
-      const aiResponse = responses[Math.floor(Math.random() * responses.length)];
+      const aiResponse = responses[Math.floor(0 * responses.length)];
 
       setTimeout(async () => {
         const newAiMessage = {

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,108 +39,22 @@ const InvestisseurOpportunites = () => {
   const [sortBy, setSortBy] = useState('roi');
 
   // Opportunités d'investissement
-  const opportunities = [
-    {
-      id: 1,
-      title: 'Villa Moderne VDN - Opportunité Exclusive',
-      type: 'Résidentiel',
-      location: 'VDN, Dakar',
-      price: 280000000,
-      minInvestment: 140000000,
-      expectedRoi: 18.5,
-      duration: '24 mois',
-      riskLevel: 'Modéré',
-      status: 'Nouveau',
-      description: 'Villa moderne 4 chambres avec piscine, finitions haut de gamme',
-      area: '350m²',
-      landSize: '500m²',
-      completionRate: 75,
-      investors: 8,
-      maxInvestors: 12,
-      promoter: 'Fall Promotion SARL',
-      images: 4,
-      rating: 4.8,
-      features: ['Piscine', 'Garage 2 places', 'Jardin', 'Sécurité 24h'],
-      deadline: '2025-01-15',
-      fundingGoal: 280000000,
-      currentFunding: 210000000
-    },
-    {
-      id: 2,
-      title: 'Complexe Commercial Liberté 6',
-      type: 'Commercial',
-      location: 'Liberté 6, Dakar',
-      price: 450000000,
-      minInvestment: 50000000,
-      expectedRoi: 22.3,
-      duration: '36 mois',
-      riskLevel: 'Faible',
-      status: 'Tendance',
-      description: 'Centre commercial avec 15 boutiques et parking',
-      area: '1200m²',
-      landSize: '800m²',
-      completionRate: 30,
-      investors: 24,
-      maxInvestors: 30,
-      promoter: 'Teranga Invest',
-      images: 8,
-      rating: 4.9,
-      features: ['Parking', '15 boutiques', 'Ascenseur', 'Climatisation'],
-      deadline: '2025-02-28',
-      fundingGoal: 450000000,
-      currentFunding: 320000000
-    },
-    {
-      id: 3,
-      title: 'Entrepôt Logistique Rufisque',
-      type: 'Industriel',
-      location: 'Rufisque',
-      price: 320000000,
-      minInvestment: 80000000,
-      expectedRoi: 19.8,
-      duration: '30 mois',
-      riskLevel: 'Élevé',
-      status: 'En cours',
-      description: 'Entrepôt moderne avec quais de chargement',
-      area: '2000m²',
-      landSize: '3000m²',
-      completionRate: 15,
-      investors: 6,
-      maxInvestors: 10,
-      promoter: 'Logistics Pro',
-      images: 6,
-      rating: 4.6,
-      features: ['Quais chargement', 'Bureau', 'Sécurité', 'Accès camions'],
-      deadline: '2025-01-30',
-      fundingGoal: 320000000,
-      currentFunding: 128000000
-    },
-    {
-      id: 4,
-      title: 'Résidence Standing Almadies',
-      type: 'Résidentiel',
-      location: 'Almadies, Dakar',
-      price: 680000000,
-      minInvestment: 170000000,
-      expectedRoi: 16.2,
-      duration: '42 mois',
-      riskLevel: 'Faible',
-      status: 'Premium',
-      description: 'Résidence de 8 villas avec vue mer',
-      area: '2800m²',
-      landSize: '4000m²',
-      completionRate: 60,
-      investors: 18,
-      maxInvestors: 20,
-      promoter: 'Almadies Development',
-      images: 12,
-      rating: 4.9,
-      features: ['Vue mer', '8 villas', 'Piscine commune', 'Gardiennage'],
-      deadline: '2025-03-15',
-      fundingGoal: 680000000,
-      currentFunding: 544000000
-    }
-  ];
+  // opportunities RÉEL depuis Supabase (aucune donnée fictive)
+  const [opportunities, setOpportunities] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('demandes_financement').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setOpportunities(data || []);
+      } catch (err) {
+        console.warn('opportunities indisponible:', err?.message);
+        if (active) setOpportunities([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Statistiques des opportunités
   const opportunityStats = {

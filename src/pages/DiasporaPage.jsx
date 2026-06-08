@@ -147,32 +147,7 @@ const DiasporaPage = () => {
     ]
   };
 
-  const testimonials = [
-    {
-      name: "Aminata Sy",
-      location: "Paris, France",
-      project: "Villa 4 pièces à Saly",
-      content: "J'ai acheté et construit ma maison depuis la France. Le suivi était parfait, j'avais l'impression d'être sur place !",
-      image: "/api/YOUR_API_KEY/60/60",
-      rating: 5
-    },
-    {
-      name: "Mamadou Diop", 
-      location: "New York, USA",
-      project: "Terrain + Duplex à Diamniadio",
-      content: "Paiements échelonnés parfaits pour mon budget. L'équipe est très professionnelle et disponible 24/7.",
-      image: "/api/YOUR_API_KEY/60/60",
-      rating: 5
-    },
-    {
-      name: "Fatou Ba",
-      location: "London, UK",
-      project: "Villa 6 pièces à Almadies",
-      content: "Les vidéos quotidiennes m'ont permis de suivre chaque détail. Ma maison est exactement comme je l'avais imaginée !",
-      image: "/api/YOUR_API_KEY/60/60",
-      rating: 5
-    }
-  ];
+  const testimonials = []; // démo retirée
 
   const stats = [
     { number: "2.5K+", label: "Projets diaspora réalisés", icon: Home },

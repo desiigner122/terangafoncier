@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Map,
@@ -27,41 +28,22 @@ const AgentFoncierTerrains = () => {
     setTimeout(() => setLoading(false), 800);
   }, []);
 
-  const terrains = [
-    {
-      id: 'TF-2024-001',
-      nom: 'Terrain Almadies Vue Mer',
-      superficie: '500 m²',
-      valeur: '850M XOF',
-      statut: 'évalué',
-      proprietaire: 'M. Amadou Diallo',
-      localisation: 'Almadies, Dakar',
-      dateEvaluation: '15/09/2024',
-      type: 'Résidentiel'
-    },
-    {
-      id: 'TF-2024-002',
-      nom: 'Parcelle Commerciale Rufisque',
-      superficie: '1,200 m²',
-      valeur: '420M XOF',
-      statut: 'en_cours',
-      proprietaire: 'Société IMMOGO',
-      localisation: 'Rufisque',
-      dateEvaluation: '20/09/2024',
-      type: 'Commercial'
-    },
-    {
-      id: 'TF-2024-003',
-      nom: 'Terrain Agricole Thiès',
-      superficie: '5,000 m²',
-      valeur: '180M XOF',
-      statut: 'attente',
-      proprietaire: 'Famille Seck',
-      localisation: 'Thiès',
-      dateEvaluation: '25/09/2024',
-      type: 'Agricole'
-    }
-  ];
+  // terrains RÉEL depuis Supabase (aucune donnée fictive)
+  const [terrains, setTerrains] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setTerrains(data || []);
+      } catch (err) {
+        console.warn('terrains indisponible:', err?.message);
+        if (active) setTerrains([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   if (loading) {
     return (

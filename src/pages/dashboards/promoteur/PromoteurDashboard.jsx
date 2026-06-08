@@ -413,7 +413,7 @@ const PromoteurDashboard = () => {
                         {[
                           {
                             id: 1,
-                            name: 'Aminata FALL',
+                            name: '',
                             lastMessage: 'Merci pour les informations sur la villa...',
                             time: '10:30',
                             unread: 2,
@@ -422,7 +422,7 @@ const PromoteurDashboard = () => {
                           },
                           {
                             id: 2,
-                            name: 'Moussa DIENG',
+                            name: '',
                             lastMessage: 'Quand pouvons-nous visiter le chantier ?',
                             time: '09:15',
                             unread: 1,
@@ -431,7 +431,7 @@ const PromoteurDashboard = () => {
                           },
                           {
                             id: 3,
-                            name: 'Fatou SARR',
+                            name: '',
                             lastMessage: 'Le devis est parfait, procédons...',
                             time: 'Hier',
                             unread: 0,

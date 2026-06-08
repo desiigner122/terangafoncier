@@ -91,22 +91,7 @@ const AgentsFonciersPage = () => {
     }
   ];
 
-  const successStories = [
-    {
-      name: "Amadou Diallo",
-      location: "Dakar",
-      sales: "45 ventes en 6 mois",
-      revenue: "2.8M FCFA",
-      testimonial: "Grâce aux outils IA, j'ai triplé mes ventes en 6 mois !"
-    },
-    {
-      name: "Fatou Sene",
-      location: "Thiès",
-      sales: "32 ventes en 4 mois",
-      revenue: "1.9M FCFA",
-      testimonial: "La blockchain a révolutionné ma façon de travailler."
-    }
-  ];
+  const successStories = []; // démo retirée
 
   return (
     <>

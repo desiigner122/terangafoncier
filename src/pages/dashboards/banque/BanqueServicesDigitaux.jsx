@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Smartphone, 
@@ -189,38 +190,18 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
   ]);
 
   // Transactions récentes
-  const [recentTransactions, setRecentTransactions] = useState([
-    {
-      id: 1,
-      type: 'credit_application',
-      client: 'M. Amadou Diallo',
-      amount: 25000000,
-      service: 'Crédit Immobilier Express',
-      status: 'approved',
-      timestamp: '2024-01-20 14:30',
-      processingTime: '18h'
-    },
-    {
-      id: 2,
-      type: 'property_valuation',
-      client: 'Société Immobilière Sénégal',
-      amount: 0,
-      service: 'Évaluation Bien Digitale',
-      status: 'completed',
-      timestamp: '2024-01-20 11:15',
-      processingTime: '1h45min'
-    },
-    {
-      id: 3,
-      type: 'wire_transfer',
-      client: 'Coopérative Habitat',
-      amount: 75000000,
-      service: 'Virements Immo Pro',
-      status: 'completed',
-      timestamp: '2024-01-20 09:22',
-      processingTime: 'Instantané'
-    }
-  ]);
+  const [recentTransactions, setRecentTransactions] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('financial_transactions').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setRecentTransactions(data || []);
+      } catch (err) { if (active) setRecentTransactions([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getServiceIcon = (service) => {
     return service.icon;

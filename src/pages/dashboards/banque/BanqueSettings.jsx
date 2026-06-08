@@ -81,7 +81,7 @@ const BanqueSettings = ({ dashboardStats = {} }) => {
       email: 'info@atlantique-bank.sn',
       website: 'www.atlantique-bank.sn',
       logo: null,
-      director: 'Amadou Ba',
+      director: '',
       foundedYear: '2018',
       capital: '15 000 000 000 XOF',
       employees: 450,

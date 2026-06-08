@@ -78,18 +78,7 @@ const VendeurSettings = () => {
     priceAlerts: false
   });
   
-  const [profileData, setProfileData] = useState({
-    firstName: 'Mamadou',
-    lastName: 'Diallo',
-    email: 'mamadou.diallo@terangafoncier.sn',
-    phone: '+221 77 123 45 67',
-    company: 'TerangaFoncier Pro',
-    address: 'Dakar, Sénégal',
-    bio: 'Agent immobilier spécialisé dans les propriétés haut de gamme à Dakar.',
-    avatar: '/api/placeholder/100/100',
-    website: 'https://mamadou-immobilier.sn',
-    license: 'AGT-2024-001'
-  });
+  const [profileData, setProfileData] = useState({}); // démo retirée
 
   const [preferences, setPreferences] = useState({
     language: 'fr',

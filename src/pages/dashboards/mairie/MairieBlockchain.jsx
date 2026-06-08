@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Shield,
@@ -74,64 +75,22 @@ const MairieBlockchain = ({ dashboardStats }) => {
   };
 
   // NFTs municipaux
-  const municipalNFTs = [
-    {
-      id: 'nft-001',
-      title: 'Titre Foncier - Parcelle A-001',
-      type: 'Titre de Propriété',
-      owner: 'Mamadou Diallo',
-      surface: '500m²',
-      zone: 'Résidentielle Nord',
-      tokenId: '45612',
-      contractAddress: '0x1234...NFT1',
-      mintDate: '2024-01-15',
-      status: 'Actif',
-      value: '50,000',
-      metadata: {
-        coordinates: '14.6928°N, 17.4467°W',
-        documents: ['Acte notarié', 'Plan cadastral', 'Certificat conformité'],
-        restrictions: ['Zone résidentielle', 'Hauteur max 3 étages']
+  // municipalNFTs RÉEL depuis Supabase (aucune donnée fictive)
+  const [municipalNFTs, setMunicipalNFTs] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('blockchain_certificates').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setMunicipalNFTs(data || []);
+      } catch (err) {
+        console.warn('municipalNFTs indisponible:', err?.message);
+        if (active) setMunicipalNFTs([]);
       }
-    },
-    {
-      id: 'nft-002', 
-      title: 'Permis Construction - PR-2024-078',
-      type: 'Permis',
-      owner: 'Société BTP SARL',
-      surface: '1200m²',
-      zone: 'Commerciale Centre',
-      tokenId: '45613',
-      contractAddress: '0x5678...NFT2',
-      mintDate: '2024-01-18',
-      status: 'Actif',
-      value: '25,000',
-      metadata: {
-        validUntil: '2025-01-18',
-        buildingType: 'Centre commercial',
-        maxHeight: '15m',
-        conditions: ['Parking 50 places', 'Espaces verts 20%']
-      }
-    },
-    {
-      id: 'nft-003',
-      title: 'Concession Agricole - CA-2024-012',  
-      type: 'Concession',
-      owner: 'Coopérative Agricole Teranga',
-      surface: '5000m²',
-      zone: 'Agricole Sud',
-      tokenId: '45614',
-      contractAddress: '0x9ABC...NFT3',
-      mintDate: '2024-01-20',
-      status: 'Actif',
-      value: '75,000',
-      metadata: {
-        duration: '25 ans',
-        cropType: 'Maraîchage',
-        waterRights: 'Inclus',
-        renewable: true
-      }
-    }
-  ];
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Transactions récentes
   const recentTransactions = [

@@ -84,7 +84,7 @@ const BanqueBlockchain = () => {
         gasUsed: 85000,
         parties: {
           bank: 'CBAO - Agence Plateau',
-          borrower: 'Mamadou FALL',
+          borrower: '',
           notary: 'Me Fatou DIAGNE'
         }
       },

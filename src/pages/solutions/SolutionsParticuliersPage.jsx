@@ -147,26 +147,7 @@ const SolutionsParticuliersPage = () => {
     }
   ];
 
-  const testimonials = [
-    {
-      name: "Fatou Diagne",
-      location: "Dakar",
-      text: "Grâce Ï  Teranga Foncier, j'ai trouvé le terrain parfait pour ma maison. Le processus était transparent et sécurisé.",
-      rating: 5
-    },
-    {
-      name: "Mamadou Ba",
-      location: "Thiès", 
-      text: "Excellent service ! L'équipe m'a accompagné tout au long du processus. Je recommande vivement.",
-      rating: 5
-    },
-    {
-      name: "Aïcha Ndiaye",
-      location: "Saint-Louis",
-      text: "Interface simple et intuitive. J'ai pu acheter mon terrain depuis l'étranger sans problème.",
-      rating: 5
-    }
-  ];
+  const testimonials = []; // démo retirée
 
   return (
     <>

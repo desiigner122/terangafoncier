@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
@@ -120,169 +121,28 @@ const BanqueMessages = () => {
   ];
 
   // Conversations avancées avec CRM
-  const conversations = [
-    {
-      id: 'conv-1',
-      contact: 'Amadou Diallo',
-      type: 'Client Premium',
-      lastMessage: 'Ma demande de crédit terrain a-t-elle été approuvée ?',
-      timestamp: '10:30',
-      unread: 2,
-      priority: 'high',
-      status: 'En attente',
-      amount: '85M FCFA',
-      property: 'Terrain Almadies',
-      phone: '+221 77 123 45 67',
-      email: 'amadou.diallo@email.com',
-      clientSince: '2019',
-      portfolioValue: '340M FCFA',
-      riskLevel: 'Faible',
-      lastInteraction: '2024-01-28',
-      satisfactionScore: 4.8,
-      preferredChannel: 'WhatsApp',
-      nextAppointment: '2024-02-05 14:00',
-      advisorNotes: 'Client fidèle, investisseur immobilier actif'
-    },
-    {
-      id: 'conv-2', 
-      contact: 'Me Fatou Ndiaye',
-      type: 'Partenaire Notaire',
-      lastMessage: 'Les documents pour le crédit Sarr sont prêts',
-      timestamp: '09:45',
-      unread: 0,
-      priority: 'normal',
-      status: 'Documenté',
-      amount: '120M FCFA',
-      property: 'Villa Mermoz',
-      phone: '+221 33 456 78 90',
-      email: 'fatou.ndiaye@notaire.sn',
-      partnerSince: '2018',
-      collaborations: 156,
-      averageProcessingTime: '3.2 jours',
-      reliability: 'Excellent',
-      lastCollaboration: '2024-01-26'
-    },
-    {
-      id: 'conv-3',
-      contact: 'Teranga Foncier',
-      type: 'Plateforme Partenaire',
-      lastMessage: 'Nouvelle demande de financement reçue - TER-2024-015',
-      timestamp: '08:20',
-      unread: 1,
-      priority: 'normal',
-      status: 'Nouveau',
-      amount: '65M FCFA',
-      property: 'Terrain Rufisque',
-      referenceId: 'TER-2024-015',
-      platformCommission: '2.5%',
-      totalReferrals: 89,
-      approvalRate: '87%',
-      averageAmount: '45M FCFA'
-    },
-    {
-      id: 'conv-4',
-      contact: 'Moussa Thiam',
-      type: 'Client',
-      lastMessage: 'Merci pour l\'approbation rapide ! Quand peut-on signer ?',
-      timestamp: 'Hier',
-      unread: 0,
-      priority: 'low',
-      status: 'Approuvé',
-      amount: '95M FCFA',
-      property: 'Appartement Plateau',
-      phone: '+221 76 987 65 43',
-      email: 'moussa.thiam@entreprise.sn',
-      clientSince: '2023',
-      portfolioValue: '95M FCFA',
-      riskLevel: 'Très Faible',
-      satisfactionScore: 5.0,
-      advisorNotes: 'Premier achat immobilier, très satisfait du service'
-    },
-    {
-      id: 'conv-5',
-      contact: 'Khady Ba',
-      type: 'Prospect',
-      lastMessage: 'Je souhaite des informations sur vos crédits immobiliers',
-      timestamp: '14:20',
-      unread: 3,
-      priority: 'high',
-      status: 'Prospect',
-      estimatedAmount: '75M FCFA',
-      source: 'Site Web',
-      leadScore: 85,
-      conversionProbability: '78%',
-      followUpDate: '2024-02-02'
-    }
-  ];
+  // conversations RÉEL depuis Supabase (aucune donnée fictive)
+  const [conversations, setConversations] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setConversations(data || []);
+      } catch (err) {
+        console.warn('conversations indisponible:', err?.message);
+        if (active) setConversations([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Messages enrichis avec métadonnées
-  const messages = {
-    'conv-1': [
-      {
-        id: 1,
-        sender: 'Amadou Diallo',
-        text: 'Bonjour, j\'ai soumis ma demande de crédit terrain il y a une semaine via la plateforme Teranga Foncier.',
-        timestamp: '10:25',
-        isClient: true,
-        type: 'text',
-        status: 'read'
-      },
-      {
-        id: 2,
-        sender: 'Conseiller Bancaire',
-        text: 'Bonjour M. Diallo. Votre dossier est en cours d\'analyse par notre équipe crédit. Référence : CRED-2024-015',
-        timestamp: '10:27',
-        isClient: false,
-        type: 'text',
-        status: 'delivered'
-      },
-      {
-        id: 3,
-        sender: 'Amadou Diallo',
-        text: 'Ma demande de crédit terrain a-t-elle été approuvée ?',
-        timestamp: '10:30',
-        isClient: true,
-        type: 'text',
-        status: 'read'
-      },
-      {
-        id: 4,
-        sender: 'Conseiller Bancaire',
-        text: 'Je vérifie immédiatement l\'état de votre dossier avec l\'équipe crédit.',
-        timestamp: '10:32',
-        isClient: false,
-        type: 'text',
-        status: 'sending'
-      }
-    ]
-  };
+  const messages = {}; // démo retirée
 
   // Activités récentes client
-  const clientActivities = [
-    {
-      id: 1,
-      type: 'credit_application',
-      description: 'Demande de crédit soumise',
-      amount: '85M FCFA',
-      date: '2024-01-20',
-      status: 'En cours'
-    },
-    {
-      id: 2,
-      type: 'document_upload',
-      description: 'Documents justificatifs envoyés',
-      date: '2024-01-22',
-      status: 'Validé'
-    },
-    {
-      id: 3,
-      type: 'call',
-      description: 'Appel téléphonique - Suivi dossier',
-      duration: '12 min',
-      date: '2024-01-25',
-      status: 'Terminé'
-    }
-  ];
+  const clientActivities = []; // démo retirée
 
   const handleSendMessage = () => {
     if (!messageText.trim()) return;

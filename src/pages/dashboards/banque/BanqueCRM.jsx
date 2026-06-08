@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -48,103 +49,18 @@ const BanqueCRM = ({ dashboardStats }) => {
   const [selectedClient, setSelectedClient] = useState(null);
 
   // Données CRM simulées pour la banque
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      name: 'M. Amadou Diallo',
-      type: 'particulier',
-      email: 'amadou.diallo@email.com',
-      phone: '+221 77 123 45 67',
-      score: 92,
-      status: 'active',
-      lastContact: '2024-01-15',
-      projects: ['Crédit Immobilier Villa', 'Assurance Habitation'],
-      creditAmount: 25000000, // CFA
-      priority: 'high',
-      avatar: null,
-      address: 'Quartier Almadies, Dakar',
-      notes: 'Client premium avec historique exemplaire',
-      creditStatus: 'approved',
-      monthlyIncome: 850000,
-      guarantees: ['Titre Foncier TF-2024-001', 'Salaire domicilié']
-    },
-    {
-      id: 2,
-      name: 'Société Immobilière Sénégal',
-      type: 'entreprise',
-      email: 'contact@immobilier-senegal.com',
-      phone: '+221 33 987 65 43',
-      score: 88,
-      status: 'active',
-      lastContact: '2024-01-20',
-      projects: ['Crédit Promoteur Immobilier', 'Ligne de Crédit Construction'],
-      creditAmount: 150000000, // CFA
-      priority: 'high',
-      avatar: null,
-      address: 'Zone d\'Activités Économiques, Diamniadio',
-      notes: 'Promoteur immobilier reconnu, 15 ans d\'expérience',
-      creditStatus: 'in_progress',
-      monthlyIncome: 5200000,
-      guarantees: ['Hypothèque multiple', 'Caution société mère']
-    },
-    {
-      id: 3,
-      name: 'Mme Fatou Mbaye',
-      type: 'particulier',
-      email: 'fatou.mbaye@gmail.com',
-      phone: '+221 76 654 32 10',
-      score: 75,
-      status: 'prospect',
-      lastContact: '2024-01-10',
-      projects: ['Crédit Habitat Social'],
-      creditAmount: 12000000, // CFA
-      priority: 'medium',
-      avatar: null,
-      address: 'Parcelles Assainies, Dakar',
-      notes: 'Première demande de crédit, profil intéressant',
-      creditStatus: 'pending',
-      monthlyIncome: 425000,
-      guarantees: ['Titre Foncier en cours', 'Épargne constituée']
-    },
-    {
-      id: 4,
-      name: 'Coopérative Habitat Solidaire',
-      type: 'cooperative',
-      email: 'info@habitat-solidaire.sn',
-      phone: '+221 77 456 78 90',
-      score: 82,
-      status: 'active',
-      lastContact: '2024-01-18',
-      projects: ['Crédit Logement Social Collectif'],
-      creditAmount: 75000000, // CFA
-      priority: 'high',
-      avatar: null,
-      address: 'Rufisque, Région de Dakar',
-      notes: 'Coopérative d\'habitat avec 200 membres',
-      creditStatus: 'approved',
-      monthlyIncome: 2800000,
-      guarantees: ['Caution mutuelle', 'Terrain collectif']
-    },
-    {
-      id: 5,
-      name: 'M. Ousmane Fall',
-      type: 'particulier',
-      email: 'ousmane.fall@outlook.com',
-      phone: '+221 78 123 45 67',
-      score: 68,
-      status: 'inactive',
-      lastContact: '2024-01-05',
-      projects: ['Crédit Acquisition Terrain'],
-      creditAmount: 8500000, // CFA
-      priority: 'low',
-      avatar: null,
-      address: 'Thiès, Région de Thiès',
-      notes: 'Dossier incomplet, relance nécessaire',
-      creditStatus: 'rejected',
-      monthlyIncome: 320000,
-      guarantees: ['Aucune garantie suffisante']
-    }
-  ]);
+  const [clients, setClients] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setClients(data || []);
+      } catch (err) { if (active) setClients([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const [crmStats, setCrmStats] = useState({
     totalClients: clients.length,

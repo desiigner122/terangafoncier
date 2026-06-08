@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { TrendingUp, DollarSign, FileText, Users, ArrowUp, ArrowDown, Calendar } from 'lucide-react';
 
@@ -26,19 +27,24 @@ const NotaireFinancialDashboardPage = () => {
     { type: 'Autres', amount: 600000, percentage: 4.8, color: 'orange' }
   ];
 
-  const topClients = [
-    { name: 'Amadou BA', revenue: 2850000, transactions: 12 },
-    { name: 'Fatou SENE', revenue: 1950000, transactions: 8 },
-    { name: 'Moussa DIALLO', revenue: 1450000, transactions: 6 },
-    { name: 'Aïssatou FALL', revenue: 1200000, transactions: 5 },
-    { name: 'Omar NDIAYE', revenue: 980000, transactions: 4 }
-  ];
+  // topClients RÉEL depuis Supabase (aucune donnée fictive)
+  const [topClients, setTopClients] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setTopClients(data || []);
+      } catch (err) {
+        console.warn('topClients indisponible:', err?.message);
+        if (active) setTopClients([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
-  const recentTransactions = [
-    { id: 'TRX-2025-045', client: 'Amadou BA', type: 'Acte de vente', amount: 450000, date: '2025-10-08', status: 'completed' },
-    { id: 'TRX-2025-044', client: 'Fatou SENE', type: 'Succession', amount: 280000, date: '2025-10-07', status: 'completed' },
-    { id: 'TRX-2025-043', client: 'Moussa DIALLO', type: 'Donation', amount: 180000, date: '2025-10-06', status: 'pending' }
-  ];
+  const recentTransactions = []; // démo retirée
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-indigo-50 to-purple-50 p-6">

@@ -162,19 +162,7 @@ const EditPropertyComplete = () => {
     'Domaine public'
   ];
 
-  const mainFeaturesList = [
-    'Vue mer panoramique',
-    'Vue montagne',
-    'Vue dégagée',
-    'Résidence fermée sécurisée',
-    'Gardien 24h/24',
-    'Parking privé',
-    'Espace vert',
-    'Piscine commune',
-    'Terrain de sport',
-    'Salle de gym',
-    'Aire de jeux enfants'
-  ];
+  const mainFeaturesList = []; // démo retirée
 
   const utilitiesList = [
     { value: 'water', label: 'Eau courante' },

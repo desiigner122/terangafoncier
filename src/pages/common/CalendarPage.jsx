@@ -45,77 +45,7 @@ const CalendarPage = () => {
   };
 
   // Données simulées pour les rendez-vous
-  const mockAppointments = [
-    {
-      id: 1,
-      title: 'Visite terrain Almadies',
-      type: 'visite',
-      date: new Date(2024, 8, 10, 14, 0), // 10 septembre 2024, 14h00
-      duration: 120, // minutes
-      location: 'Almadies, Dakar',
-      locationType: 'physical',
-      attendees: [
-        { id: 1, name: 'Amadou Diallo', role: 'PROMOTEUR', avatar: null },
-        { id: 2, name: 'Vous', role: profile?.role || 'USER', avatar: null }
-      ],
-      description: 'Visite du terrain de 500m² avec le promoteur pour évaluer le potentiel de construction.',
-      status: 'confirmed',
-      organizer: 'Amadou Diallo',
-      notes: 'Apporter les plans cadastraux'
-    },
-    {
-      id: 2,
-      title: 'Signature contrat de vente',
-      type: 'signature',
-      date: new Date(2024, 8, 12, 10, 30),
-      duration: 90,
-      location: 'Étude Me. Fatou Sall',
-      locationType: 'physical',
-      attendees: [
-        { id: 1, name: 'Me. Fatou Sall', role: 'NOTAIRE', avatar: null },
-        { id: 2, name: 'Ibrahima Ndiaye', role: 'VENDEUR', avatar: null },
-        { id: 3, name: 'Vous', role: profile?.role || 'USER', avatar: null }
-      ],
-      description: 'Signature définitive du contrat de vente pour le terrain à Ouakam.',
-      status: 'pending',
-      organizer: 'Me. Fatou Sall',
-      notes: 'Apporter pièce d\'identité et justificatifs de revenus'
-    },
-    {
-      id: 3,
-      title: 'Consultation financement',
-      type: 'consultation',
-      date: new Date(2024, 8, 15, 9, 0),
-      duration: 60,
-      location: 'En ligne',
-      locationType: 'video',
-      attendees: [
-        { id: 1, name: 'Mme. Aida Sarr', role: 'BANQUE', avatar: null },
-        { id: 2, name: 'Vous', role: profile?.role || 'USER', avatar: null }
-      ],
-      description: 'Discussion sur les options de financement pour l\'achat du terrain.',
-      status: 'confirmed',
-      organizer: 'Mme. Aida Sarr',
-      notes: 'Préparer dossier financier complet'
-    },
-    {
-      id: 4,
-      title: 'Expertise géomètre',
-      type: 'expertise',
-      date: new Date(2024, 8, 18, 15, 30),
-      duration: 180,
-      location: 'Terrain Ngor',
-      locationType: 'physical',
-      attendees: [
-        { id: 1, name: 'Samba Diop', role: 'GEOMETRE', avatar: null },
-        { id: 2, name: 'Vous', role: profile?.role || 'USER', avatar: null }
-      ],
-      description: 'Mesure et bornage du terrain avec établissement du plan topographique.',
-      status: 'confirmed',
-      organizer: 'Samba Diop',
-      notes: 'Rendez-vous sur site à 15h30 précises'
-    }
-  ];
+  const mockAppointments = []; // démo retirée
 
   useEffect(() => {
     // Simuler le chargement des rendez-vous

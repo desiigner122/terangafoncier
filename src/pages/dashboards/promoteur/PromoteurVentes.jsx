@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -49,169 +50,43 @@ const PromoteurVentes = () => {
   };
 
   // Performances des projets
-  const projectPerformance = [
-    {
-      id: 1,
-      name: 'Résidence Teranga',
-      location: 'Almadies, Dakar',
-      totalUnits: 24,
-      soldUnits: 18,
-      reservedUnits: 3,
-      availableUnits: 3,
-      avgPrice: 85000000,
-      totalRevenue: 1530000000,
-      salesRate: 75,
-      status: 'Excellent',
-      launchDate: '2024-01-15',
-      completionRate: 78,
-      topAgent: 'Fatou Diagne',
-      leadSource: 'Digital Marketing'
-    },
-    {
-      id: 2,
-      name: 'Villa Duplex Mermoz',
-      location: 'Mermoz, Dakar',
-      totalUnits: 8,
-      soldUnits: 6,
-      reservedUnits: 1,
-      availableUnits: 1,
-      avgPrice: 65000000,
-      totalRevenue: 390000000,
-      salesRate: 75,
-      status: 'Bon',
-      launchDate: '2024-03-10',
-      completionRate: 95,
-      topAgent: 'Mamadou Seck',
-      leadSource: 'Referrals'
-    },
-    {
-      id: 3,
-      name: 'Appartements VDN',
-      location: 'VDN, Dakar',
-      totalUnits: 36,
-      soldUnits: 12,
-      reservedUnits: 8,
-      availableUnits: 16,
-      avgPrice: 45000000,
-      totalRevenue: 540000000,
-      salesRate: 33,
-      status: 'Moyen',
-      launchDate: '2024-06-20',
-      completionRate: 45,
-      topAgent: 'Aïssatou Fall',
-      leadSource: 'Walk-in'
-    }
-  ];
+  // projectPerformance RÉEL depuis Supabase (aucune donnée fictive)
+  const [projectPerformance, setProjectPerformance] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('developer_projects').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setProjectPerformance(data || []);
+      } catch (err) {
+        console.warn('projectPerformance indisponible:', err?.message);
+        if (active) setProjectPerformance([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Équipe commerciale
-  const salesTeam = [
-    {
-      id: 1,
-      name: 'Fatou Diagne',
-      role: 'Directrice Commerciale',
-      photo: '/api/placeholder/40/40',
-      phone: '+221 77 123 45 67',
-      email: 'fatou@terangafoncier.com',
-      totalSales: 8,
-      revenue: 680000000,
-      target: 12,
-      achievement: 66.7,
-      rating: 4.8,
-      speciality: 'Résidentiel haut de gamme',
-      experience: '8 ans',
-      languages: ['Français', 'Wolof', 'Anglais'],
-      activeClients: 15,
-      closedDeals: 23
-    },
-    {
-      id: 2,
-      name: 'Mamadou Seck',
-      role: 'Agent Commercial Senior',
-      photo: '/api/placeholder/40/40',
-      phone: '+221 77 234 56 78',
-      email: 'mamadou@terangafoncier.com',
-      totalSales: 6,
-      revenue: 520000000,
-      target: 10,
-      achievement: 60,
-      rating: 4.6,
-      speciality: 'Villas individuelles',
-      experience: '5 ans',
-      languages: ['Français', 'Wolof'],
-      activeClients: 12,
-      closedDeals: 18
-    },
-    {
-      id: 3,
-      name: 'Aïssatou Fall',
-      role: 'Agent Commercial',
-      photo: '/api/placeholder/40/40',
-      phone: '+221 77 345 67 89',
-      email: 'aissatou@terangafoncier.com',
-      totalSales: 4,
-      revenue: 320000000,
-      target: 8,
-      achievement: 50,
-      rating: 4.4,
-      speciality: 'Appartements',
-      experience: '3 ans',
-      languages: ['Français', 'Wolof', 'Peul'],
-      activeClients: 10,
-      closedDeals: 12
-    }
-  ];
+  // salesTeam RÉEL depuis Supabase (aucune donnée fictive)
+  const [salesTeam, setSalesTeam] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('developer_projects').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setSalesTeam(data || []);
+      } catch (err) {
+        console.warn('salesTeam indisponible:', err?.message);
+        if (active) setSalesTeam([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Clients et prospects
-  const clients = [
-    {
-      id: 1,
-      name: 'Moussa Ba',
-      email: 'moussa.ba@email.com',
-      phone: '+221 77 987 65 43',
-      status: 'Client',
-      project: 'Résidence Teranga',
-      unit: 'Appartement 3 pièces',
-      value: 85000000,
-      agent: 'Fatou Diagne',
-      contractDate: '2024-11-15',
-      paymentStatus: 'En cours',
-      satisfaction: 4.5,
-      source: 'Site web',
-      notes: 'Très intéressé par les finitions haut de gamme'
-    },
-    {
-      id: 2,
-      name: 'Aminata Diop',
-      email: 'aminata.diop@email.com',
-      phone: '+221 78 123 45 67',
-      status: 'Prospect chaud',
-      project: 'Villa Duplex Mermoz',
-      unit: 'Villa 4 chambres',
-      value: 65000000,
-      agent: 'Mamadou Seck',
-      lastContact: '2024-12-10',
-      nextFollowUp: '2024-12-15',
-      interest: 85,
-      source: 'Référence',
-      notes: 'Demande modifications cuisine'
-    },
-    {
-      id: 3,
-      name: 'Ibrahima Sarr',
-      email: 'ibrahima@email.com',
-      phone: '+221 77 555 44 33',
-      status: 'Prospect',
-      project: 'Appartements VDN',
-      unit: 'Appartement 2 pièces',
-      value: 45000000,
-      agent: 'Aïssatou Fall',
-      lastContact: '2024-12-08',
-      nextFollowUp: '2024-12-12',
-      interest: 60,
-      source: 'Publicité Facebook',
-      notes: 'Budget limité, cherche facilités de paiement'
-    }
-  ];
+  const clients = []; // démo retirée
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {

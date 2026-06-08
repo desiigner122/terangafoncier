@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -33,64 +34,22 @@ const GeometreCRM = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Données fictives des clients
-  const clients = [
-    {
-      id: 1,
-      name: 'Atelier Architecture Dakar',
-      type: 'Architecte',
-      contact: 'Amadou Sall',
-      email: 'contact@atelierarch-dk.sn',
-      phone: '+221 77 123 45 67',
-      projects: 8,
-      value: '15M FCFA',
-      status: 'active',
-      priority: 'high',
-      lastProject: 'Complexe résidentiel Almadies',
-      nextMeeting: '2025-10-05'
-    },
-    {
-      id: 2,
-      name: 'Groupe Promoteur Sénégal',
-      type: 'Promoteur',
-      contact: 'Fatou Diop',
-      email: 'f.diop@gps-immo.sn',
-      phone: '+221 78 234 56 78',
-      projects: 12,
-      value: '45M FCFA',
-      status: 'active',
-      priority: 'high',
-      lastProject: 'Lotissement VDN Extension',
-      nextMeeting: '2025-10-03'
-    },
-    {
-      id: 3,
-      name: 'Bureau Urbanisme Moderne',
-      type: 'Urbaniste',
-      contact: 'Cheikh Ba',
-      email: 'urbanisme@bum-dakar.sn',
-      phone: '+221 77 345 67 89',
-      projects: 5,
-      value: '8M FCFA',
-      status: 'prospect',
-      priority: 'medium',
-      lastProject: 'Plan d\'aménagement Rufisque',
-      nextMeeting: '2025-10-08'
-    },
-    {
-      id: 4,
-      name: 'Famille Ndiaye',
-      type: 'Particulier',
-      contact: 'Moussa Ndiaye',
-      email: 'moussa.ndiaye@gmail.com',
-      phone: '+221 76 456 78 90',
-      projects: 2,
-      value: '2.5M FCFA',
-      status: 'active',
-      priority: 'low',
-      lastProject: 'Bornage terrain familial Thiès',
-      nextMeeting: '2025-10-10'
-    }
-  ];
+  // clients RÉEL depuis Supabase (aucune donnée fictive)
+  const [clients, setClients] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setClients(data || []);
+      } catch (err) {
+        console.warn('clients indisponible:', err?.message);
+        if (active) setClients([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const stats = [
     {

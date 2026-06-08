@@ -32,42 +32,7 @@ const AgentFoncierSettings = () => {
     setTimeout(() => setLoading(false), 800);
   }, []);
 
-  const [settings, setSettings] = useState({
-    // Profil
-    fullName: 'Moussa Diallo',
-    email: 'moussa.diallo@teranga.com',
-    phone: '+221 77 123 45 67',
-    specialisation: 'Évaluation Foncière',
-    certification: 'Agent Foncier Certifié',
-    
-    // Notifications
-    emailNotifications: true,
-    smsNotifications: false,
-    evaluationAlerts: true,
-    documentAlerts: true,
-    clientAlerts: true,
-    
-    // Géolocalisation
-    autoLocation: true,
-    precisionGPS: 'high',
-    saveTrajectories: false,
-    shareLocation: true,
-    
-    // IA et Blockchain
-    aiAssistance: true,
-    predictiveAnalysis: true,
-    blockchainValidation: false,
-    smartContracts: false,
-    
-    // Abonnement
-    currentPlan: 'Professionnel',
-    nextBilling: '2025-10-26',
-    usage: {
-      evaluations: 85,
-      documents: 68,
-      clients: 45
-    }
-  });
+  const [settings, setSettings] = useState({}); // démo retirée
 
   const plans = [
     {

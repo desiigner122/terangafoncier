@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -52,134 +53,22 @@ const GeometrePlans = () => {
   const [statusFilter, setStatusFilter] = useState('tous');
 
   // Données des plans
-  const plans = [
-    {
-      id: 1,
-      title: 'Plan de Bornage - Parcelle A127',
-      type: 'bornage',
-      status: 'complete',
-      date: '2024-09-25',
-      lastModified: '2024-09-25 14:30',
-      client: 'M. Amadou Diallo',
-      location: 'Rufisque',
-      echelle: '1:500',
-      format: 'A3',
-      superficie: '800 m²',
-      version: '2.1',
-      fileSize: '2.4 MB',
-      description: 'Plan de bornage définitif avec implantation des bornes géodésiques',
-      icon: Grid3X3,
-      tags: ['Bornage', 'Géodésie', 'Parcelle'],
-      layers: ['Fond de plan', 'Limites', 'Bornes', 'Cotes', 'Textes'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    },
-    {
-      id: 2,
-      title: 'Plan Topographique - Almadies Bay',
-      type: 'topographie',
-      status: 'en_cours',
-      date: '2024-09-30',
-      lastModified: '2024-10-01 09:15',
-      client: 'Société IMMOGO',
-      location: 'Almadies, Dakar',
-      echelle: '1:200',
-      format: 'A1',
-      superficie: '2.5 ha',
-      version: '1.3',
-      fileSize: '8.7 MB',
-      description: 'Plan topographique détaillé pour projet résidentiel avec courbes de niveau',
-      icon: Layers,
-      tags: ['Topographie', 'Courbes niveau', 'Résidentiel'],
-      layers: ['Topographie', 'Courbes niveau', 'Végétation', 'Bâti existant', 'Réseaux'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    },
-    {
-      id: 3,
-      title: 'Plan de Lotissement - Thiès Centre',
-      type: 'lotissement',
-      status: 'revision',
-      date: '2024-09-20',
-      lastModified: '2024-09-28 16:45',
-      client: 'Promoteur Sénégal SARL',
-      location: 'Thiès',
-      echelle: '1:1000',
-      format: 'A0',
-      superficie: '15 ha',
-      version: '3.2',
-      fileSize: '12.1 MB',
-      description: 'Plan de lotissement 120 lots avec voirie, réseaux et espaces verts',
-      icon: Route,
-      tags: ['Lotissement', 'Urbanisme', 'Voirie'],
-      layers: ['Parcelles', 'Voirie', 'Réseaux', 'Espaces verts', 'Équipements'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    },
-    {
-      id: 4,
-      title: 'Plan Cadastral - Zone Industrielle',
-      type: 'cadastral',
-      status: 'planifie',
-      date: '2024-10-05',
-      lastModified: '2024-09-15 11:20',
-      client: 'Ministère de l\'Industrie',
-      location: 'Bargny',
-      echelle: '1:2000',
-      format: 'A1',
-      superficie: '25 ha',
-      version: '1.0',
-      fileSize: '5.3 MB',
-      description: 'Plan cadastral pour aménagement zone industrielle avec découpage parcellaire',
-      icon: Building,
-      tags: ['Cadastral', 'Industriel', 'Parcellaire'],
-      layers: ['Cadastre', 'Parcelles', 'Voirie', 'Industrie', 'Infrastructure'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    },
-    {
-      id: 5,
-      title: 'Plan Architectural - Villa Sacré-Cœur',
-      type: 'architectural',
-      status: 'complete',
-      date: '2024-09-28',
-      lastModified: '2024-09-28 17:00',
-      client: 'Arch. Mbaye & Associates',
-      location: 'Sacré-Cœur, Dakar',
-      echelle: '1:100',
-      format: 'A2',
-      superficie: '1,200 m²',
-      version: '2.0',
-      fileSize: '4.8 MB',
-      description: 'Plan architectural détaillé avec relevé de façades et coupes',
-      icon: Building,
-      tags: ['Architecture', 'Relevé', 'Façades'],
-      layers: ['Plan masse', 'Façades', 'Coupes', 'Détails', 'Cotes'],
-      coordinates: 'Local',
-      projection: 'Lambert Conforme'
-    },
-    {
-      id: 6,
-      title: 'Plan Agricole - Parcelles Kaolack',
-      type: 'agricole',
-      status: 'complete',
-      date: '2024-09-18',
-      lastModified: '2024-09-20 10:30',
-      client: 'Coopérative Agricole Thiès',
-      location: 'Kaolack',
-      echelle: '1:2500',
-      format: 'A3',
-      superficie: '5.2 ha',
-      version: '1.1',
-      fileSize: '3.2 MB',
-      description: 'Plan de délimitation parcelles agricoles avec système d\'irrigation',
-      icon: TreePine,
-      tags: ['Agriculture', 'Irrigation', 'Parcellaire'],
-      layers: ['Parcelles', 'Irrigation', 'Cultures', 'Chemins', 'Points eau'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    }
-  ];
+  // plans RÉEL depuis Supabase (aucune donnée fictive)
+  const [plans, setPlans] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setPlans(data || []);
+      } catch (err) {
+        console.warn('plans indisponible:', err?.message);
+        if (active) setPlans([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getTypeIcon = (type) => {
     switch (type) {

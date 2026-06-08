@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Layers, 
@@ -47,158 +48,22 @@ const GeometreTopographie = () => {
   const [statusFilter, setStatusFilter] = useState('tous');
 
   // Données topographiques
-  const levesTopo = [
-    {
-      id: 1,
-      title: 'Levé Topographique - Almadies Bay',
-      type: 'detail',
-      status: 'complete',
-      date: '2024-09-25',
-      location: 'Almadies, Dakar',
-      superficie: '2.5 ha',
-      precision: '±2 cm',
-      points: 1247,
-      courbesNiveau: '0.5 m',
-      altitudeMin: '2.1 m',
-      altitudeMax: '15.8 m',
-      denivele: '13.7 m',
-      penteMax: '18%',
-      penteMoyenne: '8%',
-      client: 'Société IMMOGO',
-      equipment: ['Station Totale Leica TS16', 'GPS RTK'],
-      weather: { temp: '28°C', humidity: '65%', wind: '12 km/h' },
-      operator: 'Géomètre Principal',
-      icon: Mountain,
-      volumeRemblai: '2,450 m³',
-      volumeDeblai: '1,890 m³',
-      progress: 100
-    },
-    {
-      id: 2,
-      title: 'Levé Altimétrique - Zone Industrielle',
-      type: 'altimetrique',
-      status: 'en_cours',
-      date: '2024-09-30',
-      location: 'Thiès',
-      superficie: '15 ha',
-      precision: '±1 cm',
-      points: 2156,
-      courbesNiveau: '0.25 m',
-      altitudeMin: '45.2 m',
-      altitudeMax: '67.8 m',
-      denivele: '22.6 m',
-      penteMax: '25%',
-      penteMoyenne: '12%',
-      client: 'Ministère Industrie',
-      equipment: ['Niveau Électronique', 'GPS RTK', 'Station Totale'],
-      weather: { temp: '26°C', humidity: '70%', wind: '8 km/h' },
-      operator: 'Équipe Topographie',
-      icon: BarChart3,
-      volumeRemblai: '8,750 m³',
-      volumeDeblai: '6,200 m³',
-      progress: 75
-    },
-    {
-      id: 3,
-      title: 'Topographie Planimétrique - Rufisque',
-      type: 'planimetrique',
-      status: 'planifie',
-      date: '2024-10-05',
-      location: 'Rufisque',
-      superficie: '800 m²',
-      precision: '±1.5 cm',
-      points: 89,
-      courbesNiveau: 'N/A',
-      altitudeMin: '12.5 m',
-      altitudeMax: '14.2 m',
-      denivele: '1.7 m',
-      penteMax: '5%',
-      penteMoyenne: '2%',
-      client: 'M. Amadou Diallo',
-      equipment: ['Station Totale', 'Récepteur GPS'],
-      weather: { temp: 'N/A', humidity: 'N/A', wind: 'N/A' },
-      operator: 'Assistant Géomètre',
-      icon: Grid3X3,
-      volumeRemblai: '45 m³',
-      volumeDeblai: '32 m³',
-      progress: 0
-    },
-    {
-      id: 4,
-      title: 'Levé Architectural - Villa Sacré-Cœur',
-      type: 'architectural',
-      status: 'complete',
-      date: '2024-09-28',
-      location: 'Sacré-Cœur, Dakar',
-      superficie: '1,200 m²',
-      precision: '±2 mm',
-      points: 456,
-      courbesNiveau: '0.1 m',
-      altitudeMin: '18.2 m',
-      altitudeMax: '23.5 m',
-      denivele: '5.3 m',
-      penteMax: '8%',
-      penteMoyenne: '3%',
-      client: 'Arch. Mbaye & Associates',
-      equipment: ['Scanner 3D', 'Station Totale', 'Télémètre Laser'],
-      weather: { temp: '27°C', humidity: '72%', wind: '5 km/h' },
-      operator: 'Spécialiste Architecture',
-      icon: Layers,
-      volumeRemblai: '180 m³',
-      volumeDeblai: '125 m³',
-      progress: 100
-    },
-    {
-      id: 5,
-      title: 'Topographie Hydrographique - Bargny',
-      type: 'hydrographique',
-      status: 'en_cours',
-      date: '2024-09-20',
-      location: 'Bargny',
-      superficie: '25 ha',
-      precision: '±5 cm',
-      points: 3245,
-      courbesNiveau: '1 m',
-      altitudeMin: '-2.5 m',
-      altitudeMax: '8.7 m',
-      denivele: '11.2 m',
-      penteMax: '15%',
-      penteMoyenne: '6%',
-      client: 'Ministère Industrie',
-      equipment: ['Sondeur Bathymétrique', 'GPS RTK', 'Station Totale'],
-      weather: { temp: '29°C', humidity: '78%', wind: '15 km/h' },
-      operator: 'Équipe Hydrographie',
-      icon: Activity,
-      volumeRemblai: '12,500 m³',
-      volumeDeblai: '9,800 m³',
-      progress: 60
-    },
-    {
-      id: 6,
-      title: 'Levé Drone - Cartographie Kaolack',
-      type: 'drone',
-      status: 'revision',
-      date: '2024-09-18',
-      location: 'Kaolack',
-      superficie: '5.2 ha',
-      precision: '±3 cm',
-      points: 8500,
-      courbesNiveau: '0.5 m',
-      altitudeMin: '8.5 m',
-      altitudeMax: '15.2 m',
-      denivele: '6.7 m',
-      penteMax: '12%',
-      penteMoyenne: '4%',
-      client: 'Coopérative Agricole',
-      equipment: ['Drone DJI Phantom 4 RTK', 'GPS Base'],
-      weather: { temp: '31°C', humidity: '68%', wind: '10 km/h' },
-      operator: 'Pilote Drone Certifié',
-      icon: Camera,
-      volumeRemblai: '850 m³',
-      volumeDeblai: '720 m³',
-      progress: 90
-    }
-  ];
+  // levesTopo RÉEL depuis Supabase (aucune donnée fictive)
+  const [levesTopo, setLevesTopo] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('field_measurements').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setLevesTopo(data || []);
+      } catch (err) {
+        console.warn('levesTopo indisponible:', err?.message);
+        if (active) setLevesTopo([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getTypeIcon = (type) => {
     switch (type) {

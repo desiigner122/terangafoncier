@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Compass, 
@@ -66,74 +67,25 @@ const GeometreOverview = () => {
   ];
 
   // Missions récentes
-  const recentMissions = [
-    {
-      id: 1,
-      title: "Levé topographique - Parcelle A127",
-      client: "Amadou Diallo",
-      location: "Rufisque",
-      status: "En cours",
-      deadline: "15 Jan 2025",
-      progress: 75,
-      type: "topographie"
-    },
-    {
-      id: 2,
-      title: "Bornage - Lot 45 Cité Keur Gorgui",
-      client: "Fatou Sow",
-      location: "Dakar",
-      status: "En attente",
-      deadline: "20 Jan 2025",
-      progress: 0,
-      type: "bornage"
-    },
-    {
-      id: 3,
-      title: "Levé cadastral - Zone industrielle",
-      client: "SARL Teranga Construction",
-      location: "Thiès",
-      status: "Terminé",
-      deadline: "10 Jan 2025",
-      progress: 100,
-      type: "cadastral"
-    }
-  ];
+  // recentMissions RÉEL depuis Supabase (aucune donnée fictive)
+  const [recentMissions, setRecentMissions] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('field_measurements').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setRecentMissions(data || []);
+      } catch (err) {
+        console.warn('recentMissions indisponible:', err?.message);
+        if (active) setRecentMissions([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Activités récentes
-  const recentActivities = [
-    {
-      id: 1,
-      action: "Levé GPS terminé",
-      details: "Parcelle A127 - 2.5 ha mesurés",
-      time: "Il y a 2h",
-      icon: Satellite,
-      color: "text-green-600"
-    },
-    {
-      id: 2,
-      action: "Rapport généré",
-      details: "Plan de bornage - Lot 45",
-      time: "Il y a 4h",
-      icon: FileText,
-      color: "text-blue-600"
-    },
-    {
-      id: 3,
-      action: "Client contacté",
-      details: "Rendez-vous fixé avec M. Diallo",
-      time: "Il y a 6h",
-      icon: Users,
-      color: "text-purple-600"
-    },
-    {
-      id: 4,
-      action: "Photos terrain",
-      details: "15 photos ajoutées - Zone industrielle",
-      time: "Hier",
-      icon: Camera,
-      color: "text-orange-600"
-    }
-  ];
+  const recentActivities = []; // démo retirée
 
   const getStatusColor = (status) => {
     switch (status) {

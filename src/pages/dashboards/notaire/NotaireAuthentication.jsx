@@ -197,9 +197,9 @@ const NotaireAuthentication = () => {
                 status: 'authenticated',
                 authDate: new Date().toISOString().split('T')[0],
                 blockchainHash: '0x' + Math.random().toString(16).substr(2, 40),
-                authenticity: 95 + Math.random() * 5,
-                integrity: 95 + Math.random() * 5,
-                confidentiality: 90 + Math.random() * 10
+                authenticity: 95 + 0,
+                integrity: 95 + 0,
+                confidentiality: 90 + 0
               }
             : doc
         )

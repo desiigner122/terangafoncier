@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MapPin, 
@@ -54,76 +55,18 @@ const MairieGPSVerification = ({ dashboardStats }) => {
   });
 
   // Données des propriétés à vérifier
-  const [properties, setProperties] = useState([
-    {
-      id: 1,
-      reference: 'TF-001-2024',
-      owner: 'M. Moussa Diagne',
-      address: 'Zone Résidentielle Nord, Parcelle 47',
-      coordinates: {
-        latitude: 14.7167,
-        longitude: -17.4677,
-        precision: 2.1 // mètres
-      },
-      status: 'verified',
-      area: 450, // m²
-      lastVerified: '2024-01-20',
-      conflicts: [],
-      riskLevel: 'low',
-      satelliteImageDate: '2024-01-15'
-    },
-    {
-      id: 2,
-      reference: 'TF-002-2024',
-      owner: 'Société Immobilière Dakar',
-      address: 'Zone Commerciale, Lot 12-15',
-      coordinates: {
-        latitude: 14.7200,
-        longitude: -17.4700,
-        precision: 1.8
-      },
-      status: 'conflict_detected',
-      area: 1250,
-      lastVerified: '2024-01-19',
-      conflicts: ['Chevauchement avec TF-008-2023', 'Limite contestée par voisin'],
-      riskLevel: 'high',
-      satelliteImageDate: '2024-01-10'
-    },
-    {
-      id: 3,
-      reference: 'TF-003-2024',
-      owner: 'Coopérative Agricole Sénégal',
-      address: 'Zone Agricole Sud, Parcelle A-23',
-      coordinates: {
-        latitude: 14.7100,
-        longitude: -17.4750,
-        precision: 3.2
-      },
-      status: 'pending',
-      area: 2800,
-      lastVerified: null,
-      conflicts: [],
-      riskLevel: 'medium',
-      satelliteImageDate: '2024-01-18'
-    },
-    {
-      id: 4,
-      reference: 'TF-004-2024',
-      owner: 'Mme Fatou Mbaye',
-      address: 'Quartier Centre, Parcelle 89',
-      coordinates: {
-        latitude: 14.7180,
-        longitude: -17.4650,
-        precision: 1.5
-      },
-      status: 'verified',
-      area: 320,
-      lastVerified: '2024-01-20',
-      conflicts: [],
-      riskLevel: 'low',
-      satelliteImageDate: '2024-01-16'
-    }
-  ]);
+  const [properties, setProperties] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setProperties(data || []);
+      } catch (err) { if (active) setProperties([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Simulation de vérification GPS
   const handleGPSVerification = async (property) => {
@@ -132,7 +75,7 @@ const MairieGPSVerification = ({ dashboardStats }) => {
     
     // Simulation du processus de vérification
     setTimeout(() => {
-      const hasConflict = Math.random() > 0.8;
+      const hasConflict = false;
       const updatedProperties = properties.map(p => 
         p.id === property.id 
           ? {

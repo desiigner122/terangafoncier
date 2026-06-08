@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -44,72 +45,22 @@ const AgentFoncierCRM = () => {
     tauxConversion: 68
   };
 
-  const clientsData = [
-    {
-      id: 1,
-      name: 'Amadou Diallo',
-      email: 'amadou.diallo@email.com',
-      phone: '+221 77 123 45 67',
-      company: 'Diallo Immobilier',
-      location: 'Dakar, Plateau',
-      status: 'active',
-      value: 25000000,
-      lastContact: '2024-03-01',
-      nextFollowUp: '2024-03-05',
-      projects: 3,
-      avatar: '/api/placeholder/40/40',
-      tags: ['VIP', 'Promoteur'],
-      score: 95
-    },
-    {
-      id: 2,
-      name: 'Aïssatou Fall',
-      email: 'aissatou.fall@email.com',
-      phone: '+221 76 987 65 43',
-      company: 'Fall Construction',
-      location: 'Almadies, Dakar',
-      status: 'prospect',
-      value: 15000000,
-      lastContact: '2024-02-28',
-      nextFollowUp: '2024-03-03',
-      projects: 1,
-      avatar: '/api/placeholder/40/40',
-      tags: ['Nouveau'],
-      score: 78
-    },
-    {
-      id: 3,
-      name: 'Ousmane Ndiaye',
-      email: 'ousmane.ndiaye@email.com',
-      phone: '+221 78 456 78 90',
-      company: 'Ndiaye Développement',
-      location: 'Guédiawaye',
-      status: 'inactive',
-      value: 8000000,
-      lastContact: '2024-02-15',
-      nextFollowUp: '2024-03-10',
-      projects: 0,
-      avatar: '/api/placeholder/40/40',
-      tags: ['Suivi'],
-      score: 45
-    },
-    {
-      id: 4,
-      name: 'Fatou Sow',
-      email: 'fatou.sow@email.com',
-      phone: '+221 77 234 56 78',
-      company: 'Sow Investissement',
-      location: 'Pikine',
-      status: 'active',
-      value: 32000000,
-      lastContact: '2024-03-02',
-      nextFollowUp: '2024-03-04',
-      projects: 5,
-      avatar: '/api/placeholder/40/40',
-      tags: ['VIP', 'Premium'],
-      score: 88
-    }
-  ];
+  // clientsData RÉEL depuis Supabase (aucune donnée fictive)
+  const [clientsData, setClientsData] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setClientsData(data || []);
+      } catch (err) {
+        console.warn('clientsData indisponible:', err?.message);
+        if (active) setClientsData([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     setClients(clientsData);

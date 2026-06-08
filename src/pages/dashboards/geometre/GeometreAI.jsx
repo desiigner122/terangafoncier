@@ -42,29 +42,7 @@ const GeometreAI = () => {
   const [activeTab, setActiveTab] = useState('chat');
 
   // Suggestions de l'IA
-  const aiSuggestions = [
-    {
-      title: "Calcul de surface optimisé",
-      description: "Optimiser le calcul de surface pour la parcelle A127",
-      icon: Calculator,
-      action: "Analyser maintenant",
-      status: "Nouveau"
-    },
-    {
-      title: "Précision GPS améliorée",
-      description: "Correction atmosphérique pour les relevés de ce matin",
-      icon: Target,
-      action: "Appliquer corrections",
-      status: "Recommandé"
-    },
-    {
-      title: "Rapport automatique",
-      description: "Générer le rapport de bornage pour M. Diallo",
-      icon: FileText,
-      action: "Générer rapport",
-      status: "Prêt"
-    }
-  ];
+  const aiSuggestions = []; // démo retirée
 
   // Historique des conversations
   const chatHistory = [

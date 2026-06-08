@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Blocks, 
@@ -61,80 +62,30 @@ const AgentFoncierBlockchain = () => {
     const interval = setInterval(() => {
       setNetworkStats(prev => ({
         ...prev,
-        blockHeight: prev.blockHeight + Math.floor(Math.random() * 3),
-        pendingTx: Math.max(0, prev.pendingTx + Math.floor(Math.random() * 5) - 2)
+        blockHeight: prev.blockHeight + 0,
+        pendingTx: Math.max(0, prev.pendingTx + 0 - 2)
       }));
     }, 5000);
 
     return () => clearInterval(interval);
   }, []);
 
-  const documentsBlockchain = [
-    {
-      id: 1,
-      nom: 'TF-2024-001',
-      type: 'Titre Foncier',
-      hash: '0x1a2b3c4d5e6f789012345678901234567890abcd',
-      shortHash: '0x1a2b...abcd',
-      statut: 'certifié',
-      date: '15/09/2024',
-      blockNumber: 2847392,
-      confirmations: 156,
-      gasUsed: '0.0023 ETH',
-      client: 'M. Amadou Diallo',
-      valeur: '850M XOF',
-      location: 'Almadies, Dakar',
-      certificat: 'CERT-2024-TF-001'
-    },
-    {
-      id: 2,
-      nom: 'AV-2024-012',
-      type: 'Acte de Vente',
-      hash: '0x7g8h9i0j1k2l345678901234567890mnop5678qrst',
-      shortHash: '0x7g8h...qrst',
-      statut: 'en_attente',
-      date: '20/09/2024',
-      blockNumber: null,
-      confirmations: 0,
-      gasUsed: 'Pending',
-      client: 'Société IMMOGO',
-      valeur: '1.2B XOF',
-      location: 'Parcelles Assainies',
-      certificat: 'Pending'
-    },
-    {
-      id: 3,
-      nom: 'PE-2024-089',
-      type: 'Permis Environnemental',
-      hash: '0xabcd1234efgh5678ijkl9012mnop3456qrst7890',
-      shortHash: '0xabcd...7890',
-      statut: 'certifié',
-      date: '18/09/2024',
-      blockNumber: 2847388,
-      confirmations: 298,
-      gasUsed: '0.0018 ETH',
-      client: 'Green Development SARL',
-      valeur: '450M XOF',
-      location: 'Rufisque',
-      certificat: 'CERT-2024-PE-089'
-    },
-    {
-      id: 4,
-      nom: 'CC-2024-156',
-      type: 'Certificat de Conformité',
-      hash: '0x9876543210fedcba0987654321abcdef12345678',
-      shortHash: '0x9876...5678',
-      statut: 'révoqué',
-      date: '10/09/2024',
-      blockNumber: 2847350,
-      confirmations: 445,
-      gasUsed: '0.0031 ETH',
-      client: 'M. Cheikh Ba',
-      valeur: '320M XOF',
-      location: 'Thiès',
-      certificat: 'REV-2024-CC-156'
-    }
-  ];
+  // documentsBlockchain RÉEL depuis Supabase (aucune donnée fictive)
+  const [documentsBlockchain, setDocumentsBlockchain] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('blockchain_certificates').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setDocumentsBlockchain(data || []);
+      } catch (err) {
+        console.warn('documentsBlockchain indisponible:', err?.message);
+        if (active) setDocumentsBlockchain([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const smartContracts = [
     {

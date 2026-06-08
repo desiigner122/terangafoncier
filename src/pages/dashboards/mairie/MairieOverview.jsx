@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Building2, 
@@ -137,66 +138,33 @@ const MairieOverview = ({ dashboardStats }) => {
   ];
 
   // Données graphiques
-  const weeklyRequests = [
-    { day: 'Lun', requests: 12, approvals: 8 },
-    { day: 'Mar', requests: 19, approvals: 15 },
-    { day: 'Mer', requests: 15, approvals: 12 },
-    { day: 'Jeu', requests: 22, approvals: 18 },
-    { day: 'Ven', requests: 18, approvals: 16 },
-    { day: 'Sam', requests: 8, approvals: 6 },
-    { day: 'Dim', requests: 5, approvals: 4 }
-  ];
+  const weeklyRequests = []; // données réelles requises (aucune valeur fictive)
 
-  const requestsByType = [
-    { name: 'Attribution Communale', value: 45, color: '#3B82F6' },
-    { name: 'Permis Construire', value: 30, color: '#10B981' },
-    { name: 'Modification Cadastre', value: 15, color: '#F59E0B' },
-    { name: 'Résolution Conflits', value: 10, color: '#EF4444' }
-  ];
+  const requestsByType = []; // données réelles requises (aucune valeur fictive)
 
-  const zoneUtilization = [
-    { zone: 'Zone Résidentielle', utilized: 78, total: 100 },
-    { zone: 'Zone Commerciale', utilized: 65, total: 100 },
-    { zone: 'Zone Agricole', utilized: 45, total: 100 },
-    { zone: 'Zone Industrielle', utilized: 82, total: 100 }
-  ];
+  const zoneUtilization = []; // données réelles requises (aucune valeur fictive)
 
   // Demandes récentes
-  const recentRequests = [
-    {
-      id: '#MR-2024-0987',
-      applicant: 'Amadou Diallo',
-      type: 'Attribution Communale',
-      area: '1200m²',
-      zone: 'Zone Résidentielle Nord',
-      status: 'En Évaluation',
-      priority: 'Moyenne',
-      date: '2024-01-20',
-      aiScore: 85
-    },
-    {
-      id: '#MR-2024-0988',
-      applicant: 'Fatou Seck',
-      type: 'Permis de Construire',
-      area: '800m²',
-      zone: 'Zone Commerciale Centre',
-      status: 'Approuvé',
-      priority: 'Haute',
-      date: '2024-01-19',
-      aiScore: 92
-    },
-    {
-      id: '#MR-2024-0989',
-      applicant: 'Ibrahim Ndiaye',
-      type: 'Modification Cadastre',
-      area: '650m²',
-      zone: 'Zone Mixte Sud',
-      status: 'En Attente',
-      priority: 'Normale',
-      date: '2024-01-18',
-      aiScore: 78
-    }
-  ];
+  // Demandes récentes RÉELLES (table communal_requests)
+  const [recentRequests, setRecentRequests] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('communal_requests')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (error) throw error;
+        if (active) setRecentRequests(data || []);
+      } catch (err) {
+        console.warn('Demandes récentes indisponibles:', err?.message);
+        if (active) setRecentRequests([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {

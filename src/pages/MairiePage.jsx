@@ -77,7 +77,7 @@ const mairieDataSim = {
     slug: "saly-portudal",
     description: "Première station balnéaire d'Afrique de l'Ouest, Saly est une destination touristique par excellence. Un pôle d'investissement incontournable pour le tourisme et la résidence secondaire.",
     images: ["Saly beach with palm trees", "Saly resort pool", "Saly golf course"],
-    maire: { name: "Ousmane Guèye", avatar: `https://avatar.vercel.sh/ousmane-gueye.png`, mot: "Saly continue de croître. Nous soutenons activement les projets qui renforcent notre position de leader du tourisme balnéaire." },
+    maire: { name: "", avatar: `https://avatar.vercel.sh/ousmane-gueye.png`, mot: "Saly continue de croître. Nous soutenons activement les projets qui renforcent notre position de leader du tourisme balnéaire." },
     atouts: [
       { icon: Sun, text: "Tourisme international et local." },
       { icon: Building, text: "Forte demande en villas et commerces." },

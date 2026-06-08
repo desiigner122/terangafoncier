@@ -25,7 +25,7 @@ const MessagesPage = () => {
   const [conversations] = useState([
     {
       id: 1,
-      name: 'Aminata Diallo',
+      name: '',
       role: 'Agent Foncier',
       lastMessage: 'Le terrain de Mbour est toujours disponible',
       timestamp: '14:30',
@@ -35,7 +35,7 @@ const MessagesPage = () => {
       messages: [
         {
           id: 1,
-          sender: 'Aminata Diallo',
+          sender: '',
           text: 'Bonjour ! J\'ai vu votre intérêt pour le terrain Ï  Mbour.',
           timestamp: '14:25',
           read: true
@@ -49,7 +49,7 @@ const MessagesPage = () => {
         },
         {
           id: 3,
-          sender: 'Aminata Diallo',
+          sender: '',
           text: 'Le terrain de Mbour est toujours disponible. 500mÂ², titre foncier, proche de la mer.',
           timestamp: '14:30',
           read: false
@@ -58,7 +58,7 @@ const MessagesPage = () => {
     },
     {
       id: 2,
-      name: 'Moussa Promoteur',
+      name: '',
       role: 'Promoteur',
       lastMessage: 'Photos du chantier envoyées',
       timestamp: '12:15',
@@ -68,7 +68,7 @@ const MessagesPage = () => {
       messages: [
         {
           id: 1,
-          sender: 'Moussa Promoteur',
+          sender: '',
           text: 'Voici les dernières photos du chantier',
           timestamp: '12:15',
           read: true

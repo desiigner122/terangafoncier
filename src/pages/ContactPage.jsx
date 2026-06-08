@@ -129,44 +129,11 @@ const ContactPage = () => {
     }
   };
 
-  const contactMethods = [
-    {
-      icon: Phone,
-      title: "Appelez-nous",
-      description: "Disponible 7j/7 de 8h à 22h",
-      value: "+221 77 593 42 41",
-      action: "tel:+221775934241",
-      bg: "from-green-500 to-emerald-500"
-    },
-    {
-      icon: Mail,
-      title: "Email",
-      description: "Réponse sous 24h garantie",
-      value: "palaye122@gmail.com",
-      action: "mailto:palaye122@gmail.com",
-      bg: "from-blue-500 to-cyan-500"
-    },
-    {
-      icon: MessageCircle,
-      title: "WhatsApp",
-      description: "Chat en temps réel",
-      value: "+221 77 593 42 41",
-      action: "https://wa.me/221775934241",
-      bg: "from-green-600 to-green-500"
-    },
-    {
-      icon: MapPin,
-      title: "Adresse",
-      description: "Visitez nos bureaux",
-      value: "Dakar, Sénégal",
-      action: "https://maps.google.com/?q=Dakar,Senegal",
-      bg: "from-purple-500 to-indigo-500"
-    }
-  ];
+  const contactMethods = []; // démo retirée
 
   const team = [
     {
-      name: "Abdoulaye Diémé",
+      name: "",
       role: "CEO & Fondateur",
       description: "Expert en foncier avec 15+ ans d'expérience",
       email: "palaye122@gmail.com",

@@ -180,40 +180,7 @@ const RejoignezNousPage = () => {
     }
   ];
 
-  const testimonials = [
-    {
-      name: "Mamadou Diallo",
-      role: "Agent Foncier - Thiès",
-      avatar: "MD",
-      content: "En 8 mois avec Teranga, j'ai triplé mes revenus. Le territoire exclusif et les outils CRM changent tout.",
-      rating: 5,
-      commission: "+278% revenus"
-    },
-    {
-      name: "Dr. Aïcha Ndiaye",
-      role: "Notaire - Dakar",
-      avatar: "AN",
-      content: "La digitalisation de mon étude m'a fait gagner 60% de temps. Les formations sont excellentes.",
-      rating: 5,
-      commission: "+156% croissance"
-    },
-    {
-      name: "Ibrahima Sarr",
-      role: "Géomètre - Saint-Louis",
-      avatar: "IS",
-      content: "Équipements fournis, missions garanties. J'ai quadruplé mon activité en 6 mois.",
-      rating: 5,
-      commission: "+234% missions"
-    },
-    {
-      name: "Groupe SOPIC",
-      role: "Promoteur - Saly",
-      avatar: "SP",
-      content: "85% de pré-commercialisation grâce au réseau diaspora. ROI exceptionnel.",
-      rating: 5,
-      commission: "+267% performance"
-    }
-  ];
+  const testimonials = []; // démo retirée
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;

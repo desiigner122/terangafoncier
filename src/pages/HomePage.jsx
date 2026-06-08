@@ -43,50 +43,67 @@ import SellersPreview from '@/components/home/SellersPreview';
 import DiasporaPreview from '@/components/home/DiasporaPreview';
 import CitiesPreview from '@/components/home/CitiesPreview';
 import DashboardProcessInfo from '@/components/home/DashboardProcessInfo';
+import { supabase } from '@/lib/supabaseClient';
 
 const HomePage = () => {
   const [currentTestimonial, setCurrentTestimonial] = useState(0);
   const [currentStat, setCurrentStat] = useState(0);
   const { user, isLocalMode } = useAuth();
 
-  const testimonials = [
-    {
-      name: "Aminata Diallo",
-      role: "Diaspora - France", 
-      content: "Financement bancaire approuvé en 48h et suivi construction en temps réel depuis Paris. Révolutionnaire !",
-      rating: 5,
-      avatar: "/api/YOUR_API_KEY/60/60"
-    },
-    {
-      name: "Moussa Seck",
-      role: "Investisseur - Dakar",
-      content: "Partenariat bancaire UBA facilite tout. NFT blockchain sécurise mes investissements terrains.",
-      rating: 5,
-      avatar: "/api/YOUR_API_KEY/60/60"
-    },
-    {
-      name: "Fatou Ba",
-      role: "Diaspora - USA",
-      content: "Crédit Agricole approuve directement sur plateforme. Photos quotidiennes de ma construction !",
-      rating: 5,
-      avatar: "/api/YOUR_API_KEY/60/60"
-    },
-    {
-      name: "Ibrahim Touré",
-      role: "Mairie - Thiès",
-      content: "Demandes de terrains communaux simplifiées. Blockchain transparent pour tous citoyens.",
-      rating: 5,
-      avatar: "/api/YOUR_API_KEY/60/60"
-    }
-  ];
+  // Témoignages et statistiques chargés depuis Supabase (aucune donnée fictive)
+  const [testimonials, setTestimonials] = useState([]);
+  const [stats, setStats] = useState([]);
 
-  const stats = [
-    { number: "15K+", label: "Terrains disponibles", icon: MapPin, color: "text-blue-600" },
-    { number: "8.2K", label: "Sénégalais connectés", icon: Users, color: "text-emerald-600" },
-    { number: "12", label: "Banques partenaires", icon: CreditCard, color: "text-indigo-600" },
-    { number: "95%", label: "Projets financés", icon: TrendingUp, color: "text-green-600" },
-    { number: "24/7", label: "Suivi construction", icon: Shield, color: "text-purple-600" }
-  ];
+  useEffect(() => {
+    let active = true;
+
+    const loadHomeData = async () => {
+      try {
+        // Témoignages réels depuis la table `reviews` (avis approuvés, bien notés)
+        const { data: reviews } = await supabase
+          .from('reviews')
+          .select('*')
+          .gte('rating', 4)
+          .order('created_at', { ascending: false })
+          .limit(8);
+
+        if (active && Array.isArray(reviews)) {
+          setTestimonials(
+            reviews.map((r) => ({
+              name: r.author_name || r.user_name || 'Utilisateur',
+              role: r.author_role || r.location || '',
+              content: r.content || r.comment || '',
+              rating: r.rating || 5,
+              avatar: r.avatar_url || null
+            }))
+          );
+        }
+
+        // Statistiques réelles (comptes Supabase)
+        const [{ count: properties }, { count: users }, { count: banks }, { count: projects }] =
+          await Promise.all([
+            supabase.from('properties').select('id', { count: 'exact', head: true }),
+            supabase.from('profiles').select('id', { count: 'exact', head: true }),
+            supabase.from('banking_partners').select('id', { count: 'exact', head: true }),
+            supabase.from('construction_requests').select('id', { count: 'exact', head: true })
+          ]);
+
+        if (active) {
+          setStats([
+            { number: String(properties ?? 0), label: 'Terrains disponibles', icon: MapPin, color: 'text-blue-600' },
+            { number: String(users ?? 0), label: 'Sénégalais connectés', icon: Users, color: 'text-emerald-600' },
+            { number: String(banks ?? 0), label: 'Banques partenaires', icon: CreditCard, color: 'text-indigo-600' },
+            { number: String(projects ?? 0), label: 'Projets de construction', icon: TrendingUp, color: 'text-green-600' }
+          ]);
+        }
+      } catch (error) {
+        console.warn('Chargement données accueil échoué:', error?.message);
+      }
+    };
+
+    loadHomeData();
+    return () => { active = false; };
+  }, []);
 
   const mainFeatures = [
     {
@@ -175,18 +192,20 @@ const HomePage = () => {
   ];
 
   useEffect(() => {
+    if (testimonials.length === 0) return;
     const timer = setInterval(() => {
       setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
     }, 5000);
     return () => clearInterval(timer);
-  }, []);
+  }, [testimonials.length]);
 
   useEffect(() => {
+    if (stats.length === 0) return;
     const timer = setInterval(() => {
       setCurrentStat((prev) => (prev + 1) % stats.length);
     }, 3000);
     return () => clearInterval(timer);
-  }, []);
+  }, [stats.length]);
 
   return (
     <>
@@ -482,6 +501,7 @@ const HomePage = () => {
               </p>
             </motion.div>
 
+            {testimonials[currentTestimonial] && (
             <motion.div
               key={currentTestimonial}
               initial={{ opacity: 0, x: 50 }}
@@ -491,7 +511,7 @@ const HomePage = () => {
               className="bg-white rounded-2xl p-8 shadow-lg"
             >
               <div className="flex justify-center mb-4">
-                {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
+                {[...Array(testimonials[currentTestimonial].rating || 5)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                 ))}
               </div>
@@ -499,11 +519,17 @@ const HomePage = () => {
                 "{testimonials[currentTestimonial].content}"
               </blockquote>
               <div className="flex items-center justify-center">
-                <img 
-                  src={testimonials[currentTestimonial].avatar}
-                  alt={testimonials[currentTestimonial].name}
-                  className="w-12 h-12 rounded-full mr-4"
-                />
+                {testimonials[currentTestimonial].avatar ? (
+                  <img
+                    src={testimonials[currentTestimonial].avatar}
+                    alt={testimonials[currentTestimonial].name}
+                    className="w-12 h-12 rounded-full mr-4"
+                  />
+                ) : (
+                  <div className="w-12 h-12 rounded-full mr-4 bg-emerald-100 text-emerald-700 flex items-center justify-center font-semibold">
+                    {(testimonials[currentTestimonial].name || '?').charAt(0).toUpperCase()}
+                  </div>
+                )}
                 <div>
                   <div className="font-semibold text-gray-900">
                     {testimonials[currentTestimonial].name}
@@ -514,6 +540,7 @@ const HomePage = () => {
                 </div>
               </div>
             </motion.div>
+            )}
 
             {}
             <div className="flex justify-center mt-6 space-x-2">

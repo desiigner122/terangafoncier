@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Shield, 
@@ -60,52 +61,18 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
   });
 
   // Données des analyses récentes
-  const [recentAnalyses, setRecentAnalyses] = useState([
-    {
-      id: 1,
-      documentType: 'Bulletin de Salaire',
-      clientName: 'M. Amadou Diallo',
-      date: '2024-01-20',
-      status: 'validated',
-      confidence: 96.2,
-      issues: [],
-      riskLevel: 'low',
-      creditAmount: 25000000
-    },
-    {
-      id: 2,
-      documentType: 'Titre Foncier',
-      clientName: 'Société Immobilière Sénégal',
-      date: '2024-01-20',
-      status: 'fraud_detected',
-      confidence: 89.4,
-      issues: ['Tampon suspect', 'Numéro série incohérent'],
-      riskLevel: 'high',
-      creditAmount: 150000000
-    },
-    {
-      id: 3,
-      documentType: 'Relevé Bancaire',
-      clientName: 'Mme Fatou Mbaye',
-      date: '2024-01-19',
-      status: 'pending',
-      confidence: 74.8,
-      issues: ['Vérification revenus en cours'],
-      riskLevel: 'medium',
-      creditAmount: 12000000
-    },
-    {
-      id: 4,
-      documentType: 'Contrat de Travail',
-      clientName: 'M. Ousmane Fall',
-      date: '2024-01-19',
-      status: 'validated',
-      confidence: 93.1,
-      issues: [],
-      riskLevel: 'low',
-      creditAmount: 8500000
-    }
-  ]);
+  const [recentAnalyses, setRecentAnalyses] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setRecentAnalyses(data || []);
+      } catch (err) { if (active) setRecentAnalyses([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Simulation du scan de document
   const handleDocumentScan = async () => {
@@ -113,15 +80,7 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
     
     // Simulation d'analyse IA bancaire
     setTimeout(() => {
-      const mockResult = {
-        documentType: 'Bulletin de Salaire',
-        confidence: Math.random() * 30 + 70, // 70-100%
-        fraudRisk: Math.random() * 100,
-        issues: Math.random() > 0.7 ? ['Revenus incohérents', 'Signature douteuse'] : [],
-        blockchain_verified: Math.random() > 0.5,
-        authenticity_score: Math.random() * 20 + 80,
-        creditScore: Math.random() * 200 + 600 // Score crédit 600-800
-      };
+      const mockResult = {}; // démo retirée
       
       setAnalysisResults(mockResult);
       setScanningDocument(false);

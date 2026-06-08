@@ -417,26 +417,10 @@ const CompleteSidebarAdminDashboard = () => {
   });
 
   // Fonction pour générer des données de sauvegarde réalistes
+  // Les sauvegardes doivent provenir d'un vrai système de backup.
+  // Tant qu'aucune source réelle n'est branchée, on ne fabrique aucune donnée.
   const generateBackupData = () => {
-    const backups = [];
-    for (let i = 0; i < 4; i++) {
-      const date = new Date();
-      date.setDate(date.getDate() - i);
-      
-      backups.push({
-        date: date.toLocaleString('fr-FR', { 
-          year: 'numeric', 
-          month: '2-digit', 
-          day: '2-digit', 
-          hour: '2-digit', 
-          minute: '2-digit' 
-        }),
-        type: i === 3 ? 'Base de données' : 'Complète',
-        size: i === 3 ? `${Math.floor(Math.random() * 500 + 500)} MB` : `${(Math.random() * 1 + 1.5).toFixed(1)} GB`,
-        status: 'Succès'
-      });
-    }
-    return backups;
+    return [];
   };
 
   // Handlers pour les actions du dashboard
@@ -816,35 +800,7 @@ const CompleteSidebarAdminDashboard = () => {
   }, []);
 
   // Données pour les aperçus rapides - CONTROLLABLES
-  const [headerMessages, setHeaderMessages] = useState([
-    {
-      id: 1,
-      sender: 'M. Diallo',
-      subject: 'Demande terrain Almadies',
-      preview: 'Bonjour, je souhaiterais avoir plus d\'informations...',
-      time: '2 min',
-      unread: true,
-      avatar: 'MD'
-    },
-    {
-      id: 2,
-      sender: 'Mme Ndiaye',
-      subject: 'Question sur transaction',
-      preview: 'Le paiement n\'est toujours pas validé...',
-      time: '15 min',
-      unread: true,
-      avatar: 'MN'
-    },
-    {
-      id: 3,
-      sender: 'Agent Foncier',
-      subject: 'Rapport mensuel',
-      preview: 'Voici le rapport d\'activité du mois...',
-      time: '1h',
-      unread: false,
-      avatar: 'AF'
-    }
-  ]);
+  const [headerMessages, setHeaderMessages] = useState([]); // démo retirée
 
   const [headerNotifications, setHeaderNotifications] = useState([
     {

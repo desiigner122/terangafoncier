@@ -161,7 +161,7 @@ const UserProfilePage = () => {
       case 'seller':
         return {
           ...baseProfile,
-          name: 'Amadou Diallo',
+          name: '',
           title: 'Propriétaire Foncier',
           avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face',
           location: 'Liberté 6, Dakar',
@@ -311,7 +311,7 @@ const UserProfilePage = () => {
       case 'agent-foncier':
         return {
           ...baseProfile,
-          name: 'Moussa Ba',
+          name: '',
           title: 'Agent Foncier Certifié',
           avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face',
           location: 'Sacré-Cœur, Dakar',

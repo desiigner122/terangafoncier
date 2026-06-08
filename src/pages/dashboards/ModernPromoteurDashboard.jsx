@@ -311,13 +311,13 @@ const ModernPromoteurDashboard = () => {
           <div className="space-y-4">
             {[
               {
-                client: 'Amadou DIALLO',
+                client: '',
                 property: 'App. T3 - TERANGA Gardens #24',
                 price: '22M FCFA',
                 date: '20/01/2024',
                 commission: '1.1M FCFA',
                 status: 'Signé',
-                agent: 'Fatou SECK'
+                agent: ''
               },
               {
                 client: 'Société DIGITAL Corp',
@@ -326,7 +326,7 @@ const ModernPromoteurDashboard = () => {
                 date: '18/01/2024',
                 commission: '1.4M FCFA',
                 status: 'Compromis',
-                agent: 'Ibrahim FALL'
+                agent: ''
               },
               {
                 client: 'Mariama NDIAYE',
@@ -335,7 +335,7 @@ const ModernPromoteurDashboard = () => {
                 date: '15/01/2024',
                 commission: '2.25M FCFA',
                 status: 'Finalisé',
-                agent: 'Moussa DIOP'
+                agent: ''
               }
             ].map((sale, index) => (
               <div key={index} className="p-4 border rounded-lg">
@@ -447,7 +447,7 @@ const ModernPromoteurDashboard = () => {
               {[
                 { client: 'SARL TECH Innovation', property: 'Bureaux 250m²', value: '32M FCFA', priority: 'Haute' },
                 { client: 'Famille WADE', property: 'Villa 5ch', value: '48M FCFA', priority: 'Moyenne' },
-                { client: 'Moussa SARR', property: 'App. T4', value: '25M FCFA', priority: 'Haute' }
+                { client: '', property: 'App. T4', value: '25M FCFA', priority: 'Haute' }
               ].map((deal, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
@@ -836,9 +836,9 @@ const ModernPromoteurDashboard = () => {
             <div className="space-y-3">
               <h5 className="font-medium">Top performers ce mois:</h5>
               {[
-                { name: 'Fatou SECK', sales: 8, commission: '2.1M FCFA' },
-                { name: 'Ibrahim FALL', sales: 6, commission: '1.8M FCFA' },
-                { name: 'Moussa DIOP', sales: 5, commission: '1.5M FCFA' }
+                { name: '', sales: 8, commission: '2.1M FCFA' },
+                { name: '', sales: 6, commission: '1.8M FCFA' },
+                { name: '', sales: 5, commission: '1.5M FCFA' }
               ].map((performer, index) => (
                 <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
                   <div>

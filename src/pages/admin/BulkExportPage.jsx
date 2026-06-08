@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaDownload, FaFileExcel, FaFilePdf, FaFileAlt, FaCalendarAlt, FaFilter, FaDatabase } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 const BulkExportPage = () => {
   const [loading, setLoading] = useState(false);
@@ -58,39 +59,12 @@ const BulkExportPage = () => {
 
   const fetchExportHistory = async () => {
     try {
-      // Simuler un historique pour l'instant
-      const mockHistory = [
-        {
-          id: 1,
-          type: 'users',
-          format: 'csv',
-          dateCreated: new Date(Date.now() - 86400000).toISOString(),
-          status: 'completed',
-          fileSize: '2.4 MB',
-          downloadCount: 3
-        },
-        {
-          id: 2,
-          type: 'properties',
-          format: 'excel',
-          dateCreated: new Date(Date.now() - 172800000).toISOString(),
-          status: 'completed',
-          fileSize: '5.1 MB',
-          downloadCount: 1
-        },
-        {
-          id: 3,
-          type: 'transactions',
-          format: 'pdf',
-          dateCreated: new Date(Date.now() - 259200000).toISOString(),
-          status: 'processing',
-          fileSize: '-',
-          downloadCount: 0
-        }
-      ];
-      setExportHistory(mockHistory);
+      // L'historique d'export n'est pas (encore) persisté en base.
+      // On part d'un historique vide réel ; les exports de la session s'y ajoutent.
+      setExportHistory([]);
     } catch (error) {
       console.error('Erreur chargement historique:', error);
+      setExportHistory([]);
     }
   };
 
@@ -99,8 +73,8 @@ const BulkExportPage = () => {
     try {
       setLoading(true);
 
-      // Simuler l'API call d'export
-      const exportData = await mockExportData(exportType, format, dateRange, filters);
+      // Export RÉEL des données depuis Supabase
+      const exportData = await buildExportData(exportType, format, dateRange, filters);
       
       if (exportData) {
         downloadFile(exportData, `${exportType}_${new Date().toISOString().split('T')[0]}.${format}`);
@@ -126,47 +100,43 @@ const BulkExportPage = () => {
     }
   };
 
-  // Mock data pour l'export
-  const mockExportData = async (type, format, dateRange, filters) => {
-    // Simuler un délai de traitement
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    const mockData = {
-      users: [
-        ['ID', 'Nom', 'Email', 'Type', 'Date inscription', 'Statut'],
-        ['1', 'Admin Teranga', 'admin@teranga.com', 'admin', '2024-01-01', 'actif'],
-        ['2', 'Jean Dupont', 'jean@example.com', 'particulier', '2024-01-15', 'actif'],
-        ['3', 'Marie Martin', 'marie@example.com', 'agence', '2024-01-20', 'actif']
-      ],
-      properties: [
-        ['ID', 'Titre', 'Propriétaire', 'Prix', 'Location', 'Statut'],
-        ['1', 'Villa moderne Dakar', 'Jean Dupont', '150000000', 'Dakar-Plateau', 'active'],
-        ['2', 'Appartement Almadies', 'Marie Martin', '85000000', 'Almadies', 'active']
-      ],
-      transactions: [
-        ['ID', 'Utilisateur', 'Montant', 'Type', 'Statut', 'Date'],
-        ['1', 'Jean Dupont', '25000', 'commission', 'completed', '2024-01-15'],
-        ['2', 'Marie Martin', '15000', 'listing_fee', 'completed', '2024-01-20']
-      ]
+  // Construction RÉELLE de l'export à partir des données Supabase
+  const buildExportData = async (type, format, dateRange, filters) => {
+    // Table source réelle selon le type demandé
+    const tableByType = {
+      users: 'profiles',
+      properties: 'properties',
+      transactions: 'blockchain_transactions'
     };
+    const table = tableByType[type] || 'profiles';
 
-    const data = mockData[type] || mockData.users;
-    
-    if (format === 'csv') {
-      return data.map(row => row.join(',')).join('\n');
-    } else if (format === 'json') {
-      const headers = data[0];
-      const rows = data.slice(1);
-      return JSON.stringify(rows.map(row => {
-        const obj = {};
-        headers.forEach((header, index) => {
-          obj[header] = row[index];
-        });
-        return obj;
-      }), null, 2);
+    let query = supabase.from(table).select('*').order('created_at', { ascending: false });
+    if (dateRange?.startDate) query = query.gte('created_at', dateRange.startDate);
+    if (dateRange?.endDate) query = query.lte('created_at', dateRange.endDate);
+
+    const { data, error } = await query;
+    if (error) throw error;
+
+    const rows = data || [];
+    if (rows.length === 0) {
+      toast('Aucune donnée à exporter pour ce type.', { icon: 'ℹ️' });
     }
-    
-    return data.map(row => row.join(',')).join('\n');
+
+    if (format === 'json') {
+      return JSON.stringify(rows, null, 2);
+    }
+
+    // CSV : entêtes = colonnes réelles de la table
+    const headers = rows.length ? Object.keys(rows[0]) : [];
+    const escape = (v) => {
+      const s = v === null || v === undefined ? '' : String(v);
+      return /[",\n]/.test(s) ? `"${s.replace(/"/g, '""')}"` : s;
+    };
+    const lines = [
+      headers.join(','),
+      ...rows.map((r) => headers.map((h) => escape(r[h])).join(','))
+    ];
+    return lines.join('\n');
   };
 
   // Télécharger le fichier

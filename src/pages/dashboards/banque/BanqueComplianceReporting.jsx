@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Shield, 
@@ -116,41 +117,18 @@ const BanqueComplianceReporting = ({ dashboardStats }) => {
   ]);
 
   // Contrôles de conformité pour crédits fonciers
-  const [creditComplianceChecks, setCreditComplianceChecks] = useState([
-    {
-      id: 'CHK-001',
-      creditId: 'PLC-2024-001',
-      clientName: 'Mamadou FALL',
-      checkType: 'KYC Verification',
-      status: 'Conforme',
-      score: 98,
-      lastCheck: '2024-01-20',
-      issues: [],
-      platformRef: 'TER-2024-001'
-    },
-    {
-      id: 'CHK-002',
-      creditId: 'PLC-2024-002',
-      clientName: 'Société SENEGAL INVEST',
-      checkType: 'AML Screening',
-      status: 'Alerte Mineure',
-      score: 89,
-      lastCheck: '2024-01-22',
-      issues: ['Vérification source revenus requise'],
-      platformRef: 'TER-2024-002'
-    },
-    {
-      id: 'CHK-003',
-      creditId: 'PLC-2024-003',
-      clientName: 'Fatou MBAYE',
-      checkType: 'Credit Risk Assessment',
-      status: 'Conforme',
-      score: 95,
-      lastCheck: '2024-01-25',
-      issues: [],
-      platformRef: 'TER-2024-003'
-    }
-  ]);
+  const [creditComplianceChecks, setCreditComplianceChecks] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('demandes_financement').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setCreditComplianceChecks(data || []);
+      } catch (err) { if (active) setCreditComplianceChecks([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Alertes de conformité
   const [complianceAlerts, setComplianceAlerts] = useState([

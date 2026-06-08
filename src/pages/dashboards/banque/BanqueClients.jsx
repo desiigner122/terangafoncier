@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -47,127 +48,50 @@ const BanqueClients = () => {
 
   // Simulation des données clients
   useEffect(() => {
-    const mockClients = [
-      {
-        id: 1,
-        firstName: 'Amadou',
-        lastName: 'Diallo',
-        email: 'amadou.diallo@email.com',
-        phone: '+221 77 123 45 67',
-        address: '125 Rue de la République, Dakar',
-        status: 'active',
-        accountType: 'premium',
-        balance: '2,500,000',
-        creditScore: 850,
-        joinDate: '2023-01-15',
-        lastActivity: '2024-09-25',
-        totalTransactions: 145,
-        avatar: null,
-        nationality: 'Sénégalaise',
-        profession: 'Entrepreneur',
-        company: 'DialloCorp SARL',
-        monthlyIncome: '1,200,000',
-        creditLimit: '5,000,000',
-        loans: [
-          { type: 'Immobilier', amount: '25,000,000', status: 'active' },
-          { type: 'Auto', amount: '8,000,000', status: 'completed' }
-        ]
-      },
-      {
-        id: 2,
-        firstName: 'Fatou',
-        lastName: 'Sene',
-        email: 'fatou.sene@diaspora.fr',
-        phone: '+33 6 12 34 56 78',
-        address: '45 Avenue des Champs, Paris, France',
-        status: 'active',
-        accountType: 'diaspora',
-        balance: '750,000',
-        creditScore: 720,
-        joinDate: '2023-05-20',
-        lastActivity: '2024-09-26',
-        totalTransactions: 89,
-        avatar: null,
-        nationality: 'Franco-Sénégalaise',
-        profession: 'Ingénieure',
-        company: 'Tech Solutions',
-        monthlyIncome: '4,500 EUR',
-        creditLimit: '2,000,000',
-        loans: []
-      },
-      {
-        id: 3,
-        firstName: 'Moussa',
-        lastName: 'Ba',
-        email: 'moussa.ba@entreprise.sn',
-        phone: '+221 70 987 65 43',
-        address: '88 Zone Industrielle, Thiès',
-        status: 'pending',
-        accountType: 'business',
-        balance: '12,000,000',
-        creditScore: 780,
-        joinDate: '2024-01-10',
-        lastActivity: '2024-09-24',
-        totalTransactions: 234,
-        avatar: null,
-        nationality: 'Sénégalaise',
-        profession: 'Directeur Commercial',
-        company: 'Industries Ba & Fils',
-        monthlyIncome: '2,800,000',
-        creditLimit: '15,000,000',
-        loans: [
-          { type: 'Professionnel', amount: '45,000,000', status: 'active' }
-        ]
-      },
-      {
-        id: 4,
-        firstName: 'Aissatou',
-        lastName: 'Ndiaye',
-        email: 'aissatou.ndiaye@email.com',
-        phone: '+221 76 555 44 33',
-        address: '12 Cité Keur Gorgui, Dakar',
-        status: 'suspended',
-        accountType: 'standard',
-        balance: '125,000',
-        creditScore: 650,
-        joinDate: '2022-11-30',
-        lastActivity: '2024-09-20',
-        totalTransactions: 56,
-        avatar: null,
-        nationality: 'Sénégalaise',
-        profession: 'Commerçante',
-        company: 'Boutique Aissatou',
-        monthlyIncome: '350,000',
-        creditLimit: '500,000',
-        loans: []
-      },
-      {
-        id: 5,
-        firstName: 'Omar',
-        lastName: 'Fall',
-        email: 'omar.fall@usa.com',
-        phone: '+1 555 123 4567',
-        address: '789 Brooklyn Ave, New York, USA',
-        status: 'active',
-        accountType: 'diaspora',
-        balance: '3,200,000',
-        creditScore: 820,
-        joinDate: '2023-08-12',
-        lastActivity: '2024-09-26',
-        totalTransactions: 178,
-        avatar: null,
-        nationality: 'Américano-Sénégalaise',
-        profession: 'Consultant IT',
-        company: 'Fall Consulting LLC',
-        monthlyIncome: '8,500 USD',
-        creditLimit: '8,000,000',
-        loans: [
-          { type: 'Investissement', amount: '15,000,000', status: 'active' }
-        ]
+    let active = true;
+    const loadClients = async () => {
+      try {
+        // Clients RÉELS depuis Supabase (profils). Les champs bancaires
+        // (score, solde, prêts) sont lus s'ils existent, sinon null.
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        const mapped = (data || []).map((p) => {
+          const full = p.full_name || `${p.first_name || ''} ${p.last_name || ''}`.trim();
+          const [first = '', ...rest] = full.split(' ');
+          return {
+            id: p.id,
+            firstName: p.first_name || first || '',
+            lastName: p.last_name || rest.join(' ') || '',
+            email: p.email || '',
+            phone: p.phone || p.phone_number || '',
+            address: p.address || '',
+            status: p.status || 'active',
+            accountType: p.account_type || 'standard',
+            balance: p.balance ?? null,
+            creditScore: p.credit_score ?? null,
+            joinDate: p.created_at,
+            lastActivity: p.last_sign_in_at || p.updated_at || null,
+            totalTransactions: p.transactions_count ?? 0,
+            avatar: p.avatar_url || null,
+            nationality: p.nationality || '',
+            profession: p.profession || '',
+            company: p.company || '',
+            monthlyIncome: p.monthly_income ?? null,
+            creditLimit: p.credit_limit ?? null,
+            loans: []
+          };
+        });
+        if (active) { setClients(mapped); setFilteredClients(mapped); }
+      } catch (err) {
+        console.warn('Clients banque indisponibles:', err?.message);
+        if (active) { setClients([]); setFilteredClients([]); }
       }
-    ];
-    setClients(mockClients);
-    setFilteredClients(mockClients);
+    };
+    loadClients();
+    return () => { active = false; };
   }, []);
 
   // Filtrage des clients

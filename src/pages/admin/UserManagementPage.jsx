@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { FaUsers, FaEye, FaEdit, FaBan, FaUserCheck, FaSearch, FaUserPlus, FaChartLine } from 'react-icons/fa';
 import { toast } from 'react-hot-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 const UserManagementPage = () => {
   const [users, setUsers] = useState([]);
@@ -28,104 +29,57 @@ const UserManagementPage = () => {
     fetchUserStats();
   }, [currentPage, searchTerm, filters]);
 
+  const PAGE_SIZE = 10;
+
+  // Normalise une ligne `profiles` vers la forme attendue par l'UI
+  const mapProfile = (p) => {
+    const full = p.full_name || `${p.first_name || ''} ${p.last_name || ''}`.trim();
+    const [first = '', ...rest] = full.split(' ');
+    return {
+      id: p.id,
+      first_name: p.first_name || first || '',
+      last_name: p.last_name || rest.join(' ') || '',
+      email: p.email || '',
+      phone: p.phone || p.phone_number || '',
+      role: p.role || 'particulier',
+      status: p.status || (p.banned ? 'banned' : 'active'),
+      created_at: p.created_at,
+      last_login: p.last_sign_in_at || p.last_login || null,
+      properties_count: p.properties_count ?? 0,
+      transactions_count: p.transactions_count ?? 0
+    };
+  };
+
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      
-      // Simulation des données utilisateurs
-      const mockUsers = [
-        {
-          id: 1,
-          first_name: 'Admin',
-          last_name: 'Teranga',
-          email: 'admin@teranga.com',
-          phone: '+221 77 123 4567',
-          role: 'admin',
-          status: 'active',
-          created_at: '2024-01-01T00:00:00Z',
-          last_login: '2024-01-15T10:30:00Z',
-          properties_count: 0,
-          transactions_count: 25
-        },
-        {
-          id: 2,
-          first_name: 'Jean',
-          last_name: 'Dupont',
-          email: 'jean@example.com',
-          phone: '+221 77 987 6543',
-          role: 'particulier',
-          status: 'active',
-          created_at: '2024-01-10T00:00:00Z',
-          last_login: '2024-01-14T15:45:00Z',
-          properties_count: 3,
-          transactions_count: 7
-        },
-        {
-          id: 3,
-          first_name: 'Marie',
-          last_name: 'Martin',
-          email: 'marie@agence.com',
-          phone: '+221 76 555 4444',
-          role: 'agence',
-          status: 'active',
-          created_at: '2024-01-05T00:00:00Z',
-          last_login: '2024-01-13T09:20:00Z',
-          properties_count: 12,
-          transactions_count: 18
-        },
-        {
-          id: 4,
-          first_name: 'Pierre',
-          last_name: 'Diallo',
-          email: 'pierre@example.com',
-          phone: '+221 78 111 2222',
-          role: 'particulier',
-          status: 'inactive',
-          created_at: '2024-01-08T00:00:00Z',
-          last_login: '2024-01-10T12:00:00Z',
-          properties_count: 1,
-          transactions_count: 2
-        },
-        {
-          id: 5,
-          first_name: 'Fatou',
-          last_name: 'Sow',
-          email: 'fatou@banque.com',
-          phone: '+221 77 333 5555',
-          role: 'banque',
-          status: 'active',
-          created_at: '2024-01-12T00:00:00Z',
-          last_login: '2024-01-15T08:15:00Z',
-          properties_count: 0,
-          transactions_count: 45
-        }
-      ];
 
-      // Filtrer selon les critères
-      let filteredUsers = mockUsers;
-      
+      // Requête RÉELLE sur la table `profiles` (recherche + filtres + pagination)
+      let query = supabase
+        .from('profiles')
+        .select('*', { count: 'exact' })
+        .order('created_at', { ascending: false });
+
       if (searchTerm) {
-        filteredUsers = filteredUsers.filter(user => 
-          user.first_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.last_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          user.email.toLowerCase().includes(searchTerm.toLowerCase())
+        query = query.or(
+          `full_name.ilike.%${searchTerm}%,email.ilike.%${searchTerm}%`
         );
       }
+      if (filters.role) query = query.eq('role', filters.role);
+      if (filters.status) query = query.eq('status', filters.status);
 
-      if (filters.role) {
-        filteredUsers = filteredUsers.filter(user => user.role === filters.role);
-      }
+      const from = (currentPage - 1) * PAGE_SIZE;
+      query = query.range(from, from + PAGE_SIZE - 1);
 
-      if (filters.status) {
-        filteredUsers = filteredUsers.filter(user => user.status === filters.status);
-      }
+      const { data, count, error } = await query;
+      if (error) throw error;
 
-      setUsers(filteredUsers);
-      setTotalPages(Math.ceil(filteredUsers.length / 10));
-      
+      setUsers((data || []).map(mapProfile));
+      setTotalPages(Math.max(1, Math.ceil((count || 0) / PAGE_SIZE)));
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors du chargement des utilisateurs');
+      setUsers([]);
     } finally {
       setLoading(false);
     }
@@ -133,29 +87,42 @@ const UserManagementPage = () => {
 
   const fetchUserStats = async () => {
     try {
-      // Simulation des statistiques
+      // Statistiques RÉELLES calculées depuis Supabase
+      const sinceISO = new Date(Date.now() - 30 * 24 * 3600 * 1000).toISOString();
+      const [{ count: totalUsers }, { count: activeUsers }, { count: newUsers }, { count: bannedUsers }] =
+        await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', sinceISO),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('status', 'banned')
+        ]);
+
       setStats({
-        totalUsers: 245,
-        activeUsers: 189,
-        newUsers: 12,
-        bannedUsers: 3
+        totalUsers: totalUsers || 0,
+        activeUsers: activeUsers || 0,
+        newUsers: newUsers || 0,
+        bannedUsers: bannedUsers || 0
       });
     } catch (error) {
       console.error('Erreur stats:', error);
+      setStats({ totalUsers: 0, activeUsers: 0, newUsers: 0, bannedUsers: 0 });
     }
   };
 
-  // Changer le statut d'un utilisateur
+  // Changer le statut d'un utilisateur (persisté en base)
   const changeUserStatus = async (userId, newStatus) => {
     try {
-      // Simulation de l'API call
-      const updatedUsers = users.map(user => 
+      const { error } = await supabase
+        .from('profiles')
+        .update({ status: newStatus })
+        .eq('id', userId);
+      if (error) throw error;
+
+      setUsers(users.map(user =>
         user.id === userId ? { ...user, status: newStatus } : user
-      );
-      setUsers(updatedUsers);
-      
+      ));
       toast.success(`Utilisateur ${newStatus === 'active' ? 'activé' : 'désactivé'} avec succès`);
-      
+      fetchUserStats();
     } catch (error) {
       console.error('Erreur:', error);
       toast.error('Erreur lors de la modification du statut');

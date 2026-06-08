@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MessageSquare,
@@ -46,68 +47,22 @@ const MairieMessages = ({ dashboardStats }) => {
   const [recipient, setRecipient] = useState('');
 
   // Messages reçus
-  const inboxMessages = [
-    {
-      id: 'msg-001',
-      sender: 'Conseil Départemental de Dakar',
-      senderEmail: 'contact@conseil-dakar.sn',
-      senderAvatar: null,
-      subject: 'Nouvelle directive sur l\'attribution foncière communale',
-      preview: 'Suite aux récentes réformes, nous vous informons des nouvelles procédures...',
-      content: 'Monsieur le Maire,\n\nSuite aux récentes réformes du code foncier, nous vous informons des nouvelles procédures d\'attribution foncière communale qui entreront en vigueur le 1er février 2024.\n\nLes principales modifications concernent :\n- Les seuils d\'attribution automatique\n- Les procédures de consultation publique\n- Les délais de traitement\n\nVeuillez trouver en pièce jointe le guide complet des nouvelles procédures.\n\nCordialement,\nLe Secrétaire Général',
-      timestamp: '2024-01-22T14:30:00',
-      isRead: false,
-      isImportant: true,
-      category: 'Officiel',
-      attachments: ['Guide_nouvelles_procedures.pdf'],
-      priority: 'Haute'
-    },
-    {
-      id: 'msg-002',
-      sender: 'Association des Résidents - Quartier Nord',
-      senderEmail: 'president@residents-nord.org',
-      senderAvatar: null,
-      subject: 'Demande d\'aménagement d\'un parc public',
-      preview: 'Les résidents du quartier Nord souhaitent soumettre une demande d\'aménagement...',
-      content: 'Monsieur le Maire,\n\nAu nom de l\'Association des Résidents du Quartier Nord, nous souhaitons vous soumettre une demande d\'aménagement d\'un parc public sur le terrain vague situé entre les rues 15 et 17.\n\nCe projet bénéficierait à plus de 800 familles et comprend :\n- Aires de jeux pour enfants\n- Espaces verts\n- Terrain de sport\n- Éclairage public\n\nNous avons déjà réuni 65% des signatures nécessaires et disposons d\'un budget participatif de 2,5M FCFA.\n\nNous restons à votre disposition pour présenter ce projet en détail.\n\nCordialement,\nMadame Fatou Diop, Présidente',
-      timestamp: '2024-01-21T09:15:00',
-      isRead: true,
-      isImportant: false,
-      category: 'Citoyens',
-      attachments: ['Petition_signatures.pdf', 'Plan_amenagement.jpg'],
-      priority: 'Moyenne'
-    },
-    {
-      id: 'msg-003',
-      sender: 'Moussa Ba - Entrepreneur',
-      senderEmail: 'moussa.ba@construction.sn',
-      senderAvatar: null,
-      subject: 'Demande de permis de construire - Complexe commercial',
-      preview: 'Je souhaite déposer une demande de permis de construire pour un complexe commercial...',
-      content: 'Monsieur le Maire,\n\nJ\'ai l\'honneur de vous adresser ma demande de permis de construire pour un complexe commercial moderne situé Zone Commerciale Centre, parcelle 245-B.\n\nLe projet comprend :\n- Surface totale : 2,400m²\n- 45 boutiques\n- 150 places de parking\n- Centre de services (banque, poste, pharmacie)\n\nTous les documents techniques sont joints à ce message. Le projet respecte toutes les normes d\'urbanisme en vigueur et créera environ 200 emplois directs.\n\nInvestissement total : 850M FCFA\nDurée des travaux prévue : 18 mois\n\nJe reste à votre disposition pour tout complément d\'information.\n\nCordialement,\nMoussa Ba',
-      timestamp: '2024-01-20T16:45:00',
-      isRead: true,
-      isImportant: false,
-      category: 'Business',
-      attachments: ['Plans_architecturaux.pdf', 'Etude_impact.pdf', 'Devis_estimatif.xlsx'],
-      priority: 'Normale'
-    },
-    {
-      id: 'msg-004',
-      sender: 'Préfet du Département',
-      senderEmail: 'cabinet@prefet-dakar.gouv.sn',
-      senderAvatar: null,
-      subject: 'Convocation réunion des maires - Schéma directeur',
-      preview: 'Vous êtes convié à la réunion mensuelle des maires du département...',
-      content: 'Monsieur le Maire,\n\nVous êtes convié à la réunion mensuelle des maires du département qui se tiendra le jeudi 25 janvier 2024 à 14h00 dans les locaux de la Préfecture.\n\nOrdre du jour :\n1. Présentation du nouveau schéma directeur d\'urbanisme\n2. Budget participatif régional 2024\n3. Coordination des projets intercommunaux\n4. Point sur les réformes foncières\n5. Questions diverses\n\nMerci de confirmer votre présence avant le 23 janvier.\n\nCordialement,\nLe Chef de Cabinet',
-      timestamp: '2024-01-19T11:20:00',
-      isRead: false,
-      isImportant: true,
-      category: 'Officiel',
-      attachments: ['Ordre_du_jour.pdf'],
-      priority: 'Haute'
-    }
-  ];
+  // inboxMessages RÉEL depuis Supabase (aucune donnée fictive)
+  const [inboxMessages, setInboxMessages] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setInboxMessages(data || []);
+      } catch (err) {
+        console.warn('inboxMessages indisponible:', err?.message);
+        if (active) setInboxMessages([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Messages envoyés
   const sentMessages = [

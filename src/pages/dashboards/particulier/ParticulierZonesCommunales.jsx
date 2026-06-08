@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   MapPin,
@@ -65,47 +66,22 @@ const ParticulierZonesCommunales = ({ dashboardStats }) => {
   });
 
   // Mes demandes de zones communales
-  const mesDemandesZones = [
-    {
-      id: 'DZC001',
-      nom: 'Zone Résidentielle Pikine Nord',
-      commune: 'Pikine',
-      region: 'Dakar',
-      superficie: '200m²',
-      prix: '2 500 000',
-      dateDemande: '2024-02-15',
-      statut: 'en_attente',
-      numeroReference: 'REF-ZC-2024-001',
-      description: 'Demande de lot résidentiel pour construction familiale.',
-      etapeActuelle: 'Évaluation du dossier',
-      documentsManquants: ['Certificat de revenus récent'],
-      prochainRendezVous: '2024-03-10 à 14h00',
-      contactResponsable: {
-        nom: 'Mme Fatou NDIAYE',
-        telephone: '77 123 45 67',
-        email: 'f.ndiaye@teranga.sn'
+  // mesDemandesZones RÉEL depuis Supabase (aucune donnée fictive)
+  const [mesDemandesZones, setMesDemandesZones] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('demandes_financement').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setMesDemandesZones(data || []);
+      } catch (err) {
+        console.warn('mesDemandesZones indisponible:', err?.message);
+        if (active) setMesDemandesZones([]);
       }
-    },
-    {
-      id: 'DZC002',
-      nom: 'Zone Mixte Guédiawaye Centre',
-      commune: 'Guédiawaye',
-      region: 'Dakar',
-      superficie: '150m²',
-      prix: '1 800 000',
-      dateDemande: '2024-01-20',
-      statut: 'approuve',
-      numeroReference: 'REF-ZC-2024-002',
-      description: 'Demande approuvée pour lot commercial.',
-      etapeActuelle: 'Signature du contrat',
-      prochainRendezVous: '2024-03-05 à 10h00',
-      contactResponsable: {
-        nom: 'M. Ousmane DIOP',
-        telephone: '77 987 65 43',
-        email: 'o.diop@teranga.sn'
-      }
-    }
-  ];
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Zones favorites (venant de la page favoris)
   const zonesFavorites = [

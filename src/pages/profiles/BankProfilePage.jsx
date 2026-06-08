@@ -38,78 +38,7 @@ const BankProfilePage = () => {
   }, [bankId]);
 
   const loadBankProfile = async () => {
-    const mockBank = {
-      id: bankId,
-      name: 'Banque de l\'Habitat du Sénégal',
-      type: 'Institution Financière Spécialisée',
-      avatar: 'https://images.unsplash.com/photo-1541354329998-f4d9a9f9297f?w=150&h=150&fit=crop',
-      coverImage: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=300&fit=crop',
-      location: 'Point E, Dakar',
-      foundedYear: 1979,
-      isVerified: true,
-      rating: 4.7,
-      reviewCount: 892,
-      description: 'Banque spécialisée dans le financement immobilier au Sénégal depuis plus de 40 ans. Nous proposons des solutions de crédit adaptées à tous les projets fonciers et immobiliers.',
-      phone: '+221 33 889 50 00',
-      email: 'info@bhs.sn',
-      website: 'www.bhs.sn',
-      stats: {
-        clients: '12,500+',
-        loansGranted: '2,340',
-        totalFunded: '45 Milliards FCFA',
-        averageRate: '8.5%',
-        maxLoan: '500M FCFA',
-        branches: 12,
-        employees: 245,
-        satisfaction: '94%'
-      },
-      services: [
-        {
-          name: 'Crédit Immobilier',
-          description: 'Financement jusqu\'à 85% pour l\'achat de résidence principale',
-          rate: '8.5%',
-          duration: '25 ans max',
-          icon: Home
-        },
-        {
-          name: 'Crédit Terrain',
-          description: 'Financement pour l\'acquisition de terrains à bâtir',
-          rate: '9.0%',
-          duration: '15 ans max',
-          icon: MapPin
-        },
-        {
-          name: 'Crédit Construction',
-          description: 'Financement des travaux de construction et rénovation',
-          rate: '8.8%',
-          duration: '20 ans max',
-          icon: Building2
-        },
-        {
-          name: 'Investissement Locatif',
-          description: 'Financement pour l\'investissement immobilier locatif',
-          rate: '9.5%',
-          duration: '20 ans max',
-          icon: TrendingUp
-        }
-      ],
-      requirements: [
-        'Justificatifs de revenus (3 dernières fiches de paie)',
-        'Compromis de vente ou promesse d\'achat',
-        'Pièce d\'identité et justificatif de domicile',
-        'Relevés bancaires des 3 derniers mois',
-        'Acte de propriété (pour refinancement)',
-        'Devis détaillé (pour construction)'
-      ],
-      advantages: [
-        'Taux compétitifs',
-        'Accompagnement personnalisé',
-        'Réponse rapide (72h)',
-        'Frais de dossier réduits',
-        'Assurance incluse',
-        'Service digital'
-      ]
-    };
+    const mockBank = {}; // démo retirée
     setBank(mockBank);
     setLoading(false);
   };

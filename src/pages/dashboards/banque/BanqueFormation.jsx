@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   GraduationCap, 
@@ -58,158 +59,51 @@ const BanqueFormation = () => {
 
   // Données de formation simulées
   useEffect(() => {
-    const mockFormations = [
-      {
-        id: 1,
-        title: 'Maîtrise de la Plateforme TerangaChain',
-        category: 'blockchain',
-        type: 'Cours interactif',
-        description: 'Formation complète sur l\'utilisation de la blockchain TerangaChain pour les opérations bancaires',
-        duration: 240,
-        difficulty: 'intermédiaire',
-        instructor: 'Dr. Aminata Diallo',
-        rating: 4.8,
-        students: 156,
-        modules: 8,
-        progress: 65,
-        status: 'en cours',
-        image: '/api/placeholder/300/200',
-        features: ['Certification', 'Support 24/7', 'Exercices pratiques'],
-        objectives: [
-          'Comprendre les fondamentaux de TerangaChain',
-          'Effectuer des transactions sécurisées',
-          'Gérer les certificats fonciers',
-          'Optimiser les processus bancaires'
-        ]
-      },
-      {
-        id: 2,
-        title: 'KYC et Conformité Réglementaire',
-        category: 'compliance',
-        type: 'Formation certifiante',
-        description: 'Processus KYC automatisé et respect des réglementations bancaires UEMOA',
-        duration: 180,
-        difficulty: 'avancé',
-        instructor: 'Maître Ousmane Ba',
-        rating: 4.9,
-        students: 203,
-        modules: 6,
-        progress: 100,
-        status: 'terminé',
-        image: '/api/placeholder/300/200',
-        features: ['Certification officielle', 'Cas pratiques', 'Quiz interactifs'],
-        objectives: [
-          'Maîtriser les exigences KYC',
-          'Identifier les risques de blanchiment',
-          'Appliquer les procédures de conformité',
-          'Gérer les signalements'
-        ]
-      },
-      {
-        id: 3,
-        title: 'Intelligence Artificielle Bancaire',
-        category: 'ai',
-        type: 'Masterclass',
-        description: 'Utilisation de l\'IA pour le scoring crédit et l\'analyse des risques',
-        duration: 300,
-        difficulty: 'expert',
-        instructor: 'Prof. Fatou Sow',
-        rating: 4.7,
-        students: 89,
-        modules: 10,
-        progress: 0,
-        status: 'non commencé',
-        image: '/api/placeholder/300/200',
-        features: ['Laboratoire IA', 'Projets réels', 'Mentorat'],
-        objectives: [
-          'Développer des modèles de scoring',
-          'Analyser les patterns de risque',
-          'Optimiser les décisions crédit',
-          'Implémenter l\'IA éthique'
-        ]
-      },
-      {
-        id: 4,
-        title: 'Gestion de Portefeuille Immobilier',
-        category: 'immobilier',
-        type: 'Formation pratique',
-        description: 'Évaluation et gestion des garanties immobilières dans le crédit bancaire',
-        duration: 120,
-        difficulty: 'intermédiaire',
-        instructor: 'Ibrahima Ndiaye',
-        rating: 4.6,
-        students: 134,
-        modules: 5,
-        progress: 30,
-        status: 'en cours',
-        image: '/api/placeholder/300/200',
-        features: ['Visites terrain', 'Outils d\'évaluation', 'Réseau expert'],
-        objectives: [
-          'Évaluer la valeur des biens',
-          'Analyser les risques immobiliers',
-          'Optimiser les garanties',
-          'Gérer les contentieux'
-        ]
-      },
-      {
-        id: 5,
-        title: 'Services Bancaires Diaspora',
-        category: 'diaspora',
-        type: 'Spécialisation',
-        description: 'Services bancaires adaptés aux besoins de la diaspora africaine',
-        duration: 150,
-        difficulty: 'intermédiaire',
-        instructor: 'Aïssatou Diop',
-        rating: 4.8,
-        students: 98,
-        modules: 6,
-        progress: 0,
-        status: 'non commencé',
-        image: '/api/placeholder/300/200',
-        features: ['Études de cas', 'Témoignages', 'Réseautage'],
-        objectives: [
-          'Comprendre les besoins diaspora',
-          'Proposer des solutions adaptées',
-          'Gérer les transferts internationaux',
-          'Développer la clientèle'
-        ]
-      },
-      {
-        id: 6,
-        title: 'Cybersécurité Bancaire',
-        category: 'securite',
-        type: 'Formation critique',
-        description: 'Protection des systèmes bancaires contre les cybermenaces',
-        duration: 200,
-        difficulty: 'avancé',
-        instructor: 'Moussa Traoré',
-        rating: 4.9,
-        students: 67,
-        modules: 7,
-        progress: 45,
-        status: 'en cours',
-        image: '/api/placeholder/300/200',
-        features: ['Simulations d\'attaque', 'Outils pro', 'Certification'],
-        objectives: [
-          'Identifier les vulnérabilités',
-          'Implémenter des protections',
-          'Réagir aux incidents',
-          'Former les équipes'
-        ]
+    let active = true;
+    const loadFormations = async () => {
+      try {
+        // Formations RÉELLES depuis Supabase (table elearning_courses)
+        const { data, error } = await supabase
+          .from('elearning_courses')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        const mapped = (data || []).map((c) => ({
+          id: c.id,
+          title: c.title || '',
+          category: c.category || '',
+          type: c.type || 'Cours',
+          description: c.description || '',
+          duration: c.duration ?? 0,
+          difficulty: c.difficulty || '',
+          instructor: c.instructor || '',
+          rating: c.rating ?? null,
+          students: c.students_count ?? 0,
+          modules: c.modules_count ?? 0,
+          progress: c.progress ?? 0,
+          status: c.status || '',
+          image: c.image_url || null,
+          features: Array.isArray(c.features) ? c.features : [],
+          objectives: Array.isArray(c.objectives) ? c.objectives : []
+        }));
+        if (active) {
+          setFormations(mapped);
+          setUserProgress({
+            totalFormations: mapped.length,
+            formationsTerminees: mapped.filter((x) => x.status === 'termine' || x.progress === 100).length,
+            formationsEnCours: mapped.filter((x) => x.progress > 0 && x.progress < 100).length,
+            heuresFormation: null,
+            certificationsObtenues: null,
+            niveau: null
+          });
+        }
+      } catch (err) {
+        console.warn('Formations indisponibles:', err?.message);
+        if (active) { setFormations([]); setUserProgress({ totalFormations: 0, formationsTerminees: 0, formationsEnCours: 0, heuresFormation: null, certificationsObtenues: null, niveau: null }); }
       }
-    ];
-
-    const mockUserProgress = {
-      totalFormations: 6,
-      formationsTerminees: 1,
-      formationsEnCours: 3,
-      heuresFormation: 420,
-      certificationsObtenues: 2,
-      niveau: 'Intermédiaire'
     };
-
-    setFormations(mockFormations);
-    setUserProgress(mockUserProgress);
+    loadFormations();
+    return () => { active = false; };
   }, []);
 
   const getCategoryIcon = (category) => {

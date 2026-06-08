@@ -42,63 +42,23 @@ const AdminProjectsPage = () => {
     const fetchProjectsData = async () => {
       setLoading(true);
       try {
-        // Données des projets (simulation avec données réelles si disponibles)
-        const projectsData = [
-          {
-            id: 1,
-            title: 'Villa Almadies - Famille Diallo',
-            client: 'Amadou Diallo',
-            location: 'Almadies, Dakar',
-            status: 'in_progress',
-            progress: 65,
-            budget: 125000000,
-            spent: 81250000,
-            start_date: '2024-06-15',
-            estimated_completion: '2025-02-15',
-            current_phase: 'Gros œuvre',
-            diaspora_country: 'France',
-            last_update: '2024-09-03'
-          },
-          {
-            id: 2,
-            title: 'Duplex Yeumbeul - Famille Sall',
-            client: 'Fatou Sall',
-            location: 'Yeumbeul, Keur Massar',
-            status: 'FileTextation',
-            progress: 25,
-            budget: 85000000,
-            spent: 21250000,
-            start_date: '2024-08-01',
-            estimated_completion: '2025-06-01',
-            current_phase: 'Fondations',
-            diaspora_country: 'États-Unis',
-            last_update: '2024-09-04'
-          },
-          {
-            id: 3,
-            title: 'Maison Familiale Mbour - Ba',
-            client: 'Ousmane Ba',
-            location: 'Mbour, Thiès',
-            status: 'completed',
-            progress: 100,
-            budget: 95000000,
-            spent: 93500000,
-            start_date: '2024-01-15',
-            estimated_completion: '2024-08-15',
-            current_phase: 'Finitions',
-            diaspora_country: 'Canada',
-            last_update: '2024-08-20'
-          }
-        ];
+        // Chargement RÉEL des projets depuis Supabase (table developer_projects)
+        const { data, error } = await supabase
+          .from('developer_projects')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
 
+        const projectsData = data || [];
         setProjects(projectsData);
 
-        // Statistiques
+        // Statistiques calculées sur les vraies données (défensif sur les champs)
+        const num = (v) => parseFloat(v) || 0;
         const totalProjects = projectsData.length;
         const activeProjects = projectsData.filter(p => p.status === 'in_progress').length;
         const completedProjects = projectsData.filter(p => p.status === 'completed').length;
-        const totalBudget = projectsData.reduce((sum, p) => sum + p.budget, 0);
-        const totalSpent = projectsData.reduce((sum, p) => sum + p.spent, 0);
+        const totalBudget = projectsData.reduce((sum, p) => sum + num(p.budget), 0);
+        const totalSpent = projectsData.reduce((sum, p) => sum + num(p.spent), 0);
 
         setStats({
           totalProjects,
@@ -106,7 +66,9 @@ const AdminProjectsPage = () => {
           completedProjects,
           totalBudget,
           totalSpent,
-          avgProgress: Math.round(projectsData.reduce((sum, p) => sum + p.progress, 0) / totalProjects)
+          avgProgress: totalProjects
+            ? Math.round(projectsData.reduce((sum, p) => sum + num(p.progress), 0) / totalProjects)
+            : 0
         });
 
       } catch (error) {

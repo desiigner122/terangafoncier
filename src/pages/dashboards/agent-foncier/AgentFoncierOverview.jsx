@@ -65,64 +65,9 @@ const AgentFoncierOverview = () => {
     }
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      action: 'Nouveau terrain cadastré',
-      client: 'Lot 425 - Parcelles Dakar',
-      time: 'Il y a 2h',
-      status: 'completed',
-      icon: Map
-    },
-    {
-      id: 2,
-      action: 'Évaluation terminée',
-      client: 'Villa Almadies - M. Diallo',
-      time: 'Il y a 4h',
-      status: 'completed',
-      icon: Calculator
-    },
-    {
-      id: 3,
-      action: 'Document en attente',
-      client: 'Titre foncier - Entreprise ABC',
-      time: 'Il y a 6h',
-      status: 'pending',
-      icon: FileText
-    },
-    {
-      id: 4,
-      action: 'Nouveau client',
-      client: 'Mme Ndiaye - Terrain agricole',
-      time: 'Il y a 1 jour',
-      status: 'new',
-      icon: Users
-    }
-  ];
+  const recentActivities = []; // démo retirée
 
-  const upcomingTasks = [
-    {
-      id: 1,
-      task: 'Visite terrain Rufisque',
-      date: 'Aujourd\'hui 14h30',
-      priority: 'high',
-      client: 'M. Fall'
-    },
-    {
-      id: 2,
-      task: 'Finaliser titre foncier',
-      date: 'Demain 9h00',
-      priority: 'medium',
-      client: 'Société Immobilière'
-    },
-    {
-      id: 3,
-      task: 'Rapport d\'évaluation',
-      date: 'Vendredi 16h00',
-      priority: 'low',
-      client: 'Famille Seck'
-    }
-  ];
+  const upcomingTasks = []; // démo retirée
 
   if (loading) {
     return (

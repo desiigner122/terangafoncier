@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -41,115 +42,40 @@ const PromoteurBlockchain = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   // Certificats blockchain
-  const certificates = [
-    {
-      id: 1,
-      type: 'Titre de Propriété',
-      project: 'Résidence Teranga',
-      unit: 'Appartement 3A-205',
-      owner: 'Moussa Ba',
-      hash: '0x1a2b3c4d5e6f7890abcdef1234567890abcdef12',
-      blockNumber: 18457392,
-      timestamp: '2024-11-30T14:30:00Z',
-      status: 'Validé',
-      value: 85000000,
-      gasUsed: 0.0023,
-      confirmations: 156,
-      ipfsHash: 'QmX7Y8Z9A1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T',
-      verificationLevel: 'Triple validation'
-    },
-    {
-      id: 2,
-      type: 'Contrat de Vente',
-      project: 'Villa Duplex Mermoz',
-      unit: 'Villa B-102',
-      owner: 'Aminata Diop',
-      hash: '0x9876543210fedcba0987654321fedcba09876543',
-      blockNumber: 18455821,
-      timestamp: '2024-11-28T09:15:00Z',
-      status: 'En attente',
-      value: 65000000,
-      gasUsed: 0.0019,
-      confirmations: 89,
-      ipfsHash: 'QmA1B2C3D4E5F6G7H8I9J0K1L2M3N4O5P6Q7R8S9T0U1V2W',
-      verificationLevel: 'Double validation'
-    },
-    {
-      id: 3,
-      type: 'Permis de Construire',
-      project: 'Appartements VDN',
-      unit: 'Ensemble immobilier',
-      owner: 'Teranga Foncier SARL',
-      hash: '0xabcdef1234567890abcdef1234567890abcdef12',
-      blockNumber: 18452156,
-      timestamp: '2024-11-25T16:45:00Z',
-      status: 'Validé',
-      value: 0,
-      gasUsed: 0.0031,
-      confirmations: 234,
-      ipfsHash: 'QmZ9Y8X7W6V5U4T3S2R1Q0P9O8N7M6L5K4J3I2H1G0F9E8D',
-      verificationLevel: 'Validation gouvernementale'
-    },
-    {
-      id: 4,
-      type: 'Certificat de Conformité',
-      project: 'Entrepôt Logistics',
-      unit: 'Bâtiment principal',
-      owner: 'Logistics Corp',
-      hash: '0x5555666677778888999900001111222233334444',
-      blockNumber: 18448792,
-      timestamp: '2024-11-20T11:20:00Z',
-      status: 'Révoqué',
-      value: 0,
-      gasUsed: 0.0015,
-      confirmations: 445,
-      ipfsHash: 'QmP1Q2R3S4T5U6V7W8X9Y0Z1A2B3C4D5E6F7G8H9I0J1K2L',
-      verificationLevel: 'Validation technique'
-    }
-  ];
+  // certificates RÉEL depuis Supabase (aucune donnée fictive)
+  const [certificates, setCertificates] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('blockchain_certificates').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setCertificates(data || []);
+      } catch (err) {
+        console.warn('certificates indisponible:', err?.message);
+        if (active) setCertificates([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Transactions récentes
-  const transactions = [
-    {
-      id: 1,
-      type: 'Émission certificat',
-      hash: '0x1234567890abcdef1234567890abcdef12345678',
-      from: 'Teranga Foncier',
-      to: 'Moussa Ba',
-      amount: 0.0023,
-      timestamp: '2024-12-11T10:30:00Z',
-      status: 'Confirmé',
-      confirmations: 12,
-      gasPrice: 25.5,
-      blockHeight: 18459871
-    },
-    {
-      id: 2,
-      type: 'Transfert propriété',
-      hash: '0xabcdef1234567890abcdef1234567890abcdef12',
-      from: 'Aminata Diop',
-      to: 'Ibrahima Sarr',
-      amount: 0.0019,
-      timestamp: '2024-12-11T09:15:00Z',
-      status: 'En attente',
-      confirmations: 3,
-      gasPrice: 23.8,
-      blockHeight: 18459845
-    },
-    {
-      id: 3,
-      type: 'Validation document',
-      hash: '0x9876543210fedcba0987654321fedcba09876543',
-      from: 'Notaire Sénégal',
-      to: 'Blockchain Registry',
-      amount: 0.0031,
-      timestamp: '2024-12-11T08:45:00Z',
-      status: 'Confirmé',
-      confirmations: 25,
-      gasPrice: 27.2,
-      blockHeight: 18459823
-    }
-  ];
+  // transactions RÉEL depuis Supabase (aucune donnée fictive)
+  const [transactions, setTransactions] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('financial_transactions').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setTransactions(data || []);
+      } catch (err) {
+        console.warn('transactions indisponible:', err?.message);
+        if (active) setTransactions([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Métriques blockchain
   const blockchainMetrics = {

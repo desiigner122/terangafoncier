@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building2,
@@ -74,18 +75,30 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [realTimeData, setRealTimeData] = useState({});
 
-  // Données temps réel simulées
+  // Données RÉELLES depuis Supabase (aucune valeur aléatoire)
   useEffect(() => {
-    const interval = setInterval(() => {
-      setRealTimeData({
-        activeClients: Math.floor(Math.random() * 50) + 150,
-        processingCredits: Math.floor(Math.random() * 10) + 25,
-        pendingApprovals: Math.floor(Math.random() * 5) + 8,
-        systemLoad: Math.floor(Math.random() * 30) + 45
-      });
-    }, 5000);
-
-    return () => clearInterval(interval);
+    let active = true;
+    const loadRealTime = async () => {
+      try {
+        const [{ count: processingCredits }, { count: pendingApprovals }] = await Promise.all([
+          supabase.from('demandes_financement').select('id', { count: 'exact', head: true }).eq('status', 'processing'),
+          supabase.from('demandes_financement').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+        ]);
+        if (active) {
+          setRealTimeData({
+            activeClients: null,
+            processingCredits: processingCredits || 0,
+            pendingApprovals: pendingApprovals || 0,
+            systemLoad: null
+          });
+        }
+      } catch (err) {
+        console.warn('Données banque indisponibles:', err?.message);
+        if (active) setRealTimeData({ activeClients: null, processingCredits: 0, pendingApprovals: 0, systemLoad: null });
+      }
+    };
+    loadRealTime();
+    return () => { active = false; };
   }, []);
 
   // KPIs principaux enrichis
@@ -182,92 +195,10 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
   ];
 
   // Dernières activités
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'credit_approved',
-      client: 'Amadou Diallo',
-      amount: '85M FCFA',
-      property: 'Terrain Almadies',
-      time: '5 min',
-      status: 'approved',
-      agent: 'Me Fatou Ndiaye'
-    },
-    {
-      id: 2,
-      type: 'kyc_completed',
-      client: 'Aïcha Sow',
-      amount: '120M FCFA',
-      property: 'Villa Mermoz',
-      time: '12 min',
-      status: 'processing',
-      agent: 'IA KYC System'
-    },
-    {
-      id: 3,
-      type: 'credit_pending',
-      client: 'Moussa Thiam',
-      amount: '65M FCFA',
-      property: 'Terrain Rufisque',
-      time: '25 min',
-      status: 'pending',
-      agent: 'Équipe crédit'
-    },
-    {
-      id: 4,
-      type: 'blockchain_verified',
-      client: 'Fatou Diop',
-      amount: '95M FCFA',
-      property: 'Appartement Plateau',
-      time: '1h',
-      status: 'verified',
-      agent: 'TerangaChain'
-    },
-    {
-      id: 5,
-      type: 'compliance_check',
-      client: 'Ibrahima Fall',
-      amount: '110M FCFA',
-      property: 'Terrain Liberté 6',
-      time: '2h',
-      status: 'compliant',
-      agent: 'Système conformité'
-    }
-  ];
+  const recentActivities = []; // démo retirée
 
   // Clients prioritaires
-  const priorityClients = [
-    {
-      id: 1,
-      name: 'Amadou Diallo',
-      type: 'Premium',
-      portfolio: '450M FCFA',
-      properties: 5,
-      lastActivity: '2h',
-      status: 'active',
-      riskScore: 92
-    },
-    {
-      id: 2,
-      name: 'Aïcha Sow',
-      type: 'Diaspora VIP',
-      portfolio: '320M FCFA',
-      properties: 3,
-      lastActivity: '5h',
-      status: 'active',
-      riskScore: 88
-    },
-    {
-      id: 3,
-      name: 'Moussa Thiam',
-      type: 'Corporate', 
-      portfolio: '1.2B FCFA',
-      properties: 12,
-      lastActivity: '1j',
-      status: 'active',
-      riskScore: 95
-    }
-  ];
+  const priorityClients = []; // démo retirée
 
   const handleRefresh = () => {
     setRefreshing(true);

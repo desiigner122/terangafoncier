@@ -150,7 +150,7 @@ const BanqueAI = () => {
         role: 'assistant',
         content: generateAIResponse(chatMessage),
         timestamp: new Date(),
-        confidence: Math.floor(Math.random() * 20) + 80,
+        confidence: 0,
         model: selectedModel
       };
       setChatHistory(prev => [...prev, aiResponse]);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -43,88 +44,18 @@ const MairieCRM = ({ dashboardStats }) => {
   const [selectedContact, setSelectedContact] = useState(null);
 
   // Données CRM simulées pour la mairie
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: 'Association Les Verts',
-      type: 'association',
-      email: 'contact@lesverts-commune.org',
-      phone: '+221 77 123 45 67',
-      score: 85,
-      status: 'active',
-      lastContact: '2024-01-15',
-      projects: ['Aménagement Parc Central', 'Zone Verte Quartier Nord'],
-      value: 0, // Associations n'ont pas de valeur commerciale
-      priority: 'high',
-      avatar: null,
-      address: 'Quartier Résidentiel Nord',
-      notes: 'Très actifs dans les projets environnementaux communaux'
-    },
-    {
-      id: 2,
-      name: 'Entreprise BTP Sénégal',
-      type: 'entreprise',
-      email: 'direction@btpsenegal.com',
-      phone: '+221 33 987 65 43',
-      score: 92,
-      status: 'active',
-      lastContact: '2024-01-20',
-      projects: ['Construction École Primaire', 'Rénovation Mairie'],
-      value: 45000000, // CFA
-      priority: 'high',
-      avatar: null,
-      address: 'Zone Industrielle',
-      notes: 'Partenaire privilégié pour les grands travaux communaux'
-    },
-    {
-      id: 3,
-      name: 'M. Amadou Diallo',
-      type: 'citoyen',
-      email: 'amadou.diallo@email.com',
-      phone: '+221 76 654 32 10',
-      score: 68,
-      status: 'prospect',
-      lastContact: '2024-01-10',
-      projects: ['Demande Parcelle Résidentielle'],
-      value: 8500000, // CFA
-      priority: 'medium',
-      avatar: null,
-      address: 'Quartier Centre-Ville',
-      notes: 'Citoyen exemplaire, membre conseil de quartier'
-    },
-    {
-      id: 4,
-      name: 'Coopérative Agricole Locale',
-      type: 'cooperative',
-      email: 'info@coopagri-locale.sn',
-      phone: '+221 77 456 78 90',
-      score: 76,
-      status: 'active',
-      lastContact: '2024-01-18',
-      projects: ['Extension Zone Agricole', 'Marché Hebdomadaire'],
-      value: 12000000, // CFA
-      priority: 'medium',
-      avatar: null,
-      address: 'Zone Agricole Communale',
-      notes: 'Important pour le développement économique local'
-    },
-    {
-      id: 5,
-      name: 'Mme Fatou Sow',
-      type: 'citoyen',
-      email: 'fatou.sow@gmail.com',
-      phone: '+221 78 123 45 67',
-      score: 72,
-      status: 'active',
-      lastContact: '2024-01-12',
-      projects: ['Autorisation Commerce Local'],
-      value: 3500000, // CFA
-      priority: 'low',
-      avatar: null,
-      address: 'Quartier Marché',
-      notes: 'Commerçante locale, très impliquée communauté'
-    }
-  ]);
+  const [contacts, setContacts] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setContacts(data || []);
+      } catch (err) { if (active) setContacts([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const [crmStats, setCrmStats] = useState({
     totalContacts: contacts.length,

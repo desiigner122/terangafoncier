@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -121,123 +122,24 @@ const MairieCommunalRequests = ({ dashboardStats }) => {
   };
 
   // Données des demandes communales
-  const communalRequests = [
-    {
-      id: 'MC-2024-001',
-      applicantName: 'Amadou Diallo',
-      applicantPhone: '+221 77 123 45 67',
-      applicantEmail: 'amadou.diallo@email.com',
-      requestType: 'Attribution Communale',
-      requestedArea: '1200m²',
-      zone: 'Zone Résidentielle Nord',
-      purpose: 'Construction résidentielle familiale',
-      status: 'En Évaluation',
-      priority: 'Moyenne',
-      submissionDate: '2024-01-20',
-      evaluationDate: null,
-      aiScore: 85,
-      documents: ['Demande officielle', 'Plan de construction', 'Justificatifs revenus'],
-      evaluatorComments: 'Dossier complet, en cours d\'analyse par la commission technique',
-      estimatedProcessingDays: 15,
-      currentStep: 2,
-      totalSteps: 5,
-      meetingRequired: true,
-      legalConstraints: ['Zone non inondable', 'Respect coefficient occupation sol'],
-      neighborConsultation: 'En cours'
-    },
-    {
-      id: 'MC-2024-002',
-      applicantName: 'Fatou Seck',
-      applicantPhone: '+221 76 987 65 43',
-      applicantEmail: 'fatou.seck@entreprise.sn',
-      requestType: 'Permis de Construire',
-      requestedArea: '800m²',
-      zone: 'Zone Commerciale Centre',
-      purpose: 'Centre commercial moderne',
-      status: 'Approuvé',
-      priority: 'Haute',
-      submissionDate: '2024-01-15',
-      evaluationDate: '2024-01-19',
-      aiScore: 92,
-      documents: ['Étude d\'impact', 'Plans architecturaux', 'Autorisation environnementale'],
-      evaluatorComments: 'Projet conforme aux normes, contribution positive au développement économique',
-      estimatedProcessingDays: 10,
-      currentStep: 5,
-      totalSteps: 5,
-      meetingRequired: false,
-      legalConstraints: ['Norme accessibilité', 'Parking obligatoire'],
-      neighborConsultation: 'Favorable'
-    },
-    {
-      id: 'MC-2024-003',
-      applicantName: 'Ibrahim Ndiaye',
-      applicantPhone: '+221 78 456 12 34',
-      applicantEmail: 'ibrahim.ndiaye@gmail.com',
-      requestType: 'Modification Cadastre',
-      requestedArea: '650m²',
-      zone: 'Zone Mixte Sud',
-      purpose: 'Rectification limites parcellaires',
-      status: 'En Attente',
-      priority: 'Normale',
-      submissionDate: '2024-01-18',
-      evaluationDate: null,
-      aiScore: 78,
-      documents: ['Relevé topographique', 'Accord voisins', 'Ancien titre foncier'],
-      evaluatorComments: 'En attente validation géomètre expert',
-      estimatedProcessingDays: 20,
-      currentStep: 1,
-      totalSteps: 4,
-      meetingRequired: true,
-      legalConstraints: ['Respect servitudes', 'Validation technique'],
-      neighborConsultation: 'Programmée'
-    },
-    {
-      id: 'MC-2024-004',
-      applicantName: 'Aïssa Ba',
-      applicantPhone: '+221 77 321 98 76',
-      applicantEmail: 'aissa.ba@cooperative.sn',
-      requestType: 'Attribution Agricole',
-      requestedArea: '2500m²',
-      zone: 'Zone Agricole Est',
-      purpose: 'Maraîchage coopératif',
-      status: 'Rejeté',
-      priority: 'Normale',
-      submissionDate: '2024-01-12',
-      evaluationDate: '2024-01-16',
-      aiScore: 65,
-      documents: ['Projet agricole', 'Statuts coopérative', 'Plan exploitation'],
-      evaluatorComments: 'Zone réservée pour extension urbaine future selon schéma directeur',
-      estimatedProcessingDays: 12,
-      currentStep: 5,
-      totalSteps: 5,
-      meetingRequired: false,
-      legalConstraints: ['Schéma directeur', 'Réserve foncière'],
-      neighborConsultation: 'Non nécessaire'
-    },
-    {
-      id: 'MC-2024-005',
-      applicantName: 'Moussa Gueye',
-      applicantPhone: '+221 76 654 32 10',
-      applicantEmail: 'moussa.gueye@artisan.sn',
-      requestType: 'Zone Artisanale',
-      requestedArea: '400m²',
-      zone: 'Zone Artisanale Nord',
-      purpose: 'Atelier menuiserie traditionnelle',
-      status: 'En Évaluation',
-      priority: 'Haute',
-      submissionDate: '2024-01-22',
-      evaluationDate: null,
-      aiScore: 88,
-      documents: ['Diplôme professionnel', 'Business plan', 'Caution bancaire'],
-      evaluatorComments: 'Candidature prometteuse, secteur porteur',
-      estimatedProcessingDays: 8,
-      currentStep: 3,
-      totalSteps: 5,
-      meetingRequired: true,
-      legalConstraints: ['Normes artisanales', 'Nuisances sonores'],
-      neighborConsultation: 'En cours'
-    }
-  ];
+  const [communalRequests, setCommunalRequests] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('communal_requests')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setCommunalRequests(data || []);
+      } catch (err) {
+        console.warn('Demandes communales indisponibles:', err?.message);
+        if (active) setCommunalRequests([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {

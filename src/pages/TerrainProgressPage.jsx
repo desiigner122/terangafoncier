@@ -131,19 +131,7 @@ const TerrainProgressPage = () => {
     }
   ];
 
-  const mockRequest = {
-    id: 'REQ-2024-001',
-    type: 'Attribution terrain communal',
-    municipality: 'Commune de Guédiawaye',
-    location: 'Zone résidentielle Nord',
-    area: '300m²',
-    status: 'En cours d\'examen',
-    submittedDate: '15 Janvier 2024',
-    currentStep: 3,
-    totalSteps: 5,
-    progress: 60,
-    estimatedCompletion: '15 Mars 2024'
-  };
+  const mockRequest = {}; // démo retirée
 
   const getStatusIcon = (status) => {
     switch (status) {

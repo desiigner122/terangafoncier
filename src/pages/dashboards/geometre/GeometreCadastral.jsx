@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Map, 
@@ -48,188 +49,22 @@ const GeometreCadastral = () => {
   const [statusFilter, setStatusFilter] = useState('tous');
 
   // Données cadastrales
-  const parcelles = [
-    {
-      id: 1,
-      numeroTitre: 'TF 12.345/DK',
-      numeroParcelle: '0234/15',
-      section: 'A',
-      lieu: 'Almadies, Dakar',
-      proprietaire: 'Société IMMOGO',
-      typeProprietaire: 'morale',
-      superficie: '2.5 ha',
-      superficieExacte: '25,247 m²',
-      natureTerrain: 'urbain',
-      usage: 'résidentiel',
-      statut: 'titre_foncier',
-      dateCreation: '2024-03-15',
-      dateModification: '2024-09-25',
-      valeurVenale: '125,000,000 XOF',
-      impotFoncier: '2,500,000 XOF',
-      coordonnees: {
-        lat: 14.7167,
-        lng: -17.4677
-      },
-      limites: [
-        { direction: 'Nord', limite: 'Route de la Corniche' },
-        { direction: 'Sud', limite: 'Parcelle 0233/15' },
-        { direction: 'Est', limite: 'Océan Atlantique' },
-        { direction: 'Ouest', limite: 'Parcelle 0235/15' }
-      ],
-      documents: ['Plan cadastral', 'Titre foncier', 'Permis de construire'],
-      icon: Building
-    },
-    {
-      id: 2,
-      numeroTitre: 'TF 8.901/RF',
-      numeroParcelle: '0156/08',
-      section: 'B',
-      lieu: 'Rufisque',
-      proprietaire: 'M. Amadou Diallo',
-      typeProprietaire: 'physique',
-      superficie: '800 m²',
-      superficieExacte: '847 m²',
-      natureTerrain: 'urbain',
-      usage: 'résidentiel',
-      statut: 'titre_foncier',
-      dateCreation: '2024-01-20',
-      dateModification: '2024-09-15',
-      valeurVenale: '8,000,000 XOF',
-      impotFoncier: '160,000 XOF',
-      coordonnees: {
-        lat: 14.7197,
-        lng: -17.2658
-      },
-      limites: [
-        { direction: 'Nord', limite: 'Rue Léopold Sédar Senghor' },
-        { direction: 'Sud', limite: 'Parcelle 0155/08' },
-        { direction: 'Est', limite: 'Parcelle 0157/08' },
-        { direction: 'Ouest', limite: 'Rue Amadou Bamba' }
-      ],
-      documents: ['Plan cadastral', 'Titre foncier', 'Certificat d\'urbanisme'],
-      icon: User
-    },
-    {
-      id: 3,
-      numeroTitre: 'DF 234/TH',
-      numeroParcelle: '1024/12',
-      section: 'C',
-      lieu: 'Zone Industrielle, Thiès',
-      proprietaire: 'État du Sénégal',
-      typeProprietaire: 'publique',
-      superficie: '15 ha',
-      superficieExacte: '150,000 m²',
-      natureTerrain: 'industriel',
-      usage: 'industriel',
-      statut: 'domaine_public',
-      dateCreation: '2024-02-10',
-      dateModification: '2024-09-30',
-      valeurVenale: '450,000,000 XOF',
-      impotFoncier: 'Exempté',
-      coordonnees: {
-        lat: 14.7889,
-        lng: -16.9250
-      },
-      limites: [
-        { direction: 'Nord', limite: 'Route Nationale N2' },
-        { direction: 'Sud', limite: 'Chemin de fer Dakar-Niger' },
-        { direction: 'Est', limite: 'Zone résidentielle' },
-        { direction: 'Ouest', limite: 'Zone commerciale' }
-      ],
-      documents: ['Plan d\'aménagement', 'Arrêté de classement', 'Étude d\'impact'],
-      icon: Building
-    },
-    {
-      id: 4,
-      numeroTitre: 'TF 5.678/KL',
-      numeroParcelle: '0789/05',
-      section: 'D',
-      lieu: 'Kaolack',
-      proprietaire: 'Coopérative Agricole Thiès',
-      typeProprietaire: 'cooperative',
-      superficie: '5.2 ha',
-      superficieExacte: '52,000 m²',
-      natureTerrain: 'agricole',
-      usage: 'agricole',
-      statut: 'titre_foncier',
-      dateCreation: '2024-04-05',
-      dateModification: '2024-08-20',
-      valeurVenale: '26,000,000 XOF',
-      impotFoncier: '520,000 XOF',
-      coordonnees: {
-        lat: 14.1516,
-        lng: -16.0729
-      },
-      limites: [
-        { direction: 'Nord', limite: 'Marigot de Kaolack' },
-        { direction: 'Sud', limite: 'Parcelle 0788/05' },
-        { direction: 'Est', limite: 'Piste rurale' },
-        { direction: 'Ouest', limite: 'Parcelle 0790/05' }
-      ],
-      documents: ['Plan parcellaire', 'Titre foncier', 'Autorisation exploitation'],
-      icon: TreePine
-    },
-    {
-      id: 5,
-      numeroTitre: 'DF 456/BG',
-      numeroParcelle: '2048/20',
-      section: 'E',
-      lieu: 'Bargny',
-      proprietaire: 'Ministère de l\'Industrie',
-      typeProprietaire: 'publique',
-      superficie: '25 ha',
-      superficieExacte: '250,000 m²',
-      natureTerrain: 'industriel',
-      usage: 'industriel',
-      statut: 'domaine_public',
-      dateCreation: '2024-05-12',
-      dateModification: '2024-09-28',
-      valeurVenale: '750,000,000 XOF',
-      impotFoncier: 'Exempté',
-      coordonnees: {
-        lat: 14.6928,
-        lng: -17.0547
-      },
-      limites: [
-        { direction: 'Nord', limite: 'Océan Atlantique' },
-        { direction: 'Sud', limite: 'Route de Bargny' },
-        { direction: 'Est', limite: 'Zone résidentielle' },
-        { direction: 'Ouest', limite: 'Port de Dakar' }
-      ],
-      documents: ['Plan masse', 'Arrêté ministériel', 'Étude environnementale'],
-      icon: Building
-    },
-    {
-      id: 6,
-      numeroTitre: 'TF 9.876/SC',
-      numeroParcelle: '0345/18',
-      section: 'F',
-      lieu: 'Sacré-Cœur, Dakar',
-      proprietaire: 'Famille Mbaye',
-      typeProprietaire: 'physique',
-      superficie: '1,200 m²',
-      superficieExacte: '1,247 m²',
-      natureTerrain: 'urbain',
-      usage: 'résidentiel',
-      statut: 'titre_foncier',
-      dateCreation: '2024-01-08',
-      dateModification: '2024-09-28',
-      valeurVenale: '37,500,000 XOF',
-      impotFoncier: '750,000 XOF',
-      coordonnees: {
-        lat: 14.6937,
-        lng: -17.4441
-      },
-      limites: [
-        { direction: 'Nord', limite: 'Avenue Cheikh Anta Diop' },
-        { direction: 'Sud', limite: 'Parcelle 0344/18' },
-        { direction: 'Est', limite: 'Parcelle 0346/18' },
-        { direction: 'Ouest', limite: 'Rue Joseph Gomis' }
-      ],
-      documents: ['Plan cadastral', 'Titre foncier', 'Certificat d\'hérédité'],
-      icon: User
-    }
-  ];
+  // parcelles RÉEL depuis Supabase (aucune donnée fictive)
+  const [parcelles, setParcelles] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setParcelles(data || []);
+      } catch (err) {
+        console.warn('parcelles indisponible:', err?.message);
+        if (active) setParcelles([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getTypeProprietaireIcon = (type) => {
     switch (type) {

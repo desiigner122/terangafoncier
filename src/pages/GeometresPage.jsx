@@ -164,32 +164,7 @@ const GeometresPage = () => {
     }
   ];
 
-  const successStories = [
-    {
-      geometre: "Cabinet Diallo & Associés",
-      location: "Dakar",
-      results: "+280% missions en 10 mois",
-      details: "Spécialisation projets Almadies",
-      growth: "+280%",
-      volume: "85 missions/mois"
-    },
-    {
-      geometre: "Geo-Tech Sénégal",
-      location: "Thiès",
-      results: "€180K revenus additionnels/an",
-      details: "Focus développements diaspora",
-      growth: "+190%",
-      volume: "65 missions/mois"
-    },
-    {
-      geometre: "Cabinet Ba Géomètres",
-      location: "Saint-Louis",
-      results: "650 nouveaux clients acquis",
-      details: "Couverture Nord Sénégal",
-      growth: "+156%",
-      volume: "45 missions/mois"
-    }
-  ];
+  const successStories = []; // démo retirée
 
   const packages = [
     {

@@ -55,7 +55,7 @@ const ParticulierSettings = () => {
 
   // Données utilisateur
   const userProfile = {
-    name: "Amadou Diallo",
+    name: "",
     email: "amadou.diallo@email.com",
     phone: "+221 77 123 45 67",
     avatar: "/api/placeholder/100/100",

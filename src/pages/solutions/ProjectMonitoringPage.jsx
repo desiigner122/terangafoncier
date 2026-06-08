@@ -54,7 +54,7 @@ const ProjectMonitoringPage = () => {
 
   const testimonial = {
     text: "Grâce au suivi en temps réel, j'ai pu surveiller ma construction depuis Paris. Les rapports quotidiens m'ont donné une tranquillité d'esprit totale.",
-    author: "Aminata Diop",
+    author: "",
     location: "Paris, France",
     project: "Villa 4 pièces à Almadies"
   };

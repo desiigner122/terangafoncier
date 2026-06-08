@@ -83,7 +83,7 @@ const InvestisseurDashboardLayout = ({ children }) => {
   ];
 
   const userProfile = {
-    name: 'Amadou Cissé',
+    name: '',
     role: 'Investisseur Premium',
     avatar: '/api/placeholder/40/40',
     portfolioValue: '2.8M XOF',

@@ -25,38 +25,7 @@ const MarketAnalysisPage = () => {
 
   useEffect(() => {
     // Simulation des données de marché
-    const mockData = {
-      Dakar: {
-        averagePrice: 850000,
-        priceChange: 12.5,
-        volume: 245,
-        volumeChange: 8.3,
-        inventory: 1420,
-        daysOnMarket: 45,
-        demandIndex: 85,
-        supplyIndex: 72
-      },
-      Thies: {
-        averagePrice: 420000,
-        priceChange: 18.2,
-        volume: 89,
-        volumeChange: 15.1,
-        inventory: 567,
-        daysOnMarket: 62,
-        demandIndex: 78,
-        supplyIndex: 65
-      },
-      'Saint-Louis': {
-        averagePrice: 320000,
-        priceChange: 8.7,
-        volume: 34,
-        volumeChange: 5.2,
-        inventory: 289,
-        daysOnMarket: 78,
-        demandIndex: 65,
-        supplyIndex: 70
-      }
-    };
+    const mockData = {}; // démo retirée
     setMarketData(mockData);
   }, []);
 

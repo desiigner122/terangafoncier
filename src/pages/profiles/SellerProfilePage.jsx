@@ -92,47 +92,7 @@ const SellerProfilePage = () => {
 
   const loadSellerProperties = async () => {
     // Simulation des propriétés du vendeur
-    const mockProperties = [
-      {
-        id: 1,
-        title: 'Terrain Résidentiel 400m²',
-        location: 'Liberté 6, Dakar',
-        price: '45,000,000 FCFA',
-        surface: '400m²',
-        type: 'Terrain',
-        status: 'Disponible',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=300&fit=crop',
-        postedDate: '2024-08-15',
-        views: 234,
-        interested: 12
-      },
-      {
-        id: 2,
-        title: 'Parcelle Commerciale 600m²',
-        location: 'Mermoz, Dakar',
-        price: '78,000,000 FCFA',
-        surface: '600m²',
-        type: 'Commercial',
-        status: 'Négociation',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=300&fit=crop',
-        postedDate: '2024-07-20',
-        views: 189,
-        interested: 8
-      },
-      {
-        id: 3,
-        title: 'Grand Terrain 800m²',
-        location: 'Sacré-Cœur, Dakar',
-        price: '95,000,000 FCFA',
-        surface: '800m²',
-        type: 'Terrain',
-        status: 'Disponible',
-        image: 'https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=300&fit=crop',
-        postedDate: '2024-08-01',
-        views: 345,
-        interested: 18
-      }
-    ];
+    const mockProperties = []; // démo retirée
     setProperties(mockProperties);
   };
 

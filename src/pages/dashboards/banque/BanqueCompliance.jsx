@@ -105,47 +105,7 @@ const BanqueCompliance = ({ dashboardStats }) => {
   ]);
 
   // Vérifications KYC des crédits plateforme
-  const [kycVerifications, setKYCVerifications] = useState([
-    {
-      clientId: 'KYC-TER-001',
-      clientName: 'Mamadou FALL',
-      platformRef: 'TER-2024-001',
-      creditAmount: 20000000,
-      kycStatus: 'Validé',
-      documentsReceived: 8,
-      documentsRequired: 8,
-      riskLevel: 'Faible',
-      lastVerification: '2024-01-20',
-      complianceScore: 98,
-      amlStatus: 'Conforme'
-    },
-    {
-      clientId: 'KYC-TER-002',
-      clientName: 'Société SENEGAL INVEST',
-      platformRef: 'TER-2024-002',
-      creditAmount: 96000000,
-      kycStatus: 'En Cours',
-      documentsReceived: 6,
-      documentsRequired: 9,
-      riskLevel: 'Moyen',
-      lastVerification: '2024-01-22',
-      complianceScore: 75,
-      amlStatus: 'En Vérification'
-    },
-    {
-      clientId: 'KYC-TER-003',
-      clientName: 'Fatou MBAYE',
-      platformRef: 'TER-2024-003',
-      creditAmount: 15000000,
-      kycStatus: 'Validé',
-      documentsReceived: 7,
-      documentsRequired: 7,
-      riskLevel: 'Très Faible',
-      lastVerification: '2024-01-25',
-      complianceScore: 96,
-      amlStatus: 'Conforme'
-    }
-  ]);
+  const [kycVerifications, setKycVerifications] = useState([]); // démo retirée
 
   // Alertes de conformité
   const [complianceAlerts, setComplianceAlerts] = useState([

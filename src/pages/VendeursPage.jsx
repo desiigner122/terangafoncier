@@ -163,32 +163,7 @@ const VendeursPage = () => {
     }
   ];
 
-  const successStories = [
-    {
-      vendeur: "Madame Diouf",
-      bien: "Villa 4 pièces Almadies",
-      resultat: "Vendue +45% prix initial en 3 semaines",
-      details: "Acquéreur diaspora parisienne",
-      gain: "+€127K",
-      delai: "3 semaines"
-    },
-    {
-      vendeur: "Monsieur Kane",
-      bien: "Terrain 500m² Diamniadio", 
-      resultat: "Surenchère de 3 acheteurs diaspora",
-      details: "Vente finale +38% estimation",
-      gain: "+€85K",
-      delai: "10 jours"
-    },
-    {
-      vendeur: "Famille Ba",
-      bien: "Duplex Ngor bord de mer",
-      resultat: "Vente record zone en 2 mois",
-      details: "Acheteur investisseur US",
-      gain: "+€194K",
-      delai: "2 mois"
-    }
-  ];
+  const successStories = []; // démo retirée
 
   const packages = [
     {

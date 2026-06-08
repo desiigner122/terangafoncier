@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
@@ -37,126 +38,22 @@ const AgentFoncierCommunication = () => {
   const [newMessage, setNewMessage] = useState('');
 
   // Données de communication simulées
-  const conversations = [
-    {
-      id: 1,
-      name: 'Amadou Diallo',
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Le dossier du terrain à Almadies est-il prêt ?',
-      timestamp: '10:30',
-      unread: 2,
-      status: 'online',
-      type: 'client',
-      messages: [
-        {
-          id: 1,
-          sender: 'client',
-          content: 'Bonjour, j\'aimerais avoir des nouvelles du dossier du terrain à Almadies.',
-          timestamp: '09:15',
-          read: true
-        },
-        {
-          id: 2,
-          sender: 'me',
-          content: 'Bonjour M. Diallo, le dossier est en cours de finalisation. Nous devrions avoir les documents d\'ici jeudi.',
-          timestamp: '09:20',
-          read: true
-        },
-        {
-          id: 3,
-          sender: 'client',
-          content: 'Le dossier du terrain à Almadies est-il prêt ?',
-          timestamp: '10:30',
-          read: false
-        }
-      ]
-    },
-    {
-      id: 2,
-      name: 'Aïssatou Fall',
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Parfait, merci pour l\'information !',
-      timestamp: 'Hier',
-      unread: 0,
-      status: 'offline',
-      type: 'client',
-      messages: [
-        {
-          id: 1,
-          sender: 'me',
-          content: 'Bonsoir, les plans du terrain de Guédiawaye sont maintenant disponibles.',
-          timestamp: 'Hier 16:45',
-          read: true
-        },
-        {
-          id: 2,
-          sender: 'client',
-          content: 'Parfait, merci pour l\'information !',
-          timestamp: 'Hier 17:00',
-          read: true
-        }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Service Cadastre',
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Documents validés ✓',
-      timestamp: 'Hier',
-      unread: 0,
-      status: 'away',
-      type: 'service',
-      messages: [
-        {
-          id: 1,
-          sender: 'service',
-          content: 'Les documents pour le dossier #2024-AF-001 ont été validés.',
-          timestamp: 'Hier 14:30',
-          read: true
-        },
-        {
-          id: 2,
-          sender: 'service',
-          content: 'Documents validés ✓',
-          timestamp: 'Hier 14:35',
-          read: true
-        }
-      ]
-    },
-    {
-      id: 4,
-      name: 'Ousmane Ndiaye',
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Quand peut-on se rencontrer ?',
-      timestamp: '2 jours',
-      unread: 1,
-      status: 'online',
-      type: 'prospect',
-      messages: [
-        {
-          id: 1,
-          sender: 'client',
-          content: 'Bonjour, je suis intéressé par les terrains à Pikine.',
-          timestamp: '2 jours 11:20',
-          read: true
-        },
-        {
-          id: 2,
-          sender: 'me',
-          content: 'Bonjour M. Ndiaye, j\'ai plusieurs options intéressantes à vous proposer. Souhaitez-vous programmer une visite ?',
-          timestamp: '2 jours 11:25',
-          read: true
-        },
-        {
-          id: 3,
-          sender: 'client',
-          content: 'Quand peut-on se rencontrer ?',
-          timestamp: '2 jours 15:30',
-          read: false
-        }
-      ]
-    }
-  ];
+  // conversations RÉEL depuis Supabase (aucune donnée fictive)
+  const [conversations, setConversations] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('conversations').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setConversations(data || []);
+      } catch (err) {
+        console.warn('conversations indisponible:', err?.message);
+        if (active) setConversations([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const stats = {
     totalMessages: 248,

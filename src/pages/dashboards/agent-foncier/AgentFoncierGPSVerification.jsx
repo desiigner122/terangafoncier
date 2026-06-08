@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MapPin, 
@@ -62,151 +63,25 @@ const AgentFoncierGPSVerification = () => {
   };
 
   // Propriétés avec coordonnées GPS
-  const properties = [
-    {
-      id: 1,
-      reference: 'TF-2024-001',
-      owner: 'Amadou Diallo',
-      location: 'Dakar, Parcelles Assainies',
-      coordinates: {
-        lat: 14.7644,
-        lng: -17.3844,
-        accuracy: 1.2,
-        elevation: 45
-      },
-      status: 'verified',
-      surveyDate: '2024-02-28',
-      area: 450, // m²
-      boundaries: 'confirmed',
-      conflicts: [],
-      photos: 8,
-      documents: ['Plan cadastral', 'Titre foncier', 'Photos terrain']
-    },
-    {
-      id: 2,
-      reference: 'TF-2024-002',
-      owner: 'Fatou Seck',
-      location: 'Thiès, Cité Malick Sy',
-      coordinates: {
-        lat: 14.7889,
-        lng: -16.9317,
-        accuracy: 3.5,
-        elevation: 78
-      },
-      status: 'pending',
-      surveyDate: '2024-03-01',
-      area: 320,
-      boundaries: 'disputed',
-      conflicts: ['Chevauchement parcelle voisine'],
-      photos: 12,
-      documents: ['Plan provisoire', 'Demande titre']
-    },
-    {
-      id: 3,
-      reference: 'TF-2024-003',
-      owner: 'Ousmane Ba',
-      location: 'Saint-Louis, Sor',
-      coordinates: {
-        lat: 16.0378,
-        lng: -16.4890,
-        accuracy: 0.8,
-        elevation: 12
-      },
-      status: 'verified',
-      surveyDate: '2024-02-25',
-      area: 678,
-      boundaries: 'confirmed',
-      conflicts: [],
-      photos: 15,
-      documents: ['Titre définitif', 'Levé topographique', 'Photos drone']
-    },
-    {
-      id: 4,
-      reference: 'TF-2024-004',
-      owner: 'Awa Thiam',
-      location: 'Kaolack, Médina',
-      coordinates: {
-        lat: 14.1592,
-        lng: -16.0731,
-        accuracy: 4.2,
-        elevation: 23
-      },
-      status: 'investigating',
-      surveyDate: '2024-03-01',
-      area: 256,
-      boundaries: 'unclear',
-      conflicts: ['Coordonnées incohérentes', 'Limites floues'],
-      photos: 6,
-      documents: ['Plan ancien', 'Récépissé']
-    },
-    {
-      id: 5,
-      reference: 'TF-2024-005',
-      owner: 'Mamadou Fall',
-      location: 'Ziguinchor, Boucotte',
-      coordinates: {
-        lat: 12.5681,
-        lng: -16.2733,
-        accuracy: 2.1,
-        elevation: 8
-      },
-      status: 'verified',
-      surveyDate: '2024-02-20',
-      area: 534,
-      boundaries: 'confirmed',
-      conflicts: [],
-      photos: 10,
-      documents: ['Titre foncier', 'Plan géomètre', 'Certificat GPS']
-    }
-  ];
+  // properties RÉEL depuis Supabase (aucune donnée fictive)
+  const [properties, setProperties] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setProperties(data || []);
+      } catch (err) {
+        console.warn('properties indisponible:', err?.message);
+        if (active) setProperties([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Équipements GPS
-  const gpsEquipment = [
-    {
-      id: 1,
-      name: 'GPS Trimble R12',
-      type: 'RTK',
-      operator: 'Agent Samba',
-      status: 'active',
-      accuracy: '±2cm',
-      battery: 87,
-      lastCalibration: '2024-02-15',
-      surveysToday: 5
-    },
-    {
-      id: 2,
-      name: 'GPS Leica GS18',
-      type: 'GNSS',
-      operator: 'Agent Ndiaye',
-      status: 'active',
-      accuracy: '±1cm',
-      battery: 94,
-      lastCalibration: '2024-02-10',
-      surveysToday: 8
-    },
-    {
-      id: 3,
-      name: 'Drone DJI P4 RTK',
-      type: 'Aerial',
-      operator: 'Agent Diop',
-      status: 'maintenance',
-      accuracy: '±3cm',
-      battery: 0,
-      lastCalibration: '2024-01-20',
-      surveysToday: 0
-    },
-    {
-      id: 4,
-      name: 'Smartphone Galaxy S23',
-      type: 'Mobile',
-      operator: 'Agent Cissé',
-      status: 'active',
-      accuracy: '±3m',
-      battery: 76,
-      lastCalibration: '2024-02-28',
-      surveysToday: 3
-    }
-  ];
+  const gpsEquipment = []; // démo retirée
 
   const getStatusColor = (status) => {
     switch(status) {

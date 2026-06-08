@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   PieChart, 
@@ -99,56 +100,18 @@ const BanquePortfolio = ({ dashboardStats }) => {
   ]);
 
   // Crédits issus de demandes plateforme
-  const [platformCredits, setPlatformCredits] = useState([
-    {
-      id: 'PLC-2024-001',
-      clientName: 'Mamadou FALL',
-      platformRef: 'TER-2024-001',
-      propertyLocation: 'Ouakam - Zone Résidentielle',
-      creditAmount: 20000000,
-      propertyValue: 25000000,
-      ltvRatio: 80,
-      status: 'Actif',
-      startDate: '2024-01-20',
-      monthlyPayment: 185000,
-      remainingBalance: 19650000,
-      nextPaymentDate: '2024-02-20',
-      performanceStatus: 'Excellent',
-      riskRating: 'A+'
-    },
-    {
-      id: 'PLC-2024-002',
-      clientName: 'Société SENEGAL INVEST',
-      platformRef: 'TER-2024-002',
-      propertyLocation: 'Avenue Lamine Guèye, Plateau',
-      creditAmount: 96000000,
-      propertyValue: 120000000,
-      ltvRatio: 80,
-      status: 'Actif',
-      startDate: '2024-01-22',
-      monthlyPayment: 890000,
-      remainingBalance: 95200000,
-      nextPaymentDate: '2024-02-22',
-      performanceStatus: 'Bon',
-      riskRating: 'A'
-    },
-    {
-      id: 'PLC-2024-003',
-      clientName: 'Fatou MBAYE',
-      platformRef: 'TER-2024-003',
-      propertyLocation: 'Parcelles Assainies U15',
-      creditAmount: 15000000,
-      propertyValue: 18750000,
-      ltvRatio: 80,
-      status: 'En Cours',
-      startDate: '2024-01-25',
-      monthlyPayment: 139000,
-      remainingBalance: 14860000,
-      nextPaymentDate: '2024-02-25',
-      performanceStatus: 'Excellent',
-      riskRating: 'A+'
-    }
-  ]);
+  const [platformCredits, setPlatformCredits] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('demandes_financement').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setPlatformCredits(data || []);
+      } catch (err) { if (active) setPlatformCredits([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Métriques de performance
   const [performanceMetrics, setPerformanceMetrics] = useState({

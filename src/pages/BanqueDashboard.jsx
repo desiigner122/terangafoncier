@@ -78,72 +78,9 @@ const BanqueDashboard = () => {
     }
   ];
 
-  const creditsImmobiliers = [
-    {
-      id: 1,
-      reference: 'CI-2024-0156',
-      client: 'Amadou Diallo',
-      montant: '85,000,000 FCFA',
-      duree: '20 ans',
-      taux: '8.5%',
-      bien: 'Villa Almadies - 200m²',
-      statut: 'En instruction',
-      dateCreation: '2024-01-10',
-      progression: 65,
-      risque: 'Faible'
-    },
-    {
-      id: 2,
-      reference: 'CI-2024-0157',
-      client: 'Fatou Ndiaye',
-      montant: '120,000,000 FCFA',
-      duree: '25 ans',
-      taux: '8.2%',
-      bien: 'Appartement Plateau - 150m²',
-      statut: 'Approuvé',
-      dateCreation: '2024-01-08',
-      progression: 95,
-      risque: 'Très faible'
-    },
-    {
-      id: 3,
-      reference: 'CI-2024-0158',
-      client: 'Ousmane Ba',
-      montant: '65,000,000 FCFA',
-      duree: '15 ans',
-      taux: '9.0%',
-      bien: 'Terrain Rufisque - 500m²',
-      statut: 'En attente documents',
-      dateCreation: '2024-01-12',
-      progression: 30,
-      risque: 'Moyen'
-    }
-  ];
+  const creditsImmobiliers = []; // démo retirée
 
-  const hypotheques = [
-    {
-      id: 1,
-      reference: 'HYP-2024-0089',
-      debiteur: 'Société IMMOSN',
-      creancier: 'Banque Atlantique',
-      montantGaranti: '500,000,000 FCFA',
-      bien: 'Immeuble commercial Plateau',
-      rang: '1er rang',
-      dateInscription: '2024-01-15',
-      statut: 'Active'
-    },
-    {
-      id: 2,
-      reference: 'HYP-2024-0090',
-      debiteur: 'Mamadou Seck',
-      creancier: 'CBAO',
-      montantGaranti: '180,000,000 FCFA',
-      bien: 'Villa Mermoz',
-      rang: '1er rang',
-      dateInscription: '2024-01-12',
-      statut: 'En cours'
-    }
-  ];
+  const hypotheques = []; // démo retirée
 
   const evaluations = [
     {

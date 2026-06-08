@@ -35,53 +35,7 @@ const CRMPage = () => {
     conversionRate: 12.8
   });
 
-  const [contacts, setContacts] = useState([
-    {
-      id: 1,
-      name: 'Aminata Diallo',
-      email: 'aminata.diallo@email.com',
-      phone: '+221 77 123 45 67',
-      role: 'Acheteur Diaspora',
-      status: 'lead',
-      location: 'Paris, France',
-      interests: ['Terrain résidentiel', 'Construction'],
-      lastContact: '2024-03-15',
-      dealValue: 15000000,
-      avatar: null,
-      notes: 'Intéressée par un terrain Ï  Mbour pour construction maison familiale',
-      score: 85
-    },
-    {
-      id: 2,
-      name: 'Moussa Seck',
-      email: 'moussa.seck@email.com',
-      phone: '+221 76 987 65 43',
-      role: 'Promoteur',
-      status: 'client',
-      location: 'Dakar, Sénégal',
-      interests: ['Terrain commercial', 'Investissement'],
-      lastContact: '2024-03-14',
-      dealValue: 35000000,
-      avatar: null,
-      notes: 'Projet de résidence haut standing en cours',
-      score: 92
-    },
-    {
-      id: 3,
-      name: 'Fatou Ba',
-      email: 'fatou.ba@email.com',
-      phone: '+221 78 456 78 90',
-      role: 'Particulier',
-      status: 'prospect',
-      location: 'Thiès, Sénégal',
-      interests: ['Terrain agricole'],
-      lastContact: '2024-03-13',
-      dealValue: 8000000,
-      avatar: null,
-      notes: 'Recherche terrain pour agriculture familiale',
-      score: 67
-    }
-  ]);
+  const [contacts, setContacts] = useState([]); // démo retirée
 
   const [deals] = useState([
     {

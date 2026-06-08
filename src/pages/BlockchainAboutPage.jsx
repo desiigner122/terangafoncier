@@ -118,7 +118,7 @@ const BlockchainAboutPage = () => {
 
   const teamMembers = [
     {
-      name: "Abdoulaye Diémé",
+      name: "",
       role: "Fondateur & CEO",
       speciality: "Blockchain & Développement Full-Stack",
       experience: "8+ ans",
@@ -138,26 +138,7 @@ const BlockchainAboutPage = () => {
     { name: "Ordre des Notaires", type: "Juridique", logo: "/api/YOUR_API_KEY/80/80" }
   ];
 
-  const testimonials = [
-    {
-      quote: "Teranga Foncier a révolutionné notre façon de gérer les terrains communaux. La blockchain apporte une transparence inégalée.",
-      author: "Maire de Guédiawaye",
-      role: "Autorité Municipale",
-      rating: 5
-    },
-    {
-      quote: "Grâce Ï  leur plateforme, j'ai pu investir depuis la France en toute sérénité. Le suivi IA de ma construction est exceptionnel.",
-      author: "Aminata Diallo",
-      role: "Diaspora - Paris",
-      rating: 5
-    },
-    {
-      quote: "Les smart contracts ont simplifié nos processus d'évaluation et de financement. Un vrai game-changer pour le secteur bancaire.",
-      author: "Directeur Crédit Immobilier",
-      role: "Banque Atlantique",
-      rating: 5
-    }
-  ];
+  const testimonials = []; // démo retirée
 
   return (
     <>
@@ -433,7 +414,7 @@ const BlockchainAboutPage = () => {
                     <div className="w-24 h-24 mx-auto mb-6 rounded-full overflow-hidden">
                       <img 
                         src="/api/YOUR_API_KEY/120/120" 
-                        alt="Abdoulaye Diémé"
+                        alt=""
                         className="w-full h-full object-cover"
                       />
                     </div>

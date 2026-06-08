@@ -27,52 +27,7 @@ const InvestmentsPage = () => {
 
   useEffect(() => {
     // Simulation des données d'investissements
-    const mockInvestments = [
-      {
-        id: 1,
-        property: "Villa Moderna Almadies",
-        location: "Almadies, Dakar",
-        investmentAmount: 500000,
-        currentValue: 620000,
-        returnRate: 24.0,
-        status: "active",
-        type: "residential",
-        duration: "24 mois"
-      },
-      {
-        id: 2,
-        property: "Complexe Commercial VDN",
-        location: "VDN, Dakar",
-        investmentAmount: 800000,
-        currentValue: 920000,
-        returnRate: 15.0,
-        status: "active",
-        type: "commercial",
-        duration: "18 mois"
-      },
-      {
-        id: 3,
-        property: "Résidence Teranga Heights",
-        location: "Mermoz, Dakar",
-        investmentAmount: 300000,
-        currentValue: 285000,
-        returnRate: -5.0,
-        status: "under_review",
-        type: "residential",
-        duration: "6 mois"
-      },
-      {
-        id: 4,
-        property: "Centre d'Affaires Plateau",
-        location: "Plateau, Dakar",
-        investmentAmount: 1200000,
-        currentValue: 1380000,
-        returnRate: 15.0,
-        status: "active",
-        type: "office",
-        duration: "36 mois"
-      }
-    ];
+    const mockInvestments = []; // démo retirée
     setInvestments(mockInvestments);
   }, []);
 

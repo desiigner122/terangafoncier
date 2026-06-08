@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
@@ -123,33 +124,47 @@ const NotaireAIModernized = () => {
   }, [user]);
 
   const loadAIData = async () => {
-    // Simuler le chargement des statistiques IA
-    // Dans une vraie application, ces données viendraient de Supabase
-    setAiStats({
-      totalQueries: Math.floor(Math.random() * 500) + 100,
-      documentsAnalyzed: Math.floor(Math.random() * 200) + 50,
-      avgResponseTime: Math.random() * 2 + 0.5,
-      satisfactionRate: Math.floor(Math.random() * 20) + 80,
-      savedHours: Math.floor(Math.random() * 100) + 50
-    });
+    // Statistiques IA RÉELLES depuis Supabase (défensif si les tables sont absentes).
+    // Les métriques sans source réelle (temps de réponse, satisfaction, heures
+    // économisées) restent à null tant qu'aucune mesure réelle n'est branchée.
+    try {
+      const [{ count: totalQueries }, { count: documentsAnalyzed }] = await Promise.all([
+        supabase.from('ai_interactions').select('id', { count: 'exact', head: true }).eq('user_id', user?.id),
+        supabase.from('ai_analyses').select('id', { count: 'exact', head: true }).eq('user_id', user?.id)
+      ]);
+      setAiStats({
+        totalQueries: totalQueries || 0,
+        documentsAnalyzed: documentsAnalyzed || 0,
+        avgResponseTime: null,
+        satisfactionRate: null,
+        savedHours: null
+      });
+    } catch (err) {
+      console.warn('Stats IA indisponibles:', err?.message);
+      setAiStats({ totalQueries: 0, documentsAnalyzed: 0, avgResponseTime: null, satisfactionRate: null, savedHours: null });
+    }
 
-    // Simuler un historique de conversation
-    setChatHistory([
-      {
-        id: 1,
-        type: 'user',
-        content: 'Quelles sont les clauses obligatoires pour un acte de vente ?',
-        timestamp: new Date(Date.now() - 3600000)
-      },
-      {
-        id: 2,
-        type: 'ai',
-        content:
-          'Pour un acte de vente immobilière au Sénégal, les clauses obligatoires incluent :\n\n1. **Identification des parties** : Identité complète du vendeur et de l\'acheteur\n2. **Désignation du bien** : Description précise avec références cadastrales\n3. **Prix de vente** : Montant en FCFA et modalités de paiement\n4. **Origine de propriété** : Titre foncier ou acte de propriété antérieur\n5. **Servitudes et charges** : Mention explicite des éventuelles servitudes\n6. **Garantie d\'éviction** : Engagement du vendeur sur la propriété du bien\n7. **Déclarations fiscales** : Conformité aux obligations de la DGI\n\nJe peux vous assister pour rédiger un modèle adapté à votre dossier.',
-        timestamp: new Date(Date.now() - 3599000),
-        confidence: 0.95
-      }
-    ]);
+    // Historique de conversation réel (table ai_chat_history) ; vide si rien.
+    try {
+      const { data } = await supabase
+        .from('ai_chat_history')
+        .select('*')
+        .eq('user_id', user?.id)
+        .order('created_at', { ascending: true })
+        .limit(50);
+      setChatHistory(
+        (data || []).map((m) => ({
+          id: m.id,
+          type: m.role === 'assistant' ? 'ai' : 'user',
+          content: m.content,
+          timestamp: m.created_at ? new Date(m.created_at) : new Date(),
+          confidence: m.confidence ?? null
+        }))
+      );
+    } catch (err) {
+      console.warn('Historique IA indisponible:', err?.message);
+      setChatHistory([]);
+    }
   };
 
   const handleSendQuery = async () => {
@@ -173,7 +188,7 @@ const NotaireAIModernized = () => {
         type: 'ai',
         content: generateAIResponse(query),
         timestamp: new Date(),
-        confidence: Math.random() * 0.2 + 0.8
+        confidence: null
       };
 
       setChatHistory((prev) => [...prev, aiResponse]);

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   MessageSquare,
@@ -35,158 +36,8 @@ const VendeurCommunication = () => {
   const [filterType, setFilterType] = useState('all');
 
   // Données de communication enrichies
-  const [communicationData] = useState({
-    conversations: [
-      {
-        id: 1,
-        participant: {
-          name: 'Fatou Sall',
-          avatar: 'https://images.unsplash.com/photo-1494790108755-2616b9c3e9a3?w=80&h=80&fit=crop&crop=face',
-          status: 'online',
-          type: 'prospect',
-          company: 'Entreprise Sall & Fils'
-        },
-        lastMessage: 'Parfait, je confirme la visite pour demain à 14h',
-        timestamp: '2024-03-20T15:30:00',
-        unreadCount: 2,
-        priority: 'high',
-        property: 'Villa Moderne Almadies',
-        messages: [
-          {
-            id: 1,
-            sender: 'Fatou Sall',
-            message: 'Bonjour, je suis très intéressée par la villa aux Almadies. Pourriez-vous m\'envoyer plus de détails ?',
-            timestamp: '2024-03-20T10:00:00',
-            type: 'text',
-            status: 'read'
-          },
-          {
-            id: 2,
-            sender: 'Amadou Diallo',
-            message: 'Bonjour Madame Sall, merci pour votre intérêt ! Je vous envoie immédiatement le dossier complet avec photos et plan.',
-            timestamp: '2024-03-20T10:15:00',
-            type: 'text',
-            status: 'delivered'
-          },
-          {
-            id: 3,
-            sender: 'Amadou Diallo',
-            message: '',
-            timestamp: '2024-03-20T10:16:00',
-            type: 'file',
-            fileName: 'Villa_Almadies_Dossier_Complet.pdf',
-            fileSize: '2.4 MB',
-            status: 'delivered'
-          },
-          {
-            id: 4,
-            sender: 'Fatou Sall',
-            message: 'Merci beaucoup ! Le dossier est très complet. Serait-il possible de programmer une visite cette semaine ?',
-            timestamp: '2024-03-20T14:00:00',
-            type: 'text',
-            status: 'read'
-          },
-          {
-            id: 5,
-            sender: 'Amadou Diallo',
-            message: 'Bien sûr ! Je suis disponible demain (jeudi) à 14h ou vendredi à 10h. Quelle heure vous convient le mieux ?',
-            timestamp: '2024-03-20T14:30:00',
-            type: 'text',
-            status: 'delivered'
-          },
-          {
-            id: 6,
-            sender: 'Fatou Sall',
-            message: 'Parfait, je confirme la visite pour demain à 14h',
-            timestamp: '2024-03-20T15:30:00',
-            type: 'text',
-            status: 'sent'
-          }
-        ]
-      },
-      {
-        id: 2,
-        participant: {
-          name: 'Moussa Diop',
-          avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',
-          status: 'away',
-          type: 'prospect',
-          company: 'Cabinet Diop Associés'
-        },
-        lastMessage: 'Je vais réfléchir au prix et vous reviens',
-        timestamp: '2024-03-20T11:45:00',
-        unreadCount: 0,
-        priority: 'medium',
-        property: 'Appartement Standing Plateau',
-        messages: [
-          {
-            id: 1,
-            sender: 'Moussa Diop',
-            message: 'Bonjour, j\'ai vu votre appartement au Plateau. Le prix me semble un peu élevé, y a-t-il une possibilité de négociation ?',
-            timestamp: '2024-03-20T09:00:00',
-            type: 'text',
-            status: 'read'
-          },
-          {
-            id: 2,
-            sender: 'Amadou Diallo',
-            message: 'Bonjour Monsieur Diop. Le prix reflète la qualité et l\'emplacement exceptionnel, mais je peux étudier une proposition sérieuse.',
-            timestamp: '2024-03-20T09:30:00',
-            type: 'text',
-            status: 'delivered'
-          },
-          {
-            id: 3,
-            sender: 'Moussa Diop',
-            message: 'Je vais réfléchir au prix et vous reviens',
-            timestamp: '2024-03-20T11:45:00',
-            type: 'text',
-            status: 'sent'
-          }
-        ]
-      },
-      {
-        id: 3,
-        participant: {
-          name: 'Banque CBAO',
-          avatar: 'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=80&h=80&fit=crop',
-          status: 'online',
-          type: 'partner',
-          company: 'Institution Financière'
-        },
-        lastMessage: 'Dossier de financement approuvé pour Mme Sall',
-        timestamp: '2024-03-20T16:00:00',
-        unreadCount: 1,
-        priority: 'high',
-        property: 'Villa Moderne Almadies',
-        messages: [
-          {
-            id: 1,
-            sender: 'Banque CBAO',
-            message: 'Bonjour M. Diallo, nous avons reçu le dossier de financement pour Mme Sall concernant la villa aux Almadies.',
-            timestamp: '2024-03-20T14:00:00',
-            type: 'text',
-            status: 'read'
-          },
-          {
-            id: 2,
-            sender: 'Amadou Diallo',
-            message: 'Perfect ! Où en êtes-vous dans l\'instruction du dossier ?',
-            timestamp: '2024-03-20T14:15:00',
-            type: 'text',
-            status: 'delivered'
-          },
-          {
-            id: 3,
-            sender: 'Banque CBAO',
-            message: 'Dossier de financement approuvé pour Mme Sall',
-            timestamp: '2024-03-20T16:00:00',
-            type: 'text',
-            status: 'sent'
-          }
-        ]
-      }
-    ],
+  const [communicationData, setCommunicationData] = useState({
+    conversations: [],
     quickReplies: [
       'Merci pour votre intérêt !',
       'Je vous envoie les détails par email',
@@ -211,6 +62,25 @@ const VendeurCommunication = () => {
     ]
   });
 
+  useEffect(() => {
+    let active = true;
+    const loadConversations = async () => {
+      try {
+        // Conversations RÉELLES depuis Supabase (aucune conversation fictive)
+        const { data, error } = await supabase
+          .from('conversations')
+          .select('*')
+          .order('updated_at', { ascending: false });
+        if (error) throw error;
+        if (active) setCommunicationData((prev) => ({ ...prev, conversations: data || [] }));
+      } catch (err) {
+        console.warn('Conversations indisponibles:', err?.message);
+      }
+    };
+    loadConversations();
+    return () => { active = false; };
+  }, []);
+
   const filteredConversations = communicationData.conversations.filter(conv => {
     const matchesSearch = conv.participant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          conv.lastMessage.toLowerCase().includes(searchTerm.toLowerCase());
@@ -225,7 +95,7 @@ const VendeurCommunication = () => {
     if (messageText.trim() && selectedConversation) {
       const newMessage = {
         id: Date.now(),
-        sender: 'Amadou Diallo',
+        sender: '',
         message: messageText,
         timestamp: new Date().toISOString(),
         type: 'text',
@@ -437,13 +307,13 @@ const VendeurCommunication = () => {
                 {selectedConversation.messages.map((message, index) => (
                   <motion.div
                     key={message.id}
-                    className={`flex ${message.sender === 'Amadou Diallo' ? 'justify-end' : 'justify-start'}`}
+                    className={`flex ${message.sender === '' ? 'justify-end' : 'justify-start'}`}
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: index * 0.1 }}
                   >
                     <div className={`max-w-xs lg:max-w-md ${
-                      message.sender === 'Amadou Diallo'
+                      message.sender === ''
                         ? 'bg-gradient-to-r from-orange-500 to-red-500 text-white'
                         : 'bg-white border border-gray-200'
                     } rounded-2xl p-3 shadow-sm`}>
@@ -464,10 +334,10 @@ const VendeurCommunication = () => {
                         </div>
                       ) : null}
                       <div className={`flex items-center justify-between mt-2 ${
-                        message.sender === 'Amadou Diallo' ? 'text-white/70' : 'text-gray-500'
+                        message.sender === '' ? 'text-white/70' : 'text-gray-500'
                       }`}>
                         <span className="text-xs">{formatTime(message.timestamp)}</span>
-                        {message.sender === 'Amadou Diallo' && (
+                        {message.sender === '' && (
                           <div className="ml-2">
                             {getStatusIcon(message.status)}
                           </div>

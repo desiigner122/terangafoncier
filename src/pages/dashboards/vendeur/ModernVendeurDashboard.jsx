@@ -134,7 +134,7 @@ const ModernVendeurDashboard = () => {
       propertyId: property.id,
       type: 'verification',
       status: 'confirmed',
-      blockHeight: Math.floor(Math.random() * 100000),
+      blockHeight: 0,
       hash: `0x${Math.random().toString(16).slice(2, 18)}`,
       timestamp: new Date().toISOString()
     };
@@ -151,7 +151,7 @@ const ModernVendeurDashboard = () => {
       status: 'deployed',
       address: `0x${Math.random().toString(16).slice(2, 42)}`,
       network: 'TerangaChain',
-      gasUsed: Math.floor(Math.random() * 50000),
+      gasUsed: 0,
       timestamp: new Date().toISOString()
     };
     setBlockchainTransactions(prev => [contract, ...prev]);
@@ -261,16 +261,16 @@ const ModernVendeurDashboard = () => {
     // Simuler analyse IA complète
     const analysis = {
       property: property,
-      score: 92 + Math.floor(Math.random() * 8),
+      score: 92 + 0,
       pricing: {
         current: property.price,
-        recommended: property.price * (0.95 + Math.random() * 0.1),
-        confidence: 85 + Math.floor(Math.random() * 10)
+        recommended: property.price * (0.95 + 0),
+        confidence: 85 + 0
       },
       market: {
-        demand: ['Élevé', 'Moyen', 'Faible'][Math.floor(Math.random() * 3)],
-        competition: Math.floor(Math.random() * 20) + 10,
-        averageSaleTime: Math.floor(Math.random() * 60) + 30
+        demand: ['Élevé', 'Moyen', 'Faible'][0],
+        competition: 0,
+        averageSaleTime: 0
       },
       recommendations: [
         'Ajoutez plus de photos haute qualité',
@@ -286,9 +286,9 @@ const ModernVendeurDashboard = () => {
     const recommendations = dashboardData.properties.map(p => ({
       property: p,
       currentPrice: p.price,
-      recommendedPrice: Math.floor(p.price * (0.95 + Math.random() * 0.1)),
-      expectedIncrease: Math.floor(Math.random() * 15) + 5,
-      confidence: 80 + Math.floor(Math.random() * 15)
+      recommendedPrice: Math.floor(p.price * (0.95 + 0)),
+      expectedIncrease: 0,
+      confidence: 80 + 0
     }));
     setPriceOptimizationModal({ open: true, recommendations });
   };
@@ -300,12 +300,12 @@ const ModernVendeurDashboard = () => {
   const handleBlockchainStatus = (property) => {
     // Simuler statut blockchain
     const status = {
-      verified: property.blockchainVerified || Math.random() > 0.3,
+      verified: property.blockchainVerified || false,
       transactionHash: `0x${Math.random().toString(16).slice(2, 42)}`,
-      blockNumber: Math.floor(Math.random() * 1000000),
+      blockNumber: 0,
       timestamp: new Date().toISOString(),
       network: 'TerangaChain',
-      confirmations: Math.floor(Math.random() * 50) + 10
+      confirmations: 0
     };
     setBlockchainStatusModal({ open: true, property, status });
   };
@@ -415,9 +415,9 @@ const ModernVendeurDashboard = () => {
     try {
       const blockchainData = {
         transactionHash: `0x${Math.random().toString(16).slice(2, 42)}`,
-        blockNumber: Math.floor(Math.random() * 1000000),
+        blockNumber: 0,
         network: 'TerangaChain',
-        confirmations: Math.floor(Math.random() * 50) + 10,
+        confirmations: 0,
         verified: true
       };
 

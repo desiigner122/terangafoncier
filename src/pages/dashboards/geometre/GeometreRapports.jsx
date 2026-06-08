@@ -34,78 +34,7 @@ const GeometreRapports = () => {
   const [selectedReport, setSelectedReport] = useState(null);
 
   // Rapports et documents
-  const reports = [
-    {
-      id: 1,
-      title: 'Levé Topographique - Résidence Les Almadies',
-      type: 'Levé Topographique',
-      client: 'Fall Promotion SARL',
-      location: 'Almadies, Dakar',
-      date: '2024-12-10',
-      status: 'Terminé',
-      pages: 15,
-      size: '2.3 MB',
-      format: 'PDF',
-      attachments: 3,
-      category: 'topographie'
-    },
-    {
-      id: 2,
-      title: 'Plan Cadastral - Lotissement Diamaguène',
-      type: 'Plan Cadastral',
-      client: 'Mairie de Guédiawaye',
-      location: 'Diamaguène, Sicap',
-      date: '2024-12-08',
-      status: 'En révision',
-      pages: 8,
-      size: '1.8 MB',
-      format: 'PDF',
-      attachments: 2,
-      category: 'cadastre'
-    },
-    {
-      id: 3,
-      title: 'Certificat de Bornage - Villa VDN',
-      type: 'Bornage',
-      client: 'Amadou Cissé',
-      location: 'VDN, Dakar',
-      date: '2024-12-05',
-      status: 'Terminé',
-      pages: 6,
-      size: '1.2 MB',
-      format: 'PDF',
-      attachments: 1,
-      category: 'bornage'
-    },
-    {
-      id: 4,
-      title: 'Étude Faisabilité - Complexe Commercial',
-      type: 'Étude Faisabilité',
-      client: 'Teranga Invest',
-      location: 'Liberté 6, Dakar',
-      date: '2024-12-03',
-      status: 'En cours',
-      pages: 22,
-      size: '4.1 MB',
-      format: 'PDF',
-      attachments: 5,
-      category: 'etude'
-    },
-    {
-      id: 5,
-      title: 'Rapport Géotechnique - Fondations',
-      type: 'Géotechnique',
-      client: 'BTP Sénégal',
-      location: 'Rufisque',
-      date: '2024-11-28',
-      status: 'Terminé',
-      pages: 18,
-      size: '3.2 MB',
-      format: 'PDF',
-      attachments: 4,
-      category: 'geotechnique'
-    }
-  ];
+  const reports = []; // démo retirée
 
   // Statistiques
   const reportStats = {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Blocks, 
@@ -39,47 +40,22 @@ const GeometreBlockchain = () => {
   const [activeTab, setActiveTab] = useState('certificates');
 
   // Certificats blockchain
-  const certificates = [
-    {
-      id: 1,
-      title: "Certificat de levé topographique",
-      client: "Amadou Diallo",
-      location: "Rufisque",
-      date: "2025-01-10",
-      hash: "0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c5f7af66ab4ead7",
-      status: "Validé",
-      blockNumber: 2847293,
-      surface: "2.5 ha",
-      type: "Topographie",
-      confidence: 99.2
-    },
-    {
-      id: 2,
-      title: "Certificat de bornage",
-      client: "Fatou Sow",
-      location: "Dakar",
-      date: "2025-01-08",
-      hash: "0x2c5f7af66ab4ead7fade1c0d57a7af66ab4ead79f2c5f7af66ab4ead7fade1c0d5",
-      status: "En attente",
-      blockNumber: null,
-      surface: "800 m²",
-      type: "Bornage",
-      confidence: 0
-    },
-    {
-      id: 3,
-      title: "Plan cadastral certifié",
-      client: "SARL Teranga Construction",
-      location: "Thiès",
-      date: "2025-01-05",
-      hash: "0x4ead7fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c5f7af66ab4e",
-      status: "Validé",
-      blockNumber: 2845891,
-      surface: "15 ha",
-      type: "Cadastral",
-      confidence: 98.7
-    }
-  ];
+  // certificates RÉEL depuis Supabase (aucune donnée fictive)
+  const [certificates, setCertificates] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('blockchain_certificates').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setCertificates(data || []);
+      } catch (err) {
+        console.warn('certificates indisponible:', err?.message);
+        if (active) setCertificates([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Transactions blockchain récentes
   const transactions = [

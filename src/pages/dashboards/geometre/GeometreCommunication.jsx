@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
@@ -32,52 +33,22 @@ const GeometreCommunication = () => {
   const [message, setMessage] = useState('');
 
   // Données des conversations
-  const conversations = [
-    {
-      id: 1,
-      name: 'Atelier Architecture Dakar',
-      contact: 'Amadou Sall',
-      type: 'Architecte',
-      lastMessage: 'Les plans de topographie sont-ils prêts ?',
-      timestamp: '10:30',
-      unread: 2,
-      status: 'online',
-      project: 'Complexe résidentiel Almadies'
-    },
-    {
-      id: 2,
-      name: 'Me Fatou Sow Sarr',
-      contact: 'Notaire',
-      type: 'Partenaire',
-      lastMessage: 'Document de bornage validé ✓',
-      timestamp: '09:45',
-      unread: 0,
-      status: 'online',
-      project: 'Lotissement VDN'
-    },
-    {
-      id: 3,
-      name: 'Groupe Promoteur Sénégal',
-      contact: 'Fatou Diop',
-      type: 'Promoteur',
-      lastMessage: 'RDV planifié pour demain 14h',
-      timestamp: 'Hier',
-      unread: 1,
-      status: 'away',
-      project: 'Lotissement VDN Extension'
-    },
-    {
-      id: 4,
-      name: 'Famille Ndiaye',
-      contact: 'Moussa Ndiaye',
-      type: 'Particulier',
-      lastMessage: 'Merci pour le rapport de mission',
-      timestamp: 'Hier',
-      unread: 0,
-      status: 'offline',
-      project: 'Bornage terrain familial Thiès'
-    }
-  ];
+  // conversations RÉEL depuis Supabase (aucune donnée fictive)
+  const [conversations, setConversations] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setConversations(data || []);
+      } catch (err) {
+        console.warn('conversations indisponible:', err?.message);
+        if (active) setConversations([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Messages pour une conversation
   const messages = [
@@ -119,38 +90,7 @@ const GeometreCommunication = () => {
   ];
 
   // Réunions à venir
-  const meetings = [
-    {
-      id: 1,
-      title: 'Point projet Almadies',
-      client: 'Atelier Architecture Dakar',
-      date: '2025-10-05',
-      time: '10:00',
-      type: 'Visioconférence',
-      participants: 3,
-      status: 'confirmed'
-    },
-    {
-      id: 2,
-      title: 'Validation bornage',
-      client: 'Me Fatou Sow Sarr',
-      date: '2025-10-06',
-      time: '14:30',
-      type: 'Présentiel',
-      participants: 4,
-      status: 'pending'
-    },
-    {
-      id: 3,
-      title: 'Présentation rapport',
-      client: 'Groupe Promoteur Sénégal',
-      date: '2025-10-08',
-      time: '09:00',
-      type: 'Visioconférence',
-      participants: 5,
-      status: 'confirmed'
-    }
-  ];
+  const meetings = []; // démo retirée
 
   const getStatusColor = (status) => {
     switch (status) {

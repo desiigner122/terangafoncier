@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Bell,
@@ -30,62 +31,22 @@ const AgentFoncierNotifications = () => {
     setTimeout(() => setLoading(false), 800);
   }, []);
 
-  const notifications = [
-    {
-      id: 1,
-      type: 'evaluation',
-      title: 'Nouvelle demande d\'évaluation',
-      message: 'M. Diallo souhaite une évaluation pour son terrain aux Almadies',
-      location: 'Almadies, Dakar',
-      time: 'Il y a 15 min',
-      read: false,
-      priority: 'high',
-      icon: Calculator
-    },
-    {
-      id: 2,
-      type: 'document',
-      title: 'Document signé',
-      message: 'Le titre foncier TF-2024-001 a été validé et signé',
-      location: 'Rufisque',
-      time: 'Il y a 1h',
-      read: false,
-      priority: 'medium',
-      icon: FileText
-    },
-    {
-      id: 3,
-      type: 'client',
-      title: 'Nouveau client',
-      message: 'Société IMMOGO a créé un compte et demande vos services',
-      location: 'Parcelles Assainies',
-      time: 'Il y a 2h',
-      read: true,
-      priority: 'medium',
-      icon: AlertTriangle
-    },
-    {
-      id: 4,
-      type: 'reminder',
-      title: 'Rappel de visite',
-      message: 'Visite terrain prévue aujourd\'hui à 14h30 chez M. Fall',
-      location: 'Thiès',
-      time: 'Il y a 3h',
-      read: false,
-      priority: 'high',
-      icon: Clock
-    },
-    {
-      id: 5,
-      type: 'system',
-      title: 'Mise à jour disponible',
-      message: 'Version 2.1 de l\'application disponible avec nouvelles fonctionnalités IA',
-      time: 'Il y a 1 jour',
-      read: true,
-      priority: 'low',
-      icon: Settings
-    }
-  ];
+  // notifications RÉEL depuis Supabase (aucune donnée fictive)
+  const [notifications, setNotifications] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('notifications').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setNotifications(data || []);
+      } catch (err) {
+        console.warn('notifications indisponible:', err?.message);
+        if (active) setNotifications([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const filteredNotifications = notifications.filter(notification => {
     if (selectedFilter === 'all') return true;

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Mail,
@@ -32,56 +33,22 @@ const AgentFoncierMessages = () => {
     setTimeout(() => setLoading(false), 800);
   }, []);
 
-  const conversations = [
-    {
-      id: 1,
-      clientName: 'Amadou Diallo',
-      clientType: 'Propriétaire',
-      lastMessage: 'Merci pour l\'évaluation du terrain. Pouvons-nous programmer une visite ?',
-      timestamp: '10:30',
-      unread: 2,
-      status: 'active',
-      avatar: 'AD',
-      subject: 'Évaluation Terrain Almadies',
-      location: 'Almadies, Dakar'
-    },
-    {
-      id: 2,
-      clientName: 'Fatou Seck',
-      clientType: 'Promoteur',
-      lastMessage: 'Les documents cadastraux sont-ils prêts ?',
-      timestamp: '09:15',
-      unread: 0,
-      status: 'pending',
-      avatar: 'FS',
-      subject: 'Dossier Cadastral Rufisque',
-      location: 'Rufisque'
-    },
-    {
-      id: 3,
-      clientName: 'Société IMMOGO',
-      clientType: 'Entreprise',
-      lastMessage: 'Rapport d\'expertise reçu. Excellent travail !',
-      timestamp: 'Hier',
-      unread: 0,
-      status: 'completed',
-      avatar: 'SI',
-      subject: 'Expertise Judiciaire',
-      location: 'Parcelles Assainies'
-    },
-    {
-      id: 4,
-      clientName: 'Moussa Fall',
-      clientType: 'Particulier',
-      lastMessage: 'Quand pouvez-vous visiter le terrain agricole ?',
-      timestamp: 'Hier',
-      unread: 1,
-      status: 'active',
-      avatar: 'MF',
-      subject: 'Terrain Agricole Thiès',
-      location: 'Thiès'
-    }
-  ];
+  // conversations RÉEL depuis Supabase (aucune donnée fictive)
+  const [conversations, setConversations] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('conversations').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setConversations(data || []);
+      } catch (err) {
+        console.warn('conversations indisponible:', err?.message);
+        if (active) setConversations([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const messages = selectedConversation ? [
     {

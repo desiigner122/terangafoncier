@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -41,95 +42,24 @@ const VendeurMessages = () => {
     { id: 'archived', name: 'Archivés', count: 8 }
   ];
 
-  const conversations = [
-    {
-      id: 1,
-      name: 'Marie Diallo',
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Bonjour, je suis intéressée par la villa à Almadies. Pouvons-nous organiser une visite ?',
-      timestamp: '14:30',
-      unread: 2,
-      property: 'Villa Moderne Almadies',
-      status: 'hot',
-      isOnline: true
-    },
-    {
-      id: 2,
-      name: 'Amadou Ba',
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Merci pour les informations. Le prix est-il négociable ?',
-      timestamp: '12:45',
-      unread: 0,
-      property: 'Appartement Plateau',
-      status: 'warm',
-      isOnline: false
-    },
-    {
-      id: 3,
-      name: 'Fatou Sall',
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Parfait, je confirme la visite pour demain 15h.',
-      timestamp: 'Hier',
-      unread: 0,
-      property: 'Maison Parcelles Assainies',
-      status: 'confirmed',
-      isOnline: true
-    },
-    {
-      id: 4,
-      name: 'Ousmane Ndiaye',
-      avatar: '/api/placeholder/40/40',
-      lastMessage: 'Avez-vous d\'autres propriétés similaires dans le quartier ?',
-      timestamp: 'Hier',
-      unread: 1,
-      property: 'Terrain Saly',
-      status: 'interested',
-      isOnline: false
-    }
-  ];
+  // conversations RÉEL depuis Supabase (aucune donnée fictive)
+  const [conversations, setConversations] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setConversations(data || []);
+      } catch (err) {
+        console.warn('conversations indisponible:', err?.message);
+        if (active) setConversations([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
-  const messages = [
-    {
-      id: 1,
-      senderId: 'client',
-      senderName: 'Marie Diallo',
-      message: 'Bonjour, je viens de voir votre annonce pour la villa à Almadies. Elle m\'intéresse beaucoup !',
-      timestamp: '14:20',
-      status: 'read'
-    },
-    {
-      id: 2,
-      senderId: 'vendor',
-      senderName: 'Vous',
-      message: 'Bonjour Marie ! Merci pour votre intérêt. Cette villa est effectivement exceptionnelle. Souhaitez-vous organiser une visite ?',
-      timestamp: '14:22',
-      status: 'read'
-    },
-    {
-      id: 3,
-      senderId: 'client',
-      senderName: 'Marie Diallo',
-      message: 'Oui, ce serait parfait ! Quand êtes-vous disponible cette semaine ? J\'aimerais aussi savoir s\'il y a une piscine.',
-      timestamp: '14:28',
-      status: 'read'
-    },
-    {
-      id: 4,
-      senderId: 'vendor',
-      senderName: 'Vous',
-      message: 'Excellente nouvelle ! Oui, la villa dispose d\'une magnifique piscine avec vue mer. Je suis disponible demain après-midi ou jeudi matin. Quel créneau vous arrange ?',
-      timestamp: '14:29',
-      status: 'delivered'
-    },
-    {
-      id: 5,
-      senderId: 'client',
-      senderName: 'Marie Diallo',
-      message: 'Demain après-midi serait parfait ! Vers 15h ça vous va ?',
-      timestamp: '14:30',
-      status: 'unread'
-    }
-  ];
+  const messages = []; // démo retirée
 
   const quickReplies = [
     'Merci pour votre intérêt !',

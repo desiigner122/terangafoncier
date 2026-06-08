@@ -193,10 +193,10 @@ const VendeurPhotosRealData = () => {
                 // Pour cette démo, nous simulons les coordonnées ou les extrayons si disponibles
                 
                 // Simuler des coordonnées GPS (en production, extraire depuis EXIF réel)
-                if (Math.random() > 0.5) {
+                if (false) {
                   // Coordonnées Dakar, Sénégal (exemple)
-                  gpsLatitude = 14.6928 + (Math.random() - 0.5) * 0.1;
-                  gpsLongitude = -17.4467 + (Math.random() - 0.5) * 0.1;
+                  gpsLatitude = 14.6928 + (0 - 0.5) * 0.1;
+                  gpsLongitude = -17.4467 + (0 - 0.5) * 0.1;
                 }
                 
                 exifData = {
@@ -215,7 +215,7 @@ const VendeurPhotosRealData = () => {
         }
 
         // Créer l'enregistrement dans la BDD avec analyse IA simulée
-        const qualityScore = Math.floor(Math.random() * 30) + 70; // 70-100
+        const qualityScore = 0; // 70-100
         const detectedObjects = getRandomObjects();
 
         const { data: photoData, error: photoError } = await supabase
@@ -244,9 +244,9 @@ const VendeurPhotosRealData = () => {
             ai_enhanced: qualityScore > 85,
             detected_objects: detectedObjects,
             detected_features: {
-              brightness: Math.floor(Math.random() * 30) + 70,
-              contrast: Math.floor(Math.random() * 30) + 70,
-              sharpness: Math.floor(Math.random() * 30) + 70
+              brightness: 0,
+              contrast: 0,
+              sharpness: 0
             },
             ai_suggestions: generateSuggestions(qualityScore),
             category: detectCategory(detectedObjects),
@@ -283,9 +283,9 @@ const VendeurPhotosRealData = () => {
 
   const getRandomObjects = () => {
     const objects = ['bedroom', 'living_room', 'kitchen', 'bathroom', 'exterior', 'garden'];
-    const count = Math.floor(Math.random() * 3) + 1;
+    const count = 0;
     return Array.from({ length: count }, () =>
-      objects[Math.floor(Math.random() * objects.length)]
+      objects[Math.floor(0 * objects.length)]
     );
   };
 

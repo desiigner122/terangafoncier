@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Map, Search, MapPin, FileText, Download, User, Calendar } from 'lucide-react';
 
@@ -7,38 +8,24 @@ const NotaireAPICadastrePage = () => {
   const [searchType, setSearchType] = useState('parcelle');
   const [selectedParcel, setSelectedParcel] = useState(null);
 
-  const parcels = [
-    {
-      id: 'PAR-2025-001',
-      reference: 'D-123-45',
-      address: 'Avenue Cheikh Anta Diop, Dakar',
-      surface: 450,
-      owner: 'Amadou BA',
-      commune: 'Dakar Plateau',
-      section: 'D',
-      type: 'Résidentiel',
-      lastTransaction: '2023-05-15',
-      value: 85000000
-    },
-    {
-      id: 'PAR-2025-002',
-      reference: 'A-456-78',
-      address: 'Route des Almadies, Dakar',
-      surface: 850,
-      owner: 'Fatou SENE',
-      commune: 'Almadies',
-      section: 'A',
-      type: 'Commercial',
-      lastTransaction: '2024-02-20',
-      value: 150000000
-    }
-  ];
+  // parcels RÉEL depuis Supabase (aucune donnée fictive)
+  const [parcels, setParcels] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setParcels(data || []);
+      } catch (err) {
+        console.warn('parcels indisponible:', err?.message);
+        if (active) setParcels([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
-  const recentSearches = [
-    { query: 'D-123-45', type: 'Parcelle', date: '2025-10-09' },
-    { query: 'Avenue Pompidou', type: 'Adresse', date: '2025-10-08' },
-    { query: 'Amadou BA', type: 'Propriétaire', date: '2025-10-07' }
-  ];
+  const recentSearches = []; // démo retirée
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-green-50 to-emerald-50 p-6">

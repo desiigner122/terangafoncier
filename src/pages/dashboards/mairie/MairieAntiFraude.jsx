@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Shield, 
@@ -54,48 +55,18 @@ const MairieAntiFraude = ({ dashboardStats }) => {
   });
 
   // Données des analyses récentes
-  const [recentAnalyses, setRecentAnalyses] = useState([
-    {
-      id: 1,
-      documentType: 'Titre Foncier',
-      citizenName: 'M. Ibrahim Sarr',
-      date: '2024-01-20',
-      status: 'validated',
-      confidence: 98.5,
-      issues: [],
-      riskLevel: 'low'
-    },
-    {
-      id: 2,
-      documentType: 'Permis de Construire',
-      citizenName: 'Mme Aïcha Diop',
-      date: '2024-01-20',
-      status: 'fraud_detected',
-      confidence: 87.2,
-      issues: ['Signature suspecte', 'Tampon non conforme'],
-      riskLevel: 'high'
-    },
-    {
-      id: 3,
-      documentType: 'Acte de Vente',
-      citizenName: 'Entreprise Alpha Construction',
-      date: '2024-01-19',
-      status: 'pending',
-      confidence: 72.3,
-      issues: ['Vérification croisée requise'],
-      riskLevel: 'medium'
-    },
-    {
-      id: 4,
-      documentType: 'Certificat d\'Urbanisme',
-      citizenName: 'M. Ousmane Fall',
-      date: '2024-01-19',
-      status: 'validated',
-      confidence: 94.7,
-      issues: [],
-      riskLevel: 'low'
-    }
-  ]);
+  const [recentAnalyses, setRecentAnalyses] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setRecentAnalyses(data || []);
+      } catch (err) { if (active) setRecentAnalyses([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Simulation du scan de document
   const handleDocumentScan = async () => {
@@ -103,14 +74,7 @@ const MairieAntiFraude = ({ dashboardStats }) => {
     
     // Simulation d'analyse IA
     setTimeout(() => {
-      const mockResult = {
-        documentType: 'Titre Foncier',
-        confidence: Math.random() * 30 + 70, // 70-100%
-        fraudRisk: Math.random() * 100,
-        issues: Math.random() > 0.7 ? ['Signature suspecte', 'Date incohérente'] : [],
-        blockchain_verified: Math.random() > 0.5,
-        authenticity_score: Math.random() * 20 + 80
-      };
+      const mockResult = {}; // démo retirée
       
       setAnalysisResults(mockResult);
       setScanningDocument(false);

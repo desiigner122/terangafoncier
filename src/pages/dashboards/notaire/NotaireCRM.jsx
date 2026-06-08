@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -120,180 +121,18 @@ const NotaireCRM = () => {
   });
 
   // Clients et partenaires avec intégration bancaire
-  const [clients, setClients] = useState([
-    {
-      id: 'client-1',
-      name: 'Amadou Diallo',
-      type: 'Particulier',
-      email: 'amadou.diallo@email.com',
-      phone: '+221 77 123 45 67',
-      status: 'Actif',
-      currentTransaction: {
-        type: 'Achat Terrain',
-        value: '85M FCFA',
-        location: 'Almadies, Dakar',
-        bank: 'Banque Atlantique',
-        creditRef: 'CRED-2024-015',
-        stage: 'Signature en cours'
-      },
-      portfolio: '340M FCFA',
-      transactionHistory: 3,
-      satisfactionScore: 4.9,
-      lastInteraction: '2024-01-28',
-      notes: 'Client fidèle, investisseur immobilier actif',
-      documents: {
-        received: 8,
-        pending: 2,
-        validated: 6
-      },
-      bankRelation: {
-        advisor: 'Mme Fatou Sarr',
-        status: 'Crédit approuvé',
-        conditions: 'Taux 8.5%, 15 ans'
-      }
-    },
-    {
-      id: 'client-2',
-      name: 'Société SENEGAL INVEST',
-      type: 'Entreprise',
-      email: 'contact@senegalinvest.sn',
-      phone: '+221 33 456 78 90',
-      status: 'En négociation',
-      currentTransaction: {
-        type: 'Achat Villa',
-        value: '120M FCFA',
-        location: 'Mermoz, Dakar',
-        bank: 'CBAO',
-        creditRef: 'CBAO-2024-008',
-        stage: 'Vérification documents'
-      },
-      portfolio: '2.1Md FCFA',
-      transactionHistory: 12,
-      satisfactionScore: 4.7,
-      lastInteraction: '2024-01-26',
-      notes: 'Promoteur immobilier, transactions régulières',
-      documents: {
-        received: 15,
-        pending: 3,
-        validated: 12
-      },
-      bankRelation: {
-        advisor: 'M. Omar Ba',
-        status: 'Étude en cours',
-        conditions: 'Négociation taux'
-      }
-    },
-    {
-      id: 'client-3',
-      name: 'Moussa Thiam',
-      type: 'Particulier',
-      email: 'moussa.thiam@entreprise.sn',
-      phone: '+221 76 987 65 43',
-      status: 'Nouveau',
-      currentTransaction: {
-        type: 'Premier Achat',
-        value: '95M FCFA',
-        location: 'Plateau, Dakar',
-        bank: 'UBA Sénégal',
-        creditRef: 'UBA-2024-012',
-        stage: 'Constitution du dossier'
-      },
-      portfolio: '95M FCFA',
-      transactionHistory: 1,
-      satisfactionScore: 5.0,
-      lastInteraction: '2024-01-25',
-      notes: 'Premier achat immobilier, accompagnement personnalisé',
-      documents: {
-        received: 5,
-        pending: 4,
-        validated: 3
-      },
-      bankRelation: {
-        advisor: 'Mlle Aida Ndiaye',
-        status: 'Pré-approbation',
-        conditions: 'Taux préférentiel 7.8%'
-      }
-    }
-  ]);
-
-  // Partenaires bancaires
-  const [bankPartners, setBankPartners] = useState([
-    {
-      id: 'bank-1',
-      name: 'Banque Atlantique',
-      contact: 'Mme Fatou Sarr',
-      phone: '+221 33 859 20 00',
-      email: 'fatou.sarr@banqueatlantique.sn',
-      activeFiles: 23,
-      completedThisMonth: 8,
-      averageProcessingTime: '10 jours',
-      reliability: 'Excellente',
-      preferredFor: ['Crédits particuliers', 'Investissement'],
-      lastCollaboration: '2024-01-28'
-    },
-    {
-      id: 'bank-2',
-      name: 'CBAO',
-      contact: 'M. Omar Ba',
-      phone: '+221 33 839 90 00',
-      email: 'omar.ba@cbao.sn',
-      activeFiles: 15,
-      completedThisMonth: 5,
-      averageProcessingTime: '12 jours',
-      reliability: 'Très bonne',
-      preferredFor: ['Crédits entreprise', 'Promotions'],
-      lastCollaboration: '2024-01-26'
-    },
-    {
-      id: 'bank-3',
-      name: 'UBA Sénégal',
-      contact: 'Mlle Aida Ndiaye',
-      phone: '+221 33 849 30 00',
-      email: 'aida.ndiaye@ubagroup.com',
-      activeFiles: 12,
-      completedThisMonth: 6,
-      averageProcessingTime: '8 jours',
-      reliability: 'Excellente',
-      preferredFor: ['Jeunes acquéreurs', 'Primo-accédants'],
-      lastCollaboration: '2024-01-25'
-    }
-  ]);
-
-  // Dossiers en cours avec intégration bancaire
-  const [activeFiles, setActiveFiles] = useState([
-    {
-      id: 'file-1',
-      clientName: 'Amadou Diallo',
-      type: 'Vente Terrain',
-      value: '85M FCFA',
-      location: 'Almadies',
-      stage: 'Signature',
-      bank: 'Banque Atlantique',
-      bankAdvisor: 'Mme Fatou Sarr',
-      creditStatus: 'Approuvé',
-      dueDate: '2024-02-05',
-      progress: 85,
-      nextAction: 'Signature définitive',
-      documents: ['Titre foncier', 'Accord de prêt', 'Assurance'],
-      priority: 'Haute'
-    },
-    {
-      id: 'file-2',
-      clientName: 'SENEGAL INVEST',
-      type: 'Achat Villa',
-      value: '120M FCFA',
-      location: 'Mermoz',
-      stage: 'Vérification',
-      bank: 'CBAO',
-      bankAdvisor: 'M. Omar Ba',
-      creditStatus: 'En cours',
-      dueDate: '2024-02-10',
-      progress: 65,
-      nextAction: 'Validation documents banque',
-      documents: ['Compromis', 'Expertises', 'Garanties'],
-      priority: 'Moyenne'
-    }
-  ]);
+  const [clients, setClients] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setClients(data || []);
+      } catch (err) { if (active) setClients([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {

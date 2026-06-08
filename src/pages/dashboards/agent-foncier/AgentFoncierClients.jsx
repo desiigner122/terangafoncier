@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -45,122 +46,22 @@ const AgentFoncierClients = () => {
   }, []);
 
   // Données complètes des clients
-  const clients = [
-    {
-      id: 1,
-      nom: 'Amadou Diallo',
-      type: 'Particulier',
-      email: 'amadou.diallo@email.com',
-      telephone: '+221 77 123 45 67',
-      adresse: 'Almadies, Dakar',
-      projetsActifs: 2,
-      projetsTotal: 5,
-      valeurPortefeuille: '2.8B XOF',
-      dateInscription: '2023-03-15',
-      dernierContact: '2024-09-20',
-      statut: 'actif',
-      satisfaction: 92,
-      avatar: 'AD',
-      priorite: 'haute',
-      prochainRdv: '2024-09-28 14h30',
-      notes: 'Client VIP - Investisseur immobilier actif'
-    },
-    {
-      id: 2,
-      nom: 'Société IMMOGO SARL',
-      type: 'Entreprise',
-      email: 'contact@immogo.sn',
-      telephone: '+221 33 456 78 90',
-      adresse: 'Zone industrielle, Rufisque',
-      projetsActifs: 5,
-      projetsTotal: 12,
-      valeurPortefeuille: '8.5B XOF',
-      dateInscription: '2022-07-20',
-      dernierContact: '2024-09-25',
-      statut: 'actif',
-      satisfaction: 88,
-      avatar: 'IM',
-      priorite: 'haute',
-      prochainRdv: '2024-09-27 10h00',
-      notes: 'Promoteur immobilier - Projets résidentiels'
-    },
-    {
-      id: 3,
-      nom: 'Fatou Seck',
-      type: 'Particulier',
-      email: 'fatou.seck@gmail.com',
-      telephone: '+221 78 654 32 10',
-      adresse: 'Mermoz, Dakar',
-      projetsActifs: 1,
-      projetsTotal: 1,
-      valeurPortefeuille: '450M XOF',
-      dateInscription: '2024-08-10',
-      dernierContact: '2024-09-18',
-      statut: 'nouveau',
-      satisfaction: 95,
-      avatar: 'FS',
-      priorite: 'moyenne',
-      prochainRdv: 'Non planifié',
-      notes: 'Première acquisition - Accompagnement nécessaire'
-    },
-    {
-      id: 4,
-      nom: 'Groupe SENEGALIA',
-      type: 'Entreprise',
-      email: 'info@senegalia.com',
-      telephone: '+221 33 987 65 43',
-      adresse: 'Dakar Plateau',
-      projetsActifs: 3,
-      projetsTotal: 8,
-      valeurPortefeuille: '5.2B XOF',
-      dateInscription: '2021-11-05',
-      dernierContact: '2024-09-22',
-      statut: 'actif',
-      satisfaction: 90,
-      avatar: 'GS',
-      priorite: 'haute',
-      prochainRdv: '2024-10-02 16h00',
-      notes: 'Développement agricole - Terres rurales'
-    },
-    {
-      id: 5,
-      nom: 'Omar Ba',
-      type: 'Particulier',
-      email: 'omar.ba@yahoo.fr',
-      telephone: '+221 77 888 99 00',
-      adresse: 'Parcelles Assainies',
-      projetsActifs: 0,
-      projetsTotal: 3,
-      valeurPortefeuille: '1.1B XOF',
-      dateInscription: '2023-01-20',
-      dernierContact: '2024-08-15',
-      statut: 'inactif',
-      satisfaction: 75,
-      avatar: 'OB',
-      priorite: 'faible',
-      prochainRdv: 'À planifier',
-      notes: 'Projets suspendus - Relance nécessaire'
-    },
-    {
-      id: 6,
-      nom: 'Diaspora Investment Corp',
-      type: 'Entreprise',
-      email: 'contact@diaspora-invest.com',
-      telephone: '+221 33 111 22 33',
-      adresse: 'Point E, Dakar',
-      projetsActifs: 4,
-      projetsTotal: 6,
-      valeurPortefeuille: '12.8B XOF',
-      dateInscription: '2023-09-12',
-      dernierContact: '2024-09-26',
-      statut: 'vip',
-      satisfaction: 98,
-      avatar: 'DI',
-      priorite: 'très haute',
-      prochainRdv: '2024-09-29 11h00',
-      notes: 'Client premium - Investissements diaspora'
-    }
-  ];
+  // clients RÉEL depuis Supabase (aucune donnée fictive)
+  const [clients, setClients] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setClients(data || []);
+      } catch (err) {
+        console.warn('clients indisponible:', err?.message);
+        if (active) setClients([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Statistiques clients
   const clientStats = [

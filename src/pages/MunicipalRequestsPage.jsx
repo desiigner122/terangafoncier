@@ -37,73 +37,7 @@ const MunicipalRequestsPage = () => {
 
   // Données mockées des demandes
   useEffect(() => {
-    const mockRequests = [
-      {
-        id: 'REQ-2024-001',
-        type: 'Attribution terrain communal',
-        municipality: 'Commune de Guédiawaye',
-        location: 'Zone résidentielle Nord',
-        area: '300mÂ²',
-        status: 'En cours d\'examen',
-        submittedDate: '2024-01-15',
-        lastUpdate: '2024-01-22',
-        estimatedDecision: '2024-02-15',
-        documents: ['Demande manuscrite', 'Pièce d\'identité', 'Justificatif de revenus'],
-        requirements: ['Résidence dans la commune depuis 2 ans', 'Revenus inférieurs Ï  500,000 FCFA/mois', 'Premier logement']
-      },
-      {
-        id: 'REQ-2024-002',
-        type: 'Lotissement social',
-        municipality: 'Commune de Pikine',
-        location: 'Extension Pikine Sud',
-        area: '250mÂ²',
-        status: 'Approuvée',
-        submittedDate: '2023-12-10',
-        lastUpdate: '2024-01-20',
-        estimatedDecision: '2024-01-20',
-        documents: ['Dossier complet', 'Attestation domiciliation', 'Projet de construction'],
-        requirements: ['Domiciliation Pikine', 'Famille de 4+ personnes', 'Projet architectural validé']
-      },
-      {
-        id: 'REQ-2024-003',
-        type: 'Terrain commercial',
-        municipality: 'Commune de Rufisque',
-        location: 'Zone commerciale centrale',
-        area: '500mÂ²',
-        status: 'Documents manquants',
-        submittedDate: '2024-01-05',
-        lastUpdate: '2024-01-18',
-        estimatedDecision: '2024-02-28',
-        documents: ['Demande incomplète', 'Justificatifs financiers manquants'],
-        requirements: ['Activité commerciale justifiée', 'Caution de 2,000,000 FCFA', 'Autorisation commerciale']
-      },
-      {
-        id: 'REQ-2024-004',
-        type: 'Terrain résidentiel',
-        municipality: 'Commune de Thiès',
-        location: 'Quartier résidentiel Est',
-        area: '400mÂ²',
-        status: 'En cours d\'examen',
-        submittedDate: '2024-01-25',
-        lastUpdate: '2024-02-01',
-        estimatedDecision: '2024-03-05',
-        documents: ['Demande complète', 'Justificatifs revenus', 'Plan de construction'],
-        requirements: ['Résidence Thiès', 'Premier achat terrain', 'Projet familial']
-      },
-      {
-        id: 'REQ-2024-005',
-        type: 'Extension urbaine',
-        municipality: 'Commune de Mbour',
-        location: 'Zone d\'extension Sud',
-        area: '350mÂ²',
-        status: 'Approuvée',
-        submittedDate: '2023-11-20',
-        lastUpdate: '2024-01-15',
-        estimatedDecision: '2024-01-15',
-        documents: ['Dossier validé', 'Contrat signé', 'Permis de construire'],
-        requirements: ['Domiciliation Mbour', 'Activité économique locale', 'Engagement construction 18 mois']
-      }
-    ];
+    const mockRequests = []; // démo retirée
 
     setTimeout(() => {
       setRequests(mockRequests);

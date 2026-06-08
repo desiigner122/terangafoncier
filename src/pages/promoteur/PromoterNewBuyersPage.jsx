@@ -27,76 +27,7 @@ const PromoterNewBuyersPage = () => {
   const [selectedBuyer, setSelectedBuyer] = useState(null);
 
   // Données simulées de nouveaux acheteurs
-  const mockBuyers = [
-    {
-      id: 1,
-      name: 'Aminata Diallo',
-      email: 'aminata.diallo@email.com',
-      phone: '+33 6 12 34 56 78',
-      location: 'Paris, France',
-      type: 'Diaspora',
-      landPurchased: 'Terrain 500mÂ² - Saly',
-      purchaseAmount: 25000000, // FCFA
-      purchaseDate: '2024-09-01',
-      status: 'Construction planifiée',
-      interests: ['Construction résidentielle', 'Villa moderne', 'Piscine'],
-      budget: '80-120M FCFA',
-      timeline: 'Q1 2025',
-      notes: 'Intéressée par nos services de construction clé en main pour une villa moderne avec piscine.',
-      avatar: '/api/YOUR_API_KEY/60/60'
-    },
-    {
-      id: 2,
-      name: 'Omar Ndiaye',
-      email: 'omar.ndiaye@email.com',
-      phone: '+1 514 123 4567',
-      location: 'Montréal, Canada',
-      type: 'Diaspora',
-      landPurchased: 'Terrain 800mÂ² - Almadies',
-      purchaseAmount: 45000000,
-      purchaseDate: '2024-08-15',
-      status: 'Études en cours',
-      interests: ['Immeuble R+3', 'Commercial', 'Locatif'],
-      budget: '200-300M FCFA',
-      timeline: 'Q2 2025',
-      notes: 'Projet d\'immeuble mixte (commercial RDC + résidentiel). Demande devis complet.',
-      avatar: '/api/YOUR_API_KEY/60/60'
-    },
-    {
-      id: 3,
-      name: 'Fatou Ba',
-      email: 'fatou.ba@email.com',
-      phone: '+221 77 123 45 67',
-      location: 'Dakar, Sénégal',
-      type: 'Particulier',
-      landPurchased: 'Terrain 400mÂ² - VDN',
-      purchaseAmount: 32000000,
-      purchaseDate: '2024-09-10',
-      status: 'Prêt Ï  commencer',
-      interests: ['Villa familiale', 'Architecture moderne', 'Jardin'],
-      budget: '60-90M FCFA',
-      timeline: 'Immédiat',
-      notes: 'Villa familiale moderne pour famille de 5 personnes. Priorité sur jardin et espaces ouverts.',
-      avatar: '/api/YOUR_API_KEY/60/60'
-    },
-    {
-      id: 4,
-      name: 'Moussa Sarr',
-      email: 'moussa.sarr@email.com',
-      phone: '+49 30 12345678',
-      location: 'Berlin, Allemagne',
-      type: 'Diaspora',
-      landPurchased: 'Terrain 600mÂ² - Mbour',
-      purchaseAmount: 18000000,
-      purchaseDate: '2024-08-30',
-      status: 'Recherche financement',
-      interests: ['Maison traditionnelle', 'Style sénégalais', 'Cour'],
-      budget: '45-70M FCFA',
-      timeline: 'Q3 2025',
-      notes: 'Maison traditionnelle sénégalaise modernisée. Cherche partenariat bancaire.',
-      avatar: '/api/YOUR_API_KEY/60/60'
-    }
-  ];
+  const mockBuyers = []; // démo retirée
 
   useEffect(() => {
     // Simulation du chargement des données

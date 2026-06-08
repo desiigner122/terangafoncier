@@ -32,99 +32,10 @@ const PromoteurChantiers = () => {
   const [activeTab, setActiveTab] = useState('active');
 
   // Chantiers actifs
-  const activeSites = [
-    {
-      id: 1,
-      name: 'Résidence Teranga',
-      location: 'Almadies, Dakar',
-      type: 'Résidentiel',
-      status: 'En cours',
-      progress: 75,
-      startDate: '2024-01-15',
-      plannedEnd: '2025-06-30',
-      currentPhase: 'Finitions intérieures',
-      budget: 2800000000,
-      spent: 2100000000,
-      workers: 45,
-      contractor: 'BTP Sénégal SARL',
-      supervisor: 'Ing. Mamadou Fall',
-      supervisorPhone: '+221 77 123 45 67',
-      lastInspection: '2024-12-10',
-      nextMilestone: 'Livraison étage 2 - 20 Déc',
-      issues: 2,
-      safetyScore: 92,
-      images: 24,
-      units: 24,
-      unitsCompleted: 18
-    },
-    {
-      id: 2,
-      name: 'Complexe Commercial VDN',
-      location: 'VDN, Dakar',
-      type: 'Commercial',
-      status: 'En cours',
-      progress: 45,
-      startDate: '2024-03-10',
-      plannedEnd: '2025-12-15',
-      currentPhase: 'Gros œuvre niveau 2',
-      budget: 5200000000,
-      spent: 2340000000,
-      workers: 78,
-      contractor: 'Teranga Construction',
-      supervisor: 'Ing. Aïssatou Diop',
-      supervisorPhone: '+221 77 234 56 78',
-      lastInspection: '2024-12-08',
-      nextMilestone: 'Coulage dalle niveau 3 - 28 Déc',
-      issues: 1,
-      safetyScore: 88,
-      images: 42,
-      units: 12,
-      unitsCompleted: 5
-    },
-    {
-      id: 3,
-      name: 'Entrepôt Logistics',
-      location: 'Rufisque',
-      type: 'Industriel',
-      status: 'Retard',
-      progress: 35,
-      startDate: '2024-05-20',
-      plannedEnd: '2025-08-30',
-      currentPhase: 'Charpente métallique',
-      budget: 1800000000,
-      spent: 630000000,
-      workers: 32,
-      contractor: 'Metal Pro Sénégal',
-      supervisor: 'Ing. Ousmane Sarr',
-      supervisorPhone: '+221 77 345 67 89',
-      lastInspection: '2024-12-05',
-      nextMilestone: 'Montage charpente - 15 Jan',
-      issues: 4,
-      safetyScore: 85,
-      images: 18,
-      units: 1,
-      unitsCompleted: 0
-    }
-  ];
+  const activeSites = []; // démo retirée
 
   // Chantiers terminés
-  const completedSites = [
-    {
-      id: 4,
-      name: 'Villa Duplex Mermoz',
-      location: 'Mermoz, Dakar',
-      type: 'Résidentiel',
-      status: 'Terminé',
-      progress: 100,
-      startDate: '2023-06-15',
-      completedDate: '2024-11-30',
-      budget: 180000000,
-      finalCost: 172000000,
-      contractor: 'Fall Construction',
-      quality: 'Excellent',
-      clientSatisfaction: 4.8
-    }
-  ];
+  const completedSites = []; // démo retirée
 
   // Statistiques générales
   const siteStats = {

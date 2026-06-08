@@ -41,15 +41,7 @@ const GeometreSettings = () => {
   const [activeTab, setActiveTab] = useState('profile');
 
   // États pour les différentes sections
-  const [profileData, setProfileData] = useState({
-    fullName: 'Mamadou Aly Ndiaye',
-    email: 'mamadou.aly@geometre-expert.sn',
-    phone: '+221 77 234 56 78',
-    address: 'Mermoz, Dakar',
-    bio: 'Géomètre expert avec 15 ans d\'expérience en levés topographiques et cadastraux.',
-    license: 'GE-SN-2010-0157',
-    specialities: ['Topographie', 'Cadastre', 'SIG', 'GPS/GNSS']
-  });
+  const [profileData, setProfileData] = useState({}); // démo retirée
 
   const [notificationSettings, setNotificationSettings] = useState({
     emailMissions: true,

@@ -50,7 +50,7 @@ const ModernAboutPage = () => {
   };
 
   const teamMember = {
-    name: "Abdoulaye Diémé",
+    name: "",
     role: "Fondateur & CEO",
     imgUrl: "/images/team-member.jpg",
     imgAlt: "Portrait d'Abdoulaye Diémé, fondateur de Teranga Foncier",

@@ -37,29 +37,7 @@ const ParticulierProfileModern = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [activeSection, setActiveSection] = useState('profile');
   
-  const [profileData, setProfileData] = useState({
-    firstName: 'Aminata',
-    lastName: 'Diallo',
-    email: 'aminata.diallo@email.com',
-    phone: '+221 77 123 45 67',
-    location: 'Dakar, Sénégal',
-    birthDate: '1985-06-15',
-    bio: 'À la recherche d\'un bien immobilier familial dans la région de Dakar. Intéressée par les villas et appartements modernes.',
-    preferences: {
-      propertyTypes: ['villa', 'apartment'],
-      locations: ['Almadies', 'Mamelles', 'Point E'],
-      budgetMin: 30000000,
-      budgetMax: 80000000,
-      bedrooms: 3,
-      features: ['parking', 'security', 'wifi']
-    },
-    notifications: {
-      newProperties: true,
-      priceChanges: true,
-      appointments: true,
-      newsletter: false
-    }
-  });
+  const [profileData, setProfileData] = useState({}); // démo retirée
 
   const [stats] = useState({
     propertiesViewed: 187,

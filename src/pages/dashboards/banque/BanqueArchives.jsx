@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Archive, 
@@ -48,74 +49,61 @@ const BanqueArchives = () => {
   const [selectedYear, setSelectedYear] = useState('2024');
 
   // Données d'archives simulées
-  const archiveStats = {
-    totalDocuments: 15847,
-    creditsApprouves: 1203,
-    creditsRejetes: 289,
-    documentsImportants: 456,
-    espaceDisk: '2.8 GB'
-  };
+  // Données d'archives RÉELLES (depuis Supabase) — aucune donnée fabriquée
+  const [archiveStats, setArchiveStats] = useState({
+    totalDocuments: 0, creditsApprouves: 0, creditsRejetes: 0, documentsImportants: 0, espaceDisk: null
+  });
+  const [archivedCredits, setArchivedCredits] = useState([]);
 
-  const archivedCredits = [
-    {
-      id: 'CR-2023-0892',
-      client: 'Amadou Diallo',
-      montant: '85,000,000 FCFA',
-      terrain: 'Terrain Almadies - 500m²',
-      statut: 'Approuvé',
-      dateApprobation: '2023-12-15',
-      dateArchivage: '2024-01-20',
-      notaire: 'Me Fatou Ndiaye',
-      documents: 12,
-      importance: 'haute',
-      tokenNFT: 'TF-NFT-8923'
-    },
-    {
-      id: 'CR-2023-0891',
-      client: 'Société IMMOSN',
-      montant: '250,000,000 FCFA',
-      terrain: 'Complexe commercial Plateau',
-      statut: 'Approuvé',
-      dateApprobation: '2023-12-10',
-      dateArchivage: '2024-01-18',
-      notaire: 'Me Ousmane Ba',
-      documents: 18,
-      importance: 'haute',
-      tokenNFT: 'TF-NFT-8891'
-    },
-    {
-      id: 'CR-2023-0890',
-      client: 'Fatou Sarr',
-      montant: '45,000,000 FCFA',
-      terrain: 'Terrain résidentiel Rufisque',
-      statut: 'Rejeté',
-      dateRejet: '2023-12-05',
-      dateArchivage: '2024-01-15',
-      motifRejet: 'Revenus insuffisants',
-      documents: 8,
-      importance: 'moyenne'
-    },
-    {
-      id: 'CR-2023-0889',
-      client: 'Moussa Thiam',
-      montant: '120,000,000 FCFA',
-      terrain: 'Villa Mermoz - 300m²',
-      statut: 'Approuvé',
-      dateApprobation: '2023-11-28',
-      dateArchivage: '2024-01-10',
-      notaire: 'Me Aïcha Ndiaye',
-      documents: 15,
-      importance: 'haute',
-      tokenNFT: 'TF-NFT-8889'
-    }
-  ];
+  useEffect(() => {
+    let active = true;
+    const loadArchives = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('demandes_financement')
+          .select('*')
+          .in('status', ['approved', 'rejected', 'archived'])
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        const mapped = (data || []).map((r) => ({
+          id: r.reference || r.id,
+          client: r.client_name || '',
+          montant: r.amount != null ? `${Number(r.amount).toLocaleString('fr-FR')} FCFA` : '',
+          terrain: r.property_title || r.terrain || '',
+          statut: r.status === 'approved' ? 'Approuvé' : r.status === 'rejected' ? 'Rejeté' : 'Archivé',
+          dateApprobation: r.approved_at || null,
+          dateArchivage: r.archived_at || r.updated_at || null,
+          notaire: r.notaire || '',
+          documents: r.documents_count ?? 0,
+          importance: r.importance || 'moyenne',
+          tokenNFT: r.nft_token || null,
+          motifRejet: r.rejection_reason || null
+        }));
+        if (active) {
+          setArchivedCredits(mapped);
+          setArchiveStats({
+            totalDocuments: mapped.reduce((s, m) => s + (m.documents || 0), 0),
+            creditsApprouves: mapped.filter((m) => m.statut === 'Approuvé').length,
+            creditsRejetes: mapped.filter((m) => m.statut === 'Rejeté').length,
+            documentsImportants: mapped.filter((m) => m.importance === 'haute').length,
+            espaceDisk: null
+          });
+        }
+      } catch (err) {
+        console.warn('Archives banque indisponibles:', err?.message);
+        if (active) setArchivedCredits([]);
+      }
+    };
+    loadArchives();
+    return () => { active = false; };
+  }, []);
 
   const documentCategories = [
-    { id: 'credits', label: 'Dossiers Crédit', count: 1492, icon: FileText },
-    { id: 'evaluations', label: 'Évaluations', count: 892, icon: BarChart3 },
-    { id: 'garanties', label: 'Garanties', count: 567, icon: Building2 },
-    { id: 'juridique', label: 'Documents Juridiques', count: 234, icon: Archive },
-    { id: 'blockchain', label: 'Tokens NFT', count: 1203, icon: Database }
+    { id: 'credits', label: 'Dossiers Crédit', count: null, icon: FileText },
+    { id: 'evaluations', label: 'Évaluations', count: null, icon: BarChart3 },
+    { id: 'garanties', label: 'Garanties', count: null, icon: Building2 },
+    { id: 'juridique', label: 'Documents Juridiques', count: null, icon: Archive },
+    { id: 'blockchain', label: 'Tokens NFT', count: null, icon: Database }
   ];
 
   const getStatutColor = (statut) => {

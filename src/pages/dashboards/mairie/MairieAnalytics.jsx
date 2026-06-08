@@ -428,13 +428,13 @@ const MairieAnalytics = ({ dashboardStats }) => {
                       <div>
                         <span className="text-gray-600">Taux approbation</span>
                         <p className="font-medium text-green-600">
-                          {Math.floor(85 + Math.random() * 10)}%
+                          {Math.floor(85 + 0)}%
                         </p>
                       </div>
                       <div>
                         <span className="text-gray-600">Délai moyen</span>
                         <p className="font-medium text-blue-600">
-                          {Math.floor(15 + Math.random() * 10)}j
+                          {Math.floor(15 + 0)}j
                         </p>
                       </div>
                     </div>

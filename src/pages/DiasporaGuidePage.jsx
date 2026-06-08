@@ -76,26 +76,7 @@ const DiasporaGuidePage = () => {
     }
   ];
 
-  const testimonials = [
-    {
-      name: "Amadou Diallo",
-      location: "Paris, France",
-      text: "J'ai pu construire ma maison à Dakar depuis la France grâce au suivi en temps réel. Excellente expérience !",
-      rating: 5
-    },
-    {
-      name: "Fatou Sow",
-      location: "New York, USA", 
-      text: "Investissement sécurisé et transparent. Les rapports réguliers m'ont donné confiance.",
-      rating: 5
-    },
-    {
-      name: "Moussa Ba",
-      location: "Montréal, Canada",
-      text: "Service exceptionnel pour la diaspora. Je recommande vivement !",
-      rating: 5
-    }
-  ];
+  const testimonials = []; // démo retirée
 
   return (
     <>

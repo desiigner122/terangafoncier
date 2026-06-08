@@ -114,7 +114,7 @@ const ModernMairieDashboard = () => {
               },
               { 
                 type: 'Certificat d\'Urbanisme', 
-                applicant: 'Mamadou FALL',
+                applicant: '',
                 project: 'Villa - Parcelle 142/D',
                 submitted: '18/01/2024',
                 status: 'Commission',
@@ -407,7 +407,7 @@ const ModernMairieDashboard = () => {
           <div className="space-y-4">
             {[
               {
-                citizen: 'Aminata DIOP',
+                citizen: '',
                 request: 'Demande d\'éclairage public',
                 location: 'Rue 15 - Quartier Nord',
                 date: '20/01/2024',
@@ -415,7 +415,7 @@ const ModernMairieDashboard = () => {
                 status: 'En cours'
               },
               {
-                citizen: 'Ibrahim NDIAYE', 
+                citizen: '', 
                 request: 'Réparation voirie',
                 location: 'Avenue Cheikh Anta Diop',
                 date: '19/01/2024',
@@ -423,7 +423,7 @@ const ModernMairieDashboard = () => {
                 status: 'Planifiée'
               },
               {
-                citizen: 'Fatou SALL',
+                citizen: '',
                 request: 'Collecte des ordures',
                 location: 'Cité des Enseignants',
                 date: '18/01/2024',

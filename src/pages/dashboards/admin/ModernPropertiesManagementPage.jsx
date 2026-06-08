@@ -135,35 +135,35 @@ const ModernPropertiesManagementPage = () => {
 
   const loadAIValuations = async (propertiesData) => {
     try {
-      // Générer des évaluations IA basées sur les vraies propriétés
+      // Évaluations IA : uniquement les vraies valeurs présentes sur la propriété.
+      // (Aucun score aléatoire : si le champ n'existe pas en base, pas d'évaluation.)
       const valuations = {};
       const nftReady = {};
-      
-      propertiesData.forEach(property => {
-        // Score IA d'évaluation (0-100)
-        const aiScore = Math.floor(Math.random() * 30) + 70; // Score élevé (70-100)
-        
-        // Évaluation IA du prix
-        const marketValue = property.price * (0.9 + Math.random() * 0.2); // ±10%
-        
-        // Préparation NFT
-        const nftScore = Math.floor(Math.random() * 40) + 60; // 60-100%
-        
-        valuations[property.id] = {
-          aiScore,
-          marketValue,
-          priceAccuracy: aiScore > 80 ? 'Excellent' : aiScore > 65 ? 'Bon' : 'Moyen',
-          lastUpdated: new Date()
-        };
 
-        nftReady[property.id] = {
-          readinessScore: nftScore,
-          status: nftScore > 80 ? 'ready' : nftScore > 60 ? 'preparing' : 'pending',
-          estimatedTokens: Math.floor(property.price / 1000000), // 1 token = 1M CFA
-          smartContractReady: nftScore > 75
-        };
+      propertiesData.forEach(property => {
+        const aiScore = property.ai_score ?? property.aiScore ?? null;
+        const marketValue = property.estimated_value ?? property.market_value ?? null;
+
+        if (aiScore !== null || marketValue !== null) {
+          valuations[property.id] = {
+            aiScore,
+            marketValue,
+            priceAccuracy: aiScore === null ? null : aiScore > 80 ? 'Excellent' : aiScore > 65 ? 'Bon' : 'Moyen',
+            lastUpdated: property.updated_at || null
+          };
+        }
+
+        const nftScore = property.nft_readiness_score ?? null;
+        if (nftScore !== null) {
+          nftReady[property.id] = {
+            readinessScore: nftScore,
+            status: nftScore > 80 ? 'ready' : nftScore > 60 ? 'preparing' : 'pending',
+            estimatedTokens: property.price ? Math.floor(property.price / 1000000) : null,
+            smartContractReady: nftScore > 75
+          };
+        }
       });
-      
+
       setAiValuations(valuations);
       setNftReadiness(nftReady);
     } catch (error) {
@@ -173,19 +173,20 @@ const ModernPropertiesManagementPage = () => {
 
   const loadBlockchainStatus = async (propertiesData) => {
     try {
-      const blockchainData = await globalAdminService.prepareBlockchainIntegration();
+      // Statut blockchain RÉEL : lu depuis les champs de la propriété
+      // (renseignés par le service blockchain). Aucune donnée fabriquée.
       const status = {};
-      
+
       propertiesData.forEach(property => {
         status[property.id] = {
-          onBlockchain: Math.random() > 0.7, // 30% sur blockchain
-          transactionHash: Math.random() > 0.5 ? `0x${Math.random().toString(16).substr(2, 40)}` : null,
-          smartContractAddress: Math.random() > 0.6 ? `0x${Math.random().toString(16).substr(2, 40)}` : null,
-          nftMinted: Math.random() > 0.8,
-          tokenId: Math.random() > 0.8 ? Math.floor(Math.random() * 10000) : null
+          onBlockchain: Boolean(property.blockchain_hash || property.transaction_hash),
+          transactionHash: property.transaction_hash || property.blockchain_hash || null,
+          smartContractAddress: property.smart_contract_address || null,
+          nftMinted: Boolean(property.nft_token_id),
+          tokenId: property.nft_token_id ?? null
         };
       });
-      
+
       setBlockchainStatus(status);
     } catch (error) {
       console.error('Erreur statut blockchain:', error);

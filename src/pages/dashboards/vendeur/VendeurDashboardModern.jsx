@@ -50,7 +50,7 @@ const VendeurDashboardModern = () => {
   // Données du vendeur
   const vendeurData = {
     profile: {
-      name: 'Amadou Diallo',
+      name: '',
       status: 'Vendeur Pro',
       rating: 4.9,
       totalSales: 127,
@@ -112,7 +112,7 @@ const VendeurDashboardModern = () => {
     prospects: [
       {
         id: 1,
-        name: 'Fatou Sall',
+        name: '',
         email: 'fatou.sall@email.com',
         phone: '+221 77 234 56 78',
         avatar: 'https://images.unsplash.com/photo-1494790108755-2616b9c3e9a3?w=80&h=80&fit=crop&crop=face',
@@ -123,7 +123,7 @@ const VendeurDashboardModern = () => {
       },
       {
         id: 2,
-        name: 'Moussa Diop',
+        name: '',
         email: 'moussa.diop@email.com',
         phone: '+221 76 345 67 89',
         avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face',

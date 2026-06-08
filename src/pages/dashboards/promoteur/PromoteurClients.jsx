@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -53,180 +54,22 @@ const PromoteurClients = () => {
   };
 
   // Base de données clients
-  const clients = [
-    {
-      id: 1,
-      name: 'Moussa Ba',
-      email: 'moussa.ba@email.com',
-      phone: '+221 77 987 65 43',
-      status: 'Client actif',
-      category: 'VIP',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2024-01-15',
-      lastContact: '2024-12-10',
-      nextFollowUp: '2024-12-20',
-      projects: [
-        {
-          name: 'Résidence Teranga',
-          unit: 'Appartement 3 pièces',
-          value: 85000000,
-          status: 'Propriétaire',
-          completionDate: '2024-11-30'
-        }
-      ],
-      totalSpent: 85000000,
-      satisfaction: 4.8,
-      referrals: 3,
-      agent: 'Fatou Diagne',
-      source: 'Site web',
-      preferences: ['Haut de gamme', 'Vue mer', 'Parking'],
-      notes: 'Client très exigeant sur les finitions. Intéressé par d\'autres projets.',
-      interactions: 24,
-      contracts: 1,
-      payments: 'À jour',
-      loyaltyPoints: 850,
-      vipLevel: 'Gold'
-    },
-    {
-      id: 2,
-      name: 'Aminata Diop', 
-      email: 'aminata.diop@email.com',
-      phone: '+221 78 123 45 67',
-      status: 'Prospect avancé',
-      category: 'Premium',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2024-03-10',
-      lastContact: '2024-12-08',
-      nextFollowUp: '2024-12-15',
-      projects: [
-        {
-          name: 'Villa Duplex Mermoz',
-          unit: 'Villa 4 chambres',
-          value: 65000000,
-          status: 'En négociation',
-          expectedDate: '2025-01-15'
-        }
-      ],
-      totalSpent: 0,
-      satisfaction: 0,
-      referrals: 0,
-      agent: 'Mamadou Seck',
-      source: 'Référence',
-      preferences: ['Jardin', 'Garage', 'Sécurité'],
-      notes: 'Demande modifications sur la cuisine. Budget confirmé.',
-      interactions: 12,
-      contracts: 0,
-      payments: 'N/A',
-      loyaltyPoints: 120,
-      interest: 85
-    },
-    {
-      id: 3,
-      name: 'Ibrahima Sarr',
-      email: 'ibrahima@email.com',
-      phone: '+221 77 555 44 33',
-      status: 'Prospect',
-      category: 'Standard',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2024-06-20',
-      lastContact: '2024-12-05',
-      nextFollowUp: '2024-12-12',
-      projects: [
-        {
-          name: 'Appartements VDN',
-          unit: 'Appartement 2 pièces',
-          value: 45000000,
-          status: 'Réflexion',
-          expectedDate: '2025-03-01'
-        }
-      ],
-      totalSpent: 0,
-      satisfaction: 0,
-      referrals: 0,
-      agent: 'Aïssatou Fall',
-      source: 'Publicité Facebook',
-      preferences: ['Budget limité', 'Transport', 'Écoles'],
-      notes: 'Cherche facilités de paiement. Première acquisition.',
-      interactions: 8,
-      contracts: 0,
-      payments: 'N/A',
-      loyaltyPoints: 45,
-      interest: 60
-    },
-    {
-      id: 4,
-      name: 'Fatou Ndiaye',
-      email: 'fatou.ndiaye@email.com',
-      phone: '+221 76 888 99 00',
-      status: 'Client fidèle',
-      category: 'VIP',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2023-08-10',
-      lastContact: '2024-12-01',
-      nextFollowUp: '2024-12-30',
-      projects: [
-        {
-          name: 'Villa Almadies',
-          unit: 'Villa 5 chambres',
-          value: 120000000,
-          status: 'Propriétaire',
-          completionDate: '2024-06-15'
-        },
-        {
-          name: 'Appartement Centre-ville',
-          unit: 'Appartement 2 pièces',
-          value: 55000000,
-          status: 'Propriétaire',
-          completionDate: '2024-09-30'
-        }
-      ],
-      totalSpent: 175000000,
-      satisfaction: 4.9,
-      referrals: 5,
-      agent: 'Fatou Diagne',
-      source: 'Référence',
-      preferences: ['Investissement', 'Qualité', 'Emplacement'],
-      notes: 'Investisseuse expérimentée. Excellente relation client.',
-      interactions: 45,
-      contracts: 2,
-      payments: 'À jour',
-      loyaltyPoints: 1750,
-      vipLevel: 'Platinum'
-    },
-    {
-      id: 5,
-      name: 'Omar Thiam',
-      email: 'omar.thiam@email.com',
-      phone: '+221 77 222 33 44',
-      status: 'Ancien client',
-      category: 'Standard',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2023-02-15',
-      lastContact: '2024-10-20',
-      nextFollowUp: '2025-01-15',
-      projects: [
-        {
-          name: 'Studio Médina',
-          unit: 'Studio',
-          value: 25000000,
-          status: 'Propriétaire',
-          completionDate: '2023-12-30'
-        }
-      ],
-      totalSpent: 25000000,
-      satisfaction: 4.2,
-      referrals: 1,
-      agent: 'Aïssatou Fall',
-      source: 'Walk-in',
-      preferences: ['Première acquisition', 'Transport'],
-      notes: 'Premier achat immobilier. Potentiel pour upgrade.',
-      interactions: 18,
-      contracts: 1,
-      payments: 'Terminé',
-      loyaltyPoints: 250,
-      vipLevel: 'Bronze'
-    }
-  ];
+  // clients RÉEL depuis Supabase (aucune donnée fictive)
+  const [clients, setClients] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setClients(data || []);
+      } catch (err) {
+        console.warn('clients indisponible:', err?.message);
+        if (active) setClients([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Segmentation des clients
   const clientSegments = {

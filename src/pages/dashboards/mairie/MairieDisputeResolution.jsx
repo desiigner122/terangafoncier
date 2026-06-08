@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Shield,
@@ -53,87 +54,24 @@ const MairieDisputeResolution = ({ dashboardStats }) => {
   const [selectedDispute, setSelectedDispute] = useState(null);
 
   // Données des conflits fonciers
-  const landDisputes = [
-    {
-      id: 'CONF-2024-001',
-      title: 'Litige limites parcellaires - Quartier Nord',
-      parties: [
-        { name: 'Amadou Diallo', role: 'Demandeur', contact: '+221 77 123 45 67' },
-        { name: 'Fatou Seck', role: 'Défendeur', contact: '+221 76 987 65 43' }
-      ],
-      location: 'Zone Résidentielle Nord - Secteur B',
-      disputeType: 'Limites parcellaires',
-      priority: 'Moyenne',
-      status: 'Médiation en cours',
-      submissionDate: '2024-01-15',
-      lastActivity: '2024-01-20',
-      mediator: 'Conseiller Juridique Moussa Ba',
-      description: 'Contestation des limites entre deux parcelles adjacentes suite à la construction d\'une clôture',
-      timeline: [
-        { date: '2024-01-15', event: 'Dépôt de la plainte', status: 'completed' },
-        { date: '2024-01-17', event: 'Convocation des parties', status: 'completed' },
-        { date: '2024-01-20', event: 'Première séance de médiation', status: 'completed' },
-        { date: '2024-01-25', event: 'Expertise technique prévue', status: 'pending' },
-        { date: '2024-02-01', event: 'Séance de conciliation', status: 'upcoming' }
-      ],
-      documents: ['Plainte initiale', 'Plans parcellaires', 'Photos terrain'],
-      resolutionProgress: 60,
-      estimatedResolution: '2024-02-15'
-    },
-    {
-      id: 'CONF-2024-002',
-      title: 'Conflit succession foncière - Famille Ndiaye',
-      parties: [
-        { name: 'Ibrahim Ndiaye', role: 'Héritier 1', contact: '+221 78 456 12 34' },
-        { name: 'Aïssa Ndiaye', role: 'Héritier 2', contact: '+221 77 654 32 10' },
-        { name: 'Moussa Ndiaye', role: 'Héritier 3', contact: '+221 76 123 98 76' }
-      ],
-      location: 'Zone Agricole Est - Parcelle 127',
-      disputeType: 'Succession',
-      priority: 'Haute',
-      status: 'Arbitrage requis',
-      submissionDate: '2024-01-10',
-      lastActivity: '2024-01-22',
-      mediator: 'Juge de Paix Assane Diop',
-      description: 'Désaccord entre héritiers sur le partage d\'une parcelle agricole de 2.5 hectares',
-      timeline: [
-        { date: '2024-01-10', event: 'Saisine du tribunal', status: 'completed' },
-        { date: '2024-01-12', event: 'Constitution du dossier', status: 'completed' },
-        { date: '2024-01-18', event: 'Première audience', status: 'completed' },
-        { date: '2024-01-22', event: 'Expertise notariale', status: 'completed' },
-        { date: '2024-01-28', event: 'Audience de jugement', status: 'upcoming' }
-      ],
-      documents: ['Acte de décès', 'Titre foncier original', 'Actes de naissance héritiers'],
-      resolutionProgress: 80,
-      estimatedResolution: '2024-02-05'
-    },
-    {
-      id: 'CONF-2024-003',
-      title: 'Occupation illégale terrain communal',
-      parties: [
-        { name: 'Commune de Dakar', role: 'Demandeur', contact: 'mairie@dakar.sn' },
-        { name: 'Association Commerçants', role: 'Défendeur', contact: '+221 77 987 65 43' }
-      ],
-      location: 'Zone Commerciale Centre - Place publique',
-      disputeType: 'Occupation illégale',
-      priority: 'Haute',
-      status: 'Résolu',
-      submissionDate: '2024-01-05',
-      lastActivity: '2024-01-18',
-      mediator: 'Préfet Départemental',
-      description: 'Occupation non autorisée d\'un espace public par des commerçants informels',
-      timeline: [
-        { date: '2024-01-05', event: 'Constat d\'huissier', status: 'completed' },
-        { date: '2024-01-08', event: 'Mise en demeure', status: 'completed' },
-        { date: '2024-01-12', event: 'Négociation solution', status: 'completed' },
-        { date: '2024-01-15', event: 'Accord de relocalisation', status: 'completed' },
-        { date: '2024-01-18', event: 'Libération espace', status: 'completed' }
-      ],
-      documents: ['Constat huissier', 'Mise en demeure', 'Accord final'],
-      resolutionProgress: 100,
-      estimatedResolution: '2024-01-18'
-    }
-  ];
+  const [landDisputes, setLandDisputes] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('disputes')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setLandDisputes(data || []);
+      } catch (err) {
+        console.warn('Litiges indisponibles:', err?.message);
+        if (active) setLandDisputes([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Types de médiation
   const mediationTypes = [

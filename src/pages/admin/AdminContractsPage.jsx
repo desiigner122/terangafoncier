@@ -13,23 +13,34 @@ import { Input } from '@/components/ui/input';
 import { jsPDF } from "jspdf"; 
 // useToast import supprimé - utilisation window.safeGlobalToast 
 import { LoadingSpinner } from '@/components/ui/spinner';
-
-const initialSampleContracts = [
-  { id: 'CONTR-001', type: 'Vente', parcelId: 'SL042', userName: 'Client A', date: '2025-04-10', status: 'Signé' },
-  { id: 'CONTR-002', type: 'Réservation', parcelId: 'TH015', userName: 'Client B', date: '2025-04-20', status: 'En attente signature' },
-];
+import { supabase } from '@/lib/supabaseClient';
 
 const AdminContractsPage = () => {
-  // toast remplacé par window.safeGlobalToast 
+  // toast remplacé par window.safeGlobalToast
   const [contracts, setContracts] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setContracts(initialSampleContracts);
-      setLoading(false);
-    }, 500);
-    return () => clearTimeout(timer);
+    let active = true;
+    const loadContracts = async () => {
+      try {
+        // Chargement RÉEL depuis Supabase (table `contracts`).
+        // Défensif : si la table n'existe pas encore, on reste sur une liste vide.
+        const { data, error } = await supabase
+          .from('contracts')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setContracts(data || []);
+      } catch (err) {
+        console.warn('Contrats indisponibles (table absente ?) :', err?.message);
+        if (active) setContracts([]);
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+    loadContracts();
+    return () => { active = false; };
   }, []);
 
   const generatePdf = (contract) => {

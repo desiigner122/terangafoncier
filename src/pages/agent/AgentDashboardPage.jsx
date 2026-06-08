@@ -127,48 +127,7 @@ const AgentDashboardPage = () => {
   });
 
   // Pipeline et activités client
-  const [clientActivities, setClientActivities] = useState([
-    {
-      id: 1,
-      type: 'meeting',
-      title: 'RDV client Villa Almadies',
-      clientName: 'M. Diallo',
-      property: 'Villa 4 pièces - 180M FCFA',
-      time: 'Aujourd\'hui 15h',
-      status: 'scheduled',
-      priority: 'high'
-    },
-    {
-      id: 2,
-      type: 'visit',
-      title: 'Visite guidée Appartement',
-      clientName: 'Mme. Fall',
-      property: 'App 3 pièces Plateau - 95M FCFA',
-      time: 'Demain 10h',
-      status: 'confirmed',
-      priority: 'medium'
-    },
-    {
-      id: 3,
-      type: 'negotiation',
-      title: 'Négociation en cours',
-      clientName: 'SCI Teranga',
-      property: 'Bureau commercial - 250M FCFA',
-      time: 'Il y a 2h',
-      status: 'in_progress',
-      priority: 'high'
-    },
-    {
-      id: 4,
-      type: 'followup',
-      title: 'Suivi post-visite',
-      clientName: 'M. Niang',
-      property: 'Terrain Yoff - 45M FCFA',
-      time: 'Il y a 1 jour',
-      status: 'pending',
-      priority: 'medium'
-    }
-  ]);
+  const [clientActivities, setClientActivities] = useState([]); // démo retirée
 
   // KPI Data
   const kpiData = [

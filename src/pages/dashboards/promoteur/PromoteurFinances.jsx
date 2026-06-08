@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,72 +51,22 @@ const PromoteurFinances = () => {
   };
 
   // Revenus par projet
-  const projectRevenues = [
-    {
-      id: 1,
-      name: 'Résidence Teranga',
-      totalBudget: 2800000000,
-      revenue: 1530000000,
-      costs: 2100000000,
-      profit: -570000000,
-      profitMargin: -37.25,
-      unitsTotal: 24,
-      unitsSold: 18,
-      averagePrice: 85000000,
-      status: 'En cours',
-      completion: 75,
-      expectedCompletion: '2025-06-30',
-      riskLevel: 'Moyen'
-    },
-    {
-      id: 2,
-      name: 'Villa Duplex Mermoz',
-      totalBudget: 180000000,
-      revenue: 390000000,
-      costs: 172000000,
-      profit: 218000000,
-      profitMargin: 55.9,
-      unitsTotal: 8,
-      unitsSold: 6,
-      averagePrice: 65000000,
-      status: 'Terminé',
-      completion: 100,
-      completedDate: '2024-11-30',
-      riskLevel: 'Faible'
-    },
-    {
-      id: 3,
-      name: 'Appartements VDN',
-      totalBudget: 5200000000,
-      revenue: 540000000,
-      costs: 2340000000,
-      profit: -1800000000,
-      profitMargin: -333.33,
-      unitsTotal: 36,
-      unitsSold: 12,
-      averagePrice: 45000000,
-      status: 'En cours',
-      completion: 45,
-      expectedCompletion: '2025-12-15',
-      riskLevel: 'Élevé'
-    },
-    {
-      id: 4,
-      name: 'Entrepôt Logistics',
-      totalBudget: 1800000000,
-      revenue: 0,
-      costs: 630000000,
-      profit: -630000000,
-      profitMargin: 0,
-      unitsTotal: 1,
-      unitsSold: 0,
-      averagePrice: 1800000000,
-      status: 'En cours',
-      completion: 35,
-      expectedCompletion: '2025-08-30',
-      riskLevel: 'Élevé'
-    }
-  ];
+  // projectRevenues RÉEL depuis Supabase (aucune donnée fictive)
+  const [projectRevenues, setProjectRevenues] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('developer_projects').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setProjectRevenues(data || []);
+      } catch (err) {
+        console.warn('projectRevenues indisponible:', err?.message);
+        if (active) setProjectRevenues([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Flux de trésorerie mensuel
   const cashFlowData = [
@@ -193,38 +144,7 @@ const PromoteurFinances = () => {
   ];
 
   // Créances et dettes
-  const receivables = [
-    {
-      id: 1,
-      client: 'Moussa Ba',
-      project: 'Résidence Teranga',
-      amount: 45000000,
-      dueDate: '2024-12-20',
-      status: 'En retard',
-      daysPastDue: 5,
-      type: 'Acompte'
-    },
-    {
-      id: 2,
-      client: 'Aminata Diop',
-      project: 'Villa Duplex Mermoz',
-      amount: 32500000,
-      dueDate: '2024-12-25',
-      status: 'À venir',
-      daysPastDue: 0,
-      type: 'Solde final'
-    },
-    {
-      id: 3,
-      client: 'Société IMMO Plus',
-      project: 'Appartements VDN',
-      amount: 135000000,
-      dueDate: '2025-01-15',
-      status: 'À venir',
-      daysPastDue: 0,
-      type: 'Paiement échelonné'
-    }
-  ];
+  const receivables = []; // démo retirée
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
@@ -136,156 +137,18 @@ const NotaireCommunication = ({ dashboardStats }) => {
   });
 
   // Conversations tripartites (Notaire-Banque-Client)
-  const [conversations, setConversations] = useState([
-    {
-      id: 'conv-1',
-      type: 'Tripartite',
-      participants: [
-        { name: 'Amadou Diallo', role: 'Client', avatar: 'AD' },
-        { name: 'Mme Fatou Sarr', role: 'Conseiller Banque Atlantique', avatar: 'FS' },
-        { name: 'Me Ousmane Kane', role: 'Notaire', avatar: 'OK' }
-      ],
-      subject: 'Finalisation Achat Terrain Almadies',
-      lastMessage: 'Les documents sont prêts pour la signature définitive',
-      timestamp: '10:30',
-      unread: 2,
-      priority: 'Haute',
-      status: 'Signature en cours',
-      transactionValue: '85M FCFA',
-      dossierRef: 'NOT-2024-015',
-      creditRef: 'CRED-2024-015',
-      location: 'Almadies, Dakar',
-      stage: 'Signature',
-      progress: 90
-    },
-    {
-      id: 'conv-2',
-      type: 'Banque-Client',
-      participants: [
-        { name: 'SENEGAL INVEST', role: 'Client Entreprise', avatar: 'SI' },
-        { name: 'M. Omar Ba', role: 'Directeur CBAO', avatar: 'OB' },
-        { name: 'Me Ousmane Kane', role: 'Notaire', avatar: 'OK' }
-      ],
-      subject: 'Acquisition Villa Mermoz - Validation Documents',
-      lastMessage: 'Expertise technique validée, crédit approuvé sous conditions',
-      timestamp: '09:15',
-      unread: 0,
-      priority: 'Moyenne',
-      status: 'Validation banque',
-      transactionValue: '120M FCFA',
-      dossierRef: 'NOT-2024-012',
-      creditRef: 'CBAO-2024-008',
-      location: 'Mermoz, Dakar',
-      stage: 'Validation',
-      progress: 75
-    },
-    {
-      id: 'conv-3',
-      type: 'Client Direct',
-      participants: [
-        { name: 'Moussa Thiam', role: 'Primo-accédant', avatar: 'MT' },
-        { name: 'Me Ousmane Kane', role: 'Notaire', avatar: 'OK' }
-      ],
-      subject: 'Premier Achat - Accompagnement Complet',
-      lastMessage: 'Rendez-vous avec UBA programmé pour demain',
-      timestamp: '08:45',
-      unread: 1,
-      priority: 'Normale',
-      status: 'Accompagnement',
-      transactionValue: '95M FCFA',
-      dossierRef: 'NOT-2024-018',
-      creditRef: 'En attente',
-      location: 'Plateau, Dakar',
-      stage: 'Constitution dossier',
-      progress: 40
-    }
-  ]);
-
-  // Messages avec contexte notarial
-  const [messages, setMessages] = useState({
-    'conv-1': [
-      {
-        id: 1,
-        sender: 'Amadou Diallo',
-        role: 'Client',
-        text: 'Bonjour, quand pouvons-nous procéder à la signature définitive ?',
-        timestamp: '09:30',
-        type: 'text',
-        isNotaire: false
-      },
-      {
-        id: 2,
-        sender: 'Mme Fatou Sarr',
-        role: 'Banque Atlantique',
-        text: 'Le déblocage des fonds est confirmé. Tous les documents bancaires sont prêts.',
-        timestamp: '09:35',
-        type: 'text',
-        isNotaire: false,
-        attachments: ['Accord_Credit_Final.pdf', 'Conditions_Deblocage.pdf']
-      },
-      {
-        id: 3,
-        sender: 'Me Ousmane Kane',
-        role: 'Notaire',
-        text: 'Parfait ! J\'ai préparé l\'acte authentique. Nous pouvons programmer la signature pour vendredi 14h.',
-        timestamp: '09:40',
-        type: 'text',
-        isNotaire: true
-      },
-      {
-        id: 4,
-        sender: 'Me Ousmane Kane',
-        role: 'Notaire',
-        text: 'Voici le projet d\'acte pour validation avant signature.',
-        timestamp: '10:15',
-        type: 'document',
-        isNotaire: true,
-        attachments: ['Projet_Acte_Authentique.pdf'],
-        documentType: 'Acte authentique'
-      },
-      {
-        id: 5,
-        sender: 'Amadou Diallo',
-        role: 'Client',
-        text: 'Document validé. Confirmo pour vendredi 14h. Merci pour l\'accompagnement !',
-        timestamp: '10:30',
-        type: 'text',
-        isNotaire: false
-      }
-    ]
-  });
-
-  // Templates de communication notariale
-  const [messageTemplates, setMessageTemplates] = useState([
-    {
-      id: 'signature_ready',
-      name: 'Signature Prête',
-      category: 'Actes',
-      content: 'L\'acte authentique est finalisé. Nous pouvons programmer la signature. Merci de confirmer votre disponibilité.',
-      usageCount: 45
-    },
-    {
-      id: 'documents_needed',
-      name: 'Documents Manquants',
-      category: 'Documentation',
-      content: 'Pour finaliser le dossier, nous avons besoin des pièces suivantes : [Liste des documents]. Merci de les transmettre au plus tôt.',
-      usageCount: 32
-    },
-    {
-      id: 'bank_validation',
-      name: 'Validation Bancaire',
-      category: 'Banque',
-      content: 'Le dossier a été transmis à la banque pour validation. Le conseiller vous contactera sous 48h pour la suite de la procédure.',
-      usageCount: 28
-    },
-    {
-      id: 'completion',
-      name: 'Transaction Finalisée',
-      category: 'Clôture',
-      content: 'Félicitations ! La transaction est officiellement finalisée. Les clés vous seront remises selon les modalités convenues.',
-      usageCount: 67
-    }
-  ]);
+  const [conversations, setConversations] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setConversations(data || []);
+      } catch (err) { if (active) setConversations([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {

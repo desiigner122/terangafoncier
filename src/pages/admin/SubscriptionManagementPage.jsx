@@ -29,6 +29,7 @@ import {
   Eye
 } from 'lucide-react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
 
 const SubscriptionManagementPage = () => {
   const [subscriptions, setSubscriptions] = useState([]);
@@ -53,149 +54,65 @@ const SubscriptionManagementPage = () => {
     status: 'active'
   });
 
-  // Données de démonstration pour les plans d'abonnement
-  const mockPlans = [
-    {
-      id: 1,
-      name: 'Particulier Basic',
-      description: 'Plan de base pour les particuliers',
-      price: 15000,
-      currency: 'XOF',
-      duration_months: 12,
-      max_properties: 5,
-      max_images_per_property: 10,
-      priority_support: false,
-      featured_listings: false,
-      analytics_access: false,
-      api_access: false,
-      custom_branding: false,
-      status: 'active',
-      subscribers_count: 245,
-      created_at: '2024-01-15'
-    },
-    {
-      id: 2,
-      name: 'Vendeur Pro',
-      description: 'Plan professionnel pour les vendeurs réguliers',
-      price: 45000,
-      currency: 'XOF',
-      duration_months: 12,
-      max_properties: 25,
-      max_images_per_property: 30,
-      priority_support: true,
-      featured_listings: true,
-      analytics_access: true,
-      api_access: false,
-      custom_branding: false,
-      status: 'active',
-      subscribers_count: 89,
-      created_at: '2024-01-15'
-    },
-    {
-      id: 3,
-      name: 'Promoteur Premium',
-      description: 'Plan premium pour les promoteurs immobiliers',
-      price: 125000,
-      currency: 'XOF',
-      duration_months: 12,
-      max_properties: 100,
-      max_images_per_property: 50,
-      priority_support: true,
-      featured_listings: true,
-      analytics_access: true,
-      api_access: true,
-      custom_branding: true,
-      status: 'active',
-      subscribers_count: 34,
-      created_at: '2024-01-15'
-    },
-    {
-      id: 4,
-      name: 'Agent Foncier',
-      description: 'Plan spécialisé pour les agents fonciers',
-      price: 75000,
-      currency: 'XOF',
-      duration_months: 12,
-      max_properties: 50,
-      max_images_per_property: 40,
-      priority_support: true,
-      featured_listings: true,
-      analytics_access: true,
-      api_access: true,
-      custom_branding: false,
-      status: 'active',
-      subscribers_count: 156,
-      created_at: '2024-01-15'
-    }
-  ];
+  // Chargement RÉEL des plans et des abonnements depuis Supabase
+  const loadSubscriptionData = async () => {
+    try {
+      setLoading(true);
 
-  // Données de démonstration pour les abonnements utilisateurs
-  const mockUserSubscriptions = [
-    {
-      id: 1,
-      user_id: 101,
-      plan_id: 2,
-      user_name: 'Amadou Diallo',
-      user_email: 'amadou.diallo@email.com',
-      plan_name: 'Vendeur Pro',
-      status: 'active',
-      start_date: '2024-09-01',
-      end_date: '2025-09-01',
-      auto_renew: true,
-      last_payment: '2024-09-01',
-      amount_paid: 45000
-    },
-    {
-      id: 2,
-      user_id: 102,
-      plan_id: 3,
-      user_name: 'Fatou Sall',
-      user_email: 'fatou.sall@email.com',
-      plan_name: 'Promoteur Premium',
-      status: 'active',
-      start_date: '2024-08-15',
-      end_date: '2025-08-15',
-      auto_renew: true,
-      last_payment: '2024-08-15',
-      amount_paid: 125000
-    },
-    {
-      id: 3,
-      user_id: 103,
-      plan_id: 1,
-      user_name: 'Ousmane Ba',
-      user_email: 'ousmane.ba@email.com',
-      plan_name: 'Particulier Basic',
-      status: 'expired',
-      start_date: '2024-01-01',
-      end_date: '2024-12-31',
-      auto_renew: false,
-      last_payment: '2024-01-01',
-      amount_paid: 15000
+      // Plans d'abonnement
+      const { data: plans, error: plansError } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .order('price', { ascending: true });
+      if (plansError) throw plansError;
+
+      // Abonnements utilisateurs + infos profil
+      const { data: subs, error: subsError } = await supabase
+        .from('user_subscriptions')
+        .select('*, profiles:user_id(full_name, email), subscription_plans:plan_id(name, price)')
+        .order('created_at', { ascending: false });
+      if (subsError) throw subsError;
+
+      setSubscriptions(plans || []);
+      setUserSubscriptions(
+        (subs || []).map((s) => ({
+          ...s,
+          user_name: s.profiles?.full_name || '',
+          user_email: s.profiles?.email || '',
+          plan_name: s.subscription_plans?.name || '',
+          amount_paid: s.amount_paid ?? s.subscription_plans?.price ?? 0
+        }))
+      );
+    } catch (error) {
+      console.error('Erreur chargement abonnements:', error);
+      setSubscriptions([]);
+      setUserSubscriptions([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
   useEffect(() => {
-    // Simuler le chargement des données
-    setTimeout(() => {
-      setSubscriptions(mockPlans);
-      setUserSubscriptions(mockUserSubscriptions);
-      setLoading(false);
-    }, 1000);
+    loadSubscriptionData();
   }, []);
 
   const handleCreatePlan = async () => {
     try {
-      // TODO: Intégrer avec l'API backend
-      const newPlanWithId = {
+      // Création RÉELLE du plan dans Supabase
+      const payload = {
         ...newPlan,
-        id: Date.now(),
-        subscribers_count: 0,
-        created_at: new Date().toISOString().split('T')[0],
-        currency: 'XOF'
+        price: parseFloat(newPlan.price) || 0,
+        currency: 'XOF',
+        status: newPlan.status || 'active'
       };
-      
-      setSubscriptions([...subscriptions, newPlanWithId]);
+      const { data, error } = await supabase
+        .from('subscription_plans')
+        .insert(payload)
+        .select()
+        .single();
+      if (error) throw error;
+
+      setSubscriptions([...subscriptions, data]);
       setIsAddingPlan(false);
       setNewPlan({
         name: '',

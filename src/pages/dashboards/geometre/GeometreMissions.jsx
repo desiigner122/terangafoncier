@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Target,
@@ -30,72 +31,22 @@ const GeometreMissions = () => {
   const [activeTab, setActiveTab] = useState('all');
 
   // Données des missions
-  const missions = [
-    {
-      id: 1,
-      title: "Levé topographique complet",
-      client: "Amadou Diallo",
-      location: "Rufisque, Sénégal",
-      type: "Topographie",
-      status: "En cours",
-      priority: "Haute",
-      deadline: "2025-01-15",
-      created: "2024-12-20",
-      surface: "2.5 ha",
-      progress: 75,
-      budget: "450,000 XOF",
-      coordinates: "14.7167° N, 17.4677° W",
-      description: "Levé topographique détaillé pour projet de construction résidentielle"
-    },
-    {
-      id: 2,
-      title: "Bornage terrain résidentiel",
-      client: "Fatou Sow",
-      location: "Dakar, Plateau",
-      type: "Bornage",
-      status: "En attente",
-      priority: "Moyenne",
-      deadline: "2025-01-20",
-      created: "2024-12-18",
-      surface: "800 m²",
-      progress: 0,
-      budget: "180,000 XOF",
-      coordinates: "14.6937° N, 17.4441° W",
-      description: "Délimitation précise des bornes de propriété"
-    },
-    {
-      id: 3,
-      title: "Levé cadastral zone industrielle",
-      client: "SARL Teranga Construction",
-      location: "Thiès",
-      type: "Cadastral",
-      status: "Terminé",
-      priority: "Haute",
-      deadline: "2025-01-10",
-      created: "2024-12-10",
-      surface: "15 ha",
-      progress: 100,
-      budget: "850,000 XOF",
-      coordinates: "14.7886° N, 16.9261° W",
-      description: "Levé cadastral pour zone d'expansion industrielle"
-    },
-    {
-      id: 4,
-      title: "Mise à jour plan parcellaire",
-      client: "Mairie de Guédiawaye",
-      location: "Guédiawaye",
-      type: "Mise à jour",
-      status: "En révision",
-      priority: "Moyenne",
-      deadline: "2025-01-25",
-      created: "2024-12-15",
-      surface: "5.2 ha",
-      progress: 90,
-      budget: "320,000 XOF",
-      coordinates: "14.7667° N, 17.4167° W",
-      description: "Actualisation du plan parcellaire suite aux nouveaux aménagements"
-    }
-  ];
+  // missions RÉEL depuis Supabase (aucune donnée fictive)
+  const [missions, setMissions] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('field_measurements').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setMissions(data || []);
+      } catch (err) {
+        console.warn('missions indisponible:', err?.message);
+        if (active) setMissions([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {

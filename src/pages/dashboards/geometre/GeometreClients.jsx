@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -37,130 +38,22 @@ const GeometreClients = () => {
   const [filterType, setFilterType] = useState('tous');
 
   // Données des clients
-  const clients = [
-    {
-      id: 1,
-      name: 'Société IMMOGO',
-      type: 'entreprise',
-      contact: 'M. Ibrahima Fall',
-      email: 'contact@immogo.sn',
-      phone: '+221 77 123 45 67',
-      address: 'Route de la Corniche, Almadies, Dakar',
-      status: 'actif',
-      rating: 4.8,
-      totalMissions: 12,
-      totalRevenue: '8,500,000 XOF',
-      lastMission: '2024-09-25',
-      avatar: null,
-      sector: 'Immobilier',
-      description: 'Promoteur immobilier spécialisé dans le résidentiel haut de gamme',
-      projects: [
-        { name: 'Résidence Almadies Bay', status: 'en_cours', value: '2,500,000 XOF' },
-        { name: 'Villa Les Palmiers', status: 'termine', value: '1,200,000 XOF' }
-      ]
-    },
-    {
-      id: 2,
-      name: 'M. Amadou Diallo',
-      type: 'particulier',
-      contact: 'Amadou Diallo',
-      email: 'amadou.diallo@gmail.com',
-      phone: '+221 76 987 65 43',
-      address: 'Cité Keur Gorgui, Rufisque',
-      status: 'actif',
-      rating: 4.5,
-      totalMissions: 3,
-      totalRevenue: '950,000 XOF',
-      lastMission: '2024-09-15',
-      avatar: null,
-      sector: 'Particulier',
-      description: 'Propriétaire terrain résidentiel',
-      projects: [
-        { name: 'Bornage terrain résidentiel', status: 'en_cours', value: '320,000 XOF' }
-      ]
-    },
-    {
-      id: 3,
-      name: 'Ministère de l\'Industrie',
-      type: 'administration',
-      contact: 'Direction de l\'Aménagement',
-      email: 'amenagement@industrie.gouv.sn',
-      phone: '+221 33 824 56 78',
-      address: 'Building Administratif, Plateau, Dakar',
-      status: 'actif',
-      rating: 4.9,
-      totalMissions: 8,
-      totalRevenue: '15,200,000 XOF',
-      lastMission: '2024-09-30',
-      avatar: null,
-      sector: 'Administration',
-      description: 'Institution gouvernementale - projets d\'infrastructure',
-      projects: [
-        { name: 'Zone industrielle Bargny', status: 'en_cours', value: '3,500,000 XOF' },
-        { name: 'Cartographie Thiès', status: 'termine', value: '2,100,000 XOF' }
-      ]
-    },
-    {
-      id: 4,
-      name: 'Coopérative Agricole Thiès',
-      type: 'cooperative',
-      contact: 'M. Ousmane Sarr',
-      email: 'coop.thies@agriculture.sn',
-      phone: '+221 77 456 78 90',
-      address: 'Centre ville, Thiès',
-      status: 'actif',
-      rating: 4.2,
-      totalMissions: 5,
-      totalRevenue: '1,850,000 XOF',
-      lastMission: '2024-08-20',
-      avatar: null,
-      sector: 'Agriculture',
-      description: 'Coopérative agricole - délimitation parcelles',
-      projects: [
-        { name: 'Parcelles rizicoles Kaolack', status: 'planifie', value: '450,000 XOF' }
-      ]
-    },
-    {
-      id: 5,
-      name: 'Architecte Mbaye & Associates',
-      type: 'entreprise',
-      contact: 'Arch. Fatou Mbaye',
-      email: 'f.mbaye@archimbaye.sn',
-      phone: '+221 77 234 56 78',
-      address: 'Point E, Dakar',
-      status: 'actif',
-      rating: 4.7,
-      totalMissions: 7,
-      totalRevenue: '3,200,000 XOF',
-      lastMission: '2024-09-20',
-      avatar: null,     
-      sector: 'Architecture',
-      description: 'Cabinet d\'architecture - relevés de bâtiments',
-      projects: [
-        { name: 'Villa Sacré-Cœur', status: 'en_cours', value: '680,000 XOF' }
-      ]
-    },
-    {
-      id: 6,
-      name: 'Mme Aïssatou Ndiaye',
-      type: 'particulier',
-      contact: 'Aïssatou Ndiaye',
-      email: 'aissatou.ndiaye@yahoo.fr',
-      phone: '+221 76 345 67 89',
-      address: 'Liberté 6, Dakar',
-      status: 'inactif',
-      rating: 4.0,
-      totalMissions: 2,
-      totalRevenue: '480,000 XOF',
-      lastMission: '2024-06-15',
-      avatar: null,
-      sector: 'Particulier',
-      description: 'Propriétaire foncier',
-      projects: [
-        { name: 'Délimitation héritage familial', status: 'termine', value: '280,000 XOF' }
-      ]
-    }
-  ];
+  // clients RÉEL depuis Supabase (aucune donnée fictive)
+  const [clients, setClients] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setClients(data || []);
+      } catch (err) {
+        console.warn('clients indisponible:', err?.message);
+        if (active) setClients([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getClientTypeIcon = (type) => {
     switch (type) {

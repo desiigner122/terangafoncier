@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Zap, 
@@ -141,44 +142,18 @@ const MairieServicesDigitaux = ({ dashboardStats }) => {
   ]);
 
   // Activités récentes
-  const [recentActivities, setRecentActivities] = useState([
-    {
-      id: 1,
-      type: 'signature',
-      title: 'Document signé électroniquement',
-      user: 'M. Mamadou Seck',
-      document: 'Autorisation commerciale #AR-2024-045',
-      timestamp: '2024-01-20 14:30',
-      status: 'completed'
-    },
-    {
-      id: 2,
-      type: 'video_conference',
-      title: 'Réunion conseil municipal',
-      user: 'Équipe municipale',
-      document: 'Session du 20/01/2024',
-      timestamp: '2024-01-20 10:00',
-      status: 'completed'
-    },
-    {
-      id: 3,
-      type: 'document_processing',
-      title: 'Dématérialisation automatique',
-      user: 'Système IA',
-      document: 'Lot de 15 documents cadastraux',
-      timestamp: '2024-01-20 09:15',
-      status: 'processing'
-    },
-    {
-      id: 4,
-      type: 'e_service',
-      title: 'Demande télé-service',
-      user: 'Mme Fatou Diallo',
-      document: 'Certificat de résidence',
-      timestamp: '2024-01-19 16:45',
-      status: 'pending'
-    }
-  ]);
+  const [recentActivities, setRecentActivities] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('audit_logs').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setRecentActivities(data || []);
+      } catch (err) { if (active) setRecentActivities([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getServiceIcon = (category) => {
     switch (category) {

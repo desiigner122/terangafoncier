@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Mail, 
@@ -30,68 +31,18 @@ const InvestisseurMessages = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [loading, setLoading] = useState(true);
 
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      from: 'Maître Diop - Notaire',
-      subject: 'Validation de l\'acte de propriété - Terrain Almadies',
-      preview: 'Bonjour, je vous confirme que l\'acte de propriété pour votre investissement...',
-      timestamp: '2024-01-20T14:30:00Z',
-      read: false,
-      important: true,
-      attachments: 2,
-      type: 'legal',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 2,
-      from: 'Sarah Chen - Promoteur',
-      subject: 'Nouvelle opportunité - Résidence Premium Saly',
-      preview: 'Une opportunité exclusive vient de se présenter pour un projet résidentiel...',
-      timestamp: '2024-01-20T11:15:00Z',
-      read: false,
-      important: false,
-      attachments: 5,
-      type: 'opportunity',
-      avatar: 'https://images.unsplash.com/photo-1494790108755-2616b612b3db?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 3,
-      from: 'Mamadou Ba - Agent Foncier',
-      subject: 'Rapport d\'évaluation - Terrain Commercial Thiès',
-      preview: 'Veuillez trouver ci-joint le rapport d\'évaluation complet du terrain...',
-      timestamp: '2024-01-19T16:45:00Z',
-      read: true,
-      important: false,
-      attachments: 1,
-      type: 'report',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 4,
-      from: 'Banque Atlantique',
-      subject: 'Confirmation de financement approuvé',
-      preview: 'Nous avons le plaisir de vous informer que votre demande de financement...',
-      timestamp: '2024-01-19T09:20:00Z',
-      read: true,
-      important: true,
-      attachments: 0,
-      type: 'banking',
-      avatar: 'https://images.unsplash.com/photo-1560250097-0b93528c311a?w=150&h=150&fit=crop&crop=face'
-    },
-    {
-      id: 5,
-      from: 'Teranga Foncier - Support',
-      subject: 'Mise à jour de votre profil investisseur',
-      preview: 'Votre profil a été mis à jour avec succès. Découvrez les nouvelles fonctionnalités...',
-      timestamp: '2024-01-18T13:10:00Z',
-      read: true,
-      important: false,
-      attachments: 0,
-      type: 'system',
-      avatar: null
-    }
-  ]);
+  const [messages, setMessages] = useState([]); // RÉEL via Supabase
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setMessages(data || []);
+      } catch (err) { if (active) setMessages([]); }
+    })();
+    return () => { active = false; };
+  }, []);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 300);

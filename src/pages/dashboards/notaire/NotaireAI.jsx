@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Bot, 
@@ -175,18 +176,22 @@ const NotaireAI = () => {
   ];
 
   // Messages d'exemple pour le chat IA
-  const defaultChatMessages = [
-    {
-      role: 'user',
-      content: 'Analyse le document de vente immobilière pour Mme Diallo',
-      timestamp: '14:30'
-    },
-    {
-      role: 'assistant',
-      content: 'Document analysé avec succès. Voici les points clés identifiés:\n\n• Propriété: Villa 4 chambres, Almadies\n• Prix: 85M FCFA\n• Statut légal: Conforme\n• Documents requis: Titre foncier (✓), Certificat non-gage (⚠️ manquant)\n\nRecommandation: Demander le certificat de non-gage avant signature.',
-      timestamp: '14:31'
-    }
-  ];
+  // defaultChatMessages RÉEL depuis Supabase (aucune donnée fictive)
+  const [defaultChatMessages, setDefaultChatMessages] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setDefaultChatMessages(data || []);
+      } catch (err) {
+        console.warn('defaultChatMessages indisponible:', err?.message);
+        if (active) setDefaultChatMessages([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
 
 

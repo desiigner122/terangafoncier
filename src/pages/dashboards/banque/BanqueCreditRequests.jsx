@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -299,176 +300,22 @@ const BanqueCreditRequests = ({ dashboardStats = {} }) => {
   };
 
   // Données enrichies des demandes de crédit via plateforme Teranga Foncier
-  const creditRequests = [
-    {
-      id: 'CR-TER-2024-001',
-      applicantName: 'Mamadou FALL',
-      applicantPhone: '+221 77 123 45 67',
-      applicantEmail: 'mamadou.fall@email.com',
-      creditType: 'Crédit Terrain Résidentiel',
-      platformRef: 'TER-2024-001',
-      requestedAmount: 20000000,
-      propertyValue: 25000000,
-      ltvRatio: 80,
-      landLocation: 'Ouakam - Zone Résidentielle',
-      landArea: '500m²',
-      landTitle: 'TF-OUAKAM-457/2023',
-      zoning: 'Résidentiel R3',
-      purpose: 'Construction résidence familiale',
-      status: 'Pré-approuvé',
-      priority: 'Haute',
-      submissionDate: '2024-01-15',
-      expectedDecisionDate: '2024-02-10',
-      monthlyIncome: 850000,
-      creditScore: 785,
-      riskLevel: 'Faible',
-      documents: ['CNI', 'Bulletins salaire', 'Titre foncier', 'Accord plateforme', 'Plan cadastral'],
-      documentsComplete: 90,
-      comments: 'Terrain bien situé, transaction via plateforme Teranga',
-      advisorNotes: 'Client solvable, bon profil investisseur',
-      processingStage: 4, // sur 5 étapes
-      estimatedApprovalProbability: 92,
-      interestRate: 8.5,
-      proposedTerm: 180, // mois
-      monthlyPayment: 165000,
-      sellerInfo: {
-        name: 'Fatou DIOP',
-        verified: true,
-        rating: 4.8
-      },
-      platformMetrics: {
-        transactionFee: 125000,
-        escrowStatus: 'Active',
-        verificationLevel: 'Gold'
+  // creditRequests RÉEL depuis Supabase (aucune donnée fictive)
+  const [creditRequests, setCreditRequests] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('demandes_financement').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setCreditRequests(data || []);
+      } catch (err) {
+        console.warn('creditRequests indisponible:', err?.message);
+        if (active) setCreditRequests([]);
       }
-    },
-    {
-      id: 'CR-TER-2024-002',
-      applicantName: 'Société SENEGAL INVEST',
-      applicantPhone: '+221 33 821 45 67',
-      applicantEmail: 'contact@senegalinvest.com',
-      creditType: 'Crédit Terrain Commercial',
-      platformRef: 'TER-2024-002',
-      requestedAmount: 96000000,
-      propertyValue: 120000000,
-      ltvRatio: 80,
-      landLocation: 'Avenue Lamine Guèye, Plateau',
-      landArea: '800m²',
-      landTitle: 'TF-PLATEAU-123/2023',
-      zoning: 'Commercial C2',
-      purpose: 'Développement projet commercial',
-      status: 'En Attente Documents',
-      priority: 'Moyenne',
-      submissionDate: '2024-01-18',
-      expectedDecisionDate: '2024-02-15',
-      monthlyIncome: 2500000,
-      creditScore: 720,
-      riskLevel: 'Moyen',
-      documents: ['Registre commerce', 'Bilan comptable', 'Accord plateforme', 'Étude de marché'],
-      documentsComplete: 75,
-      comments: 'En attente conformité urbaine',
-      advisorNotes: 'Société établie, bon historique commercial',
-      processingStage: 2,
-      estimatedApprovalProbability: 78,
-      interestRate: 9.2,
-      proposedTerm: 240,
-      monthlyPayment: 850000,
-      sellerInfo: {
-        name: 'Ibrahima SARR',
-        verified: true,
-        rating: 4.6
-      },
-      platformMetrics: {
-        transactionFee: 600000,
-        escrowStatus: 'Pending',
-        verificationLevel: 'Silver'
-      }
-    },
-    {
-      id: 'CR-TER-2024-003',
-      applicantName: 'Fatou MBAYE',
-      applicantPhone: '+221 76 987 65 43',
-      applicantEmail: 'fatou.mbaye@email.com',
-      creditType: 'Crédit Terrain Résidentiel',
-      platformRef: 'TER-2024-003',
-      requestedAmount: 15000000,
-      propertyValue: 18750000,
-      ltvRatio: 80,
-      landLocation: 'Parcelles Assainies U15',
-      landArea: '300m²',
-      landTitle: 'TF-PA-789/2023',
-      zoning: 'Résidentiel R2',
-      purpose: 'Première acquisition immobilière',
-      status: 'Approuvé',
-      priority: 'Normale',
-      submissionDate: '2024-01-25',
-      expectedDecisionDate: '2024-02-18',
-      monthlyIncome: 550000,
-      creditScore: 745,
-      riskLevel: 'Faible',
-      documents: ['CNI', 'Bulletins salaire', 'Titre foncier', 'Accord plateforme'],
-      documentsComplete: 100,
-      comments: 'Primo-accédant, profil stable',
-      advisorNotes: 'Excellente capacité de remboursement',
-      processingStage: 5,
-      estimatedApprovalProbability: 95,
-      interestRate: 8.2,
-      proposedTerm: 180,
-      monthlyPayment: 125000,
-      sellerInfo: {
-        name: 'Moussa THIAM',
-        verified: true,
-        rating: 4.9
-      },
-      platformMetrics: {
-        transactionFee: 93750,
-        escrowStatus: 'Completed',
-        verificationLevel: 'Gold'
-      }
-    },
-    {
-      id: 'CR-TER-2024-004',
-      applicantName: 'Dr. Awa SECK',
-      applicantPhone: '+221 78 456 32 10',
-      applicantEmail: 'awa.seck@hospital.sn',
-      creditType: 'Crédit Construction',
-      platformRef: 'TER-2024-004',
-      requestedAmount: 45000000,
-      propertyValue: 56250000,
-      ltvRatio: 80,
-      landLocation: 'Almadies - Zone 3',
-      landArea: '600m²',
-      landTitle: 'TF-ALM-345/2023',
-      zoning: 'Résidentiel R4',
-      purpose: 'Construction villa moderne',
-      status: 'En Évaluation',
-      priority: 'Haute',
-      submissionDate: '2024-01-30',
-      expectedDecisionDate: '2024-02-20',
-      monthlyIncome: 1200000,
-      creditScore: 812,
-      riskLevel: 'Très Faible',
-      documents: ['CNI', 'Bulletins salaire', 'Permis construire', 'Plans architecte', 'Devis travaux'],
-      documentsComplete: 85,
-      comments: 'Médecin établi, projet de qualité',
-      advisorNotes: 'Profil premium, revenus stables',
-      processingStage: 3,
-      estimatedApprovalProbability: 89,
-      interestRate: 7.8,
-      proposedTerm: 240,
-      monthlyPayment: 385000,
-      sellerInfo: {
-        name: 'SARL TERANGA CONSTRUCTION',
-        verified: true,
-        rating: 4.7
-      },
-      platformMetrics: {
-        transactionFee: 281250,
-        escrowStatus: 'Active',
-        verificationLevel: 'Platinum'
-      }
-    }
-  ];
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {

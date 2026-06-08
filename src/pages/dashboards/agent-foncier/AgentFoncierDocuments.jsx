@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -57,128 +58,22 @@ const AgentFoncierDocuments = () => {
     setTimeout(() => setLoading(false), 800);
   }, []);
 
-  const documents = [
-    {
-      id: 1,
-      nom: 'Titre Foncier TF-2024-001',
-      type: 'Titre Foncier',
-      format: 'PDF',
-      taille: '2.4 MB',
-      client: 'M. Amadou Diallo',
-      statut: 'validé',
-      date: '15/09/2024',
-      dateModification: '16/09/2024',
-      location: 'Almadies, Dakar',
-      priority: 'haute',
-      tags: ['Urgent', 'Résidentiel', 'VIP'],
-      version: '1.2',
-      commentaires: 3,
-      partage: ['admin@teranga.com', 'client@example.com'],
-      signature: true,
-      blockchain: true,
-      description: 'Titre de propriété pour terrain résidentiel aux Almadies'
-    },
-    {
-      id: 2,
-      nom: 'Acte de Vente AV-2024-012',
-      type: 'Acte de Vente',
-      format: 'PDF',
-      taille: '1.8 MB',
-      client: 'Société IMMOGO',
-      statut: 'en_cours',
-      date: '20/09/2024',
-      dateModification: '24/09/2024',
-      location: 'Parcelles Assainies',
-      priority: 'moyenne',
-      tags: ['Commercial', 'Société'],
-      version: '2.1',
-      commentaires: 7,
-      partage: ['legal@immogo.com'],
-      signature: false,
-      blockchain: false,
-      description: 'Acte de vente pour complexe commercial'
-    },
-    {
-      id: 3,
-      nom: 'Permis de Construire PC-2024-089',
-      type: 'Permis de Construire',
-      format: 'PDF',
-      taille: '3.2 MB',
-      client: 'M. Cheikh Ba',
-      statut: 'en_attente',
-      date: '18/09/2024',
-      dateModification: '22/09/2024',
-      location: 'Rufisque',
-      priority: 'moyenne',
-      tags: ['Construction', 'Permis'],
-      version: '1.0',
-      commentaires: 2,
-      partage: [],
-      signature: false,
-      blockchain: true,
-      description: 'Permis pour construction villa familiale'
-    },
-    {
-      id: 4,
-      nom: 'Rapport d\'Expertise RE-2024-156',
-      type: 'Rapport d\'Expertise',
-      format: 'DOCX',
-      taille: '4.1 MB',
-      client: 'Banque Atlantique',
-      statut: 'validé',
-      date: '12/09/2024',
-      dateModification: '12/09/2024',
-      location: 'Thiès',
-      priority: 'haute',
-      tags: ['Banque', 'Expertise', 'Hypothèque'],
-      version: '3.0',
-      commentaires: 12,
-      partage: ['credit@atlantique.sn', 'risk@atlantique.sn'],
-      signature: true,
-      blockchain: true,
-      description: 'Expertise pour crédit hypothécaire'
-    },
-    {
-      id: 5,
-      nom: 'Plan Cadastral PL-2024-203',
-      type: 'Plan Cadastral',
-      format: 'DWG',
-      taille: '8.7 MB',
-      client: 'Ministère de l\'Urbanisme',
-      statut: 'validé',
-      date: '10/09/2024',
-      dateModification: '11/09/2024',
-      location: 'Dakar Plateau',
-      priority: 'haute',
-      tags: ['Gouvernement', 'Cadastre', 'Officiel'],
-      version: '1.0',
-      commentaires: 1,
-      partage: ['cadastre@urbanisme.gov.sn'],
-      signature: true,
-      blockchain: true,
-      description: 'Plan cadastral officiel zone administrative'
-    },
-    {
-      id: 6,
-      nom: 'Certificat de Conformité CC-2024-078',
-      type: 'Certificat de Conformité', 
-      format: 'PDF',
-      taille: '1.2 MB',
-      client: 'Green Development SARL',
-      statut: 'expiré',
-      date: '05/09/2024',
-      dateModification: '05/09/2024',
-      location: 'Saly',
-      priority: 'faible',
-      tags: ['Environnement', 'Conformité'],
-      version: '1.0',
-      commentaires: 0,
-      partage: [],
-      signature: false,
-      blockchain: false,
-      description: 'Certificat conformité environnementale'
-    }
-  ];
+  // documents RÉEL depuis Supabase (aucune donnée fictive)
+  const [documents, setDocuments] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('documents').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setDocuments(data || []);
+      } catch (err) {
+        console.warn('documents indisponible:', err?.message);
+        if (active) setDocuments([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const folders = [
     {

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Map,
@@ -293,74 +294,22 @@ const MairieCadastre = ({ dashboardStats }) => {
   const [filterZone, setFilterZone] = useState('all');
 
   // Données cadastrales
-  const cadastralParcels = [
-    {
-      id: 'CAD-2024-001',
-      parcelNumber: 'P-154/2024',
-      title: 'TF 5647/R',
-      area: '1200m²',
-      zone: 'Zone Résidentielle Nord',
-      owner: 'Amadou Diallo',
-      ownerType: 'Privé',
-      status: 'Régularisé',
-      lastSurvey: '2024-01-15',
-      coordinates: {
-        lat: 14.6937,
-        lng: -17.4441
-      },
-      boundaries: 'Délimitées par bornes',
-      landUse: 'Résidentiel',
-      restrictions: ['Servitude passage', 'Zone non aedificandi'],
-      value: '85M FCFA',
-      taxStatus: 'À jour',
-      blockchainHash: '0x7a8b9c...def456',
-      nftStatus: 'Tokenisé'
-    },
-    {
-      id: 'CAD-2024-002',
-      parcelNumber: 'P-289/2024',
-      title: 'TF 3421/R',
-      area: '800m²',
-      zone: 'Zone Commerciale Centre',
-      owner: 'Fatou Seck Entreprise',
-      ownerType: 'Entreprise',
-      status: 'En Révision',
-      lastSurvey: '2023-12-20',
-      coordinates: {
-        lat: 14.6955,
-        lng: -17.4425
-      },
-      boundaries: 'En cours de bornage',
-      landUse: 'Commercial',
-      restrictions: ['Hauteur limitée', 'Parking obligatoire'],
-      value: '120M FCFA',
-      taxStatus: 'En attente',
-      blockchainHash: '0x2f3e4d...abc123',
-      nftStatus: 'En cours'
-    },
-    {
-      id: 'CAD-2024-003',
-      parcelNumber: 'P-067/2024',
-      title: 'TF 8934/R',
-      area: '2500m²',
-      zone: 'Zone Agricole Est',
-      owner: 'Coopérative Agricole',
-      ownerType: 'Coopérative',
-      status: 'Régularisé',
-      lastSurvey: '2024-01-10',
-      coordinates: {
-        lat: 14.6882,
-        lng: -17.4387
-      },
-      boundaries: 'Délimitées par bornes',
-      landUse: 'Agricole',
-      restrictions: ['Protection sols', 'Usage agricole exclusif'],
-      value: '45M FCFA',
-      taxStatus: 'Exonéré',
-      blockchainHash: '0x9g8h7i...789xyz',
-      nftStatus: 'Tokenisé'
-    }
-  ];
+  // cadastralParcels RÉEL depuis Supabase (aucune donnée fictive)
+  const [cadastralParcels, setCadastralParcels] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setCadastralParcels(data || []);
+      } catch (err) {
+        console.warn('cadastralParcels indisponible:', err?.message);
+        if (active) setCadastralParcels([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Données des zones cadastrales
   const cadastralZones = [

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Ruler, 
@@ -45,170 +46,22 @@ const GeometreMesures = () => {
   const [statusFilter, setStatusFilter] = useState('tous');
 
   // Données des mesures
-  const mesures = [
-    {
-      id: 1,
-      title: 'Levé GPS - Parcelle A127',
-      type: 'gps',
-      status: 'complete',
-      date: '2024-09-25',
-      location: 'Almadies, Dakar',
-      superficie: '2.5 ha',
-      precision: '±2 cm',
-      points: 45,
-      client: 'Société IMMOGO',
-      coordinates: {
-        lat: 14.7167,
-        lng: -17.4677
-      },
-      equipment: 'GPS RTK Trimble R12',
-      operator: 'Géomètre Principal',
-      temperature: '28°C',
-      humidity: '65%',
-      icon: Satellite,
-      results: {
-        perimeter: '675.8 m',
-        area: '25,247 m²',
-        northing: '1,554,123.45',
-        easting: '234,567.89'
+  // mesures RÉEL depuis Supabase (aucune donnée fictive)
+  const [mesures, setMesures] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('field_measurements').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setMesures(data || []);
+      } catch (err) {
+        console.warn('mesures indisponible:', err?.message);
+        if (active) setMesures([]);
       }
-    },
-    {
-      id: 2,
-      title: 'Mesure Station Totale - Bornage Rufisque',
-      type: 'station_totale',
-      status: 'en_cours',
-      date: '2024-10-01',
-      location: 'Rufisque',
-      superficie: '800 m²',
-      precision: '±1 mm',
-      points: 28,
-      client: 'M. Amadou Diallo',
-      coordinates: {
-        lat: 14.7197,
-        lng: -17.2658
-      },
-      equipment: 'Station Totale Leica TS16',
-      operator: 'Assistant Géomètre',
-      temperature: '26°C',
-      humidity: '70%',
-      icon: Compass,
-      results: {
-        perimeter: '112.5 m',
-        area: '847 m²',
-        northing: '1,554,890.12',
-        easting: '235,123.45'
-      }
-    },
-    {
-      id: 3,
-      title: 'Nivellement - Zone Industrielle Thiès',
-      type: 'nivellement',
-      status: 'planifie',
-      date: '2024-10-05',
-      location: 'Thiès',
-      superficie: '15 ha',
-      precision: '±5 mm',
-      points: 120,
-      client: 'Ministère Industrie',
-      coordinates: {
-        lat: 14.7889,
-        lng: -16.9250
-      },
-      equipment: 'Niveau Électronique Leica DNA03',
-      operator: 'Géomètre Principal',
-      temperature: '25°C',
-      humidity: '60%',
-      icon: Ruler,
-      results: {
-        denivele_max: '12.5 m',
-        denivele_min: '2.1 m',
-        pente_moyenne: '3.2%',
-        volume_remblai: '15,250 m³'
-      }
-    },
-    {
-      id: 4,
-      title: 'Mesure Drone - Cartographie Bargny',
-      type: 'drone',
-      status: 'en_cours',
-      date: '2024-09-30',
-      location: 'Bargny',
-      superficie: '25 ha',
-      precision: '±3 cm',
-      points: 8500,
-      client: 'Ministère Industrie',
-      coordinates: {  
-        lat: 14.6928,
-        lng: -17.0547
-      },
-      equipment: 'Drone DJI Phantom 4 RTK',
-      operator: 'Pilote Drone Certifié',
-      temperature: '29°C',
-      humidity: '75%',
-      icon: Camera,
-      results: {
-        photos_prises: '450',
-        resolution: '2.5 cm/px',
-        couverture: '100%',
-        modele_3d: 'Généré'
-      }
-    },
-    {
-      id: 5,
-      title: 'Polygonation - Lotissement Kaolack',
-      type: 'polygonation',
-      status: 'complete',
-      date: '2024-09-20',
-      location: 'Kaolack',
-      superficie: '5.2 ha',
-      precision: '±1 cm',
-      points: 65,
-      client: 'Coopérative Agricole',
-      coordinates: {
-        lat: 14.1516,
-        lng: -16.0729
-      },
-      equipment: 'GPS RTK + Station Totale',
-      operator: 'Équipe Complète',
-      temperature: '31°C',
-      humidity: '68%',
-      icon: Grid3X3,
-      results: {
-        parcelles: '24',
-        voirie: '1,200 m²',
-        espaces_verts: '800 m²',
-        coefficient_utilis: '0.75'
-      }
-    },
-    {
-      id: 6,
-      title: 'Relevé Architectural - Villa Sacré-Cœur',
-      type: 'architectural',
-      status: 'complete',
-      date: '2024-09-28',
-      location: 'Sacré-Cœur, Dakar',
-      superficie: '1,200 m²',
-      precision: '±2 mm',
-      points: 156,
-      client: 'Arch. Mbaye & Associates',
-      coordinates: {
-        lat: 14.6937,
-        lng: -17.4441
-      },
-      equipment: 'Scanner 3D + Station Totale',
-      operator: 'Spécialiste Architecture',
-      temperature: '27°C',
-      humidity: '72%',
-      icon: Building,
-      results: {
-        facades: '4',
-        nuage_points: '2.5M points',
-        plans_generes: '8',
-        precision_3d: '±1 mm'
-      }
-    }
-  ];
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getTypeIcon = (type) => {
     switch (type) {

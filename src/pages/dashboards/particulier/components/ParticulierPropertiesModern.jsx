@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Heart,
@@ -34,134 +35,22 @@ const ParticulierPropertiesModern = () => {
   const [showFilters, setShowFilters] = useState(false);
 
   // Données simulées des biens
-  const properties = [
-    {
-      id: 1,
-      title: 'Villa Moderne Almadies Vue Mer',
-      type: 'villa',
-      price: 85000000,
-      location: 'Almadies, Dakar',
-      bedrooms: 5,
-      bathrooms: 4,
-      surface: 320,
-      features: ['wifi', 'parking', 'security', 'garden', 'pool'],
-      images: ['/api/placeholder/400/300'],
-      agent: {
-        name: 'Mamadou Diop',
-        phone: '+221 77 123 45 67',
-        rating: 4.8
-      },
-      favorite: true,
-      views: 47,
-      posted: '2 jours',
-      status: 'available'
-    },
-    {
-      id: 2,
-      title: 'Appartement F4 Standing Mamelles',
-      type: 'apartment',
-      price: 45000000,
-      location: 'Mamelles, Dakar',
-      bedrooms: 4,
-      bathrooms: 3,
-      surface: 150,
-      features: ['wifi', 'parking', 'security', 'furnished'],
-      images: ['/api/placeholder/400/300'],
-      agent: {
-        name: 'Aïcha Fall',
-        phone: '+221 78 987 65 43',
-        rating: 4.9
-      },
-      favorite: false,
-      views: 23,
-      posted: '1 semaine',
-      status: 'available'
-    },
-    {
-      id: 3,
-      title: 'Bureau Open Space Plateau',
-      type: 'office',
-      price: 120000000,
-      location: 'Plateau, Dakar',
-      bedrooms: 0,
-      bathrooms: 2,
-      surface: 450,
-      features: ['wifi', 'parking', 'security', 'generator', 'elevator'],
-      images: ['/api/placeholder/400/300'],
-      agent: {
-        name: 'Omar Ndiaye',
-        phone: '+221 76 555 44 33',
-        rating: 4.7
-      },
-      favorite: true,
-      views: 89,
-      posted: '3 jours',
-      status: 'negotiation'
-    },
-    {
-      id: 4,
-      title: 'Studio Meublé Point E',
-      type: 'studio',
-      price: 18000000,
-      location: 'Point E, Dakar',
-      bedrooms: 1,
-      bathrooms: 1,
-      surface: 45,
-      features: ['wifi', 'furnished', 'security'],
-      images: ['/api/placeholder/400/300'],
-      agent: {
-        name: 'Fatou Sall',
-        phone: '+221 77 666 55 44',
-        rating: 4.6
-      },
-      favorite: false,
-      views: 12,
-      posted: '5 jours',
-      status: 'available'
-    },
-    {
-      id: 5,
-      title: 'Villa Familiale HLM Grand Yoff',
-      type: 'villa',
-      price: 65000000,
-      location: 'HLM Grand Yoff, Dakar',
-      bedrooms: 4,
-      bathrooms: 3,
-      surface: 250,
-      features: ['parking', 'security', 'garden'],
-      images: ['/api/placeholder/400/300'],
-      agent: {
-        name: 'Ibrahima Ba',
-        phone: '+221 78 222 11 00',
-        rating: 4.5
-      },
-      favorite: true,
-      views: 31,
-      posted: '1 jour',
-      status: 'available'
-    },
-    {
-      id: 6,
-      title: 'Appartement F3 Mermoz Pyrotechnie',
-      type: 'apartment',
-      price: 35000000,
-      location: 'Mermoz, Dakar',
-      bedrooms: 3,
-      bathrooms: 2,
-      surface: 110,
-      features: ['wifi', 'parking', 'security'],
-      images: ['/api/placeholder/400/300'],
-      agent: {
-        name: 'Khadija Diallo',
-        phone: '+221 77 888 99 00',
-        rating: 4.8
-      },
-      favorite: false,
-      views: 18,
-      posted: '4 jours',
-      status: 'available'
-    }
-  ];
+  // properties RÉEL depuis Supabase (aucune donnée fictive)
+  const [properties, setProperties] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('properties').select('*').order('created_at', { ascending: false });
+        if (error) throw error;
+        if (active) setProperties(data || []);
+      } catch (err) {
+        console.warn('properties indisponible:', err?.message);
+        if (active) setProperties([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getPropertyIcon = (type) => {
     switch(type) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -36,140 +37,27 @@ const VendeurMessages = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const messagesEndRef = useRef(null);
 
-  const [conversations, setConversations] = useState([
-    {
-      id: 1,
-      contact: {
-        name: 'Amadou Diallo',
-        avatar: '/api/placeholder/40/40',
-        status: 'online',
-        lastSeen: 'En ligne'
-      },
-      property: {
-        title: 'Villa Moderne Almadies',
-        type: 'Villa',
-        location: 'Almadies'
-      },
-      lastMessage: {
-        text: 'Bonjour, je suis très intéressé par cette villa. Pouvons-nous organiser une visite ?',
-        time: '14:30',
-        sender: 'client',
-        read: false
-      },
-      unread: 2,
-      messages: [
-        {
-          id: 1,
-          text: 'Bonjour, je suis intéressé par votre villa aux Almadies.',
-          time: '14:15',
-          sender: 'client',
-          read: true
-        },
-        {
-          id: 2,
-          text: 'Bonjour Amadou, merci pour votre intérêt ! Cette villa est effectivement disponible. Quand souhaiteriez-vous la visiter ?',
-          time: '14:20',
-          sender: 'vendor',
-          read: true
-        },
-        {
-          id: 3,
-          text: 'Bonjour, je suis très intéressé par cette villa. Pouvons-nous organiser une visite ?',
-          time: '14:30',
-          sender: 'client',
-          read: false
-        }
-      ]
-    },
-    {
-      id: 2,
-      contact: {
-        name: 'Fatou Sall',
-        avatar: '/api/placeholder/40/40',
-        status: 'offline',
-        lastSeen: 'Il y a 2h'
-      },
-      property: {
-        title: 'Terrain Sacré-Cœur',
-        type: 'Terrain',
-        location: 'Sacré-Cœur'
-      },
-      lastMessage: {
-        text: 'Parfait, à demain alors !',
-        time: '12:45',
-        sender: 'vendor',
-        read: true
-      },
-      unread: 0,
-      messages: [
-        {
-          id: 1,
-          text: 'Bonjour, quel est le prix final pour ce terrain ?',
-          time: '12:30',
-          sender: 'client',
-          read: true
-        },
-        {
-          id: 2,
-          text: 'Le prix est de 85M FCFA, négociable selon les conditions de paiement.',
-          time: '12:35',
-          sender: 'vendor',
-          read: true
-        },
-        {
-          id: 3,
-          text: 'Parfait, à demain alors !',
-          time: '12:45',
-          sender: 'vendor',
-          read: true
-        }
-      ]
-    },
-    {
-      id: 3,
-      contact: {
-        name: 'Omar Thiam',
-        avatar: '/api/placeholder/40/40',
-        status: 'offline',
-        lastSeen: 'Il y a 1 jour'
-      },
-      property: {
-        title: 'Appartement Plateau',
-        type: 'Appartement',
-        location: 'Plateau'
-      },
-      lastMessage: {
-        text: 'Merci pour les informations détaillées.',
-        time: 'Hier',
-        sender: 'client',
-        read: true
-      },
-      unread: 0,
-      messages: [
-        {
-          id: 1,
-          text: 'Bonjour, l\'appartement est-il toujours disponible ?',
-          time: 'Hier 16:20',
-          sender: 'client',
-          read: true
-        },
-        {
-          id: 2,
-          text: 'Oui, il est toujours disponible. Voici les dernières photos.',
-          time: 'Hier 16:30',
-          sender: 'vendor',
-          read: true
-        },
-        {
-          id: 3,
-          text: 'Merci pour les informations détaillées.',
-          time: 'Hier 17:00',
-          sender: 'client',
-          read: true
-        }
-      ]
-    }
-  ]);
+  const [conversations, setConversations] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    const loadConversations = async () => {
+      try {
+        // Conversations RÉELLES depuis Supabase (aucune conversation fictive)
+        const { data, error } = await supabase
+          .from('conversations')
+          .select('*')
+          .order('updated_at', { ascending: false });
+        if (error) throw error;
+        if (active) setConversations(data || []);
+      } catch (err) {
+        console.warn('Conversations indisponibles:', err?.message);
+        if (active) setConversations([]);
+      }
+    };
+    loadConversations();
+    return () => { active = false; };
+  }, []);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });

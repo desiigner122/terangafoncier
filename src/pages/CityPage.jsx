@@ -86,7 +86,7 @@ const CityPage = () => {
           size: '400 mÂ²',
           price: 38000000,
           image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          seller: 'Amadou Diallo',
+          seller: '',
           features: ['Vue mer', 'Viabilisé', 'Proche commodités']
         },
         {
@@ -95,7 +95,7 @@ const CityPage = () => {
           size: '600 mÂ²',
           price: 52000000,
           image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          seller: 'Fatou Ndiaye',
+          seller: '',
           features: ['Zone commerciale', 'Accès facile', 'High standing']
         },
         {
@@ -104,7 +104,7 @@ const CityPage = () => {
           size: '500 mÂ²',
           price: 45000000,
           image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-          seller: 'Moussa Sow',
+          seller: '',
           features: ['Quartier calme', 'Sécurisé', 'Titre foncier']
         }
       ]

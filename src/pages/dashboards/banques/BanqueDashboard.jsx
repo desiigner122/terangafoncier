@@ -26,7 +26,6 @@ import {
   Briefcase,
   Home,
   Banknote,
-  CreditCard as Card,
   Search,
   Filter,
   Percent,
@@ -45,126 +44,7 @@ const BanqueDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
 
-  const [dashboardData, setDashboardData] = useState({
-    stats: {
-      portefeuille: 2450000000,
-      creditsMois: 156,
-      tauxApprob: 78,
-      nouveauxClients: 24,
-      satisfaction: 94
-    },
-    credits: [
-      {
-        id: 1,
-        numero: 'CR-2024-0245',
-        client: 'M. Amadou Diallo',
-        typeCredit: 'Crédit Habitat',
-        montant: 85000000,
-        duree: 240, // mois
-        taux: 6.5,
-        bien: 'Villa Almadies - 350m²',
-        statut: 'En cours évaluation',
-        dateDepot: '2024-03-10',
-        echeance: '2024-03-25',
-        progression: 45,
-        apportPersonnel: 25500000,
-        revenuMensuel: 2800000
-      },
-      {
-        id: 2,
-        numero: 'CR-2024-0238',
-        client: 'ABC Promotion',
-        typeCredit: 'Crédit Professionnel',
-        montant: 450000000,
-        duree: 120,
-        taux: 7.2,
-        bien: 'Lotissement Saly - 50 lots',
-        statut: 'Approuvé',
-        dateDepot: '2024-02-20',
-        echeance: '2024-03-15',
-        progression: 100,
-        apportPersonnel: 135000000,
-        revenuMensuel: 15000000
-      },
-      {
-        id: 3,
-        numero: 'CR-2024-0251',
-        client: 'Mme Fatou Fall',
-        typeCredit: 'Crédit Acquisition',
-        montant: 35000000,
-        duree: 180,
-        taux: 6.8,
-        bien: 'Appartement Médina - 120m²',
-        statut: 'En attente documents',
-        dateDepot: '2024-03-15',
-        echeance: '2024-04-05',
-        progression: 25,
-        apportPersonnel: 10500000,
-        revenuMensuel: 1200000
-      }
-    ],
-    clients: [
-      {
-        id: 1,
-        nom: 'M. Amadou Diallo',
-        email: 'amadou.diallo@email.com',
-        telephone: '+221 77 123 45 67',
-        typeClient: 'Particulier',
-        scoreBanque: 750,
-        anciennete: '2020-05-15',
-        nbCredits: 2,
-        encours: 85000000,
-        statut: 'Premium'
-      },
-      {
-        id: 2,
-        nom: 'ABC Promotion',
-        email: 'finance@abc-promotion.sn',
-        telephone: '+221 33 825 12 34',
-        typeClient: 'Entreprise',
-        scoreBanque: 820,
-        anciennete: '2018-03-10',
-        nbCredits: 8,
-        encours: 450000000,
-        statut: 'Corporate'
-      }
-    ],
-    portefeuille: [
-      {
-        type: 'Crédit Habitat',
-        montant: 1200000000,
-        pourcentage: 49,
-        nbCredits: 95,
-        tauxDefaut: 2.1
-      },
-      {
-        type: 'Crédit Professionnel',
-        montant: 800000000,
-        pourcentage: 33,
-        nbCredits: 35,
-        tauxDefaut: 3.2
-      },
-      {
-        type: 'Crédit Acquisition',
-        montant: 450000000,
-        pourcentage: 18,
-        nbCredits: 68,
-        tauxDefaut: 1.8
-      }
-    ],
-    analytics: {
-      evolutionCA: [180, 220, 195, 245, 210, 245],
-      typesCredits: {
-        'Crédit Habitat': 49,
-        'Crédit Professionnel': 33,
-        'Crédit Acquisition': 18
-      },
-      satisfactionClient: 94,
-      delaisTraitement: 12,
-      tauxApprob: 78,
-      revenus: 45000000
-    }
-  });
+  const [dashboardData, setDashboardData] = useState({}); // démo retirée
 
   useEffect(() => {
     setTimeout(() => {

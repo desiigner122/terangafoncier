@@ -18,30 +18,7 @@ const PropertyVerificationPage = () => {
     
     // Simulation de vérification
     setTimeout(() => {
-      const mockResult = {
-        status: 'verified',
-        titleNumber: verificationData.titleNumber,
-        isAuthentic: true,
-        owner: 'Amadou DIOP',
-        location: 'Almadies, Dakar',
-        surface: '500 mÂ²',
-        registrationDate: '15 Mars 2020',
-        lastUpdate: '28 Août 2024',
-        notary: 'Maître Fatou SALL',
-        encumbrances: [],
-        riskScore: 5,
-        blockchain: {
-          hash: '0x1a2b3c4d5e6f7g8h9i0j',
-          verified: true,
-          timestamp: '2024-08-28T10:30:00Z'
-        },
-        documents: [
-          { name: 'Titre Foncier Original', status: 'verified' },
-          { name: 'Acte de Vente', status: 'verified' },
-          { name: 'Certificat de Non-Gage', status: 'verified' },
-          { name: 'Plan de Bornage', status: 'verified' }
-        ]
-      };
+      const mockResult = {}; // démo retirée
       
       setVerificationResult(mockResult);
       setIsVerifying(false);

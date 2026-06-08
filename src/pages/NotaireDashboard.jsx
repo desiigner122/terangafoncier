@@ -87,87 +87,10 @@ const NotaireDashboard = () => {
   });
 
   // Dossiers actifs du notaire
-  const [activeFiles, setActiveFiles] = useState([
-    {
-      id: 'NOT-001',
-      type: 'Vente Immobilière',
-      client: 'M. & Mme Diallo',
-      property: 'Villa Almadies - 4 pièces',
-      value: 180000000,
-      status: 'draft_review',
-      progress: 75,
-      deadline: '2024-03-20',
-      priority: 'high',
-      fees: 2700000,
-      location: 'Almadies, Dakar'
-    },
-    {
-      id: 'NOT-002',
-      type: 'Succession',
-      client: 'Famille Ba',
-      property: 'Terrain + Bâtiments Rufisque',
-      value: 85000000,
-      status: 'FileTextation',
-      progress: 45,
-      deadline: '2024-04-15',
-      priority: 'medium',
-      fees: 1700000,
-      location: 'Rufisque'
-    },
-    {
-      id: 'NOT-003',
-      type: 'Donation',
-      client: 'Mme Fatou Sall',
-      property: 'Appartement Plateau',
-      value: 65000000,
-      status: 'signature_pending',
-      progress: 90,
-      deadline: '2024-03-12',
-      priority: 'urgent',
-      fees: 975000,
-      location: 'Plateau, Dakar'
-    }
-  ]);
+  const [activeFiles, setActiveFiles] = useState([]); // démo retirée
 
   // Agenda rendez-vous
-  const [appointments, setAppointments] = useState([
-    {
-      id: 1,
-      time: '09:00',
-      client: 'M. Amadou Ndiaye',
-      type: 'Signature acte vente',
-      duration: 60,
-      status: 'confirmed',
-      location: 'Étude notariale'
-    },
-    {
-      id: 2,
-      time: '11:30',
-      client: 'Société IMMODA',
-      type: 'Conseil juridique',
-      duration: 45,
-      status: 'confirmed',
-      location: 'Étude notariale'
-    },
-    {
-      id: 3,
-      time: '14:00',
-      client: 'Famille Thiam',
-      type: 'Lecture testament',
-      duration: 90,
-      status: 'pending',
-      location: 'Étude notariale'
-    },
-    {
-      id: 4,
-      time: '16:30',
-      client: 'Mme Aida Diop',
-      type: 'Authentification FileTexts',
-      duration: 30,
-      status: 'confirmed',
-      location: 'Étude notariale'
-    }
-  ]);
+  const [appointments, setAppointments] = useState([]); // démo retirée
 
   useEffect(() => {
     loadNotaireData();

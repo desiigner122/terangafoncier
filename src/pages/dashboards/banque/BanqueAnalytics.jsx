@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { sumByMonth, groupByField } from '@/services/analyticsAggregations';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, 
@@ -51,51 +53,46 @@ const BanqueAnalytics = () => {
   const [isLoading, setIsLoading] = useState(false);
 
   // Données analytiques spécifiques aux crédits terrains
-  const analyticsData = {
-    creditPortfolio: {
-      total: 45000000000, // 45 milliards FCFA
-      growth: 18.3,
-      landCredits: 32000000000, // 32 milliards pour terrains
-      traditionalCredits: 13000000000 // 13 milliards autres
-    },
+  // Données analytics RÉELLES (agrégées depuis Supabase) — aucune valeur en dur
+  const [analyticsData, setAnalyticsData] = useState({
+    creditPortfolio: { total: 0, growth: null, landCredits: 0, traditionalCredits: 0 },
     performanceMetrics: [
-      {
-        metric: 'Taux Approbation Terrains',
-        value: '—',
-        change: 5.2,
-        status: 'excellent',
-        target: '85%'
-      },
-      {
-        metric: 'Délai Moyen Traitement',
-        value: '—',
-        change: -15.3,
-        status: 'bon',
-        target: '15 jours'
-      },
-      {
-        metric: 'LTV Moyen Terrains',
-        value: '—',
-        change: 2.1,
-        status: 'stable',
-        target: '80%'
-      },
-      {
-        metric: 'Taux Défaut',
-        value: '—',
-        change: -8.7,
-        status: 'excellent',
-        target: '3%'
-      }
+      { metric: 'Taux Approbation Terrains', value: '—', change: null, status: 'stable', target: '85%' },
+      { metric: 'Délai Moyen Traitement', value: '—', change: null, status: 'stable', target: '15 jours' },
+      { metric: 'LTV Moyen Terrains', value: '—', change: null, status: 'stable', target: '80%' },
+      { metric: 'Taux Défaut', value: '—', change: null, status: 'stable', target: '3%' }
     ],
     creditEvolution: [],
-    riskAnalysis: [
-      { category: 'Terrain Titré', value: 78, risk: 'Faible', color: '#10B981' },
-      { category: 'Terrain Immatriculé', value: 15, risk: 'Moyen', color: '#F59E0B' },
-      { category: 'Terrain Non-Titré', value: 7, risk: 'Élevé', color: '#EF4444' }
-    ],
+    riskAnalysis: [],
     geographicDistribution: []
-  };
+  });
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [evolution, geo, risk, demRes] = await Promise.all([
+          sumByMonth('demandes_financement', 'amount', 12),
+          groupByField('properties', 'region'),
+          groupByField('properties', 'verification_status'),
+          supabase.from('demandes_financement').select('amount')
+        ]);
+        const total = (demRes?.data || []).reduce((s, d) => s + (parseFloat(d.amount) || 0), 0);
+        const palette = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#3B82F6'];
+        if (!active) return;
+        setAnalyticsData((prev) => ({
+          ...prev,
+          creditPortfolio: { total, growth: null, landCredits: total, traditionalCredits: 0 },
+          creditEvolution: evolution.map((m) => ({ month: m.month, totalCredits: m.value, landCredits: m.value, approvalRate: 0 })),
+          geographicDistribution: geo.map((g) => ({ region: g.name, credits: g.value, amount: 0 })),
+          riskAnalysis: risk.map((r, i) => ({ category: r.name, value: r.value, risk: r.name, color: palette[i % palette.length] }))
+        }));
+      } catch (err) {
+        console.warn('Analytics banque indisponibles:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const handleRefreshData = () => {
     setIsLoading(true);

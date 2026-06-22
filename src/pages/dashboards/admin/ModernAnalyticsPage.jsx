@@ -57,6 +57,62 @@ import {
 import { toast } from 'react-hot-toast';
 import globalAdminService from '@/services/GlobalAdminService';
 import { useAnalytics } from '@/hooks/admin/usePageTracking';
+import { supabase } from '@/lib/supabaseClient';
+
+// Agrégations RÉELLES depuis Supabase pour alimenter les graphiques
+const buildRealSeries = async () => {
+  const empty = { revenue: [], transactions: [] };
+  try {
+    const since = new Date();
+    since.setMonth(since.getMonth() - 5);
+    since.setDate(1);
+
+    // Transactions financières réelles sur la période
+    const { data: txs } = await supabase
+      .from('financial_transactions')
+      .select('amount, created_at')
+      .gte('created_at', since.toISOString());
+
+    const rows = txs || [];
+
+    // Revenus mensuels (6 derniers mois)
+    const monthsFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+    const revByMonth = {};
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      revByMonth[`${d.getFullYear()}-${d.getMonth()}`] = { month: monthsFr[d.getMonth()], revenue: 0 };
+    }
+    rows.forEach((t) => {
+      const d = new Date(t.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (revByMonth[key]) revByMonth[key].revenue += parseFloat(t.amount) || 0;
+    });
+
+    // Transactions par jour (30 derniers jours)
+    const txByDay = {};
+    for (let i = 29; i >= 0; i--) {
+      const d = new Date();
+      d.setDate(d.getDate() - i);
+      txByDay[d.toISOString().slice(0, 10)] = {
+        day: d.toLocaleDateString('fr-FR', { day: '2-digit', month: '2-digit' }),
+        transactions: 0
+      };
+    }
+    rows.forEach((t) => {
+      const key = new Date(t.created_at).toISOString().slice(0, 10);
+      if (txByDay[key]) txByDay[key].transactions += 1;
+    });
+
+    return {
+      revenue: Object.values(revByMonth),
+      transactions: Object.values(txByDay)
+    };
+  } catch (err) {
+    console.warn('Agrégations analytics indisponibles:', err?.message);
+    return empty;
+  }
+};
 
 const ModernAnalyticsPage = () => {
   // Phase 1: Use AnalyticsService for page tracking analytics
@@ -114,6 +170,9 @@ const ModernAnalyticsPage = () => {
         globalAdminService.getAllProperties()
       ]);
 
+      // Séries RÉELLES agrégées depuis Supabase (revenus mensuels, transactions/jour)
+      const realSeries = await buildRealSeries();
+
       // Construire les données d'analyse basées sur les vraies données
       const realAnalyticsData = {
         overview: {
@@ -124,10 +183,10 @@ const ModernAnalyticsPage = () => {
           monthlyGrowth: calculateMonthlyGrowth(transactionStats.data),
           conversionRate: transactionStats.data?.conversionRate || 0
         },
-        transactions: generateTransactionTrends(transactionStats.data),
+        transactions: realSeries.transactions,
         users: generateUserGrowthData(usersStats.data),
         properties: generatePropertyAnalytics(propertiesData.data),
-        revenue: generateRevenueData(transactionStats.data),
+        revenue: realSeries.revenue,
         growth: generateGrowthMetrics(dashboardStats.data)
       };
 
@@ -461,6 +520,16 @@ const ModernAnalyticsPage = () => {
     </Card>
   );
 
+  const isEmptySeries = (rows, key) =>
+    !rows || rows.length === 0 || rows.every((r) => !r[key]);
+
+  const ChartEmpty = ({ message }) => (
+    <div className="h-[300px] flex flex-col items-center justify-center text-gray-400">
+      <BarChart3 className="h-10 w-10 mb-2 opacity-50" />
+      <p className="text-sm">{message}</p>
+    </div>
+  );
+
   const renderCharts = () => (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
       {/* Graphique Revenus */}
@@ -473,6 +542,8 @@ const ModernAnalyticsPage = () => {
             <div className="h-64 flex items-center justify-center">
               <RefreshCw className="h-6 w-6 animate-spin" />
             </div>
+          ) : isEmptySeries(analyticsData.revenue, 'revenue') ? (
+            <ChartEmpty message="Aucun revenu enregistré pour le moment." />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <RechartsAreaChart data={analyticsData.revenue}>
@@ -505,6 +576,8 @@ const ModernAnalyticsPage = () => {
             <div className="h-64 flex items-center justify-center">
               <RefreshCw className="h-6 w-6 animate-spin" />
             </div>
+          ) : isEmptySeries(analyticsData.transactions, 'transactions') ? (
+            <ChartEmpty message="Aucune transaction sur la période." />
           ) : (
             <ResponsiveContainer width="100%" height={300}>
               <RechartsLineChart data={analyticsData.transactions}>

@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CreditCard,
@@ -436,10 +437,11 @@ const ModernTransactionsPage = () => {
             <span>Erreur: {error}</span>
           </div>
         ) : filteredTransactions.length === 0 ? (
-          <div className="flex items-center justify-center py-8 text-gray-500">
-            <CreditCard className="h-6 w-6 mr-2" />
-            <span>Aucune transaction trouvée</span>
-          </div>
+          <EmptyState
+            icon={CreditCard}
+            title="Aucune transaction pour le moment"
+            description="Les transactions effectuées sur la plateforme s'afficheront ici au fur et à mesure."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">

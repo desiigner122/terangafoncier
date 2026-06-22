@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Users,
@@ -451,10 +452,11 @@ const ModernUsersPage = () => {
             <span>Erreur: {error}</span>
           </div>
         ) : filteredUsers.length === 0 ? (
-          <div className="flex items-center justify-center py-8 text-gray-500">
-            <Users className="h-6 w-6 mr-2" />
-            <span>Aucun utilisateur trouvé</span>
-          </div>
+          <EmptyState
+            icon={Users}
+            title="Aucun utilisateur pour le moment"
+            description="Les comptes apparaîtront ici dès les premières inscriptions sur la plateforme."
+          />
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full">

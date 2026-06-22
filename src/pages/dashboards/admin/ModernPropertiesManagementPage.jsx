@@ -6,6 +6,7 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Building,
@@ -514,9 +515,12 @@ const ModernPropertiesManagementPage = () => {
           <span>Erreur: {error}</span>
         </div>
       ) : filteredProperties.length === 0 ? (
-        <div className="col-span-full flex items-center justify-center py-8 text-gray-500">
-          <Building className="h-6 w-6 mr-2" />
-          <span>Aucune propriété trouvée</span>
+        <div className="col-span-full">
+          <EmptyState
+            icon={Building}
+            title="Aucune propriété pour le moment"
+            description="Les biens publiés par les vendeurs apparaîtront ici. Ajoutez une première propriété pour démarrer."
+          />
         </div>
       ) : (
         filteredProperties.map((property) => (

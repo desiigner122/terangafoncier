@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { countByDay, groupByField } from '@/services/analyticsAggregations';
 import { motion } from 'framer-motion';
 import { 
   Building2, 
@@ -137,12 +138,32 @@ const MairieOverview = ({ dashboardStats }) => {
     }
   ];
 
-  // Données graphiques
-  const weeklyRequests = []; // données réelles requises (aucune valeur fictive)
+  // Données graphiques RÉELLES (agrégées depuis Supabase)
+  const [weeklyRequests, setWeeklyRequests] = useState([]);
+  const [requestsByType, setRequestsByType] = useState([]);
+  const [zoneUtilization, setZoneUtilization] = useState([]);
 
-  const requestsByType = []; // données réelles requises (aucune valeur fictive)
-
-  const zoneUtilization = []; // données réelles requises (aucune valeur fictive)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [byDay, byType, byZone] = await Promise.all([
+          countByDay('communal_requests', 7),
+          groupByField('communal_requests', 'type'),
+          groupByField('communal_requests', 'zone')
+        ]);
+        if (!active) return;
+        const palette = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+        setWeeklyRequests(byDay.map((d) => ({ day: d.day, requests: d.value, approvals: 0 })));
+        setRequestsByType(byType.map((t, i) => ({ ...t, color: palette[i % palette.length] })));
+        const maxZone = Math.max(1, ...byZone.map((z) => z.value));
+        setZoneUtilization(byZone.map((z) => ({ zone: z.name, utilized: z.value, total: maxZone })));
+      } catch (err) {
+        console.warn('Graphiques mairie indisponibles:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Demandes récentes
   // Demandes récentes RÉELLES (table communal_requests)

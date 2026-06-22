@@ -31,6 +31,7 @@ import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContai
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
+import { countByMonth } from '@/services/analyticsAggregations';
 
 const AdminProjectsPage = () => {
   const [loading, setLoading] = useState(true);
@@ -101,7 +102,19 @@ const AdminProjectsPage = () => {
     }
   };
 
-  const progressData = []; // données graphiques réelles requises
+  const [progressData, setProgressData] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const series = await countByMonth('developer_projects', 6);
+        if (active) setProgressData(series.map((m) => ({ month: m.month, projets: m.value, completion: 0 })));
+      } catch (err) {
+        console.warn('Progression projets indisponible:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   if (loading) {
     return (

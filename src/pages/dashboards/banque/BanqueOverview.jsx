@@ -175,10 +175,52 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
     { title: 'Blockchain sync', value: '—', change: null, icon: Database }
   ];
 
-  // Données graphiques
-  const creditEvolution = []; // données graphiques réelles requises
+  // Données graphiques RÉELLES (agrégées depuis Supabase)
+  const [creditEvolution, setCreditEvolution] = useState([]);
+  const [riskDistribution, setRiskDistribution] = useState([]);
 
-  const riskDistribution = []; // données graphiques réelles requises
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        // Évolution des crédits par mois (6 derniers) selon le statut
+        const since = new Date(); since.setMonth(since.getMonth() - 5); since.setDate(1);
+        const { data: dem } = await supabase
+          .from('demandes_financement')
+          .select('status, created_at')
+          .gte('created_at', since.toISOString());
+        const moisFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const buckets = {};
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(); d.setMonth(d.getMonth() - i);
+          buckets[`${d.getFullYear()}-${d.getMonth()}`] = { month: moisFr[d.getMonth()], approved: 0, pending: 0, rejected: 0 };
+        }
+        (dem || []).forEach((r) => {
+          const d = new Date(r.created_at); const k = `${d.getFullYear()}-${d.getMonth()}`;
+          if (!buckets[k]) return;
+          if (r.status === 'approved') buckets[k].approved += 1;
+          else if (r.status === 'rejected') buckets[k].rejected += 1;
+          else buckets[k].pending += 1;
+        });
+
+        // Répartition du risque selon le statut de vérification des biens
+        const { data: props } = await supabase.from('properties').select('verification_status');
+        const colors = { verified: '#22c55e', pending: '#f59e0b', rejected: '#ef4444' };
+        const counts = {};
+        (props || []).forEach((p) => { const s = p.verification_status || 'pending'; counts[s] = (counts[s] || 0) + 1; });
+        const labels = { verified: 'Vérifié (faible risque)', pending: 'En attente (risque moyen)', rejected: 'Rejeté (risque élevé)' };
+
+        if (!active) return;
+        setCreditEvolution(Object.values(buckets));
+        setRiskDistribution(Object.entries(counts).map(([s, value]) => ({
+          name: labels[s] || s, value, color: colors[s] || '#8b5cf6'
+        })));
+      } catch (err) {
+        console.warn('Graphiques banque indisponibles:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Dernières activités
   const recentActivities = []; // démo retirée

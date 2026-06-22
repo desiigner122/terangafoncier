@@ -1,4 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { countByMonth, groupByField } from '@/services/analyticsAggregations';
 import { motion } from 'framer-motion';
 import { 
   BarChart3,
@@ -56,21 +58,32 @@ const MairieAnalytics = ({ dashboardStats }) => {
   const [timeFilter, setTimeFilter] = useState('12m');
   const [reportType, setReportType] = useState('monthly');
 
-  // Données pour les graphiques
-  const monthlyRequests = []; // données graphiques réelles requises
+  // Données graphiques RÉELLES (agrégées depuis Supabase)
+  const [monthlyRequests, setMonthlyRequests] = useState([]);
+  const [requestsByZone, setRequestsByZone] = useState([]);
+  const [requestsByType, setRequestsByType] = useState([]);
+  const processingTimes = []; // nécessite des durées de traitement réelles
+  const populationStats = []; // nécessite une source de données démographiques réelle
 
-  const requestsByZone = []; // données graphiques réelles requises
-
-  const requestsByType = []; // données graphiques réelles requises
-
-  const processingTimes = []; // données graphiques réelles requises
-
-  const populationStats = [
-    { quarter: 'Q1 2024', population: 8420, growth: 2.3 },
-    { quarter: 'Q2 2024', population: 8498, growth: 2.1 },
-    { quarter: 'Q3 2024', population: 8542, growth: 1.8 },
-    { quarter: 'Q4 2024', population: 8601, growth: 2.0 }
-  ];
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [byMonth, byZone, byType] = await Promise.all([
+          countByMonth('communal_requests', 6),
+          groupByField('communal_requests', 'zone'),
+          groupByField('communal_requests', 'type')
+        ]);
+        if (!active) return;
+        setMonthlyRequests(byMonth.map((d) => ({ month: d.month, requests: d.value })));
+        setRequestsByZone(byZone);
+        setRequestsByType(byType);
+      } catch (err) {
+        console.warn('Analytics mairie indisponibles:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // KPIs principaux
   const mainKPIs = [

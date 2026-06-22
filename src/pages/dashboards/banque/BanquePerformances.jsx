@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { sumByMonth, groupByField } from '@/services/analyticsAggregations';
 import { motion } from 'framer-motion';
 import { 
   Activity, 
@@ -48,16 +50,27 @@ const BanquePerformances = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedMetric, setSelectedMetric] = useState('all');
   const [performanceData, setPerformanceData] = useState([]);
+  const [pieData, setPieData] = useState([]);
   const [kpis, setKpis] = useState({});
 
-  // Données de performance simulées
+  // Données de performance RÉELLES (agrégées depuis Supabase)
   useEffect(() => {
-    const mockPerformanceData = []; // démo retirée
-
-    const mockKpis = {}; // démo retirée
-
-    setPerformanceData(mockPerformanceData);
-    setKpis(mockKpis);
+    let active = true;
+    (async () => {
+      try {
+        const [perf, types] = await Promise.all([
+          sumByMonth('financial_transactions', 'amount', 6),
+          groupByField('properties', 'type')
+        ]);
+        if (!active) return;
+        const palette = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+        setPerformanceData(perf.map((m) => ({ periode: m.month, revenus: m.value })));
+        setPieData(types.map((t, i) => ({ name: t.name, value: t.value, color: palette[i % palette.length] })));
+      } catch (err) {
+        console.warn('Performances indisponibles:', err?.message);
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const formatCurrency = (value) => {
@@ -88,14 +101,8 @@ const BanquePerformances = () => {
     return icons[status] || TrendingUp;
   };
 
-  // Données pour les graphiques
-  const pieData = []; // données graphiques réelles requises
-
-  const clientSegmentData = [
-    { segment: 'Particuliers', clients: 2850, revenus: 1520000000 },
-    { segment: 'PME', clients: 980, revenus: 1680000000 },
-    { segment: 'Diaspora', clients: 350, revenus: 480000000 }
-  ];
+  // pieData est désormais alimenté en données réelles (voir useEffect ci-dessus)
+  const clientSegmentData = []; // données réelles requises
 
   return (
     <div className="space-y-6">

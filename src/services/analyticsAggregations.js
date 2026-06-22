@@ -39,6 +39,35 @@ export async function sumByMonth(table, field = 'amount', months = 6, filters = 
   }
 }
 
+/** Nombre de lignes par mois sur N derniers mois (clé: month, value: count) */
+export async function countByMonth(table, months = 6, filters = {}) {
+  const since = new Date();
+  since.setMonth(since.getMonth() - (months - 1));
+  since.setDate(1);
+  try {
+    let q = supabase.from(table).select('created_at').gte('created_at', since.toISOString());
+    Object.entries(filters).forEach(([k, v]) => { q = q.eq(k, v); });
+    const { data, error } = await q;
+    if (error) throw error;
+
+    const buckets = {};
+    for (let i = months - 1; i >= 0; i--) {
+      const d = new Date();
+      d.setMonth(d.getMonth() - i);
+      buckets[`${d.getFullYear()}-${d.getMonth()}`] = { month: MOIS_FR[d.getMonth()], value: 0 };
+    }
+    (data || []).forEach((row) => {
+      const d = new Date(row.created_at);
+      const key = `${d.getFullYear()}-${d.getMonth()}`;
+      if (buckets[key]) buckets[key].value += 1;
+    });
+    return Object.values(buckets);
+  } catch (err) {
+    console.warn(`countByMonth(${table}) indisponible:`, err?.message);
+    return [];
+  }
+}
+
 /** Nombre de lignes par jour sur N derniers jours (clé: day, value: count) */
 export async function countByDay(table, days = 30, filters = {}) {
   const since = new Date();

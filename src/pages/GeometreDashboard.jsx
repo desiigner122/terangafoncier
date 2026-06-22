@@ -65,14 +65,7 @@ const GeometreDashboard = () => {
 
   // Données pour les graphiques
   const [chartData, setChartData] = useState({
-    monthlyProjects: [
-      { month: 'Sept', missions: 12, revenus: 980000, precision: 97.8 },
-      { month: 'Oct', missions: 15, revenus: 1150000, precision: 98.1 },
-      { month: 'Nov', missions: 18, revenus: 1320000, precision: 98.5 },
-      { month: 'Déc', missions: 14, revenus: 1050000, precision: 98.3 },
-      { month: 'Jan', missions: 16, revenus: 1200000, precision: 98.7 },
-      { month: 'Fév', missions: 15, revenus: 1250000, precision: 98.5 }
-    ],
+    monthlyProjects: [],
     projectTypes: [
       { type: 'Bornage', count: 45, revenue: 2250000, color: '#0088FE' },
       { type: 'Lotissement', count: 12, revenue: 3600000, color: '#00C49F' },
@@ -80,13 +73,7 @@ const GeometreDashboard = () => {
       { type: 'Cadastre', count: 8, revenue: 2400000, color: '#FF8042' },
       { type: 'Expertise', count: 6, revenue: 1950000, color: '#8884D8' }
     ],
-    precisionTrends: [
-      { zone: 'Dakar Plateau', precision: 99.1, projets: 24 },
-      { zone: 'Almadies', precision: 98.8, projets: 18 },
-      { zone: 'Yoff', precision: 98.5, projets: 15 },
-      { zone: 'Ouakam', precision: 98.9, projets: 12 },
-      { zone: 'Point E', precision: 99.0, projets: 20 }
-    ]
+    precisionTrends: []
   });
 
   // Missions actives du géomètre

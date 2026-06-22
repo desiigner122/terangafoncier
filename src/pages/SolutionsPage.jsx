@@ -169,10 +169,10 @@ const SolutionsPage = () => {
   ];
 
   const stats = [
-    { label: 'Terrains Vérifiés', value: '2,500+', icon: CheckCircle },
-    { label: 'Clients Satisfaits', value: '1,200+', icon: Star },
-    { label: 'Transactions Sécurisées', value: '850+', icon: Shield },
-    { label: 'Fraudes Évitées', value: '100%', icon: Zap },
+    { label: 'Terrains Vérifiés', value: '—', icon: CheckCircle },
+    { label: 'Clients Satisfaits', value: '—', icon: Star },
+    { label: 'Transactions Sécurisées', value: '—', icon: Shield },
+    { label: 'Fraudes Évitées', value: '—', icon: Zap },
   ];
 
   return (

@@ -363,80 +363,9 @@ const VendeurPropertiesRealData = () => {
   };
 
   // 🆕 CONFIGURATION FILTRES AVANCÉS
-  const filters = [
-    {
-      name: 'search',
-      label: 'Recherche',
-      type: 'text',
-      placeholder: 'Rechercher par titre ou ville...'
-    },
-    {
-      name: 'property_type',
-      label: 'Type de bien',
-      type: 'select',
-      options: [
-        { value: 'terrain', label: 'Terrain' },
-        { value: 'villa', label: 'Villa' },
-        { value: 'appartement', label: 'Appartement' },
-        { value: 'immeuble', label: 'Immeuble' },
-        { value: 'bureau', label: 'Bureau' }
-      ],
-      placeholder: 'Tous les types'
-    },
-    {
-      name: 'status',
-      label: 'Statut',
-      type: 'select',
-      options: [
-        { value: 'active', label: 'Active' },
-        { value: 'pending_verification', label: 'En attente' },
-        { value: 'suspended', label: 'Suspendue' },
-        { value: 'sold', label: 'Vendue' }
-      ],
-      placeholder: 'Tous les statuts'
-    },
-    {
-      name: 'price',
-      label: 'Prix (FCFA)',
-      type: 'range',
-      placeholderMin: 'Prix min',
-      placeholderMax: 'Prix max'
-    },
-    {
-      name: 'surface',
-      label: 'Surface (m²)',
-      type: 'range',
-      placeholderMin: 'Surface min',
-      placeholderMax: 'Surface max'
-    },
-    {
-      name: 'created_at',
-      label: 'Date de création',
-      type: 'date',
-      placeholder: 'Sélectionner une date'
-    }
-  ];
+  const filters = [];
 
-  const filterPresets = [
-    {
-      label: 'Nouveautés (7j)',
-      filters: {
-        created_at: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString()
-      }
-    },
-    {
-      label: 'Actives uniquement',
-      filters: { status: 'active' }
-    },
-    {
-      label: 'Prix > 50M',
-      filters: { price_min: '50000000' }
-    },
-    {
-      label: 'Grande surface',
-      filters: { surface_min: '500' }
-    }
-  ];
+  const filterPresets = [];
 
   // 🆕 APPLIQUER FILTRES AVANCÉS
   const applyFilters = (appliedFilters) => {
@@ -483,39 +412,7 @@ const VendeurPropertiesRealData = () => {
   };
 
   // 🆕 BULK ACTIONS CONFIGURATION
-  const bulkActions = [
-    {
-      label: 'Supprimer',
-      icon: Trash2,
-      variant: 'destructive',
-      onClick: handleBulkDelete
-    },
-    {
-      label: 'Exporter',
-      icon: Download,
-      onClick: handleBulkExport
-    },
-    {
-      label: 'Archiver',
-      icon: Archive,
-      onClick: async (selectedItems) => {
-        await notify.promise(
-          Promise.all(
-            selectedItems.map(id =>
-              supabase.from('properties').update({ status: 'suspended' }).eq('id', id)
-            )
-          ),
-          {
-            loading: 'Archivage en cours...',
-            success: `${selectedItems.length} propriété(s) archivée(s)`,
-            error: 'Erreur lors de l\'archivage'
-          }
-        );
-        deselectAll();
-        loadProperties();
-      }
-    }
-  ];
+  const bulkActions = [];
 
   // Filtrage (si pas de filtres avancés appliqués)
   const displayProperties = filteredProperties.length > 0 || properties.length === 0 

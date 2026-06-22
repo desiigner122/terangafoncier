@@ -378,12 +378,7 @@ const AgentFoncierServicesDigitaux = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { name: 'CPU', usage: 45, color: 'bg-blue-500' },
-                { name: 'Mémoire', usage: 67, color: 'bg-green-500' },
-                { name: 'Disque', usage: 23, color: 'bg-yellow-500' },
-                { name: 'Réseau', usage: 78, color: 'bg-purple-500' }
-              ].map((metric) => (
+              {[].map((metric) => (
                 <div key={metric.name} className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="font-medium">{metric.name}</span>
@@ -410,13 +405,7 @@ const AgentFoncierServicesDigitaux = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {[
-                { name: 'API Gateway', status: 'operational', uptime: '99.9%' },
-                { name: 'Base de données', status: 'operational', uptime: '99.8%' },
-                { name: 'Stockage Cloud', status: 'operational', uptime: '100%' },
-                { name: 'Services IoT', status: 'maintenance', uptime: '95.2%' },
-                { name: 'Analytics', status: 'operational', uptime: '99.7%' }
-              ].map((service) => (
+              {[].map((service) => (
                 <div key={service.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div className="flex items-center space-x-3">
                     <div className={`w-3 h-3 rounded-full ${

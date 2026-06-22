@@ -68,9 +68,9 @@ const MairieBlockchain = ({ dashboardStats }) => {
     balance: '2,847.52',
     privateKey: '****************************************************',
     tokens: [
-      { symbol: 'TRGA', name: 'Teranga Token', balance: '2,847.52', value: '14,237.60' },
-      { symbol: 'LAND', name: 'Land Token', balance: '156', value: '78,000.00' },
-      { symbol: 'PERMIT', name: 'Permit Token', balance: '89', value: '4,450.00' }
+      { symbol: 'TRGA', name: 'Teranga Token', balance: '2,847.52', value: '—' },
+      { symbol: 'LAND', name: 'Land Token', balance: '156', value: '—' },
+      { symbol: 'PERMIT', name: 'Permit Token', balance: '89', value: '—' }
     ]
   };
 

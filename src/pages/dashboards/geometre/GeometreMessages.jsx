@@ -32,78 +32,7 @@ const GeometreMessages = () => {
   const [searchTerm, setSearchTerm] = useState('');
 
   // Conversations simulées
-  const conversations = [
-    {
-      id: 1,
-      client: {
-        name: 'SARL Sénégal Construction',
-        avatar: '/api/placeholder/40/40',
-        type: 'Entreprise',
-        location: 'Dakar'
-      },
-      lastMessage: 'Pouvons-nous programmer la visite du terrain pour demain ?',
-      timestamp: '2025-09-27T14:30:00',
-      unreadCount: 2,
-      status: 'active',
-      project: 'Levé topographique - Parcelle 1247'
-    },
-    {
-      id: 2,
-      client: {
-        name: 'Ministère de l\'Urbanisme',
-        avatar: '/api/placeholder/40/40',
-        type: 'Institution',
-        location: 'Dakar'
-      },
-      lastMessage: 'Le rapport de conformité est-il prêt ?',
-      timestamp: '2025-09-27T11:15:00',
-      unreadCount: 0,
-      status: 'away',
-      project: 'Étude cadastrale - Zone industrielle'
-    },
-    {
-      id: 3,
-      client: {
-        name: 'Promoteur Almadies SA',
-        avatar: '/api/placeholder/40/40',
-        type: 'Promoteur',
-        location: 'Almadies'
-      },
-      lastMessage: 'Merci pour le plan mis à jour !',
-      timestamp: '2025-09-26T16:45:00',
-      unreadCount: 0,
-      status: 'online',
-      project: 'Bornage - Résidence Les Almadies'
-    },
-    {
-      id: 4,
-      client: {
-        name: 'Direction du Cadastre',
-        avatar: '/api/placeholder/40/40',
-        type: 'Administration',
-        location: 'Dakar'
-      },
-      lastMessage: 'Les données GPS sont bien reçues',
-      timestamp: '2025-09-26T09:20:00',
-      unreadCount: 1,
-      status: 'offline',
-      project: 'Cartographie numérique'
-    },
-    {
-      id: 5,
-      client: {
-        name: 'Mairie de Keur Massar',
-        avatar: '/api/placeholder/40/40',
-        type: 'Collectivité',
-        location: 'Keur Massar'
-      },
-      lastMessage: 'Le contrat est signé, nous pouvons commencer',
-      timestamp: '2025-09-25T14:10:00',
-      unreadCount: 0,
-      status: 'online',
-      project: 'Lotissement communal'
-    }
-  ];
+  const conversations = []; // données graphiques réelles requises
 
   // Messages simulés pour la conversation sélectionnée
   const messages = [

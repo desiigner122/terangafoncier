@@ -375,26 +375,7 @@ const NotaireSettingsModernized = () => {
                 <CardDescription>Suivi des opérations récentes sur vos paramètres</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  {
-                    label: 'Modification des paramètres de sécurité',
-                    date: 'Il y a 2 heures',
-                    icon: Shield,
-                    color: 'text-emerald-600'
-                  },
-                  {
-                    label: 'Activation des notifications d\'audience',
-                    date: 'Hier',
-                    icon: Bell,
-                    color: 'text-blue-600'
-                  },
-                  {
-                    label: 'Synchronisation Supabase réussie',
-                    date: '25 septembre',
-                    icon: Database,
-                    color: 'text-purple-600'
-                  }
-                ].map((event, index) => (
+                {[].map((event, index) => (
                   <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-amber-200 transition">
                     <div className="flex items-center gap-3">
                       <div className={`h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center ${event.color}`}>
@@ -421,12 +402,7 @@ const NotaireSettingsModernized = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  { label: 'Double authentification', value: settings.security?.twoFactorEnabled },
-                  { label: 'Journalisation des actions', value: settings.security?.auditLogs },
-                  { label: 'Chiffrement avancé', value: settings.security?.encryptionLevel === 'high' },
-                  { label: 'Biométrie activée', value: settings.security?.biometricAuth }
-                ].map((item, index) => (
+                {[].map((item, index) => (
                   <div key={index} className="flex items-center justify-between">
                     <span className="text-sm text-gray-700">{item.label}</span>
                     {item.value ? (
@@ -732,27 +708,7 @@ const NotaireSettingsModernized = () => {
               <CardDescription>Renforcez la protection de vos procédures sensibles</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
-              {[{
-                label: 'Double authentification',
-                description: 'Code SMS sécurisé requis à chaque connexion',
-                key: 'twoFactorEnabled',
-                icon: Lock
-              }, {
-                label: 'Biométrie sur appareils homologués',
-                description: 'Reconnaissance FaceID / TouchID sur vos terminaux',
-                key: 'biometricAuth',
-                icon: Fingerprint
-              }, {
-                label: 'Journal des actions',
-                description: 'Traçabilité complète de la rédaction à la signature',
-                key: 'auditLogs',
-                icon: ShieldCheck
-              }, {
-                label: 'Liste blanche IP',
-                description: 'Restreindre l’accès aux réseaux de l’étude',
-                key: 'ipWhitelist',
-                icon: Wifi
-              }].map((item) => (
+              {[].map((item) => (
                 <div key={item.key} className="flex items-start justify-between gap-4 p-3 border rounded-lg">
                   <div className="flex items-start gap-3">
                     <div className="h-10 w-10 rounded-full bg-emerald-50 flex items-center justify-center">

@@ -123,30 +123,7 @@ const MairieAI = ({ dashboardStats }) => {
   ];
 
   // Conversation avec l'assistant IA
-  const conversationExample = [
-    {
-      type: 'user',
-      message: 'Quelles sont les tendances actuelles des demandes foncières ?',
-      timestamp: '14:30'
-    },
-    {
-      type: 'ai',
-      message: 'Basé sur l\'analyse des 12 derniers mois, voici les principales tendances :\n\n• **Augmentation de 23%** des demandes dans la Zone Résidentielle Nord\n• **Stabilisation** des demandes commerciales (+2%)\n• **Émergence** de demandes mixtes (résidentiel-commercial) : +45%\n• **Délais de traitement** réduits de 18% grâce aux optimisations\n\nRecommandation : Préparer l\'extension de la Zone Nord pour répondre à la demande croissante.',
-      timestamp: '14:31',
-      confidence: 94
-    },
-    {
-      type: 'user',
-      message: 'Comment optimiser les délais de traitement des permis de construire ?',
-      timestamp: '14:35'
-    },
-    {
-      type: 'ai',
-      message: 'Voici mes recommandations pour optimiser les délais :\n\n**1. Automatisation (Impact: -40% délais)**\n• Validation automatique documents standards\n• Pré-évaluation conformité urbanisme\n\n**2. Réorganisation processus (Impact: -25% délais)**\n• Traitement parallèle des étapes\n• Priorisation intelligente\n\n**3. Formation équipe (Impact: -15% délais)**\n• Spécialisation par type de demande\n• Outils d\'aide à la décision\n\n**Délai cible**: Passer de 22j à 14j moyenne',
-      timestamp: '14:36',
-      confidence: 91
-    }
-  ];
+  const conversationExample = []; // données graphiques réelles requises
 
   const getCategoryColor = (category) => {
     switch (category) {

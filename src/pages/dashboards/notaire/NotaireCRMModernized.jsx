@@ -940,11 +940,7 @@ const NotaireCRMModernized = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-3">
-                      {[
-                        { name: 'Crédit Agricole', type: 'Banque principale', years: '3 ans' },
-                        { name: 'UBA Sénégal', type: 'Crédit immobilier', years: '1 an' },
-                        { name: 'BICIS', type: 'Compte épargne', years: '2 ans' }
-                      ].map((bank, index) => (
+                      {[].map((bank, index) => (
                         <div key={index} className="flex items-center space-x-3 p-2 bg-gray-50 rounded">
                           <Building className="h-8 w-8 p-2 bg-green-100 text-green-600 rounded" />
                           <div className="flex-1">

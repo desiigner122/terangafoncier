@@ -129,29 +129,29 @@ const AgentFoncierDocuments = () => {
   const documentStats = [
     {
       title: 'Total Documents',
-      value: '247',
-      change: '+12',
+      value: '—',
+      change: null,
       icon: FileText,
       color: 'bg-blue-100 text-blue-600'
     },
     {
       title: 'En Attente',
-      value: '23',
-      change: '+3',
+      value: '—',
+      change: null,
       icon: Clock,
       color: 'bg-yellow-100 text-yellow-600'
     },
     {
       title: 'Validés',
-      value: '189',
-      change: '+8',
+      value: '—',
+      change: null,
       icon: CheckCircle,
       color: 'bg-green-100 text-green-600'
     },
     {
       title: 'Sécurisés',
-      value: '156',
-      change: '+15',
+      value: '—',
+      change: null,
       icon: Lock,
       color: 'bg-purple-100 text-purple-600'
     }

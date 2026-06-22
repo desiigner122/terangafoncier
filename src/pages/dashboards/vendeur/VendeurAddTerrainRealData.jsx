@@ -181,27 +181,27 @@ const VendeurAddTerrainRealData = () => {
   ];
 
   const installmentDurations = [
-    { value: '6', label: '6 mois' },
-    { value: '12', label: '1 an' },
-    { value: '24', label: '2 ans' },
-    { value: '36', label: '3 ans' },
-    { value: '60', label: '5 ans' }
+    { value: '—', label: '6 mois' },
+    { value: '—', label: '1 an' },
+    { value: '—', label: '2 ans' },
+    { value: '—', label: '3 ans' },
+    { value: '—', label: '5 ans' }
   ];
 
   const bankDurations = [
-    { value: '5', label: '5 ans' },
-    { value: '10', label: '10 ans' },
-    { value: '15', label: '15 ans' },
-    { value: '20', label: '20 ans' },
-    { value: '25', label: '25 ans' }
+    { value: '—', label: '5 ans' },
+    { value: '—', label: '10 ans' },
+    { value: '—', label: '15 ans' },
+    { value: '—', label: '20 ans' },
+    { value: '—', label: '25 ans' }
   ];
 
   const downPaymentOptions = [
-    { value: '10', label: '10%' },
-    { value: '20', label: '20%' },
-    { value: '30', label: '30%' },
-    { value: '40', label: '40%' },
-    { value: '50', label: '50%' }
+    { value: '—', label: '10%' },
+    { value: '—', label: '20%' },
+    { value: '—', label: '30%' },
+    { value: '—', label: '40%' },
+    { value: '—', label: '50%' }
   ];
 
   const banksList = [

@@ -16,10 +16,10 @@ const MarketAnalysisPage = () => {
   ];
 
   const periods = [
-    { value: '3months', label: '3 derniers mois' },
-    { value: '6months', label: '6 derniers mois' },
-    { value: '12months', label: '12 derniers mois' },
-    { value: '24months', label: '2 dernières années' }
+    { value: '—', label: '3 derniers mois' },
+    { value: '—', label: '6 derniers mois' },
+    { value: '—', label: '12 derniers mois' },
+    { value: '—', label: '2 dernières années' }
   ];
 
   const marketData = {
@@ -59,20 +59,7 @@ const MarketAnalysisPage = () => {
     { type: 'Commercial', percentage: 9, color: 'bg-yellow-500' }
   ];
 
-  const monthlyTrends = [
-    { month: 'Jan', price: 175000, transactions: 234 },
-    { month: 'Fév', price: 178000, transactions: 267 },
-    { month: 'Mar', price: 180000, transactions: 298 },
-    { month: 'Avr', price: 182000, transactions: 312 },
-    { month: 'Mai', price: 183000, transactions: 289 },
-    { month: 'Jun', price: 185000, transactions: 345 },
-    { month: 'Jul', price: 187000, transactions: 356 },
-    { month: 'Aoû', price: 188000, transactions: 334 },
-    { month: 'Sep', price: 190000, transactions: 378 },
-    { month: 'Oct', price: 192000, transactions: 389 },
-    { month: 'Nov', price: 194000, transactions: 412 },
-    { month: 'Déc', price: 195000, transactions: 445 }
-  ];
+  const monthlyTrends = []; // données graphiques réelles requises
 
   const insights = [
     {

@@ -35,36 +35,7 @@ const ModernPromoteurDashboard = () => {
   const navigate = useNavigate();
 
   // Stats du header pour Promoteur
-  const stats = [
-    { 
-      label: 'Projets Actifs', 
-      value: '8', 
-      icon: Building2, 
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    { 
-      label: 'Ventes ce Mois', 
-      value: '23', 
-      icon: ShoppingCart, 
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
-    { 
-      label: 'CA Mensuel', 
-      value: '4.2M FCFA', 
-      icon: Euro, 
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-    { 
-      label: 'ROI Moyen', 
-      value: '18.5%', 
-      icon: TrendingUp, 
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50'
-    }
-  ];
+  const stats = [];
 
   const DashboardHeader = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -114,38 +85,7 @@ const ModernPromoteurDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[
-              { 
-                name: 'Résidence TERANGA Gardens',
-                location: 'Almadies, Dakar',
-                units: 45,
-                sold: 32,
-                progress: 75,
-                phase: 'Construction',
-                completion: 'Mars 2024',
-                investment: '2.8M FCFA'
-              },
-              { 
-                name: 'Complexe SAHEL Business',
-                location: 'Diamniadio',
-                units: 28,
-                sold: 15,
-                progress: 45,
-                phase: 'Commercialisation',
-                completion: 'Juin 2024',
-                investment: '1.9M FCFA'
-              },
-              { 
-                name: 'Villas PLATEAU Premium',
-                location: 'Plateau, Dakar',
-                units: 12,
-                sold: 8,
-                progress: 90,
-                phase: 'Finitions',
-                completion: 'Février 2024',
-                investment: '3.2M FCFA'
-              }
-            ].map((project, index) => (
+            {[].map((project, index) => (
               <div key={index} className="p-4 border rounded-lg hover:bg-gray-50">
                 <div className="flex justify-between items-start mb-3">
                   <div>
@@ -211,11 +151,7 @@ const ModernPromoteurDashboard = () => {
             
             <div className="space-y-3">
               <h5 className="font-medium">Projets les plus performants:</h5>
-              {[
-                { name: 'Villas PLATEAU Premium', roi: '24.5%', satisfaction: 95 },
-                { name: 'Résidence TERANGA Gardens', roi: '19.2%', satisfaction: 92 },
-                { name: 'Complexe SAHEL Business', roi: '16.8%', satisfaction: 88 }
-              ].map((perf, index) => (
+              {[].map((perf, index) => (
                 <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <p className="font-medium text-sm">{perf.name}</p>
@@ -445,9 +381,9 @@ const ModernPromoteurDashboard = () => {
             <h5 className="font-medium mb-3">Affaires prioritaires cette semaine:</h5>
             <div className="space-y-2">
               {[
-                { client: 'SARL TECH Innovation', property: 'Bureaux 250m²', value: '32M FCFA', priority: 'Haute' },
-                { client: 'Famille WADE', property: 'Villa 5ch', value: '48M FCFA', priority: 'Moyenne' },
-                { client: '', property: 'App. T4', value: '25M FCFA', priority: 'Haute' }
+                { client: 'SARL TECH Innovation', property: 'Bureaux 250m²', value: '—', priority: 'Haute' },
+                { client: 'Famille WADE', property: 'Villa 5ch', value: '—', priority: 'Moyenne' },
+                { client: '', property: 'App. T4', value: '—', priority: 'Haute' }
               ].map((deal, index) => (
                 <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                   <div>
@@ -835,11 +771,7 @@ const ModernPromoteurDashboard = () => {
             
             <div className="space-y-3">
               <h5 className="font-medium">Top performers ce mois:</h5>
-              {[
-                { name: '', sales: 8, commission: '2.1M FCFA' },
-                { name: '', sales: 6, commission: '1.8M FCFA' },
-                { name: '', sales: 5, commission: '1.5M FCFA' }
-              ].map((performer, index) => (
+              {[].map((performer, index) => (
                 <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
                   <div>
                     <p className="font-medium text-sm">{performer.name}</p>

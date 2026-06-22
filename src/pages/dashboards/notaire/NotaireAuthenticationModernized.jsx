@@ -400,32 +400,7 @@ const NotaireAuthenticationModernized = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  { 
-                    name: 'Polygon', 
-                    status: 'Opérationnel', 
-                    gasPrice: '35 Gwei', 
-                    blockTime: '2.1s',
-                    load: 65,
-                    color: 'bg-green-500'
-                  },
-                  { 
-                    name: 'Ethereum', 
-                    status: 'Congestionné', 
-                    gasPrice: '125 Gwei', 
-                    blockTime: '12.8s',
-                    load: 85,
-                    color: 'bg-orange-500'
-                  },
-                  { 
-                    name: 'BSC', 
-                    status: 'Opérationnel', 
-                    gasPrice: '8 Gwei', 
-                    blockTime: '3.2s',
-                    load: 45,
-                    color: 'bg-green-500'
-                  }
-                ].map((network, index) => (
+                {[].map((network, index) => (
                   <div key={index} className="p-3 bg-gray-50 rounded-lg">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center space-x-2">
@@ -667,12 +642,7 @@ const NotaireAuthenticationModernized = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[
-                    { month: 'Octobre', count: 28, growth: '+15%' },
-                    { month: 'Septembre', count: 24, growth: '+8%' },
-                    { month: 'Août', count: 22, growth: '+12%' },
-                    { month: 'Juillet', count: 19, growth: '+5%' }
-                  ].map((data, index) => (
+                  {[].map((data, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 text-sm font-medium">{data.month}</div>

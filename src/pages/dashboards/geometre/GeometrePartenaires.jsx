@@ -119,32 +119,32 @@ const GeometrePartenaires = () => {
   const stats = [
     {
       title: 'Partenaires Actifs',
-      value: '18',
-      change: '+2',
+      value: '—',
+      change: null,
       changeType: 'positive',
       icon: UserCheck,
       description: 'Ce trimestre'
     },
     {
       title: 'Collaborations',
-      value: '67',
-      change: '+8',
+      value: '—',
+      change: null,
       changeType: 'positive',
       icon: Network,
       description: 'Cette année'
     },
     {
       title: 'Note Moyenne',
-      value: '4.7/5',
-      change: '+0.1',
+      value: '—',
+      change: null,
       changeType: 'positive',
       icon: Star,
       description: 'Satisfaction'
     },
     {
       title: 'CA Partenariat',
-      value: '85M FCFA',
-      change: '+22%',
+      value: '—',
+      change: null,
       changeType: 'positive',
       icon: TrendingUp,
       description: 'Revenus indirects'

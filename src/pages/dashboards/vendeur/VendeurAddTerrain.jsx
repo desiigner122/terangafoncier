@@ -143,12 +143,7 @@ const VendeurAddTerrain = () => {
     },
     
     // Documents légaux
-    documents: [
-      { name: 'Titre Foncier', type: 'PDF', required: true, uploaded: false },
-      { name: 'Plan de bornage', type: 'PDF', required: true, uploaded: false },
-      { name: 'Certificat d\'urbanisme', type: 'PDF', required: false, uploaded: false },
-      { name: 'Photos aériennes', type: 'PDF', required: false, uploaded: false }
-    ],
+    documents: [],
     
     // Images et médias
     images: [],

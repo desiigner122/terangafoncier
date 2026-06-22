@@ -643,12 +643,7 @@ const PromoteurAI = () => {
                   <div>
                     <h3 className="font-semibold text-gray-900 mb-3">Modèles Actifs</h3>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      {[
-                        { name: 'Prédiction Ventes', status: 'Actif', accuracy: 94 },
-                        { name: 'Optimisation Coûts', status: 'Actif', accuracy: 87 },
-                        { name: 'Analyse Concurrence', status: 'Actif', accuracy: 91 },
-                        { name: 'Satisfaction Client', status: 'Actif', accuracy: 89 }
-                      ].map((model, index) => (
+                      {[].map((model, index) => (
                         <div key={index} className="border rounded-lg p-4">
                           <div className="flex items-center justify-between mb-2">
                             <h4 className="font-medium text-gray-900">{model.name}</h4>

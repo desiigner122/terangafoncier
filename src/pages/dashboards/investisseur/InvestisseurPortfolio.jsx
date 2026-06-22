@@ -44,12 +44,7 @@ const InvestisseurPortfolio = () => {
   };
 
   // Répartition par type
-  const allocationData = [
-    { type: 'Résidentiel', value: 1200000, percentage: 42.1, color: 'bg-blue-500' },
-    { type: 'Commercial', value: 850000, percentage: 29.8, color: 'bg-green-500' },
-    { type: 'Foncier', value: 520000, percentage: 18.2, color: 'bg-purple-500' },
-    { type: 'Industriel', value: 280000, percentage: 9.9, color: 'bg-orange-500' }
-  ];
+  const allocationData = []; // données graphiques réelles requises
 
   // Tous les investissements
   const allInvestments = [

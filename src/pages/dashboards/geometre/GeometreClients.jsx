@@ -110,14 +110,14 @@ const GeometreClients = () => {
     },
     {
       title: 'Revenus Total',
-      value: '29.18M XOF',
+      value: '—',
       icon: DollarSign,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
     },
     {
       title: 'Note Moyenne',
-      value: '4.5/5',
+      value: '—',
       icon: Star,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100'  

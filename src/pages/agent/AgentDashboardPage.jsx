@@ -104,26 +104,14 @@ const AgentDashboardPage = () => {
 
   // Données graphiques pour analytics immobilières
   const [chartData, setChartData] = useState({
-    salesPerformance: [
-      { month: 'Jan', commissions: 650000, deals: 4, prospects: 12 },
-      { month: 'Fév', commissions: 720000, deals: 5, prospects: 15 },
-      { month: 'Mar', commissions: 580000, deals: 3, prospects: 18 },
-      { month: 'Avr', commissions: 850000, deals: 6, prospects: 22 },
-      { month: 'Mai', commissions: 920000, deals: 7, prospects: 18 },
-      { month: 'Juin', commissions: 780000, deals: 5, prospects: 20 }
-    ],
+    salesPerformance: [],
     propertyTypes: [
       { type: 'Résidentiel', mandats: 12, percentage: 50, color: '#8884d8' },
       { type: 'Commercial', mandats: 6, percentage: 25, color: '#82ca9d' },
       { type: 'Terrain', mandats: 4, percentage: 17, color: '#ffc658' },
       { type: 'Investissement', mandats: 2, percentage: 8, color: '#ff7300' }
     ],
-    marketTrends: [
-      { zone: 'Almadies', prix: 180000, evolution: 5.2, demande: 'Forte' },
-      { zone: 'Plateau', prix: 220000, evolution: 3.8, demande: 'Modérée' },
-      { zone: 'Yoff', prix: 95000, evolution: 8.1, demande: 'Très forte' },
-      { zone: 'Ouakam', prix: 150000, evolution: 2.5, demande: 'Stable' }
-    ]
+    marketTrends: []
   });
 
   // Pipeline et activités client

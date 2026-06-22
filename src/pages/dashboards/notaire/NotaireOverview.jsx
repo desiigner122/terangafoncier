@@ -224,7 +224,7 @@ const NotaireOverview = () => {
     {
       title: 'Revenus Mensuels',
       value: `${(realStats.monthlyRevenue / 1000000).toFixed(1)}M FCFA`,
-      change: '+18.3%',
+      change: null,
       trend: 'up',
       icon: DollarSign,
       color: 'bg-blue-500',

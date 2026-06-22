@@ -33,32 +33,32 @@ const AgentFoncierOverview = () => {
   const stats = [
     {
       title: 'Terrains Gérés',
-      value: '1,250',
-      change: '+8.2%',
+      value: '—',
+      change: null,
       icon: Map,
       color: 'text-green-600',
       bgColor: 'bg-green-50'
     },
     {
       title: 'Clients Actifs',
-      value: '89',
-      change: '+12.1%',
+      value: '—',
+      change: null,
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
       title: 'Documents Traités',
-      value: '342',
-      change: '+5.4%',
+      value: '—',
+      change: null,
       icon: FileText,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50'
     },
     {
       title: 'Revenus Mensuels',
-      value: '45M XOF',
-      change: '+15.8%',
+      value: '—',
+      change: null,
       icon: DollarSign,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'

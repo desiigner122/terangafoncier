@@ -63,14 +63,7 @@ const NotaireDashboard = () => {
 
   // Données pour les graphiques
   const [chartData, setChartData] = useState({
-    monthlyActivity: [
-      { month: 'Sept', actes: 18, revenus: 2800000, valeur: 650000000 },
-      { month: 'Oct', actes: 22, revenus: 3100000, valeur: 780000000 },
-      { month: 'Nov', actes: 25, revenus: 3450000, valeur: 920000000 },
-      { month: 'Déc', actes: 20, revenus: 2950000, valeur: 700000000 },
-      { month: 'Jan', actes: 24, revenus: 3200000, valeur: 850000000 },
-      { month: 'Fév', actes: 21, revenus: 3250000, valeur: 780000000 }
-    ],
+    monthlyActivity: [],
     actTypes: [
       { type: 'Vente Immobilière', count: 45, revenue: 6750000, avgValue: 35000000, color: '#0088FE' },
       { type: 'Donation', count: 18, revenue: 1800000, avgValue: 25000000, color: '#00C49F' },

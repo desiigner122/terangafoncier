@@ -69,30 +69,7 @@ const VendeurAI = () => {
     }
   ];
 
-  const chatHistory = [
-    {
-      type: 'user',
-      message: 'Comment optimiser ma villa à Almadies pour avoir plus de vues ?',
-      timestamp: '14:30'
-    },
-    {
-      type: 'ai',
-      message: 'Excellente question ! Voici mes recommandations basées sur l\'analyse de propriétés similaires :\n\n1. **Photos** : Ajoutez 3-5 photos supplémentaires, particulièrement des vues extérieures au coucher du soleil\n2. **Prix** : Considérez un ajustement de -5% pour être plus compétitif\n3. **Description** : Mettez en avant la proximité de la plage (mots-clés recherchés)\n4. **Timing** : Republiez entre 18h-20h pour plus de visibilité',
-      timestamp: '14:31',
-      confidence: 96
-    },
-    {
-      type: 'user',
-      message: 'Quel prix suggères-tu pour un appartement 3 pièces au Plateau ?',
-      timestamp: '14:35'
-    },
-    {
-      type: 'ai',
-      message: 'D\'après l\'analyse du marché actuel au Plateau :\n\n💰 **Fourchette recommandée** : 42M - 48M FCFA\n📊 **Prix médian zone** : 45M FCFA\n📈 **Tendance** : +2.3% ce trimestre\n\nFacteurs influençant :\n- Surface (estimation 120m²)\n- Étage et ascenseur\n- État de rénovation\n- Proximité transports\n\nVoulez-vous une analyse plus précise avec vos spécifications ?',
-      timestamp: '14:36',
-      confidence: 91
-    }
-  ];
+  const chatHistory = []; // données graphiques réelles requises
 
   const optimizationSuggestions = [
     {
@@ -129,7 +106,7 @@ const VendeurAI = () => {
       metric: 'Prix Moyen Dakar',
       current: '52M FCFA',
       predicted: '54.2M FCFA',
-      change: '+4.2%',
+      change: null,
       period: '3 mois',
       confidence: 87
     },
@@ -137,7 +114,7 @@ const VendeurAI = () => {
       metric: 'Demande Almadies',
       current: 'Élevée',
       predicted: 'Très Élevée',
-      change: '+18%',
+      change: null,
       period: '2 mois',
       confidence: 92
     },
@@ -145,35 +122,13 @@ const VendeurAI = () => {
       metric: 'Taux Vente',
       current: '3.2%',
       predicted: '3.8%',
-      change: '+0.6%',
+      change: null,
       period: '1 mois',
       confidence: 79
     }
   ];
 
-  const contentTemplates = [
-    {
-      type: 'description',
-      title: 'Description Villa Luxe',
-      preview: 'Découvrez cette magnifique villa moderne située dans le prestigieux quartier d\'Almadies...',
-      words: 250,
-      seoScore: 94
-    },
-    {
-      type: 'social',
-      title: 'Post Réseaux Sociaux',
-      preview: '🏡 NOUVELLE PROPRIÉTÉ | Villa exceptionnelle avec vue mer panoramique...',
-      words: 120,
-      seoScore: 88
-    },
-    {
-      type: 'email',
-      title: 'Email Marketing',
-      preview: 'Votre opportunité d\'investissement vous attend dans cette villa d\'exception...',
-      words: 180,
-      seoScore: 91
-    }
-  ];
+  const contentTemplates = []; // données graphiques réelles requises
 
   const handleSendMessage = () => {
     if (!message.trim()) return;

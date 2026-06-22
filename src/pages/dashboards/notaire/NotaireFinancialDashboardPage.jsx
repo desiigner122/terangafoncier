@@ -4,28 +4,11 @@ import { motion } from 'framer-motion';
 import { TrendingUp, DollarSign, FileText, Users, ArrowUp, ArrowDown, Calendar } from 'lucide-react';
 
 const NotaireFinancialDashboardPage = () => {
-  const kpis = [
-    { label: 'Revenus', value: '12,450,000', currency: 'FCFA', change: '+12.5%', trend: 'up', icon: DollarSign, color: 'green' },
-    { label: 'Dépenses', value: '3,280,000', currency: 'FCFA', change: '-8.3%', trend: 'down', icon: TrendingUp, color: 'red' },
-    { label: 'Bénéfice Net', value: '9,170,000', currency: 'FCFA', change: '+18.2%', trend: 'up', icon: TrendingUp, color: 'blue' },
-    { label: 'Transactions', value: '127', change: '+15', trend: 'up', icon: FileText, color: 'purple' }
-  ];
+  const kpis = [];
 
-  const monthlyData = [
-    { month: 'Jan', revenue: 8500000, expenses: 2800000 },
-    { month: 'Fév', revenue: 9200000, expenses: 2950000 },
-    { month: 'Mar', revenue: 10100000, expenses: 3100000 },
-    { month: 'Avr', revenue: 9800000, expenses: 3050000 },
-    { month: 'Mai', revenue: 11200000, expenses: 3200000 },
-    { month: 'Juin', revenue: 12450000, expenses: 3280000 }
-  ];
+  const monthlyData = []; // données graphiques réelles requises
 
-  const revenueByType = [
-    { type: 'Actes de vente', amount: 6800000, percentage: 54.6, color: 'blue' },
-    { type: 'Successions', amount: 3200000, percentage: 25.7, color: 'green' },
-    { type: 'Donations', amount: 1850000, percentage: 14.9, color: 'purple' },
-    { type: 'Autres', amount: 600000, percentage: 4.8, color: 'orange' }
-  ];
+  const revenueByType = []; // données graphiques réelles requises
 
   // topClients RÉEL depuis Supabase (aucune donnée fictive)
   const [topClients, setTopClients] = useState([]);

@@ -548,13 +548,7 @@ const NotaireAIModernized = () => {
                 <CardDescription>Répartition par type de question</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {[
-                  { label: 'Ventes immobilières', value: 35, color: 'bg-blue-500' },
-                  { label: 'Successions', value: 28, color: 'bg-purple-500' },
-                  { label: 'Donations', value: 18, color: 'bg-emerald-500' },
-                  { label: 'Sociétés', value: 12, color: 'bg-amber-500' },
-                  { label: 'Autres', value: 7, color: 'bg-gray-500' }
-                ].map((item, index) => (
+                {[].map((item, index) => (
                   <div key={index} className="space-y-2">
                     <div className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-700">{item.label}</span>

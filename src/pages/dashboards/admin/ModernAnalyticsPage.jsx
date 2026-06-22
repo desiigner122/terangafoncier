@@ -209,40 +209,7 @@ const ModernAnalyticsPage = () => {
   const loadAIInsights = async (data) => {
     try {
       // Générer des insights IA basés sur les vraies données
-      const insights = [
-        {
-          type: 'prediction',
-          title: 'Prédiction de Revenus',
-          value: `+${(data.overview.monthlyGrowth || 15).toFixed(1)}%`,
-          description: 'Croissance prévue pour le mois prochain',
-          trend: 'up',
-          confidence: 87
-        },
-        {
-          type: 'anomaly',
-          title: 'Détection d\'Anomalies',
-          value: `${Math.floor(data.overview.totalTransactions * 0.02)}`,
-          description: 'Transactions suspectes détectées',
-          trend: 'neutral',
-          confidence: 94
-        },
-        {
-          type: 'optimization',
-          title: 'Optimisation Conversion',
-          value: `${(data.overview.conversionRate || 65).toFixed(1)}%`,
-          description: 'Taux de conversion actuel',
-          trend: data.overview.conversionRate > 70 ? 'up' : 'down',
-          confidence: 78
-        },
-        {
-          type: 'segmentation',
-          title: 'Segmentation Utilisateurs',
-          value: '4 segments',
-          description: 'Groupes d\'utilisateurs identifiés',
-          trend: 'up',
-          confidence: 91
-        }
-      ];
+      const insights = []; // données graphiques réelles requises
       
       setAiInsights(insights);
 

@@ -44,23 +44,23 @@ const VendeurAnalytics = () => {
   const kpiData = [
     {
       title: 'Vues Totales',
-      value: '12,847',
-      change: '+23.5%',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: Eye,
       color: 'text-blue-600'
     },
     {
       title: 'Taux de Conversion',
-      value: '3.2%',
-      change: '+0.8%',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: Target,
       color: 'text-green-600'
     },
     {
       title: 'Temps Moyen',
-      value: '2m 34s',
+      value: '—',
       change: '+12s',
       trend: 'up',
       icon: Clock,
@@ -68,8 +68,8 @@ const VendeurAnalytics = () => {
     },
     {
       title: 'Score IA Moyen',
-      value: '87.3',
-      change: '+2.1',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: Brain,
       color: 'text-purple-600'

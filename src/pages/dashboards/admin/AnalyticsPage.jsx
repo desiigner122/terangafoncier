@@ -43,7 +43,7 @@ const AnalyticsPage = () => {
       {
         id: 1,
         title: 'Chiffre d\'affaires',
-        value: '45,250,000',
+        value: '—',
         unit: 'XOF',
         change: 18.5,
         period: 'vs mois dernier',
@@ -54,7 +54,7 @@ const AnalyticsPage = () => {
       {
         id: 2,
         title: 'Nouvelles inscriptions',
-        value: '2,847',
+        value: '—',
         unit: 'utilisateurs',
         change: 12.3,
         period: 'vs mois dernier',
@@ -65,7 +65,7 @@ const AnalyticsPage = () => {
       {
         id: 3,
         title: 'Propriétés listées',
-        value: '1,234',
+        value: '—',
         unit: 'annonces',
         change: -2.4,
         period: 'vs mois dernier',
@@ -76,7 +76,7 @@ const AnalyticsPage = () => {
       {
         id: 4,
         title: 'Taux de conversion',
-        value: '8.7',
+        value: '—',
         unit: '%',
         change: 5.2,
         period: 'vs mois dernier',
@@ -85,13 +85,7 @@ const AnalyticsPage = () => {
         bgColor: 'bg-purple-50'
       }
     ],
-    regionPerformance: [
-      { region: 'Dakar', transactions: 456, revenue: 18500000, growth: 15.2 },
-      { region: 'Thiès', transactions: 234, revenue: 9800000, growth: 22.1 },
-      { region: 'Saint-Louis', transactions: 187, revenue: 7200000, growth: -3.5 },
-      { region: 'Kaolack', transactions: 145, revenue: 5900000, growth: 8.7 },
-      { region: 'Ziguinchor', transactions: 98, revenue: 3850000, growth: 12.4 }
-    ],
+    regionPerformance: [],
     propertyTypes: [
       { type: 'Maisons', count: 543, percentage: 42.1, avgPrice: 35000000 },
       { type: 'Appartements', count: 387, percentage: 30.0, avgPrice: 18500000 },

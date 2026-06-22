@@ -145,32 +145,7 @@ export function PaymentGuideVendeur() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
-                  {[
-                    {
-                      name: '💳 Stripe (Carte Bancaire)',
-                      description: 'Visa, Mastercard, American Express',
-                      features: ['Paiement sécurisé 3D Secure', 'Récepissé instant', 'Remboursement en 7 jours'],
-                      icon: '💳'
-                    },
-                    {
-                      name: '📱 Wave (Sénégal)',
-                      description: 'Portefeuille mobile Orange Money, Free Money, Tigo Cash',
-                      features: ['Paiement sans compte bancaire', 'Frais réduits', 'Confirmation instantanée'],
-                      icon: '📱'
-                    },
-                    {
-                      name: '🏦 Virement Bancaire',
-                      description: 'Pour les professionnels et entreprises',
-                      features: ['Facture automatique', 'Délai 2-3 jours ouvrables', 'Documentation'],
-                      icon: '🏦'
-                    },
-                    {
-                      name: '🎁 Codes Promo',
-                      description: 'Codes de réduction et offres spéciales',
-                      features: ['Réduction jusqu\'à 50%', 'Essais gratuits', 'Promotions saisonnières'],
-                      icon: '🎁'
-                    }
-                  ].map((method, idx) => (
+                  {[].map((method, idx) => (
                     <div key={idx} className="p-4 bg-slate-600 rounded-lg">
                       <h3 className="font-bold text-lg mb-2">{method.icon} {method.name}</h3>
                       <p className="text-gray-300 text-sm mb-3">{method.description}</p>

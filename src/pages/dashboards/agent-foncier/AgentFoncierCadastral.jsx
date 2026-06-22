@@ -107,11 +107,11 @@ const AgentFoncierCadastral = () => {
   ]);
 
   const [recentMeasures] = useState([
-    { id: 1, parcel: 'PAR-A-001', type: 'Surface', value: '2450 m²', date: '2024-09-26', precision: '±0.5m' },
-    { id: 2, parcel: 'PAR-B-023', type: 'Périmètre', value: '198.5 m', date: '2024-09-25', precision: '±0.2m' },
-    { id: 3, parcel: 'PAR-C-112', type: 'Altitude', value: '45.2 m', date: '2024-09-24', precision: '±0.1m' },
-    { id: 4, parcel: 'PAR-D-034', type: 'Orientation', value: '125.5°', date: '2024-09-24', precision: '±0.05°' },
-    { id: 5, parcel: 'PAR-E-067', type: 'Distance', value: '87.3 m', date: '2024-09-23', precision: '±0.1m' }
+    { id: 1, parcel: 'PAR-A-001', type: 'Surface', value: '—', date: '2024-09-26', precision: '±0.5m' },
+    { id: 2, parcel: 'PAR-B-023', type: 'Périmètre', value: '—', date: '2024-09-25', precision: '±0.2m' },
+    { id: 3, parcel: 'PAR-C-112', type: 'Altitude', value: '—', date: '2024-09-24', precision: '±0.1m' },
+    { id: 4, parcel: 'PAR-D-034', type: 'Orientation', value: '—', date: '2024-09-24', precision: '±0.05°' },
+    { id: 5, parcel: 'PAR-E-067', type: 'Distance', value: '—', date: '2024-09-23', precision: '±0.1m' }
   ]);
 
   const [surveyTools] = useState([

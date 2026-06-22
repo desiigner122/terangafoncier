@@ -105,13 +105,13 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
   const mainKPIs = [
     {
       title: 'Crédits Terrain Actifs',
-      value: '2.8M',
+      value: '—',
       subtitle: '348 dossiers',
-      change: '+12.5%',
+      change: null,
       changeType: 'positive',
       icon: Home,
       color: 'bg-blue-500',
-      trend: [65, 72, 68, 75, 82, 78, 85, 88, 92, 89, 95, 98],
+      trend: [],
       details: {
         approved: '285 approuvés',
         pending: '43 en attente',
@@ -120,13 +120,13 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
     },
     {
       title: 'Portfolio Total',
-      value: '45.2M FCFA',
+      value: '—',
       subtitle: 'Encours global',
-      change: '+8.3%',
+      change: null,
       changeType: 'positive',
       icon: Wallet,
       color: 'bg-green-500',
-      trend: [45, 48, 52, 47, 55, 58, 62, 59, 65, 68, 72, 75],
+      trend: [],
       details: {
         performing: '42.1M (93%)',
         watchlist: '2.8M (6%)',
@@ -135,13 +135,13 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
     },
     {
       title: 'Nouveaux Clients',
-      value: '127',
+      value: '—',
       subtitle: 'Ce mois',
-      change: '+23.1%',
+      change: null,
       changeType: 'positive',
       icon: Users,
       color: 'bg-purple-500',
-      trend: [20, 25, 18, 30, 35, 28, 42, 38, 45, 52, 48, 55],
+      trend: [],
       details: {
         individual: '98 particuliers',
         corporate: '19 entreprises',
@@ -150,13 +150,13 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
     },
     {
       title: 'Score IA Moyen',
-      value: '87.3',
+      value: '—',
       subtitle: 'Précision crédit',
-      change: '+2.1%',
+      change: null,
       changeType: 'positive',
       icon: Zap,
       color: 'bg-yellow-500',
-      trend: [82, 83, 85, 84, 86, 87, 85, 88, 89, 87, 90, 87],
+      trend: [],
       details: {
         excellent: '65% (>85)',
         good: '28% (70-85)',
@@ -167,32 +167,18 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
 
   // Métriques secondaires
   const secondaryMetrics = [
-    { title: 'Taux d\'approbation', value: '82.1%', change: '+3.2%', icon: CheckCircle },
-    { title: 'Délai moyen', value: '4.2j', change: '-15%', icon: Clock },
-    { title: 'Satisfaction client', value: '4.7/5', change: '+0.3', icon: Star },
-    { title: 'KYC automatisé', value: '94.5%', change: '+8.1%', icon: Shield },
-    { title: 'API Uptime', value: '99.8%', change: '0%', icon: Server },
-    { title: 'Blockchain sync', value: '100%', change: '0%', icon: Database }
+    { title: 'Taux d\'approbation', value: '—', change: null, icon: CheckCircle },
+    { title: 'Délai moyen', value: '—', change: null, icon: Clock },
+    { title: 'Satisfaction client', value: '—', change: null, icon: Star },
+    { title: 'KYC automatisé', value: '—', change: null, icon: Shield },
+    { title: 'API Uptime', value: '—', change: null, icon: Server },
+    { title: 'Blockchain sync', value: '—', change: null, icon: Database }
   ];
 
   // Données graphiques
-  const creditEvolution = [
-    { month: 'Jan', approved: 45, pending: 12, rejected: 8 },
-    { month: 'Fév', approved: 52, pending: 15, rejected: 6 },
-    { month: 'Mar', approved: 48, pending: 18, rejected: 7 },
-    { month: 'Avr', approved: 61, pending: 14, rejected: 9 },
-    { month: 'Mai', approved: 55, pending: 16, rejected: 5 },
-    { month: 'Jun', approved: 67, pending: 11, rejected: 8 },
-    { month: 'Jul', approved: 73, pending: 13, rejected: 6 },
-    { month: 'Aoû', approved: 68, pending: 17, rejected: 7 },
-    { month: 'Sep', approved: 82, pending: 19, rejected: 4 }
-  ];
+  const creditEvolution = []; // données graphiques réelles requises
 
-  const riskDistribution = [
-    { name: 'Faible risque', value: 65, color: '#22c55e' },
-    { name: 'Risque modéré', value: 28, color: '#f59e0b' },
-    { name: 'Risque élevé', value: 7, color: '#ef4444' }
-  ];
+  const riskDistribution = []; // données graphiques réelles requises
 
   // Dernières activités
   const recentActivities = []; // démo retirée

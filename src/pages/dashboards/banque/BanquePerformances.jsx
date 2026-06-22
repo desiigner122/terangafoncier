@@ -89,12 +89,7 @@ const BanquePerformances = () => {
   };
 
   // Données pour les graphiques
-  const pieData = [
-    { name: 'Crédits Immobiliers', value: 45, color: '#3B82F6' },
-    { name: 'Épargne', value: 30, color: '#10B981' },
-    { name: 'Crédits Auto', value: 15, color: '#8B5CF6' },
-    { name: 'Cartes', value: 10, color: '#F59E0B' }
-  ];
+  const pieData = []; // données graphiques réelles requises
 
   const clientSegmentData = [
     { segment: 'Particuliers', clients: 2850, revenus: 1520000000 },

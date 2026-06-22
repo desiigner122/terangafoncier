@@ -1005,11 +1005,7 @@ const VendeurSettings = () => {
               <div>
                 <h4 className="font-medium mb-4">Historique des factures</h4>
                 <div className="space-y-2">
-                  {[
-                    { date: '15 Jan 2024', amount: '25 000 FCFA', status: 'Payée' },
-                    { date: '15 Déc 2023', amount: '25 000 FCFA', status: 'Payée' },
-                    { date: '15 Nov 2023', amount: '25 000 FCFA', status: 'Payée' }
-                  ].map((invoice, index) => (
+                  {[].map((invoice, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>
                         <h5 className="font-medium">{invoice.date}</h5>

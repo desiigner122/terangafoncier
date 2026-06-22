@@ -202,11 +202,11 @@ const EditPropertyComplete = () => {
   ];
 
   const installmentDurations = [
-    { value: '6', label: '6 mois' },
-    { value: '12', label: '1 an' },
-    { value: '24', label: '2 ans' },
-    { value: '36', label: '3 ans' },
-    { value: '60', label: '5 ans' }
+    { value: '—', label: '6 mois' },
+    { value: '—', label: '1 an' },
+    { value: '—', label: '2 ans' },
+    { value: '—', label: '3 ans' },
+    { value: '—', label: '5 ans' }
   ];
 
   const cryptoCurrencies = [

@@ -149,28 +149,28 @@ const AgentFoncierGPSVerification = () => {
             value: gpsStats.totalProperties, 
             icon: MapPin, 
             color: 'from-blue-500 to-cyan-600',
-            change: '+45'
+            change: null
           },
           { 
             title: 'Vérifiées', 
             value: gpsStats.verifiedProperties, 
             icon: CheckCircle, 
             color: 'from-green-500 to-emerald-600',
-            change: '+12'
+            change: null
           },
           { 
             title: 'Précision GPS', 
             value: `${gpsStats.gpsAccuracy}%`, 
             icon: Target, 
             color: 'from-purple-500 to-indigo-600',
-            change: '+0.3%'
+            change: null
           },
           { 
             title: 'Relevés Actifs', 
             value: gpsStats.activeSurveys, 
             icon: Activity, 
             color: 'from-orange-500 to-red-600',
-            change: '+8'
+            change: null
           }
         ].map((stat, index) => (
           <motion.div

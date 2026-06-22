@@ -34,26 +34,7 @@ const AgentFoncierSettings = () => {
 
   const [settings, setSettings] = useState({}); // démo retirée
 
-  const plans = [
-    {
-      name: 'Essentiel',
-      price: '25,000',
-      features: ['50 évaluations/mois', 'Support email', 'Rapports de base'],
-      current: false
-    },
-    {
-      name: 'Professionnel',
-      price: '75,000',
-      features: ['200 évaluations/mois', 'IA intégrée', 'Support prioritaire', 'Analytics avancés'],
-      current: true
-    },
-    {
-      name: 'Expert',
-      price: '150,000',
-      features: ['Évaluations illimitées', 'Blockchain', 'API access', 'Support dédié'],
-      current: false
-    }
-  ];
+  const plans = [];
 
   if (loading) {
     return (

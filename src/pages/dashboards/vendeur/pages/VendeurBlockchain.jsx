@@ -43,28 +43,28 @@ const VendeurBlockchain = () => {
   const blockchainStats = [
     {
       title: 'Propriétés Certifiées',
-      value: '8',
+      value: '—',
       change: '+2 ce mois',
       icon: Shield,
       color: 'text-green-600'
     },
     {
       title: 'Smart Contracts',
-      value: '12',
+      value: '—',
       change: '+4 actifs',
       icon: Network,
       color: 'text-blue-600'
     },
     {
       title: 'NFT Générés',
-      value: '5',
+      value: '—',
       change: '+1 cette semaine',
       icon: Coins,
       color: 'text-purple-600'
     },
     {
       title: 'Transactions',
-      value: '24',
+      value: '—',
       change: '+6 récentes',
       icon: TrendingUp,
       color: 'text-orange-600'
@@ -111,7 +111,7 @@ const VendeurBlockchain = () => {
       address: '0x742d35cc6bf4c18e1e4f9d8c5b3a1234567890',
       status: 'active',
       type: 'Sale Contract',
-      value: '85,000,000 FCFA',
+      value: '—',
       parties: 2,
       lastActivity: '2024-01-20',
       network: 'Polygon'
@@ -122,7 +122,7 @@ const VendeurBlockchain = () => {
       address: '0x8a7b6c5d4e3f2g1h0i9j8k7l6m5n4o3p2q1r',
       status: 'pending',
       type: 'Escrow Contract',
-      value: '45,000,000 FCFA',
+      value: '—',
       parties: 3,
       lastActivity: '2024-01-18',
       network: 'Ethereum'
@@ -133,7 +133,7 @@ const VendeurBlockchain = () => {
       address: '0x1a2b3c4d5e6f7g8h9i0j1k2l3m4n5o6p7q8r',
       status: 'completed',
       type: 'Rental Contract',
-      value: '500,000 FCFA/mois',
+      value: '—',
       parties: 2,
       lastActivity: '2024-01-15',
       network: 'Polygon'

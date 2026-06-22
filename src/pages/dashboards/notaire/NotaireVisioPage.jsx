@@ -74,12 +74,7 @@ const NotaireVisioPage = () => {
     }
   };
 
-  const statsDisplay = [
-    { label: 'Réunions ce mois', value: stats.totalMeetings, icon: Calendar, color: 'blue' },
-    { label: 'Heures totales', value: stats.totalHours, icon: Clock, color: 'green' },
-    { label: 'Participants moyens', value: stats.avgParticipants, icon: Users, color: 'purple' },
-    { label: 'Enregistrements', value: stats.recordings, icon: Video, color: 'red' }
-  ];
+  const statsDisplay = [];
 
   const startInstantMeeting = () => {
     setIsInMeeting(true);

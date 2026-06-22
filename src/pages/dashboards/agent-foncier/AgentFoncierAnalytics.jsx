@@ -32,9 +32,9 @@ const AgentFoncierAnalytics = () => {
   const performanceKPIs = [
     {
       title: 'Revenus Totaux',
-      value: '125,500,000',
+      value: '—',
       unit: 'XOF',
-      change: '+18.5%',
+      change: null,
       trend: 'up',
       icon: DollarSign,
       color: 'text-green-600',
@@ -42,8 +42,8 @@ const AgentFoncierAnalytics = () => {
     },
     {
       title: 'Terrains Évalués',
-      value: '342',
-      change: '+12.3%',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: Map,
       color: 'text-blue-600',
@@ -51,8 +51,8 @@ const AgentFoncierAnalytics = () => {
     },
     {
       title: 'Nouveaux Clients',
-      value: '47',
-      change: '+25.1%',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: Users,
       color: 'text-purple-600',
@@ -60,9 +60,9 @@ const AgentFoncierAnalytics = () => {
     },
     {
       title: 'Temps Moyen/Dossier',
-      value: '3.2',
+      value: '—',
       unit: 'jours',
-      change: '-8.4%',
+      change: null,
       trend: 'down',
       icon: Target,
       color: 'text-orange-600',
@@ -70,60 +70,11 @@ const AgentFoncierAnalytics = () => {
     }
   ];
 
-  const zoneAnalysis = [
-    {
-      zone: 'Dakar Plateau',
-      terrains: 145,
-      valeurMoyenne: '850M',
-      evolution: '+15.2%',
-      status: 'high'
-    },
-    {
-      zone: 'Almadies',
-      terrains: 89,
-      valeurMoyenne: '1.2B',
-      evolution: '+22.8%',
-      status: 'high'
-    },
-    {
-      zone: 'Parcelles Assainies',
-      terrains: 234,
-      valeurMoyenne: '420M',
-      evolution: '+8.5%',
-      status: 'medium'
-    },
-    {
-      zone: 'Rufisque',
-      terrains: 167,
-      valeurMoyenne: '280M',
-      evolution: '+5.1%',
-      status: 'medium'
-    },
-    {
-      zone: 'Guédiawaye',
-      terrains: 98,
-      valeurMoyenne: '180M',
-      evolution: '+12.3%',
-      status: 'low'
-    }
-  ];
+  const zoneAnalysis = []; // données graphiques réelles requises
 
-  const monthlyTrends = [
-    { month: 'Jan', terrains: 28, revenus: 8500000, clients: 12 },
-    { month: 'Fév', terrains: 35, revenus: 11200000, clients: 15 },
-    { month: 'Mar', terrains: 42, revenus: 13800000, clients: 18 },
-    { month: 'Avr', terrains: 38, revenus: 12100000, clients: 16 },
-    { month: 'Mai', terrains: 45, revenus: 15600000, clients: 21 },
-    { month: 'Jun', terrains: 52, revenus: 18200000, clients: 24 }
-  ];
+  const monthlyTrends = []; // données graphiques réelles requises
 
-  const typeDocuments = [
-    { type: 'Titres Fonciers', count: 145, percentage: 35, color: 'bg-green-500' },
-    { type: 'Actes de Vente', count: 98, percentage: 24, color: 'bg-blue-500' },
-    { type: 'Baux Emphytéotiques', count: 67, percentage: 16, color: 'bg-purple-500' },
-    { type: 'Certificats d\'Occupation', count: 54, percentage: 13, color: 'bg-orange-500' },
-    { type: 'Autres Documents', count: 48, percentage: 12, color: 'bg-gray-500' }
-  ];
+  const typeDocuments = []; // données graphiques réelles requises
 
   if (loading) {
     return (

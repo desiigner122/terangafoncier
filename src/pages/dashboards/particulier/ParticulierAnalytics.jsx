@@ -85,19 +85,8 @@ const ParticulierAnalytics = () => {
           tempsReponseModens: '5.2 jours',
           tauxSucces: 80
         },
-        activiteMensuelle: [
-          { mois: 'Jan', demandes: 2, messages: 5, documents: 3 },
-          { mois: 'Fév', demandes: 1, messages: 8, documents: 2 },
-          { mois: 'Mar', demandes: 3, messages: 12, documents: 5 },
-          { mois: 'Avr', demandes: 2, messages: 15, documents: 4 },
-          { mois: 'Mai', demandes: 0, messages: 10, documents: 1 },
-          { mois: 'Juin', demandes: 0, messages: 8, documents: 2 }
-        ],
-        repartitionTypes: [
-          { name: 'Terrains Communaux', value: 5, color: '#3B82F6' },
-          { name: 'Constructions', value: 2, color: '#10B981' },
-          { name: 'Zones Spéciales', value: 1, color: '#F59E0B' }
-        ],
+        activiteMensuelle: [],
+        repartitionTypes: [],
         performances: {
           documentsValides: 12,
           documentsTotal: 15,
@@ -106,14 +95,7 @@ const ParticulierAnalytics = () => {
           delaiMoyenReponse: 2.8,
           satisfactionScore: 4.2
         },
-        tendances: [
-          { periode: 'S1', activite: 65 },
-          { periode: 'S2', activite: 78 },
-          { periode: 'S3', activite: 82 },
-          { periode: 'S4', activite: 75 },
-          { periode: 'S5', activite: 88 },
-          { periode: 'S6', activite: 92 }
-        ],
+        tendances: [],
         objectifs: {
           profilComplete: { actuel: 85, cible: 100 },
           documentsValides: { actuel: 80, cible: 100 },

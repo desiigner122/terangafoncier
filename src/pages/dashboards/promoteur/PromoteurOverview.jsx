@@ -136,14 +136,7 @@ const PromoteurOverview = () => {
   ];
 
   // Ventes par mois (6 derniers mois)
-  const salesData = [
-    { month: 'Jul', sales: 8, revenue: 1200000 },
-    { month: 'Août', sales: 12, revenue: 1800000 },
-    { month: 'Sep', sales: 15, revenue: 2200000 },
-    { month: 'Oct', sales: 10, revenue: 1650000 },
-    { month: 'Nov', sales: 18, revenue: 2850000 },
-    { month: 'Déc', sales: 22, revenue: 3400000 }
-  ];
+  const salesData = []; // données graphiques réelles requises
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {

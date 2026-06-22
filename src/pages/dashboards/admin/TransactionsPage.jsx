@@ -183,27 +183,7 @@ const TransactionsPage = () => {
       setError(error.message);
       
       // En cas d'erreur, afficher des données par défaut minimales
-      const fallbackTransactions = [
-        {
-          id: 'fallback-1',
-          type: 'purchase',
-          status: 'pending',
-          amount: 0,
-          fee: 0,
-          property: {
-            id: null,
-            title: 'Aucune transaction disponible',
-            type: 'N/A',
-            location: 'N/A'
-          },
-          buyer: { name: 'N/A', email: 'n/a@email.com' },
-          seller: { name: 'N/A', email: 'n/a@email.com' },
-          createdAt: new Date().toISOString(),
-          completedAt: null,
-          paymentMethod: 'N/A',
-          escrowAccount: null
-        }
-      ];
+      const fallbackTransactions = []; // données graphiques réelles requises
       
       setTransactions(fallbackTransactions);
       setStats({ totalTransactions: 0, completedTransactions: 0, pendingTransactions: 0, failedTransactions: 0, totalVolume: 0, averageAmount: 0 });

@@ -134,17 +134,9 @@ export default function NotaireComplianceModernized() {
       score: c.compliance_score || 0
     }));
 
-  const typeDistribution = [
-    { name: 'Réglementaire', value: checks.filter(c => c.check_type === 'regulatory').length, color: '#3b82f6' },
-    { name: 'Qualité', value: checks.filter(c => c.check_type === 'quality').length, color: '#10b981' },
-    { name: 'Sécurité', value: checks.filter(c => c.check_type === 'security').length, color: '#f59e0b' }
-  ];
+  const typeDistribution = [];
 
-  const statusDistribution = [
-    { name: 'Réussi', value: checks.filter(c => c.check_status === 'completed').length, color: '#10b981' },
-    { name: 'En attente', value: checks.filter(c => c.check_status === 'pending').length, color: '#f59e0b' },
-    { name: 'Échoué', value: checks.filter(c => c.check_status === 'failed').length, color: '#ef4444' }
-  ];
+  const statusDistribution = [];
 
   /**
    * 🎨 FONCTIONS D'AFFICHAGE

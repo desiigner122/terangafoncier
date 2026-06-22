@@ -101,16 +101,7 @@ const AdminProjectsPage = () => {
     }
   };
 
-  const progressData = [
-    { month: 'Jan', projets: 2, completion: 85 },
-    { month: 'Fév', projets: 3, completion: 92 },
-    { month: 'Mar', projets: 2, completion: 78 },
-    { month: 'Avr', projets: 4, completion: 88 },
-    { month: 'Mai', projets: 3, completion: 95 },
-    { month: 'Jun', projets: 5, completion: 82 },
-    { month: 'Jul', projets: 4, completion: 90 },
-    { month: 'Aoû', projets: 6, completion: 87 }
-  ];
+  const progressData = []; // données graphiques réelles requises
 
   if (loading) {
     return (

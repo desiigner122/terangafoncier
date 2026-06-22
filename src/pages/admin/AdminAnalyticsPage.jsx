@@ -48,33 +48,9 @@ const AdminAnalyticsPage = () => {
       completionRate: 94.2,
       growthRate: 15.8
     },
-    revenueData: [
-      { month: 'Jan', revenue: 8500000, projects: 3, profit: 1700000 },
-      { month: 'Fév', revenue: 12300000, projects: 5, profit: 2460000 },
-      { month: 'Mar', revenue: 15200000, projects: 4, profit: 3040000 },
-      { month: 'Avr', revenue: 18700000, projects: 6, profit: 3740000 },
-      { month: 'Mai', revenue: 22100000, projects: 8, profit: 4420000 },
-      { month: 'Jun', revenue: 25600000, projects: 7, profit: 5120000 },
-      { month: 'Jul', revenue: 32400000, projects: 9, profit: 6480000 },
-      { month: 'Aoû', revenue: 45800000, projects: 12, profit: 9160000 }
-    ],
-    userGrowth: [
-      { month: 'Jan', nouveaux: 45, actifs: 234, diaspora: 18 },
-      { month: 'Fév', nouveaux: 67, actifs: 301, diaspora: 29 },
-      { month: 'Mar', nouveaux: 89, actifs: 390, diaspora: 41 },
-      { month: 'Avr', nouveaux: 123, actifs: 513, diaspora: 58 },
-      { month: 'Mai', nouveaux: 156, actifs: 669, diaspora: 72 },
-      { month: 'Jun', nouveaux: 189, actifs: 858, diaspora: 91 },
-      { month: 'Jul', nouveaux: 234, actifs: 1092, diaspora: 118 },
-      { month: 'Aoû', nouveaux: 267, actifs: 1247, diaspora: 145 }
-    ],
-    projectsByType: [
-      { name: 'Villa individuelle', value: 35, color: '#8884d8' },
-      { name: 'Duplex/Triplex', value: 28, color: '#82ca9d' },
-      { name: 'Immeuble locatif', value: 20, color: '#ffc658' },
-      { name: 'Commercial', value: 12, color: '#ff7300' },
-      { name: 'Terrain nu', value: 5, color: '#00ff88' }
-    ],
+    revenueData: [],
+    userGrowth: [],
+    projectsByType: [],
     diasporaCountries: [
       { country: 'France', projects: 12, revenue: 18500000 },
       { country: 'États-Unis', projects: 8, revenue: 12300000 },

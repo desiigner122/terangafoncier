@@ -61,53 +61,40 @@ const BanqueAnalytics = () => {
     performanceMetrics: [
       {
         metric: 'Taux Approbation Terrains',
-        value: '87%',
+        value: '—',
         change: 5.2,
         status: 'excellent',
         target: '85%'
       },
       {
         metric: 'Délai Moyen Traitement',
-        value: '12 jours',
+        value: '—',
         change: -15.3,
         status: 'bon',
         target: '15 jours'
       },
       {
         metric: 'LTV Moyen Terrains',
-        value: '76%',
+        value: '—',
         change: 2.1,
         status: 'stable',
         target: '80%'
       },
       {
         metric: 'Taux Défaut',
-        value: '2.3%',
+        value: '—',
         change: -8.7,
         status: 'excellent',
         target: '3%'
       }
     ],
-    creditEvolution: [
-      { month: 'Jan', totalCredits: 2400000000, landCredits: 1680000000, approvalRate: 82 },
-      { month: 'Fév', totalCredits: 2850000000, landCredits: 1995000000, approvalRate: 85 },
-      { month: 'Mar', totalCredits: 3200000000, landCredits: 2240000000, approvalRate: 88 },
-      { month: 'Avr', totalCredits: 2900000000, landCredits: 2030000000, approvalRate: 84 },
-      { month: 'Mai', totalCredits: 3800000000, landCredits: 2660000000, approvalRate: 89 },
-      { month: 'Jun', totalCredits: 4200000000, landCredits: 2940000000, approvalRate: 87 }
-    ],
+    creditEvolution: [],
     riskAnalysis: [
       { category: 'Terrain Titré', value: 78, risk: 'Faible', color: '#10B981' },
       { category: 'Terrain Immatriculé', value: 15, risk: 'Moyen', color: '#F59E0B' },
       { category: 'Terrain Non-Titré', value: 7, risk: 'Élevé', color: '#EF4444' }
     ],
-    geographicDistribution: [
-      { region: 'Dakar', credits: 145, amount: 18500000000, avgLTV: 78 },
-      { region: 'Thiès', credits: 89, amount: 8900000000, avgLTV: 75 },
-      { region: 'Saint-Louis', credits: 67, amount: 6200000000, avgLTV: 73 },
-      { region: 'Kaolack', credits: 45, amount: 4100000000, avgLTV: 76 },
-      { region: 'Ziguinchor', credits: 34, amount: 3800000000, avgLTV: 74 }
-    ]
+    geographicDistribution: []
   };
 
   const handleRefreshData = () => {

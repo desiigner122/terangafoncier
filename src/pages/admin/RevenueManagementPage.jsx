@@ -107,16 +107,7 @@ const RevenueManagementPage = () => {
   // Configuration des graphiques
   const lineChartData = {
     labels: revenueData?.dailyRevenue?.map(d => new Date(d.date).toLocaleDateString()) || [],
-    datasets: [
-      {
-        label: 'Revenus quotidiens',
-        data: revenueData?.dailyRevenue?.map(d => d.amount) || [],
-        borderColor: 'rgb(59, 130, 246)',
-        backgroundColor: 'rgba(59, 130, 246, 0.1)',
-        tension: 0.4,
-        fill: true
-      }
-    ]
+    datasets: []
   };
 
   const doughnutData = {

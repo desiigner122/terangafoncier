@@ -69,79 +69,10 @@ const PromoteurFinances = () => {
   }, []);
 
   // Flux de trésorerie mensuel
-  const cashFlowData = [
-    { month: 'Jan', income: 180000000, expenses: 145000000, net: 35000000 },
-    { month: 'Fév', income: 220000000, expenses: 165000000, net: 55000000 },
-    { month: 'Mar', income: 195000000, expenses: 178000000, net: 17000000 },
-    { month: 'Avr', income: 285000000, expenses: 198000000, net: 87000000 },
-    { month: 'Mai', income: 320000000, expenses: 215000000, net: 105000000 },
-    { month: 'Jun', income: 275000000, expenses: 189000000, net: 86000000 },
-    { month: 'Jul', income: 360000000, expenses: 245000000, net: 115000000 },
-    { month: 'Aoû', income: 298000000, expenses: 203000000, net: 95000000 },
-    { month: 'Sep', income: 415000000, expenses: 278000000, net: 137000000 },
-    { month: 'Oct', income: 385000000, expenses: 256000000, net: 129000000 },
-    { month: 'Nov', income: 425000000, expenses: 289000000, net: 136000000 },
-    { month: 'Déc', income: 380000000, expenses: 265000000, net: 115000000 }
-  ];
+  const cashFlowData = []; // données graphiques réelles requises
 
   // Catégories de dépenses
-  const expenseCategories = [
-    {
-      category: 'Construction',
-      amount: 1650000000,
-      percentage: 68.4,
-      change: -5.2,
-      subcategories: [
-        { name: 'Matériaux', amount: 890000000 },
-        { name: 'Main d\'œuvre', amount: 520000000 },
-        { name: 'Équipement', amount: 240000000 }
-      ]
-    },
-    {
-      category: 'Marketing & Ventes',
-      amount: 185000000,
-      percentage: 7.7,
-      change: 12.3,
-      subcategories: [
-        { name: 'Publicité digitale', amount: 85000000 },
-        { name: 'Événements', amount: 45000000 },
-        { name: 'Commissions', amount: 55000000 }
-      ]
-    },
-    {
-      category: 'Administration',
-      amount: 125000000,
-      percentage: 5.2,
-      change: 3.1,
-      subcategories: [
-        { name: 'Salaires', amount: 85000000 },
-        { name: 'Bureaux', amount: 25000000 },
-        { name: 'Autres', amount: 15000000 }
-      ]
-    },
-    {
-      category: 'Légal & Réglementaire',
-      amount: 95000000,
-      percentage: 3.9,
-      change: 8.7,
-      subcategories: [
-        { name: 'Permis', amount: 35000000 },
-        { name: 'Avocats', amount: 30000000 },
-        { name: 'Assurances', amount: 30000000 }
-      ]
-    },
-    {
-      category: 'Autres',
-      amount: 355000000,
-      percentage: 14.8,
-      change: -2.1,
-      subcategories: [
-        { name: 'Maintenance', amount: 155000000 },
-        { name: 'Transport', amount: 85000000 },
-        { name: 'Divers', amount: 115000000 }
-      ]
-    }
-  ];
+  const expenseCategories = []; // données graphiques réelles requises
 
   // Créances et dettes
   const receivables = []; // démo retirée

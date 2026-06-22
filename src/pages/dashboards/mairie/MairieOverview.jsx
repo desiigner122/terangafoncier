@@ -102,7 +102,7 @@ const MairieOverview = ({ dashboardStats }) => {
     {
       title: 'Demandes en Cours',
       value: dashboardStats.pendingRequests,
-      change: '+12%',
+      change: null,
       trend: 'up',
       icon: FileText,
       color: 'bg-blue-500',
@@ -111,7 +111,7 @@ const MairieOverview = ({ dashboardStats }) => {
     {
       title: 'Territoire Géré',
       value: dashboardStats.territoryArea,
-      change: '+0.5%',
+      change: null,
       trend: 'up',
       icon: Map,
       color: 'bg-green-500',
@@ -120,7 +120,7 @@ const MairieOverview = ({ dashboardStats }) => {
     {
       title: 'Citoyens Actifs',
       value: dashboardStats.activeCitizens.toLocaleString(),
-      change: '+3.2%',
+      change: null,
       trend: 'up',
       icon: Users,
       color: 'bg-purple-500',
@@ -129,7 +129,7 @@ const MairieOverview = ({ dashboardStats }) => {
     {
       title: 'Parcelles Gérées',
       value: dashboardStats.totalLandManaged,
-      change: '+8.1%',
+      change: null,
       trend: 'up',
       icon: Building2,
       color: 'bg-orange-500',

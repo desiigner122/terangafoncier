@@ -68,7 +68,7 @@ const AgentFoncierClients = () => {
     {
       title: 'Total Clients',
       value: clients.length,
-      change: '+12.5%',
+      change: null,
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
@@ -76,7 +76,7 @@ const AgentFoncierClients = () => {
     {
       title: 'Clients Actifs',
       value: clients.filter(c => c.statut === 'actif').length,
-      change: '+8.3%',
+      change: null,
       icon: CheckCircle2,
       color: 'text-green-600',
       bgColor: 'bg-green-50'
@@ -84,7 +84,7 @@ const AgentFoncierClients = () => {
     {
       title: 'Nouveaux (30j)',
       value: clients.filter(c => c.statut === 'nouveau').length,
-      change: '+25.0%',
+      change: null,
       icon: UserPlus,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50'
@@ -92,7 +92,7 @@ const AgentFoncierClients = () => {
     {
       title: 'Satisfaction Moy.',
       value: Math.round(clients.reduce((acc, c) => acc + c.satisfaction, 0) / clients.length) + '%',
-      change: '+2.1%',
+      change: null,
       icon: Star,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'

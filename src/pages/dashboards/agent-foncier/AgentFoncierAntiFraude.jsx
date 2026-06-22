@@ -263,28 +263,28 @@ const AgentFoncierAntiFraude = () => {
           { 
             title: 'Alertes Totales', 
             value: fraudeStats.totalAlerts, 
-            change: '+12%',
+            change: null,
             icon: Bell, 
             color: 'from-blue-500 to-cyan-600' 
           },
           { 
             title: 'Alertes Critiques', 
             value: fraudeStats.criticalAlerts, 
-            change: '-8%',
+            change: null,
             icon: AlertTriangle, 
             color: 'from-red-500 to-pink-600' 
           },
           { 
             title: 'Cas Résolus', 
             value: fraudeStats.resolvedCases, 
-            change: '+15%',
+            change: null,
             icon: CheckCircle, 
             color: 'from-green-500 to-emerald-600' 
           },
           { 
             title: 'Taux Détection', 
             value: `${fraudeStats.detectionRate}%`, 
-            change: '+2.1%',
+            change: null,
             icon: Target, 
             color: 'from-purple-500 to-indigo-600' 
           }
@@ -542,11 +542,7 @@ const AgentFoncierAntiFraude = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { month: 'Janvier', fraud: 45, prevented: 2100000 },
-                { month: 'Février', fraud: 52, prevented: 2450000 },
-                { month: 'Mars', fraud: 38, prevented: 1890000 }
-              ].map((data, index) => (
+              {[].map((data, index) => (
                 <div key={data.month} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
                     <p className="font-medium">{data.month}</p>
@@ -573,12 +569,7 @@ const AgentFoncierAntiFraude = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
-              {[
-                { name: 'Temps de réponse moyen', value: '12 min', trend: 'down' },
-                { name: 'Taux de faux positifs', value: '2.1%', trend: 'down' },
-                { name: 'Couverture géographique', value: '94%', trend: 'up' },
-                { name: 'Satisfaction agents', value: '4.7/5', trend: 'up' }
-              ].map((metric, index) => (
+              {[].map((metric, index) => (
                 <div key={metric.name} className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">{metric.name}</p>

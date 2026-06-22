@@ -54,32 +54,32 @@ const GeometreCRM = () => {
   const stats = [
     {
       title: 'Clients Actifs',
-      value: '24',
-      change: '+3',
+      value: '—',
+      change: null,
       changeType: 'positive',
       icon: Users,
       description: 'Ce mois'
     },
     {
       title: 'Prospects',
-      value: '8',
-      change: '+2',
+      value: '—',
+      change: null,
       changeType: 'positive',
       icon: Target,
       description: 'En négociation'
     },
     {
       title: 'CA Total',
-      value: '125M FCFA',
-      change: '+15%',
+      value: '—',
+      change: null,
       changeType: 'positive',
       icon: TrendingUp,
       description: 'Cette année'
     },
     {
       title: 'Taux Conversion',
-      value: '68%',
-      change: '+5%',
+      value: '—',
+      change: null,
       changeType: 'positive',
       icon: Award,
       description: 'Prospects → Clients'

@@ -123,10 +123,10 @@ const BlockchainContactPage = () => {
   ];
 
   const supportStats = [
-    { label: 'Temps Réponse Moyen', value: '2h', icon: Clock },
-    { label: 'Satisfaction Client', value: '98.5%', icon: Star },
-    { label: 'Demandes Traitées/Jour', value: '150+', icon: MessageSquare },
-    { label: 'Langues Supportées', value: '4', icon: Globe }
+    { label: 'Temps Réponse Moyen', value: '—', icon: Clock },
+    { label: 'Satisfaction Client', value: '—', icon: Star },
+    { label: 'Demandes Traitées/Jour', value: '—', icon: MessageSquare },
+    { label: 'Langues Supportées', value: '—', icon: Globe }
   ];
 
   const handleInputChange = (e) => {

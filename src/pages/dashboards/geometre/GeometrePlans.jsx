@@ -151,7 +151,7 @@ const GeometrePlans = () => {
     },
     {
       title: 'Taille Totale',
-      value: '36.5 MB',
+      value: '—',
       icon: Settings,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'

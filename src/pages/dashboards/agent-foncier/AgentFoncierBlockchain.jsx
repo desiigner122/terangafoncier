@@ -130,7 +130,7 @@ const AgentFoncierBlockchain = () => {
       type: 'Document Certification',
       from: '0x1234...5678',
       to: '0xabcd...ef90',
-      value: '0.0023 ETH',
+      value: '—',
       gasUsed: '21,000',
       timestamp: '2024-09-26 14:32:15',
       status: 'confirmé',
@@ -142,7 +142,7 @@ const AgentFoncierBlockchain = () => {
       type: 'Smart Contract Call',
       from: '0x5678...9012',
       to: '0xef90...1234',
-      value: '0.0018 ETH',
+      value: '—',
       gasUsed: '45,230',
       timestamp: '2024-09-26 14:28:42',
       status: 'confirmé',
@@ -154,7 +154,7 @@ const AgentFoncierBlockchain = () => {
       type: 'Title Transfer',
       from: '0x9012...3456',
       to: '0x1234...5678',
-      value: '0.0031 ETH',
+      value: '—',
       gasUsed: '67,890',
       timestamp: '2024-09-26 14:15:20',
       status: 'pending',
@@ -165,29 +165,29 @@ const AgentFoncierBlockchain = () => {
   const blockchainMetrics = [
     {
       title: 'Documents Sécurisés',
-      value: '1,247',
-      change: '+12%',
+      value: '—',
+      change: null,
       icon: Shield,
       color: 'bg-green-100 text-green-600'
     },
     {
       title: 'Transactions Blockchain',
-      value: '3,456',
-      change: '+8%',
+      value: '—',
+      change: null,
       icon: Activity,
       color: 'bg-blue-100 text-blue-600'
     },
     {
       title: 'Smart Contracts',
-      value: '24',
-      change: '+3',
+      value: '—',
+      change: null,
       icon: Cpu,
       color: 'bg-purple-100 text-purple-600'
     },
     {
       title: 'Certificats Validés',
-      value: '892',
-      change: '+15%',
+      value: '—',
+      change: null,
       icon: Award,
       color: 'bg-orange-100 text-orange-600'
     }

@@ -127,14 +127,14 @@ const GeometreCadastral = () => {
     },
     {
       title: 'Surface Totale',
-      value: '69.9 ha',
+      value: '—',
       icon: Ruler,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
     },
     {
       title: 'Valeur Totale',
-      value: '1.4B XOF',
+      value: '—',
       icon: Target,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100'

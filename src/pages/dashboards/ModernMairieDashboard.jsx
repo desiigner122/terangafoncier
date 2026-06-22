@@ -33,36 +33,7 @@ const ModernMairieDashboard = () => {
   const [selectedTab, setSelectedTab] = useState('permits');
 
   // Stats du header pour Mairie
-  const stats = [
-    { 
-      label: 'Permis en Cours', 
-      value: '47', 
-      icon: FileText, 
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-50'
-    },
-    { 
-      label: 'Zone Territoire', 
-      value: '12.5km²', 
-      icon: Map, 
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
-    { 
-      label: 'Citoyens Actifs', 
-      value: '8,542', 
-      icon: Users, 
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-50'
-    },
-    { 
-      label: 'Services Traités', 
-      value: '156', 
-      icon: CheckCircle, 
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-50'
-    }
-  ];
+  const stats = [];
 
   const DashboardHeader = () => (
     <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
@@ -196,22 +167,7 @@ const ModernMairieDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
-            {[
-              {
-                date: '25 Janvier 2024',
-                time: '14h30',
-                dossiers: 8,
-                location: 'Salle du Conseil Municipal',
-                status: 'Programmée'
-              },
-              {
-                date: '8 Février 2024',
-                time: '14h30',
-                dossiers: 12,
-                location: 'Salle du Conseil Municipal',
-                status: 'En préparation'
-              }
-            ].map((commission, index) => (
+            {[].map((commission, index) => (
               <div key={index} className="p-4 border rounded-lg bg-gray-50">
                 <div className="flex justify-between items-center mb-2">
                   <h4 className="font-semibold">{commission.date} à {commission.time}</h4>
@@ -241,40 +197,7 @@ const ModernMairieDashboard = () => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {[
-              { 
-                zone: 'Zone Résidentielle Nord',
-                surface: '3.2 km²',
-                population: 2400,
-                density: '750 hab/km²',
-                status: 'Dense',
-                color: 'bg-red-50 border-red-200'
-              },
-              { 
-                zone: 'Zone Commerciale Centre',
-                surface: '1.8 km²',
-                population: 850,
-                density: '472 hab/km²',
-                status: 'Modéré',
-                color: 'bg-yellow-50 border-yellow-200'
-              },
-              { 
-                zone: 'Zone Industrielle Sud',
-                surface: '4.1 km²',
-                population: 320,
-                density: '78 hab/km²',
-                status: 'Faible',
-                color: 'bg-green-50 border-green-200'
-              },
-              { 
-                zone: 'Zone Agricole Est',
-                surface: '3.4 km²',
-                population: 180,
-                density: '53 hab/km²',
-                status: 'Très faible',
-                color: 'bg-blue-50 border-blue-200'
-              }
-            ].map((zone, index) => (
+            {[].map((zone, index) => (
               <div key={index} className={`p-4 border rounded-lg ${zone.color}`}>
                 <h4 className="font-semibold mb-2">{zone.zone}</h4>
                 <div className="space-y-1 text-sm">

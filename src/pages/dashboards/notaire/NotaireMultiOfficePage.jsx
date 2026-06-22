@@ -35,12 +35,7 @@ const NotaireMultiOfficePage = () => {
 
       {/* Stats globales */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-        {[
-          { label: 'Bureaux Actifs', value: globalStats.totalOffices, icon: Building2, color: 'cyan' },
-          { label: 'Personnel Total', value: globalStats.totalStaff, icon: Users, color: 'blue' },
-          { label: 'Transactions', value: globalStats.totalTransactions, icon: FileText, color: 'purple' },
-          { label: 'Revenus Total', value: `${(globalStats.totalRevenue / 1000000).toFixed(1)}M`, suffix: 'FCFA', icon: TrendingUp, color: 'green' }
-        ].map((stat, index) => (
+        {[].map((stat, index) => (
           <motion.div key={index} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: index * 0.1 }} className="bg-white rounded-xl p-6 shadow-md border border-slate-200">
             <div className="flex items-center justify-between">
               <div>

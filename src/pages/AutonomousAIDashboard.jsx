@@ -664,28 +664,13 @@ const AutonomousAIDashboard = () => {
 
   // Fonctions utilitaires pour générer des données
   function generateChartData() {
-    return [
-      { name: 'Jan', value: 400 },
-      { name: 'Fév', value: 300 },
-      { name: 'Mar', value: 600 },
-      { name: 'Avr', value: 800 },
-      { name: 'Mai', value: 700 },
-      { name: 'Jun', value: 900 }
-    ];
+    return [];
   }
 
   function generateGoals(role) {
     const goals = {
-      particulier: [
-        { label: 'Recherches optimisées IA', progress: 85 },
-        { label: 'Opportunités identifiées', progress: 72 },
-        { label: 'Alertes configurées', progress: 100 }
-      ],
-      banque: [
-        { label: 'Automatisation crédits', progress: 94 },
-        { label: 'Réduction risques', progress: 88 },
-        { label: 'Satisfaction clients', progress: 96 }
-      ]
+      particulier: [],
+      banque: []
     };
     return goals[role] || goals.particulier;
   }
@@ -730,22 +715,11 @@ const AutonomousAIDashboard = () => {
   }
 
   function generatePieData() {
-    return [
-      { name: 'Approuvés IA', value: 65 },
-      { name: 'En attente', value: 20 },
-      { name: 'Refusés', value: 10 },
-      { name: 'En révision', value: 5 }
-    ];
+    return [];
   }
 
   function generateSalesData() {
-    return [
-      { month: 'Jan', sales: 12, aiGenerated: 8 },
-      { month: 'Fév', sales: 15, aiGenerated: 11 },
-      { month: 'Mar', sales: 18, aiGenerated: 14 },
-      { month: 'Avr', sales: 22, aiGenerated: 18 },
-      { month: 'Mai', sales: 25, aiGenerated: 21 }
-    ];
+    return [];
   }
 
   function generateAlerts() {

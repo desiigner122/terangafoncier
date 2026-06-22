@@ -287,11 +287,7 @@ const OverviewContent = ({ stats, formatCurrency }) => {
     }
   ];
 
-  const portfolioData = [
-    { name: 'Résidentiel', value: 45, color: '#3B82F6' },
-    { name: 'Commercial', value: 30, color: '#8B5CF6' },
-    { name: 'Foncier', value: 25, color: '#06B6D4' }
-  ];
+  const portfolioData = []; // données graphiques réelles requises
 
   return (
     <div className="space-y-6">

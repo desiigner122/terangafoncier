@@ -148,32 +148,7 @@ const NotaireAI = () => {
   ];
 
   // Recommandations IA
-  const aiRecommendations = [
-    {
-      type: 'efficiency',
-      title: 'Optimisation du workflow',
-      description: 'L\'IA recommande d\'automatiser la vérification des documents d\'identité pour gagner 15 minutes par dossier',
-      priority: 'high',
-      impact: 'Gain de temps: 2.5h/jour',
-      action: 'Activer la vérification automatique'
-    },
-    {
-      type: 'compliance',
-      title: 'Alerte conformité',
-      description: 'Nouveaux critères de conformité détectés dans 3 dossiers récents',
-      priority: 'medium',
-      impact: 'Réduction des risques légaux',
-      action: 'Réviser les dossiers signalés'
-    },
-    {
-      type: 'opportunity',
-      title: 'Opportunité de revenus',
-      description: 'L\'IA identifie une hausse de 20% des demandes de succession dans votre secteur',
-      priority: 'low',
-      impact: 'Revenus potentiels: +850K FCFA/mois',
-      action: 'Développer l\'offre succession'
-    }
-  ];
+  const aiRecommendations = []; // données graphiques réelles requises
 
   // Messages d'exemple pour le chat IA
   // defaultChatMessages RÉEL depuis Supabase (aucune donnée fictive)

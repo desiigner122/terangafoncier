@@ -46,20 +46,7 @@ const VendeurCommunication = () => {
       'Je vous rappelle dans la journée',
       'Parfait, c\'est noté !'
     ],
-    templates: [
-      {
-        name: 'Première prise de contact',
-        content: 'Bonjour {nom}, merci pour votre intérêt pour {propriete}. Je serais ravi de vous accompagner dans votre projet immobilier.'
-      },
-      {
-        name: 'Proposition de visite',
-        content: 'Bonjour {nom}, seriez-vous disponible pour visiter {propriete} cette semaine ? Je peux vous proposer plusieurs créneaux.'
-      },
-      {
-        name: 'Suivi après visite',
-        content: 'Bonjour {nom}, j\'espère que la visite de {propriete} vous a plu. N\'hésitez pas si vous avez des questions !'
-      }
-    ]
+    templates: []
   });
 
   useEffect(() => {

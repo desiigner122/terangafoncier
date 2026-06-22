@@ -57,42 +57,13 @@ const MairieAnalytics = ({ dashboardStats }) => {
   const [reportType, setReportType] = useState('monthly');
 
   // Données pour les graphiques
-  const monthlyRequests = [
-    { month: 'Jan', requests: 45, approved: 38, rejected: 7 },
-    { month: 'Fév', requests: 52, approved: 45, rejected: 7 },
-    { month: 'Mar', requests: 48, approved: 41, rejected: 7 },
-    { month: 'Avr', requests: 61, approved: 54, rejected: 7 },
-    { month: 'Mai', requests: 55, approved: 48, rejected: 7 },
-    { month: 'Jun', requests: 67, approved: 59, rejected: 8 },
-    { month: 'Jul', requests: 58, approved: 52, rejected: 6 },
-    { month: 'Aoû', requests: 63, approved: 56, rejected: 7 },
-    { month: 'Sep', requests: 59, approved: 51, rejected: 8 },
-    { month: 'Oct', requests: 64, approved: 57, rejected: 7 },
-    { month: 'Nov', requests: 69, approved: 61, rejected: 8 },
-    { month: 'Déc', requests: 72, approved: 65, rejected: 7 }
-  ];
+  const monthlyRequests = []; // données graphiques réelles requises
 
-  const requestsByZone = [
-    { zone: 'Résidentielle Nord', requests: 156, percentage: 35 },
-    { zone: 'Commerciale Centre', requests: 98, percentage: 22 },
-    { zone: 'Agricole Est', requests: 89, percentage: 20 },
-    { zone: 'Industrielle Sud', requests: 67, percentage: 15 },
-    { zone: 'Mixte Ouest', requests: 34, percentage: 8 }
-  ];
+  const requestsByZone = []; // données graphiques réelles requises
 
-  const requestsByType = [
-    { name: 'Attribution Communale', value: 178, color: '#3B82F6' },
-    { name: 'Permis Construire', value: 134, color: '#10B981' },
-    { name: 'Modification Cadastre', value: 89, color: '#F59E0B' },
-    { name: 'Résolution Conflits', value: 43, color: '#EF4444' }
-  ];
+  const requestsByType = []; // données graphiques réelles requises
 
-  const processingTimes = [
-    { type: 'Attribution Communale', avgDays: 18, target: 15, efficiency: 83 },
-    { type: 'Permis Construire', avgDays: 22, target: 20, efficiency: 91 },
-    { type: 'Modification Cadastre', avgDays: 16, target: 12, efficiency: 75 },
-    { type: 'Résolution Conflits', avgDays: 45, target: 40, efficiency: 89 }
-  ];
+  const processingTimes = []; // données graphiques réelles requises
 
   const populationStats = [
     { quarter: 'Q1 2024', population: 8420, growth: 2.3 },
@@ -105,23 +76,23 @@ const MairieAnalytics = ({ dashboardStats }) => {
   const mainKPIs = [
     {
       title: 'Demandes Traitées',
-      value: '687',
-      change: '+12.5%',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: FileText,
       color: 'blue'
     },
     {
       title: 'Taux d\'Approbation',
-      value: '87.3%',
-      change: '+3.2%',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: Target,
       color: 'green'
     },
     {
       title: 'Délai Moyen',
-      value: '19.5j',
+      value: '—',
       change: '-2.1j',
       trend: 'up',
       icon: Clock,
@@ -129,8 +100,8 @@ const MairieAnalytics = ({ dashboardStats }) => {
     },
     {
       title: 'Satisfaction',
-      value: '4.2/5',
-      change: '+0.3',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: Users,
       color: 'purple'

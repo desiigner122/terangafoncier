@@ -132,21 +132,21 @@ const GeometreTopographie = () => {
     },
     {
       title: 'Points Mesurés',
-      value: '16.1K',
+      value: '—',
       icon: Target,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
     {
       title: 'Surface Totale',
-      value: '69.9 ha',
+      value: '—',
       icon: Map,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
     },
     {
       title: 'Dénivelé Max',
-      value: '22.6 m',
+      value: '—',
       icon: TrendingUp,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100'

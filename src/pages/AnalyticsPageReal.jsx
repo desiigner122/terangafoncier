@@ -84,7 +84,7 @@ const AnalyticsPageComponent = () => {
         // Fallback avec données vides
         setAnalyticsData({
           kpis: [
-            { title: 'Erreur de connexion', value: '0', trend: 'Vérifiez la base', trendUp: false, icon: Users }
+            { title: 'Erreur de connexion', value: '—', trend: 'Vérifiez la base', trendUp: false, icon: Users }
           ],
           visitsData: [],
           sourceData: []

@@ -142,7 +142,7 @@ const GeometreMesures = () => {
     },
     {
       title: 'Surface Totale',
-      value: '51.7 ha',
+      value: '—',
       icon: Map,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'

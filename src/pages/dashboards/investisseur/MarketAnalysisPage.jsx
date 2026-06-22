@@ -34,12 +34,7 @@ const MarketAnalysisPage = () => {
   const regions = ['Dakar', 'Thies', 'Saint-Louis', 'Kaolack', 'Ziguinchor'];
   const periods = ['1M', '3M', '6M', '1A', '2A'];
 
-  const propertyTypes = [
-    { type: 'Résidentiel', percentage: 65, color: 'bg-blue-500' },
-    { type: 'Commercial', percentage: 20, color: 'bg-green-500' },
-    { type: 'Bureaux', percentage: 10, color: 'bg-purple-500' },
-    { type: 'Terrain', percentage: 5, color: 'bg-yellow-500' }
-  ];
+  const propertyTypes = []; // données graphiques réelles requises
 
   const marketTrends = [
     {

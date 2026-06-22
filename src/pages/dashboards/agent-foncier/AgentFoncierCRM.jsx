@@ -124,12 +124,12 @@ const AgentFoncierCRM = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         {[
-          { title: 'Total Clients', value: crmStats.totalClients, icon: Users, color: 'from-blue-500 to-cyan-600', change: '+12' },
-          { title: 'Clients Actifs', value: crmStats.activeClients, icon: CheckCircle, color: 'from-green-500 to-emerald-600', change: '+5' },
-          { title: 'Nouveaux', value: crmStats.nouveauxClients, icon: Star, color: 'from-yellow-500 to-orange-600', change: '+3' },
-          { title: 'Prospects', value: crmStats.clientsPotentiels, icon: Eye, color: 'from-purple-500 to-indigo-600', change: '+8' },
-          { title: 'CA Total', value: `${(crmStats.chiffreAffaires / 1000000).toFixed(0)}M`, icon: DollarSign, color: 'from-rose-500 to-pink-600', change: '+15%' },
-          { title: 'Conversion', value: `${crmStats.tauxConversion}%`, icon: TrendingUp, color: 'from-teal-500 to-cyan-600', change: '+2%' }
+          { title: 'Total Clients', value: crmStats.totalClients, icon: Users, color: 'from-blue-500 to-cyan-600', change: null },
+          { title: 'Clients Actifs', value: crmStats.activeClients, icon: CheckCircle, color: 'from-green-500 to-emerald-600', change: null },
+          { title: 'Nouveaux', value: crmStats.nouveauxClients, icon: Star, color: 'from-yellow-500 to-orange-600', change: null },
+          { title: 'Prospects', value: crmStats.clientsPotentiels, icon: Eye, color: 'from-purple-500 to-indigo-600', change: null },
+          { title: 'CA Total', value: `${(crmStats.chiffreAffaires / 1000000).toFixed(0)}M`, icon: DollarSign, color: 'from-rose-500 to-pink-600', change: null },
+          { title: 'Conversion', value: `${crmStats.tauxConversion}%`, icon: TrendingUp, color: 'from-teal-500 to-cyan-600', change: null }
         ].map((stat, index) => (
           <motion.div
             key={stat.title}

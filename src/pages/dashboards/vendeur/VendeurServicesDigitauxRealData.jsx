@@ -312,36 +312,7 @@ const VendeurServicesDigitauxRealData = () => {
 
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {[
-          {
-            label: 'Services Actifs',
-            value: stats.activeServices,
-            icon: Package,
-            color: 'blue',
-            trend: '+2 ce mois'
-          },
-          {
-            label: 'Utilisation Totale',
-            value: stats.totalUsage,
-            icon: Activity,
-            color: 'green',
-            trend: '+18%'
-          },
-          {
-            label: 'Coût Mensuel',
-            value: formatCFA(stats.monthlyCost),
-            icon: CreditCard,
-            color: 'orange',
-            trend: null
-          },
-          {
-            label: 'Crédits Disponibles',
-            value: stats.availableCredits,
-            icon: Award,
-            color: 'purple',
-            trend: '27/50'
-          }
-        ].map((stat, index) => (
+        {[].map((stat, index) => (
           <motion.div
             key={stat.label}
             initial={{ opacity: 0, y: 20 }}

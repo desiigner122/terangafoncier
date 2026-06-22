@@ -42,8 +42,8 @@ const BanqueDashboard = () => {
   const stats = [
     {
       title: 'Encours Crédit Immobilier',
-      value: '2.8 Mrd',
-      change: '+12.5%',
+      value: '—',
+      change: null,
       changeType: 'increase',
       icon: CreditCard,
       color: 'bg-blue-500',
@@ -51,8 +51,8 @@ const BanqueDashboard = () => {
     },
     {
       title: 'Dossiers en Cours',
-      value: '156',
-      change: '+23',
+      value: '—',
+      change: null,
       changeType: 'increase',
       icon: FileText,
       color: 'bg-green-500',
@@ -60,8 +60,8 @@ const BanqueDashboard = () => {
     },
     {
       title: 'Taux de Défaut',
-      value: '2.1%',
-      change: '-0.3%',
+      value: '—',
+      change: null,
       changeType: 'decrease',
       icon: AlertTriangle,
       color: 'bg-red-500',
@@ -69,8 +69,8 @@ const BanqueDashboard = () => {
     },
     {
       title: 'Nouveaux Clients',
-      value: '89',
-      change: '+15',
+      value: '—',
+      change: null,
       changeType: 'increase',
       icon: Users,
       color: 'bg-orange-500',
@@ -107,24 +107,7 @@ const BanqueDashboard = () => {
     }
   ];
 
-  const indicateursRisque = [
-    {
-      categorie: 'Crédit Immobilier',
-      encours: '2.8 Mrd FCFA',
-      provisionnement: '58M FCFA',
-      tauxDefaut: '2.1%',
-      evolution: '-0.3%',
-      niveau: 'Acceptable'
-    },
-    {
-      categorie: 'Hypothèques',
-      encours: '1.5 Mrd FCFA',
-      provisionnement: '15M FCFA',
-      tauxDefaut: '1.0%',
-      evolution: '+0.1%',
-      niveau: 'Très bon'
-    }
-  ];
+  const indicateursRisque = [];
 
   const getStatutColor = (statut) => {
     switch(statut.toLowerCase()) {

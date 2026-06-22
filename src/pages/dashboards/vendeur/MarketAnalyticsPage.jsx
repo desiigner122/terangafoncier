@@ -489,15 +489,7 @@ const MarketAnalyticsPage = () => {
     const dataPoints = analytics.priceSeries.length > 0 ? analytics.priceSeries : [0];
     return {
       labels,
-      datasets: [
-        {
-          label: 'Prix moyen/m²',
-          data: dataPoints,
-          borderColor: 'rgb(249, 115, 22)',
-          backgroundColor: 'rgba(249, 115, 22, 0.1)',
-          tension: 0.4,
-        },
-      ],
+      datasets: [],
     };
   }, [analytics.monthLabels, analytics.priceSeries]);
 
@@ -507,18 +499,7 @@ const MarketAnalyticsPage = () => {
     const listingPoints = analytics.listingSeries.length > 0 ? analytics.listingSeries : [0];
     return {
       labels,
-      datasets: [
-        {
-          label: 'Ventes',
-          data: salesPoints,
-          backgroundColor: 'rgba(59, 130, 246, 0.8)',
-        },
-        {
-          label: 'Annonces',
-          data: listingPoints,
-          backgroundColor: 'rgba(147, 51, 234, 0.8)',
-        },
-      ],
+      datasets: [],
     };
   }, [analytics.monthLabels, analytics.salesSeries, analytics.listingSeries]);
 

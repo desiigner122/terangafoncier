@@ -42,8 +42,8 @@ const GeometreAnalytics = () => {
   const kpiData = [
     {
       title: 'Revenus Totaux',
-      value: '28.5M XOF',
-      change: '+12.8%',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: DollarSign,
       color: 'text-green-600',
@@ -51,8 +51,8 @@ const GeometreAnalytics = () => {
     },
     {
       title: 'Missions Complétées',
-      value: '247',
-      change: '+18.2%',
+      value: '—',
+      change: null,
       trend: 'up', 
       icon: Target,
       color: 'text-blue-600',
@@ -60,8 +60,8 @@ const GeometreAnalytics = () => {
     },
     {
       title: 'Clients Actifs',
-      value: '48',
-      change: '+15.4%',
+      value: '—',
+      change: null,
       trend: 'up',
       icon: Users,
       color: 'text-purple-600',
@@ -69,8 +69,8 @@ const GeometreAnalytics = () => {
     },
     {
       title: 'Temps Moyen/Mission',
-      value: '4.2 jours',
-      change: '-8.5%',
+      value: '—',
+      change: null,
       trend: 'down',
       icon: Clock,
       color: 'text-orange-600',
@@ -79,55 +79,19 @@ const GeometreAnalytics = () => {
   ];
 
   // Données de performance mensuelle
-  const monthlyData = [
-    { month: 'Jan', missions: 18, revenus: 2.8, satisfaction: 4.5, clients: 12 },
-    { month: 'Fév', missions: 22, revenus: 3.2, satisfaction: 4.6, clients: 15 },
-    { month: 'Mar', missions: 25, revenus: 3.8, satisfaction: 4.7, clients: 18 },
-    { month: 'Avr', missions: 28, revenus: 4.2, satisfaction: 4.8, clients: 22 },
-    { month: 'Mai', missions: 24, revenus: 3.9, satisfaction: 4.6, clients: 19 },
-    { month: 'Jun', missions: 32, revenus: 5.1, satisfaction: 4.9, clients: 28 },
-    { month: 'Jul', missions: 35, revenus: 5.8, satisfaction: 4.8, clients: 31 },
-    { month: 'Aoû', missions: 38, revenus: 6.2, satisfaction: 4.9, clients: 35 },
-    { month: 'Sep', missions: 25, revenus: 4.5, satisfaction: 4.7, clients: 24 }
-  ];
+  const monthlyData = []; // données graphiques réelles requises
 
   // Répartition par type de mission
-  const missionTypes = [
-    { type: 'Topographie', count: 85, percentage: 34.4, revenue: '9.8M XOF', color: 'bg-blue-500' },
-    { type: 'Cadastral', count: 52, percentage: 21.1, revenue: '7.2M XOF', color: 'bg-green-500' },
-    { type: 'Bornage', count: 48, percentage: 19.4, revenue: '5.9M XOF', color: 'bg-purple-500' },
-    { type: 'Plans', count: 35, percentage: 14.2, revenue: '4.1M XOF', color: 'bg-orange-500' },
-    { type: 'Mesures', count: 27, percentage: 10.9, revenue: '1.5M XOF', color: 'bg-yellow-500' }
-  ];
+  const missionTypes = []; // données graphiques réelles requises
 
   // Top clients
-  const topClients = [
-    { name: 'Société IMMOGO', missions: 12, revenue: '8.5M XOF', satisfaction: 4.9 },
-    { name: 'Ministère Industrie', missions: 8, revenue: '15.2M XOF', satisfaction: 4.8 },
-    { name: 'Promoteur Sénégal', missions: 7, revenue: '6.8M XOF', satisfaction: 4.7 },
-    { name: 'Arch. Mbaye & Associates', missions: 6, revenue: '3.2M XOF', satisfaction: 4.6 },
-    { name: 'Coopérative Thiès', missions: 5, revenue: '1.9M XOF', satisfaction: 4.5 }
-  ];
+  const topClients = []; // données graphiques réelles requises
 
   // Zones géographiques
-  const geoData = [
-    { zone: 'Dakar', missions: 95, percentage: 38.5, revenue: '12.8M XOF' },
-    { zone: 'Thiès', missions: 68, percentage: 27.5, revenue: '8.9M XOF' },
-    { zone: 'Rufisque', missions: 42, percentage: 17.0, revenue: '4.2M XOF' },
-    { zone: 'Kaolack', missions: 25, percentage: 10.1, revenue: '2.1M XOF' },
-    { zone: 'Bargny', missions: 17, percentage: 6.9, revenue: '0.5M XOF' }
-  ];
+  const geoData = []; // données graphiques réelles requises
 
   // Tendances temporelles
-  const weeklyTrends = [
-    { day: 'Lun', missions: 8, efficiency: 85 },
-    { day: 'Mar', missions: 12, efficiency: 92 },
-    { day: 'Mer', missions: 15, efficiency: 88 },
-    { day: 'Jeu', missions: 11, efficiency: 90 },
-    { day: 'Ven', missions: 9, efficiency: 87 },
-    { day: 'Sam', missions: 4, efficiency: 75 },
-    { day: 'Dim', missions: 2, efficiency: 60 }
-  ];
+  const weeklyTrends = []; // données graphiques réelles requises
 
   const getTrendIcon = (trend) => {
     return trend === 'up' ? <ChevronUp className="h-4 w-4 text-green-600" /> : <ChevronDown className="h-4 w-4 text-red-600" />;

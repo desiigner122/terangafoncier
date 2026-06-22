@@ -33,24 +33,9 @@ const InvestisseurAnalytics = () => {
       bestROI: 23.3,
       riskScore: 6.8
     },
-    sectors: [
-      { name: 'Résidentiel', percentage: 45, value: 382500000, color: 'bg-blue-500' },
-      { name: 'Commercial', percentage: 35, value: 297500000, color: 'bg-green-500' },
-      { name: 'Foncier', percentage: 20, value: 170000000, color: 'bg-purple-500' }
-    ],
-    trends: [
-      { month: 'Jan', portfolio: 750, roi: 15.2 },
-      { month: 'Fév', portfolio: 780, roi: 16.1 },
-      { month: 'Mar', portfolio: 820, roi: 17.8 },
-      { month: 'Avr', portfolio: 850, roi: 18.5 },
-      { month: 'Mai', portfolio: 870, roi: 19.2 },
-      { month: 'Jun', portfolio: 850, roi: 18.5 }
-    ],
-    regions: [
-      { name: 'Dakar', investments: 8, value: 510000000, roi: 19.2 },
-      { name: 'Thiès', investments: 2, value: 175000000, roi: 18.8 },
-      { name: 'Saly', investments: 2, value: 165000000, roi: 16.5 }
-    ],
+    sectors: [],
+    trends: [],
+    regions: [],
     predictions: {
       nextMonth: { roi: 19.8, confidence: 85 },
       nextQuarter: { roi: 21.2, confidence: 78 },

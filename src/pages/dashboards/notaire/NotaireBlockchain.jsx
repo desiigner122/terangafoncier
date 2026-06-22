@@ -79,38 +79,7 @@ const NotaireBlockchain = () => {
   // Les données blockchain sont chargées depuis Supabase via loadBlockchainData()
 
   // Smart contracts déployés
-  const smartContracts = [
-    {
-      name: 'NotaryDocumentAuth',
-      address: '0xA1B2C3D4E5F6789012345678901234567890ABCD',
-      version: '2.1.0',
-      status: 'active',
-      deployer: 'Maître Notaire',
-      deployDate: '2023-12-15',
-      transactions: 1247,
-      gas: '2.5M'
-    },
-    {
-      name: 'PropertyTransfer',
-      address: '0xB2C3D4E5F678901234567890123456789012ABCD',
-      version: '1.8.2',
-      status: 'active',
-      deployer: 'Maître Notaire',
-      deployDate: '2023-11-20',
-      transactions: 834,
-      gas: '1.8M'
-    },
-    {
-      name: 'DigitalWill',
-      address: '0xC3D4E5F67890123456789012345678901234ABCD',
-      version: '1.5.1',
-      status: 'maintenance',
-      deployer: 'Maître Notaire',
-      deployDate: '2023-10-05',
-      transactions: 267,
-      gas: '950K'
-    }
-  ];
+  const smartContracts = []; // données graphiques réelles requises
 
   useEffect(() => {
     // Sera géré par loadBlockchainData

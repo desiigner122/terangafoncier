@@ -61,32 +61,7 @@ const BanqueAI = () => {
 
   // Données IA spécifiques aux crédits terrains
   const aiData = {
-    models: [
-      {
-        name: 'Analyseur de Crédit Terrain',
-        id: 'credit-analyzer',
-        accuracy: 94.7,
-        status: 'active',
-        description: 'Évalue la solvabilité pour crédits terrains',
-        lastTrained: '2024-01-20'
-      },
-      {
-        name: 'Prédicteur de Défaut',
-        id: 'default-predictor',
-        accuracy: 91.2,
-        status: 'active',
-        description: 'Prédit les risques de défaut de paiement',
-        lastTrained: '2024-01-18'
-      },
-      {
-        name: 'Évaluateur Foncier',
-        id: 'land-valuator',
-        accuracy: 87.8,
-        status: 'training',
-        description: 'Estimation automatique de valeur foncière',
-        lastTrained: '2024-01-15'
-      }
-    ],
+    models: [],
     recommendations: [
       {
         id: 'REC-001',

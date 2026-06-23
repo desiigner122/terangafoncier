@@ -120,9 +120,6 @@ const ModernHeroSlider = () => {
       ]
     }
   ];
-              ]
-    }
-  ];
 
   useEffect(() => {
     if (!isAutoPlaying) return;

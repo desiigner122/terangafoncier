@@ -180,7 +180,7 @@ class UserActionsManager {
     const mockUsers = [
       {
         id: 'user_1',
-        name: 'Amadou Diallo',
+        name: '',
         email: 'amadou.diallo@email.com',
         role: 'Particulier',
         status: 'active',
@@ -191,7 +191,7 @@ class UserActionsManager {
       },
       {
         id: 'user_2', 
-        name: 'Fatou Seck',
+        name: '',
         email: 'fatou.seck@email.com',
         role: 'Vendeur Pro',
         status: 'active',
@@ -202,7 +202,7 @@ class UserActionsManager {
       },
       {
         id: 'user_3',
-        name: 'Moussa Ba',
+        name: '',
         email: 'moussa.ba@email.com', 
         role: 'Agent Foncier',
         status: 'active',
@@ -213,7 +213,7 @@ class UserActionsManager {
       },
       {
         id: 'user_4',
-        name: 'Aïssatou Ndiaye',
+        name: '',
         email: 'aissatou.ndiaye@email.com',
         role: 'Banque',
         status: 'inactive',
@@ -224,7 +224,7 @@ class UserActionsManager {
       },
       {
         id: 'user_5',
-        name: 'Ibrahim Touré',
+        name: '',
         email: 'ibrahim.toure@email.com',
         role: 'Mairie',
         status: 'active',

@@ -207,7 +207,7 @@ const TerangaChatbot = ({ dashboardData = {}, context = {} }) => {
         setMessages(prev => [...prev, botMessage]);
         setSuggestions(aiResponse.suggestions);
         setIsLoading(false);
-      }, 1000 + Math.random() * 1500);
+      }, 1000 + 0 * 1500);
 
     } catch (error) {
       console.error('Chat error:', error);

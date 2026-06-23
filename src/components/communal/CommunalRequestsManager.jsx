@@ -102,7 +102,7 @@ const CommunalRequestsManager = () => {
       {
         id: 1,
         type: 'terrain_municipal',
-        citizen: 'Amadou Diallo',
+        citizen: '',
         commune: 'Dakar Plateau',
         status: 'en_cours',
         amount: 50000,
@@ -112,7 +112,7 @@ const CommunalRequestsManager = () => {
       {
         id: 2,
         type: 'permis_construire',
-        citizen: 'Fatou Sall',
+        citizen: '',
         commune: 'Thiès Nord',
         status: 'approuve',
         amount: 90000,
@@ -122,7 +122,7 @@ const CommunalRequestsManager = () => {
       {
         id: 3,
         type: 'terrain_agricole',
-        citizen: 'Ousmane Ba',
+        citizen: '',
         commune: 'Mbour',
         status: 'en_attente',
         amount: 50000,

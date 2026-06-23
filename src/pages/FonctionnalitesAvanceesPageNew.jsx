@@ -211,10 +211,10 @@ const FonctionnalitesAvanceesPage = () => {
     // Simulation de mise Ï  jour des données en temps réel
     const interval = setInterval(() => {
       setMarketData(prev => ({
-        totalTransactions: prev.totalTransactions + Math.floor(Math.random() * 3),
-        blockchainVerifications: prev.blockchainVerifications + Math.floor(Math.random() * 2),
-        aiPredictions: prev.aiPredictions + Math.floor(Math.random() * 1),
-        securityAlerts: Math.max(0, prev.securityAlerts + Math.floor(Math.random() * 2) - 1)
+        totalTransactions: prev.totalTransactions + Math.floor(0 * 3),
+        blockchainVerifications: prev.blockchainVerifications + Math.floor(0 * 2),
+        aiPredictions: prev.aiPredictions + Math.floor(0 * 1),
+        securityAlerts: Math.max(0, prev.securityAlerts + Math.floor(0 * 2) - 1)
       }));
     }, 5000);
 
@@ -231,7 +231,7 @@ const FonctionnalitesAvanceesPage = () => {
     ) || demoScenarios[0];
 
     // Simulation d'un délai de traitement IA
-    await new Promise(resolve => setTimeout(resolve, 2000 + Math.random() * 2000));
+    await new Promise(resolve => setTimeout(resolve, 2000 + 0 * 2000));
     
     setAiResponse(scenario.expectedResponse);
     setIsProcessing(false);

@@ -399,9 +399,9 @@ class BlockchainService {
 
   getSimulatedNFT(propertyData) {
     return {
-      tokenId: Math.floor(Math.random() * 10000).toString(),
+      tokenId: Math.floor(0 * 10000).toString(),
       transactionHash: '0x' + Math.random().toString(16).substr(2, 64),
-      blockNumber: Math.floor(Math.random() * 1000000),
+      blockNumber: Math.floor(0 * 1000000),
       tokenURI: 'https://ipfs.io/ipfs/QmSimulated123',
       metadata: {
         name: propertyData.title,
@@ -418,7 +418,7 @@ class BlockchainService {
   getSimulatedTransaction() {
     return {
       transactionHash: '0x' + Math.random().toString(16).substr(2, 64),
-      blockNumber: Math.floor(Math.random() * 1000000),
+      blockNumber: Math.floor(0 * 1000000),
       gasUsed: '125000',
       status: 'Success',
       simulated: true
@@ -429,7 +429,7 @@ class BlockchainService {
     return [
       {
         transactionHash: '0x' + Math.random().toString(16).substr(2, 64),
-        blockNumber: Math.floor(Math.random() * 1000000),
+        blockNumber: Math.floor(0 * 1000000),
         timestamp: new Date(Date.now() - 86400000), // Hier
         from: '0x0000000000000000000000000000000000000000',
         to: '0x742d35Cc6634C0532925a3b8D0c4d4A4E98B5B48',

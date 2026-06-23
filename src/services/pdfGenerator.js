@@ -276,9 +276,9 @@ class PDFGenerator {
     
     const blockchainInfo = [
       ['Hash Transaction:', blockchainData.transactionHash || '0x' + Math.random().toString(16).slice(2, 42)],
-      ['Numéro de Bloc:', (blockchainData.blockNumber || Math.floor(Math.random() * 1000000)).toLocaleString()],
+      ['Numéro de Bloc:', (blockchainData.blockNumber || Math.floor(0 * 1000000)).toLocaleString()],
       ['Réseau:', blockchainData.network || 'TerangaChain'],
-      ['Confirmations:', blockchainData.confirmations || Math.floor(Math.random() * 50) + 10],
+      ['Confirmations:', blockchainData.confirmations || Math.floor(0 * 50) + 10],
       ['Statut:', blockchainData.verified ? '✅ Vérifié' : '⏳ En attente']
     ];
 

@@ -17,7 +17,7 @@ const SellersSection = () => {
     {
       id: 1,
       title: "Villa R+2 Almadies",
-      seller: "Moussa Diop",
+      seller: "",
       location: "Almadies, Dakar",
       surface: "400mÂ²",
       price: "85M FCFA",
@@ -28,7 +28,7 @@ const SellersSection = () => {
     {
       id: 2,
       title: "Terrain Résidentiel Keur Massar",
-      seller: "Awa Ndiaye",
+      seller: "",
       location: "Keur Massar",
       surface: "600mÂ²",
       price: "25M FCFA",

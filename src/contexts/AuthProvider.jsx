@@ -30,7 +30,7 @@ const TEST_USERS = {
     id: '2',
     email: 'agent@test.com',
     role: 'agent_foncier',
-    name: 'Moussa Diallo',
+    name: '',
     phone: '+221 77 234 56 78',
     region: 'Thiès',
     profile: {
@@ -56,7 +56,7 @@ const TEST_USERS = {
     id: '4',
     email: 'geometre@test.com',
     role: 'geometre',
-    name: 'Fatou Ndiaye',
+    name: '',
     phone: '+221 77 345 67 89',
     region: 'Saint-Louis',
     profile: {
@@ -82,7 +82,7 @@ const TEST_USERS = {
     id: '6',
     email: 'vendeur-particulier@test.com',
     role: 'vendeur_particulier',
-    name: 'Ibrahima Sarr',
+    name: '',
     phone: '+221 77 456 78 90',
     region: 'Kaolack',
     profile: {
@@ -120,7 +120,7 @@ const TEST_USERS = {
     id: '9',
     email: 'particulier@test.com',
     role: 'particulier',
-    name: 'Amadou Ba',
+    name: '',
     phone: '+221 77 678 90 12',
     region: 'Ziguinchor',
     profile: {
@@ -133,7 +133,7 @@ const TEST_USERS = {
     id: '10',
     email: 'diaspora@test.com',
     role: 'diaspora',
-    name: 'Mariama Cissé',
+    name: '',
     phone: '+33 6 12 34 56 78',
     region: 'Europe',
     profile: {

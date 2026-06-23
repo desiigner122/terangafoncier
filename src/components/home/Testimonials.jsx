@@ -6,9 +6,9 @@ import {
 } from 'lucide-react';
 
 const testimonials = [
-  { name: "Moussa Diop", location: "Dakar", quote: "Processus clair, rapide et sécurisé. J'ai enfin acheté mon terrain à Diamniadio sans tracas grâce à l'équipe Teranga Foncier.", imgDesc: "Portrait homme sénégalais souriant chemise traditionnelle", rating: 5 },
-  { name: "Awa Gueye", location: "Diaspora (France)", quote: "Étant à l'étranger, j'avais peur des arnaques. Teranga Foncier m'a rassurée et accompagnée à chaque étape. Investissement réussi !", imgDesc: "Portrait femme sénégalaise élégante foulard coloré", rating: 5 },
-  { name: "Ibrahima Sow", location: "Promoteur Immobilier", quote: "Une plateforme sérieuse avec des informations fiables. Facilite grandement la recherche de terrains viabilisés pour nos projets.", imgDesc: "Portrait homme affaires sénégalais casque chantier", rating: 4 },
+  { name: "", location: "Dakar", quote: "Processus clair, rapide et sécurisé. J'ai enfin acheté mon terrain à Diamniadio sans tracas grâce à l'équipe Teranga Foncier.", imgDesc: "Portrait homme sénégalais souriant chemise traditionnelle", rating: 5 },
+  { name: "", location: "Diaspora (France)", quote: "Étant à l'étranger, j'avais peur des arnaques. Teranga Foncier m'a rassurée et accompagnée à chaque étape. Investissement réussi !", imgDesc: "Portrait femme sénégalaise élégante foulard coloré", rating: 5 },
+  { name: "", location: "Promoteur Immobilier", quote: "Une plateforme sérieuse avec des informations fiables. Facilite grandement la recherche de terrains viabilisés pour nos projets.", imgDesc: "Portrait homme affaires sénégalais casque chantier", rating: 4 },
 ];
 
 const Testimonials = () => {

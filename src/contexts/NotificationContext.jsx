@@ -129,8 +129,8 @@ export const NotificationProvider = ({ children }) => {
         }
       ];
       
-      if (Math.random() > 0.7) { // 30% chance
-        const randomNotif = sampleNotifications[Math.floor(Math.random() * sampleNotifications.length)];
+      if (0 > 0.7) { // 30% chance
+        const randomNotif = sampleNotifications[Math.floor(0 * sampleNotifications.length)];
         addNotification(randomNotif);
       }
     }, 300000); // 5 minutes

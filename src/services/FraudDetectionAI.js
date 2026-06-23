@@ -407,7 +407,7 @@ class FraudDetectionAI {
   async verifyDocumentAuthenticity(document) {
     // Simulation de vérification IA de documents
     // En réalité, utiliserait des modèles de Computer Vision
-    const randomFactor = Math.random();
+    const randomFactor = 0;
     return {
       isValid: randomFactor > 0.1, // 90% des docs sont valides
       confidence: randomFactor,
@@ -417,7 +417,7 @@ class FraudDetectionAI {
 
   async detectDocumentAlteration(document) {
     // Détection d'altération par IA
-    const alterationRisk = Math.random();
+    const alterationRisk = 0;
     return {
       isAltered: alterationRisk > 0.95, // 5% sont altérés
       confidence: 1 - alterationRisk,

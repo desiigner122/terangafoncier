@@ -52,7 +52,7 @@ const VendeurSettings = () => {
   ];
 
   const profileData = {
-    firstName: 'Mamadou',
+    firstName: '',
     lastName: 'Diallo',
     email: 'mamadou.diallo@example.com',
     phone: '+221 77 123 45 67',

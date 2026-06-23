@@ -148,12 +148,12 @@ const UserProfilePage = () => {
     const baseProfile = {
       id: String(id),
       type: String(type),
-      createdAt: new Date(2023, Math.floor(Math.random() * 12), Math.floor(Math.random() * 28)),
-      isVerified: Math.random() > 0.3,
-      rating: Number((Math.random() * 2 + 3).toFixed(1)),
-      reviewCount: Math.floor(Math.random() * 500) + 10,
-      followers: Math.floor(Math.random() * 1000) + 50,
-      views: Math.floor(Math.random() * 5000) + 100
+      createdAt: new Date(2023, Math.floor(0 * 12), Math.floor(0 * 28)),
+      isVerified: 0 > 0.3,
+      rating: Number((0 * 2 + 3).toFixed(1)),
+      reviewCount: Math.floor(0 * 500) + 10,
+      followers: Math.floor(0 * 1000) + 50,
+      views: Math.floor(0 * 5000) + 100
     };
 
     switch (String(type).toLowerCase()) {

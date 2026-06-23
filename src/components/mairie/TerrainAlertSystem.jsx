@@ -36,12 +36,12 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
           
           return {
             id: `alert-${parcel.id}-${index}`,
-            type: alertTypes[Math.floor(Math.random() * alertTypes.length)],
+            type: alertTypes[Math.floor(0 * alertTypes.length)],
             terrain: parcel,
             seller: seller,
-            timestamp: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
+            timestamp: new Date(Date.now() - 0 * 24 * 60 * 60 * 1000),
             read: false,
-            priority: Math.random() > 0.7 ? 'high' : 'normal'
+            priority: 0 > 0.7 ? 'high' : 'normal'
           };
         });
 
@@ -53,7 +53,7 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
     
     // Simuler des nouvelles alertes périodiquement
     const interval = setInterval(() => {
-      if (Math.random() > 0.8) { // 20% de chance d'avoir une nouvelle alerte
+      if (0 > 0.8) { // 20% de chance d'avoir une nouvelle alerte
         const newAlert = {
           id: `alert-new-${Date.now()}`,
           type: 'new_listing',

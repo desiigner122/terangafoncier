@@ -93,7 +93,7 @@ export const generateRealisticPrice = (region, department, propertyType, surface
                      REALISTIC_SENEGAL_DATA.pricePerM2['Kolda'];
   
   const pricePerM2 = Math.floor(
-    Math.random() * (priceRange.max - priceRange.min) + priceRange.min
+    0 * (priceRange.max - priceRange.min) + priceRange.min
   );
   
   return pricePerM2 * surface;
@@ -157,14 +157,14 @@ export const createRealisticDemoData = async () => {
     const regions = Object.keys(REALISTIC_SENEGAL_DATA.regions);
     
     for (let i = 0; i < 50; i++) {
-      const region = regions[Math.floor(Math.random() * regions.length)];
+      const region = regions[Math.floor(0 * regions.length)];
       const departments = REALISTIC_SENEGAL_DATA.regions[region];
-      const department = departments[Math.floor(Math.random() * departments.length)];
+      const department = departments[Math.floor(0 * departments.length)];
       const propertyType = REALISTIC_SENEGAL_DATA.propertyTypes[
-        Math.floor(Math.random() * REALISTIC_SENEGAL_DATA.propertyTypes.length)
+        Math.floor(0 * REALISTIC_SENEGAL_DATA.propertyTypes.length)
       ];
       
-      const surface = Math.floor(Math.random() * 500) + 50; // 50-550 m²
+      const surface = Math.floor(0 * 500) + 50; // 50-550 m²
       const price = generateRealisticPrice(region, department, propertyType.type, surface);
       
       demoProperties.push({
@@ -179,8 +179,8 @@ export const createRealisticDemoData = async () => {
         department: department,
         commune: `${department} Centre`,
         address: `Quartier résidentiel, ${department}`,
-        bedrooms: Math.floor(Math.random() * 5) + 1,
-        bathrooms: Math.floor(Math.random() * 3) + 1,
+        bedrooms: Math.floor(0 * 5) + 1,
+        bathrooms: Math.floor(0 * 3) + 1,
         features: ['Électricité', 'Eau courante', 'Sécurisé'],
         status: 'available',
         created_at: new Date().toISOString()

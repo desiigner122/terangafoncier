@@ -433,7 +433,7 @@ class AIService {
       .filter(zone => zone !== 'default')
       .map(zone => ({
         zone,
-        performance: Math.random() * 20 + 5, // Simulation
+        performance: 0 * 20 + 5, // Simulation
         trend: this.getMarketTrend(zone)
       }));
   }

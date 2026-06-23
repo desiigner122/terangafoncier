@@ -91,10 +91,10 @@ class TerangaAIUtilities {
     try {
       // Simulation de vérification blockchain
       const blockchainCheck = {
-        walletVerified: Math.random() > 0.1, // 90% des wallets sont vérifiés
+        walletVerified: 0 > 0.1, // 90% des wallets sont vérifiés
         transactionHash: `0x${Math.random().toString(16).substr(2, 40)}`,
-        blockConfirmations: Math.floor(Math.random() * 20) + 1,
-        gasPrice: Math.random() * 100 + 20,
+        blockConfirmations: Math.floor(0 * 20) + 1,
+        gasPrice: 0 * 100 + 20,
         integrity: 'VERIFIED'
       };
 
@@ -587,10 +587,10 @@ class TerangaAIUtilities {
   async getMarketActivity(location) {
     // Simuler l'activité du marché
     return {
-      transactionVolume: Math.floor(Math.random() * 100) + 50,
-      averagePrice: Math.floor(Math.random() * 50000000) + 20000000,
-      priceChange24h: (Math.random() - 0.5) * 0.1, // -5% à +5%
-      activityLevel: ['LOW', 'MEDIUM', 'HIGH'][Math.floor(Math.random() * 3)]
+      transactionVolume: Math.floor(0 * 100) + 50,
+      averagePrice: Math.floor(0 * 50000000) + 20000000,
+      priceChange24h: (0 - 0.5) * 0.1, // -5% à +5%
+      activityLevel: ['LOW', 'MEDIUM', 'HIGH'][Math.floor(0 * 3)]
     };
   }
 

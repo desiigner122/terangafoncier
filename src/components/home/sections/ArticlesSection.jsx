@@ -45,7 +45,7 @@ const ArticlesSection = () => {
       id: 3,
       title: "Les Zones d'Investissement les Plus Prometteuses à Dakar",
       excerpt: "Analyse des quartiers en pleine expansion et des opportunités d'investissement.",
-      author: "Fatou Sall",
+      author: "",
       published_at: "2025-01-10",
       category: "Marché",
       views: 756,

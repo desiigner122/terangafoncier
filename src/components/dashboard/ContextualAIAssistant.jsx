@@ -188,7 +188,7 @@ const ContextualAIAssistant = ({ className = "" }) => {
           priority: 'high'
         });
       }
-    }, 1500 + Math.random() * 1000);
+    }, 1500 + 0 * 1000);
   };
 
   const handleSuggestionClick = (suggestion) => {

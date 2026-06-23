@@ -379,9 +379,9 @@ class GlobalAnalyticsService {
       const date = new Date(Date.now() - i * 24 * 60 * 60 * 1000);
       const dateStr = date.toISOString().split('T')[0];
       data[dateStr] = {
-        unique_users: Math.floor(Math.random() * 500) + 200,
-        total_activities: Math.floor(Math.random() * 2000) + 800,
-        countries: Math.floor(Math.random() * 15) + 5
+        unique_users: Math.floor(0 * 500) + 200,
+        total_activities: Math.floor(0 * 2000) + 800,
+        countries: Math.floor(0 * 15) + 5
       };
     }
     return data;

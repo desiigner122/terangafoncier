@@ -15,7 +15,7 @@ import Autoplay from "embla-carousel-autoplay";
 const trustedSellers = [
   { name: 'Mairie de Dakar', type: 'Institutionnel', logo: 'mairie', color: 'text-blue-600', link: '/parcelles?ownerType=Mairie' },
   { name: 'Senegindia SA', type: 'Promoteur Certifié', logo: 'building', color: 'text-green-600', link: '/parcelles?ownerType=Promoteur' },
-  { name: 'Abdoulaye K.', type: 'Vendeur Particulier Vérifié', logo: 'user', color: 'text-purple-600', link: '/parcelles?ownerType=Particulier' },
+  { name: '', type: 'Vendeur Particulier Vérifié', logo: 'user', color: 'text-purple-600', link: '/parcelles?ownerType=Particulier' },
   { name: 'CSE Immobilier', type: 'Promoteur Certifié', logo: 'building', color: 'text-green-600', link: '/parcelles?ownerType=Promoteur' },
   { name: 'Mairie de Saly', type: 'Institutionnel', logo: 'mairie', color: 'text-blue-600', link: '/parcelles?ownerType=Mairie' },
   { name: 'Fatima N.', type: 'Vendeur Particulier Vérifié', logo: 'user', color: 'text-purple-600', link: '/parcelles?ownerType=Particulier' },

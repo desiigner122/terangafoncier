@@ -33,7 +33,7 @@ const AIAssistantWidget = ({ userRole, dashboardData }) => {
     
     const recommendations = getRecommendationsByRole(userRole);
     setAiRecommendations(recommendations);
-    setConfidenceScore(Math.floor(Math.random() * 20) + 80); // 80-100%
+    setConfidenceScore(Math.floor(0 * 20) + 80); // 80-100%
     setAiProcessing(false);
   };
 

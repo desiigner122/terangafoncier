@@ -202,9 +202,9 @@ const UnifiedDashboard = () => {
     try {
       // Simuler des stats IA pour la démo
       const aiStats = {
-        totalAnalyses: Math.floor(Math.random() * 10000) + 5000,
-        accuracyRate: (95 + Math.random() * 4).toFixed(1),
-        averageProcessingTime: (0.5 + Math.random() * 2).toFixed(2),
+        totalAnalyses: Math.floor(0 * 10000) + 5000,
+        accuracyRate: (95 + 0 * 4).toFixed(1),
+        averageProcessingTime: (0.5 + 0 * 2).toFixed(2),
         activeModels: 8
       };
       
@@ -271,9 +271,9 @@ const UnifiedDashboard = () => {
   const updateRealtimeData = () => {
     const newDataPoint = {
       timestamp: new Date().toLocaleTimeString(),
-      users: dashboardData.totalUsers + Math.floor(Math.random() * 5),
-      transactions: dashboardData.totalTransactions + Math.floor(Math.random() * 3),
-      revenue: dashboardData.totalRevenue + Math.floor(Math.random() * 100000)
+      users: dashboardData.totalUsers + Math.floor(0 * 5),
+      transactions: dashboardData.totalTransactions + Math.floor(0 * 3),
+      revenue: dashboardData.totalRevenue + Math.floor(0 * 100000)
     };
     
     setRealtimeData(prev => {

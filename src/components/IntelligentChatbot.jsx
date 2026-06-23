@@ -126,7 +126,7 @@ const IntelligentChatbot = () => {
       if (keywords.includes && keywords.some(keyword => msg.includes(keyword))) {
         const responseKey = category + 'Responses';
         if (responses[responseKey]) {
-          const randomResponse = responses[responseKey][Math.floor(Math.random() * responses[responseKey].length)];
+          const randomResponse = responses[responseKey][Math.floor(0 * responses[responseKey].length)];
           return {
             text: randomResponse,
             suggestions: getSuggestions(category)
@@ -186,7 +186,7 @@ const IntelligentChatbot = () => {
       
       setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    }, 1000 + 0 * 1000);
   };
 
   const handleSuggestionClick = (suggestion) => {

@@ -106,7 +106,7 @@ const PromoteurDashboardLayout = ({ children }) => {
   ];
 
   const userProfile = {
-    name: 'Ibrahima Fall',
+    name: '',
     role: 'Promoteur Immobilier',
     company: 'Fall Promotion SARL',
     avatar: '/api/placeholder/40/40',

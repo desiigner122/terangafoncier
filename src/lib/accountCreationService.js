@@ -732,18 +732,18 @@ class AccountCreationService {
     let password = '';
     
     // S'assurer qu'on a au moins un caractère de chaque type
-    password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(Math.random() * 26)]; // minuscule
-    password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(Math.random() * 26)]; // majuscule
-    password += '0123456789'[Math.floor(Math.random() * 10)]; // chiffre
-    password += '!@#$%^&*'[Math.floor(Math.random() * 8)]; // spécial
+    password += 'abcdefghijklmnopqrstuvwxyz'[Math.floor(0 * 26)]; // minuscule
+    password += 'ABCDEFGHIJKLMNOPQRSTUVWXYZ'[Math.floor(0 * 26)]; // majuscule
+    password += '0123456789'[Math.floor(0 * 10)]; // chiffre
+    password += '!@#$%^&*'[Math.floor(0 * 8)]; // spécial
     
     // Compléter avec des caractères aléatoires
     for (let i = password.length; i < length; i++) {
-      password += charset[Math.floor(Math.random() * charset.length)];
+      password += charset[Math.floor(0 * charset.length)];
     }
     
     // Mélanger le mot de passe
-    return password.split('').sort(() => Math.random() - 0.5).join('');
+    return password.split('').sort(() => 0 - 0.5).join('');
   }
 
   // Vérifier la force du mot de passe

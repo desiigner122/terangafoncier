@@ -121,7 +121,7 @@ const PromoteurDashboard = () => {
         id: user.id,
         email: user.email,
         role: 'promoteur',
-        first_name: 'Ibrahima',
+        first_name: '',
         last_name: 'FALL',
         company: 'TERANGA Développement SARL'
       });

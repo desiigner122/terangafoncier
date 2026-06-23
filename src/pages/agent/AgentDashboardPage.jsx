@@ -499,7 +499,7 @@ const AgentDashboardPage = () => {
                             <Link to={`/parcelles/${req.parcel_id}`} className="text-primary hover:underline font-mono text-xs">
                               {req.parcel_id}
                             </Link>
-                            <p className="text-xs text-muted-foreground">Budget: {Math.floor(Math.random() * 200) + 50}M FCFA</p>
+                            <p className="text-xs text-muted-foreground">Budget: {Math.floor(0 * 200) + 50}M FCFA</p>
                           </td>
                           <td className="p-2">
                             <Badge variant="outline" className="text-xs">
@@ -507,7 +507,7 @@ const AgentDashboardPage = () => {
                             </Badge>
                           </td>
                           <td className="p-2">{getStatusBadge(req.status)}</td>
-                          <td className="p-2">{getPriorityBadge(['high', 'medium', 'low'][Math.floor(Math.random() * 3)])}</td>
+                          <td className="p-2">{getPriorityBadge(['high', 'medium', 'low'][Math.floor(0 * 3)])}</td>
                           <td className="p-2">
                             <div className="flex items-center space-x-1">
                               <Button variant="ghost" size="sm" title="Programmer RDV" onClick={() => handleSimulatedAction(`Programmer RDV avec ${req.user_name}`)}>
@@ -585,14 +585,14 @@ const AgentDashboardPage = () => {
                         <div className="flex items-center justify-between">
                           <span className="text-muted-foreground">Vues:</span>
                           <Badge variant="outline" className="text-xs">
-                            {Math.floor(Math.random() * 100) + 20}
+                            {Math.floor(0 * 100) + 20}
                           </Badge>
                         </div>
                         <div className="flex items-center justify-between">
                           <span className="text-muted-foreground">Intérêt:</span>
                           <div className="flex items-center space-x-1">
                             <Star className="h-3 w-3 text-yellow-500" />
-                            <span className="text-xs">{(Math.random() * 5).toFixed(1)}</span>
+                            <span className="text-xs">{(0 * 5).toFixed(1)}</span>
                           </div>
                         </div>
                         <Separator className="my-2" />

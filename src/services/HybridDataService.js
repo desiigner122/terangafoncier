@@ -563,7 +563,7 @@ class HybridDataService {
       {
         id: '2',
         email: 'vendeur@teranga.com',
-        first_name: 'Moussa',
+        first_name: '',
         last_name: 'Diop',
         role: 'Vendeur',
         status: 'Actif',
@@ -694,7 +694,7 @@ class HybridDataService {
         region,
         transactions: regionTransactions.length,
         revenue,
-        growth: 10 + Math.random() * 20 - 10 // Simulation pour l'instant
+        growth: 10 + 0 * 20 - 10 // Simulation pour l'instant
       };
     });
   }
@@ -727,8 +727,8 @@ class HybridDataService {
     const hours = Array.from({ length: 6 }, (_, i) => i * 4); // 0h, 4h, 8h, 12h, 16h, 20h
     
     return hours.map(hour => {
-      const visits = Math.floor(users.length * (0.1 + Math.random() * 0.2));
-      const conversions = Math.floor(visits * (0.05 + Math.random() * 0.1));
+      const visits = Math.floor(users.length * (0.1 + 0 * 0.2));
+      const conversions = Math.floor(visits * (0.05 + 0 * 0.1));
       
       return {
         hour: `${hour.toString().padStart(2, '0')}h`,

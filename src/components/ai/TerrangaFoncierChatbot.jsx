@@ -175,7 +175,7 @@ const TerrangaFoncierChatbot = ({ className = "" }) => {
       
       setMessages(prev => [...prev, botResponse]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 2000); // 1-3 secondes
+    }, 1000 + 0 * 2000); // 1-3 secondes
   };
 
   const handleQuickQuestion = (question) => {

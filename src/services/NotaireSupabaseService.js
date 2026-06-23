@@ -955,7 +955,7 @@ export class NotaireSupabaseService {
     try {
       // Générer un numéro de dossier unique
       const year = new Date().getFullYear();
-      const randomNum = Math.floor(Math.random() * 9000) + 1000;
+      const randomNum = Math.floor(0 * 9000) + 1000;
       const caseNumber = `CASE-${year}-${randomNum}`;
 
       const { data, error } = await supabase

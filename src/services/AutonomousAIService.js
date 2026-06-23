@@ -371,7 +371,7 @@ export class AutonomousAIService {
 
   async analyzeZoneAvailability(zone) {
     // Simulation d'analyse IA de zone
-    const availability = Math.random();
+    const availability = 0;
     return {
       shouldCreateAlert: availability > 0.7,
       recommendation: `Forte demande détectée à ${zone}`,
@@ -392,9 +392,9 @@ export class AutonomousAIService {
 
   async checkCurrentAvailability(zone) {
     return {
-      available: Math.floor(Math.random() * 10),
-      coming_soon: Math.floor(Math.random() * 5),
-      under_construction: Math.floor(Math.random() * 8)
+      available: Math.floor(0 * 10),
+      coming_soon: Math.floor(0 * 5),
+      under_construction: Math.floor(0 * 8)
     };
   }
 

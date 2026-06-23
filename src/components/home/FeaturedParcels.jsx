@@ -35,7 +35,7 @@ const FeaturedParcels = () => {
       trending: true,
       features: ['Vue mer', 'Viabilisé', 'Titre foncier'],
       description: 'Magnifique terrain avec vue sur océan dans le quartier prestigieux des Almadies.',
-      seller: 'Amadou Diallo',
+      seller: '',
       daysOnMarket: 15
     },
     {
@@ -51,7 +51,7 @@ const FeaturedParcels = () => {
       trending: false,
       features: ['Zone touristique', 'Proche plage', 'Accès route'],
       description: 'Terrain idéal pour construction de villa dans la zone touristique de Saly.',
-      seller: 'Fatou Ndiaye',
+      seller: '',
       daysOnMarket: 8
     },
     {
@@ -67,7 +67,7 @@ const FeaturedParcels = () => {
       trending: true,
       features: ['Zone commerciale', 'Grande superficie', 'Bien situé'],
       description: 'Parfait pour projet commercial ou résidentiel dans le centre de Thiès.',
-      seller: 'Moussa Sow',
+      seller: '',
       daysOnMarket: 22
     },
     {
@@ -83,7 +83,7 @@ const FeaturedParcels = () => {
       trending: false,
       features: ['Sol fertile', 'Accès eau', 'Grande taille'],
       description: 'Terrain agricole avec excellent potentiel pour cultures maraîchères.',
-      seller: 'Awa Ba',
+      seller: '',
       daysOnMarket: 12
     },
     {
@@ -115,7 +115,7 @@ const FeaturedParcels = () => {
       trending: false,
       features: ['Centre-ville', 'Calme', 'Nature proche'],
       description: 'Terrain paisible au cœur de la capitale casamançaise.',
-      seller: 'Ibrahima Cissé',
+      seller: '',
       daysOnMarket: 18
     }
   ];

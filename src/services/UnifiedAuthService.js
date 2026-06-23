@@ -212,13 +212,13 @@ class UnifiedAuthService {
         email: 'vendeur@teranga.com', 
         password: 'vendeur123',
         role: 'vendeur',
-        name: 'Moussa Diop'
+        name: ''
       },
       {
         email: 'acheteur@teranga.com',
         password: 'acheteur123',
         role: 'particulier', 
-        name: 'Fatou Sall'
+        name: ''
       }
     ];
   }

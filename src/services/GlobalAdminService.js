@@ -439,8 +439,8 @@ class GlobalAdminService {
         // Préparation IA
         aiAnalytics: {
           predictedGrowth: await this.predictGrowthWithAI(),
-          anomaliesDetected: Math.floor(Math.random() * 5),
-          recommendationsGenerated: Math.floor(Math.random() * 10) + 5
+          anomaliesDetected: Math.floor(0 * 5),
+          recommendationsGenerated: Math.floor(0 * 10) + 5
         },
         // Préparation Blockchain
         blockchainAnalytics: {
@@ -502,7 +502,7 @@ class GlobalAdminService {
   calculateMarketTrend(property) {
     // Simulation de tendance marché basée sur l'IA
     const trends = ['up', 'down', 'stable'];
-    return trends[Math.floor(Math.random() * trends.length)];
+    return trends[Math.floor(0 * trends.length)];
   }
 
   getLocationBonus(location) {
@@ -601,7 +601,7 @@ class GlobalAdminService {
     const currentGrowth = currentUsers.data?.growthRate || 0;
     
     // Algorithme de prédiction simple
-    return Math.max(0, currentGrowth + (Math.random() * 10 - 5));
+    return Math.max(0, currentGrowth + (0 * 10 - 5));
   }
 
   calculateGrowthRate(stats) {

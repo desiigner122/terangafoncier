@@ -33,7 +33,7 @@ export class SmartContractManager {
     return {
       txHash: `0x${Math.random().toString(16).substr(2, 64)}`,
       status: 'success',
-      gasUsed: Math.floor(Math.random() * 100000),
+      gasUsed: Math.floor(0 * 100000),
       timestamp: new Date()
     };
   }

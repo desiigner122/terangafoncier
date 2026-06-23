@@ -277,7 +277,7 @@ Ou choisissez une action rapide ci-dessous ðŸ‘‡`;
       
       setMessages(prev => [...prev, aiResponse]);
       setIsTyping(false);
-    }, 1000 + Math.random() * 1000);
+    }, 1000 + 0 * 1000);
   };
 
   const handleQuickAction = (action) => {

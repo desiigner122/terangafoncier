@@ -10,7 +10,7 @@ import { motion } from 'framer-motion';
 
 const testimonials = [
   {
-    name: "Fatou B.",
+    name: "",
     location: "Diaspora (France)",
     quote: "Grâce à Teranga Foncier, j'ai pu acheter mon terrain à Diamniadio en toute confiance depuis Paris. Le processus de vérification m'a vraiment rassurée. Service impeccable !",
     rating: 5,
@@ -18,7 +18,7 @@ const testimonials = [
     avatarTextDesc: "Portrait d'une femme sénégalaise professionnelle"
   },
   {
-    name: "Moussa D.",
+    name: "",
     location: "Dakar",
     quote: "J'étais sceptique au début, mais leur équipe a été très professionnelle. Ils ont vérifié tous les FileTexts et m'ont accompagné chez le notaire. Je recommande vivement.",
     rating: 5,
@@ -26,7 +26,7 @@ const testimonials = [
     avatarTextDesc: "Portrait d'un homme sénégalais souriant"
   },
   {
-    name: "Aïcha S.",
+    name: "",
     location: "Diaspora (Canada)",
     quote: "Enfin une plateforme sérieuse pour investir au pays ! La carte interactive et les détails sur chaque parcelle sont très utiles. J'ai trouvé le terrain parfait pour ma future maison.",
     rating: 4,
@@ -34,7 +34,7 @@ const testimonials = [
     avatarTextDesc: "Portrait d'une femme canadienne heureuse"
   },
    {
-    name: "Ibrahim K.",
+    name: "",
     location: "Thiès",
     quote: "Leur engagement contre la fraude est réel. Ils ont détecté une anomalie sur un terrain qui m'intéressait et m'ont évité de gros problèmes. Merci Teranga Foncier !",
     rating: 5,

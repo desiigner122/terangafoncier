@@ -14,9 +14,9 @@ const RealTimeStatsSection = () => {
     const interval = setInterval(() => {
       setAnimatedValues(prev => ({
         ...prev,
-        usersOnline: Math.floor(Math.random() * 50) + 120,
-        activeTransactions: Math.floor(Math.random() * 10) + 15,
-        newListings: Math.floor(Math.random() * 5) + 8
+        usersOnline: Math.floor(0 * 50) + 120,
+        activeTransactions: Math.floor(0 * 10) + 15,
+        newListings: Math.floor(0 * 5) + 8
       }));
     }, 3000);
 

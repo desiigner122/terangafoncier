@@ -380,7 +380,7 @@ export class TerangaAI {
     if (!coordinates) return 0.5;
     
     // Simulation du score (en réalité, calcul basé sur POI)
-    return Math.random() * 0.3 + 0.4; // 0.4-0.7
+    return 0 * 0.3 + 0.4; // 0.4-0.7
   }
 
   getLocationMultiplier(location) {

@@ -265,7 +265,7 @@ const ModernPromoteurDashboard = () => {
                 agent: ''
               },
               {
-                client: 'Mariama NDIAYE',
+                client: '',
                 property: 'Villa 4ch - PLATEAU Premium',
                 price: '45M FCFA',
                 date: '15/01/2024',

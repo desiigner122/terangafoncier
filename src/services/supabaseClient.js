@@ -1,26 +1,20 @@
-import { createClient } from '@supabase/supabase-js';
+/**
+ * ⚠️ Ce fichier ne crée plus de client Supabase.
+ *
+ * Il réexporte le client canonique unique défini dans `src/lib/supabaseClient.js`.
+ *
+ * Auparavant, ce module appelait `createClient()` avec des variables
+ * `process.env.REACT_APP_*` — inexistantes dans un projet Vite — et retombait
+ * donc sur un placeholder cassé (`https://your-project.supabase.co`), tout en
+ * créant une instance GoTrueClient supplémentaire.
+ *
+ * Conservé uniquement pour compatibilité avec les imports existants.
+ */
 
-// Configuration Supabase centralisée
-const supabaseUrl = process.env.REACT_APP_SUPABASE_URL || 'https://your-project.supabase.co';
-const supabaseAnonKey = process.env.REACT_APP_SUPABASE_ANON_KEY || 'your-anon-key';
+import { supabase } from '@/lib/supabaseClient';
 
-// Instance unique Supabase
-let supabaseInstance = null;
+// Compat : certains anciens modules importaient getSupabaseClient()
+export const getSupabaseClient = () => supabase;
 
-export const getSupabaseClient = () => {
-  if (!supabaseInstance) {
-    supabaseInstance = createClient(supabaseUrl, supabaseAnonKey, {
-      auth: {
-        persistSession: true,
-        autoRefreshToken: true,
-        detectSessionInUrl: false
-      }
-    });
-  }
-  return supabaseInstance;
-};
-
-// Export par défaut pour compatibilité
-export const supabase = getSupabaseClient();
-
+export { supabase };
 export default supabase;

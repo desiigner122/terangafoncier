@@ -1,31 +1,16 @@
+/**
+ * ⚠️ Ce fichier ne crée plus de client Supabase.
+ *
+ * Il réexporte le client canonique unique défini dans `src/lib/supabaseClient.js`
+ * afin d'éviter la création de plusieurs instances GoTrueClient
+ * (avertissement "Multiple GoTrueClient instances detected" et bugs d'auth).
+ *
+ * `createClient` reste réexporté depuis @supabase/supabase-js pour compatibilité,
+ * mais ne doit PAS être utilisé pour instancier un nouveau client applicatif.
+ */
+
 import { createClient } from '@supabase/supabase-js';
+import { supabase } from '@/lib/supabaseClient';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('❌ Variables Supabase manquantes dans .env');
-  throw new Error('Supabase URL et ANON_KEY requis');
-}
-
-console.log('✅ Supabase client initialisé:', supabaseUrl);
-
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    autoRefreshToken: true,
-    persistSession: true,
-    detectSessionInUrl: true,
-    storage: window.localStorage
-  },
-  db: {
-    schema: 'public'
-  },
-  global: {
-    headers: {
-      'X-Client-Info': 'terangafoncier-web'
-    }
-  }
-});
-
-export { createClient };
+export { supabase, createClient };
 export default supabase;

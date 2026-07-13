@@ -1,189 +1,152 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Zap, Shield, TrendingUp, AlertCircle } from 'lucide-react';
+import { Check, Loader2, AlertCircle } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
-import {
-  createCheckoutSession,
-  upsertSubscription,
-  getSubscription
-} from '@/api/stripe';
 
-const SUBSCRIPTION_PLANS = {
-  free: {
-    name: 'Gratuit',
-    price: 0,
-    period: 'mois',
-    description: 'Parfait pour commencer',
-    features: [
-      '5 annonces',
-      '100 demandes/mois',
-      '5 GB de stockage',
-      'Support par email',
-      'Analytique basique'
-    ],
-    limits: {
-      properties: 5,
-      requests: 100,
-      storage_gb: 5
-    },
-    color: 'from-gray-100 to-gray-200',
-    icon: 'box'
-  },
-  basic: {
-    name: 'Basic',
-    price: 4990, // CFA (50k CFA ≈ 7,60€)
-    period: 'mois',
-    description: 'Pour vendeurs actifs',
-    features: [
-      '50 annonces',
-      '1000 demandes/mois',
-      '50 GB de stockage',
-      'Support prioritaire',
-      'Analytique avancée',
-      'Photos IA',
-      'Promotion jusqu\'à 3 propriétés'
-    ],
-    limits: {
-      properties: 50,
-      requests: 1000,
-      storage_gb: 50
-    },
-    popular: false,
-    color: 'from-blue-100 to-blue-200',
-    icon: 'zap'
-  },
-  pro: {
-    name: 'Professionnel',
-    price: 9990, // 100k CFA
-    period: 'mois',
-    description: 'Pour agences immobilières',
-    features: [
-      'Annonces illimitées',
-      'Demandes illimitées',
-      'Stockage illimité',
-      'Support 24/7',
-      'Analytique complète',
-      'API personnalisée',
-      'Promotion illimitée',
-      'Vérification IA complète',
-      'Blockchain certifications',
-      'Gestion multi-utilisateurs'
-    ],
-    limits: {
-      properties: 'unlimited',
-      requests: 'unlimited',
-      storage_gb: 'unlimited'
-    },
-    popular: true,
-    color: 'from-purple-100 to-purple-200',
-    icon: 'shield'
-  },
-  enterprise: {
-    name: 'Enterprise',
-    price: null, // Sur devis
-    period: 'custom',
-    description: 'Solution sur mesure',
-    features: [
-      'Tout illimité',
-      'Support dédié',
-      'Intégrations custom',
-      'Formation équipe',
-      'API illimitée',
-      'SLA garanti 99.9%',
-      'Données en cloud privé optionnel',
-      'Consulting inclus'
-    ],
-    limits: {
-      properties: 'unlimited',
-      requests: 'unlimited',
-      storage_gb: 'unlimited'
-    },
-    color: 'from-amber-100 to-amber-200',
-    icon: 'trending'
+/**
+ * Composant Plans d'Abonnement — données 100% réelles.
+ *
+ * - Les plans sont chargés depuis la table `subscription_plans` (aucune donnée codée en dur).
+ * - « Choisir ce plan » enregistre une vraie souscription dans `user_subscriptions`
+ *   avec le statut `pending` (en attente de validation / paiement).
+ *   Le paiement en ligne n'est pas encore branché (voir Edge Function à venir).
+ */
+
+const CURRENCY_LABELS = { XOF: 'FCFA', EUR: '€', USD: '$' };
+
+function formatPrice(price, currency) {
+  const value = Number(price || 0).toLocaleString('fr-FR');
+  return `${value} ${CURRENCY_LABELS[currency] || currency || ''}`.trim();
+}
+
+function periodLabel(durationMonths) {
+  if (durationMonths === 12) return 'an';
+  if (durationMonths === 1) return 'mois';
+  return `${durationMonths} mois`;
+}
+
+function buildFeatures(plan) {
+  const features = [];
+  if (plan.max_properties != null) {
+    features.push(`${plan.max_properties} annonces`);
   }
-};
+  if (plan.max_images_per_property != null) {
+    features.push(`${plan.max_images_per_property} photos par annonce`);
+  }
+  features.push(plan.priority_support ? 'Support prioritaire' : 'Support par email');
+  if (plan.featured_listings) features.push('Annonces mises en avant');
+  if (plan.analytics_access) features.push('Accès aux statistiques');
+  if (plan.api_access) features.push('Accès API');
+  if (plan.custom_branding) features.push('Personnalisation de marque');
+  return features;
+}
 
-export function SubscriptionPlans({ user, currentPlan = 'free', onPlanSelected }) {
-  const [loading, setLoading] = useState(false);
-  const [selectedPlan, setSelectedPlan] = useState(currentPlan);
-  const [subscription, setSubscription] = useState(null);
+export function SubscriptionPlans({ user, onPlanSelected }) {
+  const { user: authUser } = useAuth();
+  const userId = user?.id || authUser?.id || null;
+
+  const [plans, setPlans] = useState([]);
+  const [currentSub, setCurrentSub] = useState(null);
+  const [loadingPlans, setLoadingPlans] = useState(true);
+  const [processingId, setProcessingId] = useState(null);
+  const [error, setError] = useState(null);
+
+  const loadPlans = useCallback(async () => {
+    setLoadingPlans(true);
+    setError(null);
+    try {
+      const { data, error: err } = await supabase
+        .from('subscription_plans')
+        .select('*')
+        .eq('status', 'active')
+        .order('price', { ascending: true });
+      if (err) throw err;
+      setPlans(data || []);
+    } catch (e) {
+      console.error('Erreur chargement des plans:', e);
+      setError("Impossible de charger les plans d'abonnement.");
+    } finally {
+      setLoadingPlans(false);
+    }
+  }, []);
+
+  const loadCurrentSubscription = useCallback(async () => {
+    if (!userId) return;
+    try {
+      const { data, error: err } = await supabase
+        .from('user_subscriptions')
+        .select('*, subscription_plans (*)')
+        .eq('user_id', userId)
+        .in('status', ['active', 'pending'])
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (err && err.code !== 'PGRST116') throw err;
+      setCurrentSub(data || null);
+    } catch (e) {
+      console.error('Erreur chargement abonnement:', e);
+    }
+  }, [userId]);
 
   useEffect(() => {
-    if (user?.id) {
-      loadSubscription();
-    }
-  }, [user?.id]);
+    loadPlans();
+  }, [loadPlans]);
 
-  const loadSubscription = async () => {
+  useEffect(() => {
+    loadCurrentSubscription();
+  }, [loadCurrentSubscription]);
+
+  const handleSelectPlan = async (plan) => {
+    if (!userId) {
+      toast.error('Vous devez être connecté pour souscrire.');
+      return;
+    }
+    if (currentSub?.plan_id === plan.id) {
+      toast.info('Vous avez déjà ce plan.');
+      return;
+    }
+
+    setProcessingId(plan.id);
     try {
-      const sub = await getSubscription(user.id);
-      setSubscription(sub);
-      if (sub?.plan_name) {
-        setSelectedPlan(sub.plan_name.toLowerCase());
-      }
-    } catch (error) {
-      console.error('Erreur chargement abonnement:', error);
-    }
-  };
+      // Clôturer les souscriptions en cours de l'utilisateur (active/pending)
+      const { error: cancelErr } = await supabase
+        .from('user_subscriptions')
+        .update({ status: 'cancelled' })
+        .eq('user_id', userId)
+        .in('status', ['active', 'pending']);
+      if (cancelErr) throw cancelErr;
 
-  const handlePlanSelect = async (planName) => {
-    if (!user?.id) {
-      toast.error('Vous devez être connecté');
-      return;
-    }
+      const start = new Date();
+      const end = new Date(start);
+      end.setMonth(end.getMonth() + (plan.duration_months || 12));
 
-    if (selectedPlan === planName) {
-      toast.info('Vous avez déjà ce plan');
-      return;
-    }
+      const { data, error: insertErr } = await supabase
+        .from('user_subscriptions')
+        .insert({
+          user_id: userId,
+          plan_id: plan.id,
+          status: 'pending',
+          start_date: start.toISOString().slice(0, 10),
+          end_date: end.toISOString().slice(0, 10),
+          auto_renew: false,
+          amount_paid: 0,
+        })
+        .select('*, subscription_plans (*)')
+        .single();
+      if (insertErr) throw insertErr;
 
-    if (planName === 'free') {
-      try {
-        await upsertSubscription(user.id, 'free', 0);
-        setSelectedPlan('free');
-        if (onPlanSelected) onPlanSelected('free');
-        toast.success('Vous restez sur le plan Gratuit');
-      } catch (error) {
-        toast.error('Erreur mise à jour abonnement');
-      }
-      return;
-    }
-
-    if (planName === 'enterprise') {
-      window.location.href = '/contact?plan=enterprise&reason=pricing';
-      return;
-    }
-
-    setLoading(true);
-    setSelectedPlan(planName);
-
-    try {
-      const planData = SUBSCRIPTION_PLANS[planName];
-      const session = await createCheckoutSession(
-        planName,
-        planData.price,
-        user.id,
-        user.email
-      );
-
-      await upsertSubscription(user.id, planName, planData.price);
-
-      if (session.url && session.type !== 'test') {
-        window.location.href = session.url;
-      } else {
-        setSelectedPlan(planName);
-        if (onPlanSelected) onPlanSelected(planName);
-        toast.success(`✅ Abonnement ${planData.name} activé!`);
-        await loadSubscription();
-      }
-    } catch (error) {
-      console.error('❌ Erreur activation abonnement:', error);
-      toast.error('Erreur lors de l\'activation de l\'abonnement');
-      setLoading(false);
+      setCurrentSub(data);
+      toast.success(`Demande d'abonnement « ${plan.name} » enregistrée. En attente de validation.`);
+      if (onPlanSelected) onPlanSelected(data);
+    } catch (e) {
+      console.error('Erreur souscription:', e);
+      toast.error("Erreur lors de l'enregistrement de l'abonnement.");
+    } finally {
+      setProcessingId(null);
     }
   };
 
@@ -192,124 +155,140 @@ export function SubscriptionPlans({ user, currentPlan = 'free', onPlanSelected }
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-12">
-          <h2 className="text-4xl font-bold mb-4">Nos Plans d\'Abonnement</h2>
-          <p className="text-lg text-gray-600">Choisissez le plan qui correspond à vos besoins</p>
+          <h2 className="text-4xl font-bold mb-4">Nos Plans d'Abonnement</h2>
+          <p className="text-lg text-gray-600">
+            Choisissez le plan qui correspond à vos besoins
+          </p>
         </div>
 
-        {/* Plans Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-          {Object.entries(SUBSCRIPTION_PLANS).map(([key, plan]) => (
-            <Card
-              key={key}
-              className={`relative transition-all transform hover:scale-105 ${
-                selectedPlan === key ? 'ring-2 ring-purple-500 shadow-2xl' : ''
-              } ${plan.popular ? 'lg:scale-105 md:col-span-1' : ''}`}
-            >
-              {/* Popular badge */}
-              {plan.popular && (
-                <Badge className="absolute -top-3 left-1/2 transform -translate-x-1/2 bg-purple-500">
-                  ⭐ Populaire
-                </Badge>
-              )}
+        {/* États de chargement / erreur / vide */}
+        {loadingPlans && (
+          <div className="flex justify-center items-center py-16 text-gray-500">
+            <Loader2 className="w-6 h-6 animate-spin mr-2" />
+            Chargement des plans…
+          </div>
+        )}
 
-              <CardHeader className={`bg-gradient-to-r ${plan.color} p-6 rounded-t-lg`}>
-                <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
-                <CardDescription className="text-gray-700">{plan.description}</CardDescription>
+        {!loadingPlans && error && (
+          <div className="max-w-md mx-auto bg-red-50 border border-red-200 text-red-700 rounded-lg p-4 flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 flex-shrink-0 mt-0.5" />
+            <div>
+              <p className="font-medium">{error}</p>
+              <Button variant="outline" size="sm" className="mt-3" onClick={loadPlans}>
+                Réessayer
+              </Button>
+            </div>
+          </div>
+        )}
 
-                {/* Price */}
-                <div className="mt-4">
-                  {plan.price !== null ? (
-                    <div className="flex items-baseline gap-1">
-                      <span className="text-3xl font-bold text-gray-900">
-                        {(plan.price / 100).toLocaleString('fr-FR')}
-                      </span>
-                      <span className="text-sm text-gray-600">CFA / {plan.period}</span>
-                    </div>
-                  ) : (
-                    <div className="text-2xl font-bold text-gray-900">Sur devis</div>
-                  )}
-                </div>
-              </CardHeader>
+        {!loadingPlans && !error && plans.length === 0 && (
+          <div className="text-center py-16 text-gray-500">
+            Aucun plan d'abonnement disponible pour le moment.
+          </div>
+        )}
 
-              <CardContent className="p-6">
-                {/* Features */}
-                <ul className="space-y-3 mb-8">
-                  {plan.features.map((feature, idx) => (
-                    <li key={idx} className="flex items-start gap-3">
-                      <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
-                      <span className="text-sm text-gray-700">{feature}</span>
-                    </li>
-                  ))}
-                </ul>
+        {/* Grille des plans */}
+        {!loadingPlans && !error && plans.length > 0 && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {plans.map((plan, index) => {
+              const isCurrent = currentSub?.plan_id === plan.id;
+              const isPopular = index === 1; // 2e plan le moins cher, mise en avant
+              const features = buildFeatures(plan);
+              const processing = processingId === plan.id;
 
-                {/* Limits */}
-                <div className="bg-slate-50 p-3 rounded mb-6 text-xs space-y-1">
-                  <p className="font-semibold text-gray-900">Limites:</p>
-                  <p className="text-gray-600">
-                    {typeof plan.limits.properties === 'number'
-                      ? `${plan.limits.properties} propriétés`
-                      : 'Propriétés illimitées'}
-                  </p>
-                  <p className="text-gray-600">
-                    {typeof plan.limits.storage_gb === 'number'
-                      ? `${plan.limits.storage_gb} GB`
-                      : 'Stockage illimité'}
-                  </p>
-                </div>
-
-                {/* Button */}
-                <Button
-                  onClick={() => handlePlanSelect(key)}
-                  disabled={loading && selectedPlan === key}
-                  className={`w-full ${
-                    selectedPlan === key
-                      ? 'bg-purple-600 hover:bg-purple-700'
-                      : 'bg-slate-700 hover:bg-slate-800'
-                  }`}
+              return (
+                <Card
+                  key={plan.id}
+                  className={`relative transition-all transform hover:scale-105 ${
+                    isCurrent ? 'ring-2 ring-purple-500 shadow-2xl' : ''
+                  } ${isPopular ? 'lg:scale-105' : ''}`}
                 >
-                  {loading && selectedPlan === key ? '⏳ Traitement...' : 'Choisir ce plan'}
-                </Button>
+                  {isPopular && !isCurrent && (
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-purple-500">
+                      ⭐ Populaire
+                    </Badge>
+                  )}
+                  {isCurrent && (
+                    <Badge className="absolute -top-3 left-1/2 -translate-x-1/2 bg-green-600">
+                      ✓ Votre plan
+                    </Badge>
+                  )}
 
-                {selectedPlan === key && (
-                  <p className="text-xs text-green-600 mt-2 text-center">✓ Plan sélectionné</p>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+                  <CardHeader className="bg-gradient-to-r from-slate-100 to-slate-200 p-6 rounded-t-lg">
+                    <CardTitle className="text-2xl mb-2">{plan.name}</CardTitle>
+                    <CardDescription className="text-gray-700 min-h-[40px]">
+                      {plan.description}
+                    </CardDescription>
+                    <div className="mt-4 flex items-baseline gap-1">
+                      <span className="text-3xl font-bold text-gray-900">
+                        {formatPrice(plan.price, plan.currency)}
+                      </span>
+                      <span className="text-sm text-gray-600">
+                        / {periodLabel(plan.duration_months)}
+                      </span>
+                    </div>
+                  </CardHeader>
+
+                  <CardContent className="p-6">
+                    <ul className="space-y-3 mb-8">
+                      {features.map((feature, idx) => (
+                        <li key={idx} className="flex items-start gap-3">
+                          <Check className="w-5 h-5 text-green-500 flex-shrink-0 mt-0.5" />
+                          <span className="text-sm text-gray-700">{feature}</span>
+                        </li>
+                      ))}
+                    </ul>
+
+                    <Button
+                      onClick={() => handleSelectPlan(plan)}
+                      disabled={processing || isCurrent}
+                      className={`w-full ${
+                        isCurrent
+                          ? 'bg-green-600 hover:bg-green-600'
+                          : 'bg-slate-700 hover:bg-slate-800'
+                      }`}
+                    >
+                      {processing ? (
+                        <>
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                          Traitement…
+                        </>
+                      ) : isCurrent ? (
+                        currentSub?.status === 'pending' ? 'En attente de validation' : 'Plan actuel'
+                      ) : (
+                        'Choisir ce plan'
+                      )}
+                    </Button>
+                  </CardContent>
+                </Card>
+              );
+            })}
+          </div>
+        )}
 
         {/* FAQ */}
         <div className="mt-16 max-w-3xl mx-auto">
           <h3 className="text-2xl font-bold mb-6 text-center">Questions fréquentes</h3>
           <div className="space-y-4">
             <div className="bg-white p-4 rounded-lg shadow">
-              <h4 className="font-semibold mb-2">❓ Puis-je changer de plan à tout moment?</h4>
-              <p className="text-gray-600 text-sm">Oui, vous pouvez passer à un plan supérieur ou inférieur à tout moment. Les modifications prennent effet immédiatement.</p>
+              <h4 className="font-semibold mb-2">Puis-je changer de plan à tout moment ?</h4>
+              <p className="text-gray-600 text-sm">
+                Oui. Choisir un nouveau plan enregistre une nouvelle demande et clôture la
+                précédente.
+              </p>
             </div>
             <div className="bg-white p-4 rounded-lg shadow">
-              <h4 className="font-semibold mb-2">💳 Quels sont les moyens de paiement?</h4>
-              <p className="text-gray-600 text-sm">Nous acceptons Stripe (carte bancaire), Wave, et les virements bancaires. Pour l\'Enterprise, contactez notre équipe.</p>
-            </div>
-            <div className="bg-white p-4 rounded-lg shadow">
-              <h4 className="font-semibold mb-2">🔄 Y a-t-il une période d\'essai gratuit?</h4>
-              <p className="text-gray-600 text-sm">Oui! Le plan Free est gratuit à jamais. Vous pouvez aussi demander un essai de 7 jours des plans payants.</p>
+              <h4 className="font-semibold mb-2">Comment se passe le paiement ?</h4>
+              <p className="text-gray-600 text-sm">
+                Votre demande est d'abord enregistrée en attente. Le règlement et l'activation
+                sont finalisés avec notre équipe. Le paiement en ligne arrive prochainement.
+              </p>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
-
-/**
- * Helper pour obtenir l'ID Stripe du plan
- */
-function getPriceIdForPlan(planName) {
-  const priceIds = {
-    basic: 'price_1A0000000000000000000001', // À remplacer par vrai ID Stripe
-    pro: 'price_1A0000000000000000000002',
-  };
-  return priceIds[planName] || null;
 }
 
 export default SubscriptionPlans;

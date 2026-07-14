@@ -17,19 +17,52 @@ const FeaturedParcelsSection = () => {
   useEffect(() => {
     const fetchFeaturedParcels = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('parcels')
-        .select('*')
-        .eq('is_featured', true)
-        .in('status', ['Disponible', 'Attribution sur demande'])
-        .limit(3);
-      
-      if (error) {
-        console.error("Error fetching featured parcels:", error);
-      } else {
-        setFeaturedParcels(data);
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id, title, name, price, surface, location, city, region, verification_status')
+          .eq('verification_status', 'verified')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+
+        const properties = data || [];
+        const propertyIds = properties.map((p) => p.id);
+        let photosByProperty = {};
+
+        if (propertyIds.length > 0) {
+          const { data: photos, error: photosError } = await supabase
+            .from('property_photos')
+            .select('property_id, url, is_primary')
+            .in('property_id', propertyIds);
+
+          if (!photosError && photos) {
+            photos.forEach((photo) => {
+              if (!photosByProperty[photo.property_id] || photo.is_primary) {
+                photosByProperty[photo.property_id] = photo.url;
+              }
+            });
+          }
+        }
+
+        const formatted = properties.map((p) => ({
+          id: p.id,
+          title: p.title || p.name || 'Parcelle',
+          location: [p.city, p.region].filter(Boolean).join(', ') || p.location || '',
+          price: p.price || 0,
+          surface: p.surface ? `${p.surface.toLocaleString()} m²` : '',
+          verified: p.verification_status === 'verified',
+          image: photosByProperty[p.id] || null
+        }));
+
+        setFeaturedParcels(formatted);
+      } catch (err) {
+        console.error("Error fetching featured parcels:", err);
+        setFeaturedParcels([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
 
     fetchFeaturedParcels();

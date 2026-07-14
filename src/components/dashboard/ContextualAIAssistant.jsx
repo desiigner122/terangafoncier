@@ -6,6 +6,9 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { useLocation } from 'react-router-dom';
 import { useNotifications } from '@/contexts/NotificationContext';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import OpenAIService from '@/services/ai/OpenAIService';
 
 // Assistant IA contextuel pour chaque page
 const ContextualAIAssistant = ({ className = "" }) => {
@@ -16,6 +19,7 @@ const ContextualAIAssistant = ({ className = "" }) => {
   const [isTyping, setIsTyping] = useState(false);
   const location = useLocation();
   const { addNotification } = useNotifications();
+  const { user } = useAuth();
 
   // Configuration contextuelle par page
   const getPageContext = () => {
@@ -97,48 +101,13 @@ const ContextualAIAssistant = ({ className = "" }) => {
 
   const pageContext = getPageContext();
 
-  // Réponses intelligentes contextuelle
-  const generateAIResponse = (question) => {
-    const responses = {
-      'private-interests': {
-        'prix': 'Pour évaluer ce prix, comparons avec les transactions récentes dans le secteur. Les Almadies sont à 85-120k FCFA/m² selon l\'emplacement. Ce prix semble dans la fourchette haute.',
-        'négociation': 'Je recommande une contre-offre à -15% du prix demandé, en mettant en avant vos atouts (paiement rapide, sérieux du dossier). Laissez une marge de négociation.',
-        'documents': 'Vérifiez impérativement : titre foncier, certificat de non-gage, bornage géomètre, quitus fiscal. Je peux vous aider à analyser ces documents.',
-        'juridique': 'Principaux risques : vice de titre, litige de bornage, servitudes cachées. Je recommande un avocat spécialisé pour l\'acte notarié.'
-      },
-      'municipal-applications': {
-        'documents': 'D\'après votre dossier Mbour, il manque : certificat de célibat, quitus fiscal, et plan de situation. Délai supplémentaire estimé : 15 jours.',
-        'délais': 'Traitement standard : 3-6 mois à Mbour, 4-8 mois à Thiès. Votre dossier Mbour est à 60% complété, prévoir encore 8 semaines.',
-        'recours': 'En cas de refus, vous avez 30 jours pour un recours gracieux, puis recours contentieux devant le tribunal administratif. Success rate : 40%.',
-        'coût': 'Coût total estimé Mbour : 850k FCFA (droits + taxes + géomètre). Thiès : 650k FCFA. Budget 15% supplémentaire pour imprévus.'
-      },
-      'promoter-reservations': {
-        'paiement': 'Votre échéancier VEFA : 15% signature (✓), 25% fondations (oct 2024), 35% gros œuvre (mars 2025), 25% finitions (oct 2025). Prochaine : 11.25M FCFA.',
-        'chantier': 'Villa Cité Jardin : 75% avancé, conforme au planning. Étape finitions en cours. Je recommande une visite avant paiement suivant.',
-        'garanties': 'Garanties légales : parfait achèvement (1 an), bon fonctionnement (2 ans), décennale (10 ans). Vérifiez les assurances du promoteur.',
-        'modifications': 'Modifications encore possibles : choix carrelage, peinture, équipements cuisine/SDB. Surcoût estimé : 5-15% selon options.'
-      },
-      'owned-properties': {
-        'token': 'Token Almadies : +8.2% cette semaine. Basé sur éval. marché + revenus locatifs. Performance YTD : +15.7%. Bon momentum.',
-        'frais': 'Frais blockchain : 0.3% par transaction. Gas fees Polygon : ~0.01 MATIC. Frais plateforme : 1.5% annuels sur revenus.',
-        'dividendes': 'Rendement Plateau : 7.2% net annuel, Almadies : 5.8%. Prochaine distribution dans 12 jours : ~47k FCFA attendus.',
-        'revente': 'Liquidité élevée : moyenne 72h pour vente. Prix de marché en temps réel. Commission : 2.5% + frais blockchain.'
-      }
-    };
-
-    const contextKey = Object.keys(responses).find(key => location.pathname.includes(key));
-    const contextResponses = contextKey ? responses[contextKey] : {};
-    
-    const matchedResponse = Object.entries(contextResponses).find(([key]) => 
-      question.toLowerCase().includes(key)
-    );
-
-    if (matchedResponse) {
-      return matchedResponse[1];
-    }
-
-    // Réponse générique intelligente
-    return "C'est une excellente question ! Basé sur votre profil et vos projets en cours, je vous recommande de vérifier les dernières données de marché. Voulez-vous que je vous donne des informations plus spécifiques ?";
+  // Réponse IA générée par le service OpenAI réel (avec repli en mode simulation si aucune clé API n'est configurée)
+  const generateAIResponse = async (question) => {
+    return OpenAIService.getChatResponse(question, {
+      page: pageContext.title,
+      expertise: pageContext.expertise,
+      path: location.pathname
+    });
   };
 
   // Initialisation avec message de bienvenue
@@ -156,10 +125,11 @@ const ContextualAIAssistant = ({ className = "" }) => {
   const sendMessage = async () => {
     if (!inputValue.trim()) return;
 
+    const questionText = inputValue;
     const userMessage = {
       id: Date.now(),
       type: 'user',
-      content: inputValue,
+      content: questionText,
       timestamp: new Date()
     };
 
@@ -167,20 +137,33 @@ const ContextualAIAssistant = ({ className = "" }) => {
     setInputValue('');
     setIsTyping(true);
 
-    // Simulation réponse IA avec délai réaliste
-    setTimeout(() => {
+    try {
+      const aiContent = await generateAIResponse(questionText);
+
       const aiResponse = {
         id: Date.now() + 1,
         type: 'ai',
-        content: generateAIResponse(inputValue),
+        content: aiContent,
         timestamp: new Date()
       };
-      
+
       setMessages(prev => [...prev, aiResponse]);
-      setIsTyping(false);
+
+      // Enregistre l'échange dans l'historique IA (best effort, ne bloque pas l'UI)
+      if (user?.id) {
+        supabase
+          .from('ai_chat_history')
+          .insert([
+            { user_id: user.id, role: 'user', content: questionText },
+            { user_id: user.id, role: 'assistant', content: aiContent }
+          ])
+          .then(({ error }) => {
+            if (error) console.error('Erreur enregistrement historique IA:', error);
+          });
+      }
 
       // Notification pour réponse IA importante
-      if (inputValue.toLowerCase().includes('urgent') || inputValue.toLowerCase().includes('problème')) {
+      if (questionText.toLowerCase().includes('urgent') || questionText.toLowerCase().includes('problème')) {
         addNotification({
           title: 'Réponse IA importante',
           message: 'L\'assistant a identifié un point critique dans votre question',
@@ -188,7 +171,17 @@ const ContextualAIAssistant = ({ className = "" }) => {
           priority: 'high'
         });
       }
-    }, 1500 + 0 * 1000);
+    } catch (error) {
+      console.error('Erreur assistant IA contextuel:', error);
+      setMessages(prev => [...prev, {
+        id: Date.now() + 1,
+        type: 'ai',
+        content: "Désolé, je ne peux pas répondre pour le moment. Veuillez réessayer.",
+        timestamp: new Date()
+      }]);
+    } finally {
+      setIsTyping(false);
+    }
   };
 
   const handleSuggestionClick = (suggestion) => {

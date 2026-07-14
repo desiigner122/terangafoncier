@@ -1,79 +1,84 @@
-﻿import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  MapPin, 
+import {
+  MapPin,
   ArrowRight,
   TrendingUp,
-  Home,
-  Users
+  Home
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabaseClient';
 
 const PopularCitiesSection = () => {
-  const popularCities = [
-    {
-      id: 1,
-      name: "Dakar",
-      region: "Région de Dakar",
-      properties: 1247,
-      averagePrice: "45M FCFA",
-      growth: "+12%",
-      image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["Almadies", "Plateau", "Point E"]
-    },
-    {
-      id: 2,
-      name: "Thiès",
-      region: "Région de Thiès",
-      properties: 834,
-      averagePrice: "18M FCFA",
-      growth: "+25%",
-      image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["Centre-ville", "Mbour", "Tivaouane"]
-    },
-    {
-      id: 3,
-      name: "Saint-Louis",
-      region: "Région de Saint-Louis",
-      properties: 456,
-      averagePrice: "15M FCFA",
-      growth: "+18%",
-      image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["Île", "Sor", "Ndar Tout"]
-    },
-    {
-      id: 4,
-      name: "Kaolack",
-      region: "Région de Kaolack",
-      properties: 523,
-      averagePrice: "12M FCFA",
-      growth: "+20%",
-      image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["Centre", "Ndoffane", "Kahone"]
-    },
-    {
-      id: 5,
-      name: "Ziguinchor",
-      region: "Région de Ziguinchor",
-      properties: 289,
-      averagePrice: "14M FCFA",
-      growth: "+15%",
-      image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["Centre", "Tilène", "Kandé"]
-    },
-    {
-      id: 6,
-      name: "Diourbel",
-      region: "Région de Diourbel",
-      properties: 378,
-      averagePrice: "10M FCFA",
-      growth: "+22%",
-      image: "/api/YOUR_API_KEY/400/300",
-      hotspots: ["Touba", "Mbacké", "Bambey"]
-    }
-  ];
+  const [popularCities, setPopularCities] = useState([]);
+  const [globalStats, setGlobalStats] = useState({ regions: 0, properties: 0 });
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        const [propertiesRes, totalCountRes] = await Promise.all([
+          supabase.from('properties').select('city, region, price'),
+          supabase.from('properties').select('id', { count: 'exact', head: true })
+        ]);
+
+        if (propertiesRes.error) {
+          console.error('Erreur lors du chargement des villes:', propertiesRes.error);
+          setPopularCities([]);
+          setGlobalStats({ regions: 0, properties: 0 });
+          return;
+        }
+
+        const rows = propertiesRes.data || [];
+        const grouped = {};
+        const regions = new Set();
+
+        rows.forEach((row) => {
+          if (row.region) regions.add(row.region);
+          if (!row.city) return;
+          if (!grouped[row.city]) {
+            grouped[row.city] = { name: row.city, region: row.region, count: 0, totalPrice: 0, priceCount: 0 };
+          }
+          grouped[row.city].count += 1;
+          if (row.price) {
+            grouped[row.city].totalPrice += Number(row.price);
+            grouped[row.city].priceCount += 1;
+          }
+          if (!grouped[row.city].region && row.region) {
+            grouped[row.city].region = row.region;
+          }
+        });
+
+        const list = Object.values(grouped)
+          .map((c) => ({
+            id: c.name.toLowerCase().replace(/\s+/g, '-'),
+            name: c.name,
+            region: c.region || '',
+            properties: c.count,
+            averagePrice: c.priceCount > 0 ? Math.round(c.totalPrice / c.priceCount) : null
+          }))
+          .sort((a, b) => b.properties - a.properties)
+          .slice(0, 6);
+
+        setPopularCities(list);
+        setGlobalStats({
+          regions: regions.size,
+          properties: totalCountRes.count || 0
+        });
+      } catch (error) {
+        console.error('Erreur:', error);
+        setPopularCities([]);
+        setGlobalStats({ regions: 0, properties: 0 });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   return (
     <section className="py-16 bg-gray-50">
@@ -100,69 +105,58 @@ const PopularCitiesSection = () => {
         </div>
 
         {/* Grille des villes */}
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-          {popularCities.map((city, index) => (
-            <motion.div
-              key={city.id}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.6, delay: index * 0.1 }}
-              viewport={{ once: true }}
-            >
-              <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
-                <div className="relative">
-                  <img 
-                    src={city.image} 
-                    alt={city.name}
-                    className="w-full h-40 object-cover"
-                  />
-                  <Badge className="absolute top-3 right-3 bg-orange-500 text-white">
-                    <TrendingUp className="h-3 w-3 mr-1" />
-                    {city.growth}
-                  </Badge>
-                </div>
-                
-                <CardContent className="p-4">
-                  <div className="mb-3">
-                    <h3 className="font-bold text-lg text-gray-900">{city.name}</h3>
-                    <p className="text-sm text-gray-600">{city.region}</p>
-                  </div>
-
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600 flex items-center">
-                        <Home className="h-4 w-4 mr-1" />
-                        Propriétés
-                      </span>
-                      <span className="font-semibold text-gray-900">{city.properties}</span>
+        {loading ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {[1, 2, 3, 4, 5, 6].map((i) => (
+              <div key={i} className="h-64 bg-gray-100 rounded-xl animate-pulse" />
+            ))}
+          </div>
+        ) : popularCities.length === 0 ? (
+          <p className="text-center text-gray-500 mb-8">Aucune donnée de ville disponible pour le moment.</p>
+        ) : (
+          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+            {popularCities.map((city, index) => (
+              <motion.div
+                key={city.id}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.6, delay: index * 0.1 }}
+                viewport={{ once: true }}
+              >
+                <Card className="overflow-hidden hover:shadow-lg transition-shadow h-full">
+                  <CardContent className="p-4">
+                    <div className="mb-3">
+                      <h3 className="font-bold text-lg text-gray-900">{city.name}</h3>
+                      {city.region && <p className="text-sm text-gray-600">{city.region}</p>}
                     </div>
-                    
-                    <div className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">Prix moyen</span>
-                      <span className="font-semibold text-orange-600">{city.averagePrice}</span>
-                    </div>
-                  </div>
 
-                  <div className="mb-4">
-                    <p className="text-xs text-gray-500 mb-2">Quartiers populaires:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {city.hotspots.slice(0, 3).map((hotspot, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {hotspot}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
+                    <div className="space-y-2 mb-4">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600 flex items-center">
+                          <Home className="h-4 w-4 mr-1" />
+                          Propriétés
+                        </span>
+                        <span className="font-semibold text-gray-900">{city.properties}</span>
+                      </div>
 
-                  <Button className="w-full bg-orange-600 hover:bg-orange-700 text-sm">
-                    Explorer {city.name}
-                    <ArrowRight className="h-4 w-4 ml-2" />
-                  </Button>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">Prix moyen</span>
+                        <span className="font-semibold text-orange-600">
+                          {city.averagePrice ? `${city.averagePrice.toLocaleString()} FCFA` : 'N/A'}
+                        </span>
+                      </div>
+                    </div>
+
+                    <Button className="w-full bg-orange-600 hover:bg-orange-700 text-sm">
+                      Explorer {city.name}
+                      <ArrowRight className="h-4 w-4 ml-2" />
+                    </Button>
+                  </CardContent>
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        )}
 
         {/* Statistiques globales */}
         <motion.div
@@ -172,22 +166,18 @@ const PopularCitiesSection = () => {
           viewport={{ once: true }}
           className="bg-white rounded-xl p-6 shadow-sm mb-8"
         >
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6 text-center">
+          <div className="grid grid-cols-2 gap-6 text-center">
             <div>
-              <div className="text-2xl font-bold text-orange-600">14+</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {loading ? '…' : globalStats.regions}
+              </div>
               <div className="text-sm text-gray-600">Régions couvertes</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-orange-600">3,750</div>
+              <div className="text-2xl font-bold text-orange-600">
+                {loading ? '…' : globalStats.properties}
+              </div>
               <div className="text-sm text-gray-600">Propriétés disponibles</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-600">+19%</div>
-              <div className="text-sm text-gray-600">Croissance moyenne</div>
-            </div>
-            <div>
-              <div className="text-2xl font-bold text-orange-600">72h</div>
-              <div className="text-sm text-gray-600">Temps de réponse moyen</div>
             </div>
           </div>
         </motion.div>

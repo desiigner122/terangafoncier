@@ -1,11 +1,11 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  MapPin, 
-  FileText, 
-  Clock, 
-  CheckCircle, 
-  Eye, 
+import {
+  MapPin,
+  FileText,
+  Clock,
+  CheckCircle,
+  Eye,
   Users,
   Building,
   ArrowRight,
@@ -19,8 +19,57 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/lib/supabaseClient';
+
+const CITY_NAMES = ["Dakar", "Thiès", "Saint-Louis", "Mbour"];
 
 const CommunalLandSection = () => {
+  const [loadingStats, setLoadingStats] = useState(true);
+  const [communalStats, setCommunalStats] = useState({
+    totalRequests: 0,
+    approvalRate: 0
+  });
+  const [cityData, setCityData] = useState([]);
+
+  useEffect(() => {
+    const fetchCommunalData = async () => {
+      try {
+        const [{ count: totalRequests }, { data: allRequests }] = await Promise.all([
+          supabase.from('communal_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('communal_requests').select('commune, status')
+        ]);
+
+        const requests = allRequests || [];
+        const approvedCount = requests.filter((r) =>
+          (r.status || '').toLowerCase().includes('appro') || (r.status || '').toLowerCase().includes('valid')
+        ).length;
+        const approvalRate = requests.length > 0 ? Math.round((approvedCount / requests.length) * 100) : 0;
+
+        setCommunalStats({
+          totalRequests: totalRequests || 0,
+          approvalRate
+        });
+
+        const cities = CITY_NAMES.map((name) => {
+          const cityRequests = requests.filter((r) => (r.commune || '').toLowerCase() === name.toLowerCase());
+          return {
+            name,
+            requestsCount: cityRequests.length,
+          };
+        });
+        setCityData(cities);
+      } catch (error) {
+        console.log('Erreur lors du chargement des données de terrains communaux:', error);
+        setCommunalStats({ totalRequests: 0, approvalRate: 0 });
+        setCityData(CITY_NAMES.map((name) => ({ name, requestsCount: 0 })));
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchCommunalData();
+  }, []);
+
   const communalBenefits = [
     {
       icon: Euro,
@@ -77,41 +126,6 @@ const CommunalLandSection = () => {
     }
   ];
 
-  const availableCities = [
-    {
-      name: "Dakar",
-      availablePlots: 45,
-      averagePrice: "2.5M",
-      processingTime: "2-3 mois",
-      image: "/api/YOUR_API_KEY/300/200",
-      status: "Disponible"
-    },
-    {
-      name: "Thiès", 
-      availablePlots: 78,
-      averagePrice: "1.8M",
-      processingTime: "2-4 mois",
-      image: "/api/YOUR_API_KEY/300/200",
-      status: "Disponible"
-    },
-    {
-      name: "Saint-Louis",
-      availablePlots: 32,
-      averagePrice: "1.2M",
-      processingTime: "1-2 mois",
-      image: "/api/YOUR_API_KEY/300/200",
-      status: "Disponible"
-    },
-    {
-      name: "Mbour",
-      availablePlots: 56,
-      averagePrice: "2.1M",
-      processingTime: "2-3 mois",
-      image: "/api/YOUR_API_KEY/300/200",
-      status: "Disponible"
-    }
-  ];
-
   const requirements = [
     "Carte d'identité nationale sénégalaise",
     "Justificatif de domicile",
@@ -121,10 +135,8 @@ const CommunalLandSection = () => {
   ];
 
   const stats = [
-    { value: "1,200+", label: "Demandes traitées", subtext: "Cette année" },
-    { value: "89%", label: "Taux d'approbation", subtext: "Dossiers complets" },
-    { value: "45 jours", label: "Délai moyen", subtext: "Traitement complet" },
-    { value: "15M FCFA", label: "Économie moyenne", subtext: "vs marché privé" }
+    { value: `${communalStats.totalRequests}`, label: "Demandes traitées", subtext: "Total enregistré" },
+    { value: `${communalStats.approvalRate}%`, label: "Taux d'approbation", subtext: "Dossiers traités" }
   ];
 
   return (
@@ -159,7 +171,7 @@ const CommunalLandSection = () => {
           whileInView={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
           viewport={{ once: true }}
-          className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16"
+          className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-16 max-w-2xl mx-auto"
         >
           {stats.map((stat, index) => (
             <Card key={index} className="text-center p-6 hover:shadow-lg transition-shadow">
@@ -264,7 +276,7 @@ const CommunalLandSection = () => {
           </motion.h3>
           
           <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {availableCities.map((city, index) => (
+            {cityData.map((city, index) => (
               <motion.div
                 key={index}
                 initial={{ opacity: 0, y: 20 }}
@@ -277,28 +289,17 @@ const CommunalLandSection = () => {
                     <div className="absolute inset-0 bg-black/20"></div>
                     <div className="absolute bottom-2 left-3 text-white">
                       <h4 className="font-bold text-lg">{city.name}</h4>
-                      <Badge className="bg-green-500 text-white text-xs">
-                        {city.status}
-                      </Badge>
                     </div>
                   </div>
                   <CardContent className="p-4">
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
-                        <span className="text-gray-600">Parcelles:</span>
-                        <span className="font-semibold">{city.availablePlots}</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Prix moyen:</span>
-                        <span className="font-semibold text-green-600">{city.averagePrice} FCFA</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Délai:</span>
-                        <span className="font-semibold">{city.processingTime}</span>
+                        <span className="text-gray-600">Demandes enregistrées:</span>
+                        <span className="font-semibold">{loadingStats ? '...' : city.requestsCount}</span>
                       </div>
                     </div>
-                    <Button className="w-full mt-4" size="sm" variant="outline">
-                      Voir les Offres
+                    <Button className="w-full mt-4" size="sm" variant="outline" asChild>
+                      <a href="/villes">Voir les Offres</a>
                     </Button>
                   </CardContent>
                 </Card>

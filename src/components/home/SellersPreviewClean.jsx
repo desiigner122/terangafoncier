@@ -1,27 +1,88 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   ArrowRight,
   User,
   Building2,
   Star,
   Shield,
   CreditCard,
-  Calendar,
   Percent,
-  MapPin
+  Hammer
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 
-const SellersPreview = () => {
-  const stats = [
-    { value: "1,247", label: "Particuliers" },
-    { value: "89", label: "Professionnels" },
-    { value: "4.8/5", label: "Satisfaction" }
-  ];
+const SellersPreviewClean = () => {
+  const [stats, setStats] = useState([
+    { value: null, label: 'Particuliers' },
+    { value: null, label: 'Professionnels' },
+    { value: null, label: 'Satisfaction' }
+  ]);
+  const [loading, setLoading] = useState(true);
+  const [activeProjectsCount, setActiveProjectsCount] = useState(0);
+  const [projectsLoading, setProjectsLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoading(true);
+      try {
+        const [particuliersRes, professionnelsRes, reviewsRes] = await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('account_type', 'particulier'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('account_type', 'promoteur'),
+          supabase.from('reviews').select('rating').eq('is_approved', true)
+        ]);
+
+        const particuliersCount = particuliersRes.count || 0;
+        const professionnelsCount = professionnelsRes.count || 0;
+        const ratings = reviewsRes.data || [];
+        const avgRating = ratings.length > 0
+          ? (ratings.reduce((sum, r) => sum + (r.rating || 0), 0) / ratings.length).toFixed(1)
+          : null;
+
+        setStats([
+          { value: particuliersCount, label: 'Particuliers' },
+          { value: professionnelsCount, label: 'Professionnels' },
+          { value: avgRating ? `${avgRating}/5` : 'N/A', label: 'Satisfaction' }
+        ]);
+      } catch (error) {
+        console.error('Erreur lors du chargement des statistiques vendeurs:', error);
+        setStats([
+          { value: 0, label: 'Particuliers' },
+          { value: 0, label: 'Professionnels' },
+          { value: 'N/A', label: 'Satisfaction' }
+        ]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    const fetchActiveProjects = async () => {
+      setProjectsLoading(true);
+      try {
+        const { count, error } = await supabase
+          .from('developer_projects')
+          .select('id', { count: 'exact', head: true });
+
+        if (error) {
+          console.error('Erreur lors du chargement des projets promoteurs:', error);
+          setActiveProjectsCount(0);
+        } else {
+          setActiveProjectsCount(count || 0);
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        setActiveProjectsCount(0);
+      } finally {
+        setProjectsLoading(false);
+      }
+    };
+
+    fetchStats();
+    fetchActiveProjects();
+  }, []);
 
   return (
     <section className="py-20 bg-gradient-to-br from-slate-50 to-gray-100">
@@ -52,7 +113,9 @@ const SellersPreview = () => {
               viewport={{ once: true }}
               className="text-center"
             >
-              <div className="text-3xl font-bold text-blue-600 mb-2">{stat.value}</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">
+                {loading ? '…' : stat.value}
+              </div>
               <div className="text-gray-600">{stat.label}</div>
             </motion.div>
           ))}
@@ -60,7 +123,7 @@ const SellersPreview = () => {
 
         {/* Sections vendeurs simplifiées */}
         <div className="grid md:grid-cols-2 gap-8 mb-12">
-          
+
           {/* Vendeurs Particuliers */}
           <motion.div
             initial={{ opacity: 0, x: -20 }}
@@ -79,7 +142,7 @@ const SellersPreview = () => {
                     <p className="text-sm text-gray-600">Propriétaires directs</p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-green-500" />
@@ -123,7 +186,7 @@ const SellersPreview = () => {
                     <p className="text-sm text-gray-600">Promoteurs certifiés</p>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3 mb-6">
                   <div className="flex items-center gap-2">
                     <Shield className="h-4 w-4 text-green-500" />
@@ -167,88 +230,17 @@ const SellersPreview = () => {
             </p>
           </div>
 
-          <div className="grid md:grid-cols-3 gap-6 mb-8">
-            
-            {/* Projet 1 */}
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <div className="relative mb-3">
-                <img 
-                  src="https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=250&fit=crop&crop=center" 
-                  alt="Résidence Les Palmiers"
-                  className="w-full h-40 object-cover rounded-lg"
-                />
-                <Badge className="absolute top-2 right-2 bg-green-500 text-white text-xs">
-                  En construction
-                </Badge>
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-1">Résidence Les Palmiers</h4>
-              <div className="flex items-center text-gray-600 mb-2">
-                <MapPin className="h-3 w-3 mr-1" />
-                <span className="text-xs">Guédiawaye</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">12 appartements</span>
-                <span className="font-bold text-purple-600">35-50M FCFA</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-purple-600 h-2 rounded-full" style={{width: '75%'}}></div>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Livraison: Décembre 2025</p>
+          <div className="flex flex-col items-center gap-4 mb-8">
+            <div className="w-16 h-16 bg-purple-100 rounded-full flex items-center justify-center">
+              <Hammer className="h-8 w-8 text-purple-600" />
             </div>
-
-            {/* Projet 2 */}
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <div className="relative mb-3">
-                <img 
-                  src="https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=400&h=250&fit=crop&crop=center" 
-                  alt="Villa Complex Almadies"
-                  className="w-full h-40 object-cover rounded-lg"
-                />
-                <Badge className="absolute top-2 right-2 bg-blue-500 text-white text-xs">
-                  Nouveau
-                </Badge>
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-1">Villa Complex Almadies</h4>
-              <div className="flex items-center text-gray-600 mb-2">
-                <MapPin className="h-3 w-3 mr-1" />
-                <span className="text-xs">Almadies, Dakar</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">8 villas</span>
-                <span className="font-bold text-purple-600">120-180M FCFA</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{width: '25%'}}></div>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Livraison: Juin 2026</p>
-            </div>
-
-            {/* Projet 3 */}
-            <div className="bg-white rounded-xl p-4 shadow-sm">
-              <div className="relative mb-3">
-                <img 
-                  src="https://images.unsplash.com/photo-1560448204-e02f11c3d0e2?w=400&h=250&fit=crop&crop=center" 
-                  alt="Centre Commercial Sicap"
-                  className="w-full h-40 object-cover rounded-lg"
-                />
-                <Badge className="absolute top-2 right-2 bg-orange-500 text-white text-xs">
-                  Mixte
-                </Badge>
-              </div>
-              <h4 className="font-semibold text-gray-900 mb-1">Centre Commercial Sicap</h4>
-              <div className="flex items-center text-gray-600 mb-2">
-                <MapPin className="h-3 w-3 mr-1" />
-                <span className="text-xs">Sicap Liberté</span>
-              </div>
-              <div className="flex justify-between items-center mb-2">
-                <span className="text-sm text-gray-600">Commerce + Résidentiel</span>
-                <span className="font-bold text-purple-600">25-90M FCFA</span>
-              </div>
-              <div className="w-full bg-gray-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{width: '50%'}}></div>
-              </div>
-              <p className="text-xs text-gray-500 mt-1">Livraison: Mars 2026</p>
-            </div>
+            {projectsLoading ? (
+              <div className="h-10 w-32 bg-purple-100 rounded animate-pulse" />
+            ) : activeProjectsCount > 0 ? (
+              <p className="text-3xl font-bold text-purple-700">{activeProjectsCount} projet{activeProjectsCount > 1 ? 's' : ''}</p>
+            ) : (
+              <p className="text-gray-500">Aucun projet de promoteur disponible pour le moment.</p>
+            )}
           </div>
 
           <div className="text-center">
@@ -265,4 +257,4 @@ const SellersPreview = () => {
   );
 };
 
-export default SellersPreview;
+export default SellersPreviewClean;

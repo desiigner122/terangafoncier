@@ -110,8 +110,7 @@ const Sidebar = () => {
     useEffect(() => {
         const fetchNotificationsCount = async () => {
             if (user) {
-                // FIX: Utiliser 'read_at IS NULL' pour les notifications non lues
-                const { count: generalCount } = await supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0);
+                const { count: generalCount } = await supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).eq('read', false).limit(0);
                 const { count: requestsCount } = await supabase.from('requests').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['En cours', 'Nouvelle']).limit(0);
                 setNotifications({
                     general: generalCount || 0,

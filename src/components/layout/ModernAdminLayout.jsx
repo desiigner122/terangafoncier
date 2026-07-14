@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link, useLocation } from 'react-router-dom';
 import { 
@@ -40,6 +40,9 @@ import {
 } from '@/components/ui/popover';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { formatDistanceToNow } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
 const ModernAdminLayout = ({ title, subtitle, children }) => {
   const { user, profile, signOut } = useAuth();
@@ -48,6 +51,95 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+
+  // Compteurs réels (Supabase)
+  const [usersCount, setUsersCount] = useState(0);
+  const [reportsCount, setReportsCount] = useState(0);
+  const [headerMessages, setHeaderMessages] = useState([]);
+  const [headerNotifications, setHeaderNotifications] = useState([]);
+
+  // Chargement des compteurs de la sidebar (utilisateurs, signalements)
+  useEffect(() => {
+    const loadSidebarCounts = async () => {
+      try {
+        const { count: totalUsers, error: usersError } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true });
+
+        if (usersError) throw usersError;
+        setUsersCount(totalUsers || 0);
+
+        const { count: totalDisputes, error: disputesError } = await supabase
+          .from('disputes')
+          .select('id', { count: 'exact', head: true });
+
+        if (disputesError) throw disputesError;
+        setReportsCount(totalDisputes || 0);
+      } catch (error) {
+        console.error('Erreur chargement compteurs sidebar admin:', error);
+        setUsersCount(0);
+        setReportsCount(0);
+      }
+    };
+
+    loadSidebarCounts();
+  }, []);
+
+  // Chargement des messages et notifications récents pour les aperçus du header
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadHeaderMessages = async () => {
+      try {
+        const { data: participations, error: participationsError } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', user.id);
+
+        if (participationsError) throw participationsError;
+
+        const conversationIds = (participations || []).map((p) => p.conversation_id);
+        if (conversationIds.length === 0) {
+          setHeaderMessages([]);
+          return;
+        }
+
+        const { data, error } = await supabase
+          .from('messages')
+          .select('id, content, read, created_at, sender:sender_id(full_name, email)')
+          .in('conversation_id', conversationIds)
+          .neq('sender_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+        setHeaderMessages(data || []);
+      } catch (error) {
+        console.error('Erreur chargement messages admin:', error);
+        setHeaderMessages([]);
+      }
+    };
+
+    const loadHeaderNotifications = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('id, title, message, type, read, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+        setHeaderNotifications(data || []);
+      } catch (error) {
+        console.error('Erreur chargement notifications admin:', error);
+        setHeaderNotifications([]);
+      }
+    };
+
+    loadHeaderMessages();
+    loadHeaderNotifications();
+  }, [user?.id]);
 
   // Configuration du sidebar
   const sidebarItems = [
@@ -62,7 +154,7 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
       href: '/admin/users',
       icon: Users,
       description: 'Gestion des comptes',
-      badge: '2.8k'
+      badge: usersCount > 0 ? usersCount.toLocaleString('fr-FR') : null
     },
     {
       title: 'Projets',
@@ -87,7 +179,7 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
       href: '/admin/reports',
       icon: Flag,
       description: 'Modération',
-      badge: '12'
+      badge: reportsCount > 0 ? reportsCount.toLocaleString('fr-FR') : null
     },
     {
       title: 'Blog & Contenu',
@@ -106,67 +198,6 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
       href: '/admin/settings',
       icon: Settings,
       description: 'Configuration'
-    }
-  ];
-
-  // Données factices pour les aperçus
-  const headerMessages = [
-    {
-      id: 1,
-      sender: 'M. Diallo',
-      subject: 'Demande terrain Almadies',
-      preview: 'Bonjour, je souhaiterais avoir plus d\'informations...',
-      time: '2 min',
-      unread: true,
-      avatar: 'MD'
-    },
-    {
-      id: 2,
-      sender: 'Mme Ndiaye',
-      subject: 'Question sur transaction',
-      preview: 'Le paiement n\'est toujours pas validé...',
-      time: '15 min',
-      unread: true,
-      avatar: 'MN'
-    },
-    {
-      id: 3,
-      sender: 'Agent Foncier',
-      subject: 'Rapport mensuel',
-      preview: 'Voici le rapport d\'activité du mois...',
-      time: '1h',
-      unread: false,
-      avatar: 'AF'
-    }
-  ];
-
-  const headerNotifications = [
-    {
-      id: 1,
-      type: 'security',
-      title: 'Alerte sécurité',
-      message: 'Tentatives de connexion suspectes détectées',
-      time: '5 min',
-      priority: 'high',
-      unread: true
-    },
-    {
-      id: 2,
-      type: 'system',
-      title: 'Maintenance programmée',
-      message: 'Redémarrage des serveurs dans 2 heures',
-      time: '30 min',
-      priority: 'medium',
-      unread: true
-    },
-    {
-      id: 3,
-      type: 'business',
-      title: 'Objectif atteint',
-      message: 'Revenus mensuels dépassés de 120%',
-      time: '2h',
-      priority: 'low',
-      unread: false
     }
   ];
 
@@ -269,9 +300,9 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
                     <MessageSquare className="h-5 w-5 text-gray-600" />
-                    {headerMessages.filter(m => m.unread).length > 0 && (
+                    {headerMessages.filter(m => !m.read).length > 0 && (
                       <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {headerMessages.filter(m => m.unread).length}
+                        {headerMessages.filter(m => !m.read).length}
                       </span>
                     )}
                   </Button>
@@ -281,23 +312,32 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
                     <h3 className="font-semibold text-gray-900">Messages récents</h3>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
-                    {headerMessages.map((message) => (
-                      <div key={message.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${message.unread ? 'bg-blue-50' : ''}`}>
-                        <div className="flex items-start space-x-3">
-                          <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                            {message.avatar}
+                    {headerMessages.length === 0 ? (
+                      <div className="p-4 text-sm text-gray-500 text-center">Aucun message récent</div>
+                    ) : (
+                      headerMessages.map((message) => {
+                        const senderName = message.sender?.full_name || message.sender?.email || 'Utilisateur';
+                        const initials = senderName.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                        return (
+                          <div key={message.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${!message.read ? 'bg-blue-50' : ''}`}>
+                            <div className="flex items-start space-x-3">
+                              <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                {initials}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className={`text-sm ${!message.read ? 'font-semibold' : 'font-medium'} text-gray-900 truncate`}>
+                                  {senderName}
+                                </p>
+                                <p className="text-xs text-gray-500 truncate">{message.content}</p>
+                              </div>
+                              <span className="text-xs text-gray-400">
+                                {formatDistanceToNow(new Date(message.created_at), { addSuffix: true, locale: fr })}
+                              </span>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm ${message.unread ? 'font-semibold' : 'font-medium'} text-gray-900 truncate`}>
-                              {message.sender}
-                            </p>
-                            <p className="text-xs text-gray-600 truncate mb-1">{message.subject}</p>
-                            <p className="text-xs text-gray-500 truncate">{message.preview}</p>
-                          </div>
-                          <span className="text-xs text-gray-400">{message.time}</span>
-                        </div>
-                      </div>
-                    ))}
+                        );
+                      })
+                    )}
                   </div>
                   <div className="p-3 border-t">
                     <Link to="/admin/messages" className="text-sm text-blue-600 hover:text-blue-800">
@@ -312,9 +352,9 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
                 <PopoverTrigger asChild>
                   <Button variant="ghost" size="sm" className="relative hover:bg-gray-100">
                     <Bell className="h-5 w-5 text-gray-600" />
-                    {headerNotifications.filter(n => n.unread).length > 0 && (
+                    {headerNotifications.filter(n => !n.read).length > 0 && (
                       <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {headerNotifications.filter(n => n.unread).length}
+                        {headerNotifications.filter(n => !n.read).length}
                       </span>
                     )}
                   </Button>
@@ -324,23 +364,26 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
                     <h3 className="font-semibold text-gray-900">Notifications</h3>
                   </div>
                   <div className="max-h-64 overflow-y-auto">
-                    {headerNotifications.map((notification) => (
-                      <div key={notification.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${notification.unread ? 'bg-red-50' : ''}`}>
-                        <div className="flex items-start space-x-3">
-                          <div className={`w-2 h-2 mt-2 rounded-full ${
-                            notification.priority === 'high' ? 'bg-red-500' :
-                            notification.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
-                          }`}></div>
-                          <div className="flex-1 min-w-0">
-                            <p className={`text-sm ${notification.unread ? 'font-semibold' : 'font-medium'} text-gray-900`}>
-                              {notification.title}
-                            </p>
-                            <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
-                            <span className="text-xs text-gray-400">{notification.time}</span>
+                    {headerNotifications.length === 0 ? (
+                      <div className="p-4 text-sm text-gray-500 text-center">Aucune notification</div>
+                    ) : (
+                      headerNotifications.map((notification) => (
+                        <div key={notification.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${!notification.read ? 'bg-red-50' : ''}`}>
+                          <div className="flex items-start space-x-3">
+                            <div className={`w-2 h-2 mt-2 rounded-full ${!notification.read ? 'bg-red-500' : 'bg-gray-300'}`}></div>
+                            <div className="flex-1 min-w-0">
+                              <p className={`text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-gray-900`}>
+                                {notification.title}
+                              </p>
+                              <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
+                              <span className="text-xs text-gray-400">
+                                {formatDistanceToNow(new Date(notification.created_at), { addSuffix: true, locale: fr })}
+                              </span>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
                   <div className="p-3 border-t">
                     <Link to="/admin/notifications" className="text-sm text-blue-600 hover:text-blue-800">
@@ -355,7 +398,7 @@ const ModernAdminLayout = ({ title, subtitle, children }) => {
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="sm" className="flex items-center space-x-2 hover:bg-gray-100">
                     <Avatar className="h-8 w-8">
-                      <AvatarImage src="/placeholder-avatar.jpg" />
+                      <AvatarImage src={profile?.avatar_url} />
                       <AvatarFallback className="bg-red-600 text-white text-xs">
                         {profile?.full_name?.charAt(0) || user?.email?.charAt(0) || 'A'}
                       </AvatarFallback>

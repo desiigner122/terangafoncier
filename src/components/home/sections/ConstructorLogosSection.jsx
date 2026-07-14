@@ -1,29 +1,55 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { 
-  Building, 
-  ArrowRight, 
+import {
+  Building,
+  ArrowRight,
   CheckCircle
 } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { supabase } from '@/lib/supabaseClient';
 
-const constructorPartners = [
-  { name: "Senegindia SA", alt: "Logo Senegindia", desc: "Constructeur majeur projets résidentiels et commerciaux.", color: "text-blue-600", website: "#" },
-  { name: "WinWin Afrique", alt: "Logo WinWin Afrique", desc: "Spécialiste en logements sociaux et infrastructures.", color: "text-green-600", website: "#" },
-  { name: "CDE", alt: "Logo CDE", desc: "Compagnie Dakaroise d'Entreprise, acteur historique du BTP.", color: "text-red-600", website: "#" },
-  { name: "CSE Immobilier", alt: "Logo CSE Immobilier", desc: "Promotion immobilière et projets d'envergure.", color: "text-purple-600", website: "#" },
-  { name: "GETRAN", alt: "Logo GETRAN", desc: "Travaux publics, génie civil et bâtiment.", color: "text-orange-600", website: "#" },
-  { name: "BatiPlus", alt: "Logo BatiPlus", desc: "Construction et rénovation de bâtiments.", color: "text-teal-600", website: "#" },
-  { name: "Eiffage Sénégal", alt: "Logo Eiffage Sénégal", desc: "Grands projets d'infrastructures et bâtiment.", color: "text-yellow-600", website: "#" },
-];
+const PARTNER_COLORS = ["text-blue-600", "text-green-600", "text-red-600", "text-purple-600", "text-orange-600", "text-teal-600", "text-yellow-600"];
 
 const ConstructorLogosSection = () => {
   const plugin = React.useRef(
     Autoplay({ delay: 3500, stopOnInteraction: true })
   );
+  const [constructorPartners, setConstructorPartners] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchConstructorPartners = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, full_name, company')
+          .eq('role', 'Promoteur')
+          .eq('is_verified', true)
+          .limit(7);
+
+        if (error) throw error;
+
+        const mapped = (data || [])
+          .filter((p) => p.company || p.full_name)
+          .map((p, index) => ({
+            name: p.company || p.full_name,
+            alt: `Logo ${p.company || p.full_name}`,
+            color: PARTNER_COLORS[index % PARTNER_COLORS.length],
+          }));
+        setConstructorPartners(mapped);
+      } catch (error) {
+        console.log('Erreur lors du chargement des partenaires constructeurs:', error);
+        setConstructorPartners([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchConstructorPartners();
+  }, []);
 
   return (
     <section className="container mx-auto px-4">
@@ -61,6 +87,9 @@ const ConstructorLogosSection = () => {
         </motion.div>
 
 
+        {!loading && constructorPartners.length === 0 ? (
+          <p className="text-center text-muted-foreground">Aucun partenaire constructeur disponible pour le moment.</p>
+        ) : (
         <motion.div
            initial={{ opacity: 0 }}
            whileInView={{ opacity: 1 }}
@@ -93,11 +122,10 @@ const ConstructorLogosSection = () => {
                                  <Building size={32} strokeWidth={1.5} />
                              </div>
                             <h3 className="text-lg md:text-xl font-semibold mb-2 text-foreground">{partner.name}</h3>
-                            <p className="text-muted-foreground text-sm flex-grow mb-3">{partner.desc}</p>
                             <Button variant="link" size="sm" asChild className={`${partner.color} p-0 h-auto`}>
-                                <a href={partner.website} target="_blank" rel="noopener noreferrer">
-                                    Visiter le site <ArrowRight className="ml-1 h-3.5 w-3.5"/>
-                                </a>
+                                <Link to="/partners">
+                                    Voir le profil <ArrowRight className="ml-1 h-3.5 w-3.5"/>
+                                </Link>
                             </Button>
                           </motion.div>
                        </div>
@@ -108,6 +136,7 @@ const ConstructorLogosSection = () => {
               <CarouselNext className="absolute right-[-50px] top-1/2 -translate-y-1/2 hidden md:inline-flex" />
            </Carousel>
         </motion.div>
+        )}
          <div className="text-center mt-12">
             <Button asChild size="lg" variant="outline" className="hover:bg-primary/5 hover:border-primary transition-colors">
                 <Link to="/partners">Voir Tous Nos Partenaires</Link>

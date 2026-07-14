@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { 
@@ -35,13 +35,87 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
   const [showMessages, setShowMessages] = useState(false);
+  const [headerNotifications, setHeaderNotifications] = useState([]);
+  const [headerMessages, setHeaderMessages] = useState([]);
+  const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const location = useLocation();
   const { user, profile } = useAuth();
+
+  useEffect(() => {
+    const loadHeaderData = async () => {
+      if (!user?.id) {
+        setHeaderNotifications([]);
+        setHeaderMessages([]);
+        setUnreadMessagesCount(0);
+        return;
+      }
+
+      try {
+        const { data: notifs, error: notifError } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (notifError) throw notifError;
+        setHeaderNotifications(notifs || []);
+      } catch (error) {
+        console.error('Erreur chargement notifications:', error);
+        setHeaderNotifications([]);
+      }
+
+      try {
+        const { data: participantRows, error: participantError } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', user.id);
+
+        if (participantError) throw participantError;
+
+        const conversationIds = (participantRows || []).map(r => r.conversation_id);
+
+        if (conversationIds.length === 0) {
+          setHeaderMessages([]);
+          setUnreadMessagesCount(0);
+          return;
+        }
+
+        const { data: msgs, error: msgError } = await supabase
+          .from('messages')
+          .select('id, content, read, created_at, sender_id, conversation_id, conversations(subject), sender:profiles(full_name)')
+          .in('conversation_id', conversationIds)
+          .neq('sender_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (msgError) throw msgError;
+        setHeaderMessages(msgs || []);
+
+        const { count, error: countError } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .in('conversation_id', conversationIds)
+          .eq('read', false)
+          .neq('sender_id', user.id);
+
+        if (countError) throw countError;
+        setUnreadMessagesCount(count || 0);
+      } catch (error) {
+        console.error('Erreur chargement messages:', error);
+        setHeaderMessages([]);
+        setUnreadMessagesCount(0);
+      }
+    };
+
+    loadHeaderData();
+  }, [user?.id]);
 
   const getRoleColor = (role) => {
     const colors = {
@@ -60,66 +134,17 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
     return colors[role] || 'from-gray-500 to-slate-500';
   };
 
-  // Données pour les aperçus rapides
-  const headerMessages = [
-    {
-      id: 1,
-      sender: 'Agent Foncier',
-      subject: 'Validation terrain Almadies',
-      preview: 'Votre dossier a été validé et est prêt...',
-      time: '5 min',
-      unread: true,
-      avatar: 'AF'
-    },
-    {
-      id: 2,
-      sender: 'Notaire',
-      subject: 'Rendez-vous signature',
-      preview: 'Merci de confirmer votre présence pour...',
-      time: '1h',
-      unread: true,
-      avatar: 'NT'
-    },
-    {
-      id: 3,
-      sender: 'Support',
-      subject: 'Mise à jour plateforme',
-      preview: 'Nouvelles fonctionnalités disponibles...',
-      time: '2h',
-      unread: false,
-      avatar: 'SP'
-    }
-  ];
-
-  const headerNotifications = [
-    {
-      id: 1,
-      type: 'success',
-      title: 'Paiement validé',
-      message: 'Votre paiement de 15M FCFA a été confirmé',
-      time: '10 min',
-      priority: 'high',
-      unread: true
-    },
-    {
-      id: 2,
-      type: 'info',
-      title: 'Nouveau bien disponible',
-      message: 'Un terrain correspondant à vos critères',
-      time: '1h',
-      priority: 'medium',
-      unread: true
-    },
-    {
-      id: 3,
-      type: 'reminder',
-      title: 'Rendez-vous demain',
-      message: 'Visite terrain Almadies à 14h',
-      time: '3h',
-      priority: 'medium',
-      unread: false
-    }
-  ];
+  // Formatage relatif du temps pour les aperçus rapides (notifications / messages)
+  const formatRelativeTime = (dateStr) => {
+    if (!dateStr) return '';
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffMin = Math.floor(diffMs / 60000);
+    if (diffMin < 1) return "à l'instant";
+    if (diffMin < 60) return `${diffMin} min`;
+    const diffH = Math.floor(diffMin / 60);
+    if (diffH < 24) return `${diffH}h`;
+    return `${Math.floor(diffH / 24)}j`;
+  };
 
   const sidebarItems = [
     {
@@ -170,7 +195,7 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
       href: '/acheteur/messages',
       icon: MessageSquare,
       description: 'Communications',
-      badge: '3'
+      badge: unreadMessagesCount > 0 ? String(unreadMessagesCount) : null
     },
     {
       title: 'Calendrier',
@@ -336,9 +361,9 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
                     onClick={() => setShowNotifications(!showNotifications)}
                   >
                     <Bell className="h-5 w-5 text-gray-600" />
-                    {headerNotifications.filter(n => n.unread).length > 0 && (
+                    {headerNotifications.filter(n => !n.read).length > 0 && (
                       <span className="absolute -top-1 -right-1 h-4 w-4 bg-red-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {headerNotifications.filter(n => n.unread).length}
+                        {headerNotifications.filter(n => !n.read).length}
                       </span>
                     )}
                   </Button>
@@ -350,19 +375,22 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
                         <h3 className="font-semibold text-gray-900">Notifications</h3>
                       </div>
                       <div className="max-h-64 overflow-y-auto">
+                        {headerNotifications.length === 0 && (
+                          <div className="p-4 text-sm text-gray-500 text-center">Aucune notification</div>
+                        )}
                         {headerNotifications.map((notification) => (
-                          <div key={notification.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${notification.unread ? 'bg-blue-50' : ''}`}>
+                          <div key={notification.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${!notification.read ? 'bg-blue-50' : ''}`}>
                             <div className="flex items-start space-x-3">
                               <div className={`w-2 h-2 mt-2 rounded-full ${
-                                notification.priority === 'high' ? 'bg-red-500' :
-                                notification.priority === 'medium' ? 'bg-orange-500' : 'bg-green-500'
+                                notification.type === 'alert' || notification.type === 'urgent' ? 'bg-red-500' :
+                                notification.type === 'warning' ? 'bg-orange-500' : 'bg-green-500'
                               }`}></div>
                               <div className="flex-1 min-w-0">
-                                <p className={`text-sm ${notification.unread ? 'font-semibold' : 'font-medium'} text-gray-900`}>
+                                <p className={`text-sm ${!notification.read ? 'font-semibold' : 'font-medium'} text-gray-900`}>
                                   {notification.title}
                                 </p>
                                 <p className="text-xs text-gray-600 mb-1">{notification.message}</p>
-                                <span className="text-xs text-gray-400">{notification.time}</span>
+                                <span className="text-xs text-gray-400">{formatRelativeTime(notification.created_at)}</span>
                               </div>
                             </div>
                           </div>
@@ -386,9 +414,9 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
                     onClick={() => setShowMessages(!showMessages)}
                   >
                     <MessageSquare className="h-5 w-5 text-gray-600" />
-                    {headerMessages.filter(m => m.unread).length > 0 && (
+                    {headerMessages.filter(m => !m.read).length > 0 && (
                       <span className="absolute -top-1 -right-1 h-4 w-4 bg-blue-500 text-white text-xs rounded-full flex items-center justify-center">
-                        {headerMessages.filter(m => m.unread).length}
+                        {headerMessages.filter(m => !m.read).length}
                       </span>
                     )}
                   </Button>
@@ -400,23 +428,29 @@ const ModernDashboardLayout = ({ children, title, subtitle, userRole }) => {
                         <h3 className="font-semibold text-gray-900">Messages récents</h3>
                       </div>
                       <div className="max-h-64 overflow-y-auto">
-                        {headerMessages.map((message) => (
-                          <div key={message.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${message.unread ? 'bg-blue-50' : ''}`}>
-                            <div className="flex items-start space-x-3">
-                              <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
-                                {message.avatar}
+                        {headerMessages.length === 0 && (
+                          <div className="p-4 text-sm text-gray-500 text-center">Aucun message</div>
+                        )}
+                        {headerMessages.map((message) => {
+                          const senderName = message.sender?.full_name || 'Utilisateur';
+                          return (
+                            <div key={message.id} className={`p-3 hover:bg-gray-50 cursor-pointer border-b last:border-b-0 ${!message.read ? 'bg-blue-50' : ''}`}>
+                              <div className="flex items-start space-x-3">
+                                <div className="w-8 h-8 bg-emerald-600 rounded-full flex items-center justify-center text-white text-xs font-medium">
+                                  {senderName.charAt(0).toUpperCase()}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className={`text-sm ${!message.read ? 'font-semibold' : 'font-medium'} text-gray-900 truncate`}>
+                                    {senderName}
+                                  </p>
+                                  <p className="text-xs text-gray-600 truncate mb-1">{message.conversations?.subject || ''}</p>
+                                  <p className="text-xs text-gray-500 truncate">{message.content}</p>
+                                </div>
+                                <span className="text-xs text-gray-400">{formatRelativeTime(message.created_at)}</span>
                               </div>
-                              <div className="flex-1 min-w-0">
-                                <p className={`text-sm ${message.unread ? 'font-semibold' : 'font-medium'} text-gray-900 truncate`}>
-                                  {message.sender}
-                                </p>
-                                <p className="text-xs text-gray-600 truncate mb-1">{message.subject}</p>
-                                <p className="text-xs text-gray-500 truncate">{message.preview}</p>
-                              </div>
-                              <span className="text-xs text-gray-400">{message.time}</span>
                             </div>
-                          </div>
-                        ))}
+                          );
+                        })}
                       </div>
                       <div className="p-3 border-t">
                         <Link to="/acheteur/messages" className="text-sm text-blue-600 hover:text-blue-800">

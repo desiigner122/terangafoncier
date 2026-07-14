@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { advancedAIService } from '@/services/AdvancedAIService';
 import { blockchainAIService } from '@/services/BlockchainAIService';
+import { supabase } from '@/lib/supabaseClient';
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -108,9 +109,9 @@ const AIChatbot = () => {
         case 'price_analysis':
           const priceData = await advancedAIService.generateMarketInsights();
           content = `ðŸ“Š **Analyse de marché actuelle :**\n\n`;
-          content += `ðŸ’¹ **Tendance générale :** ${priceData.marketSentiment?.status || 'Optimiste'}\n`;
-          content += `ðŸ“ˆ **Prédiction court terme :** ${priceData.pricePredictions?.shortTerm?.prediction || '+2.5%'}\n`;
-          content += `ðŸŽ¯ **Confiance IA :** ${((priceData.confidenceScore || 0.89) * 100).toFixed(1)}%\n\n`;
+          content += `ðŸ’¹ **Tendance générale :** ${priceData?.marketSentiment?.status || 'N/A'}\n`;
+          content += `ðŸ“ˆ **Prédiction court terme :** ${priceData?.pricePredictions?.shortTerm?.prediction || 'N/A'}\n`;
+          content += `ðŸŽ¯ **Confiance IA :** ${((priceData?.confidenceScore || 0) * 100).toFixed(1)}%\n\n`;
           content += `**Top 3 zones performantes :**\n`;
           
           if (priceData.zoneAnalysis?.length > 0) {
@@ -128,46 +129,62 @@ const AIChatbot = () => {
           data = priceData;
           break;
 
-        case 'zone_recommendation':
-          content = `ðŸŽ¯ **Recommandations d'investissement par zone :**\n\n`;
-          content += `ðŸ¥‡ **Almadies** - Zone premium en forte croissance\n`;
-          content += `ðŸ’° Prix moyen: 850,000 FCFA/mÂ²\n`;
-          content += `ðŸ“ˆ Tendance: +12% cette année\n\n`;
-          
-          content += `ðŸ¥ˆ **Diamniadio** - Zone émergente Ï  fort potentiel\n`;
-          content += `ðŸ’° Prix moyen: 450,000 FCFA/mÂ²\n`;
-          content += `ðŸ“ˆ Tendance: +15% cette année\n\n`;
-          
-          content += `ðŸ¥‰ **VDN** - Équilibre parfait prix/qualité\n`;
-          content += `ðŸ’° Prix moyen: 750,000 FCFA/mÂ²\n`;
-          content += `ðŸ“ˆ Tendance: +9% cette année`;
+        case 'zone_recommendation': {
+          const { data: zoneRows } = await supabase
+            .from('properties')
+            .select('location, price')
+            .not('location', 'is', null)
+            .limit(500);
+
+          const zoneStats = {};
+          (zoneRows || []).forEach((row) => {
+            const zone = row.location || 'Non renseigne';
+            if (!zoneStats[zone]) zoneStats[zone] = { total: 0, count: 0 };
+            zoneStats[zone].total += Number(row.price) || 0;
+            zoneStats[zone].count += 1;
+          });
+
+          const topZones = Object.entries(zoneStats)
+            .map(([zone, v]) => ({ zone, avgPrice: Math.round(v.total / v.count), count: v.count }))
+            .sort((a, b) => b.count - a.count)
+            .slice(0, 3);
+
+          if (topZones.length > 0) {
+            content = `Recommandations d'investissement par zone (donnees reelles) :\n\n`;
+            topZones.forEach((z) => {
+              content += `${z.zone} - ${z.count} bien(s) disponible(s)\n`;
+              content += `Prix moyen: ${z.avgPrice.toLocaleString('fr-FR')} FCFA\n\n`;
+            });
+          } else {
+            content = `Aucune donnee de zone n'est disponible pour le moment.`;
+          }
 
           suggestions = [
-            "ðŸ“ Analyser Almadies en détail",
-            "ðŸš€ Pourquoi investir Ï  Diamniadio ?",
-            "ðŸ“Š Comparer toutes les zones",
-            "ðŸ’¡ Conseils d'investissement personnalisés"
+            "Comparer toutes les zones",
+            "Conseils d'investissement personnalises"
           ];
           break;
+        }
 
-        case 'blockchain_status':
+        case 'blockchain_status': {
           const blockchainData = await blockchainAIService.getRealtimeMetrics();
-          content = `â›“ï¸ **Status Blockchain Teranga :**\n\n`;
-          content += `ðŸ”¥ **Transactions totales :** ${blockchainData.totalTransactions || '15,247'}\n`;
-          content += `ðŸ’Ž **Smart contracts actifs :** ${blockchainData.activeContracts || '89'}\n`;
-          content += `ðŸ  **NFT Propriétés :** ${blockchainData.nftProperties || '342'}\n`;
-          content += `ðŸ’° **Volume journalier :** ${blockchainData.dailyVolume || '2.4'}M FCFA\n`;
-          content += `ðŸ›¡ï¸ **Score sécurité :** ${((blockchainData.securityScore || 0.98) * 100).toFixed(1)}%\n`;
-          content += `âš¡ **Santé réseau :** ${((blockchainData.networkHealth || 0.96) * 100).toFixed(1)}%`;
+          content = `Status Blockchain Teranga :\n\n`;
+          content += `Transactions totales : ${blockchainData?.totalTransactions ?? 0}\n`;
+          content += `Smart contracts actifs : ${blockchainData?.activeContracts ?? 0}\n`;
+          content += `NFT Proprietes : ${blockchainData?.nftProperties ?? 0}\n`;
+          content += `Volume journalier : ${blockchainData?.dailyVolume ?? 0}M FCFA\n`;
+          content += `Score securite : ${((blockchainData?.securityScore || 0) * 100).toFixed(1)}%\n`;
+          content += `Sante reseau : ${((blockchainData?.networkHealth || 0) * 100).toFixed(1)}%`;
 
           suggestions = [
-            "ðŸ” Voir mes transactions",
-            "ðŸ“ˆ Analytics blockchain détaillées", 
-            "ðŸ  Créer un NFT propriété",
-            "ðŸ’¼ Status de mes contrats"
+            "Voir mes transactions",
+            "Analytics blockchain detaillees",
+            "Creer un NFT propriete",
+            "Status de mes contrats"
           ];
           data = blockchainData;
           break;
+        }
 
         case 'property_valuation':
           content = `ðŸ  **Évaluation IA de propriété :**\n\n`;
@@ -203,23 +220,35 @@ const AIChatbot = () => {
           ];
           break;
 
-        case 'market_trends':
-          content = `ðŸ“ˆ **Tendances marché 2024 :**\n\n`;
-          content += `ðŸ”¥ **Croissance générale :** +8.5% sur l'année\n`;
-          content += `ðŸ† **Zones leaders :** Almadies, Ngor (+12%)\n`;
-          content += `ðŸš€ **Zones émergentes :** Diamniadio, Lac Rose (+15%)\n`;
-          content += `ðŸ’Ž **Segment premium :** Demande forte diaspora\n`;
-          content += `ðŸ  **Type recherché :** Villas 3-4 chambres\n`;
-          content += `â›“ï¸ **Innovation :** Boom des transactions blockchain\n\n`;
-          content += `**ðŸ”® Prédiction 2025 :** Consolidation des gains avec une croissance plus modérée (+6-8%)`;
+        case 'market_trends': {
+          const now = new Date();
+          const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+          const sixtyDaysAgo = new Date(now.getTime() - 60 * 24 * 60 * 60 * 1000);
+
+          const [{ count: totalCount }, { count: recentCount }, { count: previousCount }] = await Promise.all([
+            supabase.from('properties').select('id', { count: 'exact', head: true }),
+            supabase.from('properties').select('id', { count: 'exact', head: true }).gte('created_at', thirtyDaysAgo.toISOString()),
+            supabase.from('properties').select('id', { count: 'exact', head: true }).gte('created_at', sixtyDaysAgo.toISOString()).lt('created_at', thirtyDaysAgo.toISOString())
+          ]);
+
+          const total = totalCount || 0;
+          const recent = recentCount || 0;
+          const previous = previousCount || 0;
+          const growth = previous > 0 ? (((recent - previous) / previous) * 100).toFixed(1) : null;
+
+          content = `Tendances marche (donnees reelles) :\n\n`;
+          content += `Biens references au total : ${total}\n`;
+          content += `Nouveaux biens (30 derniers jours) : ${recent}\n`;
+          content += growth !== null
+            ? `Evolution vs les 30 jours precedents : ${growth}%\n`
+            : `Pas assez d'historique pour calculer une evolution.\n`;
 
           suggestions = [
-            "ðŸ“Š Détails par zone",
-            "ðŸ’° Impact sur mes investissements",
-            "ðŸ”® Prédictions long terme",
-            "ðŸŽ¯ Opportunités Ï  saisir"
+            "Details par zone",
+            "Impact sur mes investissements"
           ];
           break;
+        }
 
         default:
           content = `ðŸ¤” Je comprends que vous vous intéressez Ï  l'immobilier ! \n\n`;

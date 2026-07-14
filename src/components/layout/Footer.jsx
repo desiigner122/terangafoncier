@@ -1,11 +1,11 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Linkedin, 
-  MapPin, 
-  Phone, 
+import {
+  Linkedin,
+  MapPin,
+  Phone,
   Mail,
   Facebook,
   Twitter,
@@ -35,11 +35,53 @@ import {
   BookOpen,
   Building2
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const logoUrl = "/images/logo.png";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
+  const [blockchainCounts, setBlockchainCounts] = useState({
+    verifiedProperties: 0,
+    transactions: 0,
+    users: 0,
+    partners: 0
+  });
+
+  useEffect(() => {
+    const loadBlockchainCounts = async () => {
+      try {
+        const [
+          { count: verifiedCount, error: verifiedError },
+          { count: transactionsCount, error: transactionsError },
+          { count: usersCount, error: usersError },
+          { count: partnersCount, error: partnersError }
+        ] = await Promise.all([
+          supabase.from('properties').select('id', { count: 'exact', head: true }).eq('verification_status', 'verified'),
+          supabase.from('financial_transactions').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('banking_partners').select('id', { count: 'exact', head: true }).eq('status', 'active')
+        ]);
+
+        if (verifiedError) throw verifiedError;
+        if (transactionsError) throw transactionsError;
+        if (usersError) throw usersError;
+        if (partnersError) throw partnersError;
+
+        setBlockchainCounts({
+          verifiedProperties: verifiedCount || 0,
+          transactions: transactionsCount || 0,
+          users: usersCount || 0,
+          partners: partnersCount || 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement statistiques footer:', error);
+        setBlockchainCounts({ verifiedProperties: 0, transactions: 0, users: 0, partners: 0 });
+      }
+    };
+
+    loadBlockchainCounts();
+  }, []);
 
   const quickLinks = [
     {
@@ -87,12 +129,10 @@ const Footer = () => {
   ];
 
   const blockchainStats = [
-    { label: "Transactions Blockchain", value: "5,847+", icon: Blocks, trend: "+23%" },
-    { label: "Terrains Vérifiés", value: "2,500+", icon: Shield, trend: "+12%" },
-    { label: "Smart Contracts", value: "1,250+", icon: Cpu, trend: "+45%" },
-    { label: "Utilisateurs Crypto", value: "892+", icon: Coins, trend: "+67%" },
-    { label: "Partenaires Certifiés", value: "150+", icon: Fingerprint, trend: "+8%" },
-    { label: "NFT Propriétés", value: "734+", icon: Sparkles, trend: "+89%" }
+    { label: "Transactions Sécurisées", value: blockchainCounts.transactions.toLocaleString('fr-FR'), icon: Blocks },
+    { label: "Terrains Vérifiés", value: blockchainCounts.verifiedProperties.toLocaleString('fr-FR'), icon: Shield },
+    { label: "Utilisateurs", value: blockchainCounts.users.toLocaleString('fr-FR'), icon: Coins },
+    { label: "Partenaires Certifiés", value: blockchainCounts.partners.toLocaleString('fr-FR'), icon: Fingerprint }
   ];
 
   const socialLinks = [
@@ -122,7 +162,7 @@ const Footer = () => {
             </h3>
             <p className="text-gray-300">Données vérifiées et transparentes</p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {blockchainStats.map((stat, index) => (
               <div key={index} className="bg-white/5 backdrop-blur-sm rounded-xl p-4 border border-white/10 hover:border-purple-400/30 transition-all duration-300 group">
                 <div className="flex items-center justify-center mb-3">
@@ -133,7 +173,6 @@ const Footer = () => {
                 <div className="text-center">
                   <div className="text-xl font-bold text-white mb-1">{stat.value}</div>
                   <div className="text-xs text-gray-400 mb-2">{stat.label}</div>
-                  <div className="text-xs text-green-400 font-semibold">{stat.trend}</div>
                 </div>
               </div>
             ))}

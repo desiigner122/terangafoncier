@@ -15,6 +15,7 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/lib/supabaseClient';
 
 const AIAssistantWidget = ({ userRole, dashboardData }) => {
   const [aiRecommendations, setAiRecommendations] = useState([]);
@@ -27,112 +28,48 @@ const AIAssistantWidget = ({ userRole, dashboardData }) => {
 
   const generateAIRecommendations = async () => {
     setAiProcessing(true);
-    
-    // Simulation IA - En production, appel API IA réelle
-    await new Promise(resolve => setTimeout(resolve, 1500));
-    
-    const recommendations = getRecommendationsByRole(userRole);
-    setAiRecommendations(recommendations);
-    setConfidenceScore(Math.floor(0 * 20) + 80); // 80-100%
+
+    try {
+      const recommendations = await getRecommendationsByRole(userRole);
+      setAiRecommendations(recommendations);
+
+      const averageConfidence = recommendations.length > 0
+        ? Math.round(
+            recommendations.reduce((sum, rec) => sum + (rec.confidence || 0), 0) / recommendations.length
+          )
+        : 0;
+      setConfidenceScore(averageConfidence);
+    } catch (error) {
+      console.error('Erreur chargement recommandations IA:', error);
+      setAiRecommendations([]);
+      setConfidenceScore(0);
+    }
+
     setAiProcessing(false);
   };
 
-  const getRecommendationsByRole = (role) => {
-    const baseRecommendations = {
-      'Particulier': [
-        {
-          type: 'opportunity',
-          title: 'Zone Almadies sous-évaluée détectée',
-          description: 'Les prix vont augmenter de 18% dans les 6 prochains mois selon nos modèles prédictifs.',
-          confidence: 94,
-          action: 'Voir les terrains disponibles',
-          priority: 'high',
-          category: 'Investissement'
-        },
-        {
-          type: 'financial',
-          title: 'Optimisation financement détectée',
-          description: 'Votre profil est éligible à un crédit à 6.5% au lieu de 8.5% standard.',
-          confidence: 87,
-          action: 'Simuler crédit',
-          priority: 'medium',
-          category: 'Financement'
-        },
-        {
-          type: 'alert',
-          title: 'Nouvelle zone communale Thiès',
-          description: 'Attribution dans 48h. Votre profil correspond aux critères.',
-          confidence: 91,
-          action: 'Soumettre demande',
-          priority: 'urgent',
-          category: 'Communal'
-        }
-      ],
-      'Vendeur Particulier': [
-        {
-          type: 'pricing',
-          title: 'Prix optimal détecté',
-          description: 'Votre terrain à Liberté 6 peut être vendu 15% au-dessus du prix initial.',
-          confidence: 89,
-          action: 'Ajuster prix',
-          priority: 'high',
-          category: 'Pricing'
-        },
-        {
-          type: 'marketing',
-          title: 'Meilleur timing publication',
-          description: 'Publier demain entre 14h-17h pour 23% plus de vues.',
-          confidence: 76,
-          action: 'Programmer publication',
-          priority: 'medium',
-          category: 'Marketing'
-        }
-      ],
-      'Investisseur': [
-        {
-          type: 'portfolio',
-          title: 'Diversification recommandée',
-          description: 'Votre portfolio est concentré à 78% sur Dakar. Diversifier vers Thiès.',
-          confidence: 92,
-          action: 'Voir opportunités Thiès',
-          priority: 'medium',
-          category: 'Portfolio'
-        },
-        {
-          type: 'roi',
-          title: 'ROI exceptionnel détecté',
-          description: 'Projet promoteur Zone B: ROI prévu 28% sur 2 ans.',
-          confidence: 85,
-          action: 'Analyser projet',
-          priority: 'high',
-          category: 'Opportunité'
-        }
-      ],
-      'Promoteur': [
-        {
-          type: 'demand',
-          title: 'Demande forte détectée',
-          description: '47 demandes construction reçues zone Almadies cette semaine.',
-          confidence: 95,
-          action: 'Créer projet groupé',
-          priority: 'high',
-          category: 'Demande'
-        }
-      ],
-      'Municipalité': [
-        {
-          type: 'revenue',
-          title: 'Optimisation revenus',
-          description: 'Ajuster prix zone C (+12%) basé sur demande actuelle.',
-          confidence: 88,
-          action: 'Réviser tarification',
-          priority: 'medium',
-          category: 'Revenue'
-        }
-      ]
-    };
+  // Charge les analyses IA réelles enregistrées pour ce rôle utilisateur
+  const getRecommendationsByRole = async (role) => {
+    const { data, error } = await supabase
+      .from('ai_analyses')
+      .select('id, result, created_at')
+      .order('created_at', { ascending: false })
+      .limit(5);
 
-    return baseRecommendations[role] || [];
+    if (error) throw error;
+
+    return (data || []).map((row) => {
+      const result = row.result || {};
+      return {
+        type: result.type || 'opportunity',
+        title: result.title || 'Recommandation IA',
+        description: result.description || '',
+        confidence: result.confidence || 0,
+        action: result.action || 'Voir le détail',
+        priority: result.priority || 'medium',
+        category: result.category || role || 'Général'
+      };
+    });
   };
 
   const getPriorityColor = (priority) => {
@@ -196,6 +133,11 @@ const AIAssistantWidget = ({ userRole, dashboardData }) => {
                 <Brain className="h-8 w-8 animate-pulse text-blue-600 mx-auto mb-2" />
                 <p className="text-sm text-gray-500">IA en cours d'analyse...</p>
               </div>
+            </div>
+          ) : aiRecommendations.length === 0 ? (
+            <div className="text-center py-8">
+              <Brain className="h-8 w-8 text-gray-300 mx-auto mb-2" />
+              <p className="text-sm text-gray-500">Aucune recommandation IA disponible pour le moment.</p>
             </div>
           ) : (
             aiRecommendations.map((rec, index) => (

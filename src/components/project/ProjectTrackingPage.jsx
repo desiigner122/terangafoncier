@@ -1,23 +1,17 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Building2, Calendar, Progress, MapPin, Camera, FileText,
-  Clock, CheckCircle, AlertTriangle, Eye, Bookmark,
-  FileSignature, HardHat, Home, Triangle, Shield,
-  Palette, Sparkles, Search, Key, ShieldCheck,
-  Play, XCircle, Users, CreditCard, Image,
-  Download, ExternalLink, Bell, Star
+import {
+  Building2, Calendar, MapPin, Camera, FileText,
+  Clock, CheckCircle, CreditCard
 } from 'lucide-react';
-import { DeveloperProjectWorkflowService } from '../../services/DeveloperProjectWorkflowService';
+import { supabase } from '@/lib/supabaseClient';
+import EmptyState from '@/components/ui/EmptyState';
 
 const ProjectTrackingPage = ({ caseId }) => {
   const [projectCase, setProjectCase] = useState(null);
   const [activeTab, setActiveTab] = useState('timeline');
-  const [milestones, setMilestones] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [constructionPhotos, setConstructionPhotos] = useState([]);
-
-  const workflowService = new DeveloperProjectWorkflowService();
+  const [notFound, setNotFound] = useState(false);
 
   useEffect(() => {
     loadProjectData();
@@ -26,166 +20,58 @@ const ProjectTrackingPage = ({ caseId }) => {
   const loadProjectData = async () => {
     try {
       setLoading(true);
-      // Charger les données du projet (simulation)
-      const mockProjectCase = {
-        id: caseId,
-        projectName: "Résidence Les Jardins de Dakar",
-        developerName: "Teranga Développement",
-        unitNumber: "B205",
-        unitType: "3 pièces",
-        surfaceArea: 75.5,
-        salePrice: 45000000,
-        reservationAmount: 4500000,
-        currentStatus: 'STRUCTURE',
-        constructionProgress: 35,
-        expectedDelivery: '2025-06-15',
-        actualDelivery: null,
-        vefaContractDate: '2024-08-15',
-        constructionStartDate: '2024-09-01',
-        location: {
-          address: "Route de Ngor, Dakar",
-          district: "Almadies"
-        },
-        paymentSchedule: [
-          { type: 'RESERVATION', amount: 4500000, status: 'paid', date: '2024-07-20' },
-          { type: 'CONTRACT_SIGNING', amount: 9000000, status: 'paid', date: '2024-08-15' },
-          { type: 'FOUNDATIONS', amount: 9000000, status: 'paid', date: '2024-09-15' },
-          { type: 'STRUCTURE', amount: 9000000, status: 'pending', dueDate: '2024-12-01' },
-          { type: 'CLOSING', amount: 9000000, status: 'pending', dueDate: '2025-02-15' },
-          { type: 'DELIVERY', amount: 4500000, status: 'pending', dueDate: '2025-06-15' }
-        ]
-      };
+      setNotFound(false);
 
-      const mockMilestones = [
-        { 
-          type: 'PROSPECT', 
-          name: 'Prospect intéressé', 
-          date: '2024-07-01', 
-          completed: true,
-          photos: []
-        },
-        { 
-          type: 'RESERVATION', 
-          name: 'Réservation confirmée', 
-          date: '2024-07-20', 
-          completed: true,
-          photos: []
-        },
-        { 
-          type: 'VEFA_CONTRACT', 
-          name: 'Contrat VEFA signé', 
-          date: '2024-08-15', 
-          completed: true,
-          photos: []
-        },
-        { 
-          type: 'CONSTRUCTION_STARTED', 
-          name: 'Début construction', 
-          date: '2024-09-01', 
-          completed: true,
-          photos: ['construction_start_1.jpg', 'construction_start_2.jpg']
-        },
-        { 
-          type: 'FOUNDATIONS', 
-          name: 'Fondations terminées', 
-          date: '2024-10-15', 
-          completed: true,
-          photos: ['foundations_1.jpg', 'foundations_2.jpg', 'foundations_3.jpg']
-        },
-        { 
-          type: 'STRUCTURE', 
-          name: 'Gros œuvre en cours', 
-          date: '2024-11-30', 
-          completed: true,
-          photos: ['structure_1.jpg', 'structure_2.jpg']
-        },
-        { 
-          type: 'ROOFING', 
-          name: 'Toiture', 
-          estimatedDate: '2025-01-15', 
-          completed: false,
-          photos: []
-        },
-        { 
-          type: 'CLOSING', 
-          name: 'Clos et couvert', 
-          estimatedDate: '2025-02-28', 
-          completed: false,
-          photos: []
-        },
-        { 
-          type: 'INTERIOR_WORKS', 
-          name: 'Second œuvre', 
-          estimatedDate: '2025-04-30', 
-          completed: false,
-          photos: []
-        },
-        { 
-          type: 'FINISHING', 
-          name: 'Finitions', 
-          estimatedDate: '2025-05-30', 
-          completed: false,
-          photos: []
-        },
-        { 
-          type: 'DELIVERED', 
-          name: 'Livraison', 
-          estimatedDate: '2025-06-15', 
-          completed: false,
-          photos: []
-        }
-      ];
+      if (!caseId) {
+        setProjectCase(null);
+        setNotFound(true);
+        return;
+      }
 
-      setProjectCase(mockProjectCase);
-      setMilestones(mockMilestones);
-      
+      const { data: project, error } = await supabase
+        .from('developer_projects')
+        .select('*')
+        .eq('id', caseId)
+        .maybeSingle();
+
+      if (error) throw error;
+
+      if (!project) {
+        setProjectCase(null);
+        setNotFound(true);
+        return;
+      }
+
+      let developerName = null;
+      if (project.developer_id) {
+        const { data: developer } = await supabase
+          .from('profiles')
+          .select('full_name')
+          .eq('id', project.developer_id)
+          .maybeSingle();
+        developerName = developer?.full_name || null;
+      }
+
+      setProjectCase({ ...project, developerName });
     } catch (error) {
       console.error('Erreur chargement données projet:', error);
+      setProjectCase(null);
+      setNotFound(true);
     } finally {
       setLoading(false);
     }
   };
 
-  const getStatusIcon = (status) => {
-    const icons = {
-      'PROSPECT': Eye,
-      'RESERVATION': Bookmark,
-      'VEFA_CONTRACT': FileSignature,
-      'CONSTRUCTION_STARTED': HardHat,
-      'FOUNDATIONS': Building2,
-      'STRUCTURE': Home,
-      'ROOFING': Triangle,
-      'CLOSING': Shield,
-      'INTERIOR_WORKS': Palette,
-      'FINISHING': Sparkles,
-      'PRE_DELIVERY': Search,
-      'DELIVERED': Key,
-      'WARRANTY_PERIOD': ShieldCheck,
-      'COMPLETED': CheckCircle
-    };
-    return icons[status] || Building2;
+  const formatCurrency = (amount) => {
+    if (amount === null || amount === undefined) return '—';
+    return `${Number(amount).toLocaleString('fr-FR')} FCFA`;
   };
 
-  const getStatusColor = (status, completed = false) => {
-    if (!completed) return '#94A3B8'; // Gris pour non complété
-    
-    const colors = {
-      'PROSPECT': '#3B82F6',
-      'RESERVATION': '#F59E0B',
-      'VEFA_CONTRACT': '#10B981',
-      'CONSTRUCTION_STARTED': '#F59E0B',
-      'FOUNDATIONS': '#8B5CF6',
-      'STRUCTURE': '#8B5CF6',
-      'ROOFING': '#8B5CF6',
-      'CLOSING': '#8B5CF6',
-      'INTERIOR_WORKS': '#EC4899',
-      'FINISHING': '#EC4899',
-      'PRE_DELIVERY': '#10B981',
-      'DELIVERED': '#10B981',
-      'WARRANTY_PERIOD': '#06B6D4',
-      'COMPLETED': '#10B981'
-    };
-    return colors[status] || '#8B5CF6';
+  const formatDate = (value) => {
+    if (!value) return '—';
+    const date = new Date(value);
+    if (Number.isNaN(date.getTime())) return '—';
+    return date.toLocaleDateString('fr-FR');
   };
 
   if (loading) {
@@ -199,6 +85,20 @@ const ProjectTrackingPage = ({ caseId }) => {
     );
   }
 
+  if (notFound || !projectCase) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <EmptyState
+          icon={Building2}
+          title="Projet introuvable"
+          description="Aucune donnée de projet n'a été trouvée pour cet identifiant."
+        />
+      </div>
+    );
+  }
+
+  const progress = projectCase.progress ?? 0;
+
   return (
     <div className="min-h-screen bg-gray-50">
       {/* En-tête du projet */}
@@ -211,21 +111,29 @@ const ProjectTrackingPage = ({ caseId }) => {
               </div>
               <div>
                 <h1 className="text-2xl font-bold text-gray-900">
-                  {projectCase.projectName}
+                  {projectCase.title || 'Projet sans nom'}
                 </h1>
                 <div className="flex items-center space-x-4 mt-2 text-sm text-gray-500">
-                  <span>Unité {projectCase.unitNumber}</span>
-                  <span>•</span>
-                  <span>{projectCase.unitType}</span>
-                  <span>•</span>
-                  <span>{projectCase.surfaceArea} m²</span>
+                  {projectCase.developerName && <span>{projectCase.developerName}</span>}
+                  {projectCase.location && (
+                    <>
+                      <span>•</span>
+                      <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{projectCase.location}</span>
+                    </>
+                  )}
+                  {projectCase.current_phase && (
+                    <>
+                      <span>•</span>
+                      <span>{projectCase.current_phase}</span>
+                    </>
+                  )}
                 </div>
               </div>
             </div>
-            
+
             <div className="text-right">
               <div className="text-2xl font-bold text-gray-900">
-                {projectCase.constructionProgress}%
+                {progress}%
               </div>
               <div className="text-sm text-gray-500">Avancement</div>
             </div>
@@ -235,12 +143,12 @@ const ProjectTrackingPage = ({ caseId }) => {
           <div className="mt-6">
             <div className="flex justify-between text-sm text-gray-600 mb-2">
               <span>Progression de la construction</span>
-              <span>Livraison prévue : {new Date(projectCase.expectedDelivery).toLocaleDateString('fr-FR')}</span>
+              <span>Livraison prévue : {formatDate(projectCase.estimated_completion)}</span>
             </div>
             <div className="w-full bg-gray-200 rounded-full h-3">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: `${projectCase.constructionProgress}%` }}
+                animate={{ width: `${progress}%` }}
                 transition={{ duration: 1, ease: "easeOut" }}
                 className="bg-gradient-to-r from-blue-500 to-green-500 h-3 rounded-full"
               />
@@ -257,7 +165,7 @@ const ProjectTrackingPage = ({ caseId }) => {
               { id: 'timeline', label: 'Timeline Construction', icon: Calendar },
               { id: 'photos', label: 'Photos Chantier', icon: Camera },
               { id: 'documents', label: 'Documents', icon: FileText },
-              { id: 'payments', label: 'Paiements', icon: CreditCard },
+              { id: 'payments', label: 'Budget', icon: CreditCard },
               { id: 'project', label: 'Détails Projet', icon: Building2 }
             ].map((tab) => {
               const Icon = tab.icon;
@@ -294,61 +202,15 @@ const ProjectTrackingPage = ({ caseId }) => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Timeline de Construction
               </h2>
-              
-              <div className="relative">
-                {milestones.map((milestone, index) => {
-                  const Icon = getStatusIcon(milestone.type);
-                  const isCompleted = milestone.completed;
-                  const statusColor = getStatusColor(milestone.type, isCompleted);
-                  
-                  return (
-                    <div key={index} className="relative pb-8">
-                      {/* Ligne de connexion */}
-                      {index < milestones.length - 1 && (
-                        <div 
-                          className="absolute left-6 top-12 w-0.5 h-16"
-                          style={{ backgroundColor: isCompleted ? statusColor : '#E5E7EB' }}
-                        />
-                      )}
-                      
-                      <div className="flex items-start space-x-4">
-                        <div 
-                          className="flex-shrink-0 w-12 h-12 rounded-full flex items-center justify-center"
-                          style={{ 
-                            backgroundColor: isCompleted ? statusColor : '#F3F4F6',
-                            color: isCompleted ? 'white' : '#9CA3AF'
-                          }}
-                        >
-                          <Icon className="h-6 w-6" />
-                        </div>
-                        
-                        <div className="flex-1 bg-white rounded-lg shadow-sm border p-4">
-                          <div className="flex items-center justify-between">
-                            <div>
-                              <h3 className="text-lg font-medium text-gray-900">
-                                {milestone.name}
-                              </h3>
-                              <p className="text-sm text-gray-500 mt-1">
-                                {isCompleted ? (
-                                  `Terminé le ${new Date(milestone.date).toLocaleDateString('fr-FR')}`
-                                ) : (
-                                  `Prévu le ${new Date(milestone.estimatedDate).toLocaleDateString('fr-FR')}`
-                                )}
-                              </p>
-                            </div>
-                            
-                            {isCompleted && milestone.photos.length > 0 && (
-                              <button className="flex items-center space-x-2 text-blue-600 hover:text-blue-800">
-                                <Camera className="h-4 w-4" />
-                                <span className="text-sm">{milestone.photos.length} photos</span>
-                              </button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  );
-                })}
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="flex items-center gap-3 mb-2">
+                  <Clock className="h-5 w-5 text-blue-600" />
+                  <span className="font-medium text-gray-900">Statut actuel : {projectCase.status || projectCase.current_phase || '—'}</span>
+                </div>
+                <p className="text-sm text-gray-500">
+                  Le détail étape par étape du chantier n'est pas encore disponible pour ce projet.
+                </p>
               </div>
             </motion.div>
           )}
@@ -363,29 +225,29 @@ const ProjectTrackingPage = ({ caseId }) => {
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
                 Photos du Chantier
               </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {milestones
-                  .filter(m => m.completed && m.photos.length > 0)
-                  .map((milestone, index) => (
-                    <div key={index} className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                      <div className="p-4 border-b">
-                        <h3 className="font-medium text-gray-900">{milestone.name}</h3>
-                        <p className="text-sm text-gray-500">
-                          {new Date(milestone.date).toLocaleDateString('fr-FR')}
-                        </p>
-                      </div>
-                      <div className="grid grid-cols-2 gap-2 p-4">
-                        {milestone.photos.map((photo, photoIndex) => (
-                          <div key={photoIndex} className="aspect-square bg-gray-100 rounded-lg flex items-center justify-center">
-                            <Camera className="h-8 w-8 text-gray-400" />
-                            <span className="text-xs text-gray-500 ml-2">{photo}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  ))}
-              </div>
+              <EmptyState
+                icon={Camera}
+                title="Aucune photo disponible"
+                description="Les photos du chantier apparaîtront ici dès qu'elles seront ajoutées à ce projet."
+              />
+            </motion.div>
+          )}
+
+          {activeTab === 'documents' && (
+            <motion.div
+              key="documents"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Documents du Projet
+              </h2>
+              <EmptyState
+                icon={FileText}
+                title="Aucun document disponible"
+                description="Les documents liés à ce projet apparaîtront ici dès qu'ils seront ajoutés."
+              />
             </motion.div>
           )}
 
@@ -397,47 +259,72 @@ const ProjectTrackingPage = ({ caseId }) => {
               exit={{ opacity: 0, y: -20 }}
             >
               <h2 className="text-xl font-semibold text-gray-900 mb-6">
-                Échéancier VEFA
+                Budget du Projet
               </h2>
-              
-              <div className="bg-white rounded-lg shadow-sm border overflow-hidden">
-                <div className="px-6 py-4 border-b bg-gray-50">
-                  <div className="grid grid-cols-4 gap-4 text-sm font-medium text-gray-700">
-                    <span>Étape</span>
-                    <span>Montant</span>
-                    <span>Date d'échéance</span>
-                    <span>Statut</span>
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                  <div>
+                    <p className="text-sm text-gray-500">Budget total</p>
+                    <p className="text-xl font-bold text-gray-900">{formatCurrency(projectCase.budget)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Dépensé à ce jour</p>
+                    <p className="text-xl font-bold text-gray-900">{formatCurrency(projectCase.spent)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Restant</p>
+                    <p className="text-xl font-bold text-gray-900">
+                      {projectCase.budget != null && projectCase.spent != null
+                        ? formatCurrency(projectCase.budget - projectCase.spent)
+                        : '—'}
+                    </p>
                   </div>
                 </div>
-                
-                <div className="divide-y">
-                  {projectCase.paymentSchedule.map((payment, index) => (
-                    <div key={index} className="px-6 py-4">
-                      <div className="grid grid-cols-4 gap-4 items-center">
-                        <div className="text-sm text-gray-900">
-                          {payment.type.replace('_', ' ')}
-                        </div>
-                        <div className="text-sm font-medium text-gray-900">
-                          {payment.amount.toLocaleString('fr-FR')} FCFA
-                        </div>
-                        <div className="text-sm text-gray-500">
-                          {payment.date ? 
-                            new Date(payment.date).toLocaleDateString('fr-FR') :
-                            new Date(payment.dueDate).toLocaleDateString('fr-FR')
-                          }
-                        </div>
-                        <div>
-                          <span className={`inline-flex px-2 py-1 text-xs font-medium rounded-full ${
-                            payment.status === 'paid' 
-                              ? 'bg-green-100 text-green-800'
-                              : 'bg-yellow-100 text-yellow-800'
-                          }`}>
-                            {payment.status === 'paid' ? 'Payé' : 'En attente'}
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
+              </div>
+            </motion.div>
+          )}
+
+          {activeTab === 'project' && (
+            <motion.div
+              key="project"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -20 }}
+            >
+              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+                Détails du Projet
+              </h2>
+
+              <div className="bg-white rounded-lg shadow-sm border p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <p className="text-sm text-gray-500">Client</p>
+                    <p className="font-medium text-gray-900">{projectCase.client || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Promoteur</p>
+                    <p className="font-medium text-gray-900">{projectCase.developerName || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Localisation</p>
+                    <p className="font-medium text-gray-900">{projectCase.location || '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Statut</p>
+                    <p className="font-medium text-gray-900 flex items-center gap-1">
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                      {projectCase.status || '—'}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Date de début</p>
+                    <p className="font-medium text-gray-900">{formatDate(projectCase.start_date)}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm text-gray-500">Livraison estimée</p>
+                    <p className="font-medium text-gray-900">{formatDate(projectCase.estimated_completion)}</p>
+                  </div>
                 </div>
               </div>
             </motion.div>

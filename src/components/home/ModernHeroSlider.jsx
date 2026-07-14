@@ -37,10 +37,69 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/lib/supabaseClient';
 
 const ModernHeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [platformStats, setPlatformStats] = useState({
+    verifiedProperties: 0,
+    blockchainHashes: 0,
+    registeredUsers: 0,
+    communalRequests: 0,
+    smartContracts: 0,
+    blockchainTransactions: 0,
+    constructionProjects: 0,
+    reviewsCount: 0,
+    averageRating: 0
+  });
+
+  useEffect(() => {
+    const loadPlatformStats = async () => {
+      try {
+        const [
+          verifiedRes,
+          hashRes,
+          usersRes,
+          communalRes,
+          contractsRes,
+          txRes,
+          constructionRes,
+          reviewsRes
+        ] = await Promise.all([
+          supabase.from('properties').select('id', { count: 'exact', head: true }).eq('verification_status', 'verified'),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('blockchain_hash', 'is', null),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('communal_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('smart_contract_address', 'is', null),
+          supabase.from('blockchain_transactions').select('id', { count: 'exact', head: true }),
+          supabase.from('construction_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('reviews').select('rating')
+        ]);
+
+        const ratings = (reviewsRes.data || []).map((r) => r.rating).filter((r) => typeof r === 'number');
+        const averageRating = ratings.length > 0
+          ? Math.round((ratings.reduce((sum, r) => sum + r, 0) / ratings.length) * 10) / 10
+          : 0;
+
+        setPlatformStats({
+          verifiedProperties: verifiedRes.count || 0,
+          blockchainHashes: hashRes.count || 0,
+          registeredUsers: usersRes.count || 0,
+          communalRequests: communalRes.count || 0,
+          smartContracts: contractsRes.count || 0,
+          blockchainTransactions: txRes.count || 0,
+          constructionProjects: constructionRes.count || 0,
+          reviewsCount: ratings.length,
+          averageRating
+        });
+      } catch (error) {
+        console.error('Erreur chargement statistiques plateforme:', error);
+      }
+    };
+
+    loadPlatformStats();
+  }, []);
 
   const slides = [
     {
@@ -57,9 +116,9 @@ const ModernHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
       bgGradient: "from-blue-900 via-purple-900 to-blue-900",
       stats: [
-        { label: "Terrains Vérifiés", value: "2,847", icon: CheckCircle },
-        { label: "Hash Blockchain", value: "156K+", icon: Database },
-        { label: "Investisseurs", value: "1,200+", icon: Users }
+        { label: "Terrains Vérifiés", value: platformStats.verifiedProperties.toLocaleString('fr-FR'), icon: CheckCircle },
+        { label: "Hash Blockchain", value: platformStats.blockchainHashes.toLocaleString('fr-FR'), icon: Database },
+        { label: "Investisseurs", value: platformStats.registeredUsers.toLocaleString('fr-FR'), icon: Users }
       ]
     },
     {
@@ -76,9 +135,7 @@ const ModernHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop",
       bgGradient: "from-emerald-900 via-teal-900 to-emerald-900",
       stats: [
-        { label: "Mairies Connectées", value: "45", icon: Building },
-        { label: "Demandes Traitées", value: "3,200+", icon: FileCheck },
-        { label: "Délai Moyen", value: "21 jours", icon: Clock }
+        { label: "Demandes Traitées", value: platformStats.communalRequests.toLocaleString('fr-FR'), icon: FileCheck }
       ]
     },
     {
@@ -95,9 +152,8 @@ const ModernHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
       bgGradient: "from-yellow-900 via-orange-900 to-yellow-900",
       stats: [
-        { label: "Contrats Actifs", value: "892", icon: Coins },
-        { label: "Fonds Sécurisés", value: "2.4B CFA", icon: Lock },
-        { label: "Transactions", value: "5,600+", icon: Zap }
+        { label: "Contrats Actifs", value: platformStats.smartContracts.toLocaleString('fr-FR'), icon: Coins },
+        { label: "Transactions", value: platformStats.blockchainTransactions.toLocaleString('fr-FR'), icon: Zap }
       ]
     },
     {
@@ -114,9 +170,7 @@ const ModernHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&h=600&fit=crop",
       bgGradient: "from-indigo-900 via-pink-900 to-indigo-900",
       stats: [
-        { label: "Projets Surveillés", value: "456", icon: Camera },
-        { label: "Images/Jour", value: "2,400+", icon: Eye },
-        { label: "Précision IA", value: "97.8%", icon: Target }
+        { label: "Projets Surveillés", value: platformStats.constructionProjects.toLocaleString('fr-FR'), icon: Camera }
       ]
     }
   ];
@@ -267,31 +321,38 @@ const ModernHeroSlider = () => {
                     <CardContent className="p-8">
                       <div className="grid grid-cols-2 gap-6">
                         <div className="text-center">
-                          <div className="text-3xl font-bold mb-2">2,500+</div>
-                          <div className="text-sm text-white/80">Clients Satisfaits</div>
+                          <div className="text-3xl font-bold mb-2">{platformStats.registeredUsers.toLocaleString('fr-FR')}</div>
+                          <div className="text-sm text-white/80">Clients Inscrits</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-3xl font-bold mb-2">98%</div>
-                          <div className="text-sm text-white/80">Taux de Satisfaction</div>
+                          <div className="text-3xl font-bold mb-2">{platformStats.verifiedProperties.toLocaleString('fr-FR')}</div>
+                          <div className="text-sm text-white/80">Terrains Vérifiés</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-3xl font-bold mb-2">24/7</div>
-                          <div className="text-sm text-white/80">Support Premium</div>
+                          <div className="text-3xl font-bold mb-2">{platformStats.constructionProjects.toLocaleString('fr-FR')}</div>
+                          <div className="text-sm text-white/80">Projets Diaspora</div>
                         </div>
                         <div className="text-center">
-                          <div className="text-3xl font-bold mb-2">50+</div>
-                          <div className="text-sm text-white/80">Projets Livrés</div>
+                          <div className="text-3xl font-bold mb-2">{platformStats.reviewsCount.toLocaleString('fr-FR')}</div>
+                          <div className="text-sm text-white/80">Avis Clients</div>
                         </div>
                       </div>
-                      
+
                       <div className="mt-6 pt-6 border-t border-white/20">
                         <div className="flex items-center gap-2 text-sm">
                           <div className="flex items-center">
                             {[...Array(5)].map((_, i) => (
-                              <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <Star
+                                key={i}
+                                className={`h-4 w-4 ${i < Math.round(platformStats.averageRating) ? 'fill-yellow-400 text-yellow-400' : 'text-white/30'}`}
+                              />
                             ))}
                           </div>
-                          <span className="text-white/90">4.9/5 - 1,200+ avis</span>
+                          <span className="text-white/90">
+                            {platformStats.reviewsCount > 0
+                              ? `${platformStats.averageRating}/5 - ${platformStats.reviewsCount.toLocaleString('fr-FR')} avis`
+                              : 'Pas encore d\'avis'}
+                          </span>
                         </div>
                       </div>
                     </CardContent>

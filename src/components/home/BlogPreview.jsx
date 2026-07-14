@@ -1,15 +1,41 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { 
-  ArrowRight, 
+import {
+  ArrowRight,
   Calendar
 } from 'lucide-react';
-import { sampleBlogPosts } from '@/data'; // Using sampleBlogPosts from data/index.js
+import { supabase } from '@/lib/supabaseClient';
 
 const BlogPreview = () => {
+  const [posts, setPosts] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadPosts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('blog_posts')
+          .select('id, title, slug, excerpt, created_at, status')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setPosts(data || []);
+      } catch (error) {
+        console.error('Erreur chargement articles de blog:', error);
+        setPosts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPosts();
+  }, []);
+
   const sectionVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -36,38 +62,57 @@ const BlogPreview = () => {
           </p>
         </motion.div>
 
-        <motion.div
-          variants={sectionVariants}
-          initial="hidden"
-          whileInView="visible"
-          viewport={{ once: true, amount: 0.1 }}
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
-        >
-          {sampleBlogPosts.slice(0, 3).map((post, index) => (
-            <motion.div key={post.id} variants={itemVariants}>
-              <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 border rounded-xl">
-                <div className="aspect-video bg-muted relative">
-                   <img  className="w-full h-full object-cover" alt={post.title} src={`https://source.unsplash.com/random/400x300/?${post.category},senegal,${index}`} />
-                   <div className="absolute inset-0 bg-black/10"></div>
+        {loading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
+            {[...Array(3)].map((_, index) => (
+              <div key={index} className="h-full rounded-xl border overflow-hidden animate-pulse">
+                <div className="aspect-video bg-muted" />
+                <div className="p-6 space-y-3">
+                  <div className="h-4 bg-muted rounded w-3/4" />
+                  <div className="h-3 bg-muted rounded w-1/2" />
+                  <div className="h-3 bg-muted rounded w-full" />
                 </div>
-                <CardHeader>
-                  <CardTitle className="text-lg leading-snug">{post.title}</CardTitle>
-                  <p className="text-xs text-muted-foreground pt-1 flex items-center">
-                     <Calendar className="h-3.5 w-3.5 mr-1.5"/> {new Date(post.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
-                  </p>
-                </CardHeader>
-                <CardContent className="flex-grow">
-                  <p className="text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>
-                </CardContent>
-                <CardFooter>
-                  <Button variant="link" asChild className="p-0 h-auto text-primary">
-                    <Link to={`/blog/${post.slug}`}>Lire la suite <ArrowRight className="ml-1 h-4 w-4" /></Link>
-                  </Button>
-                </CardFooter>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
+              </div>
+            ))}
+          </div>
+        ) : posts.length === 0 ? (
+          <p className="text-center text-muted-foreground py-8">
+            Aucun article pour le moment.
+          </p>
+        ) : (
+          <motion.div
+            variants={sectionVariants}
+            initial="hidden"
+            whileInView="visible"
+            viewport={{ once: true, amount: 0.1 }}
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8"
+          >
+            {posts.map((post, index) => (
+              <motion.div key={post.id} variants={itemVariants}>
+                <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 border rounded-xl">
+                  <div className="aspect-video bg-muted relative">
+                     <img  className="w-full h-full object-cover" alt={post.title} src={`https://source.unsplash.com/random/400x300/?senegal,real-estate,${index}`} />
+                     <div className="absolute inset-0 bg-black/10"></div>
+                  </div>
+                  <CardHeader>
+                    <CardTitle className="text-lg leading-snug">{post.title}</CardTitle>
+                    <p className="text-xs text-muted-foreground pt-1 flex items-center">
+                       <Calendar className="h-3.5 w-3.5 mr-1.5"/> {new Date(post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                    </p>
+                  </CardHeader>
+                  <CardContent className="flex-grow">
+                    <p className="text-sm text-muted-foreground line-clamp-3">{post.excerpt}</p>
+                  </CardContent>
+                  <CardFooter>
+                    <Button variant="link" asChild className="p-0 h-auto text-primary">
+                      <Link to={`/blog/${post.slug}`}>Lire la suite <ArrowRight className="ml-1 h-4 w-4" /></Link>
+                    </Button>
+                  </CardFooter>
+                </Card>
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
 
         <motion.div
           initial={{ opacity: 0, y: 20 }}

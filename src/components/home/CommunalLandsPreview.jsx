@@ -1,7 +1,7 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  MapPin, 
+import {
+  MapPin,
   ArrowRight,
   Landmark,
   Shield,
@@ -11,12 +11,39 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 
 const CommunalLandsPreview = () => {
+  const [requestsCount, setRequestsCount] = useState(0);
+  const [exampleLand, setExampleLand] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [countRes, latestRes] = await Promise.all([
+          supabase.from('communal_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('communal_requests').select('*').order('created_at', { ascending: false }).limit(1)
+        ]);
+
+        setRequestsCount(countRes?.count || 0);
+        setExampleLand(latestRes?.data?.[0] || null);
+      } catch (error) {
+        console.error('Erreur chargement terrains communaux:', error);
+        setRequestsCount(0);
+        setExampleLand(null);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, []);
+
   const stats = [
-    { value: "156", label: "Terrains disponibles" },
+    { value: requestsCount.toLocaleString('fr-FR'), label: "Terrains disponibles" },
     { value: "14", label: "Régions couvertes" },
-    { value: "89%", label: "Attributions réussies" }
+    { value: "—", label: "Attributions réussies" }
   ];
 
   return (
@@ -78,31 +105,49 @@ const CommunalLandsPreview = () => {
           >
             <Card className="shadow-lg">
               <div className="relative">
-                <img 
-                  src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=250&fit=crop&crop=center" 
-                  alt="Terrain communal exemple"
+                <img
+                  src="https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=250&fit=crop&crop=center"
+                  alt="Terrain communal"
                   className="w-full h-48 object-cover rounded-t-lg"
                 />
                 <Badge className="absolute top-3 right-3 bg-green-500 text-white">
-                  Attribution ouverte
+                  {exampleLand?.status || 'Attribution ouverte'}
                 </Badge>
               </div>
               <CardContent className="p-6">
-                <h3 className="font-semibold text-lg text-gray-900 mb-2">
-                  Terrain Communal Thiès
-                </h3>
-                <div className="flex items-center text-gray-600 mb-4">
-                  <MapPin className="h-4 w-4 mr-1" />
-                  <span className="text-sm">Thiès Centre</span>
-                </div>
-                <div className="flex justify-between items-center mb-4">
-                  <span className="text-sm text-gray-600">500m²</span>
-                  <span className="font-semibold text-green-600">Dossier complet requis</span>
-                </div>
-                <div className="flex items-center gap-2 text-sm text-gray-500">
-                  <Users className="h-4 w-4" />
-                  <span>12 demandes en cours</span>
-                </div>
+                {loading ? (
+                  <div className="space-y-3 animate-pulse">
+                    <div className="h-5 bg-gray-200 rounded w-3/4" />
+                    <div className="h-4 bg-gray-200 rounded w-1/2" />
+                    <div className="h-4 bg-gray-200 rounded w-2/3" />
+                  </div>
+                ) : exampleLand ? (
+                  <>
+                    <h3 className="font-semibold text-lg text-gray-900 mb-2">
+                      {exampleLand.title || exampleLand.name || 'Terrain communal'}
+                    </h3>
+                    <div className="flex items-center text-gray-600 mb-4">
+                      <MapPin className="h-4 w-4 mr-1" />
+                      <span className="text-sm">
+                        {exampleLand.location || exampleLand.city || exampleLand.commune || 'Localisation à confirmer'}
+                      </span>
+                    </div>
+                    <div className="flex justify-between items-center mb-4">
+                      <span className="text-sm text-gray-600">{exampleLand.surface || ''}</span>
+                      <span className="font-semibold text-green-600">
+                        {exampleLand.requirements || exampleLand.status || ''}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                      <Users className="h-4 w-4" />
+                      <span>{requestsCount} demande{requestsCount > 1 ? 's' : ''} au total</span>
+                    </div>
+                  </>
+                ) : (
+                  <p className="text-sm text-gray-500">
+                    Aucun terrain communal disponible pour le moment.
+                  </p>
+                )}
               </CardContent>
             </Card>
           </motion.div>

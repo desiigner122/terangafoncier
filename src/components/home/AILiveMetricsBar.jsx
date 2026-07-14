@@ -21,11 +21,18 @@ import {
   DollarSign
 } from 'lucide-react';
 import { advancedAIService } from '../../services/AdvancedAIService';
+import { supabase } from '@/lib/supabaseClient';
 
 const AILiveMetricsBar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [aiInsights, setAiInsights] = useState(null);
   const [blockchainMetrics, setBlockchainMetrics] = useState(null);
+  const [platformStats, setPlatformStats] = useState({
+    propertiesAnalyzed: 0,
+    blockchainTxCount: 0,
+    smartContractsCount: 0,
+    nftCount: 0
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [currentMetricIndex, setCurrentMetricIndex] = useState(0);
 
@@ -56,13 +63,23 @@ const AILiveMetricsBar = () => {
   const loadAIData = async () => {
     try {
       setIsLoading(true);
-      const [insights, blockchain] = await Promise.all([
+      const [insights, blockchain, propertiesAnalyzedRes, blockchainTxRes, smartContractsRes, nftRes] = await Promise.all([
         advancedAIService.generateMarketInsights(),
-        advancedAIService.getBlockchainMetrics()
+        advancedAIService.getBlockchainMetrics(),
+        supabase.from('properties').select('id', { count: 'exact', head: true }).not('ai_score', 'is', null),
+        supabase.from('blockchain_transactions').select('id', { count: 'exact', head: true }),
+        supabase.from('properties').select('id', { count: 'exact', head: true }).not('smart_contract_address', 'is', null),
+        supabase.from('properties').select('id', { count: 'exact', head: true }).not('nft_token_id', 'is', null)
       ]);
-      
+
       setAiInsights(insights);
       setBlockchainMetrics(blockchain);
+      setPlatformStats({
+        propertiesAnalyzed: propertiesAnalyzedRes?.count || 0,
+        blockchainTxCount: blockchainTxRes?.count || 0,
+        smartContractsCount: smartContractsRes?.count || 0,
+        nftCount: nftRes?.count || 0
+      });
     } catch (error) {
       console.error('Erreur chargement données IA:', error);
     } finally {
@@ -71,13 +88,13 @@ const AILiveMetricsBar = () => {
   };
 
   const aiMetrics = [
-    { 
-      label: "Terrains Analysés par IA", 
-      value: "1,247", 
+    {
+      label: "Terrains Analysés par IA",
+      value: platformStats.propertiesAnalyzed.toLocaleString('fr-FR'),
       aiData: aiInsights?.zoneAnalysis?.length || 0,
       subtext: "Évaluation automatique en cours",
-      trend: "+47 nouvelles analyses", 
-      icon: Brain, 
+      trend: "Mis à jour en continu",
+      icon: Brain,
       color: "text-cyan-400",
       bgColor: "bg-cyan-500/20",
       pulse: true,
@@ -107,25 +124,25 @@ const AILiveMetricsBar = () => {
       pulse: false,
       category: "sentiment"
     },
-    { 
-      label: "Blockchain Transactions", 
-      value: blockchainMetrics?.totalTransactions || "15,247", 
-      aiData: blockchainMetrics?.dailyVolume || 2.4,
-      subtext: `${blockchainMetrics?.dailyVolume || 2.4}M FCFA volume/jour`,
-      trend: "+89 transactions/h", 
-      icon: Zap, 
+    {
+      label: "Blockchain Transactions",
+      value: blockchainMetrics?.totalTransactions || platformStats.blockchainTxCount.toLocaleString('fr-FR'),
+      aiData: blockchainMetrics?.dailyVolume || 0,
+      subtext: `${blockchainMetrics?.dailyVolume || 0}M FCFA volume/jour`,
+      trend: "Suivi en temps réel",
+      icon: Zap,
       color: "text-yellow-400",
       bgColor: "bg-yellow-500/20",
       pulse: true,
       category: "blockchain"
     },
-    { 
-      label: "Smart Contracts Actifs", 
-      value: blockchainMetrics?.smartContractsActive || "89", 
-      aiData: blockchainMetrics?.propertyTokens || 342,
-      subtext: `${blockchainMetrics?.propertyTokens || 342} NFT Propriétés`,
-      trend: "100% automatisé", 
-      icon: Shield, 
+    {
+      label: "Smart Contracts Actifs",
+      value: blockchainMetrics?.smartContractsActive || platformStats.smartContractsCount,
+      aiData: blockchainMetrics?.propertyTokens || platformStats.nftCount,
+      subtext: `${blockchainMetrics?.propertyTokens || platformStats.nftCount} NFT Propriétés`,
+      trend: "100% automatisé",
+      icon: Shield,
       color: "text-blue-400",
       bgColor: "bg-blue-500/20",
       pulse: true,
@@ -143,13 +160,13 @@ const AILiveMetricsBar = () => {
       pulse: true,
       category: "monitoring"
     },
-    { 
-      label: "Opportunities IA Détectées", 
-      value: "23", 
-      aiData: 23,
+    {
+      label: "Opportunities IA Détectées",
+      value: "0",
+      aiData: 0,
       subtext: "Investissements recommandés",
-      trend: "+5 cette semaine", 
-      icon: Target, 
+      trend: "Analyse en cours",
+      icon: Target,
       color: "text-purple-400",
       bgColor: "bg-purple-500/20",
       pulse: false,
@@ -167,13 +184,13 @@ const AILiveMetricsBar = () => {
       pulse: true,
       category: "diaspora"
     },
-    { 
-      label: "Risques Détectés IA", 
-      value: "3", 
-      aiData: 3,
+    {
+      label: "Risques Détectés IA",
+      value: "0",
+      aiData: 0,
       subtext: "Niveau de risque: Faible",
-      trend: "Monitoring actif", 
-      icon: AlertTriangle, 
+      trend: "Monitoring actif",
+      icon: AlertTriangle,
       color: "text-red-400",
       bgColor: "bg-red-500/20",
       pulse: false,

@@ -4,11 +4,11 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Clock, 
-  Calendar, 
-  AlertTriangle, 
-  TrendingUp, 
+import {
+  Clock,
+  Calendar,
+  AlertTriangle,
+  TrendingUp,
   ArrowRight,
   CreditCard,
   FileText,
@@ -24,54 +24,55 @@ import {
   Activity,
   MessageSquare
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 // Widget Prochaines Échéances
 export const UpcomingDeadlinesWidget = ({ className = "" }) => {
-  const [deadlines, setDeadlines] = useState([
-    {
-      id: 1,
-      title: 'Paiement VEFA Villa',
-      description: 'Étape finitions - Villa Cité Jardin',
-      dueDate: '2025-10-30',
-      amount: 11250000,
-      type: 'payment',
-      priority: 'high',
-      category: 'VEFA'
-    },
-    {
-      id: 2,
-      title: 'Documents Mbour',
-      description: 'Certificat célibat + Quitus fiscal',
-      dueDate: '2025-09-30',
-      type: 'documents',
-      priority: 'urgent',
-      category: 'Communal'
-    },
-    {
-      id: 3,
-      title: 'Réponse offre Almadies',
-      description: 'Contre-offre terrain 500m²',
-      dueDate: '2025-10-05',
-      type: 'negotiation',
-      priority: 'medium',
-      category: 'Privé'
-    }
-  ]);
+  const { user } = useAuth();
+  const [deadlines, setDeadlines] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const getDaysUntil = (date) => {
-    const today = new Date();
-    const target = new Date(date);
-    const diffTime = target - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
+  useEffect(() => {
+    const loadDeadlines = async () => {
+      if (!user?.id) {
+        setDeadlines([]);
+        setLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('read', false)
+          .order('created_at', { ascending: false })
+          .limit(4);
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'urgent': return 'text-red-600 bg-red-50 border-red-200';
-      case 'high': return 'text-orange-600 bg-orange-50 border-orange-200';
-      case 'medium': return 'text-yellow-600 bg-yellow-50 border-yellow-200';
-      default: return 'text-blue-600 bg-blue-50 border-blue-200';
+        if (error) throw error;
+        setDeadlines(data || []);
+      } catch (error) {
+        console.error('Erreur chargement échéances:', error);
+        setDeadlines([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDeadlines();
+  }, [user?.id]);
+
+  const getPriorityColor = (type) => {
+    switch (type) {
+      case 'urgent':
+      case 'alert':
+        return 'text-red-600 bg-red-50 border-red-200';
+      case 'warning':
+        return 'text-orange-600 bg-orange-50 border-orange-200';
+      case 'reminder':
+        return 'text-yellow-600 bg-yellow-50 border-yellow-200';
+      default:
+        return 'text-blue-600 bg-blue-50 border-blue-200';
     }
   };
 
@@ -84,66 +85,63 @@ export const UpcomingDeadlinesWidget = ({ className = "" }) => {
     }
   };
 
+  const formatRelativeTime = (dateStr) => {
+    const diffMs = Date.now() - new Date(dateStr).getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    if (diffDays <= 0) return "Aujourd'hui";
+    if (diffDays === 1) return 'Hier';
+    return `il y a ${diffDays}j`;
+  };
+
   return (
     <Card className={`${className}`}>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center text-lg">
           <Clock className="h-5 w-5 mr-2 text-orange-600" />
           Prochaines Échéances
-          <Badge variant="destructive" className="ml-2">
-            {deadlines.filter(d => getDaysUntil(d.dueDate) <= 7).length}
-          </Badge>
+          {deadlines.length > 0 && (
+            <Badge variant="destructive" className="ml-2">
+              {deadlines.length}
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">
-          {deadlines.slice(0, 4).map((deadline) => {
-            const daysUntil = getDaysUntil(deadline.dueDate);
-            return (
-              <div 
-                key={deadline.id}
-                className={`p-3 rounded-lg border-l-4 ${getPriorityColor(deadline.priority)}`}
-              >
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-2">
-                    <div className="mt-0.5">
-                      {getTypeIcon(deadline.type)}
-                    </div>
-                    <div className="flex-1">
-                      <h4 className="font-medium text-sm">{deadline.title}</h4>
-                      <p className="text-xs text-gray-600 mt-1">{deadline.description}</p>
-                      <div className="flex items-center space-x-2 mt-2">
-                        <Badge variant="outline" className="text-xs">
-                          {deadline.category}
-                        </Badge>
-                        {deadline.amount && (
-                          <span className="text-xs font-medium text-green-600">
-                            {(deadline.amount / 1000000).toFixed(1)}M FCFA
-                          </span>
-                        )}
-                      </div>
-                    </div>
+          {!loading && deadlines.length === 0 && (
+            <div className="text-center py-6">
+              <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
+              <p className="text-sm text-gray-600">Aucune échéance en attente</p>
+            </div>
+          )}
+          {deadlines.map((deadline) => (
+            <div
+              key={deadline.id}
+              className={`p-3 rounded-lg border-l-4 ${getPriorityColor(deadline.type)}`}
+            >
+              <div className="flex items-start justify-between">
+                <div className="flex items-start space-x-2">
+                  <div className="mt-0.5">
+                    {getTypeIcon(deadline.type)}
                   </div>
-                  <div className="text-right">
-                    <div className={`text-sm font-bold ${
-                      daysUntil <= 3 ? 'text-red-600' : 
-                      daysUntil <= 7 ? 'text-orange-600' : 'text-gray-600'
-                    }`}>
-                      {daysUntil <= 0 ? 'Aujourd\'hui' : 
-                       daysUntil === 1 ? 'Demain' : 
-                       `${daysUntil}j`}
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {new Date(deadline.dueDate).toLocaleDateString('fr-FR', { 
-                        day: '2-digit', 
-                        month: 'short' 
-                      })}
+                  <div className="flex-1">
+                    <h4 className="font-medium text-sm">{deadline.title}</h4>
+                    <p className="text-xs text-gray-600 mt-1">{deadline.message}</p>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Badge variant="outline" className="text-xs">
+                        {deadline.type}
+                      </Badge>
                     </div>
                   </div>
                 </div>
+                <div className="text-right">
+                  <div className="text-xs text-gray-500">
+                    {formatRelativeTime(deadline.created_at)}
+                  </div>
+                </div>
               </div>
-            );
-          })}
+            </div>
+          ))}
         </div>
         <div className="mt-4">
           <Link to="/dashboard/acheteur/calendar">
@@ -160,39 +158,52 @@ export const UpcomingDeadlinesWidget = ({ className = "" }) => {
 
 // Widget Actions Urgentes
 export const UrgentActionsWidget = ({ className = "" }) => {
-  const [actions, setActions] = useState([
-    {
-      id: 1,
-      title: 'Compléter dossier Mbour',
-      description: '3 documents manquants',
-      actionUrl: '/dashboard/acheteur/municipal-applications',
-      actionText: 'Téléverser',
-      priority: 'urgent',
-      category: 'Documents'
-    },
-    {
-      id: 2,
-      title: 'Répondre à l\'offre',
-      description: 'Terrain Almadies - Vendeur attend réponse',
-      actionUrl: '/dashboard/acheteur/private-interests',
-      actionText: 'Négocier',
-      priority: 'high',
-      category: 'Négociation'
-    },
-    {
-      id: 3,
-      title: 'Planifier visite chantier',
-      description: 'Villa VEFA - Étape finitions',
-      actionUrl: '/dashboard/acheteur/promoter-reservations',
-      actionText: 'Planifier',
-      priority: 'medium',
-      category: 'Suivi'
-    }
-  ]);
+  const { user } = useAuth();
+  const [actions, setActions] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const handleActionClick = (action) => {
-    // Marquer comme traité et rediriger
+  useEffect(() => {
+    const loadActions = async () => {
+      if (!user?.id) {
+        setActions([]);
+        setLoading(false);
+        return;
+      }
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('read', false)
+          .in('type', ['urgent', 'alert', 'warning'])
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+        setActions(data || []);
+      } catch (error) {
+        console.error('Erreur chargement actions urgentes:', error);
+        setActions([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadActions();
+  }, [user?.id]);
+
+  const handleActionClick = async (action) => {
+    // Marquer comme traité (lu) dans Supabase et retirer de la liste
     setActions(prev => prev.filter(a => a.id !== action.id));
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', action.id);
+      if (error) throw error;
+    } catch (error) {
+      console.error('Erreur mise à jour notification:', error);
+    }
   };
 
   return (
@@ -201,9 +212,11 @@ export const UrgentActionsWidget = ({ className = "" }) => {
         <CardTitle className="flex items-center text-lg">
           <AlertTriangle className="h-5 w-5 mr-2 text-red-600" />
           Actions Urgentes
-          <Badge variant="destructive" className="ml-2">
-            {actions.filter(a => a.priority === 'urgent').length}
-          </Badge>
+          {actions.length > 0 && (
+            <Badge variant="destructive" className="ml-2">
+              {actions.length}
+            </Badge>
+          )}
         </CardTitle>
       </CardHeader>
       <CardContent>
@@ -212,25 +225,23 @@ export const UrgentActionsWidget = ({ className = "" }) => {
             <div key={action.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
               <div className="flex-1">
                 <h4 className="font-medium text-sm">{action.title}</h4>
-                <p className="text-xs text-gray-600 mt-1">{action.description}</p>
+                <p className="text-xs text-gray-600 mt-1">{action.message}</p>
                 <Badge variant="outline" className="mt-2 text-xs">
-                  {action.category}
+                  {action.type}
                 </Badge>
               </div>
-              <Link to={action.actionUrl}>
-                <Button 
-                  size="sm"
-                  className="ml-3"
-                  onClick={() => handleActionClick(action)}
-                >
-                  {action.actionText}
-                  <ArrowRight className="h-3 w-3 ml-1" />
-                </Button>
-              </Link>
+              <Button
+                size="sm"
+                className="ml-3"
+                onClick={() => handleActionClick(action)}
+              >
+                Traiter
+                <ArrowRight className="h-3 w-3 ml-1" />
+              </Button>
             </div>
           ))}
         </div>
-        {actions.length === 0 && (
+        {!loading && actions.length === 0 && (
           <div className="text-center py-6">
             <CheckCircle className="h-8 w-8 mx-auto text-green-500 mb-2" />
             <p className="text-sm text-gray-600">Toutes les actions sont à jour !</p>
@@ -243,14 +254,68 @@ export const UrgentActionsWidget = ({ className = "" }) => {
 
 // Widget Progression Globale
 export const GlobalProgressWidget = ({ className = "" }) => {
-  const [projects, setProjects] = useState([
-    { name: 'Terrains Privés', progress: 60, total: 3, active: 2 },
-    { name: 'Demandes Communales', progress: 40, total: 2, active: 2 },
-    { name: 'Projets VEFA', progress: 75, total: 2, active: 1 },
-    { name: 'Propriétés NFT', progress: 90, total: 2, active: 2 }
-  ]);
+  const { user } = useAuth();
+  const [projects, setProjects] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const totalProgress = Math.round(projects.reduce((acc, p) => acc + p.progress, 0) / projects.length);
+  useEffect(() => {
+    const loadProgress = async () => {
+      if (!user?.id) {
+        setProjects([]);
+        setLoading(false);
+        return;
+      }
+      try {
+        const buildCategory = (name, rows, doneStatuses) => {
+          const total = rows.length;
+          const active = rows.filter(r => !doneStatuses.includes(r.status)).length;
+          const done = total - active;
+          const progress = total > 0 ? Math.round((done / total) * 100) : 0;
+          return { name, progress, total, active };
+        };
+
+        const [{ data: financements, error: eFin }, { data: communales, error: eCom }, { data: constructions, error: eCons }, { data: proprietes, error: eProp }] = await Promise.all([
+          supabase.from('demandes_financement').select('id, status').eq('user_id', user.id),
+          supabase.from('communal_requests').select('id, status').eq('applicant_id', user.id),
+          supabase.from('construction_requests').select('id, status').eq('user_id', user.id),
+          supabase.from('properties').select('id, status, nft_token_id').eq('owner_id', user.id)
+        ]);
+
+        if (eFin) throw eFin;
+        if (eCom) throw eCom;
+        if (eCons) throw eCons;
+        if (eProp) throw eProp;
+
+        const categories = [];
+        if ((financements || []).length > 0) {
+          categories.push(buildCategory('Financements', financements, ['approved', 'completed', 'rejected']));
+        }
+        if ((communales || []).length > 0) {
+          categories.push(buildCategory('Demandes Communales', communales, ['approved', 'completed', 'rejected']));
+        }
+        if ((constructions || []).length > 0) {
+          categories.push(buildCategory('Projets Construction', constructions, ['completed', 'rejected']));
+        }
+        const nftProperties = (proprietes || []).filter(p => p.nft_token_id);
+        if (nftProperties.length > 0) {
+          categories.push(buildCategory('Propriétés NFT', nftProperties, ['sold']));
+        }
+
+        setProjects(categories);
+      } catch (error) {
+        console.error('Erreur chargement progression globale:', error);
+        setProjects([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadProgress();
+  }, [user?.id]);
+
+  const totalProgress = projects.length > 0
+    ? Math.round(projects.reduce((acc, p) => acc + p.progress, 0) / projects.length)
+    : 0;
 
   return (
     <Card className={`${className}`}>
@@ -289,6 +354,11 @@ export const GlobalProgressWidget = ({ className = "" }) => {
           </div>
           
           <div className="space-y-3">
+            {!loading && projects.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-4">
+                Aucune activité suivie pour le moment
+              </p>
+            )}
             {projects.map((project, index) => (
               <div key={index}>
                 <div className="flex justify-between text-sm mb-1">
@@ -311,11 +381,43 @@ export const GlobalProgressWidget = ({ className = "" }) => {
 // Widget Mini Calendrier
 export const MiniCalendarWidget = ({ className = "" }) => {
   const [currentDate] = useState(new Date());
-  const [events] = useState([
-    { date: 25, type: 'meeting', title: 'Visite chantier' },
-    { date: 28, type: 'deadline', title: 'Documents Mbour' },
-    { date: 30, type: 'payment', title: 'Paiement VEFA' }
-  ]);
+  const { user } = useAuth();
+  const [events, setEvents] = useState([]);
+
+  useEffect(() => {
+    const loadEvents = async () => {
+      if (!user?.id) {
+        setEvents([]);
+        return;
+      }
+      try {
+        const start = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1).toISOString();
+        const end = new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1).toISOString();
+
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('id, title, type, created_at')
+          .eq('user_id', user.id)
+          .gte('created_at', start)
+          .lt('created_at', end)
+          .order('created_at', { ascending: true });
+
+        if (error) throw error;
+
+        const mapped = (data || []).map((n) => ({
+          date: new Date(n.created_at).getDate(),
+          type: n.type,
+          title: n.title
+        }));
+        setEvents(mapped);
+      } catch (error) {
+        console.error('Erreur chargement événements calendrier:', error);
+        setEvents([]);
+      }
+    };
+
+    loadEvents();
+  }, [user?.id, currentDate]);
 
   const getDaysInMonth = (date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();

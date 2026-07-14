@@ -2,16 +2,16 @@
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
-  Bell, 
-  AlertTriangle, 
-  MapPin, 
-  Calendar, 
-  Eye, 
-  Flag, 
+import {
+  Bell,
+  AlertTriangle,
+  MapPin,
+  Calendar,
+  Eye,
+  Flag,
   X
 } from 'lucide-react';
-import { sampleParcels, sampleUsers } from '@/data';
+import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
@@ -19,57 +19,71 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    // Simuler des alertes en temps réel pour les nouveaux terrains
-    const generateAlerts = () => {
-      const recentTerrains = sampleParcels
-        .filter(parcel => parcel.zone === municipalityName)
-        .slice(0, 3)
-        .map((parcel, index) => {
-          const seller = sampleUsers.find(user => user.id === parcel.seller_id);
-          const alertTypes = [
-            'new_listing',
-            'price_change', 
-            'status_change',
-            'suspicious_activity',
-            'FileText_missing'
-          ];
-          
-          return {
-            id: `alert-${parcel.id}-${index}`,
-            type: alertTypes[Math.floor(0 * alertTypes.length)],
-            terrain: parcel,
-            seller: seller,
-            timestamp: new Date(Date.now() - 0 * 24 * 60 * 60 * 1000),
-            read: false,
-            priority: 0 > 0.7 ? 'high' : 'normal'
-          };
-        });
+    // Charger les terrains récemment publiés dans la commune depuis Supabase
+    const loadAlerts = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id, title, name, price, status, commune, city, location, created_at, owner_id, profiles(full_name)')
+          .eq('commune', municipalityName)
+          .order('created_at', { ascending: false })
+          .limit(10);
 
-      setAlerts(recentTerrains);
-      setUnreadCount(recentTerrains.filter(alert => !alert.read).length);
-    };
+        if (error) throw error;
 
-    generateAlerts();
-    
-    // Simuler des nouvelles alertes périodiquement
-    const interval = setInterval(() => {
-      if (0 > 0.8) { // 20% de chance d'avoir une nouvelle alerte
-        const newAlert = {
-          id: `alert-new-${Date.now()}`,
+        const mapped = (data || []).map((parcel) => ({
+          id: `alert-${parcel.id}`,
           type: 'new_listing',
-          terrain: sampleParcels.find(p => p.zone === municipalityName),
-          seller: sampleUsers.find(u => u.role === 'Vendeur Particulier'),
-          timestamp: new Date(),
+          terrain: parcel,
+          seller: parcel.profiles,
+          timestamp: parcel.created_at,
           read: false,
           priority: 'normal'
-        };
-        
-        setAlerts(prev => [newAlert, ...prev.slice(0, 9)]); // Garder max 10 alertes
-        setUnreadCount(prev => prev + 1);
-      }
-    }, 30000); // Nouvelle alerte potentielle toutes les 30 secondes
+        }));
 
-    return () => clearInterval(interval);
+        setAlerts(mapped);
+        setUnreadCount(mapped.filter(alert => !alert.read).length);
+      } catch (error) {
+        console.error('Erreur chargement alertes terrain:', error);
+        setAlerts([]);
+        setUnreadCount(0);
+      }
+    };
+
+    loadAlerts();
+
+    // Abonnement temps réel : nouvelle propriété publiée dans la commune
+    const channel = supabase
+      .channel(`terrain-alerts-${municipalityName}`)
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'properties',
+          filter: `commune=eq.${municipalityName}`
+        },
+        (payload) => {
+          const parcel = payload.new;
+          const newAlert = {
+            id: `alert-${parcel.id}`,
+            type: 'new_listing',
+            terrain: parcel,
+            seller: null,
+            timestamp: parcel.created_at || new Date().toISOString(),
+            read: false,
+            priority: 'normal'
+          };
+
+          setAlerts(prev => [newAlert, ...prev.slice(0, 9)]);
+          setUnreadCount(prev => prev + 1);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [municipalityName]);
 
   const getAlertIcon = (type) => {
@@ -87,15 +101,15 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
     const { type, terrain, seller } = alert;
     switch (type) {
       case 'new_listing':
-        return `Nouveau terrain mis en vente par ${seller?.name || 'Vendeur inconnu'}`;
+        return `Nouveau terrain mis en vente par ${seller?.full_name || 'Vendeur inconnu'}`;
       case 'price_change':
-        return `Prix modifié pour ${terrain?.title || 'terrain'}`;
+        return `Prix modifié pour ${terrain?.title || terrain?.name || 'terrain'}`;
       case 'status_change':
-        return `Statut changé pour ${terrain?.title || 'terrain'}`;
+        return `Statut changé pour ${terrain?.title || terrain?.name || 'terrain'}`;
       case 'suspicious_activity':
-        return `Activité suspecte détectée sur ${terrain?.title || 'terrain'}`;
+        return `Activité suspecte détectée sur ${terrain?.title || terrain?.name || 'terrain'}`;
       case 'FileText_missing':
-        return `FileTexts manquants signalés pour ${terrain?.title || 'terrain'}`;
+        return `FileTexts manquants signalés pour ${terrain?.title || terrain?.name || 'terrain'}`;
       default:
         return 'Nouvelle activité détectée';
     }
@@ -210,7 +224,7 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
                           {alert.terrain && (
                             <span className="flex items-center gap-1">
                               <MapPin className="h-3 w-3" />
-                              Réf: {alert.terrain.reference}
+                              Réf: {alert.terrain.id?.slice(0, 8)}
                             </span>
                           )}
                         </div>

@@ -1,40 +1,96 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { TrendingUp, TrendingDown, Building2, Users, Hammer, Blocks, Database, Shield, Eye, Camera, MapPin, CreditCard, AlertTriangle, Home, Globe, BarChart3, Zap, Target, Award, CheckCircle, XCircle, Clock, DollarSign, Percent, Activity } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const BlockchainStyleMetricsBar = () => {
   const [currentMetricIndex, setCurrentMetricIndex] = useState(0);
+  const [liveCounts, setLiveCounts] = useState({
+    propertiesTotal: 0,
+    developerProjects: 0,
+    constructionRequests: 0,
+    nftCount: 0,
+    blockchainTxCount: 0,
+    smartContractsCount: 0,
+    aiAnalyzedCount: 0,
+    verifiedPercentage: 0
+  });
+
+  // Charge les compteurs réels depuis Supabase
+  useEffect(() => {
+    const loadCounts = async () => {
+      try {
+        const [
+          propertiesRes,
+          developerProjectsRes,
+          constructionRes,
+          nftRes,
+          blockchainTxRes,
+          smartContractsRes,
+          aiAnalyzedRes,
+          verifiedRes
+        ] = await Promise.all([
+          supabase.from('properties').select('id', { count: 'exact', head: true }),
+          supabase.from('developer_projects').select('id', { count: 'exact', head: true }),
+          supabase.from('construction_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('nft_token_id', 'is', null),
+          supabase.from('blockchain_transactions').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('smart_contract_address', 'is', null),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('ai_score', 'is', null),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).eq('verification_status', 'verified')
+        ]);
+
+        const total = propertiesRes?.count || 0;
+        const verifiedCount = verifiedRes?.count || 0;
+
+        setLiveCounts({
+          propertiesTotal: total,
+          developerProjects: developerProjectsRes?.count || 0,
+          constructionRequests: constructionRes?.count || 0,
+          nftCount: nftRes?.count || 0,
+          blockchainTxCount: blockchainTxRes?.count || 0,
+          smartContractsCount: smartContractsRes?.count || 0,
+          aiAnalyzedCount: aiAnalyzedRes?.count || 0,
+          verifiedPercentage: total > 0 ? Math.round((verifiedCount / total) * 1000) / 10 : 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement des métriques:', error);
+      }
+    };
+
+    loadCounts();
+  }, []);
 
   // Métriques style blockchain avec données immobilières
   const metrics = [
     // Terrains & Propriétés
-    { icon: MapPin, label: "Terrains Disponibles", value: "1,284", change: "+8.2%", isPositive: true, color: "text-blue-400", category: "Terrains" },
+    { icon: MapPin, label: "Terrains Disponibles", value: liveCounts.propertiesTotal.toLocaleString('fr-FR'), change: null, isPositive: true, color: "text-blue-400", category: "Terrains" },
     { icon: Home, label: "Propriétés Vendues", value: "2,847", change: "+15.3%", isPositive: true, color: "text-green-400", category: "Ventes" },
-    { icon: Building2, label: "Projets Actifs", value: "125", change: "+12.5%", isPositive: true, color: "text-purple-400", category: "Projets" },
-    { icon: Hammer, label: "Constructions en cours", value: "456", change: "+22.1%", isPositive: true, color: "text-orange-400", category: "Construction" },
-    
+    { icon: Building2, label: "Projets Actifs", value: liveCounts.developerProjects.toLocaleString('fr-FR'), change: null, isPositive: true, color: "text-purple-400", category: "Projets" },
+    { icon: Hammer, label: "Constructions en cours", value: liveCounts.constructionRequests.toLocaleString('fr-FR'), change: null, isPositive: true, color: "text-orange-400", category: "Construction" },
+
     // Financement & Crédits
     { icon: CreditCard, label: "Taux Crédit Habitat", value: "6.5%", change: "-0.3%", isPositive: true, color: "text-cyan-400", category: "Crédit" },
     { icon: DollarSign, label: "Fonds Sécurisés", value: "2.4B FCFA", change: "+11.8%", isPositive: true, color: "text-yellow-400", category: "Finance" },
     { icon: Percent, label: "Taux Financement", value: "7.2%", change: "-0.1%", isPositive: true, color: "text-pink-400", category: "Financement" },
     { icon: BarChart3, label: "ROI Moyen", value: "18.5%", change: "+2.1%", isPositive: true, color: "text-indigo-400", category: "Rendement" },
-    
+
     // Blockchain & Sécurité
-    { icon: Blocks, label: "NFT Propriétés", value: "2,847", change: "+15.2%", isPositive: true, color: "text-violet-400", category: "NFT" },
-    { icon: Shield, label: "Transactions Sécurisées", value: "8,923", change: "+9.8%", isPositive: true, color: "text-emerald-400", category: "Sécurité" },
-    { icon: Database, label: "Smart Contracts", value: "892", change: "+18.7%", isPositive: true, color: "text-teal-400", category: "Blockchain" },
-    { icon: Eye, label: "Fraudes Évitées", value: "247", change: "+45.2%", isPositive: true, color: "text-red-400", category: "Protection" },
-    
+    { icon: Blocks, label: "NFT Propriétés", value: liveCounts.nftCount.toLocaleString('fr-FR'), change: null, isPositive: true, color: "text-violet-400", category: "NFT" },
+    { icon: Shield, label: "Transactions Sécurisées", value: liveCounts.blockchainTxCount.toLocaleString('fr-FR'), change: null, isPositive: true, color: "text-emerald-400", category: "Sécurité" },
+    { icon: Database, label: "Smart Contracts", value: liveCounts.smartContractsCount.toLocaleString('fr-FR'), change: null, isPositive: true, color: "text-teal-400", category: "Blockchain" },
+    { icon: Eye, label: "Fraudes Évitées", value: "0", change: null, isPositive: true, color: "text-red-400", category: "Protection" },
+
     // Utilisateurs & Activité
     { icon: Users, label: "Utilisateurs Actifs", value: "8.2K", change: "+28.4%", isPositive: true, color: "text-blue-300", category: "Utilisateurs" },
     { icon: Globe, label: "Diaspora Connectée", value: "3.1K", change: "+34.6%", isPositive: true, color: "text-green-300", category: "Diaspora" },
-    { icon: Camera, label: "Suivis IA", value: "1,245", change: "+19.3%", isPositive: true, color: "text-purple-300", category: "IA" },
-    { icon: Activity, label: "Alertes Temps Réel", value: "156", change: "+67.8%", isPositive: true, color: "text-orange-300", category: "Alertes" },
-    
+    { icon: Camera, label: "Suivis IA", value: liveCounts.aiAnalyzedCount.toLocaleString('fr-FR'), change: null, isPositive: true, color: "text-purple-300", category: "IA" },
+    { icon: Activity, label: "Alertes Temps Réel", value: "0", change: null, isPositive: true, color: "text-orange-300", category: "Alertes" },
+
     // Problèmes Résolus
-    { icon: XCircle, label: "Doubles Ventes Évitées", value: "89", change: "↓-78%", isPositive: true, color: "text-red-300", category: "Protection" },
-    { icon: AlertTriangle, label: "Fraudes Détectées", value: "23", change: "↓-65%", isPositive: true, color: "text-yellow-300", category: "Détection" },
-    { icon: CheckCircle, label: "Vérifications Complètes", value: "98.7%", change: "+1.2%", isPositive: true, color: "text-emerald-300", category: "Vérification" },
+    { icon: XCircle, label: "Doubles Ventes Évitées", value: "0", change: null, isPositive: true, color: "text-red-300", category: "Protection" },
+    { icon: AlertTriangle, label: "Fraudes Détectées", value: "0", change: null, isPositive: true, color: "text-yellow-300", category: "Détection" },
+    { icon: CheckCircle, label: "Vérifications Complètes", value: `${liveCounts.verifiedPercentage}%`, change: null, isPositive: true, color: "text-emerald-300", category: "Vérification" },
     { icon: Clock, label: "Délais Réduits", value: "72h", change: "↓-60%", isPositive: true, color: "text-cyan-300", category: "Efficacité" }
   ];
 
@@ -80,16 +136,18 @@ const BlockchainStyleMetricsBar = () => {
                     <span className="text-gray-300 text-sm font-semibold">
                       {metric.value}
                     </span>
-                    <span className={`text-xs flex items-center ${
-                      metric.isPositive ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {metric.change.includes('↓') ? (
-                        <TrendingDown className="w-3 h-3 mr-1" />
-                      ) : (
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                      )}
-                      {metric.change}
-                    </span>
+                    {metric.change && (
+                      <span className={`text-xs flex items-center ${
+                        metric.isPositive ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {metric.change.includes('↓') ? (
+                          <TrendingDown className="w-3 h-3 mr-1" />
+                        ) : (
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                        )}
+                        {metric.change}
+                      </span>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -113,11 +171,13 @@ const BlockchainStyleMetricsBar = () => {
                     <span className="text-gray-300 text-sm">
                       {metric.value}
                     </span>
-                    <span className={`text-xs ${
-                      metric.isPositive ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {metric.change}
-                    </span>
+                    {metric.change && (
+                      <span className={`text-xs ${
+                        metric.isPositive ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {metric.change}
+                      </span>
+                    )}
                   </div>
                 </motion.div>
               ))}
@@ -144,16 +204,18 @@ const BlockchainStyleMetricsBar = () => {
                     <span className="text-gray-300 text-sm font-semibold">
                       {metrics[currentMetricIndex].value}
                     </span>
-                    <span className={`text-xs flex items-center ${
-                      metrics[currentMetricIndex].isPositive ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {metrics[currentMetricIndex].change.includes('↓') ? (
-                        <TrendingDown className="w-3 h-3 mr-1" />
-                      ) : (
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                      )}
-                      {metrics[currentMetricIndex].change}
-                    </span>
+                    {metrics[currentMetricIndex].change && (
+                      <span className={`text-xs flex items-center ${
+                        metrics[currentMetricIndex].isPositive ? 'text-green-400' : 'text-red-400'
+                      }`}>
+                        {metrics[currentMetricIndex].change.includes('↓') ? (
+                          <TrendingDown className="w-3 h-3 mr-1" />
+                        ) : (
+                          <TrendingUp className="w-3 h-3 mr-1" />
+                        )}
+                        {metrics[currentMetricIndex].change}
+                      </span>
+                    )}
                   </div>
                   <span className={`text-xs px-2 py-1 rounded bg-gray-800 text-gray-400`}>
                     {metrics[currentMetricIndex].category}
@@ -171,7 +233,7 @@ const BlockchainStyleMetricsBar = () => {
               href="/terrains" 
               className="text-gray-400 hover:text-white text-sm transition-colors duration-200 flex items-center group"
             >
-              Voir plus de 350 terrains
+              Voir plus de {liveCounts.propertiesTotal.toLocaleString('fr-FR')} terrains
               <TrendingUp className="w-3 h-3 ml-1 group-hover:translate-x-1 transition-transform" />
             </a>
           </div>

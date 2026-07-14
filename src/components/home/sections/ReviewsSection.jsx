@@ -18,89 +18,78 @@ import { supabase } from '@/lib/supabaseClient';
 const ReviewsSection = () => {
   const [reviews, setReviews] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Avis de démonstration en cas d'absence de données
-  const defaultReviews = [
-    {
-      id: 1,
-      content: "Grâce à Teranga Foncier, j'ai pu acheter mon terrain à Saly en toute sécurité depuis Paris. Le processus de vérification est exemplaire !",
-      rating: 5,
-      author_name: "",
-      author_role: "Diaspora",
-      author_location: "Paris, France",
-      author_avatar: "https://images.unsplash.com/photo-1494790108755-2616b612b608?w=80&h=80&fit=crop&crop=face",
-      created_at: "2025-01-10",
-      project_type: "Achat Terrain Résidentiel"
-    },
-    {
-      id: 2,
-      content: "En tant que promoteur, cette plateforme m'a permis de trouver des terrains vérifiés rapidement. Un gain de temps considérable pour nos projets.",
-      rating: 5,
-      author_name: "",
-      author_role: "Promoteur",
-      author_location: "Dakar, Sénégal", 
-      author_avatar: "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=80&h=80&fit=crop&crop=face",
-      created_at: "2025-01-08",
-      project_type: "Développement Résidentiel"
-    },
-    {
-      id: 3,
-      content: "L'équipe Teranga Foncier nous a accompagnés dans l'évaluation des garanties foncières. Service professionnel et fiable.",
-      rating: 5,
-      author_name: "",
-      author_role: "Banque", 
-      author_location: "Dakar, Sénégal",
-      author_avatar: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop&crop=face",
-      created_at: "2025-01-05",
-      project_type: "Évaluation Bancaire"
-    },
-    {
-      id: 4,
-      content: "J'ai vendu ma parcelle rapidement grâce à leur plateforme. Les acheteurs ont confiance car tout est vérifié en amont.",
-      rating: 5,
-      author_name: "",
-      author_role: "Propriétaire",
-      author_location: "Thiès, Sénégal",
-      author_avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop&crop=face",
-      created_at: "2025-01-03",
-      project_type: "Vente Terrain Agricole"
-    }
-  ];
+  const [stats, setStats] = useState({
+    reviewsCount: 0,
+    satisfactionRate: 0,
+    propertiesCount: 0,
+    usersCount: 0
+  });
 
   useEffect(() => {
     fetchReviews();
+    fetchStats();
   }, []);
 
   const fetchReviews = async () => {
     try {
       const { data, error } = await supabase
-        .from('user_reviews')
+        .from('reviews')
         .select(`
           id,
           content,
           rating,
           author_name,
           author_role,
-          author_location,
-          author_avatar,
-          created_at,
-          project_type
+          location,
+          avatar_url,
+          created_at
         `)
-        .eq('published', true)
+        .eq('is_approved', true)
         .order('created_at', { ascending: false })
         .limit(4);
 
       if (error) {
         console.log('Erreur lors du chargement des avis:', error);
-        setReviews(defaultReviews);
+        setReviews([]);
       } else {
-        setReviews(data?.length > 0 ? data : defaultReviews);
+        setReviews(data || []);
       }
     } catch (error) {
       console.log('Erreur:', error);
-      setReviews(defaultReviews);
+      setReviews([]);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchStats = async () => {
+    try {
+      const [
+        { count: reviewsCount },
+        { count: propertiesCount },
+        { count: usersCount },
+        { data: ratingsData }
+      ] = await Promise.all([
+        supabase.from('reviews').select('id', { count: 'exact', head: true }).eq('is_approved', true),
+        supabase.from('properties').select('id', { count: 'exact', head: true }),
+        supabase.from('profiles').select('id', { count: 'exact', head: true }),
+        supabase.from('reviews').select('rating').eq('is_approved', true)
+      ]);
+
+      const ratings = ratingsData || [];
+      const satisfactionRate = ratings.length > 0
+        ? Math.round((ratings.reduce((sum, r) => sum + (r.rating || 0), 0) / ratings.length / 5) * 100)
+        : 0;
+
+      setStats({
+        reviewsCount: reviewsCount || 0,
+        satisfactionRate,
+        propertiesCount: propertiesCount || 0,
+        usersCount: usersCount || 0
+      });
+    } catch (error) {
+      console.log('Erreur lors du chargement des statistiques:', error);
+      setStats({ reviewsCount: 0, satisfactionRate: 0, propertiesCount: 0, usersCount: 0 });
     }
   };
 
@@ -171,75 +160,70 @@ const ReviewsSection = () => {
           </p>
         </motion.div>
 
-        <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
-          {reviews.map((review, index) => {
-            const RoleIcon = getRoleIcon(review.author_role);
-            return (
-              <motion.div
-                key={review.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6, delay: index * 0.1 }}
-                viewport={{ once: true }}
-              >
-                <Card className="h-full hover:shadow-xl transition-all duration-300 group">
-                  <CardContent className="p-6">
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 mb-4">
-                      {Array.from({ length: review.rating }).map((_, i) => (
-                        <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
-                      ))}
-                    </div>
+        {reviews.length > 0 ? (
+          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6 mb-12">
+            {reviews.map((review, index) => {
+              const RoleIcon = getRoleIcon(review.author_role);
+              return (
+                <motion.div
+                  key={review.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.6, delay: index * 0.1 }}
+                  viewport={{ once: true }}
+                >
+                  <Card className="h-full hover:shadow-xl transition-all duration-300 group">
+                    <CardContent className="p-6">
+                      {/* Rating */}
+                      <div className="flex items-center gap-1 mb-4">
+                        {Array.from({ length: review.rating || 0 }).map((_, i) => (
+                          <Star key={i} className="h-4 w-4 text-yellow-400 fill-current" />
+                        ))}
+                      </div>
 
-                    {/* Quote Icon */}
-                    <Quote className="h-8 w-8 text-primary/20 mb-3" />
+                      {/* Quote Icon */}
+                      <Quote className="h-8 w-8 text-primary/20 mb-3" />
 
-                    {/* Content */}
-                    <p className="text-gray-700 text-sm mb-6 line-clamp-4 italic">
-                      "{review.content}"
-                    </p>
+                      {/* Content */}
+                      <p className="text-gray-700 text-sm mb-6 line-clamp-4 italic">
+                        "{review.content}"
+                      </p>
 
-                    {/* Author Info */}
-                    <div className="flex items-center gap-3 mb-3">
-                      <img 
-                        src={review.author_avatar} 
-                        alt={review.author_name}
-                        className="w-10 h-10 rounded-full object-cover"
-                      />
-                      <div className="flex-1">
-                        <div className="font-semibold text-sm">{review.author_name}</div>
-                        <div className="flex items-center gap-1 text-xs text-gray-500">
-                          <MapPin className="h-3 w-3" />
-                          {review.author_location}
+                      {/* Author Info */}
+                      <div className="flex items-center gap-3 mb-3">
+                        <img
+                          src={review.avatar_url}
+                          alt={review.author_name || 'Avatar utilisateur'}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                        <div className="flex-1">
+                          <div className="font-semibold text-sm">{review.author_name}</div>
+                          <div className="flex items-center gap-1 text-xs text-gray-500">
+                            <MapPin className="h-3 w-3" />
+                            {review.location}
+                          </div>
                         </div>
                       </div>
-                    </div>
 
-                    {/* Role Badge */}
-                    <div className="flex items-center justify-between">
-                      <Badge className={`text-xs ${getRoleColor(review.author_role)}`}>
-                        <RoleIcon className="h-3 w-3 mr-1" />
-                        {review.author_role}
-                      </Badge>
-                      <span className="text-xs text-gray-400">
-                        {formatDate(review.created_at)}
-                      </span>
-                    </div>
-
-                    {/* Project Type */}
-                    {review.project_type && (
-                      <div className="mt-3 pt-3 border-t border-gray-100">
-                        <span className="text-xs text-gray-500 font-medium">
-                          {review.project_type}
+                      {/* Role Badge */}
+                      <div className="flex items-center justify-between">
+                        <Badge className={`text-xs ${getRoleColor(review.author_role)}`}>
+                          <RoleIcon className="h-3 w-3 mr-1" />
+                          {review.author_role}
+                        </Badge>
+                        <span className="text-xs text-gray-400">
+                          {formatDate(review.created_at)}
                         </span>
                       </div>
-                    )}
-                  </CardContent>
-                </Card>
-              </motion.div>
-            );
-          })}
-        </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500 mb-12">Aucun avis disponible pour le moment.</p>
+        )}
 
         {/* Stats */}
         <motion.div
@@ -251,20 +235,20 @@ const ReviewsSection = () => {
         >
           <div className="grid md:grid-cols-4 gap-6 text-center">
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">500+</div>
-              <div className="text-gray-600 text-sm">Clients Satisfaits</div>
+              <div className="text-3xl font-bold text-primary mb-2">{stats.reviewsCount}</div>
+              <div className="text-gray-600 text-sm">Avis Clients</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">98%</div>
+              <div className="text-3xl font-bold text-primary mb-2">{stats.satisfactionRate}%</div>
               <div className="text-gray-600 text-sm">Taux de Satisfaction</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">1000+</div>
-              <div className="text-gray-600 text-sm">Projets Réalisés</div>
+              <div className="text-3xl font-bold text-primary mb-2">{stats.propertiesCount}</div>
+              <div className="text-gray-600 text-sm">Biens Disponibles</div>
             </div>
             <div>
-              <div className="text-3xl font-bold text-primary mb-2">24h</div>
-              <div className="text-gray-600 text-sm">Support Réactif</div>
+              <div className="text-3xl font-bold text-primary mb-2">{stats.usersCount}</div>
+              <div className="text-gray-600 text-sm">Utilisateurs Inscrits</div>
             </div>
           </div>
         </motion.div>

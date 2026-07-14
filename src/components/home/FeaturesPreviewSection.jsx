@@ -1,90 +1,84 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { ArrowRight, Building2, Hammer, Eye, Camera, Blocks, Brain, Shield, Users, MapPin, Calendar } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 
 const FeaturesPreviewSection = () => {
-  const projectsPreview = [
-    {
-      id: 1,
-      title: "Résidence Almadies Premium",
-      promoter: "SOGERIM Construction",
-      location: "Almadies, Dakar",
-      price: "125M FCFA",
-      image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-      progress: 75,
-      status: "En construction",
-      type: "Villa moderne",
-      isNFT: true
-    },
-    {
-      id: 2,
-      title: "Complexe Les Palmiers",
-      promoter: "Delta Construction",
-      location: "Saly, Mbour", 
-      price: "85M FCFA",
-      image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-      progress: 45,
-      status: "Démarrage",
-      type: "Appartements",
-      isNFT: true
-    },
-    {
-      id: 3,
-      title: "Villas Teranga",
-      promoter: "Immobilier Plus",
-      location: "Toubab Dialaw",
-      price: "95M FCFA", 
-      image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?ixlib=rb-4.0.3&auto=format&fit=crop&w=500&q=80",
-      progress: 90,
-      status: "Finition",
-      type: "Villa familiale",
-      isNFT: true
-    }
-  ];
+  const [projectsPreview, setProjectsPreview] = useState([]);
+  const [requestsPreview, setRequestsPreview] = useState([]);
+  const [loadingProjects, setLoadingProjects] = useState(true);
+  const [loadingRequests, setLoadingRequests] = useState(true);
+  const [platformStats, setPlatformStats] = useState({ nftCount: null, smartContractCount: null });
 
-  const requestsPreview = [
-    {
-      id: 1,
-      type: "Villa Moderne",
-      budget: "180M FCFA",
-      location: "Almadies",
-      deadline: "12 mois",
-      status: "Recherche promoteur",
-      matches: 3,
-      icon: Building2
-    },
-    {
-      id: 2,
-      type: "Immeuble R+4",
-      budget: "850M FCFA", 
-      location: "Plateau",
-      deadline: "18 mois",
-      status: "Propositions reçues",
-      matches: 5,
-      icon: Building2
-    },
-    {
-      id: 3,
-      type: "Centre Commercial",
-      budget: "2.5Md FCFA",
-      location: "Pikine",
-      deadline: "24 mois", 
-      status: "En négociation",
-      matches: 2,
-      icon: Building2
-    }
-  ];
+  useEffect(() => {
+    const loadProjects = async () => {
+      try {
+        setLoadingProjects(true);
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id, title, name, price, location, city, status, nft_token_id, property_photos(url, is_primary)')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setProjectsPreview(data || []);
+      } catch (error) {
+        console.error('Erreur chargement projets:', error);
+        setProjectsPreview([]);
+      } finally {
+        setLoadingProjects(false);
+      }
+    };
+
+    const loadRequests = async () => {
+      try {
+        setLoadingRequests(true);
+        const { data, error } = await supabase
+          .from('construction_requests')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+        setRequestsPreview(data || []);
+      } catch (error) {
+        console.error('Erreur chargement demandes de construction:', error);
+        setRequestsPreview([]);
+      } finally {
+        setLoadingRequests(false);
+      }
+    };
+
+    const loadPlatformStats = async () => {
+      try {
+        const [nftRes, contractsRes] = await Promise.all([
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('nft_token_id', 'is', null),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('smart_contract_address', 'is', null)
+        ]);
+        setPlatformStats({
+          nftCount: nftRes.count || 0,
+          smartContractCount: contractsRes.count || 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement statistiques plateforme:', error);
+      }
+    };
+
+    loadProjects();
+    loadRequests();
+    loadPlatformStats();
+  }, []);
 
   const platformFeatures = [
     {
       icon: Blocks,
       title: "NFT Propriétés",
       description: "Chaque bien tokenisé sur blockchain Ethereum",
-      stats: "2,847 NFT créés",
+      stats: platformStats.nftCount === null ? '…' : `${platformStats.nftCount} NFT créés`,
       color: "from-blue-500 to-purple-500",
       href: "/nft-properties"
     },
@@ -92,15 +86,16 @@ const FeaturesPreviewSection = () => {
       icon: Brain,
       title: "IA de Surveillance",
       description: "Suivi construction par satellite et IA",
-      stats: "97.8% précision",
-      color: "from-emerald-500 to-teal-500", 
+      // NOTE: aucune table ne mesure une "précision IA" - laissé tel quel (voir rapport)
+      stats: "Analyse continue",
+      color: "from-emerald-500 to-teal-500",
       href: "/guide-projets"
     },
     {
       icon: Shield,
       title: "Smart Contracts",
       description: "Paiements automatisés et sécurisés",
-      stats: "892 contrats actifs",
+      stats: platformStats.smartContractCount === null ? '…' : `${platformStats.smartContractCount} contrats actifs`,
       color: "from-purple-500 to-pink-500",
       href: "/smart-contracts"
     },
@@ -108,7 +103,8 @@ const FeaturesPreviewSection = () => {
       icon: Users,
       title: "Matching IA",
       description: "Connexion intelligente clients-promoteurs",
-      stats: "98% satisfaction",
+      // NOTE: aucune table ne mesure une "satisfaction" - laissé tel quel (voir rapport)
+      stats: "Mise en relation intelligente",
       color: "from-orange-500 to-red-500",
       href: "/guide-demandes"
     }
@@ -142,72 +138,79 @@ const FeaturesPreviewSection = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {projectsPreview.map((project, index) => (
-              <motion.div
-                key={project.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
-                  <div className="relative">
-                    <img 
-                      src={project.image} 
-                      alt={project.title}
-                      className="w-full h-48 object-cover"
-                    />
-                    <div className="absolute top-3 left-3">
-                      {project.isNFT && (
-                        <Badge className="bg-purple-600 text-white">
-                          <Blocks className="w-3 h-3 mr-1" />
-                          NFT
-                        </Badge>
-                      )}
-                    </div>
-                    <div className="absolute top-3 right-3">
-                      <Badge variant="secondary" className="bg-black/50 text-white">
-                        <Camera className="w-3 h-3 mr-1" />
-                        IA
-                      </Badge>
-                    </div>
-                  </div>
-                  
-                  <CardContent className="p-4">
-                    <h3 className="font-bold text-lg mb-2">{project.title}</h3>
-                    <p className="text-gray-600 text-sm mb-2">{project.promoter}</p>
-                    
-                    <div className="flex items-center text-gray-500 text-sm mb-3">
-                      <MapPin className="w-4 h-4 mr-1" />
-                      {project.location}
-                    </div>
-                    
-                    <div className="flex justify-between items-center mb-3">
-                      <span className="text-2xl font-bold text-blue-600">
-                        {project.price}
-                      </span>
-                      <Badge variant={project.status === "En construction" ? "default" : "secondary"}>
-                        {project.status}
-                      </Badge>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span>Progression</span>
-                        <span>{project.progress}%</span>
+          {loadingProjects ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-80 rounded-xl bg-gray-200 animate-pulse" />
+              ))}
+            </div>
+          ) : projectsPreview.length === 0 ? (
+            <div className="text-center text-gray-500 py-10">
+              Aucun projet disponible pour le moment
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {projectsPreview.map((project, index) => {
+                const primaryPhoto = project.property_photos?.find(p => p.is_primary) || project.property_photos?.[0];
+                return (
+                  <motion.div
+                    key={project.id}
+                    initial={{ opacity: 0, y: 20 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                  >
+                    <Card className="overflow-hidden hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2">
+                      <div className="relative">
+                        {primaryPhoto?.url ? (
+                          <img
+                            src={primaryPhoto.url}
+                            alt={project.title || project.name}
+                            className="w-full h-48 object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-48 bg-gray-200" />
+                        )}
+                        <div className="absolute top-3 left-3">
+                          {project.nft_token_id && (
+                            <Badge className="bg-purple-600 text-white">
+                              <Blocks className="w-3 h-3 mr-1" />
+                              NFT
+                            </Badge>
+                          )}
+                        </div>
+                        <div className="absolute top-3 right-3">
+                          <Badge variant="secondary" className="bg-black/50 text-white">
+                            <Camera className="w-3 h-3 mr-1" />
+                            IA
+                          </Badge>
+                        </div>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div 
-                          className="bg-green-500 h-2 rounded-full transition-all duration-500"
-                          style={{ width: `${project.progress}%` }}
-                        />
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+
+                      <CardContent className="p-4">
+                        <h3 className="font-bold text-lg mb-2">{project.title || project.name}</h3>
+
+                        <div className="flex items-center text-gray-500 text-sm mb-3">
+                          <MapPin className="w-4 h-4 mr-1" />
+                          {project.location || project.city || '—'}
+                        </div>
+
+                        <div className="flex justify-between items-center mb-3">
+                          <span className="text-2xl font-bold text-blue-600">
+                            {project.price ? `${project.price} FCFA` : '—'}
+                          </span>
+                          {project.status && (
+                            <Badge variant="secondary">
+                              {project.status}
+                            </Badge>
+                          )}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                );
+              })}
+            </div>
+          )}
         </motion.div>
 
         {/* Demandes Section */}
@@ -234,50 +237,67 @@ const FeaturesPreviewSection = () => {
             </Button>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            {requestsPreview.map((request, index) => (
-              <motion.div
-                key={request.id}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.5, delay: index * 0.1 }}
-              >
-                <Card className="hover:shadow-lg transition-shadow">
-                  <CardHeader className="pb-3">
-                    <div className="flex items-center justify-between">
-                      <request.icon className="w-8 h-8 text-emerald-600" />
-                      <Badge variant="outline" className="text-emerald-600">
-                        {request.matches} matchs
-                      </Badge>
-                    </div>
-                    <CardTitle className="text-lg">{request.type}</CardTitle>
-                  </CardHeader>
-                  
-                  <CardContent>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Budget:</span>
-                        <span className="font-semibold">{request.budget}</span>
+          {loadingRequests ? (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {[1, 2, 3].map((i) => (
+                <div key={i} className="h-64 rounded-xl bg-gray-200 animate-pulse" />
+              ))}
+            </div>
+          ) : requestsPreview.length === 0 ? (
+            <div className="text-center text-gray-500 py-10">
+              Aucune demande de construction pour le moment
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {requestsPreview.map((request, index) => (
+                <motion.div
+                  key={request.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  transition={{ duration: 0.5, delay: index * 0.1 }}
+                >
+                  <Card className="hover:shadow-lg transition-shadow">
+                    <CardHeader className="pb-3">
+                      <div className="flex items-center justify-between">
+                        <Building2 className="w-8 h-8 text-emerald-600" />
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Localisation:</span>
-                        <span className="font-semibold">{request.location}</span>
+                      <CardTitle className="text-lg">{request.type || request.title || 'Demande de construction'}</CardTitle>
+                    </CardHeader>
+
+                    <CardContent>
+                      <div className="space-y-3">
+                        {request.budget && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Budget:</span>
+                            <span className="font-semibold">{request.budget}</span>
+                          </div>
+                        )}
+                        {(request.location || request.city) && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Localisation:</span>
+                            <span className="font-semibold">{request.location || request.city}</span>
+                          </div>
+                        )}
+                        {request.deadline && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Délai:</span>
+                            <span className="font-semibold">{request.deadline}</span>
+                          </div>
+                        )}
+                        {request.status && (
+                          <div className="pt-2">
+                            <Badge className="w-full justify-center bg-emerald-100 text-emerald-800">
+                              {request.status}
+                            </Badge>
+                          </div>
+                        )}
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Délai:</span>
-                        <span className="font-semibold">{request.deadline}</span>
-                      </div>
-                      <div className="pt-2">
-                        <Badge className="w-full justify-center bg-emerald-100 text-emerald-800">
-                          {request.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
+                    </CardContent>
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
+          )}
         </motion.div>
 
         {/* Platform Features */}

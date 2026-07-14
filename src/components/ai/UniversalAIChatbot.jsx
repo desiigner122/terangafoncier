@@ -34,6 +34,7 @@ import {
 } from 'lucide-react';
 import { autonomousAI } from '@/services/AutonomousAIService';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
   // Protection contre l'absence d'AuthProvider
@@ -52,10 +53,106 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
   const [conversationContext, setConversationContext] = useState(null);
   const messagesEndRef = useRef(null);
 
+  // Statistiques réelles de la plateforme (aucune donnée fictive) : chargées une fois
+  // depuis Supabase pour remplacer les chiffres codés en dur des réponses de l'IA.
+  const [platformStats, setPlatformStats] = useState({
+    propertiesCount: null,
+    verifiedPropertiesCount: null,
+    pendingFinancingCount: null,
+    myContactsCount: null,
+    communalPendingCount: null,
+    disputesCount: null,
+    certificatesCount: null,
+    developerProjectsCount: null,
+    chatHistoryCount: null,
+    avgPricePerSqm: null,
+    priceByRegion: []
+  });
+
   useEffect(() => {
-    // Message de bienvenue personnalisé selon le rôle
-    initializeConversation();
+    let active = true;
+    (async () => {
+      try {
+        const [
+          { count: propertiesCount },
+          { count: verifiedPropertiesCount },
+          { count: pendingFinancingCount },
+          { count: communalPendingCount },
+          { count: disputesCount },
+          { count: certificatesCount },
+          { count: developerProjectsCount },
+          { count: chatHistoryCount },
+          { data: priceRows }
+        ] = await Promise.all([
+          supabase.from('properties').select('*', { count: 'exact', head: true }),
+          supabase.from('properties').select('*', { count: 'exact', head: true }).eq('verification_status', 'verified'),
+          supabase.from('demandes_financement').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+          supabase.from('communal_requests').select('*', { count: 'exact', head: true }).eq('status', 'pending'),
+          supabase.from('disputes').select('*', { count: 'exact', head: true }),
+          supabase.from('blockchain_certificates').select('*', { count: 'exact', head: true }),
+          supabase.from('developer_projects').select('*', { count: 'exact', head: true }),
+          supabase.from('ai_chat_history').select('*', { count: 'exact', head: true }),
+          supabase.from('properties').select('region, price, surface').eq('status', 'active')
+        ]);
+
+        let avgPricePerSqm = null;
+        const byRegion = {};
+        (priceRows || []).forEach((row) => {
+          if (row.price && row.surface && Number(row.surface) > 0) {
+            const pricePerSqm = Number(row.price) / Number(row.surface);
+            const region = row.region || 'Autre';
+            if (!byRegion[region]) byRegion[region] = [];
+            byRegion[region].push(pricePerSqm);
+          }
+        });
+        const allValues = Object.values(byRegion).flat();
+        if (allValues.length > 0) {
+          avgPricePerSqm = allValues.reduce((a, b) => a + b, 0) / allValues.length;
+        }
+        const priceByRegion = Object.entries(byRegion).map(([region, values]) => ({
+          region,
+          avgPricePerSqm: values.reduce((a, b) => a + b, 0) / values.length
+        })).slice(0, 4);
+
+        let myContactsCount = null;
+        if (user?.id) {
+          const { count } = await supabase
+            .from('crm_contacts')
+            .select('*', { count: 'exact', head: true })
+            .eq('owner_id', user.id);
+          myContactsCount = count;
+        }
+
+        if (active) {
+          setPlatformStats({
+            propertiesCount: propertiesCount ?? 0,
+            verifiedPropertiesCount: verifiedPropertiesCount ?? 0,
+            pendingFinancingCount: pendingFinancingCount ?? 0,
+            myContactsCount,
+            communalPendingCount: communalPendingCount ?? 0,
+            disputesCount: disputesCount ?? 0,
+            certificatesCount: certificatesCount ?? 0,
+            developerProjectsCount: developerProjectsCount ?? 0,
+            chatHistoryCount: chatHistoryCount ?? 0,
+            avgPricePerSqm,
+            priceByRegion
+          });
+        }
+      } catch (error) {
+        console.error('Erreur chargement statistiques plateforme (chatbot IA):', error);
+      }
+    })();
+    return () => { active = false; };
   }, [user]);
+
+  useEffect(() => {
+    // Message de bienvenue personnalisé selon le rôle.
+    // Se régénère quand les statistiques réelles finissent de charger (messages.length <= 1
+    // garantit qu'on ne réinitialise pas une conversation déjà entamée par l'utilisateur).
+    if (messages.length <= 1) {
+      initializeConversation();
+    }
+  }, [user, platformStats]);
 
   useEffect(() => {
     scrollToBottom();
@@ -76,6 +173,7 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
   };
 
   const generateWelcomeMessage = async (userRole) => {
+    const s = platformStats;
     const welcomeMessages = {
       particulier: {
         text: "ðŸ  Bonjour ! Je suis votre expert IA foncier personnel. En tant qu'intelligence artificielle spécialisée dans l'immobilier sénégalais, je peux vous aider Ï  trouver le terrain parfait, analyser les opportunités d'investissement, et vous guider dans toutes vos démarches. Comment puis-je vous assister aujourd'hui ?",
@@ -85,7 +183,9 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
           "Configurer des alertes IA",
           "Comprendre les prix du marché"
         ],
-        insights: "ðŸ§  J'ai détecté 3 nouvelles opportunités dans vos zones d'intérêt"
+        insights: s.propertiesCount !== null
+          ? `🧠 ${s.propertiesCount} bien(s) référencé(s) actuellement sur la plateforme`
+          : null
       },
       banque: {
         text: "ðŸ¦ Bienvenue ! Je suis votre assistant IA spécialisé dans les services financiers immobiliers. Je peux analyser les dossiers de crédit, évaluer les risques, optimiser votre portefeuille et automatiser vos processus d'approbation. Mon expertise couvre la lutte anti-fraude et l'évaluation des garanties foncières.",
@@ -95,7 +195,9 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
           "Optimiser les taux",
           "Détecter les fraudes"
         ],
-        insights: "ðŸ’° 127 dossiers pré-analysés nécessitent votre validation"
+        insights: s.pendingFinancingCount !== null
+          ? `💰 ${s.pendingFinancingCount} dossier(s) de financement en attente de validation`
+          : null
       },
       vendeur_particulier: {
         text: "ðŸª Salut ! En tant qu'IA commerciale experte, je vais révolutionner vos ventes. Je peux optimiser vos prix, générer des leads qualifiés, négocier avec les acheteurs, et automatiser votre marketing. Mon algorithme analyse le marché en temps réel pour maximiser vos profits.",
@@ -105,7 +207,9 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
           "Analyser la concurrence",
           "Automatiser mes annonces"
         ],
-        insights: "ðŸ“ˆ 47 nouveaux leads qualifiés générés cette semaine"
+        insights: s.myContactsCount !== null
+          ? `📈 ${s.myContactsCount} contact(s) CRM enregistré(s) sur votre compte`
+          : null
       },
       mairie: {
         text: "ðŸ›ï¸ Bonjour ! Je suis votre IA administrative municipale. Je surveille votre territoire, traite les demandes communales, détecte les fraudes foncières et optimise vos services citoyens. Mon système de surveillance territoriale protège votre commune 24h/24.",
@@ -115,7 +219,9 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
           "Détecter les fraudes",
           "Analyser l'urbanisation"
         ],
-        insights: "ðŸš¨ 12 alertes territoriales nécessitent votre attention"
+        insights: s.communalPendingCount !== null
+          ? `🚨 ${s.communalPendingCount} demande(s) communale(s) en attente de traitement`
+          : null
       },
       agent_foncier: {
         text: "ðŸ‘¨â€ðŸ’¼ Bonjour ! Je suis votre IA experte en médiation foncière. Je facilite les transactions, vérifie l'authenticité des documents, détecte les conflits potentiels et optimise vos négociations. Mon expertise juridique vous protège contre toute fraude.",
@@ -125,7 +231,9 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
           "Détecter les conflits",
           "Optimiser une négociation"
         ],
-        insights: "âš–ï¸ 3 conflits potentiels détectés nécessitent médiation"
+        insights: s.disputesCount !== null
+          ? `⚖️ ${s.disputesCount} litige(s) enregistré(s) sur la plateforme`
+          : null
       },
       visiteur: {
         text: "ðŸ‘‹ Bienvenue sur Teranga Foncier ! Je suis l'IA qui révolutionne l'immobilier au Sénégal. Expert en foncier, lutte anti-fraude et facilitation d'acquisition, je vous guide dans toutes vos démarches. Posez-moi n'importe quelle question sur l'immobilier sénégalais !",
@@ -135,7 +243,7 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
           "Comment éviter les fraudes ?",
           "Découvrir Teranga Foncier"
         ],
-        insights: "ðŸŒŸ Plateforme 100% sécurisée par blockchain et IA"
+        insights: "Plateforme sécurisée par blockchain et IA"
       }
     };
 
@@ -145,6 +253,7 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
   const processIntelligentResponse = async (userMessage) => {
     const message = userMessage.toLowerCase();
     const userRole = user?.user_metadata?.role || 'visiteur';
+    const s = platformStats;
 
     // Détection d'intention et réponses intelligentes
     if (message.includes('terrain') || message.includes('parcelle')) {
@@ -152,7 +261,7 @@ const UniversalAIChatbot = ({ isFloating = true, fullScreen = false }) => {
         response: `ðŸžï¸ Excellente question sur les terrains ! En tant qu'expert IA immobilier, je peux vous aider Ï  trouver le terrain parfait. 
 
 Sur Teranga Foncier, nous avons plusieurs options :
-â€¢ **Terrains privés** : Plus de 2,500 parcelles vérifiées par blockchain
+â€¢ **Terrains privés** : ${s.certificatesCount !== null ? s.certificatesCount : '…'} parcelles certifiées par blockchain
 â€¢ **Terrains communaux** : Demandes d'attribution simplifiées  
 â€¢ **Terrains promoteurs** : Projets résidentiels et commerciaux
 
@@ -163,7 +272,9 @@ Quel type de terrain vous intéresse ? Dans quelle zone de Dakar ou du Sénégal
           "Prix moyens par zone",
           "Vérification légale terrain"
         ],
-        insights: "ðŸ’¡ J'ai analysé 156 terrains disponibles dans vos critères",
+        insights: s.propertiesCount !== null
+          ? `💡 ${s.propertiesCount} terrain(s) actuellement référencé(s) sur la plateforme`
+          : null,
         confidence: 95,
         nextQuestions: ["Dans quelle zone ?", "Quel budget ?", "Usage prévu ?"]
       };
@@ -173,11 +284,9 @@ Quel type de terrain vous intéresse ? Dans quelle zone de Dakar ou du Sénégal
       return {
         response: `ðŸ’° Parlons budget ! Mes algorithmes analysent en temps réel les prix du marché immobilier sénégalais.
 
-**Prix moyens actuels (analyse IA temps réel) :**
-â€¢ **Liberté 6** : 180,000 - 250,000 FCFA/mÂ²
-â€¢ **Almadies** : 300,000 - 450,000 FCFA/mÂ²  
-â€¢ **Guédiawaye** : 45,000 - 80,000 FCFA/mÂ²
-â€¢ **Mbao** : 35,000 - 60,000 FCFA/mÂ²
+${s.priceByRegion && s.priceByRegion.length > 0
+  ? `**Prix moyens constatés par région (biens actifs) :**\n${s.priceByRegion.map(r => `• **${r.region}** : ${Math.round(r.avgPricePerSqm).toLocaleString()} FCFA/m²`).join('\n')}`
+  : `Je n'ai pas encore assez de biens actifs enregistrés pour calculer une moyenne fiable par région.`}
 
 Je peux analyser votre budget et vous proposer les meilleures opportunités !`,
         actions: [
@@ -186,7 +295,9 @@ Je peux analyser votre budget et vous proposer les meilleures opportunités !`,
           "Prédictions prix 6 mois",
           "Négocier avec l'IA"
         ],
-        insights: "ðŸ“ˆ Les prix ont augmenté de 12% cette année Ï  Dakar",
+        insights: s.avgPricePerSqm !== null
+          ? `📈 Prix moyen constaté : ${Math.round(s.avgPricePerSqm).toLocaleString()} FCFA/m² sur les biens actifs`
+          : null,
         confidence: 92,
         nextQuestions: ["Votre budget maximum ?", "Zone prioritaire ?"]
       };
@@ -211,7 +322,9 @@ Je peux analyser votre budget et vous proposer les meilleures opportunités !`,
           "Guide anti-fraude",
           "Signaler une fraude"
         ],
-        insights: "ðŸ” 213 tentatives de fraude bloquées ce mois",
+        insights: s.disputesCount !== null
+          ? `🔍 ${s.disputesCount} litige(s) enregistré(s) sur la plateforme`
+          : null,
         confidence: 98,
         nextQuestions: ["Avez-vous un doute sur une transaction ?"]
       };
@@ -221,10 +334,9 @@ Je peux analyser votre budget et vous proposer les meilleures opportunités !`,
       return {
         response: `ðŸ—ï¸ Les projets promoteurs, mon domaine d'expertise ! J'analyse tous les projets en temps réel.
 
-**Projets analysés actuellement :**
-â€¢ **Résidentiels** : 47 projets vérifiés (villas, appartements)
-â€¢ **Commerciaux** : 23 complexes en développement  
-â€¢ **Mixtes** : 12 projets résidence + commerce
+${s.developerProjectsCount !== null
+  ? `**Projets promoteurs actuellement référencés :** ${s.developerProjectsCount}`
+  : `Aucune donnée de projet disponible pour le moment.`}
 
 Mon IA évalue chaque promoteur sur :
 ✅ Historique financier, ✅ Qualité constructions, ✅ Respect délais, ✅ Satisfaction clients
@@ -236,7 +348,9 @@ Quel type de projet vous intéresse ?`,
           "Évaluer un promoteur",
           "Demande de construction"
         ],
-        insights: "ðŸ¢ 3 nouveaux projets certifiés cette semaine",
+        insights: s.developerProjectsCount !== null
+          ? `🏢 ${s.developerProjectsCount} projet(s) promoteur(s) référencé(s)`
+          : null,
         confidence: 94,
         nextQuestions: ["Type de bien recherché ?", "Budget prévu ?"]
       };
@@ -264,7 +378,9 @@ Que souhaitez-vous savoir ?`,
           "Analyser sécurité",
           "Guide débutant"
         ],
-        insights: "ðŸ’¡ Plus de 10,000 questions traitées avec 96% de satisfaction",
+        insights: s.chatHistoryCount !== null
+          ? `💡 ${s.chatHistoryCount} échange(s) enregistré(s) dans l'historique IA`
+          : null,
         confidence: 99,
         nextQuestions: ["Par quoi commencer ?"]
       };

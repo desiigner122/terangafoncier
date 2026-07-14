@@ -1,21 +1,58 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Brain, 
-  BarChart3, 
-  MessageCircle, 
-  TrendingUp, 
+import {
+  Brain,
+  BarChart3,
+  MessageCircle,
+  TrendingUp,
   Coins,
   Activity,
   Zap
 } from 'lucide-react';
 import AdvancedAIChatbot from '@/components/advanced/AdvancedAIChatbot';
 import BlockchainAnalytics from '@/components/advanced/BlockchainAnalytics';
+import { supabase } from '@/lib/supabaseClient';
 
 const AdvancedFeaturesWidget = ({ showChatbot = true, showAnalytics = true, compact = false }) => {
+  // Statistiques IA réelles (aucune valeur codée en dur) : moyenne de confiance
+  // issue de l'historique de chat IA + volume total d'interactions IA journalisées.
+  const [aiStats, setAiStats] = useState({ avgConfidence: null, totalInteractions: null });
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [{ data: confidenceRows, error: confError }, { count: interactionsCount, error: interError }] = await Promise.all([
+          supabase.from('ai_chat_history').select('confidence').not('confidence', 'is', null),
+          supabase.from('ai_interactions').select('*', { count: 'exact', head: true })
+        ]);
+
+        if (confError) throw confError;
+        if (interError) throw interError;
+
+        let avgConfidence = null;
+        if (confidenceRows && confidenceRows.length > 0) {
+          const sum = confidenceRows.reduce((acc, row) => acc + Number(row.confidence || 0), 0);
+          avgConfidence = sum / confidenceRows.length;
+        }
+
+        if (active) {
+          setAiStats({
+            avgConfidence,
+            totalInteractions: typeof interactionsCount === 'number' ? interactionsCount : null
+          });
+        }
+      } catch (error) {
+        console.error('Erreur chargement statistiques IA:', error);
+        if (active) setAiStats({ avgConfidence: null, totalInteractions: null });
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   if (compact) {
     return (
       <motion.div
@@ -111,12 +148,16 @@ const AdvancedFeaturesWidget = ({ showChatbot = true, showAnalytics = true, comp
             <CardContent className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-blue-600">98.7%</div>
+                  <div className="text-2xl font-bold text-blue-600">
+                    {aiStats.avgConfidence !== null ? `${aiStats.avgConfidence.toFixed(1)}%` : '—'}
+                  </div>
                   <p className="text-xs text-muted-foreground">Précision IA</p>
                 </div>
                 <div className="text-center">
-                  <div className="text-2xl font-bold text-green-600">24/7</div>
-                  <p className="text-xs text-muted-foreground">Disponibilité</p>
+                  <div className="text-2xl font-bold text-green-600">
+                    {aiStats.totalInteractions !== null ? aiStats.totalInteractions : '—'}
+                  </div>
+                  <p className="text-xs text-muted-foreground">Interactions IA traitées</p>
                 </div>
               </div>
               
@@ -176,10 +217,6 @@ const AdvancedFeaturesWidget = ({ showChatbot = true, showAnalytics = true, comp
                 <p className="text-sm text-green-600">
                   Toutes les fonctionnalités avancées sont opérationnelles
                 </p>
-              </div>
-              <div className="text-right">
-                <div className="text-sm font-medium text-green-700">155 packages</div>
-                <div className="text-xs text-green-600">installés</div>
               </div>
             </div>
           </CardContent>

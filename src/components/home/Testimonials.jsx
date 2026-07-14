@@ -1,17 +1,62 @@
-﻿import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { motion } from 'framer-motion';
-import { 
+import {
   Star
 } from 'lucide-react';
-
-const testimonials = [
-  { name: "", location: "Dakar", quote: "Processus clair, rapide et sécurisé. J'ai enfin acheté mon terrain à Diamniadio sans tracas grâce à l'équipe Teranga Foncier.", imgDesc: "Portrait homme sénégalais souriant chemise traditionnelle", rating: 5 },
-  { name: "", location: "Diaspora (France)", quote: "Étant à l'étranger, j'avais peur des arnaques. Teranga Foncier m'a rassurée et accompagnée à chaque étape. Investissement réussi !", imgDesc: "Portrait femme sénégalaise élégante foulard coloré", rating: 5 },
-  { name: "", location: "Promoteur Immobilier", quote: "Une plateforme sérieuse avec des informations fiables. Facilite grandement la recherche de terrains viabilisés pour nos projets.", imgDesc: "Portrait homme affaires sénégalais casque chantier", rating: 4 },
-];
+import { supabase } from '@/lib/supabaseClient';
 
 const Testimonials = () => {
+  const [testimonials, setTestimonials] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchReviews = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('reviews')
+          .select('id, author_name, location, content, rating, avatar_url, is_approved, created_at')
+          .eq('is_approved', true)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) {
+          console.error('Erreur lors du chargement des avis:', error);
+          setTestimonials([]);
+        } else {
+          setTestimonials(data || []);
+        }
+      } catch (error) {
+        console.error('Erreur:', error);
+        setTestimonials([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchReviews();
+  }, []);
+
+  if (loading) {
+    return (
+      <section className="bg-muted/50 dark:bg-card/60 py-12 md:py-16">
+        <div className="container mx-auto px-4">
+          <div className="h-8 w-64 bg-muted rounded mx-auto mb-10 animate-pulse" />
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
+            {[1, 2, 3].map((i) => (
+              <div key={i} className="h-48 bg-muted rounded-xl animate-pulse" />
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (testimonials.length === 0) {
+    return null;
+  }
+
   return (
     <section className="bg-muted/50 dark:bg-card/60 py-12 md:py-16"> {/* Reduced padding */}
       <div className="container mx-auto px-4">
@@ -27,7 +72,7 @@ const Testimonials = () => {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8"> {/* Reduced gap */}
               {testimonials.map((testimonial, index) => (
                   <motion.div
-                     key={index}
+                     key={testimonial.id ?? index}
                      initial={{ opacity: 0, scale: 0.9 }}
                      whileInView={{ opacity: 1, scale: 1 }}
                      viewport={{ once: true, amount: 0.2 }}
@@ -37,16 +82,22 @@ const Testimonials = () => {
                           <CardContent className="pt-6 pb-6 flex-grow flex flex-col">
                               <div className="flex mb-3">
                                  {[...Array(5)].map((_, i) => (
-                                     <Star key={i} className={`h-4 w-4 ${i < testimonial.rating ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}/>
+                                     <Star key={i} className={`h-4 w-4 ${i < (testimonial.rating || 0) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}/>
                                  ))}
                               </div>
-                              <p className="text-muted-foreground italic mb-4 flex-grow">"{testimonial.quote}"</p>
+                              <p className="text-muted-foreground italic mb-4 flex-grow">"{testimonial.content}"</p>
                               <div className="flex items-center mt-auto">
                                   <div className="w-11 h-11 rounded-full bg-muted mr-4 overflow-hidden ring-2 ring-primary/10">
-                                    <img  className="w-full h-full object-cover" alt={`Portrait ${testimonial.name}`} src="https://images.unsplash.com/photo-1697256200022-f61abccad430" />
+                                    {testimonial.avatar_url ? (
+                                      <img className="w-full h-full object-cover" alt={`Portrait ${testimonial.author_name || ''}`} src={testimonial.avatar_url} />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-muted-foreground text-sm font-semibold">
+                                        {(testimonial.author_name || '?').charAt(0)}
+                                      </div>
+                                    )}
                                   </div>
                                   <div>
-                                      <p className="font-semibold text-foreground">{testimonial.name}</p>
+                                      <p className="font-semibold text-foreground">{testimonial.author_name}</p>
                                       <p className="text-sm text-muted-foreground">{testimonial.location}</p>
                                   </div>
                               </div>

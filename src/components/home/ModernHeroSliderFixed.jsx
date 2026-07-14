@@ -38,10 +38,72 @@ import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import { supabase } from '@/lib/supabaseClient';
 
 const ModernHeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [liveStats, setLiveStats] = useState({
+    verifiedProperties: null,
+    hashedProperties: null,
+    profiles: null,
+    communesServed: null,
+    communalRequests: null,
+    smartContracts: null,
+    blockchainTransactions: null,
+    aiMonitored: null,
+    propertyPhotos: null
+  });
+
+  useEffect(() => {
+    const loadLiveStats = async () => {
+      try {
+        const [
+          verifiedRes,
+          hashedRes,
+          profilesRes,
+          communesRes,
+          communalRes,
+          contractsRes,
+          txRes,
+          aiRes,
+          photosRes
+        ] = await Promise.allSettled([
+          supabase.from('properties').select('id', { count: 'exact', head: true }).eq('verification_status', 'verified'),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('blockchain_hash', 'is', null),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('commune'),
+          supabase.from('communal_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('smart_contract_address', 'is', null),
+          supabase.from('blockchain_transactions').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('ai_score', 'is', null),
+          supabase.from('property_photos').select('id', { count: 'exact', head: true })
+        ]);
+
+        const communesServed = communesRes.status === 'fulfilled'
+          ? new Set((communesRes.value.data || []).map(r => r.commune).filter(Boolean)).size
+          : 0;
+
+        setLiveStats({
+          verifiedProperties: verifiedRes.status === 'fulfilled' ? (verifiedRes.value.count || 0) : 0,
+          hashedProperties: hashedRes.status === 'fulfilled' ? (hashedRes.value.count || 0) : 0,
+          profiles: profilesRes.status === 'fulfilled' ? (profilesRes.value.count || 0) : 0,
+          communesServed,
+          communalRequests: communalRes.status === 'fulfilled' ? (communalRes.value.count || 0) : 0,
+          smartContracts: contractsRes.status === 'fulfilled' ? (contractsRes.value.count || 0) : 0,
+          blockchainTransactions: txRes.status === 'fulfilled' ? (txRes.value.count || 0) : 0,
+          aiMonitored: aiRes.status === 'fulfilled' ? (aiRes.value.count || 0) : 0,
+          propertyPhotos: photosRes.status === 'fulfilled' ? (photosRes.value.count || 0) : 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement statistiques hero slider:', error);
+      }
+    };
+
+    loadLiveStats();
+  }, []);
+
+  const fmt = (value) => (value === null ? '…' : value.toLocaleString('fr-FR'));
 
   const slides = [
     {
@@ -58,9 +120,9 @@ const ModernHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=800&h=600&fit=crop",
       bgGradient: "from-blue-900 via-purple-900 to-blue-900",
       stats: [
-        { label: "Terrains Vérifiés", value: "2,847", icon: CheckCircle },
-        { label: "Hash Blockchain", value: "156K+", icon: Database },
-        { label: "Investisseurs", value: "1,200+", icon: Users }
+        { label: "Terrains Vérifiés", value: fmt(liveStats.verifiedProperties), icon: CheckCircle },
+        { label: "Hash Blockchain", value: fmt(liveStats.hashedProperties), icon: Database },
+        { label: "Utilisateurs Inscrits", value: fmt(liveStats.profiles), icon: Users }
       ]
     },
     {
@@ -77,9 +139,10 @@ const ModernHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=800&h=600&fit=crop",
       bgGradient: "from-emerald-900 via-teal-900 to-emerald-900",
       stats: [
-        { label: "Mairies Connectées", value: "45", icon: Building },
-        { label: "Demandes Traitées", value: "3,200+", icon: FileCheck },
-        { label: "Délai Moyen", value: "21 jours", icon: Clock }
+        { label: "Communes Desservies", value: fmt(liveStats.communesServed), icon: Building },
+        { label: "Demandes Reçues", value: fmt(liveStats.communalRequests), icon: FileCheck },
+        // NOTE: "Délai Moyen" nécessiterait des colonnes de dates de traitement absentes du schéma connu - laissé de côté (voir rapport)
+        { label: "Suivi", value: "En temps réel", icon: Clock }
       ]
     },
     {
@@ -96,9 +159,10 @@ const ModernHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1451187580459-43490279c0fa?w=800&h=600&fit=crop",
       bgGradient: "from-yellow-900 via-orange-900 to-yellow-900",
       stats: [
-        { label: "Contrats Actifs", value: "892", icon: Coins },
-        { label: "Fonds Sécurisés", value: "2.4B CFA", icon: Lock },
-        { label: "Transactions", value: "5,600+", icon: Zap }
+        { label: "Contrats Actifs", value: fmt(liveStats.smartContracts), icon: Coins },
+        // NOTE: "Fonds Sécurisés" nécessiterait une agrégation financière fiable non disponible de façon certaine - laissé de côté (voir rapport)
+        { label: "Sécurisation", value: "Escrow décentralisé", icon: Lock },
+        { label: "Transactions", value: fmt(liveStats.blockchainTransactions), icon: Zap }
       ]
     },
     {
@@ -115,9 +179,10 @@ const ModernHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1541888946425-d81bb19240f5?w=800&h=600&fit=crop",
       bgGradient: "from-indigo-900 via-pink-900 to-indigo-900",
       stats: [
-        { label: "Projets Surveillés", value: "456", icon: Camera },
-        { label: "Images/Jour", value: "2,400+", icon: Eye },
-        { label: "Précision IA", value: "97.8%", icon: Target }
+        { label: "Projets Surveillés", value: fmt(liveStats.aiMonitored), icon: Camera },
+        { label: "Photos Enregistrées", value: fmt(liveStats.propertyPhotos), icon: Eye },
+        // NOTE: "Précision IA" n'est mesurée par aucune table - laissé de côté (voir rapport)
+        { label: "Analyse", value: "Continue", icon: Target }
       ]
     }
   ];

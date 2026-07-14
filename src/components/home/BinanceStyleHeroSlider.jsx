@@ -4,24 +4,61 @@ import { ChevronLeft, ChevronRight, Play, ArrowRight, Users, Building2, Hammer, 
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 
 const BinanceStyleHeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [liveStats, setLiveStats] = useState({
+    users: 0,
+    transactions: 0,
+    constructionRequests: 0,
+    developerProjects: 0,
+    nftCount: 0,
+    smartContracts: 0
+  });
+
+  useEffect(() => {
+    const loadLiveStats = async () => {
+      try {
+        const [usersRes, transactionsRes, constructionRes, developerProjectsRes, nftRes, contractsRes] = await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('financial_transactions').select('id', { count: 'exact', head: true }),
+          supabase.from('construction_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('developer_projects').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('nft_token_id', 'is', null),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('smart_contract_address', 'is', null)
+        ]);
+
+        setLiveStats({
+          users: usersRes?.count || 0,
+          transactions: transactionsRes?.count || 0,
+          constructionRequests: constructionRes?.count || 0,
+          developerProjects: developerProjectsRes?.count || 0,
+          nftCount: nftRes?.count || 0,
+          smartContracts: contractsRes?.count || 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement statistiques temps réel:', error);
+      }
+    };
+
+    loadLiveStats();
+  }, []);
 
   const slides = [
     {
       id: 1,
-      title: "288,067,087 Utilisateurs nous font confiance",
+      title: `${liveStats.users.toLocaleString('fr-FR')} Utilisateurs nous font confiance`,
       subtitle: "La plateforme foncière blockchain #1 au Sénégal",
       description: "Achetez, vendez et construisez en toute sécurité avec la technologie blockchain et l'intelligence artificielle",
       primaryAction: { text: "Commencer", href: "/register" },
       secondaryAction: { text: "Voir les terrains", href: "/terrains" },
       image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       stats: [
-        { label: "Transactions sécurisées", value: "2.4B FCFA" },
-        { label: "Utilisateurs actifs", value: "8,200+" },
-        { label: "Projets surveillés", value: "456" }
+        { label: "Transactions sécurisées", value: liveStats.transactions.toLocaleString('fr-FR') },
+        { label: "Utilisateurs actifs", value: liveStats.users.toLocaleString('fr-FR') },
+        { label: "Projets surveillés", value: liveStats.constructionRequests.toLocaleString('fr-FR') }
       ],
       gradient: "from-blue-600 via-purple-600 to-blue-800"
     },
@@ -34,7 +71,7 @@ const BinanceStyleHeroSlider = () => {
       secondaryAction: { text: "Faire une demande", href: "/promoter-requests" },
       image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       stats: [
-        { label: "Projets disponibles", value: "125" },
+        { label: "Projets disponibles", value: liveStats.developerProjects.toLocaleString('fr-FR') },
         { label: "Promoteurs certifiés", value: "45" },
         { label: "Demandes traitées", value: "1,200+" }
       ],
@@ -51,7 +88,7 @@ const BinanceStyleHeroSlider = () => {
       image: "https://images.unsplash.com/photo-1504307651254-35680f356dfd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       stats: [
         { label: "Précision IA", value: "97.8%" },
-        { label: "Projets suivis", value: "456" },
+        { label: "Projets suivis", value: liveStats.constructionRequests.toLocaleString('fr-FR') },
         { label: "Rapports générés", value: "12,000+" }
       ],
       gradient: "from-purple-600 via-pink-600 to-purple-800"
@@ -65,8 +102,8 @@ const BinanceStyleHeroSlider = () => {
       secondaryAction: { text: "Smart contracts", href: "/smart-contracts" },
       image: "https://images.unsplash.com/photo-1559136555-9303baea8ebd?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1000&q=80",
       stats: [
-        { label: "NFT créés", value: "2,847" },
-        { label: "Smart contracts", value: "892" },
+        { label: "NFT créés", value: liveStats.nftCount.toLocaleString('fr-FR') },
+        { label: "Smart contracts", value: liveStats.smartContracts.toLocaleString('fr-FR') },
         { label: "Sécurité", value: "100%" }
       ],
       gradient: "from-orange-600 via-red-600 to-orange-800"

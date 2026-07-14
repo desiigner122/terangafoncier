@@ -1,18 +1,18 @@
-﻿import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ShieldCheck, 
-  Users, 
-  Scale, 
-  Globe, 
-  CreditCard, 
-  Plane, 
-  AlertOctagon, 
+import {
+  ShieldCheck,
+  Scale,
+  Globe,
+  CreditCard,
+  Plane,
+  AlertOctagon,
   TrendingUp
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
 import CountUp from 'react-countup';
+import { supabase } from '@/lib/supabaseClient';
 
 const objectives = [
    { icon: ShieldCheck, title: "Lutte Acharnée Contre la Fraude", description: "Vérification systématique et multi-niveaux des titres fonciers, baux, délibérations, identités des vendeurs et mandats pour prévenir les doubles ventes, les faux FileTexts et les litiges.", color: "text-red-600" },
@@ -53,6 +53,59 @@ const PlatformObjectivesSection = () => {
        visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
    };
 
+   const [stats, setStats] = useState({
+     verifications: 0,
+     diasporaCountries: 0,
+     transactions: 0,
+     disputesTracked: 0,
+   });
+
+   useEffect(() => {
+     let isMounted = true;
+
+     const fetchStats = async () => {
+       try {
+         const [
+           { count: verifiedCount, error: verifiedError },
+           { data: nationalityRows, error: nationalityError },
+           { count: transactionsCount, error: transactionsError },
+           { count: disputesCount, error: disputesError },
+         ] = await Promise.all([
+           supabase.from('properties').select('id', { count: 'exact', head: true }).eq('verification_status', 'verified'),
+           supabase.from('profiles').select('nationality').not('nationality', 'is', null),
+           supabase.from('financial_transactions').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+           supabase.from('disputes').select('id', { count: 'exact', head: true }),
+         ]);
+
+         if (verifiedError) throw verifiedError;
+         if (nationalityError) throw nationalityError;
+         if (transactionsError) throw transactionsError;
+         if (disputesError) throw disputesError;
+
+         if (!isMounted) return;
+
+         const distinctCountries = new Set(
+           (nationalityRows || []).map((row) => row.nationality).filter(Boolean)
+         );
+
+         setStats({
+           verifications: verifiedCount || 0,
+           diasporaCountries: distinctCountries.size,
+           transactions: transactionsCount || 0,
+           disputesTracked: disputesCount || 0,
+         });
+       } catch (err) {
+         console.error('Erreur chargement statistiques plateforme:', err);
+         if (isMounted) {
+           setStats({ verifications: 0, diasporaCountries: 0, transactions: 0, disputesTracked: 0 });
+         }
+       }
+     };
+
+     fetchStats();
+     return () => { isMounted = false; };
+   }, []);
+
 
   return (
     <section className="container mx-auto px-4">
@@ -87,20 +140,20 @@ const PlatformObjectivesSection = () => {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
-              <AnimatedStatCard icon={ShieldCheck} value={1250} label="Vérifications Anti-Fraude" color="text-green-500" delay={0.1} />
-              <AnimatedStatCard icon={Globe} value={25} label="Pays (Diaspora Accompagnée)" color="text-blue-500" delay={0.2} />
-              <AnimatedStatCard icon={TrendingUp} value={500} label="Transactions Facilitées" color="text-purple-500" delay={0.3} />
-              <AnimatedStatCard icon={AlertOctagon} value={70} label="Réduction des Litiges*" color="text-red-500" isPercentage={true} note="*Estimé via notre plateforme." delay={0.4} />
-              
-              <motion.div 
-                variants={itemVariants} 
+              <AnimatedStatCard icon={ShieldCheck} value={stats.verifications} label="Vérifications Anti-Fraude" color="text-green-500" delay={0.1} />
+              <AnimatedStatCard icon={Globe} value={stats.diasporaCountries} label="Pays (Diaspora Accompagnée)" color="text-blue-500" delay={0.2} />
+              <AnimatedStatCard icon={TrendingUp} value={stats.transactions} label="Transactions Facilitées" color="text-purple-500" delay={0.3} />
+              <AnimatedStatCard icon={AlertOctagon} value={stats.disputesTracked} label="Litiges Suivis par la Plateforme" color="text-red-500" delay={0.4} />
+
+              <motion.div
+                variants={itemVariants}
                 className="col-span-1 sm:col-span-2 aspect-video bg-muted rounded-xl overflow-hidden mt-4 shadow-xl relative group"
                 initial={{ opacity: 0, scale: 0.9 }}
                 whileInView={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
               >
                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/20 to-transparent z-10"></div>
-                  <img    
+                  <img
                       className="w-full h-full object-cover relative z-0 transition-transform duration-500 group-hover:scale-105"
                       alt="Agent immobilier sénégalais expliquant un plan cadastral à un client souriant dans un bureau moderne" src="https://images.unsplash.com/photo-1654702330584-c95d0894e0a8" />
                   <div className="absolute bottom-4 left-4 z-20">

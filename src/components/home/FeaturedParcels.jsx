@@ -1,15 +1,15 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  MapPin, 
-  Users, 
-  DollarSign, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Users,
+  DollarSign,
   Zap,
   Shield,
   Star,
@@ -17,108 +17,77 @@ import {
   Home,
   Calendar
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const FeaturedParcels = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [featuredParcels, setFeaturedParcels] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  const featuredParcels = [
-    {
-      id: 'TF-2024-001',
-      title: 'Terrain Premium Almadies',
-      location: 'Almadies, Dakar',
-      size: '500 m²',
-      price: 45000000,
-      pricePerSqm: 90000,
-      image: 'https://images.unsplash.com/photo-1560518883-ce09059eeffa?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      type: 'intelligent',
-      verified: true,
-      trending: true,
-      features: ['Vue mer', 'Viabilisé', 'Titre foncier'],
-      description: 'Magnifique terrain avec vue sur océan dans le quartier prestigieux des Almadies.',
-      seller: '',
-      daysOnMarket: 15
-    },
-    {
-      id: 'TF-2024-002',
-      title: 'Parcelle Résidentielle Saly',
-      location: 'Saly Portudal, Mbour',
-      size: '800 m²',
-      price: 32000000,
-      pricePerSqm: 40000,
-      image: 'https://images.unsplash.com/photo-1582407947304-fd86f028f716?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      type: 'standard',
-      verified: true,
-      trending: false,
-      features: ['Zone touristique', 'Proche plage', 'Accès route'],
-      description: 'Terrain idéal pour construction de villa dans la zone touristique de Saly.',
-      seller: '',
-      daysOnMarket: 8
-    },
-    {
-      id: 'TF-2024-003',
-      title: 'Terrain Commercial Thiès',
-      location: 'Centre-ville, Thiès',
-      size: '1200 m²',
-      price: 24000000,
-      pricePerSqm: 20000,
-      image: 'https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      type: 'commercial',
-      verified: true,
-      trending: true,
-      features: ['Zone commerciale', 'Grande superficie', 'Bien situé'],
-      description: 'Parfait pour projet commercial ou résidentiel dans le centre de Thiès.',
-      seller: '',
-      daysOnMarket: 22
-    },
-    {
-      id: 'TF-2024-004',
-      title: 'Parcelle Agricole Kaolack',
-      location: 'Périphérie, Kaolack',
-      size: '2000 m²',
-      price: 18000000,
-      pricePerSqm: 9000,
-      image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      type: 'agricole',
-      verified: true,
-      trending: false,
-      features: ['Sol fertile', 'Accès eau', 'Grande taille'],
-      description: 'Terrain agricole avec excellent potentiel pour cultures maraîchères.',
-      seller: '',
-      daysOnMarket: 12
-    },
-    {
-      id: 'TF-2024-005',
-      title: 'Terrain Diaspora Saint-Louis',
-      location: 'Sor, Saint-Louis',
-      size: '600 m²',
-      price: 15000000,
-      pricePerSqm: 25000,
-      image: 'https://images.unsplash.com/photo-1571041804726-53e8bf082096?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      type: 'diaspora',
-      verified: true,
-      trending: true,
-      features: ['Suivi distance', 'Prix diaspora', 'Construction pilotée'],
-      description: 'Spécialement conçu pour la diaspora avec suivi de construction.',
-      seller: 'Teranga Construction',
-      daysOnMarket: 5
-    },
-    {
-      id: 'TF-2024-006',
-      title: 'Parcelle Urbaine Ziguinchor',
-      location: 'Centre-ville, Ziguinchor',
-      size: '400 m²',
-      price: 12000000,
-      pricePerSqm: 30000,
-      image: 'https://images.unsplash.com/photo-1578662996442-48f60103fc96?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80',
-      type: 'standard',
-      verified: true,
-      trending: false,
-      features: ['Centre-ville', 'Calme', 'Nature proche'],
-      description: 'Terrain paisible au cœur de la capitale casamançaise.',
-      seller: '',
-      daysOnMarket: 18
-    }
-  ];
+  useEffect(() => {
+    const fetchFeaturedParcels = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id, title, name, description, type, price, surface, location, city, region, status, verification_status, ai_score, views_count, created_at')
+          .eq('status', 'disponible')
+          .order('created_at', { ascending: false })
+          .limit(6);
+
+        if (error) throw error;
+
+        const properties = data || [];
+        const propertyIds = properties.map((p) => p.id);
+        let photosByProperty = {};
+
+        if (propertyIds.length > 0) {
+          const { data: photos, error: photosError } = await supabase
+            .from('property_photos')
+            .select('property_id, url, is_primary')
+            .in('property_id', propertyIds);
+
+          if (!photosError && photos) {
+            photos.forEach((photo) => {
+              if (!photosByProperty[photo.property_id] || photo.is_primary) {
+                photosByProperty[photo.property_id] = photo.url;
+              }
+            });
+          }
+        }
+
+        const formatted = properties.map((p) => {
+          const surface = p.surface || 0;
+          const daysOnMarket = p.created_at
+            ? Math.max(0, Math.floor((Date.now() - new Date(p.created_at).getTime()) / (1000 * 60 * 60 * 24)))
+            : 0;
+          return {
+            id: p.id,
+            title: p.title || p.name || 'Terrain',
+            location: [p.city, p.region].filter(Boolean).join(', ') || p.location || '',
+            size: surface ? `${surface.toLocaleString()} m²` : '',
+            price: p.price || 0,
+            pricePerSqm: surface ? Math.round((p.price || 0) / surface) : 0,
+            image: photosByProperty[p.id] || null,
+            type: p.type || 'standard',
+            verified: p.verification_status === 'verified',
+            trending: (p.ai_score || 0) >= 80,
+            description: p.description || '',
+            daysOnMarket
+          };
+        });
+
+        setFeaturedParcels(formatted);
+      } catch (err) {
+        console.error('Erreur chargement terrains vedettes:', err);
+        setFeaturedParcels([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchFeaturedParcels();
+  }, []);
 
   const parcelsPerView = 3;
   const maxIndex = Math.max(0, featuredParcels.length - parcelsPerView);
@@ -149,6 +118,24 @@ const FeaturedParcels = () => {
       default: return 'bg-gray-100 text-gray-700 border-gray-200';
     }
   };
+
+  if (loading) {
+    return (
+      <section className="py-16 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="bg-gray-100 animate-pulse rounded-lg h-96"></div>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (featuredParcels.length === 0) {
+    return null;
+  }
 
   return (
     <section className="py-16 bg-white">
@@ -210,12 +197,18 @@ const FeaturedParcels = () => {
               >
                 <Card className="h-full hover:shadow-xl transition-shadow group">
                   <div className="relative">
-                    <img
-                      src={parcel.image}
-                      alt={parcel.title}
-                      className="w-full h-48 object-cover rounded-t-lg"
-                    />
-                    
+                    {parcel.image ? (
+                      <img
+                        src={parcel.image}
+                        alt={parcel.title}
+                        className="w-full h-48 object-cover rounded-t-lg"
+                      />
+                    ) : (
+                      <div className="w-full h-48 bg-gray-100 rounded-t-lg flex items-center justify-center">
+                        <Home className="h-10 w-10 text-gray-300" />
+                      </div>
+                    )}
+
                     {/* Overlays */}
                     <div className="absolute top-3 left-3 flex flex-col gap-2">
                       <Badge className={`${getTypeColor(parcel.type)} flex items-center gap-1`}>
@@ -283,17 +276,6 @@ const FeaturedParcels = () => {
                       </div>
                     </div>
 
-                    {/* Features */}
-                    <div className="mb-4">
-                      <div className="flex flex-wrap gap-1">
-                        {parcel.features.slice(0, 3).map((feature, index) => (
-                          <span key={index} className="text-xs bg-gray-100 text-gray-700 px-2 py-1 rounded">
-                            {feature}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* Actions */}
                     <div className="space-y-2">
                       <div className="flex gap-2">
@@ -308,10 +290,6 @@ const FeaturedParcels = () => {
                             <ArrowRight className="h-4 w-4 ml-2" />
                           </Link>
                         </Button>
-                      </div>
-                      
-                      <div className="text-xs text-gray-500 text-center">
-                        Vendu par {parcel.seller}
                       </div>
                     </div>
                   </CardContent>

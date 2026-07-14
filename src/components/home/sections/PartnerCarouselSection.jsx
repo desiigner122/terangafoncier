@@ -1,67 +1,27 @@
-﻿
-import React from 'react';
+
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { 
-  Building2, 
-  Scale, 
-  Briefcase, 
-  ArrowRight, 
-  Landmark, 
-  Smartphone, 
+import {
+  Building2,
+  Scale,
+  Briefcase,
+  ArrowRight,
+  Landmark,
   Banknote as BankIcon
 } from 'lucide-react';
 import { Carousel, CarouselContent, CarouselItem, CarouselPrevious, CarouselNext } from "@/components/ui/carousel";
 import Autoplay from "embla-carousel-autoplay";
+import { supabase } from '@/lib/supabaseClient';
 
-const senegal2050LogoUrl = undefined; // Remplacer par un chemin local si disponible
-const waveLogoUrl = undefined; // Remplacer par un chemin local si disponible
-const orangeMoneyLogoUrl = undefined; // Remplacer par un chemin local si disponible
-const sgbsLogoUrl = undefined; // Remplacer par un chemin local si disponible
-const bdsLogoUrl = undefined; // Remplacer par un chemin local si disponible
-
-
-const partners = [
-  { 
-    icon: Landmark, 
-    title: "Sénégal 2050", 
-    description: "Aligné avec l'Agenda National de Transformation pour un développement foncier durable et inclusif.", 
-    isImage: true,
-    imageUrl: senegal2050LogoUrl,
-    altText: "Logo Sénégal 2050"
-  },
-  { 
-    icon: Smartphone, 
-    title: "Wave", 
-    description: "Payez vos frais et timbres en toute simplicité avec le leader du mobile money au Sénégal.", 
-    isImage: true,
-    imageUrl: waveLogoUrl,
-    altText: "Logo Wave Mobile Money"
-  },
-  { 
-    icon: Smartphone, 
-    title: "Orange Money", 
-    description: "Une solution de paiement mobile fiable et accessible partout pour sécuriser vos transactions.", 
-    isImage: true,
-    imageUrl: orangeMoneyLogoUrl,
-    altText: "Logo Orange Money"
-  },
-  { 
-    icon: BankIcon, 
-    title: "SGBS", 
-    description: "Notre partenaire bancaire de confiance pour les virements et la sécurisation des fonds.", 
-    isImage: true,
-    imageUrl: sgbsLogoUrl,
-    altText: "Logo SGBS"
-  },
-  { 
-    icon: BankIcon, 
-    title: "BDS", 
-    description: "La Banque du Sénégal nous accompagne dans la structuration des financements de projets.", 
-    isImage: true,
-    imageUrl: bdsLogoUrl,
-    altText: "Logo Banque du Sénégal"
+// Partenaires institutionnels : catégories de rôles, pas des entités stockées en base.
+const institutionalPartners = [
+  {
+    icon: Landmark,
+    title: "Sénégal 2050",
+    description: "Aligné avec l'Agenda National de Transformation pour un développement foncier durable et inclusif.",
+    color: "text-amber-600"
   },
   { icon: Building2, title: "Mairies & Collectivités", description: "Accédez à une vue d'ensemble du foncier sur votre territoire et facilitez la gestion administrative.", color: "text-blue-600" },
   { icon: Scale, title: "Notaires", description: "Collaborez sur une plateforme sécurisée pour la vérification et la finalisation des actes de vente.", color: "text-purple-600" },
@@ -72,6 +32,48 @@ const PartnerCarouselSection = () => {
    const plugin = React.useRef(
      Autoplay({ delay: 4000, stopOnInteraction: true })
    );
+
+  const [bankingPartners, setBankingPartners] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchBankingPartners = async () => {
+      try {
+        setLoading(true);
+        const { data, error } = await supabase
+          .from('banking_partners')
+          .select('id, name, logo_url, status')
+          .eq('status', 'active')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        if (!isMounted) return;
+
+        setBankingPartners((data || []).map((bp) => ({
+          id: bp.id,
+          icon: BankIcon,
+          title: bp.name,
+          description: "Partenaire financier de confiance de Teranga Foncier.",
+          isImage: !!bp.logo_url,
+          imageUrl: bp.logo_url,
+          altText: `Logo ${bp.name}`,
+          color: "text-slate-600",
+        })));
+      } catch (err) {
+        console.error('Erreur chargement partenaires bancaires:', err);
+        if (isMounted) setBankingPartners([]);
+      } finally {
+        if (isMounted) setLoading(false);
+      }
+    };
+
+    fetchBankingPartners();
+    return () => { isMounted = false; };
+  }, []);
+
+  const partners = [...institutionalPartners, ...bankingPartners];
 
   return (
     <section className="container mx-auto px-4">
@@ -94,6 +96,13 @@ const PartnerCarouselSection = () => {
             Nous collaborons avec les acteurs institutionnels, financiers et technologiques clés pour garantir la fiabilité, la sécurité et un développement harmonieux.
         </motion.p>
 
+        {loading ? (
+          <div className="flex gap-4 justify-center flex-wrap">
+            {[...Array(4)].map((_, i) => (
+              <div key={i} className="h-40 w-56 rounded-xl border bg-muted/40 animate-pulse" />
+            ))}
+          </div>
+        ) : (
         <motion.div
            initial={{ opacity: 0 }}
            whileInView={{ opacity: 1 }}
@@ -113,7 +122,7 @@ const PartnerCarouselSection = () => {
            >
               <CarouselContent className="-ml-4">
                  {partners.map((partner, index) => (
-                    <CarouselItem key={index} className="pl-4 md:basis-1/3 lg:basis-1/4">
+                    <CarouselItem key={partner.id || index} className="pl-4 md:basis-1/3 lg:basis-1/4">
                        <div className="p-1 h-full">
                           <motion.div
                               initial={{ opacity: 0, y: 50 }}
@@ -140,6 +149,7 @@ const PartnerCarouselSection = () => {
               <CarouselNext className="absolute right-[-50px] top-1/2 -translate-y-1/2 hidden lg:inline-flex" />
            </Carousel>
         </motion.div>
+        )}
 
          <div className="text-center mt-12">
             <Button asChild size="lg" variant="outline" className="hover:bg-primary/5 hover:border-primary transition-colors">
@@ -151,4 +161,3 @@ const PartnerCarouselSection = () => {
 };
 
 export default PartnerCarouselSection;
-  

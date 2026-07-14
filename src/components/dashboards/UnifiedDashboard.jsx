@@ -116,24 +116,24 @@ const UnifiedDashboard = () => {
       const { count: usersCount } = await supabase
         .from('profiles')
         .select('*', { count: 'exact' });
-      
+
       // Propriétés totales
       const { count: propertiesCount } = await supabase
-        .from('annonces')
+        .from('properties')
         .select('*', { count: 'exact' });
-      
-      // Transactions totales (estimation depuis les annonces)
+
+      // Transactions totales (propriétés vendues)
       const { count: transactionsCount } = await supabase
-        .from('annonces')
+        .from('properties')
         .select('*', { count: 'exact' })
         .eq('status', 'sold');
-      
+
       // Revenus estimés
       const { data: revenueData } = await supabase
-        .from('annonces')
+        .from('properties')
         .select('price')
         .eq('status', 'sold');
-      
+
       const totalRevenue = revenueData?.reduce((sum, item) => sum + (item.price || 0), 0) || 0;
       
       setDashboardData(prev => ({
@@ -154,32 +154,32 @@ const UnifiedDashboard = () => {
    */
   const loadBlockchainStats = async () => {
     try {
-      // Récupérer les stats depuis le service blockchain
+      // Récupérer les stats depuis le service de synchronisation blockchain
       const stats = await blockchainSyncService.getSyncStats();
-      
-      // Métriques depuis Supabase
+
+      // Métriques réelles depuis Supabase
       const { count: documentsCount } = await supabase
-        .from('blockchain_sync_data')
+        .from('blockchain_certificates')
         .select('*', { count: 'exact' });
-      
+
       const { count: verifiedCount } = await supabase
-        .from('blockchain_sync_data')
+        .from('blockchain_certificates')
         .select('*', { count: 'exact' })
-        .eq('document_type', 'verification');
-      
-      const { count: fraudCount } = await supabase
-        .from('blockchain_sync_data')
-        .select('*', { count: 'exact' })
-        .eq('document_type', 'fraud_pattern');
-      
+        .eq('status', 'verified');
+
+      // Litiges signalés (proxy réel le plus proche d'une alerte de fraude)
+      const { count: disputeCount } = await supabase
+        .from('disputes')
+        .select('*', { count: 'exact' });
+
       const successRate = documentsCount > 0 ? ((verifiedCount / documentsCount) * 100) : 0;
-      
+
       setDashboardData(prev => ({
         ...prev,
         blockchainStats: {
           totalDocuments: documentsCount || 0,
           verifiedDocuments: verifiedCount || 0,
-          fraudAttempts: fraudCount || 0,
+          fraudAttempts: disputeCount || 0,
           successRate: successRate.toFixed(1)
         },
         syncStats: {
@@ -189,7 +189,7 @@ const UnifiedDashboard = () => {
           isRunning: stats.isRunning || false
         }
       }));
-      
+
     } catch (error) {
       console.error('❌ Erreur stats blockchain:', error);
     }
@@ -200,19 +200,31 @@ const UnifiedDashboard = () => {
    */
   const loadAIStats = async () => {
     try {
-      // Simuler des stats IA pour la démo
-      const aiStats = {
-        totalAnalyses: Math.floor(0 * 10000) + 5000,
-        accuracyRate: (95 + 0 * 4).toFixed(1),
-        averageProcessingTime: (0.5 + 0 * 2).toFixed(2),
-        activeModels: 8
-      };
-      
+      // Métriques réelles depuis les tables IA Supabase
+      const { count: analysesCount } = await supabase
+        .from('ai_analyses')
+        .select('*', { count: 'exact' });
+
+      const { count: interactionsCount } = await supabase
+        .from('ai_interactions')
+        .select('*', { count: 'exact' });
+
+      const { data: interactionRows } = await supabase
+        .from('ai_interactions')
+        .select('type');
+
+      const distinctTypes = new Set((interactionRows || []).map(r => r.type).filter(Boolean)).size;
+
       setDashboardData(prev => ({
         ...prev,
-        aiStats
+        aiStats: {
+          totalAnalyses: analysesCount || 0,
+          accuracyRate: interactionsCount || 0,
+          averageProcessingTime: 0,
+          activeModels: distinctTypes
+        }
       }));
-      
+
     } catch (error) {
       console.error('❌ Erreur stats IA:', error);
     }
@@ -377,10 +389,6 @@ const UnifiedDashboard = () => {
               <Users className="text-blue-600" size={24} />
             </div>
           </div>
-          <div className="flex items-center mt-4 text-green-600">
-            <TrendingUp size={16} />
-            <span className="ml-2 text-sm">+12% ce mois</span>
-          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
@@ -392,10 +400,6 @@ const UnifiedDashboard = () => {
             <div className="p-3 bg-green-100 rounded-lg">
               <MapPin className="text-green-600" size={24} />
             </div>
-          </div>
-          <div className="flex items-center mt-4 text-green-600">
-            <TrendingUp size={16} />
-            <span className="ml-2 text-sm">+8% ce mois</span>
           </div>
         </div>
 
@@ -409,10 +413,6 @@ const UnifiedDashboard = () => {
               <BarChart3 className="text-purple-600" size={24} />
             </div>
           </div>
-          <div className="flex items-center mt-4 text-green-600">
-            <TrendingUp size={16} />
-            <span className="ml-2 text-sm">+15% ce mois</span>
-          </div>
         </div>
 
         <div className="bg-white rounded-xl shadow-sm p-6 border border-gray-200">
@@ -424,10 +424,6 @@ const UnifiedDashboard = () => {
             <div className="p-3 bg-yellow-100 rounded-lg">
               <DollarSign className="text-yellow-600" size={24} />
             </div>
-          </div>
-          <div className="flex items-center mt-4 text-green-600">
-            <TrendingUp size={16} />
-            <span className="ml-2 text-sm">+22% ce mois</span>
           </div>
         </div>
       </div>
@@ -461,7 +457,7 @@ const UnifiedDashboard = () => {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <AlertTriangle size={20} className="text-red-600" />
-                <span className="font-medium">Tentatives de Fraude</span>
+                <span className="font-medium">Litiges Signalés</span>
               </div>
               <span className="text-lg font-bold">{dashboardData.blockchainStats.fraudAttempts}</span>
             </div>
@@ -495,23 +491,15 @@ const UnifiedDashboard = () => {
             <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
               <div className="flex items-center gap-3">
                 <CheckCircle size={20} className="text-green-600" />
-                <span className="font-medium">Taux de Précision</span>
+                <span className="font-medium">Interactions IA</span>
               </div>
-              <span className="text-lg font-bold">{dashboardData.aiStats.accuracyRate}%</span>
+              <span className="text-lg font-bold">{formatNumber(dashboardData.aiStats.accuracyRate)}</span>
             </div>
-            
-            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-              <div className="flex items-center gap-3">
-                <Clock size={20} className="text-orange-600" />
-                <span className="font-medium">Temps Moyen (s)</span>
-              </div>
-              <span className="text-lg font-bold">{dashboardData.aiStats.averageProcessingTime}s</span>
-            </div>
-            
+
             <div className="flex items-center justify-between p-4 bg-purple-50 rounded-lg border border-purple-200">
               <div className="flex items-center gap-3">
                 <Server size={20} className="text-purple-600" />
-                <span className="font-medium">Modèles Actifs</span>
+                <span className="font-medium">Types d'IA Utilisés</span>
               </div>
               <span className="text-lg font-bold text-purple-600">{dashboardData.aiStats.activeModels}</span>
             </div>

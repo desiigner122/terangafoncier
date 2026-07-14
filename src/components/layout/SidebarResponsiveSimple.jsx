@@ -129,7 +129,7 @@ const SidebarContent = ({ onNavigate }) => {
           .select('id', { count: 'exact' })
           .limit(0)
           .eq('user_id', user.id)
-          .eq('is_read', false);
+          .eq('read', false);
 
         const { count: reqCount } = await supabase
           .from('requests')

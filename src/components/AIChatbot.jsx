@@ -20,6 +20,7 @@ import {
   CheckCircle2
 } from 'lucide-react';
 import aiManager from '@/lib/aiManager';
+import { supabase } from '@/lib/supabaseClient';
 
 const AIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -49,26 +50,44 @@ const AIChatbot = () => {
   useEffect(scrollToBottom, [messages]);
 
   // Réponses prédéfinies intelligentes
-  const getAIResponse = (userMessage) => {
+  const getAIResponse = async (userMessage) => {
     const message = userMessage.toLowerCase();
-    
+
     if (message.includes('terrain') || message.includes('acheter')) {
       return {
         content: '🏡 Pour acheter un terrain au Sénégal :\n\n1. Vérifiez le statut foncier\n2. Obtenez un certificat de non-gage\n3. Contactez un notaire\n4. Négociez le prix\n5. Signez l\'acte de vente\n\nVoulez-vous que je vous mette en contact avec nos partenaires ?',
         suggestions: ['Trouver un notaire', 'Voir les terrains disponibles', 'Guide complet']
       };
     }
-    
+
     if (message.includes('notaire') || message.includes('acte')) {
       return {
         content: '⚖️ Nos notaires partenaires peuvent vous aider :\n\n• Rédaction d\'actes authentiques\n• Vérification de titres fonciers\n• Conseils juridiques\n• Sécurisation des transactions\n\nTarifs transparents et service rapide garanti.',
         suggestions: ['Liste des notaires', 'Prendre RDV', 'Tarifs']
       };
     }
-    
+
     if (message.includes('région') || message.includes('dakar') || message.includes('thiès')) {
+      const regionNames = ['Dakar', 'Thiès', 'Saint-Louis', 'Ziguinchor'];
+      let regionsText = 'Données par région momentanément indisponibles.';
+
+      try {
+        const counts = await Promise.all(
+          regionNames.map(async (region) => {
+            const { count } = await supabase
+              .from('properties')
+              .select('*', { count: 'exact', head: true })
+              .ilike('region', `%${region}%`);
+            return { region, count: count || 0 };
+          })
+        );
+        regionsText = counts.map(({ region, count }) => `📍 ${region} : ${count} bien(s)`).join('\n');
+      } catch (error) {
+        console.error('Erreur récupération biens par région:', error);
+      }
+
       return {
-        content: '📍 Recherche par région :\n\n🏙️ Dakar : 2,847 biens\n🌆 Thiès : 1,293 biens\n🏞️ Saint-Louis : 687 biens\n🌊 Ziguinchor : 445 biens\n\nQuelle région vous intéresse le plus ?',
+        content: `📍 Recherche par région :\n\n${regionsText}\n\nQuelle région vous intéresse le plus ?`,
         suggestions: ['Voir Dakar', 'Voir Thiès', 'Toutes les régions']
       };
     }
@@ -125,7 +144,7 @@ const AIChatbot = () => {
         };
       } else {
         // Fallback sur réponses prédéfinies
-        aiResponse = getAIResponse(currentMessage);
+        aiResponse = await getAIResponse(currentMessage);
       }
 
       const botMessage = {

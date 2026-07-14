@@ -1,12 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Building2, Users, Landmark, Scale, Banknote, MapPin, Globe, Shield, Zap, Target, Award, CheckCircle, TrendingUp, Clock, Eye, Heart, Star, Briefcase, Home, CreditCard } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
 
 const StakeholdersAdvantagesSection = () => {
+  const [stakeholderStats, setStakeholderStats] = useState({});
+  const [diasporaCountries, setDiasporaCountries] = useState(null);
+  const [loadingStats, setLoadingStats] = useState(true);
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      setLoadingStats(true);
+      try {
+        const [
+          particuliersRes,
+          promoteursRes,
+          banquesRes,
+          mairiesRes,
+          notairesRes,
+          agentsRes,
+          profilesNationalityRes
+        ] = await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('account_type', 'particulier'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('account_type', 'promoteur'),
+          supabase.from('banking_partners').select('id', { count: 'exact', head: true }).eq('status', 'active'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('account_type', 'mairie'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('account_type', 'notaire'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('account_type', 'agent'),
+          supabase.from('profiles').select('nationality').not('nationality', 'is', null)
+        ]);
+
+        setStakeholderStats({
+          particuliers: particuliersRes.count || 0,
+          promoteurs: promoteursRes.count || 0,
+          banques: banquesRes.count || 0,
+          mairies: mairiesRes.count || 0,
+          notaires: notairesRes.count || 0,
+          agents: agentsRes.count || 0
+        });
+
+        const nationalities = (profilesNationalityRes.data || []).map((p) => p.nationality).filter(Boolean);
+        setDiasporaCountries(new Set(nationalities).size);
+      } catch (error) {
+        console.error('Erreur lors du chargement des statistiques des parties prenantes:', error);
+        setStakeholderStats({});
+        setDiasporaCountries(0);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const statLabel = (value, suffix) => (loadingStats ? '…' : `${value ?? 0}${suffix}`);
+
   // Parties prenantes de l'écosystème
   const stakeholders = [
     {
@@ -14,7 +66,7 @@ const StakeholdersAdvantagesSection = () => {
       description: "Acheteurs et vendeurs individuels, y compris la diaspora sénégalaise",
       icon: Users,
       color: "from-blue-500 to-cyan-500",
-      stats: "8,200+ utilisateurs",
+      stats: statLabel(stakeholderStats.particuliers, ' utilisateurs'),
       benefits: [
         "Achat à distance sécurisé",
         "Suivi construction en temps réel",
@@ -34,7 +86,7 @@ const StakeholdersAdvantagesSection = () => {
       description: "Entreprises de construction et développement immobilier",
       icon: Building2,
       color: "from-emerald-500 to-teal-500",
-      stats: "45 promoteurs certifiés",
+      stats: statLabel(stakeholderStats.promoteurs, ' promoteurs certifiés'),
       benefits: [
         "Visibilité maximale projets",
         "Financement facilité",
@@ -54,7 +106,7 @@ const StakeholdersAdvantagesSection = () => {
       description: "Établissements financiers et organismes de crédit",
       icon: Banknote,
       color: "from-purple-500 to-pink-500",
-      stats: "12 banques partenaires",
+      stats: statLabel(stakeholderStats.banques, ' banques partenaires'),
       benefits: [
         "Évaluation précise garanties",
         "Réduction risques crédit",
@@ -74,7 +126,7 @@ const StakeholdersAdvantagesSection = () => {
       description: "Autorités locales et administrations territoriales",
       icon: Landmark,
       color: "from-orange-500 to-red-500",
-      stats: "23 communes connectées",
+      stats: statLabel(stakeholderStats.mairies, ' mairies connectées'),
       benefits: [
         "Gestion transparente terrains",
         "Augmentation revenus fonciers",
@@ -94,7 +146,7 @@ const StakeholdersAdvantagesSection = () => {
       description: "Professionnels du droit et officiers publics",
       icon: Scale,
       color: "from-indigo-500 to-purple-500",
-      stats: "34 notaires actifs",
+      stats: statLabel(stakeholderStats.notaires, ' notaires actifs'),
       benefits: [
         "Actes authentifiés blockchain",
         "Processus dématérialisé",
@@ -114,7 +166,7 @@ const StakeholdersAdvantagesSection = () => {
       description: "Professionnels de l'immobilier et de la topographie",
       icon: MapPin,
       color: "from-teal-500 to-green-500",
-      stats: "156 professionnels",
+      stats: statLabel(stakeholderStats.agents, ' professionnels'),
       benefits: [
         "Outils avancés cartographie",
         "Commissions transparentes",
@@ -150,8 +202,8 @@ const StakeholdersAdvantagesSection = () => {
     {
       icon: Globe,
       title: "Accès Global",
-      description: "Plateforme accessible depuis 50+ pays pour la diaspora",
-      stats: "50+ pays couverts",
+      description: "Plateforme accessible pour la diaspora sénégalaise partout dans le monde",
+      stats: loadingStats ? '…' : `${diasporaCountries ?? 0} pays couverts`,
       color: "text-green-600"
     },
     {

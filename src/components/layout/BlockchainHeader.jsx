@@ -7,7 +7,6 @@ import {
   BarChart3, Settings, User, LogOut, Bell, Search
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { cn } from '@/lib/utils';
 
 const BlockchainHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
@@ -222,9 +221,6 @@ const BlockchainHeader = ({ isSidebarOpen, setIsSidebarOpen }) => {
                 className="text-slate-300 hover:text-white hover:bg-slate-800/50 transition-all duration-300 relative"
               >
                 <Bell className="h-4 w-4" />
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 p-0 bg-red-500 text-white text-xs flex items-center justify-center">
-                  3
-                </Badge>
               </Button>
             </motion.div>
 

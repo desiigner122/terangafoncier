@@ -30,7 +30,10 @@ const AdminSidebarAuthentic = ({
   mobileMenuOpen = false,
   setMobileMenuOpen = () => {}
 }) => {
-  const { signOut } = useAuth();
+  const { signOut, user, profile } = useAuth();
+
+  const adminDisplayName = profile?.name || user?.user_metadata?.name || user?.email?.split('@')[0] || 'Administrateur';
+  const adminEmail = user?.email || profile?.email || '';
 
   const handleLogout = async () => {
     try {
@@ -174,8 +177,8 @@ const AdminSidebarAuthentic = ({
                 <Shield className="h-6 w-6 text-white" />
               </div>
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-amber-800 truncate">Administrateur</p>
-                <p className="text-xs text-amber-600 truncate">admin@terangafoncier.sn</p>
+                <p className="text-sm font-bold text-amber-800 truncate">{adminDisplayName}</p>
+                <p className="text-xs text-amber-600 truncate">{adminEmail || 'Email non renseigné'}</p>
               </div>
             </motion.div>
           )}

@@ -17,10 +17,10 @@ const BlogPreviewSection = () => {
     const fetchBlogPosts = async () => {
       try {
         const { data, error } = await supabase
-          .from('blog')
+          .from('blog_posts')
           .select('*')
           .eq('status', 'published')
-          .order('published_at', { ascending: false })
+          .order('created_at', { ascending: false })
           .limit(3);
 
         if (error) throw error;
@@ -100,7 +100,7 @@ const BlogPreviewSection = () => {
               <CardHeader>
                 <CardTitle className="text-lg leading-snug">{post.title}</CardTitle>
                 <p className="text-xs text-muted-foreground pt-1 flex items-center">
-                   <Calendar className="h-3.5 w-3.5 mr-1.5"/> {new Date(post.published_at || post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
+                   <Calendar className="h-3.5 w-3.5 mr-1.5"/> {new Date(post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })}
                 </p>
               </CardHeader>
               <CardContent className="flex-grow">

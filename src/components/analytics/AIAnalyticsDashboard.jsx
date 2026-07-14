@@ -20,8 +20,12 @@ import {
   Eye,
   Layers
 } from 'lucide-react';
-import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar } from 'recharts';
+import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, RadialBarChart, RadialBar } from 'recharts';
 import { advancedAIService } from '@/services/AdvancedAIService';
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
+
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 const AIAnalyticsDashboard = () => {
   const [aiInsights, setAiInsights] = useState(null);
@@ -31,9 +35,16 @@ const AIAnalyticsDashboard = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [refreshInterval, setRefreshInterval] = useState(30);
 
+  // Données pour les graphiques - chargées depuis Supabase (vide par défaut)
+  const [priceEvolutionData, setPriceEvolutionData] = useState([]);
+  const [zonePerformanceData, setZonePerformanceData] = useState([]);
+  const [blockchainActivityData, setBlockchainActivityData] = useState([]);
+  const [aiPredictionAccuracy, setAiPredictionAccuracy] = useState([]);
+  const [marketSentimentData, setMarketSentimentData] = useState([]);
+
   useEffect(() => {
     loadAnalyticsData();
-    
+
     // Auto-refresh des données
     const interval = setInterval(loadAnalyticsData, 30000);
     return () => clearInterval(interval);
@@ -46,56 +57,125 @@ const AIAnalyticsDashboard = () => {
         advancedAIService.generateMarketInsights(),
         advancedAIService.getBlockchainMetrics()
       ]);
-      
+
       setAiInsights(insights);
       setBlockchainMetrics(blockchain);
     } catch (error) {
       console.error('Erreur chargement analytics:', error);
     } finally {
       setIsLoading(false);
+      loadChartsData();
     }
   };
 
-  // Données pour les graphiques
-  const priceEvolutionData = [
-    { month: 'Jan', price: 650000, prediction: 660000, confidence: 0.92 },
-    { month: 'Fév', price: 665000, prediction: 675000, confidence: 0.89 },
-    { month: 'Mar', price: 678000, prediction: 690000, confidence: 0.91 },
-    { month: 'Avr', price: 685000, prediction: 705000, confidence: 0.88 },
-    { month: 'Mai', price: 692000, prediction: 720000, confidence: 0.85 },
-    { month: 'Jun', price: 708000, prediction: 735000, confidence: 0.87 }
-  ];
+  const loadChartsData = async () => {
+    // Prix moyen des biens et performance par zone, calculés à partir des propriétés réelles
+    try {
+      const sixMonthsAgo = new Date();
+      sixMonthsAgo.setMonth(sixMonthsAgo.getMonth() - 6);
 
-  const zonePerformanceData = [
-    { zone: 'Almadies', performance: 95, growth: 12.5, volume: 245 },
-    { zone: 'Ngor', performance: 92, growth: 11.8, volume: 189 },
-    { zone: 'VDN', performance: 88, growth: 9.2, volume: 312 },
-    { zone: 'Sicap', performance: 85, growth: 8.7, volume: 278 },
-    { zone: 'Diamniadio', performance: 90, growth: 15.3, volume: 156 }
-  ];
+      const [propertiesRes, transactionsRes] = await Promise.all([
+        supabase
+          .from('properties')
+          .select('id, price, location, created_at')
+          .gte('created_at', sixMonthsAgo.toISOString())
+          .order('created_at', { ascending: true })
+          .limit(1000),
+        supabase
+          .from('blockchain_transactions')
+          .select('id, amount, status, created_at')
+          .order('created_at', { ascending: false })
+          .limit(500)
+      ]);
 
-  const blockchainActivityData = [
-    { time: '00:00', transactions: 45, volume: 2.1, contracts: 12 },
-    { time: '04:00', transactions: 32, volume: 1.8, contracts: 8 },
-    { time: '08:00', transactions: 78, volume: 4.2, contracts: 23 },
-    { time: '12:00', transactions: 95, volume: 5.8, contracts: 31 },
-    { time: '16:00', transactions: 87, volume: 4.9, contracts: 28 },
-    { time: '20:00', transactions: 65, volume: 3.5, contracts: 18 }
-  ];
+      const properties = propertiesRes.data || [];
+      const transactions = transactionsRes.data || [];
 
-  const aiPredictionAccuracy = [
-    { category: 'Prix', accuracy: 94.2, color: '#10B981' },
-    { category: 'Demande', accuracy: 89.7, color: '#3B82F6' },
-    { category: 'Tendances', accuracy: 91.5, color: '#8B5CF6' },
-    { category: 'Risques', accuracy: 87.3, color: '#F59E0B' }
-  ];
+      // Évolution du prix moyen par mois
+      const monthBuckets = {};
+      properties.forEach((p) => {
+        if (!p.created_at || !p.price) return;
+        const d = new Date(p.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        if (!monthBuckets[key]) {
+          monthBuckets[key] = { label: MONTH_LABELS[d.getMonth()], total: 0, count: 0, sortKey: d.getFullYear() * 12 + d.getMonth() };
+        }
+        monthBuckets[key].total += Number(p.price) || 0;
+        monthBuckets[key].count += 1;
+      });
+      setPriceEvolutionData(
+        Object.values(monthBuckets)
+          .sort((a, b) => a.sortKey - b.sortKey)
+          .map((b) => ({ month: b.label, price: Math.round(b.total / b.count) }))
+      );
 
-  const marketSentimentData = [
-    { sentiment: 'Très Optimiste', value: 35, color: '#10B981' },
-    { sentiment: 'Optimiste', value: 42, color: '#3B82F6' },
-    { sentiment: 'Neutre', value: 18, color: '#6B7280' },
-    { sentiment: 'Pessimiste', value: 5, color: '#F59E0B' }
-  ];
+      // Performance par zone (nombre de biens et prix moyen réels)
+      const zoneBuckets = {};
+      properties.forEach((p) => {
+        const zone = p.location || 'Non renseigné';
+        if (!zoneBuckets[zone]) zoneBuckets[zone] = { zone, total: 0, count: 0 };
+        zoneBuckets[zone].total += Number(p.price) || 0;
+        zoneBuckets[zone].count += 1;
+      });
+      setZonePerformanceData(
+        Object.values(zoneBuckets)
+          .sort((a, b) => b.count - a.count)
+          .slice(0, 5)
+          .map((z) => ({ zone: z.zone, volume: z.count, avgPrice: Math.round(z.total / z.count) }))
+      );
+
+      // Activité blockchain des dernières 24h, répartie en tranches de 4h
+      const now = new Date();
+      const buckets = Array.from({ length: 6 }, (_, i) => ({
+        time: `${(i * 4).toString().padStart(2, '0')}:00`,
+        transactions: 0
+      }));
+      transactions.forEach((tx) => {
+        if (!tx.created_at) return;
+        const d = new Date(tx.created_at);
+        const hoursAgo = (now - d) / 3600000;
+        if (hoursAgo < 0 || hoursAgo > 24) return;
+        const bucketIndex = Math.min(5, Math.floor(d.getHours() / 4));
+        buckets[bucketIndex].transactions += 1;
+      });
+      setBlockchainActivityData(buckets);
+    } catch (error) {
+      console.error('Erreur chargement graphiques analytics:', error);
+      setPriceEvolutionData([]);
+      setZonePerformanceData([]);
+      setBlockchainActivityData([]);
+    }
+
+    // Précision des modèles IA, calculée à partir des analyses réelles
+    try {
+      const { data, error } = await supabase
+        .from('ai_analyses')
+        .select('analysis_type, confidence_score')
+        .limit(200);
+      if (error) throw error;
+
+      const accuracyColors = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B'];
+      const accBuckets = {};
+      (data || []).forEach((a) => {
+        const type = a.analysis_type || 'Général';
+        if (!accBuckets[type]) accBuckets[type] = { total: 0, count: 0 };
+        accBuckets[type].total += Number(a.confidence_score) || 0;
+        accBuckets[type].count += 1;
+      });
+      setAiPredictionAccuracy(
+        Object.entries(accBuckets).map(([category, v], index) => ({
+          category,
+          accuracy: Math.round((v.total / v.count) * 1000) / 10,
+          color: accuracyColors[index % accuracyColors.length]
+        }))
+      );
+    } catch (error) {
+      setAiPredictionAccuracy([]);
+    }
+
+    // Sentiment marché : aucune source de données fiable disponible pour l'instant
+    setMarketSentimentData([]);
+  };
 
   const COLORS = ['#10B981', '#3B82F6', '#8B5CF6', '#F59E0B', '#EF4444'];
 
@@ -162,22 +242,21 @@ const AIAnalyticsDashboard = () => {
                 <div>
                   <p className="text-sm text-gray-600">Confiance IA</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {((aiInsights?.confidenceScore || 0.89) * 100).toFixed(1)}%
+                    {((aiInsights?.confidenceScore || 0) * 100).toFixed(1)}%
                   </p>
                 </div>
               </div>
               <div className="w-16 h-16">
                 <ResponsiveContainer width="100%" height="100%">
-                  <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%" data={[{value: (aiInsights?.confidenceScore || 0.89) * 100}]}>
+                  <RadialBarChart cx="50%" cy="50%" innerRadius="60%" outerRadius="90%" data={[{value: (aiInsights?.confidenceScore || 0) * 100}]}>
                     <RadialBar dataKey="value" fill="#06B6D4" />
                   </RadialBarChart>
                 </ResponsiveContainer>
               </div>
             </div>
-            <p className="text-sm text-green-600">+2.3% vs hier</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="bg-white rounded-xl shadow-lg p-6"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
@@ -189,14 +268,13 @@ const AIAnalyticsDashboard = () => {
               <div>
                 <p className="text-sm text-gray-600">Transactions Blockchain</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {blockchainMetrics?.totalTransactions || '15,247'}
+                  {blockchainMetrics?.totalTransactions ?? 0}
                 </p>
               </div>
             </div>
-            <p className="text-sm text-blue-600">+89 transactions/h</p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="bg-white rounded-xl shadow-lg p-6"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
@@ -208,14 +286,18 @@ const AIAnalyticsDashboard = () => {
               <div>
                 <p className="text-sm text-gray-600">Prédiction Prix</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {aiInsights?.pricePredictions?.shortTerm?.prediction || '+2.5%'}
+                  {aiInsights?.pricePredictions?.shortTerm?.prediction ?? 'N/A'}
                 </p>
               </div>
             </div>
-            <p className="text-sm text-green-600">Confiance: 92%</p>
+            <p className="text-sm text-green-600">
+              {aiInsights?.pricePredictions?.shortTerm?.confidence
+                ? `Confiance: ${Math.round(aiInsights.pricePredictions.shortTerm.confidence * 100)}%`
+                : 'Confiance: N/A'}
+            </p>
           </motion.div>
 
-          <motion.div 
+          <motion.div
             className="bg-white rounded-xl shadow-lg p-6"
             whileHover={{ scale: 1.02 }}
             transition={{ duration: 0.2 }}
@@ -227,11 +309,10 @@ const AIAnalyticsDashboard = () => {
               <div>
                 <p className="text-sm text-gray-600">Smart Contracts</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {blockchainMetrics?.smartContractsActive || '89'}
+                  {blockchainMetrics?.smartContractsActive ?? 0}
                 </p>
               </div>
             </div>
-            <p className="text-sm text-purple-600">100% automatisé</p>
           </motion.div>
         </div>
       </div>
@@ -248,38 +329,37 @@ const AIAnalyticsDashboard = () => {
             </div>
           </div>
           
-          <ResponsiveContainer width="100%" height={300}>
-            <LineChart data={priceEvolutionData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="month" stroke="#6B7280" />
-              <YAxis stroke="#6B7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#1F2937', 
-                  border: 'none', 
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="price" 
-                stroke="#10B981" 
-                strokeWidth={3}
-                name="Prix Réel"
-                dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
-              />
-              <Line 
-                type="monotone" 
-                dataKey="prediction" 
-                stroke="#06B6D4" 
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                name="Prédiction IA"
-                dot={{ fill: '#06B6D4', strokeWidth: 2, r: 4 }}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+          {priceEvolutionData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <LineChart data={priceEvolutionData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="month" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                />
+                <Line
+                  type="monotone"
+                  dataKey="price"
+                  stroke="#10B981"
+                  strokeWidth={3}
+                  name="Prix Moyen Réel"
+                  dot={{ fill: '#10B981', strokeWidth: 2, r: 4 }}
+                />
+              </LineChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState
+              icon={TrendingUp}
+              title="Aucune donnée de prix"
+              description="Pas assez de biens enregistrés sur les 6 derniers mois pour tracer une évolution des prix."
+            />
+          )}
         </div>
 
         {/* Activité Blockchain temps réel */}
@@ -291,38 +371,38 @@ const AIAnalyticsDashboard = () => {
               <span className="text-sm text-green-600">Temps réel</span>
             </div>
           </div>
-          
-          <ResponsiveContainer width="100%" height={300}>
-            <AreaChart data={blockchainActivityData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="time" stroke="#6B7280" />
-              <YAxis stroke="#6B7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#1F2937', 
-                  border: 'none', 
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
-              <Area 
-                type="monotone" 
-                dataKey="transactions" 
-                stroke="#3B82F6" 
-                fill="#3B82F6"
-                fillOpacity={0.3}
-                name="Transactions"
-              />
-              <Area 
-                type="monotone" 
-                dataKey="contracts" 
-                stroke="#8B5CF6" 
-                fill="#8B5CF6"
-                fillOpacity={0.3}
-                name="Smart Contracts"
-              />
-            </AreaChart>
-          </ResponsiveContainer>
+
+          {blockchainActivityData.some((b) => b.transactions > 0) ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <AreaChart data={blockchainActivityData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="time" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                />
+                <Area
+                  type="monotone"
+                  dataKey="transactions"
+                  stroke="#3B82F6"
+                  fill="#3B82F6"
+                  fillOpacity={0.3}
+                  name="Transactions"
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState
+              icon={Zap}
+              title="Aucune transaction blockchain"
+              description="Aucune transaction blockchain enregistrée sur les dernières 24 heures."
+            />
+          )}
         </div>
       </div>
 
@@ -330,67 +410,91 @@ const AIAnalyticsDashboard = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8">
         <div className="lg:col-span-2 bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Performance Zones (IA)</h3>
-          
-          <ResponsiveContainer width="100%" height={300}>
-            <BarChart data={zonePerformanceData}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
-              <XAxis dataKey="zone" stroke="#6B7280" />
-              <YAxis stroke="#6B7280" />
-              <Tooltip 
-                contentStyle={{ 
-                  backgroundColor: '#1F2937', 
-                  border: 'none', 
-                  borderRadius: '8px',
-                  color: 'white'
-                }}
-              />
-              <Bar dataKey="performance" fill="#10B981" name="Score Performance" />
-              <Bar dataKey="growth" fill="#06B6D4" name="Croissance %" />
-            </BarChart>
-          </ResponsiveContainer>
+
+          {zonePerformanceData.length > 0 ? (
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={zonePerformanceData}>
+                <CartesianGrid strokeDasharray="3 3" stroke="#E5E7EB" />
+                <XAxis dataKey="zone" stroke="#6B7280" />
+                <YAxis stroke="#6B7280" />
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: '#1F2937',
+                    border: 'none',
+                    borderRadius: '8px',
+                    color: 'white'
+                  }}
+                />
+                <Bar dataKey="volume" fill="#10B981" name="Nombre de biens" />
+              </BarChart>
+            </ResponsiveContainer>
+          ) : (
+            <EmptyState
+              icon={BarChart3}
+              title="Aucune donnée de zone"
+              description="Aucune propriété avec localisation renseignée n'a été trouvée."
+            />
+          )}
         </div>
 
         {/* Sentiment du marché */}
         <div className="bg-white rounded-xl shadow-lg p-6">
           <h3 className="text-xl font-bold text-gray-900 mb-6">Sentiment Marché IA</h3>
-          
-          <ResponsiveContainer width="100%" height={250}>
-            <RechartsPieChart>
-              <Pie
-                data={marketSentimentData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={5}
-                dataKey="value"
-              >
-                {marketSentimentData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+
+          {marketSentimentData.length > 0 ? (
+            <>
+              <ResponsiveContainer width="100%" height={250}>
+                <RechartsPieChart>
+                  <Pie
+                    data={marketSentimentData}
+                    cx="50%"
+                    cy="50%"
+                    innerRadius={60}
+                    outerRadius={100}
+                    paddingAngle={5}
+                    dataKey="value"
+                  >
+                    {marketSentimentData.map((entry, index) => (
+                      <Cell key={`cell-${index}`} fill={entry.color} />
+                    ))}
+                  </Pie>
+                  <Tooltip />
+                </RechartsPieChart>
+              </ResponsiveContainer>
+
+              <div className="mt-4 space-y-2">
+                {marketSentimentData.map((item, index) => (
+                  <div key={index} className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 rounded-full" style={{backgroundColor: item.color}}></div>
+                      <span className="text-sm text-gray-600">{item.sentiment}</span>
+                    </div>
+                    <span className="text-sm font-semibold">{item.value}%</span>
+                  </div>
                 ))}
-              </Pie>
-              <Tooltip />
-            </RechartsPieChart>
-          </ResponsiveContainer>
-          
-          <div className="mt-4 space-y-2">
-            {marketSentimentData.map((item, index) => (
-              <div key={index} className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 rounded-full" style={{backgroundColor: item.color}}></div>
-                  <span className="text-sm text-gray-600">{item.sentiment}</span>
-                </div>
-                <span className="text-sm font-semibold">{item.value}%</span>
               </div>
-            ))}
-          </div>
+            </>
+          ) : (
+            <EmptyState
+              icon={PieChart}
+              title="Aucune donnée de sentiment"
+              description="Aucune analyse de sentiment marché n'est disponible pour le moment."
+            />
+          )}
         </div>
       </div>
 
       {/* Précision modèles IA */}
       <div className="bg-white rounded-xl shadow-lg p-6">
         <h3 className="text-xl font-bold text-gray-900 mb-6">Précision Modèles IA</h3>
-        
+
+        {aiPredictionAccuracy.length === 0 ? (
+          <EmptyState
+            icon={Brain}
+            title="Aucune analyse IA disponible"
+            description="Aucune analyse IA enregistrée ne permet de calculer la précision des modèles."
+          />
+        ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
           {aiPredictionAccuracy.map((model, index) => (
             <motion.div 
@@ -432,6 +536,7 @@ const AIAnalyticsDashboard = () => {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
     </div>
   );

@@ -15,75 +15,17 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
-const ConstructionProgressBar = ({ projectName = "Villa Moderne Dakar" }) => {
-  const [selectedPhase, setSelectedPhase] = useState(2);
+const ConstructionProgressBar = ({ projectName = "Projet en construction", phases = [], updates = [] }) => {
+  const [selectedPhase, setSelectedPhase] = useState(phases[0]?.id ?? null);
 
-  const constructionPhases = [
-    {
-      id: 1,
-      name: "Fondations",
-      progress: 100,
-      status: "completed",
-      date: "15 Nov 2024",
-      images: 3,
-      videos: 1,
-      description: "Excavation terminée, béton coulé"
-    },
-    {
-      id: 2,
-      name: "Gros Œuvre",
-      progress: 65,
-      status: "active",
-      date: "En cours",
-      images: 8,
-      videos: 2,
-      description: "Murs porteurs, dalle niveau 1"
-    },
-    {
-      id: 3,
-      name: "Charpente",
-      progress: 0,
-      status: "pending",
-      date: "Prévu Jan 2025",
-      images: 0,
-      videos: 0,
-      description: "Installation structure toiture"
-    },
-    {
-      id: 4,
-      name: "Finitions",
-      progress: 0,
-      status: "pending", 
-      date: "Prévu Mar 2025",
-      images: 0,
-      videos: 0,
-      description: "Électricité, plomberie, peinture"
-    }
-  ];
+  const constructionPhases = phases;
+  const recentUpdates = updates;
 
-  const recentUpdates = [
-    {
-      date: "Il y a 2 heures",
-      type: "image",
-      title: "Coulage dalle étage",
-      promoter: "BTP Sénégal Pro",
-      verified: true
-    },
-    {
-      date: "Hier",
-      type: "video",
-      title: "Avancement murs porteurs",
-      promoter: "BTP Sénégal Pro", 
-      verified: true
-    },
-    {
-      date: "Il y a 3 jours",
-      type: "report",
-      title: "Rapport hebdomadaire",
-      promoter: "BTP Sénégal Pro",
-      verified: true
-    }
-  ];
+  const overallProgress = constructionPhases.length > 0
+    ? Math.round(
+        constructionPhases.reduce((sum, phase) => sum + (phase.progress || 0), 0) / constructionPhases.length
+      )
+    : 0;
 
   const getProgressColor = (progress, status) => {
     if (status === 'completed') return 'bg-emerald-500';
@@ -114,24 +56,31 @@ const ConstructionProgressBar = ({ projectName = "Villa Moderne Dakar" }) => {
       <div className="mb-8">
         <div className="flex justify-between items-center mb-2">
           <span className="font-semibold text-gray-900">Progression Globale</span>
-          <span className="text-2xl font-bold text-blue-600">41%</span>
+          <span className="text-2xl font-bold text-blue-600">{overallProgress}%</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-3">
-          <motion.div 
+          <motion.div
             className="bg-gradient-to-r from-blue-500 to-emerald-500 h-3 rounded-full"
             initial={{ width: 0 }}
-            animate={{ width: "41%" }}
+            animate={{ width: `${overallProgress}%` }}
             transition={{ duration: 1.5, ease: "easeOut" }}
           />
         </div>
-        <p className="text-sm text-gray-600 mt-2">
-          Dernière mise à jour: Il y a 2 heures par le promoteur
-        </p>
+        {recentUpdates.length > 0 && (
+          <p className="text-sm text-gray-600 mt-2">
+            Dernière mise à jour: {recentUpdates[0].date}{recentUpdates[0].promoter ? ` par ${recentUpdates[0].promoter}` : ''}
+          </p>
+        )}
       </div>
 
       {/* Phases de construction */}
       <div className="mb-8">
         <h4 className="font-semibold text-gray-900 mb-4">Phases de Construction</h4>
+        {constructionPhases.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-6">
+            Aucune donnée de construction disponible pour le moment.
+          </p>
+        ) : (
         <div className="space-y-4">
           {constructionPhases.map((phase) => (
             <motion.div
@@ -182,11 +131,17 @@ const ConstructionProgressBar = ({ projectName = "Villa Moderne Dakar" }) => {
             </motion.div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Mises à jour récentes */}
       <div className="mb-6">
         <h4 className="font-semibold text-gray-900 mb-4">Mises à Jour Récentes</h4>
+        {recentUpdates.length === 0 ? (
+          <p className="text-sm text-gray-500 text-center py-4">
+            Aucune mise à jour récente.
+          </p>
+        ) : (
         <div className="space-y-3">
           {recentUpdates.map((update, index) => (
             <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
@@ -203,7 +158,7 @@ const ConstructionProgressBar = ({ projectName = "Villa Moderne Dakar" }) => {
                   )}
                 </div>
                 <div className="text-sm text-gray-600">
-                  {update.date} • {update.promoter}
+                  {update.date}{update.promoter ? ` • ${update.promoter}` : ''}
                 </div>
               </div>
               <Button variant="outline" size="sm">
@@ -213,6 +168,7 @@ const ConstructionProgressBar = ({ projectName = "Villa Moderne Dakar" }) => {
             </div>
           ))}
         </div>
+        )}
       </div>
 
       {/* Actions */}

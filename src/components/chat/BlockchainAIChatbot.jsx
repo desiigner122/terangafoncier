@@ -26,6 +26,7 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
 
 const BlockchainAIChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -70,31 +71,28 @@ const BlockchainAIChatbot = () => {
   const aiResponses = {
     terrains: {
       keywords: ['terrain', 'parcelle', 'lot', 'disponible', 'acheter'],
-      response: `ðŸžï¸ **Terrains Vérifiés Blockchain**
+      response: async () => {
+        const { data } = await supabase
+          .from('properties')
+          .select('title, location, price, surface, blockchain_verified')
+          .eq('blockchain_verified', true)
+          .order('created_at', { ascending: false })
+          .limit(3);
 
-Voici nos terrains certifiés :
+        if (!data || data.length === 0) {
+          return `Aucun terrain verifie blockchain n'est disponible pour le moment. Revenez bientot ou contactez notre equipe pour etre informe des nouvelles disponibilites.`;
+        }
 
-ðŸ“ **Dakar - Almadies** 
-â€¢ 500mÂ² - 45M FCFA ✅ Vérifié
-â€¢ Titre foncier blockchain sécurisé
-
-ðŸ“ **Thiès - Centre**
-â€¢ 1000mÂ² - 25M FCFA ✅ Vérifié  
-â€¢ Smart contract activé
-
-ðŸ“ **Mbour - Résidentiel**
-â€¢ 750mÂ² - 18M FCFA ✅ Vérifié
-â€¢ NFT propriété disponible
-
-ðŸ”— Tous nos terrains sont vérifiés par blockchain et incluent :
-â€¢ Certificat NFT de propriété
-â€¢ Smart contract automatisé
-â€¢ Historique transparent
-â€¢ Paiement crypto accepté
-
-Voulez-vous plus de détails sur une zone spécifique ?`
+        let text = `Terrains Verifies Blockchain\n\nVoici nos terrains certifies :\n\n`;
+        data.forEach((p) => {
+          text += `${p.title || 'Terrain'} - ${p.location || 'Localisation non precisee'}\n`;
+          text += `${p.surface ? p.surface + 'm2' : 'Surface non precisee'} - ${p.price ? Number(p.price).toLocaleString('fr-FR') + ' FCFA' : 'Prix sur demande'} - Verifie\n\n`;
+        });
+        text += `Voulez-vous plus de details sur une zone specifique ?`;
+        return text;
+      }
     },
-    
+
     blockchain: {
       keywords: ['blockchain', 'vérification', 'sécurité', 'nft', 'crypto', 'smart contract'],
       response: `â›“ï¸ **Technologie Blockchain Teranga**
@@ -127,59 +125,55 @@ Souhaitez-vous voir un exemple de vérification blockchain ?`
 
     prix: {
       keywords: ['prix', 'coût', 'calculer', 'tarif', 'budget'],
-      response: `ðŸ’° **Calculateur Prix IA**
+      response: async () => {
+        const { data } = await supabase
+          .from('properties')
+          .select('location, price')
+          .not('location', 'is', null)
+          .limit(500);
 
-Prix moyens par région (mise Ï  jour blockchain) :
+        if (!data || data.length === 0) {
+          return `Aucune donnee de prix n'est disponible pour le moment.`;
+        }
 
-ðŸ“Š **Dakar Métropolitaine**
-â€¢ Centre-ville : 80-120k FCFA/mÂ²
-â€¢ Almadies : 60-90k FCFA/mÂ² 
-â€¢ Parcelles Assainies : 45-65k FCFA/mÂ²
+        const stats = {};
+        data.forEach((p) => {
+          const zone = p.location;
+          if (!stats[zone]) stats[zone] = { total: 0, count: 0 };
+          stats[zone].total += Number(p.price) || 0;
+          stats[zone].count += 1;
+        });
 
-ðŸ“Š **Régions**
-â€¢ Thiès : 15-35k FCFA/mÂ²
-â€¢ Saint-Louis : 12-25k FCFA/mÂ²
-â€¢ Mbour : 20-40k FCFA/mÂ²
+        const zones = Object.entries(stats)
+          .map(([zone, v]) => ({ zone, avg: Math.round(v.total / v.count) }))
+          .sort((a, b) => b.avg - a.avg)
+          .slice(0, 5);
 
-ðŸŽ¯ **Facteurs de prix IA :**
-✅ Proximité mer/ville
-✅ Infrastructures disponibles  
-✅ Potentiel d'investissement
-✅ Sécurité blockchain
-
-ðŸ’¡ **Astuce :** Nos algorithmes d'IA analysent +50 critères pour un prix optimal !
-
-Quelle zone vous intéresse pour un calcul précis ?`
+        let text = `Prix moyens par region (donnees reelles) :\n\n`;
+        zones.forEach((z) => {
+          text += `${z.zone} : ${z.avg.toLocaleString('fr-FR')} FCFA en moyenne\n`;
+        });
+        text += `\nQuelle zone vous interesse pour un calcul precis ?`;
+        return text;
+      }
     },
+
 
     marche: {
       keywords: ['marché', 'investissement', 'tendance', 'analyse', 'évolution'],
-      response: `ðŸ“ˆ **Analyse Marché IA - Temps Réel**
+      response: async () => {
+        const now = new Date();
+        const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
 
-**État du Marché (Blockchain Data):**
+        const [{ count: total }, { count: recent }] = await Promise.all([
+          supabase.from('properties').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).gte('created_at', thirtyDaysAgo.toISOString())
+        ]);
 
-ðŸ”¥ **Tendances Actuelles**
-â€¢ +15% croissance terrains Dakar (6 mois)
-â€¢ +8% demande diaspora sénégalaise
-â€¢ +25% adoption paiements crypto
-
-ðŸŽ¯ **Opportunités Détectées par IA**
-â€¢ Thiès : Potentiel +40% (5 ans)
-â€¢ Mbour : Zone touristique en expansion
-â€¢ Rufisque : Infrastructure en développement
-
-âš¡ **Alertes Blockchain**
-â€¢ ðŸŸ¢ Marché stable et croissant
-â€¢ ðŸŸ¢ Liquidité excellente  
-â€¢ ðŸŸ¢ Sécurité maximale
-
-ðŸ“± **Prédictions IA 2024**
-â€¢ Croissance prévue : +12-18%
-â€¢ Zones émergentes identifiées
-â€¢ ROI optimal : 8-15% annuel
-
-Voulez-vous une analyse personnalisée de votre profil d'investissement ?`
+        return `Analyse Marche (donnees reelles) :\n\nBiens references au total : ${total || 0}\nNouveaux biens (30 derniers jours) : ${recent || 0}\n\nVoulez-vous une analyse personnalisee de votre profil d'investissement ?`;
+      }
     },
+
 
     help: {
       keywords: ['aide', 'comment', 'help', 'assistance', 'problème'],
@@ -225,13 +219,15 @@ Quelle est votre question ?`
     scrollToBottom();
   }, [messages]);
 
-  const getAIResponse = (message) => {
+  const getAIResponse = async (message) => {
     const lowerMessage = message.toLowerCase();
-    
+
     // Recherche de mots-clés dans les réponses prédéfinies
     for (const [key, responseData] of Object.entries(aiResponses)) {
       if (responseData.keywords.some(keyword => lowerMessage.includes(keyword))) {
-        return responseData.response;
+        return typeof responseData.response === 'function'
+          ? await responseData.response()
+          : responseData.response;
       }
     }
 
@@ -266,18 +262,20 @@ Ou choisissez une action rapide ci-dessous ðŸ‘‡`;
     setIsTyping(true);
     setShowQuickActions(false);
 
-    // Simulation délai réponse IA
+    const responseContent = await getAIResponse(inputMessage);
+
+    // Petit délai d'affichage pour l'indicateur de frappe
     setTimeout(() => {
       const aiResponse = {
         id: Date.now() + 1,
         type: 'bot',
-        content: getAIResponse(inputMessage),
+        content: responseContent,
         timestamp: new Date()
       };
-      
+
       setMessages(prev => [...prev, aiResponse]);
       setIsTyping(false);
-    }, 1000 + 0 * 1000);
+    }, 1000);
   };
 
   const handleQuickAction = (action) => {

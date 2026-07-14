@@ -67,30 +67,14 @@ const PreviewPropertyModal = ({
     });
   };
 
-  // Images pour le carousel (utiliser les vraies photos de Supabase Storage)
-  const images = property.photos?.length > 0 
+  // Images pour le carousel (utiliser uniquement les vraies photos de Supabase Storage)
+  const images = property.photos?.length > 0
     ? property.photos.map(photo => ({
         original: photo.url || photo,
         thumbnail: photo.thumbnail || photo.url || photo,
         description: photo.caption || ''
       }))
-    : [
-        {
-          original: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=800',
-          thumbnail: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?w=150',
-          description: property.title
-        },
-        {
-          original: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=800',
-          thumbnail: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?w=150',
-          description: 'Vue extérieure'
-        },
-        {
-          original: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=800',
-          thumbnail: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?w=150',
-          description: 'Vue détaillée'
-        }
-      ];
+    : [];
 
   const getStatusColor = (status) => {
     const colors = {
@@ -118,16 +102,25 @@ const PreviewPropertyModal = ({
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-0">
           {/* Colonne Gauche - Carousel Photos */}
           <div className="bg-gray-100 relative">
-            <ImageGallery
-              items={images}
-              showPlayButton={false}
-              showFullscreenButton={true}
-              showIndex={true}
-              onSlide={(currentIndex) => setActiveImageIndex(currentIndex)}
-              slideInterval={5000}
-              additionalClass="property-preview-gallery"
-            />
-            
+            {images.length > 0 ? (
+              <ImageGallery
+                items={images}
+                showPlayButton={false}
+                showFullscreenButton={true}
+                showIndex={true}
+                onSlide={(currentIndex) => setActiveImageIndex(currentIndex)}
+                slideInterval={5000}
+                additionalClass="property-preview-gallery"
+              />
+            ) : (
+              <div className="w-full h-64 lg:h-full flex items-center justify-center text-gray-400">
+                <div className="text-center">
+                  <Home className="h-16 w-16 mx-auto mb-2" />
+                  <p className="text-sm">Aucune photo disponible</p>
+                </div>
+              </div>
+            )}
+
             {/* Overlay Badges */}
             <div className="absolute top-4 left-4 z-10 flex gap-2">
               <Badge className={getStatusColor(property.status)}>
@@ -148,9 +141,11 @@ const PreviewPropertyModal = ({
             </div>
 
             {/* Compteur Photos */}
-            <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
-              {activeImageIndex + 1} / {images.length}
-            </div>
+            {images.length > 0 && (
+              <div className="absolute bottom-4 right-4 bg-black/70 text-white px-3 py-1 rounded-full text-sm">
+                {activeImageIndex + 1} / {images.length}
+              </div>
+            )}
           </div>
 
           {/* Colonne Droite - Détails */}

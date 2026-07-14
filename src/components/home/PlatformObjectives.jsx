@@ -1,13 +1,14 @@
-﻿import React from 'react';
+﻿import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  ShieldCheck, 
-  Users, 
-  Scale, 
-  Globe, 
-  CalendarCheck, 
+import {
+  ShieldCheck,
+  Users,
+  Scale,
+  Globe,
+  CalendarCheck,
   Plane
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const objectives = [
    { icon: ShieldCheck, title: "Contre la Fraude", description: "Vérification systématique des titres fonciers, identités des vendeurs et mandats pour prévenir les doubles ventes et litiges.", color: "text-red-600" },
@@ -16,14 +17,55 @@ const objectives = [
    { icon: Users, title: "Accompagnement Expert", description: "Nos agents dédiés vous conseillent, répondent à vos questions et vous assistent dans toutes les démarches administratives.", color: "text-yellow-600" },
 ];
 
-const stats = [
-    { icon: ShieldCheck, value: "100+", label: "Vérifications Anti-Fraude/Mois", color: "text-primary" },
-    { icon: Globe, value: "15+", label: "Pays (Diaspora Servie)", color: "text-primary" },
-    { icon: CalendarCheck, value: "95%", label: "Respect des Délais", color: "text-green-500", span: true }
-];
-
-
 const PlatformObjectives = () => {
+   const [antiFraudCount, setAntiFraudCount] = useState(null);
+   const [diasporaCountries, setDiasporaCountries] = useState(null);
+   const [loadingStats, setLoadingStats] = useState(true);
+
+   useEffect(() => {
+      const fetchStats = async () => {
+         setLoadingStats(true);
+         try {
+            const startOfMonth = new Date();
+            startOfMonth.setDate(1);
+            startOfMonth.setHours(0, 0, 0, 0);
+
+            const [verificationsRes, profilesRes] = await Promise.all([
+               supabase
+                  .from('properties')
+                  .select('id', { count: 'exact', head: true })
+                  .eq('verification_status', 'verified')
+                  .gte('created_at', startOfMonth.toISOString()),
+               supabase
+                  .from('profiles')
+                  .select('nationality')
+                  .not('nationality', 'is', null)
+            ]);
+
+            setAntiFraudCount(verificationsRes.count || 0);
+
+            const nationalities = (profilesRes.data || [])
+               .map((p) => p.nationality)
+               .filter(Boolean);
+            setDiasporaCountries(new Set(nationalities).size);
+         } catch (error) {
+            console.error('Erreur lors du chargement des statistiques:', error);
+            setAntiFraudCount(0);
+            setDiasporaCountries(0);
+         } finally {
+            setLoadingStats(false);
+         }
+      };
+
+      fetchStats();
+   }, []);
+
+   const stats = [
+       { icon: ShieldCheck, value: loadingStats ? '…' : `${antiFraudCount}`, label: "Vérifications Anti-Fraude ce Mois", color: "text-primary" },
+       { icon: Globe, value: loadingStats ? '…' : `${diasporaCountries}`, label: "Pays (Diaspora Servie)", color: "text-primary" },
+       { icon: CalendarCheck, value: "N/A", label: "Respect des Délais", color: "text-green-500", span: true }
+   ];
+
    const sectionVariants = {
       hidden: { opacity: 0 },
       visible: { opacity: 1, transition: { staggerChildren: 0.1 } }

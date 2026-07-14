@@ -69,87 +69,11 @@ const DeFiNFTMarketplace = () => {
     priceImpact: 0
   });
 
-  const [farmingPools, setFarmingPools] = useState([
-    {
-      id: 1,
-      name: 'TERANGA-MATIC LP',
-      apy: 125.6,
-      tvl: '2,450,000',
-      myStake: '0',
-      rewards: '0',
-      lockPeriod: 0,
-      isActive: true
-    },
-    {
-      id: 2,
-      name: 'TERANGA Single Stake',
-      apy: 85.2,
-      tvl: '1,850,000',
-      myStake: '0',
-      rewards: '0',
-      lockPeriod: 30,
-      isActive: true
-    },
-    {
-      id: 3,
-      name: 'Real Estate Pool',
-      apy: 95.4,
-      tvl: '3,200,000',
-      myStake: '0',
-      rewards: '0',
-      lockPeriod: 90,
-      isActive: true
-    }
-  ]);
-
-  // NFT States
-  const [nftCollections, setNftCollections] = useState([
-    {
-      id: 1,
-      name: 'Teranga Properties',
-      description: 'Propriétés immobilières tokenisées au Sénégal',
-      floorPrice: '50',
-      volume: '12,500',
-      items: 1245,
-      owners: 892,
-      image: '/api/YOUR_API_KEY/400/300'
-    },
-    {
-      id: 2,
-      name: 'Dakar Luxury Villas',
-      description: 'Villas de luxe dans les quartiers premium de Dakar',
-      floorPrice: '250',
-      volume: '45,800',
-      items: 156,
-      owners: 98,
-      image: '/api/YOUR_API_KEY/400/300'
-    }
-  ]);
-
-  const [nftListings, setNftListings] = useState([
-    {
-      id: 1,
-      tokenId: '001',
-      name: 'Villa Moderne Almadies',
-      collection: 'Teranga Properties',
-      price: '75',
-      image: '/api/YOUR_API_KEY/300/300',
-      seller: '0x1234...5678',
-      rarity: 'Rare',
-      traits: ['Prime Location', 'Ocean View', 'Modern Design']
-    },
-    {
-      id: 2,
-      tokenId: '045',
-      name: 'Appartement Centre-Ville',
-      collection: 'Teranga Properties',
-      price: '35',
-      image: '/api/YOUR_API_KEY/300/300',
-      seller: '0x8765...4321',
-      rarity: 'Common',
-      traits: ['City Center', 'Furnished', 'Parking']
-    }
-  ]);
+  // Aucune table Supabase dédiée au DeFi/NFT n'existe dans le schéma actuel :
+  // ces listes restent vides tant qu'un service on-chain réel n'est pas branché.
+  const [farmingPools, setFarmingPools] = useState([]);
+  const [nftCollections, setNftCollections] = useState([]);
+  const [nftListings, setNftListings] = useState([]);
 
   useEffect(() => {
     loadDeFiData();
@@ -158,16 +82,15 @@ const DeFiNFTMarketplace = () => {
   const loadDeFiData = async () => {
     setLoading(true);
     try {
-      // Simulate DeFi data loading
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
+      // Aucune donnée DeFi réelle disponible actuellement (pas de service on-chain connecté).
+      // On affiche un état vide honnête plutôt que des chiffres fabriqués.
       setDefiStats({
-        totalValueLocked: '15,750,000',
-        totalRewards: '2,350,000',
-        myLiquidity: '1,250',
-        myRewards: '145.50',
-        apy: 95.4,
-        volume24h: '850,000'
+        totalValueLocked: '0',
+        totalRewards: '0',
+        myLiquidity: '0',
+        myRewards: '0',
+        apy: 0,
+        volume24h: '0'
       });
     } catch (error) {
       console.error('Failed to load DeFi data:', error);
@@ -176,28 +99,18 @@ const DeFiNFTMarketplace = () => {
     }
   };
 
-  const calculateSwapOutput = (inputAmount, fromToken, toToken) => {
-    // Simplified swap calculation (in real implementation, use actual AMM formulas)
-    const exchangeRate = fromToken === 'MATIC' ? 6.67 : 0.15; // MATIC to TERANGA and vice versa
-    const slippageMultiplier = 1 - (swapForm.slippage / 100);
-    return (parseFloat(inputAmount) * exchangeRate * slippageMultiplier).toFixed(4);
-  };
+  // Aucun oracle de prix / AMM réel n'est connecté : pas de taux de change fabriqué.
+  const calculateSwapOutput = () => null;
 
   const handleSwapAmountChange = (value, field) => {
     const newSwapForm = { ...swapForm };
-    
+
     if (field === 'fromAmount') {
       newSwapForm.fromAmount = value;
-      newSwapForm.toAmount = calculateSwapOutput(value, swapForm.fromToken, swapForm.toToken);
     } else {
       newSwapForm.toAmount = value;
-      newSwapForm.fromAmount = calculateSwapOutput(value, swapForm.toToken, swapForm.fromToken);
     }
-    
-    // Calculate price impact
-    const impact = Math.min((parseFloat(value) / 10000) * 100, 15);
-    newSwapForm.priceImpact = impact;
-    
+
     setSwapForm(newSwapForm);
   };
 
@@ -207,22 +120,9 @@ const DeFiNFTMarketplace = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      toast.loading('Échange en cours...', { id: 'swap' });
-      
-      // Simulate swap transaction
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success(`Échange réussi: ${swapForm.fromAmount} ${swapForm.fromToken} â†’ ${swapForm.toAmount} ${swapForm.toToken}`, { id: 'swap' });
-      
-      setSwapForm(prev => ({ ...prev, fromAmount: '', toAmount: '' }));
-      await loadDeFiData();
-    } catch (error) {
-      toast.error('Erreur lors de l\'échange', { id: 'swap' });
-    } finally {
-      setLoading(false);
-    }
+    // Aucun service DeFi on-chain n'est encore connecté : on informe honnêtement l'utilisateur
+    // plutôt que de simuler un échange qui ne se produit pas réellement.
+    toast.error("L'échange de tokens n'est pas encore disponible sur la plateforme.");
   };
 
   const addLiquidity = async () => {
@@ -231,66 +131,15 @@ const DeFiNFTMarketplace = () => {
       return;
     }
 
-    setLoading(true);
-    try {
-      toast.loading('Ajout de liquidité...', { id: 'liquidity' });
-      
-      // Simulate liquidity addition
-      await new Promise(resolve => setTimeout(resolve, 2500));
-      
-      toast.success(`Liquidité ajoutée: ${liquidityForm.amountA} ${liquidityForm.tokenA} + ${liquidityForm.amountB} ${liquidityForm.tokenB}`, { id: 'liquidity' });
-      
-      setLiquidityForm(prev => ({ ...prev, amountA: '', amountB: '' }));
-      await loadDeFiData();
-    } catch (error) {
-      toast.error('Erreur lors de l\'ajout de liquidité', { id: 'liquidity' });
-    } finally {
-      setLoading(false);
-    }
+    toast.error("L'ajout de liquidité n'est pas encore disponible sur la plateforme.");
   };
 
   const stakeInFarm = async (poolId, amount) => {
-    setLoading(true);
-    try {
-      toast.loading('Mise en farming...', { id: 'farm' });
-      
-      // Simulate farming stake
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success(`${amount} tokens mis en farming!`, { id: 'farm' });
-      
-      // Update pool data
-      setFarmingPools(pools => 
-        pools.map(pool => 
-          pool.id === poolId 
-            ? { ...pool, myStake: (parseFloat(pool.myStake) + parseFloat(amount)).toString() }
-            : pool
-        )
-      );
-    } catch (error) {
-      toast.error('Erreur de farming', { id: 'farm' });
-    } finally {
-      setLoading(false);
-    }
+    toast.error("Le farming n'est pas encore disponible sur la plateforme.");
   };
 
   const buyNFT = async (nftId, price) => {
-    setLoading(true);
-    try {
-      toast.loading('Achat du NFT...', { id: 'buy-nft' });
-      
-      // Simulate NFT purchase
-      await new Promise(resolve => setTimeout(resolve, 2000));
-      
-      toast.success(`NFT acheté pour ${price} MATIC!`, { id: 'buy-nft' });
-      
-      // Remove from listings
-      setNftListings(listings => listings.filter(nft => nft.id !== nftId));
-    } catch (error) {
-      toast.error('Erreur lors de l\'achat', { id: 'buy-nft' });
-    } finally {
-      setLoading(false);
-    }
+    toast.error("L'achat de NFT n'est pas encore disponible sur la plateforme.");
   };
 
   return (
@@ -406,7 +255,7 @@ const DeFiNFTMarketplace = () => {
                     <div className="bg-white/5 rounded-lg p-4">
                       <div className="flex justify-between items-center mb-2">
                         <Label>De</Label>
-                        <span className="text-xs text-gray-300">Balance: 1,250.50</span>
+                        <span className="text-xs text-gray-300">Balance: --</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Input
@@ -448,7 +297,7 @@ const DeFiNFTMarketplace = () => {
                     <div className="bg-white/5 rounded-lg p-4">
                       <div className="flex justify-between items-center mb-2">
                         <Label>Vers</Label>
-                        <span className="text-xs text-gray-300">Balance: 8,456.78</span>
+                        <span className="text-xs text-gray-300">Balance: --</span>
                       </div>
                       <div className="flex items-center space-x-2">
                         <Input
@@ -468,24 +317,14 @@ const DeFiNFTMarketplace = () => {
                       </div>
                     </div>
 
-                    {/* Swap Details */}
+                    {/* Détails d'échange - nécessite un oracle de prix / AMM réel */}
                     {swapForm.fromAmount && (
-                      <div className="bg-white/5 rounded-lg p-3 space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Taux de change</span>
-                          <span>1 {swapForm.fromToken} = {calculateSwapOutput('1', swapForm.fromToken, swapForm.toToken)} {swapForm.toToken}</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Slippage</span>
-                          <span>{swapForm.slippage}%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Impact sur le prix</span>
-                          <span className={swapForm.priceImpact > 5 ? 'text-red-400' : 'text-green-400'}>
-                            {swapForm.priceImpact.toFixed(2)}%
-                          </span>
-                        </div>
-                      </div>
+                      <Alert className="border-blue-200 bg-blue-50/10">
+                        <Info className="h-4 w-4" />
+                        <AlertDescription className="text-blue-200">
+                          Le taux de change et l'impact sur le prix seront disponibles une fois le service d'échange connecté.
+                        </AlertDescription>
+                      </Alert>
                     )}
 
                     {/* Slippage Settings */}
@@ -524,37 +363,19 @@ const DeFiNFTMarketplace = () => {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-purple-400">$45,230</div>
+                        <div className="text-2xl font-bold text-purple-400">$0</div>
                         <div className="text-xs text-gray-400">Volume personnel</div>
                       </div>
                       <div className="text-center">
-                        <div className="text-2xl font-bold text-green-400">142</div>
+                        <div className="text-2xl font-bold text-green-400">0</div>
                         <div className="text-xs text-gray-400">Échanges réalisés</div>
                       </div>
                     </div>
-                    
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>TERANGA/MATIC</span>
-                          <span className="text-green-400">+2.5%</span>
-                        </div>
-                        <Progress value={65} className="h-2" />
-                      </div>
-                      
-                      <div>
-                        <div className="flex justify-between text-sm mb-1">
-                          <span>TERANGA/USDC</span>
-                          <span className="text-red-400">-1.2%</span>
-                        </div>
-                        <Progress value={45} className="h-2" />
-                      </div>
-                    </div>
-                    
+
                     <Alert className="border-blue-200 bg-blue-50/10">
                       <Info className="h-4 w-4" />
                       <AlertDescription className="text-blue-200">
-                        Les échanges sont automatiquement optimisés pour minimiser les frais et le slippage.
+                        Aucune statistique d'échange disponible pour le moment.
                       </AlertDescription>
                     </Alert>
                   </CardContent>
@@ -583,7 +404,7 @@ const DeFiNFTMarketplace = () => {
                         className="bg-white/10 border-white/20 text-white"
                         placeholder="0.0"
                       />
-                      <div className="text-xs text-gray-400 mt-1">Balance: 8,456.78 TERANGA</div>
+                      <div className="text-xs text-gray-400 mt-1">Balance: --</div>
                     </div>
 
                     {/* Token B */}
@@ -596,25 +417,17 @@ const DeFiNFTMarketplace = () => {
                         className="bg-white/10 border-white/20 text-white"
                         placeholder="0.0"
                       />
-                      <div className="text-xs text-gray-400 mt-1">Balance: 1,250.50 MATIC</div>
+                      <div className="text-xs text-gray-400 mt-1">Balance: --</div>
                     </div>
 
-                    {/* Pool Share */}
+                    {/* Apercu du pool - necessite un service on-chain reel pour etre calcule */}
                     {liquidityForm.amountA && liquidityForm.amountB && (
-                      <div className="bg-white/5 rounded-lg p-3 space-y-2 text-sm">
-                        <div className="flex justify-between">
-                          <span>Part du pool</span>
-                          <span>0.125%</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Tokens LP Ï  recevoir</span>
-                          <span>145.67 LP</span>
-                        </div>
-                        <div className="flex justify-between">
-                          <span>Valeur totale</span>
-                          <span>${(parseFloat(liquidityForm.amountA) * 0.15 + parseFloat(liquidityForm.amountB) * 1.2).toFixed(2)}</span>
-                        </div>
-                      </div>
+                      <Alert className="border-blue-200 bg-blue-50/10">
+                        <Info className="h-4 w-4" />
+                        <AlertDescription className="text-blue-200">
+                          L'apercu de la part de pool sera disponible une fois le service de liquidite connecte.
+                        </AlertDescription>
+                      </Alert>
                     )}
 
                     <Button 
@@ -638,50 +451,8 @@ const DeFiNFTMarketplace = () => {
                     <CardTitle>Mes Positions de Liquidité</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-3">
-                    <div className="bg-white/5 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gradient-to-r from-purple-500 to-blue-500 rounded-full"></div>
-                          <span className="font-medium">TERANGA/MATIC</span>
-                        </div>
-                        <Badge variant="secondary">Actif</Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-400">Liquidité:</span>
-                          <div className="font-bold">$1,250.00</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Frais collectés:</span>
-                          <div className="font-bold text-green-400">$45.60</div>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline" className="w-full mt-2 border-white/20 text-white hover:bg-white/10">
-                        Retirer la liquidité
-                      </Button>
-                    </div>
-
-                    <div className="bg-white/5 rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <div className="flex items-center space-x-2">
-                          <div className="w-8 h-8 bg-gradient-to-r from-green-500 to-blue-500 rounded-full"></div>
-                          <span className="font-medium">TERANGA/USDC</span>
-                        </div>
-                        <Badge variant="secondary">Actif</Badge>
-                      </div>
-                      <div className="grid grid-cols-2 gap-4 text-sm">
-                        <div>
-                          <span className="text-gray-400">Liquidité:</span>
-                          <div className="font-bold">$850.00</div>
-                        </div>
-                        <div>
-                          <span className="text-gray-400">Frais collectés:</span>
-                          <div className="font-bold text-green-400">$32.10</div>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline" className="w-full mt-2 border-white/20 text-white hover:bg-white/10">
-                        Retirer la liquidité
-                      </Button>
+                    <div className="text-center py-8 text-gray-300">
+                      Aucune position de liquidité pour le moment.
                     </div>
 
                     <Alert className="border-yellow-200 bg-yellow-50/10">
@@ -697,6 +468,15 @@ const DeFiNFTMarketplace = () => {
 
             {/* Farming Tab */}
             <TabsContent value="farming" className="space-y-4">
+              {farmingPools.length === 0 && (
+                <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
+                  <CardContent className="text-center py-12">
+                    <Coins className="h-10 w-10 mx-auto mb-4 text-white/60" />
+                    <h3 className="text-xl font-bold mb-2">Aucun pool de farming disponible</h3>
+                    <p className="text-gray-400">Les pools de farming apparaîtront ici une fois le service on-chain connecté.</p>
+                  </CardContent>
+                </Card>
+              )}
               <div className="grid lg:grid-cols-3 gap-4">
                 {farmingPools.map((pool) => (
                   <Card key={pool.id} className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
@@ -743,7 +523,7 @@ const DeFiNFTMarketplace = () => {
                       <div className="space-y-2">
                         <Input
                           type="number"
-                          placeholder="Montant Ï  staker"
+                          placeholder="Montant a staker"
                           className="bg-white/10 border-white/20 text-white"
                           id={`stake-${pool.id}`}
                         />
@@ -777,6 +557,15 @@ const DeFiNFTMarketplace = () => {
 
             {/* NFT Collections Tab */}
             <TabsContent value="nft-collections" className="space-y-4">
+              {nftCollections.length === 0 && (
+                <Card className="bg-white/10 backdrop-blur-lg border-white/20 text-white">
+                  <CardContent className="text-center py-12">
+                    <Shield className="h-10 w-10 mx-auto mb-4 text-white/60" />
+                    <h3 className="text-xl font-bold mb-2">Aucune collection NFT disponible</h3>
+                    <p className="text-gray-400">Les collections NFT apparaîtront ici une fois le service on-chain connecté.</p>
+                  </CardContent>
+                </Card>
+              )}
               <div className="grid lg:grid-cols-2 gap-6">
                 {nftCollections.map((collection) => (
                   <Card key={collection.id} className="bg-white/10 backdrop-blur-lg border-white/20 text-white overflow-hidden">

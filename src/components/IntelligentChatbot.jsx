@@ -1,10 +1,11 @@
-﻿import React, { useState, useRef, useEffect } from 'react';
+﻿import React, { useState, useRef, useEffect, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, Send, X, Bot, User, Sparkles, Lightbulb, Search, Home, Building2, MapPin, CreditCard, Shield, Clock, Phone } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabaseClient';
 
 const IntelligentChatbot = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -25,9 +26,45 @@ const IntelligentChatbot = () => {
   const [currentMessage, setCurrentMessage] = useState('');
   const [isTyping, setIsTyping] = useState(false);
   const messagesEndRef = useRef(null);
+  const [platformStats, setPlatformStats] = useState({
+    properties: 0,
+    certificates: 0,
+    projects: 0,
+    users: 0
+  });
 
-  // Réponses intelligentes du chatbot
-  const responses = {
+  // Charger les statistiques réelles de la plateforme depuis Supabase
+  useEffect(() => {
+    const loadPlatformStats = async () => {
+      try {
+        const [
+          { count: propertiesCount },
+          { count: certificatesCount },
+          { count: projectsCount },
+          { count: usersCount }
+        ] = await Promise.all([
+          supabase.from('properties').select('*', { count: 'exact', head: true }),
+          supabase.from('blockchain_certificates').select('*', { count: 'exact', head: true }),
+          supabase.from('developer_projects').select('*', { count: 'exact', head: true }),
+          supabase.from('profiles').select('*', { count: 'exact', head: true })
+        ]);
+
+        setPlatformStats({
+          properties: propertiesCount || 0,
+          certificates: certificatesCount || 0,
+          projects: projectsCount || 0,
+          users: usersCount || 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement statistiques plateforme:', error);
+      }
+    };
+
+    loadPlatformStats();
+  }, []);
+
+  // Réponses intelligentes du chatbot (statistiques dynamiques basées sur les données réelles)
+  const responses = useMemo(() => ({
     // Salutations
     greetings: [
       "bonjour", "salut", "hello", "bonsoir", "hey", "coucou"
@@ -43,7 +80,7 @@ const IntelligentChatbot = () => {
       "terrain", "parcelle", "lot", "foncier", "acheter", "vendre"
     ],
     terrainResponses: [
-      "ðŸžï¸ Excellent ! Nous avons plus de 1,284 terrains vérifiés blockchain. Voulez-vous :\nâ€¢ Parcourir par région (Dakar, Thiès, Mbour...)\nâ€¢ Filtrer par prix\nâ€¢ Voir les terrains NFT\nâ€¢ Obtenir une évaluation IA ?",
+      "ðŸžï¸ Excellent ! Nous avons " + platformStats.properties + " terrains référencés sur la plateforme. Voulez-vous :\nâ€¢ Parcourir par région (Dakar, Thiès, Mbour...)\nâ€¢ Filtrer par prix\nâ€¢ Voir les terrains NFT\nâ€¢ Obtenir une évaluation IA ?",
       "ðŸ—ºï¸ Super ! Notre catalogue comprend des terrains dans toutes les régions du Sénégal, tous vérifiés par blockchain. Quel type de terrain vous intéresse ?",
       "ðŸ“ Parfait ! Tous nos terrains sont certifiés NFT pour éviter les fraudes. Dans quelle zone cherchez-vous ?"
     ],
@@ -55,7 +92,7 @@ const IntelligentChatbot = () => {
     blockchainResponses: [
       "ðŸ” La blockchain garantit que chaque propriété est unique et vérifiable ! Chaque terrain devient un NFT avec :\nâ€¢ Titre de propriété inviolable\nâ€¢ Historique complet des transactions\nâ€¢ Protection contre les doubles ventes\nâ€¢ Smart contracts pour paiements automatiques",
       "â›“ï¸ Notre blockchain Ethereum sécurise toutes les transactions ! Plus de fraude possible grâce Ï  :\nâ€¢ Vérification par IA\nâ€¢ Registre public immuable\nâ€¢ Signatures cryptographiques\nâ€¢ Traçabilité complète",
-      "ðŸ›¡ï¸ Avec 2,847 NFT créés et 0% de fraude détectée, notre blockchain révolutionne l'immobilier sénégalais !"
+      "ðŸ›¡ï¸ Avec " + platformStats.certificates + " certificats NFT émis, notre blockchain sécurise l'immobilier sénégalais !"
     ],
 
     // Questions sur les prix
@@ -73,9 +110,9 @@ const IntelligentChatbot = () => {
       "construction", "bâtir", "projet", "promoteur", "maison", "villa"
     ],
     constructionResponses: [
-      "ðŸ—ï¸ Nos 45 promoteurs certifiés proposent :\nâ€¢ Suivi construction par IA satellite\nâ€¢ Rapports photos quotidiens\nâ€¢ Paiements liés Ï  l'avancement\nâ€¢ Garanties blockchain\n\nVoulez-vous voir les projets disponibles ?",
+      "ðŸ—ï¸ Nos promoteurs certifiés proposent :\nâ€¢ Suivi construction par IA satellite\nâ€¢ Rapports photos quotidiens\nâ€¢ Paiements liés Ï  l'avancement\nâ€¢ Garanties blockchain\n\nVoulez-vous voir les projets disponibles ?",
       "ðŸ  Construction moderne avec technologie :\nâ€¢ Surveillance 24/7 par IA\nâ€¢ Matériaux de qualité certifiés\nâ€¢ Respect des délais (72h vs 3 mois)\nâ€¢ Garantie décennale blockchain",
-      "ðŸ‘· 125 projets actifs avec suivi temps réel ! Quel type de construction vous intéresse ?"
+      "ðŸ‘· " + platformStats.projects + " projet(s) actif(s) avec suivi temps réel ! Quel type de construction vous intéresse ?"
     ],
 
     // Questions sur la diaspora
@@ -84,7 +121,7 @@ const IntelligentChatbot = () => {
     ],
     diasporaResponses: [
       "ðŸŒ Spécialement conçu pour la diaspora ! Services inclus :\nâ€¢ Visite virtuelle 360Â°\nâ€¢ Support multidevise (EUR, USD, CAD)\nâ€¢ Accompagnement juridique\nâ€¢ Suivi construction Ï  distance\nâ€¢ Support 24/7 en français",
-      "âœˆï¸ 3,100+ membres diaspora nous font confiance ! Nous couvrons 50+ pays avec :\nâ€¢ Transferts sécurisés blockchain\nâ€¢ Vérification Ï  distance\nâ€¢ Représentation légale locale\nâ€¢ Garanties internationales",
+      "âœˆï¸ La diaspora nous fait confiance ! Nous couvrons de nombreux pays avec :\nâ€¢ Transferts sécurisés blockchain\nâ€¢ Vérification Ï  distance\nâ€¢ Représentation légale locale\nâ€¢ Garanties internationales",
       "ðŸ‡¸ðŸ‡³ Investir depuis l'étranger n'a jamais été aussi sûr ! Notre plateforme élimine tous les risques traditionnels."
     ],
 
@@ -94,10 +131,10 @@ const IntelligentChatbot = () => {
     ],
     helpResponses: [
       "ðŸ¤ Je peux vous aider avec :\nâ€¢ Recherche de terrains/propriétés\nâ€¢ Explication blockchain\nâ€¢ Calculs de prix/financement\nâ€¢ Contact promoteurs\nâ€¢ Processus d'achat\nâ€¢ Support diaspora\n\nQue souhaitez-vous savoir ?",
-      "ðŸ“š Services disponibles :\nâ€¢ Catalogue 1,284 terrains\nâ€¢ 125 projets construction\nâ€¢ Outils d'évaluation IA\nâ€¢ Support multilingue\nâ€¢ Guides détaillés\n\nPar quoi commencer ?",
-      "ðŸ’¡ Teranga Foncier c'est :\nâ€¢ 1ère plateforme blockchain immobilière du Sénégal\nâ€¢ 8,200+ utilisateurs satisfaits\nâ€¢ 0% de fraude détectée\nâ€¢ Support 24/7\n\nUne question spécifique ?"
+      `ðŸ“š Services disponibles :\nâ€¢ Catalogue ${platformStats.properties} terrains\nâ€¢ ${platformStats.projects} projets construction\nâ€¢ Outils d'évaluation IA\nâ€¢ Support multilingue\nâ€¢ Guides détaillés\n\nPar quoi commencer ?`,
+      `ðŸ’¡ Teranga Foncier c'est :\nâ€¢ 1ère plateforme blockchain immobilière du Sénégal\nâ€¢ ${platformStats.users} utilisateurs inscrits\nâ€¢ Support 24/7\n\nUne question spécifique ?`
     ]
-  };
+  }), [platformStats]);
 
   // Suggestions contextuelles
   const quickActions = [

@@ -1,10 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  MapPin, 
-  Building, 
-  Hammer, 
-  Clock, 
+import {
+  MapPin,
+  Building,
+  Hammer,
+  Clock,
   Eye,
   TrendingUp,
   Users,
@@ -12,9 +12,19 @@ import {
   Calendar,
   Target
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const LiveMetricsBar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
+  const [counts, setCounts] = useState({
+    properties: 0,
+    communalRequests: 0,
+    constructionRequests: 0,
+    profiles: 0,
+    aiMonitored: 0,
+    transactions: 0
+  });
+  const [loading, setLoading] = useState(true);
 
   // Mettre à jour l'heure toutes les secondes
   useEffect(() => {
@@ -25,83 +35,123 @@ const LiveMetricsBar = () => {
     return () => clearInterval(timer);
   }, []);
 
+  // Charger les statistiques réelles depuis Supabase
+  useEffect(() => {
+    const loadCounts = async () => {
+      try {
+        setLoading(true);
+
+        const [
+          propertiesRes,
+          communalRes,
+          constructionRes,
+          profilesRes,
+          aiMonitoredRes,
+          transactionsRes
+        ] = await Promise.allSettled([
+          supabase.from('properties').select('id', { count: 'exact', head: true }),
+          supabase.from('communal_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('construction_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('ai_score', 'is', null),
+          supabase.from('financial_transactions').select('id', { count: 'exact', head: true })
+        ]);
+
+        setCounts({
+          properties: propertiesRes.status === 'fulfilled' ? (propertiesRes.value.count || 0) : 0,
+          communalRequests: communalRes.status === 'fulfilled' ? (communalRes.value.count || 0) : 0,
+          constructionRequests: constructionRes.status === 'fulfilled' ? (constructionRes.value.count || 0) : 0,
+          profiles: profilesRes.status === 'fulfilled' ? (profilesRes.value.count || 0) : 0,
+          aiMonitored: aiMonitoredRes.status === 'fulfilled' ? (aiMonitoredRes.value.count || 0) : 0,
+          transactions: transactionsRes.status === 'fulfilled' ? (transactionsRes.value.count || 0) : 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement métriques live:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCounts();
+  }, []);
+
   const liveMetrics = [
-    { 
-      label: "Terrains Actuels Disponibles", 
-      value: "1,247", 
+    {
+      label: "Terrains Disponibles",
+      value: loading ? '…' : counts.properties.toLocaleString('fr-FR'),
       location: "Dakar, Thiès, Saint-Louis",
-      trend: "+47 aujourd'hui", 
-      icon: Building, 
+      trend: "Mis à jour en direct",
+      icon: Building,
       color: "text-emerald-400",
       bgColor: "bg-emerald-500/20",
       pulse: true
     },
-    { 
-      label: "Projets en Cours", 
-      value: "89", 
+    {
+      label: "Demandes de Construction",
+      value: loading ? '…' : counts.constructionRequests.toLocaleString('fr-FR'),
       location: "Construction active",
-      trend: "12 démarrés cette semaine", 
-      icon: Hammer, 
+      trend: "Mis à jour en direct",
+      icon: Hammer,
       color: "text-orange-400",
       bgColor: "bg-orange-500/20",
       pulse: true
     },
-    { 
-      label: "Terrains Communaux Disponibles", 
-      value: "156", 
-      location: "45 mairies connectées",
-      trend: "+23 nouvelles parcelles", 
-      icon: MapPin, 
+    {
+      label: "Terrains Communaux Disponibles",
+      value: loading ? '…' : counts.communalRequests.toLocaleString('fr-FR'),
+      location: "Demandes communales",
+      trend: "Mis à jour en direct",
+      icon: MapPin,
       color: "text-blue-400",
       bgColor: "bg-blue-500/20",
       pulse: false
     },
-    { 
-      label: "Visites Planifiées Aujourd'hui", 
-      value: "34", 
-      location: "Région de Dakar",
-      trend: "18h30 prochaine visite", 
-      icon: Calendar, 
+    {
+      label: "Visites Planifiées Aujourd'hui",
+      value: "0",
+      location: "Fonctionnalité à venir",
+      trend: "",
+      icon: Calendar,
       color: "text-purple-400",
       bgColor: "bg-purple-500/20",
       pulse: false
     },
-    { 
-      label: "Projets Livrés ce Mois", 
-      value: "12", 
-      location: "Délai moyen: 5.8 mois",
-      trend: "2 livrés cette semaine", 
-      icon: CheckCircle, 
+    {
+      label: "Projets Livrés ce Mois",
+      value: "0",
+      location: "Fonctionnalité à venir",
+      trend: "",
+      icon: CheckCircle,
       color: "text-green-400",
       bgColor: "bg-green-500/20",
       pulse: false
     },
-    { 
-      label: "Investisseurs Actifs", 
-      value: "284", 
-      location: "En ligne maintenant",
-      trend: "+12 nouveaux ce mois", 
-      icon: Users, 
+    {
+      label: "Utilisateurs Inscrits",
+      value: loading ? '…' : counts.profiles.toLocaleString('fr-FR'),
+      location: "Communauté Teranga Foncier",
+      trend: "Mis à jour en direct",
+      icon: Users,
       color: "text-cyan-400",
       bgColor: "bg-cyan-500/20",
       pulse: true
     },
-    { 
-      label: "Transactions en Cours", 
-      value: "67", 
-      location: "Smart contracts actifs",
-      trend: "8.4M CFA en escrow", 
-      icon: TrendingUp, 
+    {
+      label: "Transactions Enregistrées",
+      value: loading ? '…' : counts.transactions.toLocaleString('fr-FR'),
+      location: "Suivi financier",
+      trend: "Mis à jour en direct",
+      icon: TrendingUp,
       color: "text-yellow-400",
       bgColor: "bg-yellow-500/20",
       pulse: true
     },
-    { 
-      label: "Surveillance IA Active", 
-      value: "45", 
-      location: "Projets surveillés 24/7",
-      trend: "97.8% précision", 
-      icon: Eye, 
+    {
+      label: "Surveillance IA Active",
+      value: loading ? '…' : counts.aiMonitored.toLocaleString('fr-FR'),
+      location: "Biens analysés par IA",
+      trend: "",
+      icon: Eye,
       color: "text-pink-400",
       bgColor: "bg-pink-500/20",
       pulse: false

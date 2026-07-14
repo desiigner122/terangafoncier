@@ -18,18 +18,18 @@ const CitiesCarousel = () => {
     const fetchCities = async () => {
       setLoading(true);
       const { data, error } = await supabase
-  .from('users')
-        .select('full_name, company_info')
+        .from('profiles')
+        .select('full_name, city, region')
         .eq('role', 'Mairie')
         .limit(10);
-      
+
       if (error) {
         console.error("Error fetching cities:", error);
       } else {
-        const formattedCities = data
-          .filter(mairie => mairie.full_name || mairie.company_info?.commune) // Filtrer les entrées avec des noms valides
+        const formattedCities = (data || [])
+          .filter(mairie => mairie.city || mairie.full_name) // Filtrer les entrées avec des noms valides
           .map(mairie => {
-            const communeName = mairie.company_info?.commune || 
+            const communeName = mairie.city ||
                               (mairie.full_name ? mairie.full_name.replace('Mairie de ', '') : 'Ville inconnue');
             return {
               name: communeName,

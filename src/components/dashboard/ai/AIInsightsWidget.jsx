@@ -21,6 +21,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import OpenAIService from '@/services/ai/OpenAIService';
+import { supabase } from '@/lib/supabaseClient';
 
 const AIInsightsWidget = ({ userType = 'admin', context = {} }) => {
   const [insights, setInsights] = useState([]);
@@ -38,9 +39,9 @@ const AIInsightsWidget = ({ userType = 'admin', context = {} }) => {
   const loadAIInsights = async () => {
     setLoading(true);
     try {
-      // Générer des insights contextuels basés sur le type d'utilisateur
+      // Charge les insights IA réels enregistrés en base
       const contextualInsights = await generateContextualInsights();
-      setInsights(contextualInsights);
+      setInsights(contextualInsights.length > 0 ? contextualInsights : getDefaultInsights());
     } catch (error) {
       console.error('Erreur chargement insights IA:', error);
       setInsights(getDefaultInsights());
@@ -49,72 +50,39 @@ const AIInsightsWidget = ({ userType = 'admin', context = {} }) => {
   };
 
   const generateContextualInsights = async () => {
-    // Insights spécifiques selon le type d'utilisateur
-    if (userType === 'admin') {
-      return [
-        {
-          id: 1,
-          type: 'market',
-          title: 'Tendance marché détectée',
-          description: 'Augmentation de 12% des recherches pour Almadies cette semaine',
-          confidence: 92,
-          action: 'Analyser les prix dans cette zone',
-          priority: 'high',
-          icon: TrendingUp
-        },
-        {
-          id: 2,
-          type: 'fraud',
-          title: 'Alerte sécurité',
-          description: '3 transactions suspectes détectées - vérification requise',
-          confidence: 85,
-          action: 'Examiner les comptes signalés',
-          priority: 'urgent',
-          icon: AlertCircle
-        },
-        {
-          id: 3,
-          type: 'optimization',
-          title: 'Optimisation recommandée',
-          description: 'Les propriétés avec photos 360° ont 45% plus de vues',
-          confidence: 78,
-          action: 'Encourager les photos 360°',
-          priority: 'medium',
-          icon: Lightbulb
-        }
-      ];
-    } else {
-      return [
-        {
-          id: 1,
-          type: 'recommendation',
-          title: 'Opportunité d\'investissement',
-          description: 'Nouvelle propriété à Mermoz correspond à vos critères',
-          confidence: 89,
-          action: 'Voir la propriété',
-          priority: 'high',
-          icon: Target
-        },
-        {
-          id: 2,
-          type: 'market',
-          title: 'Prédiction prix',
-          description: 'Les prix à Keur Massar devraient augmenter de 8% dans 6 mois',
-          confidence: 76,
-          action: 'Considérer un investissement',
-          priority: 'medium',
-          icon: BarChart3
-        }
-      ];
-    }
+    // Charge les dernières analyses IA réelles enregistrées en base
+    const query = supabase
+      .from('ai_analyses')
+      .select('id, result, created_at, property_id, user_id')
+      .order('created_at', { ascending: false })
+      .limit(5);
+
+    const { data, error } = await query;
+
+    if (error) throw error;
+
+    return (data || []).map((row) => {
+      const result = row.result || {};
+      const insightType = result.type || 'info';
+      return {
+        id: row.id,
+        type: insightType,
+        title: result.title || 'Analyse IA',
+        description: result.description || '',
+        confidence: result.confidence ?? 0,
+        action: result.action || 'Voir le détail',
+        priority: result.priority || 'medium',
+        icon: getTypeIcon(insightType)
+      };
+    });
   };
 
   const getDefaultInsights = () => [
     {
-      id: 1,
+      id: 'empty',
       type: 'info',
-      title: 'IA en cours d\'initialisation',
-      description: 'Configuration des services IA en cours...',
+      title: 'Aucun insight disponible',
+      description: 'Aucune analyse IA n\'a encore été enregistrée pour ce compte.',
       confidence: 0,
       action: 'Patienter',
       priority: 'low',

@@ -1,73 +1,120 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { TrendingUp, TrendingDown, Building2, Users, Hammer, Blocks, Database, Shield, Eye, Camera } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const ModernMetricsBar = () => {
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [counts, setCounts] = useState({
+    properties: null,
+    constructionRequests: null,
+    promoters: null,
+    nftProperties: null,
+    securedFundsTotal: null,
+    aiMonitored: null,
+    transactions: null,
+    propertyViews: null
+  });
+
+  useEffect(() => {
+    const loadCounts = async () => {
+      try {
+        const [
+          propertiesRes,
+          requestsRes,
+          promotersRes,
+          nftRes,
+          securedFundsRes,
+          aiRes,
+          txRes,
+          viewsRes
+        ] = await Promise.allSettled([
+          supabase.from('properties').select('id', { count: 'exact', head: true }),
+          supabase.from('construction_requests').select('id', { count: 'exact', head: true }),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('account_type', 'promoteur'),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('nft_token_id', 'is', null),
+          supabase.from('properties').select('estimated_value').not('smart_contract_address', 'is', null),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).not('ai_score', 'is', null),
+          supabase.from('blockchain_transactions').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('views_count')
+        ]);
+
+        const securedFundsTotal = securedFundsRes.status === 'fulfilled'
+          ? (securedFundsRes.value.data || []).reduce((sum, row) => sum + (row.estimated_value || 0), 0)
+          : 0;
+
+        const propertyViews = viewsRes.status === 'fulfilled'
+          ? (viewsRes.value.data || []).reduce((sum, row) => sum + (row.views_count || 0), 0)
+          : 0;
+
+        setCounts({
+          properties: propertiesRes.status === 'fulfilled' ? (propertiesRes.value.count || 0) : 0,
+          constructionRequests: requestsRes.status === 'fulfilled' ? (requestsRes.value.count || 0) : 0,
+          promoters: promotersRes.status === 'fulfilled' ? (promotersRes.value.count || 0) : 0,
+          nftProperties: nftRes.status === 'fulfilled' ? (nftRes.value.count || 0) : 0,
+          securedFundsTotal,
+          aiMonitored: aiRes.status === 'fulfilled' ? (aiRes.value.count || 0) : 0,
+          transactions: txRes.status === 'fulfilled' ? (txRes.value.count || 0) : 0,
+          propertyViews
+        });
+      } catch (error) {
+        console.error('Erreur chargement métriques modernes:', error);
+      }
+    };
+
+    loadCounts();
+  }, []);
+
+  const fmt = (value) => (value === null ? '…' : value.toLocaleString('fr-FR'));
+  const fmtFCFA = (value) => (value === null ? '…' : `${(value / 1_000_000_000).toFixed(1)}B FCFA`);
 
   const metrics = [
     {
       icon: Building2,
       label: "Projets Disponibles",
-      value: "125",
-      change: "+12.5%",
-      isPositive: true,
+      value: fmt(counts.properties),
       color: "text-blue-400"
     },
     {
       icon: Hammer,
-      label: "Demandes Actives", 
-      value: "1,284",
-      change: "+18.7%",
-      isPositive: true,
+      label: "Demandes Actives",
+      value: fmt(counts.constructionRequests),
       color: "text-emerald-400"
     },
     {
       icon: Users,
       label: "Promoteurs Certifiés",
-      value: "45",
-      change: "+8.9%",
-      isPositive: true,
+      value: fmt(counts.promoters),
       color: "text-purple-400"
     },
     {
       icon: Blocks,
       label: "NFT Propriétés",
-      value: "2,847",
-      change: "+15.2%",
-      isPositive: true,
+      value: fmt(counts.nftProperties),
       color: "text-yellow-400"
     },
     {
       icon: Database,
       label: "Fonds Sécurisés",
-      value: "2.4B FCFA",
-      change: "+11.3%",
-      isPositive: true,
+      value: fmtFCFA(counts.securedFundsTotal),
       color: "text-green-400"
     },
     {
       icon: Camera,
       label: "Projets Surveillés IA",
-      value: "456",
-      change: "+22.1%",
-      isPositive: true,
+      value: fmt(counts.aiMonitored),
       color: "text-orange-400"
     },
     {
       icon: Shield,
       label: "Transactions Sécurisées",
-      value: "8,923",
-      change: "+9.8%",
-      isPositive: true,
+      value: fmt(counts.transactions),
       color: "text-cyan-400"
     },
     {
       icon: Eye,
       label: "Vues Propriétés",
-      value: "45.2K",
-      change: "+28.4%",
-      isPositive: true,
+      value: fmt(counts.propertyViews),
       color: "text-pink-400"
     }
   ];
@@ -109,16 +156,6 @@ const ModernMetricsBar = () => {
                     <span className="text-gray-300 text-sm">
                       {metric.value}
                     </span>
-                    <span className={`text-xs flex items-center ${
-                      metric.isPositive ? 'text-green-400' : 'text-red-400'
-                    }`}>
-                      {metric.isPositive ? (
-                        <TrendingUp className="w-3 h-3 mr-1" />
-                      ) : (
-                        <TrendingDown className="w-3 h-3 mr-1" />
-                      )}
-                      {metric.change}
-                    </span>
                   </div>
                 </motion.div>
               ))}
@@ -134,8 +171,8 @@ const ModernMetricsBar = () => {
                 transition={{ duration: 0.5 }}
                 className="flex items-center space-x-2"
               >
-                {React.createElement(metrics[currentIndex].icon, { 
-                  className: `w-4 h-4 ${metrics[currentIndex].color}` 
+                {React.createElement(metrics[currentIndex].icon, {
+                  className: `w-4 h-4 ${metrics[currentIndex].color}`
                 })}
                 <div className="flex items-center space-x-2">
                   <span className="text-white text-sm font-medium">
@@ -143,16 +180,6 @@ const ModernMetricsBar = () => {
                   </span>
                   <span className="text-gray-300 text-sm">
                     {metrics[currentIndex].value}
-                  </span>
-                  <span className={`text-xs flex items-center ${
-                    metrics[currentIndex].isPositive ? 'text-green-400' : 'text-red-400'
-                  }`}>
-                    {metrics[currentIndex].isPositive ? (
-                      <TrendingUp className="w-3 h-3 mr-1" />
-                    ) : (
-                      <TrendingDown className="w-3 h-3 mr-1" />
-                    )}
-                    {metrics[currentIndex].change}
                   </span>
                 </div>
               </motion.div>

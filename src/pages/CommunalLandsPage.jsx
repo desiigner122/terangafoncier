@@ -21,48 +21,52 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
+import { supabase } from '@/lib/supabaseClient';
+
+const DEFAULT_LAND_IMAGE = "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=250&fit=crop";
 
 const CommunalLandsPage = () => {
   const [viewMode, setViewMode] = useState('grid');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedZone, setSelectedZone] = useState('all');
+  const [communalLands, setCommunalLands] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Données d'exemple des terrains communaux
-  const communalLands = [
-    {
-      id: 1,
-      title: "Parcelle Communale Guédiawaye",
-      zone: "Guédiawaye",
-      area: "300mÂ²",
-      status: "Disponible",
-      price: "Attribution selon revenus",
-      requirements: ["Résidence au Sénégal", "Revenus < 500K FCFA/mois", "Premier logement"],
-      image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=400&h=250&fit=crop",
-      description: "Terrain communal destiné Ï  l'habitat social avec toutes les commodités."
-    },
-    {
-      id: 2,
-      title: "Lotissement Communal Pikine",
-      zone: "Pikine",
-      area: "250mÂ²",
-      status: "En cours",
-      price: "Attribution selon critères",
-      requirements: ["Domiciliation Pikine", "Famille nombreuse", "Projet défini"],
-      image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=400&h=250&fit=crop",
-      description: "Nouveau lotissement communal avec infrastructure moderne."
-    },
-    {
-      id: 3,
-      title: "Zone Communale Rufisque",
-      zone: "Rufisque",
-      area: "400mÂ²",
-      status: "Bientôt disponible",
-      price: "Programme d'attribution 2025",
-      requirements: ["Résidence Rufisque 2+ ans", "Activité économique", "Dossier complet"],
-      image: "https://images.unsplash.com/photo-1545324418-cc1a3fa10c00?w=400&h=250&fit=crop",
-      description: "Grande parcelle communale avec accès facilités."
-    }
-  ];
+  useEffect(() => {
+    const fetchCommunalLands = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('communal_requests')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(30);
+
+        if (error) throw error;
+
+        const mapped = (data || []).map((row) => ({
+          id: row.id,
+          title: [row.type, row.zone || row.commune].filter(Boolean).join(' - ') || 'Terrain communal',
+          zone: row.commune || row.zone || 'Non renseigné',
+          area: row.surface ? `${row.surface}m²` : 'Surface non renseignée',
+          status: row.status || 'Disponible',
+          price: 'Attribution selon critères municipaux',
+          requirements: [],
+          image: DEFAULT_LAND_IMAGE,
+          description: `Terrain communal${row.commune ? ` à ${row.commune}` : ''}.`
+        }));
+
+        setCommunalLands(mapped);
+      } catch (err) {
+        console.error('Erreur chargement terrains communaux:', err);
+        setCommunalLands([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchCommunalLands();
+  }, []);
 
   const zones = ['all', 'Guédiawaye', 'Pikine', 'Rufisque', 'Dakar', 'Thiaroye'];
 
@@ -293,6 +297,12 @@ const CommunalLandsPage = () => {
             </div>
 
             {/* Liste des terrains */}
+            {loading ? (
+              <div className="flex justify-center py-16">
+                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600"></div>
+              </div>
+            ) : (
+            <>
             <div className={`grid gap-6 ${viewMode === 'grid' ? 'md:grid-cols-2 lg:grid-cols-3' : 'grid-cols-1'}`}>
               {filteredLands.map((land, index) => (
                 <motion.div
@@ -367,6 +377,8 @@ const CommunalLandsPage = () => {
                 <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun terrain trouvé</h3>
                 <p className="text-gray-600">Essayez de modifier vos critères de recherche.</p>
               </div>
+            )}
+            </>
             )}
           </div>
         </section>

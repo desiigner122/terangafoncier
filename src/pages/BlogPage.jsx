@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import SEO from '@/components/SEO';
 import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from '@/components/ui/card';
@@ -6,212 +6,83 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Link } from 'react-router-dom';
-import BlogService from '@/services/admin/BlogService';
-import { 
-  Tag, 
-  Calendar, 
-  ArrowRight, 
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
+import {
+  Calendar,
+  ArrowRight,
   BookOpen,
   Search,
   Clock,
-  User,
   Users,
-  Eye,
   TrendingUp,
-  Filter,
-  Bookmark,
-  Share2,
   ChevronRight
 } from 'lucide-react';
 
+const computeReadingTime = (content) => {
+  if (!content) return '1 min';
+  const words = content.trim().split(/\s+/).length;
+  return `${Math.max(1, Math.ceil(words / 200))} min`;
+};
+
 const BlogPage = () => {
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedCategory, setSelectedCategory] = useState('all');
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
   useEffect(() => {
+    let active = true;
+
     const fetchPosts = async () => {
       setLoading(true);
       setError(null);
       try {
-        // Phase 1: Fetch published posts from BlogService
-        const result = await BlogService.getPosts({ status: 'published' });
-        if (!result.success) {
-          throw new Error(result.error || 'Erreur lors du chargement des articles');
+        const { data, error: fetchError } = await supabase
+          .from('blog_posts')
+          .select('id, title, slug, excerpt, content, created_at, updated_at, author:profiles(full_name)')
+          .eq('status', 'published')
+          .order('created_at', { ascending: false });
+
+        if (fetchError) throw fetchError;
+
+        if (active) {
+          setPosts(
+            (data || []).map((p) => ({
+              id: p.id,
+              slug: p.slug,
+              title: p.title,
+              excerpt: p.excerpt || (p.content ? `${p.content.slice(0, 150)}...` : ''),
+              author: p.author?.full_name || 'Teranga Foncier',
+              publishedAt: p.created_at
+                ? new Date(p.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' })
+                : '',
+              readTime: computeReadingTime(p.content)
+            }))
+          );
         }
-        setPosts(result.data || []);
       } catch (err) {
-        setError(err.message);
+        if (active) setError(err.message || 'Erreur lors du chargement des articles');
         console.error('Error loading blog posts:', err);
       } finally {
-        setLoading(false);
+        if (active) setLoading(false);
       }
     };
+
     fetchPosts();
+    return () => { active = false; };
   }, []);
 
-  const categories = [
-    { id: 'all', name: 'Tous les articles', count: 12 },
-    { id: 'guides', name: 'Guides pratiques', count: 5 },
-    { id: 'actualites', name: 'Actualités', count: 3 },
-    { id: 'conseils', name: 'Conseils experts', count: 4 }
-  ];
+  const filteredPosts = useMemo(() => posts.filter(post => {
+    const term = searchTerm.toLowerCase();
+    return post.title?.toLowerCase().includes(term) || post.excerpt?.toLowerCase().includes(term);
+  }), [posts, searchTerm]);
 
-  const featuredPosts = [
-    {
-      id: 1,
-      title: "Guide complet pour acheter un terrain au Sénégal en 2024",
-      excerpt: "Tout ce que vous devez savoir pour acquérir un terrain en toute sécurité : démarches, documents, vérifications et conseils d'experts.",
-      category: "guides",
-      categoryLabel: "Guide pratique",
-      author: "",
-      publishedAt: "15 Décembre 2024",
-      readTime: "8 min",
-      views: "2.1k",
-      image: "https://images.unsplash.com/photo-1560518883-ce09059eeffa?w=600&h=400&fit=crop",
-      featured: true,
-      tags: ["Achat", "Guide", "Débutant"]
-    },
-    {
-      id: 2,
-      title: "Les pièges Ï  éviter lors de l'achat d'un terrain",
-      excerpt: "Découvrez les erreurs les plus communes et comment les éviter pour sécuriser votre investissement foncier.",
-      category: "conseils",
-      categoryLabel: "Conseils expert",
-      author: "",
-      publishedAt: "12 Décembre 2024",
-      readTime: "6 min",
-      views: "1.8k",
-      image: "https://images.unsplash.com/photo-1450101499163-c8848c66ca85?w=600&h=400&fit=crop",
-      featured: true,
-      tags: ["Sécurité", "Conseils", "Fraude"]
-    },
-    {
-      id: 3,
-      title: "Investir dans l'immobilier depuis l'étranger : mode d'emploi",
-      excerpt: "Guide spécialement conçu pour la diaspora sénégalaise souhaitant investir au pays en toute tranquillité.",
-      category: "guides",
-      categoryLabel: "Guide pratique",
-      author: "",
-      publishedAt: "10 Décembre 2024",
-      readTime: "10 min",
-      views: "3.2k",
-      image: "https://images.unsplash.com/photo-1486406146926-c627a92ad1ab?w=600&h=400&fit=crop",
-      featured: true,
-      tags: ["Diaspora", "Investissement", "International"]
-    }
-  ];
-
-  const blogPosts = [
-    {
-      id: 4,
-      title: "Nouvelle réglementation foncière : ce qui change en 2024",
-      excerpt: "Les dernières modifications réglementaires et leur impact sur le marché foncier sénégalais.",
-      category: "actualites",
-      categoryLabel: "Actualités",
-      author: "",
-      publishedAt: "8 Décembre 2024",
-      readTime: "5 min",
-      views: "1.5k",
-      image: "https://images.unsplash.com/photo-1589829545856-d10d557cf95f?w=400&h=250&fit=crop",
-      tags: ["Réglementation", "2024", "Nouveautés"]
-    },
-    {
-      id: 5,
-      title: "Comment vérifier l'authenticité d'un titre foncier",
-      excerpt: "Méthodes et outils pour s'assurer de la validité des documents fonciers avant tout achat.",
-      category: "conseils",
-      categoryLabel: "Conseils expert",
-      author: "",
-      publishedAt: "5 Décembre 2024",
-      readTime: "7 min",
-      views: "2.3k",
-      image: "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=400&h=250&fit=crop",
-      tags: ["Vérification", "Sécurité", "Documents"]
-    },
-    {
-      id: 6,
-      title: "Les zones les plus prometteuses pour investir en 2024",
-      excerpt: "Analyse des régions en développement et des opportunités d'investissement foncier.",
-      category: "conseils",
-      categoryLabel: "Conseils expert",
-      author: "",
-      publishedAt: "2 Décembre 2024",
-      readTime: "9 min",
-      views: "1.9k",
-      image: "https://images.unsplash.com/photo-1469474968028-56623f02e42e?w=400&h=250&fit=crop",
-      tags: ["Investissement", "Zones", "Opportunités"]
-    },
-    {
-      id: 7,
-      title: "Financement immobilier : toutes les options disponibles",
-      excerpt: "Tour d'horizon des solutions de financement pour votre projet d'acquisition foncière.",
-      category: "guides",
-      categoryLabel: "Guide pratique",
-      author: "",
-      publishedAt: "28 Novembre 2024",
-      readTime: "12 min",
-      views: "2.7k",
-      image: "https://images.unsplash.com/photo-1554224154-26032ffc0d07?w=400&h=250&fit=crop",
-      tags: ["Financement", "Banques", "Crédit"]
-    },
-    {
-      id: 8,
-      title: "Technologie blockchain dans l'immobilier : révolution en cours",
-      excerpt: "Comment la blockchain transforme le secteur immobilier et sécurise les transactions.",
-      category: "actualites",
-      categoryLabel: "Actualités",
-      author: "",
-      publishedAt: "25 Novembre 2024",
-      readTime: "6 min",
-      views: "1.4k",
-      image: "https://images.unsplash.com/photo-1639762681485-074b7f938ba0?w=400&h=250&fit=crop",
-      tags: ["Blockchain", "Innovation", "Technologie"]
-    },
-    {
-      id: 9,
-      title: "Construire sa maison : étapes et autorisations nécessaires",
-      excerpt: "Guide complet des démarches administratives pour la construction de votre future maison.",
-      category: "guides",
-      categoryLabel: "Guide pratique",
-      author: "",
-      publishedAt: "22 Novembre 2024",
-      readTime: "11 min",
-      views: "3.1k",
-      image: "https://images.unsplash.com/photo-1503387762-592deb58ef4e?w=400&h=250&fit=crop",
-      tags: ["Construction", "Permis", "Maison"]
-    }
-  ];
-
-  // Phase 1: Use loaded posts from Supabase instead of hardcoded data
-  // Fallback to hardcoded data if no posts loaded
-  const allPosts = posts.length > 0 ? posts : [...featuredPosts, ...blogPosts];
-
-  const filteredPosts = allPosts.filter(post => {
-    const matchesCategory = selectedCategory === 'all' || post.category === selectedCategory;
-    const matchesSearch = post.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         post.excerpt?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (post.tags && post.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase())));
-    return matchesCategory && matchesSearch;
-  });
-
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'guides': return 'bg-blue-100 text-blue-800';
-      case 'actualites': return 'bg-green-100 text-green-800';
-      case 'conseils': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const stats = [
-    { icon: BookOpen, number: "50+", label: "Articles publiés" },
-    { icon: Eye, number: "25k", label: "Lectures mensuelles" },
-    { icon: Users, number: "5k", label: "Lecteurs fidèles" },
-    { icon: TrendingUp, number: "98%", label: "Taux de satisfaction" }
-  ];
+  const stats = useMemo(() => ([
+    { icon: BookOpen, number: `${posts.length}`, label: "Articles publiés" },
+    { icon: Calendar, number: posts[0]?.publishedAt || "—", label: "Dernière publication" },
+    { icon: Clock, number: posts.length > 0 ? computeReadingTime(posts.map(p => p.excerpt).join(' ')) : "—", label: "Temps de lecture moyen" }
+  ]), [posts]);
 
   return (
     <>
@@ -223,7 +94,7 @@ const BlogPage = () => {
       />
 
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50 pt-20">
-        
+
         {/* Hero Section */}
         <section className="py-16 bg-gradient-to-r from-blue-600 to-green-600 text-white">
           <div className="container mx-auto px-4">
@@ -239,21 +110,21 @@ const BlogPage = () => {
               <p className="text-xl md:text-2xl mb-8 opacity-90">
                 Guides experts, conseils pratiques et actualités du marché foncier
               </p>
-              
+
               {/* Loading State */}
               {loading && (
                 <div className="text-white/80 py-4">
                   Chargement des articles...
                 </div>
               )}
-              
+
               {/* Error State */}
               {error && (
                 <div className="bg-red-100 text-red-800 px-4 py-3 rounded-xl mb-4 max-w-2xl mx-auto">
                   {error}
                 </div>
               )}
-              
+
               {/* Search Bar */}
               <div className="relative max-w-2xl mx-auto mb-8">
                 <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
@@ -267,7 +138,7 @@ const BlogPage = () => {
               </div>
 
               {/* Stats */}
-              <div className="grid md:grid-cols-4 gap-6">
+              <div className="grid md:grid-cols-3 gap-6">
                 {stats.map((stat, index) => (
                   <motion.div
                     key={index}
@@ -286,129 +157,6 @@ const BlogPage = () => {
           </div>
         </section>
 
-        {/* Categories Section */}
-        <section className="py-8 bg-white border-b">
-          <div className="container mx-auto px-4">
-            <div className="flex flex-wrap gap-2 justify-center">
-              {categories.map((category) => (
-                <Button
-                  key={category.id}
-                  variant={selectedCategory === category.id ? 'default' : 'outline'}
-                  onClick={() => setSelectedCategory(category.id)}
-                  className="flex items-center gap-2"
-                >
-                  <Filter className="h-4 w-4" />
-                  {category.name}
-                  <Badge variant="secondary" className="ml-1">
-                    {category.count}
-                  </Badge>
-                </Button>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Featured Articles */}
-        {selectedCategory === 'all' && (
-          <section className="py-16">
-            <div className="container mx-auto px-4">
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.6 }}
-                viewport={{ once: true }}
-                className="text-center mb-12"
-              >
-                <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                  Articles Ï  la une
-                </h2>
-                <p className="text-xl text-gray-600 max-w-3xl mx-auto">
-                  Nos articles les plus populaires et les plus récents
-                </p>
-              </motion.div>
-
-              <div className="grid lg:grid-cols-3 gap-8">
-                {featuredPosts.map((post, index) => (
-                  <motion.div
-                    key={post.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.6, delay: index * 0.1 }}
-                    viewport={{ once: true }}
-                  >
-                    <Card className="h-full hover:shadow-lg transition-all duration-300 group">
-                      <div className="relative">
-                        <img 
-                          src={post.image}
-                          alt={post.title}
-                          className="w-full h-48 object-cover rounded-t-lg"
-                        />
-                        <Badge className={`absolute top-3 left-3 ${getCategoryColor(post.category)}`}>
-                          {post.categoryLabel}
-                        </Badge>
-                        {post.featured && (
-                          <Badge className="absolute top-3 right-3 bg-red-500 text-white">
-                            À la une
-                          </Badge>
-                        )}
-                      </div>
-                      
-                      <CardHeader>
-                        <CardTitle className="text-lg group-hover:text-blue-600 transition-colors line-clamp-2">
-                          {post.title}
-                        </CardTitle>
-                        <CardDescription className="line-clamp-3">
-                          {post.excerpt}
-                        </CardDescription>
-                      </CardHeader>
-
-                      <CardContent className="pt-0">
-                        <div className="flex items-center gap-4 text-sm text-gray-500 mb-4">
-                          <div className="flex items-center gap-1">
-                            <User className="h-4 w-4" />
-                            {post.author}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Calendar className="h-4 w-4" />
-                            {post.publishedAt}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <Clock className="h-4 w-4" />
-                            {post.readTime}
-                          </div>
-                        </div>
-
-                        <div className="flex flex-wrap gap-1 mb-4">
-                          {post.tags.map((tag, tagIndex) => (
-                            <Badge key={tagIndex} variant="outline" className="text-xs">
-                              {tag}
-                            </Badge>
-                          ))}
-                        </div>
-                      </CardContent>
-
-                      <CardFooter className="pt-0">
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-1 text-sm text-gray-500">
-                            <Eye className="h-4 w-4" />
-                            {post.views} vues
-                          </div>
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/blog/${post.id}`}>
-                              Lire l'article
-                              <ArrowRight className="h-3 w-3 ml-1" />
-                            </Link>
-                          </Button>
-                        </div>
-                      </CardFooter>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
-          </section>
-        )}
-
         {/* All Articles */}
         <section className="py-16 bg-white">
           <div className="container mx-auto px-4">
@@ -420,14 +168,14 @@ const BlogPage = () => {
               className="text-center mb-12"
             >
               <h2 className="text-3xl font-bold text-gray-900 mb-4">
-                {selectedCategory === 'all' ? 'Tous nos articles' : `Articles - ${categories.find(c => c.id === selectedCategory)?.name}`}
+                Tous nos articles
               </h2>
               <p className="text-xl text-gray-600 max-w-3xl mx-auto">
                 {filteredPosts.length} article{filteredPosts.length > 1 ? 's' : ''} trouvé{filteredPosts.length > 1 ? 's' : ''}
               </p>
             </motion.div>
 
-            {filteredPosts.length > 0 ? (
+            {!loading && filteredPosts.length > 0 ? (
               <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
                 {filteredPosts.map((post, index) => (
                   <motion.div
@@ -438,17 +186,6 @@ const BlogPage = () => {
                     viewport={{ once: true }}
                   >
                     <Card className="h-full hover:shadow-lg transition-all duration-300 group">
-                      <div className="relative">
-                        <img 
-                          src={post.image}
-                          alt={post.title}
-                          className="w-full h-48 object-cover rounded-t-lg"
-                        />
-                        <Badge className={`absolute top-3 left-3 ${getCategoryColor(post.category)}`}>
-                          {post.categoryLabel}
-                        </Badge>
-                      </div>
-                      
                       <CardHeader>
                         <CardTitle className="text-lg group-hover:text-blue-600 transition-colors line-clamp-2">
                           {post.title}
@@ -472,13 +209,9 @@ const BlogPage = () => {
                       </CardContent>
 
                       <CardFooter className="pt-0">
-                        <div className="flex items-center justify-between w-full">
-                          <div className="flex items-center gap-1 text-sm text-gray-500">
-                            <Eye className="h-4 w-4" />
-                            {post.views} vues
-                          </div>
+                        <div className="flex items-center justify-end w-full">
                           <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/blog/${post.id}`}>
+                            <Link to={`/blog/${post.slug}`}>
                               Lire
                               <ChevronRight className="h-3 w-3 ml-1" />
                             </Link>
@@ -489,13 +222,13 @@ const BlogPage = () => {
                   </motion.div>
                 ))}
               </div>
-            ) : (
-              <div className="text-center py-12">
-                <Search className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun article trouvé</h3>
-                <p className="text-gray-600">Essayez de modifier votre recherche ou explorez d'autres catégories.</p>
-              </div>
-            )}
+            ) : !loading ? (
+              <EmptyState
+                icon={Search}
+                title="Aucun article trouvé"
+                description="Essayez de modifier votre recherche, ou revenez plus tard : de nouveaux articles seront publiés prochainement."
+              />
+            ) : null}
           </div>
         </section>
 
@@ -514,9 +247,9 @@ const BlogPage = () => {
               <p className="text-xl mb-8 opacity-90">
                 Recevez nos conseils d'experts directement dans votre boîte mail
               </p>
-              
+
               <div className="max-w-md mx-auto flex gap-2">
-                <Input 
+                <Input
                   placeholder="Votre email..."
                   className="bg-white/90 border-0 text-gray-900"
                 />
@@ -533,4 +266,3 @@ const BlogPage = () => {
 };
 
 export default BlogPage;
-

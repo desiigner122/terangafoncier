@@ -17,6 +17,7 @@ import { ResponsiveContainer, Bar, XAxis, YAxis, Tooltip, PieChart, Pie, Cell, L
 import { LoadingSpinner } from '@/components/ui/spinner';
 import { RoleProtectedRoute } from '@/components/layout/ProtectedRoute';
 import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042'];
 
@@ -28,20 +29,20 @@ const AnalyticsPageComponent = () => {
   useEffect(() => {
     const fetchRealAnalyticsData = async () => {
       if (!user) return;
-      
+
       try {
         // Récupérer les données réelles depuis Supabase
-        const [usersResult, parcelsResult, requestsResult, blogResult] = await Promise.all([
-          supabase.from('profiles').select('*'),
-          supabase.from('parcels').select('*'),
-          supabase.from('requests').select('*'),
-          supabase.from('blog').select('*')
+        const [usersResult, propertiesResult, requestsResult, blogResult] = await Promise.all([
+          supabase.from('profiles').select('*', { count: 'exact', head: true }),
+          supabase.from('properties').select('*', { count: 'exact', head: true }),
+          supabase.from('demandes_financement').select('*', { count: 'exact', head: true }),
+          supabase.from('blog_posts').select('*', { count: 'exact', head: true })
         ]);
 
-        const totalUsers = usersResult.data?.length || 0;
-        const totalParcels = parcelsResult.data?.length || 0;
-        const totalRequests = requestsResult.data?.length || 0;
-        const totalBlogPosts = blogResult.data?.length || 0;
+        const totalUsers = usersResult.count || 0;
+        const totalParcels = propertiesResult.count || 0;
+        const totalRequests = requestsResult.count || 0;
+        const totalBlogPosts = blogResult.count || 0;
 
         // Calculer les données analytiques basées sur les vraies données
         const kpis = [
@@ -51,28 +52,8 @@ const AnalyticsPageComponent = () => {
           { title: 'Articles Blog', value: totalBlogPosts.toString(), trend: 'Contenu actuel', trendUp: true, icon: Globe },
         ];
 
-        // Données de visites simulées mais basées sur l'activité réelle
-        const visitsData = [
-          { name: 'Lun', Visites: Math.floor(totalUsers * 1.2) + 50 },
-          { name: 'Mar', Visites: Math.floor(totalUsers * 1.5) + 60 },
-          { name: 'Mer', Visites: Math.floor(totalUsers * 1.1) + 40 },
-          { name: 'Jeu', Visites: Math.floor(totalUsers * 1.8) + 80 },
-          { name: 'Ven', Visites: Math.floor(totalUsers * 1.6) + 70 },
-          { name: 'Sam', Visites: Math.floor(totalUsers * 2.1) + 90 },
-          { name: 'Dim', Visites: Math.floor(totalUsers * 1.9) + 85 }
-        ];
-
-        const sourceData = [
-          { name: 'Direct', value: Math.floor(totalUsers * 0.45) || 5 },
-          { name: 'Google', value: Math.floor(totalUsers * 0.30) || 3 },
-          { name: 'Réseaux Sociaux', value: Math.floor(totalUsers * 0.15) || 2 },
-          { name: 'Références', value: Math.floor(totalUsers * 0.10) || 1 }
-        ];
-
         setAnalyticsData({
           kpis,
-          visitsData,
-          sourceData,
           totalUsers,
           totalParcels,
           totalRequests,
@@ -85,9 +66,7 @@ const AnalyticsPageComponent = () => {
         setAnalyticsData({
           kpis: [
             { title: 'Erreur de connexion', value: '—', trend: 'Vérifiez la base', trendUp: false, icon: Users }
-          ],
-          visitsData: [],
-          sourceData: []
+          ]
         });
       } finally {
         setLoading(false);
@@ -149,18 +128,15 @@ const AnalyticsPageComponent = () => {
         {/* Visites sur 7 jours */}
         <Card>
           <CardHeader>
-            <CardTitle>Trafic Estimé (7 jours)</CardTitle>
-            <CardDescription>Basé sur l'activité utilisateur réelle</CardDescription>
+            <CardTitle>Trafic (7 jours)</CardTitle>
+            <CardDescription>Nécessite un suivi d'audience connecté</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <Bar data={analyticsData.visitsData}>
-                <XAxis dataKey="name" stroke="#888" fontSize={12} tickLine={false} axisLine={false}/>
-                <YAxis stroke="#888" fontSize={12} tickLine={false} axisLine={false}/>
-                <Tooltip />
-                <Bar dataKey="Visites" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} />
-              </Bar>
-            </ResponsiveContainer>
+            <EmptyState
+              icon={BarChart}
+              title="Aucun suivi de trafic disponible"
+              description="Le suivi des visites n'est pas encore connecté à une source de données réelle."
+            />
           </CardContent>
         </Card>
 
@@ -168,28 +144,14 @@ const AnalyticsPageComponent = () => {
         <Card>
           <CardHeader>
             <CardTitle>Sources du Trafic</CardTitle>
-            <CardDescription>Répartition estimée des visiteurs</CardDescription>
+            <CardDescription>Nécessite un suivi d'audience connecté</CardDescription>
           </CardHeader>
           <CardContent>
-            <ResponsiveContainer width="100%" height={300}>
-              <PieChart>
-                <Pie 
-                  data={analyticsData.sourceData} 
-                  dataKey="value" 
-                  nameKey="name" 
-                  cx="50%" 
-                  cy="50%" 
-                  innerRadius={60} 
-                  outerRadius={80} 
-                  label
-                >
-                  {analyticsData.sourceData.map((_, index) => (
-                    <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                  ))}
-                </Pie>
-                <Legend />
-              </PieChart>
-            </ResponsiveContainer>
+            <EmptyState
+              icon={Globe}
+              title="Aucune donnée de source disponible"
+              description="La répartition des sources de trafic n'est pas encore connectée à une source de données réelle."
+            />
           </CardContent>
         </Card>
       </div>

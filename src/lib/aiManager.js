@@ -25,7 +25,8 @@ class AIManager {
    */
   async predictUserTrends(userData) {
     if (!this.isEnabled) {
-      return this.getMockPredictions();
+      console.warn('IA désactivée: predictUserTrends retourne une structure vide.');
+      return this.getEmptyPredictions();
     }
 
     try {
@@ -60,7 +61,7 @@ class AIManager {
       return JSON.parse(data.choices[0].message.content);
     } catch (error) {
       console.error('Erreur IA prédiction:', error);
-      return this.getMockPredictions();
+      return this.getEmptyPredictions();
     }
   }
 
@@ -69,7 +70,8 @@ class AIManager {
    */
   async detectAnomalies(metrics) {
     if (!this.isEnabled) {
-      return this.getMockAnomalies();
+      console.warn('IA désactivée: detectAnomalies retourne une structure vide.');
+      return this.getEmptyAnomalies();
     }
 
     try {
@@ -88,7 +90,7 @@ class AIManager {
       return response;
     } catch (error) {
       console.error('Erreur détection anomalies:', error);
-      return this.getMockAnomalies();
+      return this.getEmptyAnomalies();
     }
   }
 
@@ -97,7 +99,8 @@ class AIManager {
    */
   async generateIntelligentReport(data) {
     if (!this.isEnabled) {
-      return this.getMockReport();
+      console.warn('IA désactivée: generateIntelligentReport retourne une structure vide.');
+      return this.getEmptyReport();
     }
 
     try {
@@ -117,7 +120,7 @@ class AIManager {
       return response;
     } catch (error) {
       console.error('Erreur génération rapport:', error);
-      return this.getMockReport();
+      return this.getEmptyReport();
     }
   }
 
@@ -126,7 +129,8 @@ class AIManager {
    */
   async optimizePricing(propertyData) {
     if (!this.isEnabled) {
-      return this.getMockPricingOptimization();
+      console.warn('IA désactivée: optimizePricing retourne une structure vide.');
+      return this.getEmptyPricingOptimization();
     }
 
     try {
@@ -151,7 +155,7 @@ class AIManager {
       return response;
     } catch (error) {
       console.error('Erreur optimisation prix:', error);
-      return this.getMockPricingOptimization();
+      return this.getEmptyPricingOptimization();
     }
   }
 
@@ -160,7 +164,8 @@ class AIManager {
    */
   async analyzeSentiment(userFeedback) {
     if (!this.isEnabled) {
-      return this.getMockSentimentAnalysis();
+      console.warn('IA désactivée: analyzeSentiment retourne une structure vide.');
+      return this.getEmptySentimentAnalysis();
     }
 
     try {
@@ -180,7 +185,7 @@ class AIManager {
       return response;
     } catch (error) {
       console.error('Erreur analyse sentiment:', error);
-      return this.getMockSentimentAnalysis();
+      return this.getEmptySentimentAnalysis();
     }
   }
 
@@ -266,7 +271,8 @@ class AIManager {
    */
   async generatePersonalizedRecommendations(userProfile, propertyPreferences) {
     if (!this.isEnabled) {
-      return this.getMockRecommendations();
+      console.warn('IA désactivée: generatePersonalizedRecommendations retourne une structure vide.');
+      return this.getEmptyRecommendations();
     }
 
     try {
@@ -286,7 +292,7 @@ class AIManager {
       return response;
     } catch (error) {
       console.error('Erreur recommandations:', error);
-      return this.getMockRecommendations();
+      return this.getEmptyRecommendations();
     }
   }
 
@@ -332,99 +338,60 @@ class AIManager {
   }
 
   /**
-   * Données mock pour les tests (quand l'API n'est pas disponible)
+   * Structures vides retournées quand l'IA n'est pas disponible (pas de clé
+   * API ou erreur d'appel). Aucune donnée inventée n'est renvoyée : les
+   * appelants doivent gérer ces valeurs vides/nulles côté UI.
    */
-  getMockPredictions() {
+  getEmptyPredictions() {
     return {
-      growth_prediction: '+23%',
-      peak_periods: ['Décembre-Janvier', 'Juillet-Août'],
-      market_insights: [
-        'Forte demande dans la région de Dakar',
-        'Croissance du marché résidentiel',
-        'Opportunités dans l\'immobilier commercial'
-      ],
-      recommendations: [
-        'Intensifier le marketing en décembre',
-        'Développer l\'offre à Thiès et Saint-Louis',
-        'Améliorer l\'expérience mobile'
-      ]
+      growth_prediction: null,
+      peak_periods: [],
+      market_insights: [],
+      recommendations: []
     };
   }
 
-  getMockAnomalies() {
+  getEmptyAnomalies() {
     return {
-      anomalies_detected: [
-        {
-          metric: 'conversion_rate',
-          current: '2.1%',
-          expected: '3.2%',
-          severity: 'medium'
-        }
-      ],
-      explanations: [
-        'Baisse inhabituelle du taux de conversion en France'
-      ],
-      suggested_actions: [
-        'Vérifier les pages de conversion',
-        'Analyser le parcours utilisateur'
-      ]
+      anomalies_detected: [],
+      explanations: [],
+      suggested_actions: []
     };
   }
 
-  getMockReport() {
+  getEmptyReport() {
     return {
-      executive_summary: 'Croissance solide de 23% avec opportunités d\'expansion.',
-      key_findings: [
-        'Marché sénégalais en forte croissance',
-        'Demande élevée pour le résidentiel',
-        'Potentiel inexploité en régions'
-      ],
-      regional_analysis: {
-        dakar: { growth: '+35%', potential: 'high' },
-        thies: { growth: '+18%', potential: 'medium' },
-        saint_louis: { growth: '+12%', potential: 'high' }
-      },
-      recommendations: [
-        'Expansion géographique',
-        'Amélioration UX mobile',
-        'Partenariats locaux'
-      ]
+      executive_summary: '',
+      key_findings: [],
+      regional_analysis: {},
+      recommendations: []
     };
   }
 
-  getMockPricingOptimization() {
+  getEmptyPricingOptimization() {
     return {
-      suggested_price: 75000000,
-      price_range: { min: 65000000, max: 85000000 },
-      market_position: 'competitive',
-      confidence_score: 0.87
+      suggested_price: null,
+      price_range: { min: null, max: null },
+      market_position: null,
+      confidence_score: null
     };
   }
 
-  getMockSentimentAnalysis() {
+  getEmptySentimentAnalysis() {
     return {
-      overall_sentiment: 'positive',
-      sentiment_score: 0.72,
-      key_themes: ['Facilité d\'utilisation', 'Service client', 'Prix'],
-      improvement_areas: ['Temps de réponse', 'Photos des biens'],
-      positive_highlights: ['Interface intuitive', 'Support réactif']
+      overall_sentiment: null,
+      sentiment_score: null,
+      key_themes: [],
+      improvement_areas: [],
+      positive_highlights: []
     };
   }
 
-  getMockRecommendations() {
+  getEmptyRecommendations() {
     return {
-      properties: [
-        { id: 1, match_score: 0.94, reason: 'Correspond parfaitement à vos critères' },
-        { id: 2, match_score: 0.87, reason: 'Bon rapport qualité-prix' }
-      ],
-      search_tips: [
-        'Élargissez votre zone de recherche',
-        'Considérez les biens récemment rénovés'
-      ],
-      market_alerts: [
-        'Baisse des prix dans votre zone d\'intérêt',
-        'Nouvelles propriétés disponibles'
-      ]
+      properties: [],
+      search_tips: [],
+      market_alerts: []
     };
   }
 }

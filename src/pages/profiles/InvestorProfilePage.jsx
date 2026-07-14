@@ -32,6 +32,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const InvestorProfilePage = () => {
   const { investorId } = useParams();
@@ -43,9 +45,58 @@ const InvestorProfilePage = () => {
   }, [investorId]);
 
   const loadInvestorProfile = async () => {
-    const mockInvestor = {}; // démo retirée
-    setInvestor(mockInvestor);
-    setLoading(false);
+    if (!investorId) {
+      setInvestor(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', investorId)
+        .single();
+
+      if (error || !data) {
+        console.error('Erreur lors du chargement du profil investisseur:', error);
+        setInvestor(null);
+        return;
+      }
+
+      setInvestor({
+        id: data.id,
+        name: data.full_name || data.company_name || 'Investisseur',
+        avatar: data.avatar_url || '',
+        coverImage: data.cover_url || '',
+        title: 'Investisseur',
+        company: data.company_name || '',
+        location: data.address || 'Non spécifié',
+        rating: data.rating || 0,
+        reviewCount: data.review_count || 0,
+        isVerified: data.is_verified || false,
+        description: data.bio || 'Aucune description disponible.',
+        investmentTypes: [],
+        recentInvestments: [],
+        investmentCriteria: [],
+        partnerships: [],
+        stats: {
+          yearsExperience: 0,
+          averageROI: 'Non disponible',
+          totalInvested: 'Non disponible',
+          properties: 0,
+          portfolioValue: 'Non disponible'
+        },
+        phone: data.phone || 'Non spécifié',
+        email: data.email || 'Non spécifié',
+        website: data.website || ''
+      });
+    } catch (err) {
+      console.error('Erreur lors du chargement du profil investisseur:', err);
+      setInvestor(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -55,6 +106,18 @@ const InvestorProfilePage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement du profil investisseur...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!investor) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <EmptyState
+          icon={TrendingUp}
+          title="Profil introuvable"
+          description="Ce profil investisseur n'existe pas ou n'est plus disponible."
+        />
       </div>
     );
   }
@@ -165,6 +228,9 @@ const InvestorProfilePage = () => {
               <TabsContent value="portfolio" className="space-y-6">
                 <h2 className="text-xl font-semibold">Types d'Investissement</h2>
                 
+                {investor.investmentTypes.length === 0 && (
+                  <p className="text-center text-gray-500 py-8">Aucun type d'investissement renseigné.</p>
+                )}
                 <div className="grid gap-4">
                   {investor.investmentTypes.map((type, index) => (
                     <Card key={index} className="hover:shadow-lg transition-shadow">
@@ -206,6 +272,9 @@ const InvestorProfilePage = () => {
                     <CardTitle>Investissements Récents</CardTitle>
                   </CardHeader>
                   <CardContent>
+                    {investor.recentInvestments.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">Aucun investissement récent à afficher.</p>
+                    )}
                     <div className="space-y-4">
                       {investor.recentInvestments.map((investment, index) => (
                         <div key={index} className="border rounded-lg p-4">
@@ -291,6 +360,9 @@ const InvestorProfilePage = () => {
                     <CardTitle>Partenaires Stratégiques</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {investor.partnerships.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">Aucun partenariat à afficher.</p>
+                    )}
                     {investor.partnerships.map((partner, index) => (
                       <div key={index} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
                         <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">

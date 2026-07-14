@@ -274,11 +274,13 @@ class PDFGenerator {
     pdf.setFontSize(11);
     pdf.setFont(undefined, 'normal');
     
+    // Aucune donnée blockchain inventée : si une valeur réelle n'est pas fournie,
+    // on affiche explicitement "Non disponible" plutôt qu'une fausse valeur.
     const blockchainInfo = [
-      ['Hash Transaction:', blockchainData.transactionHash || '0x' + Math.random().toString(16).slice(2, 42)],
-      ['Numéro de Bloc:', (blockchainData.blockNumber || Math.floor(0 * 1000000)).toLocaleString()],
+      ['Hash Transaction:', blockchainData.transactionHash || null],
+      ['Numéro de Bloc:', blockchainData.blockNumber != null ? blockchainData.blockNumber.toLocaleString() : null],
       ['Réseau:', blockchainData.network || 'TerangaChain'],
-      ['Confirmations:', blockchainData.confirmations || Math.floor(0 * 50) + 10],
+      ['Confirmations:', blockchainData.confirmations != null ? blockchainData.confirmations : null],
       ['Statut:', blockchainData.verified ? '✅ Vérifié' : '⏳ En attente']
     ];
 
@@ -286,9 +288,14 @@ class PDFGenerator {
       pdf.setFont(undefined, 'bold');
       pdf.text(label, 30, yPos);
       pdf.setFont(undefined, 'normal');
-      const displayValue = label === 'Hash Transaction:' 
-        ? value.slice(0, 20) + '...' + value.slice(-10)
-        : value.toString();
+      let displayValue;
+      if (value === null || value === undefined) {
+        displayValue = 'Non disponible';
+      } else if (label === 'Hash Transaction:') {
+        displayValue = value.length > 30 ? value.slice(0, 20) + '...' + value.slice(-10) : value;
+      } else {
+        displayValue = value.toString();
+      }
       pdf.text(displayValue, 70, yPos);
       yPos += 8;
     });

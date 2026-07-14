@@ -23,10 +23,49 @@ import {
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '../components/ui/card';
 import { AIEstimationWidget, AIMarketInsights } from '../components/AIComponents';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const BanqueDashboard = () => {
+  const { user } = useAuth();
   const [activeSection, setActiveSection] = useState('credits');
-  const [notifications, setNotifications] = useState(7);
+  const [notifications, setNotifications] = useState(0);
+  const [evaluations, setEvaluations] = useState([]);
+
+  useEffect(() => {
+    const fetchNotifications = async () => {
+      if (!user) return;
+      try {
+        const { count, error } = await supabase
+          .from('notifications')
+          .select('*', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('read', false);
+        if (!error) setNotifications(count || 0);
+      } catch (error) {
+        console.error('Error fetching notifications count:', error);
+      }
+    };
+
+    const fetchEvaluations = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('id, title, location, city, surface, estimated_value, market_value, updated_at')
+          .not('estimated_value', 'is', null)
+          .order('updated_at', { ascending: false })
+          .limit(10);
+        if (error) throw error;
+        setEvaluations(data || []);
+      } catch (error) {
+        console.error('Error fetching evaluations:', error);
+        setEvaluations([]);
+      }
+    };
+
+    fetchNotifications();
+    fetchEvaluations();
+  }, [user]);
 
   const menuItems = [
     { id: 'credits', label: 'Crédits Immobiliers', icon: CreditCard, color: 'bg-blue-500' },
@@ -82,30 +121,7 @@ const BanqueDashboard = () => {
 
   const hypotheques = []; // démo retirée
 
-  const evaluations = [
-    {
-      id: 1,
-      bien: 'Villa Almadies',
-      adresse: 'Route des Almadies, Dakar',
-      surface: '250 m²',
-      valeurEstimee: '180,000,000 FCFA',
-      valeurMarche: '175,000,000 FCFA',
-      expert: 'Cabinet EVAL+',
-      dateEvaluation: '2024-01-10',
-      validite: '6 mois'
-    },
-    {
-      id: 2,
-      bien: 'Appartement Sacré-Cœur',
-      adresse: 'Sacré-Cœur 3, Dakar',
-      surface: '120 m²',
-      valeurEstimee: '95,000,000 FCFA',
-      valeurMarche: '92,000,000 FCFA',
-      expert: 'SENEVAL',
-      dateEvaluation: '2024-01-08',
-      validite: '6 mois'
-    }
-  ];
+  // evaluations chargées depuis Supabase (table properties) via useEffect ci-dessus
 
   const indicateursRisque = [];
 
@@ -305,28 +321,31 @@ const BanqueDashboard = () => {
             <CardContent className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div>
-                  <h3 className="text-lg font-semibold text-gray-800">{evaluation.bien}</h3>
-                  <p className="text-gray-600">{evaluation.adresse}</p>
-                  <p className="text-gray-600">Surface: {evaluation.surface}</p>
+                  <h3 className="text-lg font-semibold text-gray-800">{evaluation.title || 'Bien sans titre'}</h3>
+                  <p className="text-gray-600">{evaluation.location || evaluation.city || 'Localisation non renseignée'}</p>
+                  {evaluation.surface && (
+                    <p className="text-gray-600">Surface: {evaluation.surface} m²</p>
+                  )}
                 </div>
                 <div className="text-right">
-                  <p className="text-sm text-gray-500">Par {evaluation.expert}</p>
-                  <p className="text-sm text-gray-500">{evaluation.dateEvaluation}</p>
+                  <p className="text-sm text-gray-500">
+                    {evaluation.updated_at ? new Date(evaluation.updated_at).toLocaleDateString('fr-FR') : ''}
+                  </p>
                 </div>
               </div>
 
               <div className="space-y-3 mb-4">
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Valeur estimée:</span>
-                  <span className="font-semibold text-green-600">{evaluation.valeurEstimee}</span>
+                  <span className="font-semibold text-green-600">
+                    {evaluation.estimated_value ? `${Number(evaluation.estimated_value).toLocaleString('fr-FR')} FCFA` : 'N/A'}
+                  </span>
                 </div>
                 <div className="flex justify-between items-center">
                   <span className="text-gray-600">Valeur de marché:</span>
-                  <span className="font-semibold text-blue-600">{evaluation.valeurMarche}</span>
-                </div>
-                <div className="flex justify-between items-center">
-                  <span className="text-gray-600">Validité:</span>
-                  <span className="text-sm text-gray-500">{evaluation.validite}</span>
+                  <span className="font-semibold text-blue-600">
+                    {evaluation.market_value ? `${Number(evaluation.market_value).toLocaleString('fr-FR')} FCFA` : 'N/A'}
+                  </span>
                 </div>
               </div>
 

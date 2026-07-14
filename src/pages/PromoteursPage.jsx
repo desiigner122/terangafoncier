@@ -185,32 +185,7 @@ const PromoteursPage = () => {
     }
   ];
 
-  const successStories = [
-    {
-      promoteur: "Groupe Sahel Immobilier",
-      projet: "Résidence Les Jardins d'Almadies",
-      resultat: "100% vendu en 4 mois vs 18 mois prévu",
-      details: "142 logements, 89% acheteurs diaspora",
-      performance: "+340%",
-      chiffre: "€28M CA"
-    },
-    {
-      promoteur: "SOPIC Développement",
-      projet: "Complexe Lac Rose Village",
-      resultat: "85% pré-commercialisé avant livraison",
-      details: "Villas + commerces, ciblage diaspora US",
-      performance: "+267%",
-      chiffre: "€45M CA"
-    },
-    {
-      promoteur: "Teranga Construction",
-      projet: "Tours Plateau Business",
-      resultat: "ROI marketing +450% vs traditionnel",
-      details: "Bureaux + commerces, diaspora européenne",
-      performance: "+189%",
-      chiffre: "€67M CA"
-    }
-  ];
+  const successStories = []; // démo retirée
 
   const packages = [
     {

@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Blocks, 
@@ -31,18 +31,73 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import SEO from '@/components/SEO';
 import { Link } from 'react-router-dom';
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const BlockchainAboutPage = () => {
   const [activeTimeline, setActiveTimeline] = useState(0);
 
-  const companyStats = [
+  const [companyStats, setCompanyStats] = useState([
     { label: "Années d'Expérience", value: "5+", icon: Calendar, color: "text-blue-600" },
-    { label: "Transactions Blockchain", value: "2.8K+", icon: Database, color: "text-purple-600" },
-    { label: "Clients Satisfaits", value: "8.2K+", icon: Users, color: "text-green-600" },
+    { label: "Transactions Blockchain", value: "0", icon: Database, color: "text-purple-600" },
+    { label: "Clients Satisfaits", value: "0", icon: Users, color: "text-green-600" },
     { label: "Pays Couverts", value: "50+", icon: Globe, color: "text-orange-600" },
-    { label: "Smart Contracts", value: "892", icon: Zap, color: "text-cyan-600" },
-    { label: "Projets Surveillés", value: "456", icon: Eye, color: "text-pink-600" }
-  ];
+    { label: "Smart Contracts", value: "0", icon: Zap, color: "text-cyan-600" },
+    { label: "Projets Surveillés", value: "0", icon: Eye, color: "text-pink-600" }
+  ]);
+
+  const [partnerships, setPartnerships] = useState([]);
+  const [partnershipsLoading, setPartnershipsLoading] = useState(true);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadData = async () => {
+      try {
+        const [
+          { count: txCount },
+          { count: usersCount },
+          { count: certCount },
+          { count: projectsCount }
+        ] = await Promise.all([
+          supabase.from('blockchain_transactions').select('id', { count: 'exact', head: true }),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('blockchain_certificates').select('id', { count: 'exact', head: true }),
+          supabase.from('developer_projects').select('id', { count: 'exact', head: true })
+        ]);
+
+        if (active) {
+          setCompanyStats((prev) => prev.map((stat) => {
+            if (stat.label === "Transactions Blockchain") return { ...stat, value: `${txCount ?? 0}` };
+            if (stat.label === "Clients Satisfaits") return { ...stat, value: `${usersCount ?? 0}` };
+            if (stat.label === "Smart Contracts") return { ...stat, value: `${certCount ?? 0}` };
+            if (stat.label === "Projets Surveillés") return { ...stat, value: `${projectsCount ?? 0}` };
+            return stat;
+          }));
+        }
+
+        const { data: banks } = await supabase
+          .from('banking_partners')
+          .select('id, bank_name, bank_code, bank_logo_url')
+          .limit(6);
+
+        if (active) {
+          setPartnerships(
+            Array.isArray(banks)
+              ? banks.map((b) => ({ name: b.bank_name, type: b.bank_code || 'Partenaire', logo: b.bank_logo_url }))
+              : []
+          );
+        }
+      } catch (error) {
+        console.warn('Chargement des données "À propos" échoué:', error?.message);
+      } finally {
+        if (active) setPartnershipsLoading(false);
+      }
+    };
+
+    loadData();
+    return () => { active = false; };
+  }, []);
 
   const coreValues = [
     {
@@ -114,28 +169,6 @@ const BlockchainAboutPage = () => {
       icon: Zap,
       color: "bg-cyan-500"
     }
-  ];
-
-  const teamMembers = [
-    {
-      name: "",
-      role: "Fondateur & CEO",
-      speciality: "Blockchain & Développement Full-Stack",
-      experience: "8+ ans",
-      education: "Expert en Technologies Web & Blockchain",
-      image: "/api/YOUR_API_KEY/120/120",
-      color: "from-blue-500 to-purple-500",
-      description: "Entrepreneur passionné et développeur full-stack expérimenté, Abdoulaye révolutionne l'immobilier sénégalais en combinant blockchain et intelligence artificielle pour démocratiser l'accès au foncier."
-    }
-  ];
-
-  const partnerships = [
-    { name: "Ministère de l'Urbanisme", type: "Institution", logo: "/api/YOUR_API_KEY/80/80" },
-    { name: "Banque Atlantique", type: "Financier", logo: "/api/YOUR_API_KEY/80/80" },
-    { name: "Ethereum Foundation", type: "Technologique", logo: "/api/YOUR_API_KEY/80/80" },
-    { name: "APIX", type: "Promotion Investissement", logo: "/api/YOUR_API_KEY/80/80" },
-    { name: "Chambre de Commerce", type: "Business", logo: "/api/YOUR_API_KEY/80/80" },
-    { name: "Ordre des Notaires", type: "Juridique", logo: "/api/YOUR_API_KEY/80/80" }
   ];
 
   const testimonials = []; // démo retirée
@@ -465,31 +498,41 @@ const BlockchainAboutPage = () => {
               </p>
             </motion.div>
 
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
-              {partnerships.map((partner, index) => (
-                <motion.div
-                  key={partner.name}
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  transition={{ duration: 0.5, delay: index * 0.1 }}
-                  className="text-center"
-                >
-                  <Card className="hover:shadow-lg transition-all duration-300 border-0">
-                    <CardContent className="p-6">
-                      <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
-                        <img 
-                          src={partner.logo} 
-                          alt={partner.name}
-                          className="w-12 h-12 object-contain"
-                        />
-                      </div>
-                      <h4 className="font-semibold text-gray-900 text-sm mb-1">{partner.name}</h4>
-                      <p className="text-xs text-gray-500">{partner.type}</p>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              ))}
-            </div>
+            {partnershipsLoading ? (
+              <div className="text-center text-gray-500">Chargement des partenaires...</div>
+            ) : partnerships.length === 0 ? (
+              <EmptyState
+                icon={Landmark}
+                title="Aucun partenaire à afficher"
+                description="Nos partenariats bancaires seront listés ici dès qu'ils seront enregistrés."
+              />
+            ) : (
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-8">
+                {partnerships.map((partner, index) => (
+                  <motion.div
+                    key={partner.name}
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    transition={{ duration: 0.5, delay: index * 0.1 }}
+                    className="text-center"
+                  >
+                    <Card className="hover:shadow-lg transition-all duration-300 border-0">
+                      <CardContent className="p-6">
+                        <div className="w-16 h-16 mx-auto mb-3 bg-gray-100 rounded-full flex items-center justify-center">
+                          <img
+                            src={partner.logo}
+                            alt={partner.name}
+                            className="w-12 h-12 object-contain"
+                          />
+                        </div>
+                        <h4 className="font-semibold text-gray-900 text-sm mb-1">{partner.name}</h4>
+                        <p className="text-xs text-gray-500">{partner.type}</p>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </div>
         </section>
 

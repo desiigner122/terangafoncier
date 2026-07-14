@@ -33,6 +33,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const MunicipalityProfilePage = () => {
   const { municipalityId } = useParams();
@@ -44,9 +46,53 @@ const MunicipalityProfilePage = () => {
   }, [municipalityId]);
 
   const loadMunicipalityProfile = async () => {
-    const mockMunicipality = {}; // démo retirée
-    setMunicipality(mockMunicipality);
-    setLoading(false);
+    if (!municipalityId) {
+      setMunicipality(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', municipalityId)
+        .single();
+
+      if (error || !data) {
+        console.error('Erreur lors du chargement du profil mairie:', error);
+        setMunicipality(null);
+        return;
+      }
+
+      setMunicipality({
+        id: data.id,
+        name: data.full_name || data.company_name || 'Mairie',
+        avatar: data.avatar_url || '',
+        coverImage: data.cover_url || '',
+        mayor: data.mayor_name || 'Non spécifié',
+        location: data.address || 'Non spécifié',
+        population: data.population || 'Non disponible',
+        established: data.established_year || '',
+        rating: data.rating || 0,
+        reviewCount: data.review_count || 0,
+        isVerified: data.is_verified || false,
+        description: data.bio || 'Aucune description disponible.',
+        services: [],
+        currentProjects: [],
+        infrastructure: [],
+        departments: [],
+        stats: { population: 0, quartiers: 0, projets: 0 },
+        phone: data.phone || 'Non spécifié',
+        email: data.email || 'Non spécifié',
+        website: data.website || ''
+      });
+    } catch (err) {
+      console.error('Erreur lors du chargement du profil mairie:', err);
+      setMunicipality(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -56,6 +102,18 @@ const MunicipalityProfilePage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement du profil mairie...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!municipality) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <EmptyState
+          icon={Building2}
+          title="Profil introuvable"
+          description="Ce profil de mairie n'existe pas ou n'est plus disponible."
+        />
       </div>
     );
   }
@@ -167,6 +225,9 @@ const MunicipalityProfilePage = () => {
               <TabsContent value="services" className="space-y-6">
                 <h2 className="text-xl font-semibold">Services Municipaux</h2>
                 
+                {municipality.services.length === 0 && (
+                  <p className="text-center text-gray-500 py-8">Aucun service disponible pour le moment.</p>
+                )}
                 <div className="grid gap-4">
                   {municipality.services.map((service, index) => (
                     <Card key={index} className={`hover:shadow-lg transition-shadow ${service.popular ? 'ring-2 ring-blue-200' : ''}`}>
@@ -212,6 +273,9 @@ const MunicipalityProfilePage = () => {
                     <CardTitle>Projets en Cours</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {municipality.currentProjects.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">Aucun projet en cours à afficher.</p>
+                    )}
                     {municipality.currentProjects.map((project, index) => (
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-3">
@@ -259,6 +323,9 @@ const MunicipalityProfilePage = () => {
                     <CardTitle>État des Infrastructures</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {municipality.infrastructure.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">Aucune information d'infrastructure disponible.</p>
+                    )}
                     {municipality.infrastructure.map((infra, index) => (
                       <div key={index} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
                         <div className="flex items-center gap-3">
@@ -287,6 +354,9 @@ const MunicipalityProfilePage = () => {
                     <CardTitle>Départements Municipaux</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {municipality.departments.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">Aucun département renseigné.</p>
+                    )}
                     {municipality.departments.map((dept, index) => (
                       <div key={index} className="border rounded-lg p-4">
                         <h4 className="font-semibold mb-2">{dept.name}</h4>

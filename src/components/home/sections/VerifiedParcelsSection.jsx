@@ -1,18 +1,42 @@
 ﻿
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { 
-  ShieldCheck, 
+import {
+  ShieldCheck,
   ArrowRight
 } from 'lucide-react';
-import { sampleParcels } from '@/data/sampleData';
+import { supabase } from '@/lib/supabaseClient';
 // import ParcelCard from '@/components/parcels/ParcelCard'; // Composant supprimé
 import SimpleParcelCard from '@/components/common/SimpleParcelCard';
 
 const VerifiedParcelsSection = () => {
-    const verifiedParcels = sampleParcels.filter(p => p.verified).slice(0, 3);
+    const [verifiedParcels, setVerifiedParcels] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchVerifiedParcels = async () => {
+            setLoading(true);
+            try {
+                const { data, error } = await supabase
+                    .from('properties')
+                    .select('*')
+                    .eq('verification_status', 'verified')
+                    .limit(3);
+
+                if (error) throw error;
+                setVerifiedParcels((data || []).map(p => ({ ...p, verified: true })));
+            } catch (error) {
+                console.error('Erreur chargement terrains vérifiés:', error);
+                setVerifiedParcels([]);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchVerifiedParcels();
+    }, []);
 
     const sectionVariants = {
         hidden: { opacity: 0, y: 30 },
@@ -43,7 +67,13 @@ const VerifiedParcelsSection = () => {
                 </Button>
             </div>
 
-            {verifiedParcels.length > 0 ? (
+            {loading ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {[...Array(3)].map((_, i) => (
+                        <div key={i} className="bg-gray-200 animate-pulse rounded-lg h-64"></div>
+                    ))}
+                </div>
+            ) : verifiedParcels.length > 0 ? (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {verifiedParcels.map(parcel => (
                         <SimpleParcelCard key={parcel.id} parcel={parcel} />

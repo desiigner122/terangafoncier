@@ -27,6 +27,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const BankProfilePage = () => {
   const { bankId } = useParams();
@@ -38,9 +40,51 @@ const BankProfilePage = () => {
   }, [bankId]);
 
   const loadBankProfile = async () => {
-    const mockBank = {}; // démo retirée
-    setBank(mockBank);
-    setLoading(false);
+    if (!bankId) {
+      setBank(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', bankId)
+        .single();
+
+      if (error || !data) {
+        console.error('Erreur lors du chargement du profil banque:', error);
+        setBank(null);
+        return;
+      }
+
+      setBank({
+        id: data.id,
+        name: data.full_name || data.company_name || 'Banque',
+        avatar: data.avatar_url || '',
+        coverImage: data.cover_url || '',
+        type: 'Institution Financière',
+        location: data.address || 'Non spécifié',
+        rating: data.rating || 0,
+        reviewCount: data.review_count || 0,
+        isVerified: data.is_verified || false,
+        foundedYear: data.founded_year || '',
+        description: data.bio || 'Aucune description disponible.',
+        services: [],
+        requirements: [],
+        advantages: [],
+        stats: { averageRate: 'Non disponible' },
+        phone: data.phone || 'Non spécifié',
+        email: data.email || 'Non spécifié',
+        website: data.website || ''
+      });
+    } catch (err) {
+      console.error('Erreur lors du chargement du profil banque:', err);
+      setBank(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -50,6 +94,18 @@ const BankProfilePage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement du profil banque...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!bank) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <EmptyState
+          icon={Building2}
+          title="Profil introuvable"
+          description="Ce profil banque n'existe pas ou n'est plus disponible."
+        />
       </div>
     );
   }
@@ -150,6 +206,9 @@ const BankProfilePage = () => {
               <TabsContent value="services" className="space-y-6">
                 <h2 className="text-xl font-semibold">Nos Solutions de Financement</h2>
                 
+                {bank.services.length === 0 && (
+                  <p className="text-center text-gray-500 py-8">Aucun service disponible pour le moment.</p>
+                )}
                 <div className="grid gap-6">
                   {bank.services.map((service, index) => (
                     <Card key={index} className="hover:shadow-lg transition-shadow">
@@ -320,7 +379,7 @@ const BankProfilePage = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-green-600 mb-2">8.5%</div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">{bank.stats.averageRate}</div>
                   <div className="text-sm text-gray-600 mb-4">Taux à partir de</div>
                   <Button className="w-full" size="sm">
                     <Calculator className="h-4 w-4 mr-2" />

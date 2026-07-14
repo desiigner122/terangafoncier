@@ -133,29 +133,7 @@ const BanquesPage = () => {
     }
   ];
 
-  const successStories = [
-    {
-      bank: "Bank of Africa Sénégal",
-      results: "+45% de nouveaux crédits immobiliers en 6 mois",
-      details: "Partenariat exclusif sur segment diaspora",
-      growth: "+45%",
-      icon: Building2
-    },
-    {
-      bank: "Banque Atlantique",
-      results: "€12M de volume additionnel généré",
-      details: "Intégration API complète réalisée",
-      growth: "+67%",
-      icon: TrendingUp
-    },
-    {
-      bank: "Ecobank Sénégal",
-      results: "2,200 nouveaux comptes diaspora",
-      details: "Programme co-marketing personnalisé",
-      growth: "+89%",
-      icon: Users
-    }
-  ];
+  const successStories = []; // démo retirée
 
   const packages = [
     {

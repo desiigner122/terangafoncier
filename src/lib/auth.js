@@ -1,5 +1,6 @@
 // Utilitaires d'authentification pour Teranga Foncier
 import { useState, useEffect } from 'react';
+import { supabase } from './supabaseClient';
 
 // Types d'utilisateurs supportés
 export const USER_TYPES = {
@@ -43,28 +44,35 @@ export const validatePassword = (password) => {
   };
 };
 
-// Hook d'authentification simplifié pour le développement
+// Hook d'authentification basé sur Supabase (aucune donnée simulée)
 export const useAuth = () => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  useEffect(() => {
+    let isMounted = true;
+
+    supabase.auth.getSession().then(({ data }) => {
+      if (isMounted) setUser(data?.session?.user ?? null);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (isMounted) setUser(session?.user ?? null);
+    });
+
+    return () => {
+      isMounted = false;
+      listener?.subscription?.unsubscribe?.();
+    };
+  }, []);
+
   const signIn = async (email, password) => {
     setLoading(true);
     try {
-      // Simulation d'authentification
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      const mockUser = {
-        id: '1',
-        email,
-        user_metadata: {
-          name: 'Utilisateur Test'
-        }
-      };
-      
-      setUser(mockUser);
+      const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+      if (!error) setUser(data?.user ?? null);
       setLoading(false);
-      return { data: { user: mockUser }, error: null };
+      return { data, error };
     } catch (error) {
       setLoading(false);
       return { data: null, error };
@@ -74,18 +82,14 @@ export const useAuth = () => {
   const signUp = async (email, password, metadata = {}) => {
     setLoading(true);
     try {
-      // Simulation d'inscription
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const mockUser = {
-        id: Date.now().toString(),
+      const { data, error } = await supabase.auth.signUp({
         email,
-        user_metadata: metadata
-      };
-      
-      setUser(mockUser);
+        password,
+        options: { data: metadata }
+      });
+      if (!error) setUser(data?.user ?? null);
       setLoading(false);
-      return { data: { user: mockUser }, error: null };
+      return { data, error };
     } catch (error) {
       setLoading(false);
       return { data: null, error };
@@ -93,6 +97,7 @@ export const useAuth = () => {
   };
 
   const signOut = async () => {
+    await supabase.auth.signOut();
     setUser(null);
   };
 

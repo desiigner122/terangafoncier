@@ -1,4 +1,4 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -20,11 +20,53 @@ import {
   TrendingUp,
   ArrowRight
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const logoUrl = "/images/logo.png";
 
 const ModernFooter = () => {
   const currentYear = new Date().getFullYear();
+  const [footerStats, setFooterStats] = useState({
+    verifiedProperties: 0,
+    clients: 0,
+    secureTransactions: 0,
+    partners: 0
+  });
+
+  useEffect(() => {
+    const loadFooterStats = async () => {
+      try {
+        const [
+          { count: verifiedCount, error: verifiedError },
+          { count: clientsCount, error: clientsError },
+          { count: transactionsCount, error: transactionsError },
+          { count: partnersCount, error: partnersError }
+        ] = await Promise.all([
+          supabase.from('properties').select('id', { count: 'exact', head: true }).eq('verification_status', 'verified'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('financial_transactions').select('id', { count: 'exact', head: true }).eq('status', 'completed'),
+          supabase.from('banking_partners').select('id', { count: 'exact', head: true }).eq('status', 'active')
+        ]);
+
+        if (verifiedError) throw verifiedError;
+        if (clientsError) throw clientsError;
+        if (transactionsError) throw transactionsError;
+        if (partnersError) throw partnersError;
+
+        setFooterStats({
+          verifiedProperties: verifiedCount || 0,
+          clients: clientsCount || 0,
+          secureTransactions: transactionsCount || 0,
+          partners: partnersCount || 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement statistiques footer:', error);
+        setFooterStats({ verifiedProperties: 0, clients: 0, secureTransactions: 0, partners: 0 });
+      }
+    };
+
+    loadFooterStats();
+  }, []);
 
   const quickLinks = [
     {
@@ -70,10 +112,10 @@ const ModernFooter = () => {
   ];
 
   const stats = [
-    { label: "Terrains Vérifiés", value: "2,500+", icon: Shield },
-    { label: "Clients Satisfaits", value: "1,200+", icon: Users },
-    { label: "Transactions Sécurisées", value: "800+", icon: Award },
-    { label: "Professionnels Partenaires", value: "150+", icon: TrendingUp }
+    { label: "Terrains Vérifiés", value: footerStats.verifiedProperties, icon: Shield },
+    { label: "Clients Satisfaits", value: footerStats.clients, icon: Users },
+    { label: "Transactions Sécurisées", value: footerStats.secureTransactions, icon: Award },
+    { label: "Professionnels Partenaires", value: footerStats.partners, icon: TrendingUp }
   ];
 
   const socialLinks = [

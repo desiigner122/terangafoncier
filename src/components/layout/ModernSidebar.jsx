@@ -1,4 +1,4 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { 
@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { useUser } from '@/hooks/useUser';
 import { ROLES_CONFIG } from '@/lib/enhancedRbacConfig';
+import { supabase } from '@/lib/supabaseClient';
 
 const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -37,9 +38,55 @@ const ModernSidebar = ({ sidebarItems = [], currentPage = 'dashboard' }) => {
     description: "Utilisateur particulier"
   };
 
-  // Notifications non lues (simulé pour l'instant)
-  const unreadNotifications = 3;
-  const unreadMessages = 5;
+  // Notifications et messages non lus (comptes réels depuis Supabase)
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [unreadMessages, setUnreadMessages] = useState(0);
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadUnreadCounts = async () => {
+      try {
+        const { count: notifCount, error: notifError } = await supabase
+          .from('notifications')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id)
+          .eq('read', false);
+
+        if (notifError) throw notifError;
+        setUnreadNotifications(notifCount || 0);
+
+        const { data: participations, error: participationsError } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', user.id);
+
+        if (participationsError) throw participationsError;
+
+        const conversationIds = (participations || []).map((p) => p.conversation_id);
+
+        if (conversationIds.length > 0) {
+          const { count: msgCount, error: msgError } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: true })
+            .in('conversation_id', conversationIds)
+            .eq('read', false)
+            .neq('sender_id', user.id);
+
+          if (msgError) throw msgError;
+          setUnreadMessages(msgCount || 0);
+        } else {
+          setUnreadMessages(0);
+        }
+      } catch (error) {
+        console.error('Erreur chargement compteurs sidebar:', error);
+        setUnreadNotifications(0);
+        setUnreadMessages(0);
+      }
+    };
+
+    loadUnreadCounts();
+  }, [user?.id]);
 
   // Items par défaut du sidebar
   const defaultItems = [

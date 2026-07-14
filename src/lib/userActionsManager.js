@@ -1,5 +1,7 @@
-// Mock UserActionsManager for Admin Dashboard
-// Replaces Supabase functionality with local mock data
+// UserActionsManager for Admin Dashboard
+// Journal d'actions en mémoire + recherche/statistiques utilisateurs via Supabase (table profiles)
+
+import { supabase } from './supabaseClient';
 
 class UserActionsManager {
   constructor() {
@@ -139,168 +141,136 @@ class UserActionsManager {
     });
   }
 
-  // Mock some initial actions for testing
-  async seedMockData() {
-    const mockActions = [
-      {
-        userId: 'user_1',
-        action: 'login',
-        details: { method: 'email' }
-      },
-      {
-        userId: 'user_2',
-        action: 'profile_update',
-        details: { fields: ['name', 'email'] }
-      },
-      {
-        userId: 'user_1',
-        action: 'terrain_view',
-        details: { terrainId: 'terrain_123' }
-      },
-      {
-        userId: 'user_3',
-        action: 'purchase_initiated',
-        details: { terrainId: 'terrain_456', amount: 5000000 }
-      },
-      {
-        userId: 'user_2',
-        action: 'logout',
-        details: {}
-      }
-    ];
-
-    for (const action of mockActions) {
-      await this.logUserAction(action.userId, action.action, action.details);
-    }
-  }
-
-  // Search users - Mock implementation for admin dashboard
+  // Search users - interroge la table profiles réelle (Supabase)
   async searchUsers(query = '', options = {}) {
-    // Mock user data for the admin dashboard
-    const mockUsers = [
-      {
-        id: 'user_1',
-        name: '',
-        email: 'amadou.diallo@email.com',
-        role: 'Particulier',
-        status: 'active',
-        verification_status: 'verified',
-        created_at: '2024-01-15T10:30:00Z',
-        last_login: '2024-01-20T14:15:00Z',
-        phone: '+221771234567'
-      },
-      {
-        id: 'user_2', 
-        name: '',
-        email: 'fatou.seck@email.com',
-        role: 'Vendeur Pro',
-        status: 'active',
-        verification_status: 'pending',
-        created_at: '2024-01-16T09:20:00Z',
-        last_login: '2024-01-19T16:45:00Z',
-        phone: '+221771234568'
-      },
-      {
-        id: 'user_3',
-        name: '',
-        email: 'moussa.ba@email.com', 
-        role: 'Agent Foncier',
-        status: 'active',
-        verification_status: 'verified',
-        created_at: '2024-01-17T11:10:00Z',
-        last_login: '2024-01-21T08:30:00Z',
-        phone: '+221771234569'
-      },
-      {
-        id: 'user_4',
-        name: '',
-        email: 'aissatou.ndiaye@email.com',
-        role: 'Banque',
-        status: 'inactive',
-        verification_status: 'verified',
-        created_at: '2024-01-18T13:45:00Z',
-        last_login: '2024-01-18T15:20:00Z',
-        phone: '+221771234570'
-      },
-      {
-        id: 'user_5',
-        name: '',
-        email: 'ibrahim.toure@email.com',
-        role: 'Mairie',
-        status: 'active',
-        verification_status: 'rejected',
-        created_at: '2024-01-19T16:30:00Z',
-        last_login: '2024-01-20T12:10:00Z',
-        phone: '+221771234571'
+    try {
+      let request = supabase
+        .from('profiles')
+        .select('id, full_name, nom, email, role, is_active, is_verified, created_at, phone', { count: 'exact' });
+
+      if (query) {
+        const term = `%${query}%`;
+        request = request.or(`full_name.ilike.${term},nom.ilike.${term},email.ilike.${term}`);
       }
-    ];
 
-    // Filter by query if provided
-    let filtered = mockUsers;
-    if (query) {
-      const searchTerm = query.toLowerCase();
-      filtered = filtered.filter(user => 
-        user.name.toLowerCase().includes(searchTerm) ||
-        user.email.toLowerCase().includes(searchTerm) ||
-        user.role.toLowerCase().includes(searchTerm)
-      );
-    }
+      if (options.role) {
+        request = request.eq('role', options.role);
+      }
 
-    // Apply additional filters
-    if (options.role) {
-      filtered = filtered.filter(user => user.role === options.role);
-    }
-    
-    if (options.status) {
-      filtered = filtered.filter(user => user.status === options.status);
-    }
-    
-    if (options.verification_status) {
-      filtered = filtered.filter(user => user.verification_status === options.verification_status);
-    }
+      if (options.status === 'active') {
+        request = request.eq('is_active', true);
+      } else if (options.status === 'inactive') {
+        request = request.eq('is_active', false);
+      }
 
-    return {
-      data: filtered,
-      count: filtered.length,
-      total: mockUsers.length
-    };
+      if (options.verification_status === 'verified') {
+        request = request.eq('is_verified', true);
+      } else if (options.verification_status === 'pending') {
+        request = request.eq('is_verified', false);
+      }
+
+      if (options.limit) {
+        request = request.limit(options.limit);
+      }
+
+      const { data, count, error } = await request;
+
+      if (error) {
+        console.error('Erreur searchUsers (profiles):', error);
+        return { data: [], count: 0, total: 0 };
+      }
+
+      const users = (data || []).map(profile => ({
+        id: profile.id,
+        name: profile.full_name || profile.nom || '',
+        email: profile.email || '',
+        role: profile.role || '',
+        status: profile.is_active === false ? 'inactive' : 'active',
+        verification_status: profile.is_verified ? 'verified' : 'pending',
+        created_at: profile.created_at,
+        phone: profile.phone || ''
+      }));
+
+      return {
+        data: users,
+        count: users.length,
+        total: count ?? users.length
+      };
+    } catch (error) {
+      console.error('Erreur searchUsers:', error);
+      return { data: [], count: 0, total: 0 };
+    }
   }
 
-  // Get user statistics for admin dashboard
+  // Get user statistics for admin dashboard - calculées à partir de profiles réel
   async getUserStats() {
-    const mockStats = {
-      total_users: 1247,
-      active_users: 1089,
-      inactive_users: 158,
-      verified_users: 892,
-      pending_verification: 234,
-      rejected_verification: 121,
-      roles_distribution: {
-        'Particulier': 456,
-        'Vendeur Particulier': 234,
-        'Vendeur Pro': 187,
-        'Agent Foncier': 89,
-        'Banque': 67,
-        'Notaire': 45,
-        'Mairie': 34,
-        'Géomètre': 28,
-        'Investisseur': 76,
-        'Promoteur': 23,
-        'Agriculteur': 8
-      },
-      recent_registrations: {
-        today: 12,
-        this_week: 89,
-        this_month: 234
-      },
-      activity_summary: {
-        active_today: 156,
-        active_this_week: 678,
-        active_this_month: 1089
-      }
-    };
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, role, is_active, is_verified, created_at');
 
-    return mockStats;
+      if (error) {
+        console.error('Erreur getUserStats (profiles):', error);
+        return {
+          total_users: 0,
+          active_users: 0,
+          inactive_users: 0,
+          verified_users: 0,
+          pending_verification: 0,
+          rejected_verification: 0,
+          roles_distribution: {},
+          recent_registrations: { today: 0, this_week: 0, this_month: 0 },
+          activity_summary: { active_today: 0, active_this_week: 0, active_this_month: 0 }
+        };
+      }
+
+      const profiles = data || [];
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const startOfWeek = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+      const startOfMonth = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000);
+
+      const roles_distribution = profiles.reduce((acc, p) => {
+        const role = p.role || 'non_defini';
+        acc[role] = (acc[role] || 0) + 1;
+        return acc;
+      }, {});
+
+      const countSince = (since) => profiles.filter(p => p.created_at && new Date(p.created_at) >= since).length;
+
+      return {
+        total_users: profiles.length,
+        active_users: profiles.filter(p => p.is_active !== false).length,
+        inactive_users: profiles.filter(p => p.is_active === false).length,
+        verified_users: profiles.filter(p => p.is_verified === true).length,
+        pending_verification: profiles.filter(p => p.is_verified !== true).length,
+        rejected_verification: 0,
+        roles_distribution,
+        recent_registrations: {
+          today: countSince(startOfToday),
+          this_week: countSince(startOfWeek),
+          this_month: countSince(startOfMonth)
+        },
+        activity_summary: {
+          active_today: 0,
+          active_this_week: 0,
+          active_this_month: 0
+        }
+      };
+    } catch (error) {
+      console.error('Erreur getUserStats:', error);
+      return {
+        total_users: 0,
+        active_users: 0,
+        inactive_users: 0,
+        verified_users: 0,
+        pending_verification: 0,
+        rejected_verification: 0,
+        roles_distribution: {},
+        recent_registrations: { today: 0, this_week: 0, this_month: 0 },
+        activity_summary: { active_today: 0, active_this_week: 0, active_this_month: 0 }
+      };
+    }
   }
 
   // Cleanup
@@ -312,8 +282,5 @@ class UserActionsManager {
 
 // Create singleton instance
 const userActionsManager = new UserActionsManager();
-
-// Initialize with mock data
-userActionsManager.seedMockData();
 
 export default userActionsManager;

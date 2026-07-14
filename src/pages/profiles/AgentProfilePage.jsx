@@ -31,6 +31,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const AgentProfilePage = () => {
   const { agentId } = useParams();
@@ -42,9 +44,54 @@ const AgentProfilePage = () => {
   }, [agentId]);
 
   const loadAgentProfile = async () => {
-    const mockAgent = {}; // démo retirée
-    setAgent(mockAgent);
-    setLoading(false);
+    if (!agentId) {
+      setAgent(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', agentId)
+        .single();
+
+      if (error || !data) {
+        console.error('Erreur lors du chargement du profil agent:', error);
+        setAgent(null);
+        return;
+      }
+
+      setAgent({
+        id: data.id,
+        name: data.full_name || 'Agent',
+        avatar: data.avatar_url || '',
+        coverImage: data.cover_url || '',
+        title: 'Agent Foncier',
+        agency: data.company_name || '',
+        location: data.address || 'Non spécifié',
+        rating: data.rating || 0,
+        reviewCount: data.review_count || 0,
+        isVerified: data.is_verified || false,
+        license: data.license_number || 'Non spécifié',
+        description: data.bio || 'Aucune description disponible.',
+        specialties: [],
+        services: [],
+        recentSales: [],
+        areas: [],
+        certifications: [],
+        stats: { yearsExperience: 0 },
+        phone: data.phone || 'Non spécifié',
+        email: data.email || 'Non spécifié',
+        website: data.website || ''
+      });
+    } catch (err) {
+      console.error('Erreur lors du chargement du profil agent:', err);
+      setAgent(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -54,6 +101,18 @@ const AgentProfilePage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement du profil agent...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!agent) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <EmptyState
+          icon={Users}
+          title="Profil introuvable"
+          description="Ce profil agent n'existe pas ou n'est plus disponible."
+        />
       </div>
     );
   }
@@ -163,6 +222,9 @@ const AgentProfilePage = () => {
               <TabsContent value="services" className="space-y-6">
                 <h2 className="text-xl font-semibold">Services Immobiliers</h2>
                 
+                {agent.services.length === 0 && (
+                  <p className="text-center text-gray-500 py-8">Aucun service disponible pour le moment.</p>
+                )}
                 <div className="grid gap-4">
                   {agent.services.map((service, index) => (
                     <Card key={index} className={`hover:shadow-lg transition-shadow ${service.popular ? 'ring-2 ring-blue-200' : ''}`}>
@@ -208,6 +270,9 @@ const AgentProfilePage = () => {
                     <CardTitle>Ventes Récentes</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {agent.recentSales.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">Aucune vente récente à afficher.</p>
+                    )}
                     {agent.recentSales.map((sale, index) => (
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-3">

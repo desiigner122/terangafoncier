@@ -1,5 +1,8 @@
-﻿// Système de gestion en temps réel des changements d'utilisateur - Version Mock
-// Mode test uniquement - Supabase désactivé
+﻿// Système de gestion en temps réel des changements d'utilisateur
+// checkUserSession interroge Supabase (table profiles) ; les autres méthodes
+// restent un bus d'événements local (pas de fausses données retournées).
+
+import { supabase } from './supabaseClient';
 
 class UserStatusManager {
   constructor() {
@@ -66,16 +69,27 @@ class UserStatusManager {
     });
   }
 
-  // Vérifier la session utilisateur (Mock)
+  // Vérifier la session utilisateur (données réelles depuis profiles)
   async checkUserSession(userId) {
-    console.log('UserStatusManager: Mock checkUserSession for:', userId);
-    return {
-      id: userId,
-      verification_status: 'verified',
-      role: 'particulier',
-      email: 'test@example.com',
-      full_name: 'Test User'
-    };
+    if (!userId) return null;
+
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .maybeSingle();
+
+      if (error) {
+        console.error('UserStatusManager: erreur checkUserSession:', error);
+        return null;
+      }
+
+      return data || null;
+    } catch (error) {
+      console.error('UserStatusManager: exception checkUserSession:', error);
+      return null;
+    }
   }
 
   // Mock invalidation de session

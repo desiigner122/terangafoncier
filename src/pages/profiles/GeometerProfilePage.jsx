@@ -34,6 +34,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
 
 const GeometerProfilePage = () => {
   const { geometerId } = useParams();
@@ -45,9 +47,54 @@ const GeometerProfilePage = () => {
   }, [geometerId]);
 
   const loadGeometerProfile = async () => {
-    const mockGeometer = {}; // démo retirée
-    setGeometer(mockGeometer);
-    setLoading(false);
+    if (!geometerId) {
+      setGeometer(null);
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', geometerId)
+        .single();
+
+      if (error || !data) {
+        console.error('Erreur lors du chargement du profil géomètre:', error);
+        setGeometer(null);
+        return;
+      }
+
+      setGeometer({
+        id: data.id,
+        name: data.full_name || 'Géomètre',
+        avatar: data.avatar_url || '',
+        coverImage: data.cover_url || '',
+        title: 'Géomètre-Expert',
+        company: data.company_name || '',
+        location: data.address || 'Non spécifié',
+        rating: data.rating || 0,
+        reviewCount: data.review_count || 0,
+        isVerified: data.is_verified || false,
+        license: data.license_number || 'Non spécifié',
+        description: data.bio || 'Aucune description disponible.',
+        specialties: [],
+        services: [],
+        equipment: [],
+        recentProjects: [],
+        certifications: [],
+        stats: { yearsExperience: 0 },
+        phone: data.phone || 'Non spécifié',
+        email: data.email || 'Non spécifié',
+        website: data.website || ''
+      });
+    } catch (err) {
+      console.error('Erreur lors du chargement du profil géomètre:', err);
+      setGeometer(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (loading) {
@@ -57,6 +104,18 @@ const GeometerProfilePage = () => {
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-green-600 mx-auto mb-4"></div>
           <p className="text-gray-600">Chargement du profil géomètre...</p>
         </div>
+      </div>
+    );
+  }
+
+  if (!geometer) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <EmptyState
+          icon={Compass}
+          title="Profil introuvable"
+          description="Ce profil géomètre n'existe pas ou n'est plus disponible."
+        />
       </div>
     );
   }
@@ -166,6 +225,9 @@ const GeometerProfilePage = () => {
               <TabsContent value="services" className="space-y-6">
                 <h2 className="text-xl font-semibold">Services de Géométrie</h2>
                 
+                {geometer.services.length === 0 && (
+                  <p className="text-center text-gray-500 py-8">Aucun service disponible pour le moment.</p>
+                )}
                 <div className="grid gap-4">
                   {geometer.services.map((service, index) => (
                     <Card key={index} className={`hover:shadow-lg transition-shadow ${service.popular ? 'ring-2 ring-green-200' : ''}`}>
@@ -211,6 +273,9 @@ const GeometerProfilePage = () => {
                     <CardTitle>Équipement Professionnel</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-6">
+                    {geometer.equipment.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">Aucun équipement renseigné.</p>
+                    )}
                     <div className="grid gap-4">
                       {geometer.equipment.map((item, index) => (
                         <div key={index} className="flex items-start gap-4 p-4 bg-gray-50 rounded-lg">
@@ -239,6 +304,9 @@ const GeometerProfilePage = () => {
                     <CardTitle>Projets Récents</CardTitle>
                   </CardHeader>
                   <CardContent className="space-y-4">
+                    {geometer.recentProjects.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">Aucun projet récent à afficher.</p>
+                    )}
                     {geometer.recentProjects.map((project, index) => (
                       <div key={index} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-3">

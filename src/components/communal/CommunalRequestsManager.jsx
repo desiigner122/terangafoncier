@@ -6,8 +6,10 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { EmptyState } from '@/components/ui/EmptyState';
 import { motion } from 'framer-motion';
-import { 
+import {
   Building2, 
   MapPin, 
   FileText, 
@@ -26,6 +28,8 @@ const CommunalRequestsManager = () => {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('dashboard');
   const [requests, setRequests] = useState([]);
+  const [subscribedCommunes, setSubscribedCommunes] = useState([]);
+  const [loading, setLoading] = useState(true);
   const [revenue, setRevenue] = useState({
     monthly: 0,
     pending: 0,
@@ -93,52 +97,62 @@ const CommunalRequestsManager = () => {
 
   useEffect(() => {
     loadCommunalRequests();
-    calculateRevenue();
   }, []);
 
   const loadCommunalRequests = async () => {
-    // Simulation données demandes communales
-    const mockRequests = [
-      {
-        id: 1,
-        type: 'terrain_municipal',
-        citizen: '',
-        commune: 'Dakar Plateau',
-        status: 'en_cours',
-        amount: 50000,
-        date: '2024-12-01',
-        location: 'Zone industrielle Hann'
-      },
-      {
-        id: 2,
-        type: 'permis_construire',
-        citizen: '',
-        commune: 'Thiès Nord',
-        status: 'approuve',
-        amount: 90000,
-        date: '2024-11-28',
-        location: 'Quartier Médina'
-      },
-      {
-        id: 3,
-        type: 'terrain_agricole',
-        citizen: '',
-        commune: 'Mbour',
-        status: 'en_attente',
-        amount: 50000,
-        date: '2024-12-02',
-        location: 'Périphérie rurale'
-      }
-    ];
-    
-    setRequests(mockRequests);
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from('communal_requests')
+        .select('*')
+        .order('created_at', { ascending: false })
+        .limit(20);
+
+      if (error) throw error;
+
+      const mappedRequests = (data || []).map((req) => ({
+        id: req.id,
+        type: req.type,
+        citizen: req.applicant_name || '',
+        commune: req.commune,
+        status: req.status,
+        amount: requestTypes[req.type]?.price || 0,
+        date: req.created_at,
+        location: req.zone
+      }));
+
+      setRequests(mappedRequests);
+      calculateRevenue(mappedRequests);
+    } catch (error) {
+      console.error('Erreur chargement demandes communales:', error);
+      setRequests([]);
+      calculateRevenue([]);
+    } finally {
+      setLoading(false);
+    }
   };
 
-  const calculateRevenue = () => {
-    // Calcul revenus secteur communal
-    const monthlyRevenue = 20000000; // 20M FCFA/mois
-    const pendingRevenue = 5000000; // 5M FCFA en attente
-    const totalRevenue = 150000000; // 150M FCFA total
+  const calculateRevenue = (requestsList) => {
+    // Calcul revenus secteur communal a partir des demandes reelles
+    const now = new Date();
+    const currentMonth = now.getMonth();
+    const currentYear = now.getFullYear();
+
+    const monthlyRevenue = requestsList
+      .filter((r) => {
+        if (r.status !== 'approuve' || !r.date) return false;
+        const d = new Date(r.date);
+        return d.getMonth() === currentMonth && d.getFullYear() === currentYear;
+      })
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
+
+    const pendingRevenue = requestsList
+      .filter((r) => r.status === 'en_attente' || r.status === 'en_cours')
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
+
+    const totalRevenue = requestsList
+      .filter((r) => r.status === 'approuve')
+      .reduce((sum, r) => sum + (r.amount || 0), 0);
 
     setRevenue({
       monthly: monthlyRevenue,
@@ -365,37 +379,38 @@ const CommunalRequestsManager = () => {
       {/* Communes abonnées */}
       <Card>
         <CardHeader>
-          <CardTitle>Communes Abonnées (50/557)</CardTitle>
+          <CardTitle>Communes Abonnées</CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-            {[
-              { name: 'Dakar Plateau', plan: 'premium', requests: 45 },
-              { name: 'Thiès Nord', plan: 'basic', requests: 32 },
-              { name: 'Mbour', plan: 'enterprise', requests: 67 },
-              { name: 'Saint-Louis', plan: 'premium', requests: 28 },
-              { name: 'Kaolack', plan: 'basic', requests: 19 },
-              { name: 'Ziguinchor', plan: 'premium', requests: 41 }
-            ].map((commune, index) => (
-              <div key={index} className="border rounded-lg p-4">
-                <div className="flex items-center justify-between mb-2">
-                  <h4 className="font-semibold">{commune.name}</h4>
-                  <Badge variant="outline" className="capitalize">
-                    {commune.plan}
-                  </Badge>
+          {subscribedCommunes.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {subscribedCommunes.map((commune, index) => (
+                <div key={index} className="border rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-2">
+                    <h4 className="font-semibold">{commune.name}</h4>
+                    <Badge variant="outline" className="capitalize">
+                      {commune.plan}
+                    </Badge>
+                  </div>
+                  <p className="text-sm text-gray-600">
+                    {commune.requests} demandes ce mois
+                  </p>
+                  <div className="mt-2 bg-gray-200 rounded-full h-2">
+                    <div
+                      className="bg-blue-500 rounded-full h-2"
+                      style={{ width: `${(commune.requests / 50) * 100}%` }}
+                    />
+                  </div>
                 </div>
-                <p className="text-sm text-gray-600">
-                  {commune.requests} demandes ce mois
-                </p>
-                <div className="mt-2 bg-gray-200 rounded-full h-2">
-                  <div 
-                    className="bg-blue-500 rounded-full h-2" 
-                    style={{ width: `${(commune.requests / 50) * 100}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          ) : (
+            <EmptyState
+              icon={Users}
+              title="Aucune commune abonnée"
+              description="Les communes ayant souscrit à un plan d'abonnement apparaîtront ici."
+            />
+          )}
         </CardContent>
       </Card>
     </div>
@@ -435,8 +450,16 @@ const CommunalRequestsManager = () => {
         </div>
 
         {/* Contenu selon l'onglet */}
-        {activeTab === 'dashboard' && <DashboardTab />}
-        {activeTab === 'subscriptions' && <SubscriptionsTab />}
+        {loading ? (
+          <div className="flex items-center justify-center py-16">
+            <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+          </div>
+        ) : (
+          <>
+            {activeTab === 'dashboard' && <DashboardTab />}
+            {activeTab === 'subscriptions' && <SubscriptionsTab />}
+          </>
+        )}
 
         {/* Alert business model */}
         <Alert className="mt-8 border-blue-200 bg-blue-50">

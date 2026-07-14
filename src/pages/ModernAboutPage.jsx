@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   Users, 
@@ -25,6 +25,7 @@ import { Link } from 'react-router-dom';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabaseClient';
 
 const ModernAboutPage = () => {
   const containerVariants = {
@@ -60,12 +61,40 @@ const ModernAboutPage = () => {
     bio: "Visionnaire passionné de technologie et d'innovation, Abdoulaye Diémé a fondé Teranga Foncier pour démocratiser l'accès au foncier au Sénégal. Fort de plus de 10 ans d'expérience dans le secteur immobilier et technologique, il dirige aujourd'hui la transformation digitale du secteur foncier sénégalais."
   };
 
-  const stats = [
-    { number: "2,500+", label: "Terrains Vérifiés", icon: Landmark },
-    { number: "1,200+", label: "Clients Satisfaits", icon: Users },
-    { number: "45+", label: "Mairies Partenaires", icon: Building },
+  const [stats, setStats] = useState([
+    { number: "0", label: "Terrains Vérifiés", icon: Landmark },
+    { number: "0", label: "Clients Satisfaits", icon: Users },
+    { number: "0", label: "Mairies Partenaires", icon: Building },
     { number: "24/7", label: "Support Client", icon: Heart }
-  ];
+  ]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadStats = async () => {
+      try {
+        const [{ count: propertiesCount }, { count: usersCount }, { count: banksCount }] = await Promise.all([
+          supabase.from('properties').select('id', { count: 'exact', head: true }),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('banking_partners').select('id', { count: 'exact', head: true })
+        ]);
+
+        if (active) {
+          setStats([
+            { number: `${propertiesCount ?? 0}+`, label: "Terrains Vérifiés", icon: Landmark },
+            { number: `${usersCount ?? 0}+`, label: "Clients Satisfaits", icon: Users },
+            { number: `${banksCount ?? 0}+`, label: "Mairies Partenaires", icon: Building },
+            { number: "24/7", label: "Support Client", icon: Heart }
+          ]);
+        }
+      } catch (error) {
+        console.warn('Chargement des statistiques échoué:', error?.message);
+      }
+    };
+
+    loadStats();
+    return () => { active = false; };
+  }, []);
 
   const values = [
     { 

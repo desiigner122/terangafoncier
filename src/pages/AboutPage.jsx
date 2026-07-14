@@ -1,11 +1,12 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Helmet } from 'react-helmet-async';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Link } from 'react-router-dom';
-import { 
+import { supabase } from '@/lib/supabaseClient';
+import {
   User,
   Code,
   Briefcase,
@@ -26,6 +27,47 @@ import {
 } from 'lucide-react';
 
 const AboutPage = () => {
+  const [stats, setStats] = useState([
+    { number: "2024", label: "Année de fondation" },
+    { number: "0", label: "Utilisateurs actifs" },
+    { number: "0", label: "Terrains vérifiés" },
+    { number: "—", label: "Taux de satisfaction" }
+  ]);
+
+  useEffect(() => {
+    let active = true;
+
+    const loadStats = async () => {
+      try {
+        const [{ count: usersCount }, { count: propertiesCount }, { data: reviews }] = await Promise.all([
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('properties').select('id', { count: 'exact', head: true }),
+          supabase.from('reviews').select('rating')
+        ]);
+
+        if (!active) return;
+
+        let satisfaction = "—";
+        if (Array.isArray(reviews) && reviews.length > 0) {
+          const avg = reviews.reduce((sum, r) => sum + (r.rating || 0), 0) / reviews.length;
+          satisfaction = `${Math.round((avg / 5) * 100)}%`;
+        }
+
+        setStats([
+          { number: "2024", label: "Année de fondation" },
+          { number: `${usersCount ?? 0}+`, label: "Utilisateurs actifs" },
+          { number: `${propertiesCount ?? 0}+`, label: "Terrains vérifiés" },
+          { number: satisfaction, label: "Taux de satisfaction" }
+        ]);
+      } catch (error) {
+        console.warn('Chargement des statistiques échoué:', error?.message);
+      }
+    };
+
+    loadStats();
+    return () => { active = false; };
+  }, []);
+
   const achievements = [
     {
       icon: Code,
@@ -93,13 +135,6 @@ const AboutPage = () => {
       title: "Innovation technologique",
       description: "Intégration IA et blockchain pour plus de sécurité"
     }
-  ];
-
-  const stats = [
-    { number: "2024", label: "Année de fondation" },
-    { number: "1000+", label: "Utilisateurs actifs" },
-    { number: "500+", label: "Terrains vérifiés" },
-    { number: "98%", label: "Taux de satisfaction" }
   ];
 
   return (

@@ -4,21 +4,52 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
-import { 
-  ChevronLeft, 
-  ChevronRight, 
-  MapPin, 
-  Users, 
-  Award, 
+import {
+  ChevronLeft,
+  ChevronRight,
+  MapPin,
+  Users,
+  Award,
   Shield,
   TrendingUp,
   Star,
   Camera,
   Play
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 const HeroSlider = () => {
   const [currentSlide, setCurrentSlide] = useState(0);
+  const [heroStats, setHeroStats] = useState({ verifiedProperties: 0, satisfiedClients: 0 });
+
+  useEffect(() => {
+    const loadHeroStats = async () => {
+      try {
+        const { count: verifiedCount, error: verifiedError } = await supabase
+          .from('properties')
+          .select('id', { count: 'exact', head: true })
+          .eq('verification_status', 'verified');
+
+        if (verifiedError) throw verifiedError;
+
+        const { count: clientsCount, error: clientsError } = await supabase
+          .from('profiles')
+          .select('id', { count: 'exact', head: true });
+
+        if (clientsError) throw clientsError;
+
+        setHeroStats({
+          verifiedProperties: verifiedCount || 0,
+          satisfiedClients: clientsCount || 0
+        });
+      } catch (error) {
+        console.error('Erreur chargement statistiques hero:', error);
+        setHeroStats({ verifiedProperties: 0, satisfiedClients: 0 });
+      }
+    };
+
+    loadHeroStats();
+  }, []);
 
   const slides = [
     {
@@ -182,11 +213,11 @@ const HeroSlider = () => {
         <div className="bg-white/10 backdrop-blur-sm rounded-lg p-4 text-white">
           <div className="grid grid-cols-2 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold">2,500+</div>
+              <div className="text-2xl font-bold">{heroStats.verifiedProperties}</div>
               <div className="text-xs text-gray-300">Terrains Vérifiés</div>
             </div>
             <div>
-              <div className="text-2xl font-bold">1,200+</div>
+              <div className="text-2xl font-bold">{heroStats.satisfiedClients}</div>
               <div className="text-xs text-gray-300">Clients Satisfaits</div>
             </div>
           </div>

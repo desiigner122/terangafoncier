@@ -44,15 +44,11 @@ const CalendarPage = () => {
     negociation: { color: 'bg-red-500', label: 'Négociation' }
   };
 
-  // Données simulées pour les rendez-vous
-  const mockAppointments = []; // démo retirée
-
   useEffect(() => {
-    // Simuler le chargement des rendez-vous
-    setTimeout(() => {
-      setAppointments(mockAppointments);
-      setIsLoading(false);
-    }, 1000);
+    // Aucune table de rendez-vous n'existe encore côté Supabase pour ce module :
+    // on affiche un état vide propre en attendant la mise en place de la fonctionnalité.
+    setAppointments([]);
+    setIsLoading(false);
   }, []);
 
   // Obtenir les jours du mois

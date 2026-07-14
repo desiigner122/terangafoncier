@@ -51,20 +51,33 @@ const MairieCRM = ({ dashboardStats }) => {
       try {
         const { data, error } = await supabase.from('crm_contacts').select('*').order('created_at', { ascending: false });
         if (error) throw error;
-        if (active) setContacts(data || []);
+        if (active) setContacts((data || []).map((c) => ({
+          id: c.id,
+          name: c.name || c.full_name || 'Contact',
+          email: c.email || '',
+          phone: c.phone || '—',
+          address: c.address || '—',
+          type: c.type || c.category || 'citoyen',
+          priority: c.priority || 'medium',
+          status: c.status || 'active',
+          score: c.score ?? 0,
+          value: c.value ?? 0,
+          projects: c.projects || [],
+          lastContact: c.last_contact_at || c.updated_at || c.created_at
+        })));
       } catch (err) { if (active) setContacts([]); }
     })();
     return () => { active = false; };
   }, []);
 
-  const [crmStats, setCrmStats] = useState({
+  const crmStats = {
     totalContacts: contacts.length,
-    activeProjects: 12,
-    monthlyInteractions: 89,
-    conversionRate: 78,
-    citizenSatisfaction: 85,
-    pendingRequests: 15
-  });
+    activeProjects: contacts.reduce((sum, c) => sum + (c.projects?.length || 0), 0),
+    monthlyInteractions: 0,
+    conversionRate: 0,
+    citizenSatisfaction: 0,
+    pendingRequests: 0
+  };
 
   // Filtrage des contacts
   const filteredContacts = contacts.filter(contact => {

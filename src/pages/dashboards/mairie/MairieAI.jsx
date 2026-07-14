@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Brain,
@@ -43,84 +44,40 @@ const MairieAI = ({ dashboardStats }) => {
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
 
-  // Suggestions IA prédéfinies
-  const aiSuggestions = [
-    {
-      id: 'sugg-1',
-      category: 'Optimisation',
-      title: 'Réduction délais traitement',
-      description: 'Optimiser le processus d\'attribution communale pour réduire les délais de 25%',
-      impact: 'Haute',
-      confidence: 92,
-      timeline: '2-3 mois',
-      resources: ['Formation équipe', 'Digitalisation processus'],
-      status: 'Recommandé'
-    },
-    {
-      id: 'sugg-2',
-      category: 'Prédiction',
-      title: 'Zones à forte demande',
-      description: 'La Zone Résidentielle Nord connaîtra une hausse de 35% des demandes au Q2',
-      impact: 'Moyenne',
-      confidence: 87,
-      timeline: '3-6 mois',
-      resources: ['Étude faisabilité', 'Plan d\'extension'],
-      status: 'En analyse'
-    },
-    {
-      id: 'sugg-3',
-      category: 'Alerte',
-      title: 'Saturation Zone Commerciale',
-      description: 'La Zone Commerciale Centre atteindra sa capacité maximale d\'ici 8 mois',
-      impact: 'Haute',
-      confidence: 94,
-      timeline: '6-8 mois',
-      resources: ['Plan urbanisme', 'Extension zone'],
-      status: 'Critique'
-    },
-    {
-      id: 'sugg-4',
-      category: 'Efficacité',
-      title: 'Automatisation validation',
-      description: 'Automatiser 60% des validations de conformité avec l\'IA',
-      impact: 'Moyenne',
-      confidence: 89,
-      timeline: '4-6 mois',
-      resources: ['Système IA', 'Base données'],
-      status: 'Planifié'
-    }
-  ];
+  // Suggestions IA (RÉELLES depuis Supabase — aucune donnée fictive)
+  const [aiSuggestions, setAiSuggestions] = useState([]);
 
-  // Analyses IA récentes
-  const aiAnalyses = [
-    {
-      id: 'analysis-1',
-      type: 'Analyse Prédictive',
-      title: 'Prévision demandes Février 2024',
-      result: '78 demandes attendues (+8% vs Janvier)',
-      accuracy: '91%',
-      date: '2024-01-22',
-      details: 'Basé sur historique 24 mois + événements locaux + saisonnalité'
-    },
-    {
-      id: 'analysis-2',
-      type: 'Détection Anomalies',
-      title: 'Pics inhabituels Zone Agricole',
-      result: 'Augmentation 150% demandes agricoles détectée',
-      accuracy: '96%',
-      date: '2024-01-21',
-      details: 'Corrélation avec nouveau programme gouvernemental agricole'
-    },
-    {
-      id: 'analysis-3',
-      type: 'Optimisation Ressources',
-      title: 'Allocation personnel février',
-      result: 'Redistribution recommandée : +2 agents zone commerciale',
-      accuracy: '88%',
-      date: '2024-01-20',
-      details: 'Analyse charge travail + prévisions demandes + capacité équipe'
-    }
-  ];
+  // Analyses IA récentes (RÉELLES depuis Supabase — aucune donnée fictive)
+  const [aiAnalyses, setAiAnalyses] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('ai_analyses')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (error) throw error;
+        if (active) {
+          setAiAnalyses((data || []).map((a) => ({
+            id: a.id,
+            type: a.analysis_type || a.type || 'Analyse',
+            title: a.title || a.analysis_type || 'Analyse IA',
+            result: a.result || a.summary || '—',
+            accuracy: a.accuracy != null ? `${a.accuracy}%` : '—',
+            date: a.created_at,
+            details: a.details || a.description || ''
+          })));
+        }
+      } catch (err) {
+        console.warn('aiAnalyses indisponible:', err?.message);
+        if (active) setAiAnalyses([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Conversation avec l'assistant IA
   const conversationExample = []; // données graphiques réelles requises
@@ -207,7 +164,7 @@ const MairieAI = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Suggestions Actives</p>
-                <p className="text-2xl font-bold text-blue-600">12</p>
+                <p className="text-2xl font-bold text-blue-600">{aiSuggestions.length}</p>
               </div>
               <Lightbulb className="h-8 w-8 text-blue-600" />
             </div>
@@ -219,7 +176,7 @@ const MairieAI = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Précision Moyenne</p>
-                <p className="text-2xl font-bold text-green-600">92.3%</p>
+                <p className="text-2xl font-bold text-green-600">—</p>
               </div>
               <Target className="h-8 w-8 text-green-600" />
             </div>
@@ -231,7 +188,7 @@ const MairieAI = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Temps Économisé</p>
-                <p className="text-2xl font-bold text-purple-600">124h</p>
+                <p className="text-2xl font-bold text-purple-600">—</p>
               </div>
               <Clock className="h-8 w-8 text-purple-600" />
             </div>
@@ -243,7 +200,7 @@ const MairieAI = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Optimisations</p>
-                <p className="text-2xl font-bold text-orange-600">8</p>
+                <p className="text-2xl font-bold text-orange-600">{aiAnalyses.length}</p>
               </div>
               <Zap className="h-8 w-8 text-orange-600" />
             </div>
@@ -387,6 +344,9 @@ const MairieAI = ({ dashboardStats }) => {
 
         {/* Suggestions IA */}
         <TabsContent value="suggestions" className="space-y-6">
+          {aiSuggestions.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-8">Aucune suggestion IA disponible</p>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {aiSuggestions.map((suggestion) => (
               <Card key={suggestion.id} className="hover:shadow-md transition-shadow">
@@ -463,6 +423,9 @@ const MairieAI = ({ dashboardStats }) => {
         {/* Analyses Prédictives */}
         <TabsContent value="analyses" className="space-y-6">
           <div className="space-y-4">
+            {aiAnalyses.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8">Aucune analyse disponible</p>
+            )}
             {aiAnalyses.map((analysis) => (
               <Card key={analysis.id}>
                 <CardContent className="p-6">
@@ -514,15 +477,15 @@ const MairieAI = ({ dashboardStats }) => {
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">2,847</div>
+                  <div className="text-2xl font-bold text-blue-600">{aiAnalyses.length}</div>
                   <div className="text-sm text-gray-600">Décisions analysées</div>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">96.2%</div>
+                  <div className="text-2xl font-bold text-green-600">—</div>
                   <div className="text-sm text-gray-600">Précision actuelle</div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">45</div>
+                  <div className="text-2xl font-bold text-purple-600">0</div>
                   <div className="text-sm text-gray-600">Modèles entraînés</div>
                 </div>
               </div>

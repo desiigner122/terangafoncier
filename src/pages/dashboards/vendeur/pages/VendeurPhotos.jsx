@@ -266,11 +266,11 @@ const VendeurPhotos = () => {
                   <p className="text-sm text-gray-700">{photo.aiAnalysis}</p>
                 </div>
                 
-                {photo.suggestions.length > 0 && (
+                {(photo.suggestions || []).length > 0 && (
                   <div className="flex items-start gap-2">
                     <AlertCircle className="h-4 w-4 text-blue-600 mt-0.5 flex-shrink-0" />
                     <div className="flex flex-wrap gap-1">
-                      {photo.suggestions.map((suggestion, idx) => (
+                      {(photo.suggestions || []).map((suggestion, idx) => (
                         <Badge key={idx} variant="outline" className="text-xs">
                           {suggestion}
                         </Badge>
@@ -301,19 +301,23 @@ const VendeurPhotos = () => {
         <CardContent className="pt-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-blue-600">24</div>
+              <div className="text-2xl font-bold text-blue-600">{photos.length}</div>
               <div className="text-sm text-gray-600">Photos Total</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-green-600">89%</div>
+              <div className="text-2xl font-bold text-green-600">
+                {photos.length > 0
+                  ? `${Math.round(photos.reduce((sum, p) => sum + (p.aiScore || 0), 0) / photos.length)}%`
+                  : '0%'}
+              </div>
               <div className="text-sm text-gray-600">Score IA Moyen</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-purple-600">18</div>
+              <div className="text-2xl font-bold text-purple-600">{photos.filter(p => (p.aiScore || 0) >= 75).length}</div>
               <div className="text-sm text-gray-600">Optimisées IA</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-orange-600">6</div>
+              <div className="text-2xl font-bold text-orange-600">{photos.filter(p => (p.aiScore || 0) < 75).length}</div>
               <div className="text-sm text-gray-600">À Améliorer</div>
             </div>
           </div>

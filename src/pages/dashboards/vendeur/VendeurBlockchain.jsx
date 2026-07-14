@@ -38,89 +38,27 @@ import {
   Settings,
   Info
 } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 
 const VendeurBlockchain = () => {
   const [activeTab, setActiveTab] = useState('portfolio');
   const [walletConnected, setWalletConnected] = useState(false);
   const [isTokenizing, setIsTokenizing] = useState(false);
 
-  // Données simulées
   const [blockchainData, setBlockchainData] = useState({
-    walletAddress: '0x742d35cc...a9b1c4e8',
+    walletAddress: '',
     balance: {
-      eth: 2.45,
-      tera: 150000,
-      usd: 3850
+      eth: 0,
+      tera: 0,
+      usd: 0
     },
-    nftCollection: [
-      {
-        id: 1,
-        tokenId: 'TERA001',
-        property: 'Villa Moderne Almadies',
-        tokenizedValue: 125000000, // FCFA
-        mintDate: '2024-01-15',
-        status: 'active',
-        royalties: 2.5,
-        transactions: 12,
-        currentOwner: '0x742d35cc...a9b1c4e8',
-        metadata: {
-          image: '/api/placeholder/300/300',
-          attributes: {
-            location: 'Almadies',
-            type: 'Villa',
-            surface: '450m²',
-            rooms: 5
-          }
-        }
-      },
-      {
-        id: 2,
-        tokenId: 'TERA002',
-        property: 'Terrain Sacré-Cœur',
-        tokenizedValue: 85000000,
-        mintDate: '2024-01-10',
-        status: 'pending',
-        royalties: 3.0,
-        transactions: 0,
-        currentOwner: 'pending',
-        metadata: {
-          image: '/api/placeholder/300/300',
-          attributes: {
-            location: 'Sacré-Cœur',
-            type: 'Terrain',
-            surface: '600m²',
-            zoning: 'Résidentiel'
-          }
-        }
-      }
-    ],
-    transactions: [
-      {
-        id: 1,
-        type: 'mint',
-        tokenId: 'TERA001',
-        amount: 125000000,
-        hash: '0xa1b2c3d4...e5f6g7h8',
-        date: '2024-01-15T10:30:00Z',
-        status: 'confirmed',
-        gasUsed: 0.0023
-      },
-      {
-        id: 2,
-        type: 'transfer',
-        tokenId: 'TERA001',
-        amount: 0,
-        hash: '0xf8e7d6c5...h4g3f2e1',
-        date: '2024-01-20T14:22:00Z',
-        status: 'confirmed',
-        gasUsed: 0.0012
-      }
-    ],
+    nftCollection: [],
+    transactions: [],
     analytics: {
-      totalValue: 210000000,
-      monthlyVolume: 45000000,
-      activeContracts: 2,
-      pendingTokenization: 1
+      totalValue: 0,
+      monthlyVolume: 0,
+      activeContracts: 0,
+      pendingTokenization: 0
     }
   });
 
@@ -305,6 +243,13 @@ const VendeurBlockchain = () => {
 
         {/* Portfolio NFT */}
         <TabsContent value="portfolio" className="space-y-6">
+          {blockchainData.nftCollection.length === 0 && (
+            <EmptyState
+              icon={Award}
+              title="Aucun NFT dans votre portfolio"
+              description="Tokenisez une propriété pour créer votre premier NFT immobilier."
+            />
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {blockchainData.nftCollection.map((nft, index) => (
               <motion.div
@@ -410,9 +355,6 @@ const VendeurBlockchain = () => {
                     </label>
                     <select className="w-full p-3 border border-gray-300 rounded-lg">
                       <option>Sélectionner une propriété</option>
-                      <option>Appartement Plateau</option>
-                      <option>Terrain Medina</option>
-                      <option>Villa Ouakam</option>
                     </select>
                   </div>
 
@@ -444,20 +386,20 @@ const VendeurBlockchain = () => {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span>Frais de minting</span>
-                        <span>0.05 ETH</span>
+                        <span>—</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Frais de gas</span>
-                        <span>~0.02 ETH</span>
+                        <span>—</span>
                       </div>
                       <div className="flex justify-between">
                         <span>Commission TerangaFoncier</span>
-                        <span>1%</span>
+                        <span>—</span>
                       </div>
                       <hr />
                       <div className="flex justify-between font-bold">
                         <span>Total estimé</span>
-                        <span>0.07 ETH</span>
+                        <span>—</span>
                       </div>
                     </div>
                   </div>
@@ -517,6 +459,13 @@ const VendeurBlockchain = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {blockchainData.transactions.length === 0 && (
+                <EmptyState
+                  icon={Link2}
+                  title="Aucune transaction"
+                  description="Vos transactions blockchain apparaîtront ici."
+                />
+              )}
               <div className="space-y-4">
                 {blockchainData.transactions.map((tx, index) => (
                   <motion.div
@@ -584,7 +533,7 @@ const VendeurBlockchain = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">ROI Total</span>
-                    <span className="font-bold text-green-600">+24.5%</span>
+                    <span className="font-bold text-green-600">—</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Valeur totale</span>
@@ -606,15 +555,15 @@ const VendeurBlockchain = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Bloc actuel</span>
-                    <span className="font-bold">2,847,391</span>
+                    <span className="font-bold">—</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Temps de bloc</span>
-                    <span className="font-bold">~15s</span>
+                    <span className="font-bold">—</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Prix TERA</span>
-                    <span className="font-bold">$0.025</span>
+                    <span className="font-bold">—</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-gray-600">Statut réseau</span>

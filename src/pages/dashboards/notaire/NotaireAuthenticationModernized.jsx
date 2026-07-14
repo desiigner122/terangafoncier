@@ -89,7 +89,7 @@ const NotaireAuthenticationModernized = () => {
     setIsLoading(true);
     try {
       const [docsResult, authResult, statsResult] = await Promise.all([
-        NotaireSupabaseService.getNotarialDocuments(user.id),
+        NotaireSupabaseService.getDocuments(user.id),
         NotaireSupabaseService.getDocumentAuthentications(user.id),
         NotaireSupabaseService.getAuthenticationStats(user.id)
       ]);
@@ -171,6 +171,76 @@ const NotaireAuthenticationModernized = () => {
     const matchesFilter = statusFilter === 'all' || auth.verification_status === statusFilter;
     return matchesSearch && matchesFilter;
   });
+
+  // Statistiques dérivées des données réelles
+  const verifiedCount = authentications.filter(a => a.verification_status === 'verified').length;
+  const pendingCount = authentications.filter(a => a.verification_status === 'pending').length;
+  const failedCount = authentications.filter(a => a.verification_status === 'failed').length;
+  const totalAuthCost = authentications.reduce((sum, a) => sum + (a.total_cost || 0), 0);
+  const avgAuthCost = authentications.length > 0 ? Math.round(totalAuthCost / authentications.length) : 0;
+  const successRate = authentications.length > 0 ? Math.round((verifiedCount / authentications.length) * 100) : 0;
+  const pendingRate = authentications.length > 0 ? Math.round((pendingCount / authentications.length) * 100) : 0;
+  const failedRate = authentications.length > 0 ? Math.round((failedCount / authentications.length) * 100) : 0;
+
+  const now = new Date();
+  const costThisMonth = authentications
+    .filter(a => {
+      if (!a.authenticated_at) return false;
+      const d = new Date(a.authenticated_at);
+      return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+    })
+    .reduce((sum, a) => sum + (a.total_cost || 0), 0);
+
+  const networkCounts = authentications.reduce((acc, a) => {
+    const network = a.blockchain_network || 'polygon';
+    acc[network] = (acc[network] || 0) + 1;
+    return acc;
+  }, {});
+  const mostUsedNetwork = Object.keys(networkCounts).length > 0
+    ? Object.entries(networkCounts).sort((a, b) => b[1] - a[1])[0][0]
+    : null;
+
+  const typePalette = ['bg-blue-500', 'bg-green-500', 'bg-purple-500', 'bg-amber-500', 'bg-gray-500'];
+  const typeCounts = authentications.reduce((acc, a) => {
+    const type = a.notarial_documents?.document_type || 'Autre';
+    acc[type] = (acc[type] || 0) + 1;
+    return acc;
+  }, {});
+  const typeDistribution = Object.entries(typeCounts)
+    .sort((a, b) => b[1] - a[1])
+    .map(([type, count], index) => ({
+      type,
+      count,
+      percentage: authentications.length > 0 ? Math.round((count / authentications.length) * 100) : 0,
+      color: typePalette[index % typePalette.length]
+    }));
+
+  const monthlyAuthData = (() => {
+    const months = [];
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+      const count = authentications.filter(a => {
+        if (!a.authenticated_at) return false;
+        const ad = new Date(a.authenticated_at);
+        return ad.getFullYear() === d.getFullYear() && ad.getMonth() === d.getMonth();
+      }).length;
+      months.push({ month: d.toLocaleDateString('fr-FR', { month: 'short' }), count });
+    }
+    const maxCount = Math.max(...months.map(m => m.count), 1);
+    return months.map((m, i) => {
+      const prev = i > 0 ? months[i - 1].count : null;
+      let growth = '—';
+      if (prev !== null) {
+        if (prev > 0) {
+          const pct = Math.round(((m.count - prev) / prev) * 100);
+          growth = `${pct >= 0 ? '+' : ''}${pct}%`;
+        } else {
+          growth = m.count > 0 ? '+100%' : '0%';
+        }
+      }
+      return { ...m, percentage: (m.count / maxCount) * 100, growth };
+    });
+  })();
 
   if (isLoading) {
     return (
@@ -370,15 +440,17 @@ const NotaireAuthenticationModernized = () => {
                 <div className="p-4 bg-gradient-to-r from-purple-50 to-blue-50 rounded-lg">
                   <div className="flex items-center justify-between mb-2">
                     <span className="text-sm font-medium">Coût estimé</span>
-                    <span className="text-lg font-bold text-purple-600">0.25 MATIC</span>
+                    <span className="text-lg font-bold text-purple-600">
+                      {authentications.length > 0 ? formatCurrency(avgAuthCost) : 'N/A'}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between mb-2">
-                    <span className="text-sm text-gray-600">≈ Équivalent FCFA</span>
-                    <span className="font-semibold">150 FCFA</span>
+                    <span className="text-sm text-gray-600">Coût total historique</span>
+                    <span className="font-semibold">{formatCurrency(totalAuthCost)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Temps d'exécution</span>
-                    <span className="text-sm font-medium">~30 secondes</span>
+                    <span className="text-sm text-gray-600">Authentifications réalisées</span>
+                    <span className="text-sm font-medium">{authentications.length}</span>
                   </div>
                 </div>
 
@@ -642,12 +714,12 @@ const NotaireAuthenticationModernized = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {[].map((data, index) => (
+                  {monthlyAuthData.map((data, index) => (
                     <div key={index} className="flex items-center justify-between">
                       <div className="flex items-center space-x-3">
                         <div className="w-12 text-sm font-medium">{data.month}</div>
                         <div className="flex-1">
-                          <Progress value={(data.count / 30) * 100} className="h-2" />
+                          <Progress value={data.percentage} className="h-2" />
                         </div>
                       </div>
                       <div className="flex items-center space-x-2">
@@ -675,12 +747,12 @@ const NotaireAuthenticationModernized = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {[
-                    { type: 'Actes de vente', count: 45, percentage: 45, color: 'bg-blue-500' },
-                    { type: 'Contrats', count: 28, percentage: 28, color: 'bg-green-500' },
-                    { type: 'Testaments', count: 15, percentage: 15, color: 'bg-purple-500' },
-                    { type: 'Autres', count: 12, percentage: 12, color: 'bg-gray-500' }
-                  ].map((item, index) => (
+                  {typeDistribution.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-4">
+                      Aucune authentification pour le moment.
+                    </p>
+                  )}
+                  {typeDistribution.map((item, index) => (
                     <div key={index} className="flex items-center space-x-3">
                       <div className={`w-4 h-4 rounded ${item.color}`}></div>
                       <div className="flex-1">

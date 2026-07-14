@@ -33,6 +33,7 @@ import {
   Rocket,
   Send
 } from 'lucide-react';
+import EmptyState from '@/components/ui/EmptyState';
 
 const VendeurAI = () => {
   const [activeTab, setActiveTab] = useState('assistant');
@@ -46,43 +47,15 @@ const VendeurAI = () => {
   ]);
 
   const [aiInsights, setAiInsights] = useState({
-    propertyScore: 87,
-    marketTrend: 'hausse',
-    competitiveness: 92,
-    recommendations: [
-      {
-        id: 1,
-        type: 'pricing',
-        title: 'Optimisation des prix',
-        description: 'Vos prix sont 8% sous le marché. Une augmentation de 12M FCFA pourrait générer 25% de revenus supplémentaires.',
-        impact: 'Élevé',
-        priority: 'Urgent',
-        action: 'Ajuster les prix'
-      },
-      {
-        id: 2,
-        type: 'photos',
-        title: 'Amélioration des photos',
-        description: 'Ajoutez 4 photos supplémentaires pour vos propriétés principales. Impact estimé : +35% de vues.',
-        impact: 'Moyen',
-        priority: 'Important',
-        action: 'Planifier shooting'
-      },
-      {
-        id: 3,
-        type: 'description',
-        title: 'Descriptions optimisées',
-        description: 'Vos descriptions pourraient être enrichies avec des mots-clés performants identifiés par l\'IA.',
-        impact: 'Moyen',
-        priority: 'Normal',
-        action: 'Réécrire descriptions'
-      }
-    ],
+    propertyScore: 0,
+    marketTrend: '',
+    competitiveness: 0,
+    recommendations: [],
     marketAnalysis: {
-      averagePrice: '145M FCFA',
-      avgTimeOnMarket: '45 jours',
-      competitorCount: 23,
-      demandLevel: 'Forte'
+      averagePrice: '—',
+      avgTimeOnMarket: '—',
+      competitorCount: 0,
+      demandLevel: '—'
     }
   });
 
@@ -178,10 +151,6 @@ const VendeurAI = () => {
               
               <div className="text-right">
                 <div className="text-4xl font-bold text-purple-600">{aiInsights.propertyScore}/100</div>
-                <div className="flex items-center mt-2">
-                  <TrendingUp className="w-4 h-4 text-green-600 mr-1" />
-                  <span className="text-green-600">+5 points ce mois</span>
-                </div>
               </div>
             </div>
             
@@ -335,17 +304,17 @@ const VendeurAI = () => {
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm font-medium">Qualité des annonces</span>
-                      <span className="text-sm font-bold">78%</span>
+                      <span className="text-sm font-bold">0%</span>
                     </div>
-                    <Progress value={78} className="h-2" />
+                    <Progress value={0} className="h-2" />
                   </div>
                   
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm font-medium">Engagement client</span>
-                      <span className="text-sm font-bold">85%</span>
+                      <span className="text-sm font-bold">0%</span>
                     </div>
-                    <Progress value={85} className="h-2" />
+                    <Progress value={0} className="h-2" />
                   </div>
                 </div>
               </CardContent>
@@ -361,6 +330,13 @@ const VendeurAI = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {aiInsights.recommendations.length === 0 && (
+                <EmptyState
+                  icon={Lightbulb}
+                  title="Aucune recommandation"
+                  description="Les recommandations IA apparaîtront ici dès que des données seront disponibles."
+                />
+              )}
               <div className="space-y-4">
                 {aiInsights.recommendations.map((rec, index) => (
                   <motion.div
@@ -407,7 +383,7 @@ const VendeurAI = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center py-6">
-                  <div className="text-3xl font-bold text-green-600 mb-2">+15M</div>
+                  <div className="text-3xl font-bold text-green-600 mb-2">—</div>
                   <p className="text-sm text-gray-600">Augmentation recommandée</p>
                   <Button className="mt-4" size="sm">
                     <Wand2 className="w-4 h-4 mr-1" />
@@ -426,7 +402,7 @@ const VendeurAI = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center py-6">
-                  <div className="text-3xl font-bold text-blue-600 mb-2">73%</div>
+                  <div className="text-3xl font-bold text-blue-600 mb-2">—</div>
                   <p className="text-sm text-gray-600">Score actuel</p>
                   <Button className="mt-4" size="sm" variant="outline">
                     <Rocket className="w-4 h-4 mr-1" />
@@ -445,7 +421,7 @@ const VendeurAI = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center py-6">
-                  <div className="text-3xl font-bold text-purple-600 mb-2">14h-16h</div>
+                  <div className="text-3xl font-bold text-purple-600 mb-2">—</div>
                   <p className="text-sm text-gray-600">Meilleur créneau</p>
                   <Button className="mt-4" size="sm" variant="outline">
                     <Calendar className="w-4 h-4 mr-1" />
@@ -471,22 +447,22 @@ const VendeurAI = () => {
                 <div className="text-center p-4 bg-green-50 rounded-lg">
                   <TrendingUp className="w-8 h-8 text-green-600 mx-auto mb-2" />
                   <h4 className="font-medium text-green-900">Évolution prix</h4>
-                  <p className="text-2xl font-bold text-green-600">+12%</p>
-                  <p className="text-sm text-green-700">Hausse prévue</p>
+                  <p className="text-2xl font-bold text-green-600">—</p>
+                  <p className="text-sm text-green-700">Prévision indisponible</p>
                 </div>
                 
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
                   <Users className="w-8 h-8 text-blue-600 mx-auto mb-2" />
                   <h4 className="font-medium text-blue-900">Demande</h4>
-                  <p className="text-2xl font-bold text-blue-600">Forte</p>
-                  <p className="text-sm text-blue-700">Tendance maintenue</p>
+                  <p className="text-2xl font-bold text-blue-600">—</p>
+                  <p className="text-sm text-blue-700">Prévision indisponible</p>
                 </div>
                 
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
                   <Clock className="w-8 h-8 text-purple-600 mx-auto mb-2" />
                   <h4 className="font-medium text-purple-900">Temps vente</h4>
-                  <p className="text-2xl font-bold text-purple-600">35j</p>
-                  <p className="text-sm text-purple-700">Réduction prévue</p>
+                  <p className="text-2xl font-bold text-purple-600">—</p>
+                  <p className="text-sm text-purple-700">Prévision indisponible</p>
                 </div>
               </div>
             </CardContent>

@@ -75,20 +75,58 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
   const [refreshing, setRefreshing] = useState(false);
   const [realTimeData, setRealTimeData] = useState({});
 
+  const [kpiStats, setKpiStats] = useState({
+    totalRequests: 0,
+    approved: 0,
+    pending: 0,
+    rejected: 0,
+    processing: 0,
+    portfolioTotal: 0,
+    newClients: 0,
+    avgAiScore: null
+  });
+
+  const formatAmount = (v) => {
+    const n = Number(v) || 0;
+    if (n >= 1e9) return `${(n / 1e9).toFixed(1)} Mrd FCFA`;
+    if (n >= 1e6) return `${(n / 1e6).toFixed(1)} M FCFA`;
+    return `${n.toLocaleString('fr-FR')} FCFA`;
+  };
+
   // Données RÉELLES depuis Supabase (aucune valeur aléatoire)
   useEffect(() => {
     let active = true;
     const loadRealTime = async () => {
       try {
-        const [{ count: processingCredits }, { count: pendingApprovals }] = await Promise.all([
-          supabase.from('demandes_financement').select('id', { count: 'exact', head: true }).eq('status', 'processing'),
-          supabase.from('demandes_financement').select('id', { count: 'exact', head: true }).eq('status', 'pending')
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+        const [demRes, clientsRes, propsRes] = await Promise.all([
+          supabase.from('demandes_financement').select('status, amount'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', monthStart.toISOString()),
+          supabase.from('properties').select('ai_score').not('ai_score', 'is', null)
         ]);
+        const dem = demRes.data || [];
+        const approved = dem.filter((d) => d.status === 'approved');
+        const pending = dem.filter((d) => d.status === 'pending');
+        const rejected = dem.filter((d) => d.status === 'rejected');
+        const processing = dem.filter((d) => d.status === 'processing');
+        const scores = (propsRes.data || []).map((p) => p.ai_score).filter((s) => s != null);
         if (active) {
+          setKpiStats({
+            totalRequests: dem.length,
+            approved: approved.length,
+            pending: pending.length,
+            rejected: rejected.length,
+            processing: processing.length,
+            portfolioTotal: approved.reduce((s, d) => s + (Number(d.amount) || 0), 0),
+            newClients: clientsRes.count || 0,
+            avgAiScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
+          });
           setRealTimeData({
             activeClients: null,
-            processingCredits: processingCredits || 0,
-            pendingApprovals: pendingApprovals || 0,
+            processingCredits: processing.length,
+            pendingApprovals: pending.length,
             systemLoad: null
           });
         }
@@ -101,26 +139,26 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
     return () => { active = false; };
   }, []);
 
-  // KPIs principaux enrichis
+  // KPIs principaux (calculés depuis Supabase)
   const mainKPIs = [
     {
       title: 'Crédits Terrain Actifs',
-      value: '—',
-      subtitle: '348 dossiers',
+      value: String(kpiStats.approved),
+      subtitle: `${kpiStats.totalRequests} dossiers`,
       change: null,
       changeType: 'positive',
       icon: Home,
       color: 'bg-blue-500',
       trend: [],
       details: {
-        approved: '285 approuvés',
-        pending: '43 en attente',
-        rejected: '20 rejetés'
+        approved: `${kpiStats.approved} approuvés`,
+        pending: `${kpiStats.pending} en attente`,
+        rejected: `${kpiStats.rejected} rejetés`
       }
     },
     {
       title: 'Portfolio Total',
-      value: '—',
+      value: formatAmount(kpiStats.portfolioTotal),
       subtitle: 'Encours global',
       change: null,
       changeType: 'positive',
@@ -128,14 +166,14 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
       color: 'bg-green-500',
       trend: [],
       details: {
-        performing: '42.1M (93%)',
-        watchlist: '2.8M (6%)',
-        npls: '0.3M (1%)'
+        encours: formatAmount(kpiStats.portfolioTotal),
+        dossiers: `${kpiStats.approved} crédits approuvés`,
+        traitement: `${kpiStats.processing} en traitement`
       }
     },
     {
       title: 'Nouveaux Clients',
-      value: '—',
+      value: String(kpiStats.newClients),
       subtitle: 'Ce mois',
       change: null,
       changeType: 'positive',
@@ -143,14 +181,14 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
       color: 'bg-purple-500',
       trend: [],
       details: {
-        individual: '98 particuliers',
-        corporate: '19 entreprises',
-        diaspora: '10 diaspora'
+        inscrits: `${kpiStats.newClients} ce mois`,
+        demandes: `${kpiStats.pending} demandes en attente`,
+        actifs: `${kpiStats.approved} dossiers actifs`
       }
     },
     {
       title: 'Score IA Moyen',
-      value: '—',
+      value: kpiStats.avgAiScore != null ? String(kpiStats.avgAiScore) : '—',
       subtitle: 'Précision crédit',
       change: null,
       changeType: 'positive',
@@ -158,9 +196,9 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
       color: 'bg-yellow-500',
       trend: [],
       details: {
-        excellent: '65% (>85)',
-        good: '28% (70-85)',
-        fair: '7% (<70)'
+        moyenne: kpiStats.avgAiScore != null ? `Score moyen ${kpiStats.avgAiScore}/100` : 'Aucun score disponible',
+        source: 'Biens évalués par IA',
+        maj: 'Temps réel'
       }
     }
   ];
@@ -394,8 +432,8 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
               <div>
                 <p className="text-lg font-semibold text-gray-900">{metric.value}</p>
                 <p className="text-xs text-gray-500">{metric.title}</p>
-                <p className={`text-xs ${metric.change.startsWith('+') ? 'text-green-600' : metric.change.startsWith('-') ? 'text-red-600' : 'text-gray-600'}`}>
-                  {metric.change}
+                <p className={`text-xs ${metric.change?.startsWith('+') ? 'text-green-600' : metric.change?.startsWith('-') ? 'text-red-600' : 'text-gray-600'}`}>
+                  {metric.change || ''}
                 </p>
               </div>
             </div>

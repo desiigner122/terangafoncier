@@ -43,67 +43,8 @@ const VendeurPropertiesComplete = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [sortBy, setSortBy] = useState('recent');
 
-  // Mock data pour les propriétés
-  const [properties, setProperties] = useState([
-    {
-      id: 1,
-      title: "Villa Moderne Almadies",
-      type: "Villa",
-      status: "active",
-      price: 250000000,
-      location: "Almadies, Dakar",
-      bedrooms: 4,
-      bathrooms: 3,
-      area: 350,
-      images: 12,
-      views: 1250,
-      favorites: 45,
-      inquiries: 12,
-      createdAt: "2024-01-15",
-      lastModified: "2024-01-20",
-      featured: true,
-      aiOptimized: true,
-      completion: 95
-    },
-    {
-      id: 2,
-      title: "Terrain Résidentiel Sacré-Cœur",
-      type: "Terrain",
-      status: "pending",
-      price: 125000000,
-      location: "Sacré-Cœur, Dakar",
-      area: 500,
-      images: 8,
-      views: 890,
-      favorites: 28,
-      inquiries: 7,
-      createdAt: "2024-01-10",
-      lastModified: "2024-01-18",
-      featured: false,
-      aiOptimized: false,
-      completion: 75
-    },
-    {
-      id: 3,
-      title: "Appartement Moderne Plateau",
-      type: "Appartement",
-      status: "active",
-      price: 95000000,
-      location: "Plateau, Dakar",
-      bedrooms: 3,
-      bathrooms: 2,
-      area: 120,
-      images: 15,
-      views: 2100,
-      favorites: 67,
-      inquiries: 23,
-      createdAt: "2024-01-05",
-      lastModified: "2024-01-22",
-      featured: true,
-      aiOptimized: true,
-      completion: 100
-    }
-  ]);
+  // Propriétés (aucune donnée simulée - état vide par défaut)
+  const [properties, setProperties] = useState([]);
 
   const statusColors = {
     active: 'bg-green-100 text-green-800',

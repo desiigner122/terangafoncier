@@ -39,17 +39,135 @@ import { Progress } from '@/components/ui/progress';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
+import { supabase } from '@/lib/supabaseClient';
+
+const emptyDashboardData = {
+  stats: { portefeuille: 0, creditsMois: 0, tauxApprob: 0, satisfaction: 0, nouveauxClients: 0 },
+  analytics: {
+    revenus: 0,
+    delaisTraitement: 0,
+    tauxApprob: 0,
+    satisfactionClient: 0,
+    croissanceCA: null,
+    tauxDefaut: null,
+    roe: null,
+    typesCredits: {}
+  },
+  credits: [],
+  clients: [],
+  portefeuille: []
+};
 
 const BanqueDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
 
-  const [dashboardData, setDashboardData] = useState({}); // démo retirée
+  const [dashboardData, setDashboardData] = useState(emptyDashboardData);
 
   useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 1500);
+    let active = true;
+    (async () => {
+      try {
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+
+        const [demRes, clientsRes, newClientsRes, txRes] = await Promise.all([
+          supabase.from('demandes_financement').select('*').order('created_at', { ascending: false }),
+          supabase.from('profiles').select('id, full_name, email, phone, credit_score, balance, account_type, created_at').order('created_at', { ascending: false }).limit(10),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }).gte('created_at', monthStart.toISOString()),
+          supabase.from('financial_transactions').select('amount, created_at').gte('created_at', monthStart.toISOString())
+        ]);
+
+        const dem = demRes.data || [];
+        const approved = dem.filter((d) => d.status === 'approved');
+        const rejected = dem.filter((d) => d.status === 'rejected');
+
+        const statutFromStatus = (s) => (
+          s === 'approved' ? 'Approuvé' :
+          s === 'rejected' ? 'Refusé' :
+          s === 'processing' ? 'En cours évaluation' :
+          'En attente documents'
+        );
+        const progressionFromStatus = (s) => (
+          s === 'approved' ? 100 : s === 'rejected' ? 100 : s === 'processing' ? 60 : 30
+        );
+
+        const credits = dem.map((d) => ({
+          id: d.id,
+          numero: `DF-${String(d.id).slice(0, 8).toUpperCase()}`,
+          typeCredit: 'Crédit Immobilier',
+          client: d.client_name || 'Client',
+          statut: statutFromStatus(d.status),
+          montant: Number(d.amount) || 0,
+          taux: 0,
+          duree: 0,
+          progression: progressionFromStatus(d.status),
+          bien: d.property_title || '—',
+          apportPersonnel: 0,
+          revenuMensuel: 0,
+          echeance: d.updated_at || d.created_at
+        }));
+
+        const clients = (clientsRes.data || []).map((p) => ({
+          id: p.id,
+          nom: p.full_name || p.email || 'Client',
+          statut: 'Standard',
+          typeClient: p.account_type || 'Particulier',
+          email: p.email || '—',
+          telephone: p.phone || '—',
+          scoreBanque: p.credit_score || 0,
+          encours: Number(p.balance) || 0,
+          anciennete: p.created_at,
+          nbCredits: dem.filter((d) => d.user_id === p.id).length
+        }));
+
+        const montantApprouve = approved.reduce((s, d) => s + (Number(d.amount) || 0), 0);
+        const portefeuille = approved.length > 0 ? [{
+          type: 'Crédit Immobilier',
+          nbCredits: approved.length,
+          montant: montantApprouve,
+          pourcentage: 100,
+          tauxDefaut: 0
+        }] : [];
+
+        const delais = approved
+          .filter((d) => d.approved_at && d.created_at)
+          .map((d) => (new Date(d.approved_at) - new Date(d.created_at)) / (1000 * 60 * 60 * 24));
+        const delaiMoyen = delais.length ? Math.round(delais.reduce((a, b) => a + b, 0) / delais.length) : 0;
+        const tauxApprob = dem.length ? Math.round((approved.length / dem.length) * 100) : 0;
+
+        if (!active) return;
+        setDashboardData({
+          stats: {
+            portefeuille: montantApprouve,
+            creditsMois: dem.filter((d) => new Date(d.created_at) >= monthStart).length,
+            tauxApprob,
+            satisfaction: 0,
+            nouveauxClients: newClientsRes.count || 0
+          },
+          analytics: {
+            revenus: (txRes.data || []).reduce((s, t) => s + (Number(t.amount) || 0), 0),
+            delaisTraitement: delaiMoyen,
+            tauxApprob,
+            satisfactionClient: 0,
+            croissanceCA: null,
+            tauxDefaut: dem.length ? Math.round((rejected.length / dem.length) * 1000) / 10 : null,
+            roe: null,
+            typesCredits: approved.length ? { 'Crédit Immobilier': 100 } : {}
+          },
+          credits,
+          clients,
+          portefeuille
+        });
+      } catch (err) {
+        console.warn('Données bancaires indisponibles:', err?.message);
+        if (active) setDashboardData(emptyDashboardData);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const stats = [

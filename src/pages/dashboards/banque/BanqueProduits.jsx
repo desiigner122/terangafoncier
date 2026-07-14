@@ -113,9 +113,9 @@ const BanqueProduits = () => {
   });
 
   // Statistiques générales
-  const totalClients = produits.reduce((sum, p) => sum + p.clientsActifs, 0);
-  const totalRevenus = produits.reduce((sum, p) => sum + p.revenusGeneres, 0);
-  const performanceMoyenne = produits.reduce((sum, p) => sum + p.performance, 0) / produits.length;
+  const totalClients = produits.reduce((sum, p) => sum + (p.clientsActifs || 0), 0);
+  const totalRevenus = produits.reduce((sum, p) => sum + (p.revenusGeneres || 0), 0);
+  const performanceMoyenne = produits.length ? produits.reduce((sum, p) => sum + (p.performance || 0), 0) / produits.length : 0;
 
   return (
     <div className="space-y-6">

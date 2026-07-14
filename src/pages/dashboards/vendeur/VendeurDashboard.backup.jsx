@@ -31,60 +31,18 @@ const ModernVendeurDashboard = () => {
 
   // State management pour les données du vendeur
   const [dashboardData, setDashboardData] = useState({
-    totalProperties: 12,
-    activeListing: 8,
-    soldProperties: 4,
-    totalRevenue: 450000000, // 450M FCFA
-    monthlyViews: 234,
-    inquiries: 18,
-    scheduledVisits: 5
+    totalProperties: 0,
+    activeListing: 0,
+    soldProperties: 0,
+    totalRevenue: 0,
+    monthlyViews: 0,
+    inquiries: 0,
+    scheduledVisits: 0
   });
 
-  const [recentActivities, setRecentActivities] = useState([
-    {
-      id: 1,
-      icon: Eye,
-      title: "Nouvelle visite programmée",
-      message: "Terrain Almadies - Visite prévue demain 14h",
-      time: "Il y a 2h",
-      type: "visit",
-      status: "info"
-    },
-    {
-      id: 2,
-      icon: MessageSquare,
-      title: "Nouvelle demande de contact",
-      message: "Client intéressé par votre terrain à Sacré-Cœur",
-      time: "Il y a 4h",
-      type: "inquiry",
-      status: "success"
-    },
-    {
-      id: 3,
-      icon: DollarSign,
-      title: "Négociation en cours",
-      message: "Offre reçue pour terrain Plateau - 85M FCFA",
-      time: "Il y a 6h",
-      type: "offer",
-      status: "warning"
-    },
-    {
-      id: 4,
-      icon: CheckCircle,
-      title: "Vente finalisée",
-      message: "Terrain résidentiel Mermoz vendu avec succès",
-      time: "Hier",
-      type: "sale",
-      status: "success"
-    }
-  ]);
+  const [recentActivities, setRecentActivities] = useState([]);
 
-  const [myProperties, setMyProperties] = useState([
-    { id: 1, title: "Terrain Almadies", price: "125M", status: "Disponible", views: 45, inquiries: 8 },
-    { id: 2, title: "Parcelle Sacré-Cœur", price: "95M", status: "En négociation", views: 32, inquiries: 5 },
-    { id: 3, title: "Terrain Plateau", price: "110M", status: "Visite programmée", views: 28, inquiries: 3 },
-    { id: 4, title: "Lot Mermoz", price: "80M", status: "Vendu", views: 67, inquiries: 12 }
-  ]);
+  const [myProperties, setMyProperties] = useState([]);
 
   // Actions spécifiques pour le vendeur
   const quickActions = [
@@ -245,6 +203,11 @@ const ModernVendeurDashboard = () => {
 
             <div className="p-4">
               <div className="space-y-3">
+                {recentActivities.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Aucune activité récente pour le moment.
+                  </p>
+                )}
                 {recentActivities.map((activity, index) => (
                   <div
                     key={activity.id}
@@ -299,6 +262,11 @@ const ModernVendeurDashboard = () => {
 
             <div className="p-4">
               <div className="space-y-3">
+                {myProperties.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-4">
+                    Aucune propriété pour le moment.
+                  </p>
+                )}
                 {myProperties.map((property, index) => (
                   <div
                     key={property.id}

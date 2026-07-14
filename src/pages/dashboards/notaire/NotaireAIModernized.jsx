@@ -39,6 +39,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Separator } from '@/components/ui/separator';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import EmptyState from '@/components/ui/EmptyState';
 
 const aiFeatures = [
   {
@@ -109,6 +110,7 @@ const NotaireAIModernized = () => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [activeTab, setActiveTab] = useState('assistant');
   const [selectedFeature, setSelectedFeature] = useState(null);
+  const [monthlyUsage, setMonthlyUsage] = useState([]);
   const [aiStats, setAiStats] = useState({
     totalQueries: 0,
     documentsAnalyzed: 0,

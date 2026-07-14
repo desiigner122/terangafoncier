@@ -133,36 +133,33 @@ const CompleteSidebarNotaireDashboard = () => {
 
   // Chargement du profil utilisateur
   useEffect(() => {
-    // Temporairement désactivé pour éviter la récursion infinie des politiques RLS
-    // const fetchProfile = async () => {
-    //   if (!user) return;
-    //   
-    //   try {
-    //     const { data, error } = await supabase
-    //       .from('profiles')
-    //       .select('*')
-    //       .eq('id', user.id)
-    //       .single();
-    //     
-    //     if (error) throw error;
-    //     setProfile(data);
-    //   } catch (error) {
-    //     console.error('Erreur lors du chargement du profil:', error);
-    //   }
-    // };
+    const fetchProfile = async () => {
+      if (!user) return;
 
-    // fetchProfile();
-    
-    // Utilisation d'un profil par défaut
-    if (user) {
-      setProfile({
-        id: user.id,
-        email: user.email,
-        role: 'notaire',
-        first_name: 'Maître',
-        last_name: 'Notaire'
-      });
-    }
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .single();
+
+        if (error) throw error;
+        setProfile(data);
+      } catch (error) {
+        console.error('Erreur lors du chargement du profil:', error);
+        // Repli sur les informations de session (aucune donnée fictive)
+        setProfile({
+          id: user.id,
+          email: user.email,
+          role: 'notaire',
+          first_name: user.user_metadata?.first_name || '',
+          last_name: user.user_metadata?.last_name || '',
+          full_name: user.user_metadata?.full_name || user.email
+        });
+      }
+    };
+
+    fetchProfile();
   }, [user]);
 
   const handleLogout = async () => {

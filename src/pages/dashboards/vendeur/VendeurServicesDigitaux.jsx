@@ -35,44 +35,13 @@ const VendeurServicesDigitaux = () => {
   // Données des services digitalisés
   const [digitalData] = useState({
     stats: {
-      documentsSignes: 25,
-      visitesVirtuelles: 8,
-      contractsGeneres: 12,
-      clientsConnectes: 15
+      documentsSignes: 0,
+      visitesVirtuelles: 0,
+      contractsGeneres: 0,
+      clientsConnectes: 0
     },
-    
-    recentActivities: [
-      {
-        id: 1,
-        type: 'signature',
-        title: 'Avant-contrat Villa Almadies',
-        client: '',
-        status: 'Signé',
-        date: '2024-09-26',
-        time: '14:30',
-        platform: 'DocuSign'
-      },
-      {
-        id: 2,
-        type: 'visite',
-        title: 'Visite virtuelle Terrain Thiès',
-        client: '',
-        status: 'Programmée',
-        date: '2024-09-27',
-        time: '10:00',
-        platform: 'Zoom'
-      },
-      {
-        id: 3,
-        type: 'document',
-        title: 'Upload certificat foncier',
-        client: '',
-        status: 'Traité',
-        date: '2024-09-25',
-        time: '16:45',
-        platform: 'OCR Scanner'
-      }
-    ],
+
+    recentActivities: [],
     
     services: [
       {
@@ -82,7 +51,7 @@ const VendeurServicesDigitaux = () => {
         icon: PenTool,
         color: 'blue',
         features: ['Juridiquement valide', 'Traçabilité complète', 'Multi-signataires'],
-        usage: 25,
+        usage: 0,
         status: 'Actif'
       },
       {
@@ -92,7 +61,7 @@ const VendeurServicesDigitaux = () => {
         icon: Video,
         color: 'green',
         features: ['Qualité 4K', 'Enregistrement', 'Partage d\'écran'],
-        usage: 8,
+        usage: 0,
         status: 'Actif'
       },
       {
@@ -102,7 +71,7 @@ const VendeurServicesDigitaux = () => {
         icon: Camera,
         color: 'purple',
         features: ['Reconnaissance texte', 'Validation auto', 'Archivage cloud'],
-        usage: 15,
+        usage: 0,
         status: 'Actif'
       },
       {
@@ -112,7 +81,7 @@ const VendeurServicesDigitaux = () => {
         icon: FileText,
         color: 'orange',
         features: ['Templates légaux', 'Personnalisation', 'Export PDF'],
-        usage: 12,
+        usage: 0,
         status: 'Actif'
       }
     ]
@@ -483,9 +452,15 @@ const VendeurServicesDigitaux = () => {
       <div>
         <h3 className="text-lg font-semibold mb-4">Activité Récente</h3>
         <div className="space-y-3">
-          {digitalData.recentActivities.map((activity) => (
-            <ActivityCard key={activity.id} activity={activity} />
-          ))}
+          {digitalData.recentActivities.length === 0 ? (
+            <p className="text-sm text-gray-500 text-center py-4">
+              Aucune activité récente pour le moment.
+            </p>
+          ) : (
+            digitalData.recentActivities.map((activity) => (
+              <ActivityCard key={activity.id} activity={activity} />
+            ))
+          )}
         </div>
       </div>
     </div>

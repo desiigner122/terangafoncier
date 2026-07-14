@@ -34,8 +34,10 @@ import {
   Home,
   TreePine,
   Zap,
-  Truck
+  Truck,
+  Star
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -45,17 +47,100 @@ import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
 
+const EMPTY_DASHBOARD_DATA = {
+  stats: { totalRequests: 0, pendingRequests: 0, approvedRequests: 0, rejectedRequests: 0, totalLandArea: 0 },
+  analytics: { approvalRate: 0, averageProcessingTime: 0, monthlyRequests: [0], requestsByZone: {} },
+  landInventory: [],
+  infrastructure: [],
+  communalRequests: []
+};
+
 const MunicipaliteDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
 
-  const [dashboardData, setDashboardData] = useState({}); // démo retirée
+  const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD_DATA);
 
   useEffect(() => {
-    // Simulation chargement des données
-    setTimeout(() => {
-      setLoading(false);
-    }, 1500);
+    let active = true;
+    (async () => {
+      try {
+        const { data: requests, error } = await supabase
+          .from('communal_requests')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+
+        const list = (requests || []).map((r) => ({
+          id: r.id,
+          applicantName: r.applicant_name || r.full_name || 'Demandeur',
+          applicantPhone: r.applicant_phone || r.phone || '—',
+          zone: r.zone || r.location || '—',
+          requestedArea: r.requested_area || r.area || '—',
+          purpose: r.purpose || r.request_type || '—',
+          status: r.status || 'En attente',
+          priority: r.priority || 'Normal',
+          estimatedPrice: r.estimated_price || 0,
+          submissionDate: r.created_at,
+          rejectionReason: r.rejection_reason || null,
+          documents: r.documents || []
+        }));
+
+        const pending = list.filter((r) => ['En attente', 'pending'].includes(r.status)).length;
+        const approved = list.filter((r) => ['Approuvé', 'approved'].includes(r.status)).length;
+        const rejected = list.filter((r) => ['Rejeté', 'rejected'].includes(r.status)).length;
+
+        // Répartition par zone (en %)
+        const zoneCounts = {};
+        list.forEach((r) => {
+          const z = r.zone || '—';
+          zoneCounts[z] = (zoneCounts[z] || 0) + 1;
+        });
+        const requestsByZone = {};
+        Object.entries(zoneCounts).forEach(([z, c]) => {
+          requestsByZone[z] = list.length ? Math.round((c / list.length) * 100) : 0;
+        });
+
+        // Demandes par mois (6 derniers mois)
+        const monthlyRequests = [];
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date();
+          d.setMonth(d.getMonth() - i);
+          const count = list.filter((r) => {
+            const rd = r.submissionDate ? new Date(r.submissionDate) : null;
+            return rd && rd.getMonth() === d.getMonth() && rd.getFullYear() === d.getFullYear();
+          }).length;
+          monthlyRequests.push(count);
+        }
+
+        if (active) {
+          setDashboardData({
+            stats: {
+              totalRequests: list.length,
+              pendingRequests: pending,
+              approvedRequests: approved,
+              rejectedRequests: rejected,
+              totalLandArea: 0
+            },
+            analytics: {
+              approvalRate: list.length ? Math.round((approved / list.length) * 100) : 0,
+              averageProcessingTime: 0,
+              monthlyRequests,
+              requestsByZone
+            },
+            landInventory: [],
+            infrastructure: [],
+            communalRequests: list
+          });
+        }
+      } catch (err) {
+        console.warn('Chargement dashboard municipalité indisponible:', err?.message);
+        if (active) setDashboardData(EMPTY_DASHBOARD_DATA);
+      } finally {
+        if (active) setLoading(false);
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const stats = [
@@ -153,7 +238,7 @@ const MunicipaliteDashboard = () => {
               </div>
               <div className="flex items-center mt-2 text-sm">
                 <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-                <span className="text-green-600">-2 jours vs mois dernier</span>
+                <span className="text-green-600">Basé sur les demandes traitées</span>
               </div>
             </CardContent>
           </Card>
@@ -189,7 +274,7 @@ const MunicipaliteDashboard = () => {
               </div>
               <div className="flex items-center mt-2 text-sm">
                 <Plus className="h-4 w-4 text-purple-600 mr-1" />
-                <span className="text-purple-600">1 nouveau ce mois</span>
+                <span className="text-purple-600">Projets en cours</span>
               </div>
             </CardContent>
           </Card>
@@ -578,7 +663,7 @@ const MunicipaliteDashboard = () => {
                 <CardContent className="p-4 text-center">
                   <Truck className="h-8 w-8 text-blue-600 mx-auto mb-2" />
                   <p className="font-medium">Transport</p>
-                  <p className="text-sm text-gray-600">2 projets</p>
+                  <p className="text-sm text-gray-600">{dashboardData.infrastructure.filter(p => p.type === 'Transport').length} projet(s)</p>
                 </CardContent>
               </Card>
 
@@ -586,7 +671,7 @@ const MunicipaliteDashboard = () => {
                 <CardContent className="p-4 text-center">
                   <Zap className="h-8 w-8 text-yellow-600 mx-auto mb-2" />
                   <p className="font-medium">Énergie</p>
-                  <p className="text-sm text-gray-600">1 projet</p>
+                  <p className="text-sm text-gray-600">{dashboardData.infrastructure.filter(p => p.type === 'Énergie').length} projet(s)</p>
                 </CardContent>
               </Card>
 
@@ -594,7 +679,7 @@ const MunicipaliteDashboard = () => {
                 <CardContent className="p-4 text-center">
                   <TreePine className="h-8 w-8 text-green-600 mx-auto mb-2" />
                   <p className="font-medium">Environnement</p>
-                  <p className="text-sm text-gray-600">0 projet</p>
+                  <p className="text-sm text-gray-600">{dashboardData.infrastructure.filter(p => p.type === 'Environnement').length} projet(s)</p>
                 </CardContent>
               </Card>
 
@@ -602,7 +687,7 @@ const MunicipaliteDashboard = () => {
                 <CardContent className="p-4 text-center">
                   <Users2 className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                   <p className="font-medium">Social</p>
-                  <p className="text-sm text-gray-600">0 projet</p>
+                  <p className="text-sm text-gray-600">{dashboardData.infrastructure.filter(p => p.type === 'Social').length} projet(s)</p>
                 </CardContent>
               </Card>
             </div>
@@ -727,7 +812,7 @@ const MunicipaliteDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Satisfaction</p>
-                      <p className="text-2xl font-bold text-purple-600">94%</p>
+                      <p className="text-2xl font-bold text-purple-600">—</p>
                     </div>
                     <Star className="h-8 w-8 text-purple-600" />
                   </div>

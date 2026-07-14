@@ -82,6 +82,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 // Lazy loading des composants existants
 const PromoteurOverview = React.lazy(() => import('./PromoteurOverview'));
@@ -102,31 +103,83 @@ const PromoteurDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profile, setProfile] = useState(null);
 
-  // Stats du dashboard promoteur
+  // Stats du dashboard promoteur (réelles, calculées depuis Supabase)
   const [dashboardStats, setDashboardStats] = useState({
-    totalProjects: 12,
-    activeProjects: 8,
-    monthlyRevenue: 25600000, // 25.6M FCFA
-    unitsBuilt: 324,
-    clientSatisfaction: 94,
-    averageMargin: 18.5,
-    completionRate: 89,
-    onTimeDelivery: 92
+    totalProjects: 0,
+    activeProjects: 0,
+    monthlyRevenue: 0,
+    unitsBuilt: 0,
+    clientSatisfaction: 0,
+    averageMargin: 0,
+    completionRate: 0,
+    onTimeDelivery: 0
   });
+  const [unreadMessages, setUnreadMessages] = useState(0);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [notificationsList, setNotificationsList] = useState([]);
+  const [conversationsList, setConversationsList] = useState([]);
+  const [projectsPerf, setProjectsPerf] = useState([]);
 
-  // Chargement du profil utilisateur
+  // Chargement du profil utilisateur (réel depuis Supabase)
   useEffect(() => {
-    if (user) {
+    if (!user) return;
+    let active = true;
+    (async () => {
+      let data = null;
+      try {
+        const res = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+        data = res.data;
+      } catch (err) {
+        console.warn('Profil indisponible:', err?.message);
+      }
+      if (!active) return;
       setProfile({
         id: user.id,
         email: user.email,
-        role: 'promoteur',
-        first_name: '',
-        last_name: 'FALL',
-        company: 'TERANGA Développement SARL'
+        role: data?.role || 'promoteur',
+        first_name: data?.first_name || '',
+        last_name: data?.last_name || '',
+        company: data?.company || ''
       });
-    }
+    })();
+    return () => { active = false; };
   }, [user]);
+
+  // Chargement des données réelles (Supabase)
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [projectsRes, notifRes, msgRes, convRes] = await Promise.all([
+          supabase.from('developer_projects').select('*').order('created_at', { ascending: false }),
+          supabase.from('notifications').select('*').order('created_at', { ascending: false }).limit(20),
+          supabase.from('messages').select('id, read').eq('read', false),
+          supabase.from('conversations').select('*').order('updated_at', { ascending: false }).limit(10)
+        ]);
+        if (!active) return;
+        const projects = projectsRes.data || [];
+        setProjectsPerf(projects);
+        setDashboardStats(prev => ({
+          ...prev,
+          totalProjects: projects.length,
+          activeProjects: projects.filter(p => p.status !== 'Terminé').length,
+          monthlyRevenue: projects.reduce((sum, p) => sum + (p.budget || 0), 0)
+        }));
+        const notifs = notifRes.data || [];
+        setNotificationsList(notifs);
+        setUnreadNotifications(notifs.filter(n => !n.read).length);
+        setUnreadMessages((msgRes.data || []).length);
+        setConversationsList(convRes.data || []);
+      } catch (err) {
+        console.warn('Données dashboard promoteur indisponibles:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const handleLogout = async () => {
     try {
@@ -171,7 +224,7 @@ const PromoteurDashboard = () => {
       icon: Hammer,
       description: 'Suivi temps réel',
       component: 'PromoteurChantiers',
-      badge: '6'
+      badge: null
     },
     {
       id: 'requests',
@@ -179,7 +232,7 @@ const PromoteurDashboard = () => {
       icon: MessageCircle,
       description: 'Nouvelles opportunités',
       component: 'ConstructionPage',
-      badge: '23'
+      badge: null
     },
     {
       id: 'sales',
@@ -195,7 +248,7 @@ const PromoteurDashboard = () => {
       icon: Users,
       description: 'Relation client avancée',
       component: 'PromoteurClients',
-      badge: '156'
+      badge: null
     },
     {
       id: 'finances',
@@ -233,14 +286,14 @@ const PromoteurDashboard = () => {
       label: 'Messages',
       icon: MessageSquare,
       description: 'Communication centralisée',
-      badge: '7'
+      badge: unreadMessages > 0 ? String(unreadMessages) : null
     },
     {
       id: 'notifications',
       label: 'Notifications',
       icon: Bell,
       description: 'Alertes importantes',
-      badge: '12'
+      badge: unreadNotifications > 0 ? String(unreadNotifications) : null
     },
     {
       id: 'settings',
@@ -1523,9 +1576,11 @@ const PromoteurDashboard = () => {
                 onClick={() => handleTabClick('messages')}
               >
                 <MessageSquare className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  7
-                </span>
+                {unreadMessages > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadMessages}
+                  </span>
+                )}
               </Button>
 
               {/* Notifications Button */}
@@ -1536,9 +1591,11 @@ const PromoteurDashboard = () => {
                 onClick={() => handleTabClick('notifications')}
               >
                 <Bell className="h-5 w-5" />
-                <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                  12
-                </span>
+                {unreadNotifications > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
+                    {unreadNotifications}
+                  </span>
+                )}
               </Button>
 
               {/* User Profile Dropdown */}

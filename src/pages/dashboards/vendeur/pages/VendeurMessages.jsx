@@ -35,13 +35,6 @@ const VendeurMessages = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
 
-  const filterOptions = [
-    { id: 'all', name: 'Tous', count: 12 },
-    { id: 'unread', name: 'Non lus', count: 4 },
-    { id: 'starred', name: 'Favoris', count: 2 },
-    { id: 'archived', name: 'Archivés', count: 8 }
-  ];
-
   // conversations RÉEL depuis Supabase (aucune donnée fictive)
   const [conversations, setConversations] = useState([]);
   useEffect(() => {
@@ -58,6 +51,13 @@ const VendeurMessages = () => {
     })();
     return () => { active = false; };
   }, []);
+
+  const filterOptions = [
+    { id: 'all', name: 'Tous', count: conversations.length },
+    { id: 'unread', name: 'Non lus', count: conversations.filter(c => (c.unread || 0) > 0).length },
+    { id: 'starred', name: 'Favoris', count: conversations.filter(c => c.starred).length },
+    { id: 'archived', name: 'Archivés', count: conversations.filter(c => c.archived).length }
+  ];
 
   const messages = []; // démo retirée
 
@@ -104,8 +104,8 @@ const VendeurMessages = () => {
 
   const selectedConv = conversations.find(c => c.id === selectedConversation);
   const filteredConversations = conversations.filter(conv => {
-    const matchesSearch = conv.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         conv.property.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (conv.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (conv.property || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = selectedFilter === 'all' || 
                          (selectedFilter === 'unread' && conv.unread > 0) ||
                          (selectedFilter === 'starred' && conv.starred) ||
@@ -147,7 +147,7 @@ const VendeurMessages = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Messages Total</p>
-                <p className="text-2xl font-bold text-blue-600">127</p>
+                <p className="text-2xl font-bold text-blue-600">{conversations.length}</p>
               </div>
               <MessageSquare className="h-8 w-8 text-blue-600" />
             </div>
@@ -159,7 +159,7 @@ const VendeurMessages = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Non Lus</p>
-                <p className="text-2xl font-bold text-red-600">4</p>
+                <p className="text-2xl font-bold text-red-600">{conversations.filter(c => (c.unread || 0) > 0).length}</p>
               </div>
               <AlertCircle className="h-8 w-8 text-red-600" />
             </div>
@@ -171,7 +171,7 @@ const VendeurMessages = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Réponse Moy.</p>
-                <p className="text-2xl font-bold text-green-600">12min</p>
+                <p className="text-2xl font-bold text-green-600">—</p>
               </div>
               <Clock className="h-8 w-8 text-green-600" />
             </div>
@@ -183,7 +183,7 @@ const VendeurMessages = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Contacts Actifs</p>
-                <p className="text-2xl font-bold text-purple-600">28</p>
+                <p className="text-2xl font-bold text-purple-600">0</p>
               </div>
               <Users className="h-8 w-8 text-purple-600" />
             </div>

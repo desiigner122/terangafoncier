@@ -51,27 +51,23 @@ const MairieBlockchain = ({ dashboardStats }) => {
   const [showPrivateKey, setShowPrivateKey] = useState(false);
   const [selectedNFT, setSelectedNFT] = useState(null);
 
-  // État de la blockchain
-  const blockchainStatus = {
+  // État de la blockchain (chargé depuis Supabase)
+  const [blockchainStatus, setBlockchainStatus] = useState({
     network: 'TerangaChain',
-    lastBlock: '2,845,672',
-    networkHealth: 98.7,
-    gasPrice: '0.0025',
-    validators: 156,
-    transactions24h: '12,847',
-    municipalNode: 'Actif'
-  };
+    lastBlock: '—',
+    networkHealth: 0,
+    gasPrice: '—',
+    validators: 0,
+    transactions24h: '0',
+    municipalNode: '—'
+  });
 
-  // Portefeuille municipal
+  // Portefeuille municipal (aucune donnée fictive)
   const municipalWallet = {
-    address: '0xA1B2C3D4E5F6789012345ABCDEF67890MUNICIPAL',
-    balance: '2,847.52',
+    address: '—',
+    balance: '0',
     privateKey: '****************************************************',
-    tokens: [
-      { symbol: 'TRGA', name: 'Teranga Token', balance: '2,847.52', value: '—' },
-      { symbol: 'LAND', name: 'Land Token', balance: '156', value: '—' },
-      { symbol: 'PERMIT', name: 'Permit Token', balance: '89', value: '—' }
-    ]
+    tokens: []
   };
 
   // NFTs municipaux
@@ -92,73 +88,41 @@ const MairieBlockchain = ({ dashboardStats }) => {
     return () => { active = false; };
   }, []);
 
-  // Transactions récentes
-  const recentTransactions = [
-    {
-      id: 'tx-001',
-      hash: '0xabcd1234567890abcdef1234567890abcdef1234567890abcdef',
-      type: 'Mint NFT',
-      description: 'Création NFT Titre Foncier A-001',
-      amount: '0.05 TRGA',
-      status: 'Confirmé',
-      timestamp: '2024-01-22 14:30',
-      block: '2,845,672',
-      gasUsed: '21,000'
-    },
-    {
-      id: 'tx-002',
-      hash: '0xefgh5678901234cdef5678901234cdef5678901234cdef5678',
-      type: 'Transfer',
-      description: 'Transfert propriété - Validation automatique',
-      amount: '0.02 TRGA',
-      status: 'Confirmé',
-      timestamp: '2024-01-22 11:15',
-      block: '2,845,651',
-      gasUsed: '35,000'
-    },
-    {
-      id: 'tx-003',
-      hash: '0xijkl9012345678mnop9012345678mnop9012345678mnop9012',
-      type: 'Smart Contract',
-      description: 'Exécution contrat validation permis',
-      amount: '0.08 TRGA',
-      status: 'En cours',
-      timestamp: '2024-01-22 16:45',
-      block: 'Pending',
-      gasUsed: '150,000'
-    }
-  ];
+  // Transactions récentes (RÉELLES depuis Supabase)
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('blockchain_transactions')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(10);
+        if (error) throw error;
+        if (active) {
+          setRecentTransactions((data || []).map((tx) => ({
+            id: tx.id,
+            hash: tx.transaction_hash || tx.hash || String(tx.id),
+            type: tx.transaction_type || tx.type || 'Transaction',
+            description: tx.description || tx.transaction_type || 'Transaction blockchain',
+            amount: tx.amount != null ? `${tx.amount}` : '—',
+            status: tx.status || 'Confirmé',
+            timestamp: tx.created_at ? new Date(tx.created_at).toLocaleString('fr-FR') : '—',
+            block: tx.block_number != null ? String(tx.block_number) : '—',
+            gasUsed: tx.gas_used != null ? String(tx.gas_used) : '—'
+          })));
+        }
+      } catch (err) {
+        console.warn('recentTransactions indisponible:', err?.message);
+        if (active) setRecentTransactions([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
-  // Smart Contracts municipaux
-  const smartContracts = [
-    {
-      name: 'LandRegistry',
-      address: '0x1111222233334444555566667777888899990000',
-      description: 'Gestion registre foncier municipal',
-      status: 'Déployé',
-      version: '1.2.3',
-      interactions: '2,847',
-      lastUpdate: '2024-01-20'
-    },
-    {
-      name: 'PermitManager',
-      address: '0xAAAABBBBCCCCDDDDEEEEFFFF0000111122223333',
-      description: 'Système automatisé de permis',
-      status: 'Déployé',
-      version: '2.1.0',
-      interactions: '1,456',
-      lastUpdate: '2024-01-18'
-    },
-    {
-      name: 'MunicipalDAO',
-      address: '0x9999888877776666555544443333222211110000',
-      description: 'Gouvernance municipale décentralisée',
-      status: 'Test',
-      version: '0.8.1',
-      interactions: '234',
-      lastUpdate: '2024-01-21'
-    }
-  ];
+  // Smart Contracts municipaux (aucune donnée fictive)
+  const smartContracts = [];
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -214,7 +178,7 @@ const MairieBlockchain = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">NFTs Municipaux</p>
-                <p className="text-2xl font-bold text-blue-600">156</p>
+                <p className="text-2xl font-bold text-blue-600">{municipalNFTs.length}</p>
               </div>
               <Award className="h-8 w-8 text-blue-600" />
             </div>
@@ -226,7 +190,7 @@ const MairieBlockchain = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Transactions 24h</p>
-                <p className="text-2xl font-bold text-green-600">89</p>
+                <p className="text-2xl font-bold text-green-600">{recentTransactions.length}</p>
               </div>
               <ArrowUpDown className="h-8 w-8 text-green-600" />
             </div>
@@ -238,7 +202,7 @@ const MairieBlockchain = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Valeur Portfolio</p>
-                <p className="text-2xl font-bold text-purple-600">96,687€</p>
+                <p className="text-2xl font-bold text-purple-600">—</p>
               </div>
               <Wallet className="h-8 w-8 text-purple-600" />
             </div>
@@ -250,7 +214,7 @@ const MairieBlockchain = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Santé Réseau</p>
-                <p className="text-2xl font-bold text-orange-600">98.7%</p>
+                <p className="text-2xl font-bold text-orange-600">{blockchainStatus.networkHealth}%</p>
               </div>
               <Shield className="h-8 w-8 text-orange-600" />
             </div>
@@ -329,32 +293,20 @@ const MairieBlockchain = ({ dashboardStats }) => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-3">
-                  <div className="flex items-center p-3 bg-blue-50 rounded-lg">
-                    <Award className="h-5 w-5 text-blue-600 mr-3" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">NFT Titre Foncier créé</p>
-                      <p className="text-xs text-gray-600">Parcelle A-001 tokenisée</p>
-                    </div>
-                    <Badge className="bg-blue-100 text-blue-800">Nouveau</Badge>
-                  </div>
-                  
-                  <div className="flex items-center p-3 bg-green-50 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-green-600 mr-3" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Transfert validé</p>
-                      <p className="text-xs text-gray-600">Transaction confirmée</p>
-                    </div>
-                    <Badge className="bg-green-100 text-green-800">Confirmé</Badge>
-                  </div>
-                  
-                  <div className="flex items-center p-3 bg-yellow-50 rounded-lg">
-                    <Clock className="h-5 w-5 text-yellow-600 mr-3" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium">Smart Contract en cours</p>
-                      <p className="text-xs text-gray-600">Validation permis automatique</p>
-                    </div>
-                    <Badge className="bg-yellow-100 text-yellow-800">En cours</Badge>
-                  </div>
+                  {recentTransactions.length === 0 ? (
+                    <p className="text-sm text-gray-500 text-center py-6">Aucune activité récente</p>
+                  ) : (
+                    recentTransactions.slice(0, 3).map((tx) => (
+                      <div key={tx.id} className="flex items-center p-3 bg-blue-50 rounded-lg">
+                        <Award className="h-5 w-5 text-blue-600 mr-3" />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{tx.description}</p>
+                          <p className="text-xs text-gray-600">{tx.timestamp}</p>
+                        </div>
+                        <Badge className={getStatusColor(tx.status)}>{tx.status}</Badge>
+                      </div>
+                    ))
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -363,6 +315,9 @@ const MairieBlockchain = ({ dashboardStats }) => {
 
         {/* NFTs Municipaux */}
         <TabsContent value="nfts" className="space-y-6">
+          {municipalNFTs.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-8">Aucun NFT municipal enregistré</p>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {municipalNFTs.map((nft) => (
               <Card key={nft.id} className="hover:shadow-md transition-shadow cursor-pointer"
@@ -539,6 +494,9 @@ const MairieBlockchain = ({ dashboardStats }) => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {recentTransactions.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-8">Aucune transaction enregistrée</p>
+                )}
                 {recentTransactions.map((tx) => (
                   <div key={tx.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
                     <div className="flex items-center space-x-4">
@@ -578,6 +536,9 @@ const MairieBlockchain = ({ dashboardStats }) => {
         {/* Smart Contracts */}
         <TabsContent value="contracts" className="space-y-6">
           <div className="space-y-4">
+            {smartContracts.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8">Aucun smart contract déployé</p>
+            )}
             {smartContracts.map((contract, index) => (
               <Card key={index}>
                 <CardContent className="p-6">

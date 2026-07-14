@@ -64,34 +64,11 @@ const MairieMessages = ({ dashboardStats }) => {
     return () => { active = false; };
   }, []);
 
-  // Messages envoyés
-  const sentMessages = [
-    {
-      id: 'sent-001',
-      recipient: 'Direction Régionale de l\'Urbanisme',
-      subject: 'Transmission dossier attribution Zone Résidentielle Nord',
-      content: 'Madame la Directrice,\n\nJ\'ai l\'honneur de vous transmettre le dossier complet d\'attribution foncière pour la Zone Résidentielle Nord, secteur B.\n\nLe dossier comprend 15 demandes pré-approuvées par la commission municipale...',
-      timestamp: '2024-01-22T10:30:00',
-      attachments: ['Dossier_complet.pdf']
-    },
-    {
-      id: 'sent-002',
-      recipient: 'Association des Commerçants',
-      subject: 'Réponse à votre demande d\'extension marché',
-      content: 'Monsieur le Président,\n\nSuite à votre demande d\'extension du marché central, je vous informe que le projet a été approuvé en principe par le conseil municipal...',
-      timestamp: '2024-01-21T15:45:00',
-      attachments: []
-    }
-  ];
+  // Messages envoyés (aucune donnée fictive — source réelle requise)
+  const sentMessages = [];
 
-  // Contacts fréquents
-  const frequentContacts = [
-    { name: 'Conseil Départemental', email: 'contact@conseil-dakar.sn', category: 'Officiel' },
-    { name: 'Préfet du Département', email: 'cabinet@prefet-dakar.gouv.sn', category: 'Officiel' },
-    { name: 'Direction Urbanisme', email: 'urbanisme@region-dakar.sn', category: 'Technique' },
-    { name: 'Association Citoyens Nord', email: 'president@residents-nord.org', category: 'Citoyens' },
-    { name: 'Chambre Commerce', email: 'info@chambre-commerce-dakar.sn', category: 'Business' }
-  ];
+  // Contacts fréquents (aucune donnée fictive — source réelle requise)
+  const frequentContacts = [];
 
   const getCategoryColor = (category) => {
     switch (category) {
@@ -115,7 +92,7 @@ const MairieMessages = ({ dashboardStats }) => {
   const filteredMessages = (messages) => {
     return messages.filter(message => 
       message.sender?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      message.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      message.subject?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       message.recipient?.toLowerCase().includes(searchQuery.toLowerCase())
     );
   };
@@ -153,7 +130,7 @@ const MairieMessages = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Messages Reçus</p>
-                <p className="text-2xl font-bold text-blue-600">24</p>
+                <p className="text-2xl font-bold text-blue-600">{inboxMessages.length}</p>
               </div>
               <MessageSquare className="h-8 w-8 text-blue-600" />
             </div>
@@ -165,7 +142,7 @@ const MairieMessages = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Non Lus</p>
-                <p className="text-2xl font-bold text-red-600">6</p>
+                <p className="text-2xl font-bold text-red-600">{inboxMessages.filter(m => m.read_at == null).length}</p>
               </div>
               <Bell className="h-8 w-8 text-red-600" />
             </div>
@@ -177,7 +154,7 @@ const MairieMessages = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Envoyés</p>
-                <p className="text-2xl font-bold text-green-600">18</p>
+                <p className="text-2xl font-bold text-green-600">{sentMessages.length}</p>
               </div>
               <Send className="h-8 w-8 text-green-600" />
             </div>
@@ -189,7 +166,7 @@ const MairieMessages = ({ dashboardStats }) => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Importants</p>
-                <p className="text-2xl font-bold text-orange-600">4</p>
+                <p className="text-2xl font-bold text-orange-600">0</p>
               </div>
               <Star className="h-8 w-8 text-orange-600" />
             </div>
@@ -210,7 +187,7 @@ const MairieMessages = ({ dashboardStats }) => {
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Boîte de Réception
-                  <Badge className="ml-auto bg-red-500 text-white">6</Badge>
+                  <Badge className="ml-auto bg-red-500 text-white">{inboxMessages.filter(m => m.read_at == null).length}</Badge>
                 </Button>
                 
                 <Button 

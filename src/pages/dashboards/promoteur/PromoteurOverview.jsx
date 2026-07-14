@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -31,109 +32,69 @@ import {
 const PromoteurOverview = () => {
   const [timeframe, setTimeframe] = useState('30d');
 
-  // Statistiques générales
-  const businessStats = {
-    totalRevenue: 4200000,
-    monthlyGrowth: 12.8,
-    activeProjects: 8,
-    totalClients: 156,
-    completedProjects: 24,
-    averageMargin: 22.5,
-    yearlyGrowth: 28.3
-  };
+  // Statistiques générales (réelles, calculées depuis Supabase)
+  const [businessStats, setBusinessStats] = useState({
+    totalRevenue: 0,
+    monthlyGrowth: 0,
+    activeProjects: 0,
+    totalClients: 0,
+    completedProjects: 0,
+    averageMargin: 0,
+    yearlyGrowth: 0
+  });
 
-  // Projets actifs
-  const activeProjects = [
-    {
-      id: 1,
-      name: 'Résidence Teranga',
-      location: 'Almadies, Dakar',
-      type: 'Résidentiel',
-      status: 'En construction',
-      progress: 75,
-      budget: 2800000,
-      revenue: 3200000,
-      margin: 400000,
-      startDate: '2024-01-15',
-      expectedCompletion: '2025-06-30',
-      unitsTotal: 24,
-      unitsSold: 18,
-      clientsCount: 18,
-      nextMilestone: 'Finitions intérieures'
-    },
-    {
-      id: 2,
-      name: 'Complexe Commercial VDN',
-      location: 'VDN, Dakar',
-      type: 'Commercial',
-      status: 'En cours',
-      progress: 45,
-      budget: 5200000,
-      revenue: 6500000,
-      margin: 1300000,
-      startDate: '2024-03-10',
-      expectedCompletion: '2025-12-15',
-      unitsTotal: 12,
-      unitsSold: 8,
-      clientsCount: 8,
-      nextMilestone: 'Gros œuvre niveau 2'
-    },
-    {
-      id: 3,
-      name: 'Lotissement Moderne',
-      location: 'Diamaguène, Sicap',
-      type: 'Foncier',
-      status: 'Commercialisation',
-      progress: 90,
-      budget: 1800000,
-      revenue: 2400000,
-      margin: 600000,
-      startDate: '2023-08-20',
-      expectedCompletion: '2024-12-30',
-      unitsTotal: 30,
-      unitsSold: 25,
-      clientsCount: 25,
-      nextMilestone: 'Finalisation actes'
-    }
-  ];
+  // Projets actifs (réels depuis Supabase)
+  const [activeProjects, setActiveProjects] = useState([]);
 
   // Activités récentes
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'sale',
-      title: 'Nouvelle vente',
-      description: 'Villa T4 - Résidence Teranga',
-      time: '2 heures',
-      amount: 185000000,
-      positive: true
-    },
-    {
-      id: 2,
-      type: 'milestone',
-      title: 'Étape terminée',
-      description: 'Gros œuvre - Complexe VDN',
-      time: '1 jour',
-      positive: true
-    },
-    {
-      id: 3,
-      type: 'payment',
-      title: 'Paiement reçu',
-      description: 'Acompte - Lotissement Moderne',
-      time: '2 jours',
-      amount: 45000000,
-      positive: true
-    },
-    {
-      id: 4,
-      type: 'issue',
-      title: 'Retard signalé',
-      description: 'Livraison matériaux - Projet Teranga',
-      time: '3 jours',
-      positive: false
-    }
-  ];
+  const recentActivities = []; // démo retirée
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('developer_projects')
+          .select('*')
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        const rows = data || [];
+        const mapped = rows.map((p) => ({
+          id: p.id,
+          name: p.title || 'Projet',
+          location: p.location || '—',
+          type: p.type || 'Résidentiel',
+          status: p.status || 'En cours',
+          progress: p.progress || 0,
+          budget: p.budget || 0,
+          revenue: p.revenue || 0,
+          margin: (p.revenue || 0) - (p.budget || 0),
+          startDate: p.start_date,
+          expectedCompletion: p.estimated_completion || p.created_at,
+          unitsTotal: p.units_total || 0,
+          unitsSold: p.units_sold || 0,
+          clientsCount: p.clients_count || 0,
+          nextMilestone: p.current_phase || '—'
+        }));
+        if (!active) return;
+        setActiveProjects(mapped.filter((p) => p.status !== 'Terminé'));
+        const completed = rows.filter((p) => p.status === 'Terminé').length;
+        setBusinessStats({
+          totalRevenue: rows.reduce((sum, p) => sum + (p.budget || 0), 0),
+          monthlyGrowth: 0,
+          activeProjects: rows.length - completed,
+          totalClients: rows.reduce((sum, p) => sum + (p.clients_count || 0), 0),
+          completedProjects: completed,
+          averageMargin: 0,
+          yearlyGrowth: 0
+        });
+      } catch (err) {
+        console.warn('Projets promoteur indisponibles:', err?.message);
+        if (active) setActiveProjects([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Ventes par mois (6 derniers mois)
   const salesData = []; // données graphiques réelles requises
@@ -377,7 +338,9 @@ const PromoteurOverview = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Ventes du Mois
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">+22 ventes</Badge>
+                  <Badge variant="secondary" className="bg-green-100 text-green-800">
+                    +{salesData.reduce((sum, d) => sum + (d.sales || 0), 0)} ventes
+                  </Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -450,19 +413,19 @@ const PromoteurOverview = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Taux de vente moyen</span>
-                    <span className="font-semibold text-green-600">78%</span>
+                    <span className="font-semibold text-green-600">—</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Délai moyen projet</span>
-                    <span className="font-semibold">18 mois</span>
+                    <span className="font-semibold">—</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Satisfaction client</span>
-                    <span className="font-semibold text-blue-600">4.7/5</span>
+                    <span className="font-semibold text-blue-600">—</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">ROI moyen</span>
-                    <span className="font-semibold text-purple-600">22.5%</span>
+                    <span className="font-semibold text-purple-600">{businessStats.averageMargin}%</span>
                   </div>
                 </div>
               </CardContent>

@@ -40,20 +40,100 @@ import {
   LineChart,
   Line,
   PieChart as RechartsPieChart,
+  Pie,
   Cell,
   Area,
   AreaChart
 } from 'recharts';
+import { supabase } from '@/lib/supabaseClient';
 
 const BanqueReports = () => {
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [selectedMetric, setSelectedMetric] = useState('revenue');
   const [reportData, setReportData] = useState({});
 
-  // Données simulées pour les rapports
+  // Données réelles depuis Supabase
   useEffect(() => {
-    const mockData = {}; // démo retirée
-    setReportData(mockData);
+    let active = true;
+    (async () => {
+      try {
+        const [txRes, clientsRes, demRes] = await Promise.all([
+          supabase.from('financial_transactions').select('amount, type, channel, created_at'),
+          supabase.from('profiles').select('id', { count: 'exact', head: true }),
+          supabase.from('demandes_financement').select('amount, status')
+        ]);
+        const tx = txRes.data || [];
+        const dem = demRes.data || [];
+
+        // Revenus mensuels (6 derniers mois)
+        const moisFr = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Juin', 'Juil', 'Août', 'Sep', 'Oct', 'Nov', 'Déc'];
+        const buckets = {};
+        for (let i = 5; i >= 0; i--) {
+          const d = new Date(); d.setMonth(d.getMonth() - i);
+          buckets[`${d.getFullYear()}-${d.getMonth()}`] = { month: moisFr[d.getMonth()], revenue: 0, clients: 0 };
+        }
+        tx.forEach((t) => {
+          const d = new Date(t.created_at);
+          const k = `${d.getFullYear()}-${d.getMonth()}`;
+          if (buckets[k]) buckets[k].revenue += Number(t.amount) || 0;
+        });
+
+        // Répartition par type de transaction
+        const byType = {};
+        tx.forEach((t) => {
+          const k = t.type || 'Autre';
+          if (!byType[k]) byType[k] = { type: k, count: 0, amount: 0 };
+          byType[k].count += 1;
+          byType[k].amount += Number(t.amount) || 0;
+        });
+        const totalAmount = tx.reduce((s, t) => s + (Number(t.amount) || 0), 0);
+        const transactionTypes = Object.values(byType).map((t) => ({
+          ...t,
+          percentage: totalAmount ? Math.round((t.amount / totalAmount) * 100) : 0
+        }));
+
+        // Performance des canaux
+        const byChannel = {};
+        tx.forEach((t) => {
+          const k = t.channel || 'Agence';
+          if (!byChannel[k]) byChannel[k] = { channel: k, users: 0, transactions: 0, revenue: 0 };
+          byChannel[k].transactions += 1;
+          byChannel[k].revenue += Number(t.amount) || 0;
+        });
+
+        const creditPortfolio = dem
+          .filter((d) => d.status === 'approved')
+          .reduce((s, d) => s + (Number(d.amount) || 0), 0);
+
+        if (!active) return;
+        setReportData({
+          monthlyRevenue: Object.values(buckets),
+          transactionTypes,
+          channelPerformance: Object.values(byChannel),
+          clientSegments: [],
+          riskAnalysis: [],
+          performanceMetrics: {
+            totalRevenue: totalAmount,
+            revenueGrowth: 0,
+            totalClients: clientsRes.count || 0,
+            clientGrowth: 0,
+            totalTransactions: tx.length,
+            transactionGrowth: 0,
+            complianceScore: 0,
+            portfolioValue: creditPortfolio + totalAmount,
+            portfolioGrowth: 0,
+            creditPortfolio,
+            creditGrowth: 0,
+            averageTransactionValue: tx.length ? Math.round(totalAmount / tx.length) : 0,
+            riskRatio: 0
+          }
+        });
+      } catch (err) {
+        console.warn('Rapports banque indisponibles:', err?.message);
+        if (active) setReportData({});
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const COLORS = ['#8B5CF6', '#3B82F6', '#10B981', '#F59E0B', '#EF4444'];

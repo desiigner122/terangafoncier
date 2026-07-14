@@ -34,75 +34,9 @@ import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget
 
 const VendeurOverview = ({ stats }) => {
   const navigate = useNavigate();
-  const [aiInsights] = useState([
-    {
-      type: 'opportunity',
-      title: 'Prix optimal détecté',
-      description: 'L\'appartement Mermoz pourrait être vendu 4% plus cher selon l\'analyse marché IA',
-      priority: 'high',
-      action: 'Ajuster le prix à 130M XOF',
-      impact: '+5M XOF de revenus potentiels'
-    },
-    {
-      type: 'success',
-      title: 'Performance marketing excellente',
-      description: 'La villa Almadies génère 40% plus de vues que la moyenne du secteur',
-      priority: 'low',
-      action: 'Maintenir la stratégie actuelle'
-    },
-    {
-      type: 'warning',
-      title: 'Certification blockchain recommandée',
-      description: '1 propriété non vérifiée sur blockchain, risque de confiance réduit',
-      priority: 'medium',
-      action: 'Lancer vérification blockchain'
-    }
-  ]);
+  const [aiInsights] = useState([]);
 
-  const [recentProperties] = useState([
-    {
-      id: 1,
-      title: 'Terrain résidentiel Sacré-Cœur',
-      location: 'Sacré-Cœur, Dakar',
-      price: 85000000,
-      size: '500m²',
-      type: 'Terrain',
-      status: 'active',
-      photos: 8,
-      views: 145,
-      datePosted: '2024-02-15',
-      aiScore: 92,
-      blockchainVerified: true
-    },
-    {
-      id: 2,
-      title: 'Villa moderne Almadies',
-      location: 'Almadies, Dakar',
-      price: 350000000,
-      size: '300m²',
-      type: 'Villa',
-      status: 'active',
-      photos: 15,
-      views: 89,
-      datePosted: '2024-02-20',
-      aiScore: 88,
-      blockchainVerified: true
-    },
-    {
-      id: 3,
-      title: 'Appartement haut standing Mermoz',
-      location: 'Mermoz, Dakar',
-      price: 125000000,
-      size: '120m²',
-      type: 'Appartement',
-      status: 'pending',
-      photos: 12,
-      views: 67,
-      datePosted: '2024-02-25',
-      aiScore: 85,
-      blockchainVerified: false
-    }
-  ]);
+  const [recentProperties] = useState([]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-SN', {
@@ -133,13 +67,10 @@ const VendeurOverview = ({ stats }) => {
                 <div className="p-3 rounded-full bg-purple-50">
                   <Building2 className="h-6 w-6 text-purple-600" />
                 </div>
-                <Badge className="bg-green-100 text-green-800">
-                  +12% ce mois
-                </Badge>
               </div>
               <div className="mt-4">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {stats?.totalProperties || 12}
+                  {stats?.totalProperties || 0}
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Propriétés totales
@@ -160,13 +91,10 @@ const VendeurOverview = ({ stats }) => {
                 <div className="p-3 rounded-full bg-green-50">
                   <DollarSign className="h-6 w-6 text-green-600" />
                 </div>
-                <Badge className="bg-green-100 text-green-800">
-                  +18% ce mois
-                </Badge>
               </div>
               <div className="mt-4">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(stats?.monthlyRevenue || 2500000)}
+                  {formatCurrency(stats?.monthlyRevenue || 0)}
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Revenus mensuels
@@ -193,7 +121,7 @@ const VendeurOverview = ({ stats }) => {
               </div>
               <div className="mt-4">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {stats?.aiOptimized || 6}
+                  {stats?.aiOptimized || 0}
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Biens optimisés IA
@@ -220,7 +148,7 @@ const VendeurOverview = ({ stats }) => {
               </div>
               <div className="mt-4">
                 <h3 className="text-2xl font-bold text-gray-900">
-                  {stats?.blockchainVerified || 10}
+                  {stats?.blockchainVerified || 0}
                 </h3>
                 <p className="text-sm text-gray-600 mt-1">
                   Biens certifiés blockchain

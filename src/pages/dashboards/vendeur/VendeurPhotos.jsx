@@ -40,84 +40,10 @@ const VendeurPhotos = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [isUploading, setIsUploading] = useState(false);
 
-  const [photos, setPhotos] = useState([
-    {
-      id: 1,
-      url: '/api/placeholder/300/200',
-      property: 'Villa Moderne Almadies',
-      propertyId: 1,
-      title: 'Vue d\'ensemble de la villa',
-      tags: ['extérieur', 'vue principale'],
-      uploadDate: '2024-01-15',
-      size: '2.3 MB',
-      dimensions: '1920x1080',
-      isMain: true,
-      quality: 95,
-      views: 1240
-    },
-    {
-      id: 2,
-      url: '/api/placeholder/300/200',
-      property: 'Villa Moderne Almadies',
-      propertyId: 1,
-      title: 'Salon principal',
-      tags: ['intérieur', 'salon'],
-      uploadDate: '2024-01-15',
-      size: '1.8 MB',
-      dimensions: '1920x1080',
-      isMain: false,
-      quality: 92,
-      views: 890
-    },
-    {
-      id: 3,
-      url: '/api/placeholder/300/200',
-      property: 'Terrain Sacré-Cœur',
-      propertyId: 2,
-      title: 'Vue aérienne du terrain',
-      tags: ['extérieur', 'terrain', 'vue aérienne'],
-      uploadDate: '2024-01-14',
-      size: '3.1 MB',
-      dimensions: '2048x1365',
-      isMain: true,
-      quality: 98,
-      views: 675
-    },
-    {
-      id: 4,
-      url: '/api/placeholder/300/200',
-      property: 'Appartement Plateau',
-      propertyId: 3,
-      title: 'Cuisine moderne',
-      tags: ['intérieur', 'cuisine'],
-      uploadDate: '2024-01-13',
-      size: '2.0 MB',
-      dimensions: '1920x1080',
-      isMain: false,
-      quality: 90,
-      views: 450
-    },
-    {
-      id: 5,
-      url: '/api/placeholder/300/200',
-      property: 'Villa Moderne Almadies',
-      propertyId: 1,
-      title: 'Piscine et jardin',
-      tags: ['extérieur', 'piscine', 'jardin'],
-      uploadDate: '2024-01-15',
-      size: '2.7 MB',
-      dimensions: '1920x1080',
-      isMain: false,
-      quality: 94,
-      views: 1120
-    }
-  ]);
+  const [photos, setPhotos] = useState([]);
 
   const properties = [
-    { id: 'all', name: 'Toutes les propriétés' },
-    { id: 1, name: 'Villa Moderne Almadies' },
-    { id: 2, name: 'Terrain Sacré-Cœur' },
-    { id: 3, name: 'Appartement Plateau' }
+    { id: 'all', name: 'Toutes les propriétés' }
   ];
 
   const filteredPhotos = photos.filter(photo => {
@@ -154,7 +80,9 @@ const VendeurPhotos = () => {
 
   const totalPhotos = photos.length;
   const totalViews = photos.reduce((sum, photo) => sum + photo.views, 0);
-  const averageQuality = Math.round(photos.reduce((sum, photo) => sum + photo.quality, 0) / photos.length);
+  const averageQuality = photos.length > 0
+    ? Math.round(photos.reduce((sum, photo) => sum + photo.quality, 0) / photos.length)
+    : 0;
 
   return (
     <div className="space-y-6">
@@ -255,7 +183,7 @@ const VendeurPhotos = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">En attente</p>
-                  <p className="text-2xl font-bold text-orange-600">3</p>
+                  <p className="text-2xl font-bold text-orange-600">0</p>
                 </div>
                 <Clock className="w-8 h-8 text-orange-600" />
               </div>
@@ -500,21 +428,9 @@ const VendeurPhotos = () => {
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="p-4 bg-blue-50 rounded-lg">
-              <h4 className="font-medium text-blue-900 mb-2">📸 Photos manquantes</h4>
-              <p className="text-sm text-blue-800">
-                Ajoutez des photos de la cuisine pour "Villa Moderne Almadies" pour augmenter l'engagement de 35%.
-              </p>
-            </div>
-            
-            <div className="p-4 bg-purple-50 rounded-lg">
-              <h4 className="font-medium text-purple-900 mb-2">🎨 Amélioration qualité</h4>
-              <p className="text-sm text-purple-800">
-                3 photos ont une qualité inférieure à 85%. Une retouche pourrait améliorer les conversions.
-              </p>
-            </div>
-          </div>
+          <p className="text-sm text-gray-500 text-center py-4">
+            Aucune recommandation disponible pour le moment. Ajoutez des photos pour recevoir des suggestions.
+          </p>
         </CardContent>
       </Card>
     </div>

@@ -28,6 +28,7 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import EmptyState from '@/components/ui/EmptyState';
 
 const VendeurAntiFraude = () => {
   const [activeTab, setActiveTab] = useState('scanner');
@@ -35,52 +36,14 @@ const VendeurAntiFraude = () => {
   // Données de vérification anti-fraude
   const [verificationData] = useState({
     stats: {
-      totalScanned: 15,
-      verified: 12,
-      suspicious: 2,
-      pending: 1,
-      securityScore: 98
+      totalScanned: 0,
+      verified: 0,
+      suspicious: 0,
+      pending: 0,
+      securityScore: 0
     },
-    
-    recentScans: [
-      {
-        id: 1,
-        propertyRef: 'ALM-001',
-        title: 'Titre Foncier - Villa Almadies',
-        scanDate: '2024-09-26',
-        status: 'Vérifié',
-        score: 98,
-        riskLevel: 'Aucun',
-        aiAnalysis: 'Document authentique, signatures valides',
-        blockchain: true,
-        gpsVerified: true
-      },
-      {
-        id: 2,
-        propertyRef: 'THI-007',
-        title: 'Acte de Vente - Terrain Thiès',
-        scanDate: '2024-09-25',
-        status: 'Suspect',
-        score: 45,
-        riskLevel: 'Élevé',
-        aiAnalysis: 'Incohérences détectées dans les dates',
-        blockchain: false,
-        gpsVerified: false,
-        alerts: ['Signature suspecte', 'Référence cadastrale introuvable']
-      },
-      {
-        id: 3,
-        propertyRef: 'SAL-003',
-        title: 'Permis de Construire - Saly',
-        scanDate: '2024-09-24',
-        status: 'En cours',
-        score: null,
-        riskLevel: 'En analyse',
-        aiAnalysis: 'Analyse IA en cours...',
-        blockchain: false,
-        gpsVerified: true
-      }
-    ]
+
+    recentScans: []
   });
 
   const getStatusColor = (status) => {
@@ -277,11 +240,19 @@ const VendeurAntiFraude = () => {
           {/* Résultats récents */}
           <div>
             <h3 className="text-lg font-semibold mb-4">Analyses récentes</h3>
-            <div className="space-y-4">
-              {verificationData.recentScans.map((scan) => (
-                <DocumentScanCard key={scan.id} scan={scan} />
-              ))}
-            </div>
+            {verificationData.recentScans.length === 0 ? (
+              <EmptyState
+                icon={Scan}
+                title="Aucune analyse récente"
+                description="Scannez un document pour lancer une analyse anti-fraude."
+              />
+            ) : (
+              <div className="space-y-4">
+                {verificationData.recentScans.map((scan) => (
+                  <DocumentScanCard key={scan.id} scan={scan} />
+                ))}
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -383,7 +354,7 @@ const VendeurAntiFraude = () => {
                     Base de données connectée aux services officiels
                   </p>
                   <p className="text-sm text-gray-500 mt-1">
-                    Dernière synchronisation: aujourd'hui 14:30
+                    Dernière synchronisation: —
                   </p>
                 </div>
               </div>

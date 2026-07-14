@@ -50,41 +50,95 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
   const [analysisResults, setAnalysisResults] = useState(null);
   const [selectedTab, setSelectedTab] = useState('scanner');
 
-  // Statistiques anti-fraude bancaire
+  // Statistiques anti-fraude bancaire (réelles, depuis Supabase)
   const [fraudStats, setFraudStats] = useState({
-    documentsScanned: 2341,
-    fraudsDetected: 18,
-    validDocuments: 2267,
-    pendingVerification: 56,
-    accuracyRate: 97.8,
-    monthlyScans: 347
+    documentsScanned: 0,
+    fraudsDetected: 0,
+    validDocuments: 0,
+    pendingVerification: 0,
+    accuracyRate: null,
+    monthlyScans: 0
   });
+  const [creditStats, setCreditStats] = useState({ avgCreditScore: null });
 
-  // Données des analyses récentes
-  const [recentAnalyses, setRecentAnalyses] = useState([]); // RÉEL via Supabase
   useEffect(() => {
     let active = true;
     (async () => {
       try {
-        const { data, error } = await supabase.from('messages').select('*').order('created_at', { ascending: false });
+        const monthStart = new Date();
+        monthStart.setDate(1);
+        monthStart.setHours(0, 0, 0, 0);
+        const [docsRes, scoresRes] = await Promise.all([
+          supabase.from('documents').select('status, created_at'),
+          supabase.from('profiles').select('credit_score').not('credit_score', 'is', null)
+        ]);
+        const docs = docsRes.data || [];
+        const valid = docs.filter((d) => ['approved', 'verified', 'validated'].includes(d.status)).length;
+        const frauds = docs.filter((d) => d.status === 'rejected').length;
+        const pending = docs.filter((d) => !d.status || d.status === 'pending').length;
+        const scores = (scoresRes.data || []).map((p) => p.credit_score).filter((s) => s != null);
+        if (active) {
+          setFraudStats({
+            documentsScanned: docs.length,
+            fraudsDetected: frauds,
+            validDocuments: valid,
+            pendingVerification: pending,
+            accuracyRate: docs.length ? Math.round((valid / docs.length) * 1000) / 10 : null,
+            monthlyScans: docs.filter((d) => new Date(d.created_at) >= monthStart).length
+          });
+          setCreditStats({
+            avgCreditScore: scores.length ? Math.round(scores.reduce((a, b) => a + b, 0) / scores.length) : null
+          });
+        }
+      } catch (err) {
+        console.warn('Statistiques anti-fraude indisponibles:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  // Données des analyses récentes (dossiers de financement réels)
+  const [recentAnalyses, setRecentAnalyses] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('demandes_financement')
+          .select('id, client_name, property_title, amount, status, created_at')
+          .order('created_at', { ascending: false })
+          .limit(10);
         if (error) throw error;
-        if (active) setRecentAnalyses(data || []);
+        const mapped = (data || []).map((d) => ({
+          id: d.id,
+          documentType: d.property_title || 'Dossier de financement',
+          clientName: d.client_name || 'Client',
+          creditAmount: Number(d.amount) || 0,
+          confidence: null,
+          riskLevel: d.status === 'rejected' ? 'high' : d.status === 'pending' ? 'medium' : 'low',
+          status: d.status === 'rejected' ? 'fraud_detected' : d.status === 'approved' ? 'validated' : 'pending',
+          date: d.created_at,
+          issues: []
+        }));
+        if (active) setRecentAnalyses(mapped);
       } catch (err) { if (active) setRecentAnalyses([]); }
     })();
     return () => { active = false; };
   }, []);
 
-  // Simulation du scan de document
+  // Scan de document (aucune analyse simulée)
   const handleDocumentScan = async () => {
     setScanningDocument(true);
-    
-    // Simulation d'analyse IA bancaire
+
     setTimeout(() => {
-      const mockResult = {}; // démo retirée
-      
-      setAnalysisResults(mockResult);
+      setAnalysisResults(null);
       setScanningDocument(false);
-    }, 3000);
+      window.safeGlobalToast?.({
+        title: "Analyse non disponible",
+        description: "Déposez un document pour lancer une analyse réelle.",
+        variant: "default"
+      });
+    }, 1500);
   };
 
   const getStatusColor = (status) => {
@@ -174,7 +228,7 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-blue-600 text-sm font-medium">Précision IA</p>
-                  <p className="text-2xl font-bold text-blue-900">{fraudStats.accuracyRate}%</p>
+                  <p className="text-2xl font-bold text-blue-900">{fraudStats.accuracyRate != null ? `${fraudStats.accuracyRate}%` : '—'}</p>
                 </div>
                 <Brain className="h-8 w-8 text-blue-600" />
               </div>
@@ -349,8 +403,8 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
                       </div>
                       
                       <div className="text-sm text-gray-600">
-                        <p>Hash: 0x9f2a1b4c5d6e7f8a9b0c1d2e3f4a5b6c</p>
-                        <p>Block: #2,341,567</p>
+                        <p>Hash: {analysisResults.hash || '—'}</p>
+                        <p>Block: {analysisResults.block || '—'}</p>
                         <p>Verification: {new Date().toLocaleString('fr-FR')}</p>
                       </div>
 
@@ -371,7 +425,7 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
                   <CardContent className="p-6 text-center">
                     <Calculator className="h-8 w-8 text-green-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-green-900 mb-2">Scoring Automatique</h3>
-                    <p className="text-2xl font-bold text-green-900">847</p>
+                    <p className="text-2xl font-bold text-green-900">{creditStats.avgCreditScore != null ? creditStats.avgCreditScore : '—'}</p>
                     <p className="text-sm text-green-600">Score moyen clients</p>
                   </CardContent>
                 </Card>
@@ -380,7 +434,7 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
                   <CardContent className="p-6 text-center">
                     <Percent className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-blue-900 mb-2">Taux d'Endettement</h3>
-                    <p className="text-2xl font-bold text-blue-900">28.4%</p>
+                    <p className="text-2xl font-bold text-blue-900">—</p>
                     <p className="text-sm text-blue-600">Moyenne portefeuille</p>
                   </CardContent>
                 </Card>
@@ -389,7 +443,7 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
                   <CardContent className="p-6 text-center">
                     <DollarSign className="h-8 w-8 text-purple-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-purple-900 mb-2">Capacité Remboursement</h3>
-                    <p className="text-2xl font-bold text-purple-900">94.2%</p>
+                    <p className="text-2xl font-bold text-purple-900">—</p>
                     <p className="text-sm text-purple-600">Fiabilité moyenne</p>
                   </CardContent>
                 </Card>
@@ -408,12 +462,17 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
             {/* Analyses récentes */}
             <TabsContent value="analyses" className="space-y-6">
               <div className="space-y-4">
-                {recentAnalyses.map((analysis) => (
+                {recentAnalyses.length === 0 && (
+                  <div className="text-center py-8 text-gray-500 text-sm">
+                    Aucune analyse récente disponible.
+                  </div>
+                )}
+                {recentAnalyses.map((analysis, analysisIndex) => (
                   <motion.div
                     key={analysis.id}
                     initial={{ opacity: 0, x: -20 }}
                     animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: analysis.id * 0.1 }}
+                    transition={{ delay: analysisIndex * 0.1 }}
                   >
                     <Card className="hover:shadow-md transition-shadow">
                       <CardContent className="p-4">
@@ -434,7 +493,9 @@ const BanqueAntiFraude = ({ dashboardStats }) => {
 
                           <div className="flex items-center space-x-4">
                             <div className="text-right">
-                              <div className="text-sm font-medium">Confiance: {analysis.confidence}%</div>
+                              {analysis.confidence != null && (
+                                <div className="text-sm font-medium">Confiance: {analysis.confidence}%</div>
+                              )}
                               <div className={`text-sm ${getRiskColor(analysis.riskLevel)}`}>
                                 Risque: {analysis.riskLevel}
                               </div>

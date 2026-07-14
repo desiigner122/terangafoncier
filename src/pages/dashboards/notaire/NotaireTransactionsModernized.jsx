@@ -74,6 +74,7 @@ const NotaireTransactionsModernized = () => {
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
+  const [transactionDocuments, setTransactionDocuments] = useState([]);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const transactionsPerPage = 10;
@@ -112,7 +113,7 @@ const NotaireTransactionsModernized = () => {
   const loadTransactions = async () => {
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.getNotarialActs(user.id);
+      const result = await NotaireSupabaseService.getTransactions(user.id);
       if (result.success) {
         setTransactions(result.data || []);
         setFilteredTransactions(result.data || []);
@@ -137,7 +138,8 @@ const NotaireTransactionsModernized = () => {
       filtered = filtered.filter(transaction =>
         transaction.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         transaction.act_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        transaction.property_address?.toLowerCase().includes(searchTerm.toLowerCase())
+        transaction.property_address?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        transaction.property_description?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -167,8 +169,17 @@ const NotaireTransactionsModernized = () => {
     loadTransactions();
   };
 
-  const handleViewTransaction = (transaction) => {
+  const handleViewTransaction = async (transaction) => {
     setSelectedTransaction(transaction);
+    setTransactionDocuments([]);
+    try {
+      const result = await NotaireSupabaseService.getDocuments(user.id, transaction.id);
+      if (result?.success) {
+        setTransactionDocuments(result.data || []);
+      }
+    } catch (error) {
+      console.error('Erreur chargement documents:', error);
+    }
   };
 
   const getStatusBadge = (status) => {
@@ -570,12 +581,12 @@ const NotaireTransactionsModernized = () => {
                       <div>
                         <div className="flex items-center justify-between mb-2">
                           <span className="text-sm font-medium">Progression globale</span>
-                          <span className="text-sm text-gray-600">{selectedTransaction.progress || 45}%</span>
+                          <span className="text-sm text-gray-600">{selectedTransaction.progress || 0}%</span>
                         </div>
                         <div className="w-full bg-gray-200 rounded-full h-3">
                           <div 
                             className="bg-gradient-to-r from-amber-500 to-amber-600 h-3 rounded-full transition-all duration-300" 
-                            style={{ width: `${selectedTransaction.progress || 45}%` }}
+                            style={{ width: `${selectedTransaction.progress || 0}%` }}
                           ></div>
                         </div>
                       </div>

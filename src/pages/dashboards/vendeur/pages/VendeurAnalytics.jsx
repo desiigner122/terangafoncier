@@ -61,7 +61,7 @@ const VendeurAnalytics = () => {
     {
       title: 'Temps Moyen',
       value: '—',
-      change: '+12s',
+      change: null,
       trend: 'up',
       icon: Clock,
       color: 'text-orange-600'
@@ -76,76 +76,13 @@ const VendeurAnalytics = () => {
     }
   ];
 
-  const topProperties = [
-    {
-      id: 1,
-      title: 'Villa Moderne Almadies',
-      location: 'Almadies, Dakar',
-      views: 1247,
-      favorites: 23,
-      inquiries: 8,
-      conversionRate: 4.2,
-      trend: 'up'
-    },
-    {
-      id: 2,
-      title: 'Appartement Standing Plateau',
-      location: 'Plateau, Dakar',
-      views: 892,
-      favorites: 15,
-      inquiries: 5,
-      conversionRate: 3.1,
-      trend: 'stable'
-    },
-    {
-      id: 3,
-      title: 'Maison Familiale Parcelles',
-      location: 'Parcelles Assainies, Dakar',
-      views: 654,
-      favorites: 12,
-      inquiries: 3,
-      conversionRate: 1.8,
-      trend: 'down'
-    }
-  ];
+  const topProperties = [];
 
-  const audienceData = [
-    { segment: 'Jeunes Professionnels', percentage: 45, color: 'bg-blue-500' },
-    { segment: 'Familles', percentage: 30, color: 'bg-green-500' },
-    { segment: 'Investisseurs', percentage: 15, color: 'bg-purple-500' },
-    { segment: 'Retraités', percentage: 10, color: 'bg-orange-500' }
-  ];
+  const audienceData = [];
 
-  const locationData = [
-    { city: 'Dakar', views: 5234, percentage: 68 },
-    { city: 'Thiès', views: 1247, percentage: 16 },
-    { city: 'Saint-Louis', views: 892, percentage: 12 },
-    { city: 'Kaolack', views: 312, percentage: 4 }
-  ];
+  const locationData = [];
 
-  const aiInsights = [
-    {
-      type: 'opportunity',
-      title: 'Optimisation Photos',
-      description: 'Ajoutez 3-5 photos supplémentaires pour augmenter les vues de 24%',
-      impact: 'high',
-      action: 'Ajouter Photos'
-    },
-    {
-      type: 'trend',
-      title: 'Demande Croissante',
-      description: 'Les propriétés à Almadies ont +34% de demandes ce mois',
-      impact: 'medium',
-      action: 'Explorer Zone'
-    },
-    {
-      type: 'warning',
-      title: 'Baisse Performance',
-      description: 'Villa Parcelles: -15% de vues cette semaine',
-      impact: 'medium',
-      action: 'Réviser Prix'
-    }
-  ];
+  const aiInsights = [];
 
   const getTrendIcon = (trend) => {
     if (trend === 'up') return <ArrowUp className="h-4 w-4 text-green-600" />;
@@ -210,7 +147,7 @@ const VendeurAnalytics = () => {
                 <p className="text-sm font-medium text-gray-600">{kpi.title}</p>
                 <p className="text-2xl font-bold text-gray-900">{kpi.value}</p>
                 <p className={`text-sm ${kpi.trend === 'up' ? 'text-green-600' : 'text-red-600'}`}>
-                  {kpi.change} vs période précédente
+                  {kpi.change ? `${kpi.change} vs période précédente` : ''}
                 </p>
               </div>
             </CardContent>
@@ -381,23 +318,23 @@ const VendeurAnalytics = () => {
         <CardContent className="pt-6">
           <div className="grid grid-cols-2 md:grid-cols-5 gap-4 text-center">
             <div>
-              <div className="text-2xl font-bold text-blue-600">12,847</div>
+              <div className="text-2xl font-bold text-blue-600">0</div>
               <div className="text-sm text-gray-600">Vues Totales</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-green-600">3.2%</div>
+              <div className="text-2xl font-bold text-green-600">0%</div>
               <div className="text-sm text-gray-600">Taux Conversion</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-purple-600">87.3</div>
+              <div className="text-2xl font-bold text-purple-600">—</div>
               <div className="text-sm text-gray-600">Score IA Moyen</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-orange-600">2m 34s</div>
+              <div className="text-2xl font-bold text-orange-600">—</div>
               <div className="text-sm text-gray-600">Temps Moyen</div>
             </div>
             <div>
-              <div className="text-2xl font-bold text-red-600">42</div>
+              <div className="text-2xl font-bold text-red-600">0</div>
               <div className="text-sm text-gray-600">Favoris Total</div>
             </div>
           </div>

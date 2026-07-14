@@ -118,160 +118,14 @@ const MairieUrbanPlanning = ({ dashboardStats }) => {
     }, 2000);
   };
 
-  // Données des zones urbaines
-  const urbanZones = [
-    {
-      id: 'zone-1',
-      name: 'Zone Résidentielle Nord',
-      type: 'Résidentielle',
-      area: '3.2 km²',
-      population: 15420,
-      density: 'Moyenne',
-      status: 'Développée',
-      occupancyRate: 78,
-      infrastructures: ['Écoles', 'Centres de santé', 'Transports'],
-      constraints: ['Hauteur max 4 étages', 'Coefficient 0.6'],
-      futureProjects: ['Extension réseau eau', 'Nouveau parc'],
-      priority: 'Moyenne',
-      color: '#10B981',
-      developmentPlan: {
-        current: 78,
-        target: 85,
-        timeline: '2024-2026'
-      }
-    },
-    {
-      id: 'zone-2',
-      name: 'Zone Commerciale Centre',
-      type: 'Commerciale',
-      area: '1.8 km²',
-      population: 8500,
-      density: 'Élevée',
-      status: 'En Expansion',
-      occupancyRate: 92,
-      infrastructures: ['Centre commercial', 'Parking', 'Éclairage LED'],
-      constraints: ['Zone piétonne', 'Normes environnementales'],
-      futureProjects: ['Marché moderne', 'Place publique'],
-      priority: 'Haute',
-      color: '#3B82F6',
-      developmentPlan: {
-        current: 92,
-        target: 100,
-        timeline: '2024-2025'
-      }
-    },
-    {
-      id: 'zone-3',
-      name: 'Zone Agricole Est',
-      type: 'Agricole',
-      area: '5.1 km²',
-      population: 3200,
-      density: 'Faible',
-      status: 'Préservée',
-      occupancyRate: 45,
-      infrastructures: ['Puits forés', 'Pistes rurales'],
-      constraints: ['Protection sols fertiles', 'Irrigation obligatoire'],
-      futureProjects: ['Coopérative moderne', 'Formation agriculteurs'],
-      priority: 'Normale',
-      color: '#22C55E',
-      developmentPlan: {
-        current: 45,
-        target: 60,
-        timeline: '2024-2027'
-      }
-    },
-    {
-      id: 'zone-4',
-      name: 'Zone Industrielle Sud',
-      type: 'Industrielle',
-      area: '2.3 km²',
-      population: 1800,
-      density: 'Faible',
-      status: 'En Développement',
-      occupancyRate: 65,
-      infrastructures: ['Usine traitement', 'Route industrielle'],
-      constraints: ['Normes pollution', 'Zone tampon résidentielle'],
-      futureProjects: ['Parc technologique', 'Centre logistique'],
-      priority: 'Haute',
-      color: '#F59E0B',
-      developmentPlan: {
-        current: 65,
-        target: 85,
-        timeline: '2024-2026'
-      }
-    }
-  ];
+  // Données des zones urbaines (aucune donnée fictive — source réelle requise)
+  const urbanZones = [];
 
-  // Projets d'urbanisme
-  const urbanProjects = [
-    {
-      id: 'proj-1',
-      name: 'Nouveau Marché Central',
-      zone: 'Zone Commerciale Centre',
-      type: 'Infrastructure Commerciale',
-      status: 'En Cours',
-      progress: 65,
-      budget: '450M FCFA',
-      startDate: '2024-01-15',
-      endDate: '2024-06-30',
-      responsible: 'Direction Urbanisme',
-      description: 'Construction d\'un marché moderne avec 200 étals'
-    },
-    {
-      id: 'proj-2',
-      name: 'Extension Réseau Électrique',
-      zone: 'Zone Résidentielle Nord',
-      type: 'Infrastructure Énergétique',
-      status: 'Planifié',
-      progress: 25,
-      budget: '280M FCFA',
-      startDate: '2024-03-01',
-      endDate: '2024-08-15',
-      responsible: 'Service Technique',
-      description: 'Raccordement électrique des nouveaux quartiers'
-    },
-    {
-      id: 'proj-3',
-      name: 'Parc Technologique',
-      zone: 'Zone Industrielle Sud',
-      type: 'Développement Économique',
-      status: 'Étude',
-      progress: 10,
-      budget: '1.2Md FCFA',
-      startDate: '2024-06-01',
-      endDate: '2025-12-31',
-      responsible: 'Direction Économique',
-      description: 'Centre d\'innovation et d\'incubation d\'entreprises'
-    }
-  ];
+  // Projets d'urbanisme (aucune donnée fictive — source réelle requise)
+  const urbanProjects = [];
 
-  // Réglementations urbaines
-  const urbanRegulations = [
-    {
-      id: 'reg-1',
-      title: 'Coefficient d\'Occupation du Sol',
-      zones: ['Résidentielle', 'Commerciale'],
-      description: 'Limite la densité de construction par zone',
-      lastUpdate: '2024-01-10',
-      status: 'Active'
-    },
-    {
-      id: 'reg-2',
-      title: 'Hauteur Maximale des Bâtiments',
-      zones: ['Résidentielle'],
-      description: 'Fixe les limites de hauteur selon les zones',
-      lastUpdate: '2023-12-15',
-      status: 'Active'
-    },
-    {
-      id: 'reg-3',
-      title: 'Espaces Verts Obligatoires',
-      zones: ['Toutes zones'],
-      description: 'Pourcentage minimum d\'espaces verts par projet',
-      lastUpdate: '2024-01-05',
-      status: 'En révision'
-    }
-  ];
+  // Réglementations urbaines (aucune donnée fictive — source réelle requise)
+  const urbanRegulations = [];
 
   const getZoneTypeIcon = (type) => {
     switch (type) {
@@ -347,6 +201,9 @@ const MairieUrbanPlanning = ({ dashboardStats }) => {
 
         {/* Zones Urbaines */}
         <TabsContent value="zones" className="space-y-6">
+          {urbanZones.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-8">Aucune zone urbaine enregistrée</p>
+          )}
           <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
             {urbanZones.map((zone) => {
               const IconComponent = getZoneTypeIcon(zone.type);
@@ -459,6 +316,9 @@ const MairieUrbanPlanning = ({ dashboardStats }) => {
         {/* Projets */}
         <TabsContent value="projects" className="space-y-6">
           <div className="space-y-6">
+            {urbanProjects.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8">Aucun projet d'urbanisme enregistré</p>
+            )}
             {urbanProjects.map((project) => (
               <Card key={project.id}>
                 <CardHeader>
@@ -523,6 +383,9 @@ const MairieUrbanPlanning = ({ dashboardStats }) => {
         {/* Réglementations */}
         <TabsContent value="regulations" className="space-y-6">
           <div className="space-y-4">
+            {urbanRegulations.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8">Aucune réglementation enregistrée</p>
+            )}
             {urbanRegulations.map((regulation) => (
               <Card key={regulation.id}>
                 <CardHeader>

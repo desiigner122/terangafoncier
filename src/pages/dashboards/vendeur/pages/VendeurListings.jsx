@@ -131,7 +131,7 @@ const VendeurListings = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Total Vues</p>
-                <p className="text-2xl font-bold text-blue-600">2,373</p>
+                <p className="text-2xl font-bold text-blue-600">{listings.reduce((sum, l) => sum + (l.views || 0), 0)}</p>
               </div>
               <Eye className="h-8 w-8 text-blue-600" />
             </div>
@@ -143,7 +143,7 @@ const VendeurListings = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Favoris</p>
-                <p className="text-2xl font-bold text-red-600">42</p>
+                <p className="text-2xl font-bold text-red-600">{listings.reduce((sum, l) => sum + (l.favorites || 0), 0)}</p>
               </div>
               <Heart className="h-8 w-8 text-red-600" />
             </div>
@@ -155,7 +155,7 @@ const VendeurListings = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Demandes</p>
-                <p className="text-2xl font-bold text-green-600">15</p>
+                <p className="text-2xl font-bold text-green-600">{listings.reduce((sum, l) => sum + (l.inquiries || 0), 0)}</p>
               </div>
               <Users className="h-8 w-8 text-green-600" />
             </div>
@@ -167,7 +167,7 @@ const VendeurListings = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600">Actives</p>
-                <p className="text-2xl font-bold text-purple-600">8</p>
+                <p className="text-2xl font-bold text-purple-600">{listings.filter(l => l.statut === 'disponible').length}</p>
               </div>
               <FileText className="h-8 w-8 text-purple-600" />
             </div>

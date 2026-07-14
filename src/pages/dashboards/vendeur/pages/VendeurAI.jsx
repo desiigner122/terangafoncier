@@ -44,89 +44,36 @@ const VendeurAI = () => {
       title: 'Analyse Prédictive',
       description: 'Prédictions de prix et tendances marché',
       status: 'active',
-      accuracy: '94%'
+      accuracy: '—'
     },
     {
       icon: Camera,
       title: 'Optimisation Photos',
       description: 'Amélioration automatique des images',
       status: 'active',
-      accuracy: '89%'
+      accuracy: '—'
     },
     {
       icon: FileText,
       title: 'Rédaction Automatique',
       description: 'Génération de descriptions optimisées',
       status: 'active',
-      accuracy: '92%'
+      accuracy: '—'
     },
     {
       icon: DollarSign,
       title: 'Pricing Intelligent',
       description: 'Suggestions de prix basées sur l\'IA',
       status: 'beta',
-      accuracy: '87%'
+      accuracy: '—'
     }
   ];
 
   const chatHistory = []; // données graphiques réelles requises
 
-  const optimizationSuggestions = [
-    {
-      type: 'high',
-      icon: Camera,
-      title: 'Photos Manquantes',
-      property: 'Villa Almadies',
-      suggestion: 'Ajoutez 4 photos supplémentaires pour augmenter les vues de 32%',
-      impact: '+32% vues',
-      action: 'Ajouter Photos'
-    },
-    {
-      type: 'medium',
-      icon: DollarSign,
-      title: 'Ajustement Prix',
-      property: 'Appartement Plateau',
-      suggestion: 'Réduisez le prix de 3M FCFA pour être dans la fourchette optimale',
-      impact: '+24% demandes',
-      action: 'Ajuster Prix'
-    },
-    {
-      type: 'low',
-      icon: FileText,
-      title: 'Description SEO',
-      property: 'Maison Parcelles',
-      suggestion: 'Optimisez la description avec les mots-clés tendances',
-      impact: '+15% visibilité',
-      action: 'Optimiser'
-    }
-  ];
+  const optimizationSuggestions = [];
 
-  const predictions = [
-    {
-      metric: 'Prix Moyen Dakar',
-      current: '52M FCFA',
-      predicted: '54.2M FCFA',
-      change: null,
-      period: '3 mois',
-      confidence: 87
-    },
-    {
-      metric: 'Demande Almadies',
-      current: 'Élevée',
-      predicted: 'Très Élevée',
-      change: null,
-      period: '2 mois',
-      confidence: 92
-    },
-    {
-      metric: 'Taux Vente',
-      current: '3.2%',
-      predicted: '3.8%',
-      change: null,
-      period: '1 mois',
-      confidence: 79
-    }
-  ];
+  const predictions = [];
 
   const contentTemplates = []; // données graphiques réelles requises
 

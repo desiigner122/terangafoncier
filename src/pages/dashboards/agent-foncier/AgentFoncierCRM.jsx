@@ -35,16 +35,6 @@ const AgentFoncierCRM = () => {
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [clients, setClients] = useState([]);
 
-  // Données CRM simulées
-  const crmStats = {
-    totalClients: 245,
-    activeClients: 89,
-    nouveauxClients: 12,
-    clientsPotentiels: 34,
-    chiffreAffaires: 125000000,
-    tauxConversion: 68
-  };
-
   // clientsData RÉEL depuis Supabase (aucune donnée fictive)
   const [clientsData, setClientsData] = useState([]);
   useEffect(() => {
@@ -64,15 +54,25 @@ const AgentFoncierCRM = () => {
 
   useEffect(() => {
     setClients(clientsData);
-  }, []);
+  }, [clientsData]);
+
+  // Statistiques CRM dérivées des données chargées (0 par défaut)
+  const crmStats = {
+    totalClients: clients.length,
+    activeClients: clients.filter(c => c.status === 'active').length,
+    nouveauxClients: 0,
+    clientsPotentiels: clients.filter(c => c.status === 'prospect').length,
+    chiffreAffaires: clients.reduce((acc, c) => acc + (Number(c.value) || 0), 0),
+    tauxConversion: 0
+  };
 
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.company.toLowerCase().includes(searchTerm.toLowerCase());
-    
+    const matchesSearch = (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (client.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (client.company || '').toLowerCase().includes(searchTerm.toLowerCase());
+
     const matchesFilter = selectedFilter === 'all' || client.status === selectedFilter;
-    
+
     return matchesSearch && matchesFilter;
   });
 
@@ -210,6 +210,9 @@ const AgentFoncierCRM = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {filteredClients.length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-6">Aucun client disponible</p>
+              )}
               {filteredClients.map((client, index) => (
                 <motion.div
                   key={client.id}
@@ -222,17 +225,17 @@ const AgentFoncierCRM = () => {
                     <Avatar className="h-12 w-12">
                       <AvatarImage src={client.avatar} />
                       <AvatarFallback className="bg-gradient-to-r from-amber-500 to-orange-600 text-white">
-                        {client.name.split(' ').map(n => n[0]).join('')}
+                        {(client.name || '?').split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
-                        <h3 className="font-semibold text-slate-900">{client.name}</h3>
-                        <div className={`text-sm font-bold ${getScoreColor(client.score)}`}>
-                          {client.score}/100
+                        <h3 className="font-semibold text-slate-900">{client.name || 'Contact'}</h3>
+                        <div className={`text-sm font-bold ${getScoreColor(client.score ?? 0)}`}>
+                          {client.score ?? 0}/100
                         </div>
-                        {client.tags.map(tag => (
+                        {(client.tags || []).map(tag => (
                           <Badge key={tag} variant="outline" className="text-xs">
                             {tag}
                           </Badge>
@@ -242,22 +245,22 @@ const AgentFoncierCRM = () => {
                       <div className="flex items-center space-x-4 text-sm text-slate-600 mt-1">
                         <span className="flex items-center">
                           <Building2 className="w-3 h-3 mr-1" />
-                          {client.company}
+                          {client.company || '—'}
                         </span>
                         <span className="flex items-center">
                           <MapPin className="w-3 h-3 mr-1" />
-                          {client.location}
+                          {client.location || '—'}
                         </span>
                         <span className="flex items-center">
                           <DollarSign className="w-3 h-3 mr-1" />
-                          {(client.value / 1000000).toFixed(1)}M FCFA
+                          {((Number(client.value) || 0) / 1000000).toFixed(1)}M FCFA
                         </span>
                       </div>
 
                       <div className="flex items-center space-x-4 text-xs text-slate-500 mt-2">
-                        <span>Dernière activité: {client.lastContact}</span>
-                        <span>Suivi prévu: {client.nextFollowUp}</span>
-                        <span>{client.projects} projets</span>
+                        <span>Dernière activité: {client.lastContact || '—'}</span>
+                        <span>Suivi prévu: {client.nextFollowUp || '—'}</span>
+                        <span>{client.projects ?? 0} projets</span>
                       </div>
                     </div>
                   </div>

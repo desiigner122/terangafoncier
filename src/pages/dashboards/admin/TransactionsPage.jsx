@@ -175,7 +175,7 @@ const TransactionsPage = () => {
         const defaultTransactions = []; // démo retirée
         
         setTransactions(defaultTransactions);
-        setStats({ totalTransactions: 1, completedTransactions: 1, pendingTransactions: 0, failedTransactions: 0, totalVolume: 450000000, averageAmount: 450000000 });
+        setStats({ totalTransactions: 0, completedTransactions: 0, pendingTransactions: 0, failedTransactions: 0, totalVolume: 0, averageAmount: 0 });
       }
       
     } catch (error) {
@@ -194,13 +194,9 @@ const TransactionsPage = () => {
 
   const generateAIInsights = async () => {
     try {
-      // Simulation insights IA - En production, appel API OpenAI
-      setAiInsights([
-        'Volume transactions en hausse de 28% ce mois',
-        'Taux de réussite paiements: 94% (excellent)',
-        'Mobile Money devient le mode préféré (65%)',
-        'Détection activité suspecte: aucune anomalie'
-      ]);
+      // Insights IA : nécessitent une vraie analyse des données.
+      // Aucun insight inventé -> liste vide (la section ne s'affiche pas).
+      setAiInsights([]);
     } catch (error) {
       console.error('Erreur génération insights IA:', error);
     }

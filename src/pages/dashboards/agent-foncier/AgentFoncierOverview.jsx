@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MapPin,
@@ -30,10 +31,37 @@ const AgentFoncierOverview = () => {
     setTimeout(() => setLoading(false), 800);
   }, []);
 
+  // Compteurs RÉELS depuis Supabase (0 par défaut, aucune donnée fictive)
+  const [counts, setCounts] = useState({ terrains: 0, clients: 0, documents: 0, revenus: 0 });
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [terrainsRes, clientsRes, documentsRes] = await Promise.all([
+          supabase.from('properties').select('*', { count: 'exact', head: true }),
+          supabase.from('crm_contacts').select('*', { count: 'exact', head: true }),
+          supabase.from('documents').select('*', { count: 'exact', head: true })
+        ]);
+        if (active) {
+          setCounts({
+            terrains: terrainsRes.count || 0,
+            clients: clientsRes.count || 0,
+            documents: documentsRes.count || 0,
+            revenus: 0
+          });
+        }
+      } catch (err) {
+        console.warn('stats indisponibles:', err?.message);
+        if (active) setCounts({ terrains: 0, clients: 0, documents: 0, revenus: 0 });
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   const stats = [
     {
       title: 'Terrains Gérés',
-      value: '—',
+      value: counts.terrains,
       change: null,
       icon: Map,
       color: 'text-green-600',
@@ -41,7 +69,7 @@ const AgentFoncierOverview = () => {
     },
     {
       title: 'Clients Actifs',
-      value: '—',
+      value: counts.clients,
       change: null,
       icon: Users,
       color: 'text-blue-600',
@@ -49,7 +77,7 @@ const AgentFoncierOverview = () => {
     },
     {
       title: 'Documents Traités',
-      value: '—',
+      value: counts.documents,
       change: null,
       icon: FileText,
       color: 'text-purple-600',
@@ -57,7 +85,7 @@ const AgentFoncierOverview = () => {
     },
     {
       title: 'Revenus Mensuels',
-      value: '—',
+      value: `${counts.revenus.toLocaleString()} XOF`,
       change: null,
       icon: DollarSign,
       color: 'text-orange-600',
@@ -112,10 +140,12 @@ const AgentFoncierOverview = () => {
                   <div>
                     <p className="text-sm text-gray-600">{stat.title}</p>
                     <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    <div className="flex items-center mt-2">
-                      <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                      <span className="text-sm text-green-600">{stat.change}</span>
-                    </div>
+                    {stat.change && (
+                      <div className="flex items-center mt-2">
+                        <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
+                        <span className="text-sm text-green-600">{stat.change}</span>
+                      </div>
+                    )}
                   </div>
                   <div className={`p-3 rounded-lg ${stat.bgColor}`}>
                     <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -139,6 +169,9 @@ const AgentFoncierOverview = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {recentActivities.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucune activité récente</p>
+                )}
                 {recentActivities.map((activity) => (
                   <div key={activity.id} className="flex items-center space-x-4 p-3 rounded-lg hover:bg-gray-50">
                     <div className={`p-2 rounded-lg ${
@@ -182,6 +215,9 @@ const AgentFoncierOverview = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {upcomingTasks.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucune tâche à venir</p>
+                )}
                 {upcomingTasks.map((task) => (
                   <div key={task.id} className="p-3 border rounded-lg">
                     <div className="flex items-start justify-between mb-2">
@@ -218,23 +254,23 @@ const AgentFoncierOverview = () => {
               <div>
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-gray-600">Objectif terrains</span>
-                  <span className="text-sm font-medium">85%</span>
+                  <span className="text-sm font-medium">0%</span>
                 </div>
-                <Progress value={85} className="h-2" />
+                <Progress value={0} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-gray-600">Satisfaction client</span>
-                  <span className="text-sm font-medium">92%</span>
+                  <span className="text-sm font-medium">0%</span>
                 </div>
-                <Progress value={92} className="h-2" />
+                <Progress value={0} className="h-2" />
               </div>
               <div>
                 <div className="flex justify-between mb-2">
                   <span className="text-sm text-gray-600">Documents traités</span>
-                  <span className="text-sm font-medium">78%</span>
+                  <span className="text-sm font-medium">0%</span>
                 </div>
-                <Progress value={78} className="h-2" />
+                <Progress value={0} className="h-2" />
               </div>
             </div>
           </CardContent>

@@ -1,4 +1,5 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
@@ -68,6 +69,41 @@ const CompleteSidebarGeometreDashboard = () => {
   const navigate = useNavigate();
   const { user, profile } = useAuth();
 
+  // Compteurs RÉELS depuis Supabase (aucune donnée fictive)
+  const [missionsCount, setMissionsCount] = useState(0);
+  const [clientsCount, setClientsCount] = useState(0);
+  const [messagesCount, setMessagesCount] = useState(0);
+  const [notificationsCount, setNotificationsCount] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [missionsRes, clientsRes, messagesRes, notificationsRes] = await Promise.all([
+          supabase.from('field_measurements').select('*', { count: 'exact', head: true }),
+          supabase.from('crm_contacts').select('*', { count: 'exact', head: true }),
+          supabase.from('messages').select('*', { count: 'exact', head: true }),
+          supabase.from('notifications').select('*', { count: 'exact', head: true })
+        ]);
+        if (active) {
+          setMissionsCount(missionsRes.count || 0);
+          setClientsCount(clientsRes.count || 0);
+          setMessagesCount(messagesRes.count || 0);
+          setNotificationsCount(notificationsRes.count || 0);
+        }
+      } catch (err) {
+        console.warn('compteurs indisponibles:', err?.message);
+        if (active) {
+          setMissionsCount(0);
+          setClientsCount(0);
+          setMessagesCount(0);
+          setNotificationsCount(0);
+        }
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   // Configuration des pages du dashboard
   const menuItems = [
     {
@@ -83,7 +119,7 @@ const CompleteSidebarGeometreDashboard = () => {
       icon: Target,
       path: '/geometre/missions',
       description: 'Gestion des missions en cours',
-      badge: 5
+      badge: missionsCount || null
     },
     {
       id: 'clients',
@@ -150,7 +186,7 @@ const CompleteSidebarGeometreDashboard = () => {
       path: '/geometre/communication',
       description: 'Hub communication multicanal',
       subtitle: 'Messagerie, visioconférence, rapports clients',
-      badge: 5
+      badge: messagesCount || null
     },
     {
       id: 'blockchain',
@@ -411,11 +447,11 @@ const CompleteSidebarGeometreDashboard = () => {
                 <div className="grid grid-cols-2 gap-2 text-center">
                   <div>
                     <p className="text-xs text-gray-500">Missions</p>
-                    <p className="text-sm font-bold text-blue-600">12</p>
+                    <p className="text-sm font-bold text-blue-600">{missionsCount}</p>
                   </div>
                   <div>
                     <p className="text-xs text-gray-500">Clients</p>
-                    <p className="text-sm font-bold text-green-600">8</p>
+                    <p className="text-sm font-bold text-green-600">{clientsCount}</p>
                   </div>
                 </div>
               </div>
@@ -598,9 +634,11 @@ const CompleteSidebarGeometreDashboard = () => {
                   className="relative hover:bg-blue-50 hover:text-blue-600 rounded-lg transition-all duration-200"
                 >
                   <MessageSquare className="h-4 w-4" />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">3</span>
-                  </span>
+                  {messagesCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">{messagesCount}</span>
+                    </span>
+                  )}
                 </Button>
                 
                 <Button 
@@ -610,9 +648,11 @@ const CompleteSidebarGeometreDashboard = () => {
                   className="relative hover:bg-amber-50 hover:text-amber-600 rounded-lg transition-all duration-200"
                 >
                   <Bell className="h-4 w-4" />
-                  <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
-                    <span className="text-white text-xs font-bold">7</span>
-                  </span>
+                  {notificationsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 w-4 h-4 bg-amber-500 rounded-full flex items-center justify-center">
+                      <span className="text-white text-xs font-bold">{notificationsCount}</span>
+                    </span>
+                  )}
                 </Button>
               </div>
 

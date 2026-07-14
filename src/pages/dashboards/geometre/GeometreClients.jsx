@@ -84,9 +84,9 @@ const GeometreClients = () => {
   };
 
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.sector.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (client.contact || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (client.sector || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'tous' || client.type === filterType;
     
     return matchesSearch && matchesType;
@@ -213,6 +213,9 @@ const GeometreClients = () => {
 
         <TabsContent value="grille" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredClients.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8 col-span-full">Aucun client pour le moment</p>
+            )}
             {filteredClients.map((client, index) => {
               const TypeIcon = getClientTypeIcon(client.type);
               return (
@@ -287,7 +290,7 @@ const GeometreClients = () => {
                       <div className="mb-4">
                         <h4 className="text-sm font-medium text-gray-900 mb-2">Projets actifs</h4>
                         <div className="space-y-2">
-                          {client.projects.slice(0, 2).map((project, idx) => (
+                          {(client.projects || []).slice(0, 2).map((project, idx) => (
                             <div key={idx} className="flex items-center justify-between text-xs">
                               <span className="text-gray-600 truncate flex-1">{project.name}</span>
                               <Badge variant="outline" className={`ml-2 ${getProjectStatusColor(project.status)}`}>
@@ -408,7 +411,7 @@ const GeometreClients = () => {
                 <div className="space-y-3">
                   {['entreprise', 'particulier', 'administration', 'cooperative'].map((type) => {
                     const count = clients.filter(c => c.type === type).length;
-                    const percentage = (count / clients.length * 100).toFixed(1);
+                    const percentage = clients.length ? (count / clients.length * 100).toFixed(1) : '0.0';
                     return (
                       <div key={type} className="flex items-center justify-between">
                         <span className="text-sm capitalize">{type}</span>
@@ -434,8 +437,8 @@ const GeometreClients = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  {clients
-                    .sort((a, b) => parseInt(b.totalRevenue.replace(/[^0-9]/g, '')) - parseInt(a.totalRevenue.replace(/[^0-9]/g, '')))
+                  {[...clients]
+                    .sort((a, b) => (parseInt(String(b.totalRevenue || '').replace(/[^0-9]/g, '')) || 0) - (parseInt(String(a.totalRevenue || '').replace(/[^0-9]/g, '')) || 0))
                     .slice(0, 5)
                     .map((client, index) => (
                       <div key={client.id} className="flex items-center justify-between">

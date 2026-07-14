@@ -272,12 +272,12 @@ const ModernAnalyticsPage = () => {
       
       setAiInsights(insights);
 
-      // Analytics prédictives : projections simples basées sur les vraies données.
-      // riskScore / opportunityScore nécessitent un vrai modèle -> null (UI "N/D").
+      // Analytics prédictives : nécessitent un vrai modèle de prévision.
+      // Sans modèle, aucune valeur inventée -> null (l'UI affiche 0).
       setPredictiveAnalytics({
-        nextMonthRevenue: (data.overview.totalRevenue || 0) * 1.15,
-        nextMonthUsers: (data.overview.totalUsers || 0) * 1.08,
-        nextMonthTransactions: (data.overview.totalTransactions || 0) * 1.12,
+        nextMonthRevenue: null,
+        nextMonthUsers: null,
+        nextMonthTransactions: null,
         riskScore: null,
         opportunityScore: null
       });
@@ -289,17 +289,30 @@ const ModernAnalyticsPage = () => {
 
   const loadBlockchainAnalytics = async (data) => {
     try {
-      const blockchainData = await globalAdminService.prepareBlockchainIntegration();
+      // Métriques blockchain RÉELLES depuis Supabase
+      const [btxResult, certResult] = await Promise.all([
+        supabase.from('blockchain_transactions').select('*', { count: 'exact', head: true }),
+        supabase.from('blockchain_certificates').select('*', { count: 'exact', head: true })
+      ]);
+
       setBlockchainMetrics({
-        totalTransactions: data.overview.totalTransactions,
-        blockchainReadyTransactions: Math.floor(data.overview.totalTransactions * 0.75),
+        totalTransactions: data.overview.totalTransactions || 0,
+        blockchainReadyTransactions: btxResult.count || 0,
         smartContractsDeployed: 0, // À implémenter
-        nftProperties: Math.floor(data.overview.totalProperties * 0.3),
-        blockchainRevenue: data.overview.totalRevenue * 0.15,
-        preparationScore: 75
+        nftProperties: certResult.count || 0,
+        blockchainRevenue: 0,
+        preparationScore: 0
       });
     } catch (error) {
       console.error('Erreur métriques blockchain:', error);
+      setBlockchainMetrics({
+        totalTransactions: 0,
+        blockchainReadyTransactions: 0,
+        smartContractsDeployed: 0,
+        nftProperties: 0,
+        blockchainRevenue: 0,
+        preparationScore: 0
+      });
     }
   };
 
@@ -370,7 +383,9 @@ const ModernAnalyticsPage = () => {
               </p>
               <div className="flex items-center mt-1">
                 <Activity className="h-4 w-4 text-blue-600 mr-1" />
-                <span className="text-sm text-blue-600">+12.5%</span>
+                <span className="text-sm text-blue-600">
+                  {analyticsData.growth?.transactionGrowth != null ? `${analyticsData.growth.transactionGrowth}%` : 'N/D'}
+                </span>
               </div>
             </div>
             <BarChart3 className="h-8 w-8 text-blue-600" />
@@ -388,7 +403,9 @@ const ModernAnalyticsPage = () => {
               </p>
               <div className="flex items-center mt-1">
                 <Users className="h-4 w-4 text-purple-600 mr-1" />
-                <span className="text-sm text-purple-600">+8.2%</span>
+                <span className="text-sm text-purple-600">
+                  {analyticsData.growth?.userGrowth != null ? `${analyticsData.growth.userGrowth}%` : 'N/D'}
+                </span>
               </div>
             </div>
             <Users className="h-8 w-8 text-purple-600" />
@@ -406,7 +423,9 @@ const ModernAnalyticsPage = () => {
               </p>
               <div className="flex items-center mt-1">
                 <Building className="h-4 w-4 text-orange-600 mr-1" />
-                <span className="text-sm text-orange-600">+15.3%</span>
+                <span className="text-sm text-orange-600">
+                  {analyticsData.growth?.propertyGrowth != null ? `${analyticsData.growth.propertyGrowth}%` : 'N/D'}
+                </span>
               </div>
             </div>
             <Building className="h-8 w-8 text-orange-600" />

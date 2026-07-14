@@ -52,6 +52,7 @@ const DashboardParticulierHome = () => {
   
   const [recentActivity, setRecentActivity] = useState([]);
   const [quickActions, setQuickActions] = useState([]);
+  const [objectifs, setObjectifs] = useState({ profil: 0, documents: 0, demandes: 0 });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -63,51 +64,25 @@ const DashboardParticulierHome = () => {
       setLoading(true);
       
       if (!user?.id) {
-        // Mode fallback avec données de démo
+        // Aucun utilisateur connecté : compteurs à zéro, pas de données simulées
         setStats({
-          messages: 4,
-          notifications: 2,
-          tickets: 1,
-          demandes: 3,
-          documents: 8,
-          favoris: 5
+          messages: 0,
+          notifications: 0,
+          tickets: 0,
+          demandes: 0,
+          documents: 0,
+          favoris: 0
         });
-        
-        setRecentActivity([
-          {
-            id: 1,
-            type: 'message',
-            title: 'Nouveau message administratif',
-            description: 'Mise à jour sur votre dossier DT-2025-001',
-            time: new Date().toISOString(),
-            status: 'nouveau',
-            icon: MessageSquare,
-            color: 'blue'
-          },
-          {
-            id: 2,
-            type: 'ticket',
-            title: 'Ticket résolu',
-            description: 'Problème de connexion résolu par le support',
-            time: new Date(Date.now() - 2 * 60 * 60 * 1000).toISOString(),
-            status: 'resolu',
-            icon: Ticket,
-            color: 'green'
-          },
-          {
-            id: 3,
-            type: 'demande',
-            title: 'Demande terrain en cours',
-            description: 'Votre demande pour Parcelles Assainies est en traitement',
-            time: new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString(),
-            status: 'en_cours',
-            icon: MapPin,
-            color: 'orange'
-          }
-        ]);
-        
+        setRecentActivity([]);
         return;
       }
+
+      // Récupérer les conversations de l'utilisateur (pour compter ses messages)
+      const { data: participations } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+      const conversationIds = (participations || []).map(p => p.conversation_id);
 
       // Charger les vraies données
       const [
@@ -118,46 +93,92 @@ const DashboardParticulierHome = () => {
         documentsResult,
         favorisResult
       ] = await Promise.allSettled([
-  supabase.from('messages').select('id', { count: 'exact' }).eq('recipient_id', user.id).is('read_at', null).limit(0),
-  supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).is('read_at', null).limit(0),
-  supabase.from('support_tickets').select('id', { count: 'exact' }).eq('user_id', user.id).in('status', ['nouveau', 'en_cours']).limit(0),
-  supabase.from('demandes_terrains_communaux').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  supabase.from('user_documents').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0),
-  // use the 'favorites' table (English) which is the correct table used across the app
-  // wrap in try/catch via Promise.allSettled in the caller; this just ensures the table name is correct
-  supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
+        conversationIds.length > 0
+          ? supabase.from('messages').select('id', { count: 'exact' }).in('conversation_id', conversationIds).neq('sender_id', user.id).eq('read', false).limit(0)
+          : Promise.resolve({ count: 0 }),
+        supabase.from('notifications').select('id', { count: 'exact' }).eq('user_id', user.id).eq('read', false).limit(0),
+        supabase.from('support_tickets').select('id,status').eq('user_id', user.id),
+        supabase.from('communal_requests').select('id,status').eq('applicant_id', user.id),
+        supabase.from('documents').select('id,status').eq('owner_id', user.id),
+        supabase.from('favorites').select('id', { count: 'exact' }).eq('user_id', user.id).limit(0)
       ]);
+
+      const openStatuses = ['nouveau', 'en_cours', 'open', 'in_progress', 'pending'];
+      const validatedStatuses = ['approved', 'validated', 'verified', 'valide', 'validé'];
+      const tickets = ticketsResult.value?.data || [];
+      const demandesList = demandesResult.value?.data || [];
+      const documentsList = documentsResult.value?.data || [];
 
       setStats({
         messages: messagesResult.value?.count || 0,
         notifications: notificationsResult.value?.count || 0,
-        tickets: ticketsResult.value?.count || 0,
-        demandes: demandesResult.value?.count || 0,
-        documents: documentsResult.value?.count || 0,
+        tickets: tickets.filter(t => openStatuses.includes(t.status)).length,
+        demandes: demandesList.length,
+        documents: documentsList.length,
         favoris: favorisResult.value?.count || 0
       });
 
-      // Charger activité récente
-      const { data: messages } = await supabase
-        .from('messages')
-        .select('*')
-        .eq('recipient_id', user.id)
+      // Objectifs calculés à partir des vraies données
+      const profileFields = [profile?.full_name, profile?.phone, profile?.city, profile?.region, profile?.avatar_url, profile?.profession];
+      const filledFields = profileFields.filter(Boolean).length;
+      setObjectifs({
+        profil: Math.round((filledFields / profileFields.length) * 100),
+        documents: documentsList.length > 0
+          ? Math.round((documentsList.filter(d => validatedStatuses.includes((d.status || '').toLowerCase())).length / documentsList.length) * 100)
+          : 0,
+        demandes: demandesList.length > 0
+          ? Math.round((demandesList.filter(d => ['pending', 'en_cours', 'in_progress', 'processing'].includes((d.status || '').toLowerCase())).length / demandesList.length) * 100)
+          : 0
+      });
+
+      // Charger activité récente (derniers messages reçus + notifications)
+      const activity = [];
+
+      if (conversationIds.length > 0) {
+        const { data: messages } = await supabase
+          .from('messages')
+          .select('id, content, read, created_at')
+          .in('conversation_id', conversationIds)
+          .neq('sender_id', user.id)
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        (messages || []).forEach(msg => {
+          activity.push({
+            id: `msg-${msg.id}`,
+            type: 'message',
+            title: 'Nouveau message',
+            description: (msg.content || '').substring(0, 100),
+            time: msg.created_at,
+            status: msg.read ? 'lu' : 'nouveau',
+            icon: MessageSquare,
+            color: 'blue'
+          });
+        });
+      }
+
+      const { data: notifs } = await supabase
+        .from('notifications')
+        .select('id, title, message, read, created_at')
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false })
         .limit(3);
 
-      if (messages) {
-        const messageActivity = messages.map(msg => ({
-          id: msg.id,
-          type: 'message',
-          title: msg.subject,
-          description: msg.message.substring(0, 100) + '...',
-          time: msg.created_at,
-          status: msg.read_at ? 'lu' : 'nouveau',
-          icon: MessageSquare,
-          color: 'blue'
-        }));
-        setRecentActivity(messageActivity);
-      }
+      (notifs || []).forEach(n => {
+        activity.push({
+          id: `notif-${n.id}`,
+          type: 'notification',
+          title: n.title || 'Notification',
+          description: (n.message || '').substring(0, 100),
+          time: n.created_at,
+          status: n.read ? 'lu' : 'nouveau',
+          icon: Bell,
+          color: 'orange'
+        });
+      });
+
+      activity.sort((a, b) => new Date(b.time) - new Date(a.time));
+      setRecentActivity(activity.slice(0, 5));
 
     } catch (error) {
       console.error('Erreur chargement dashboard:', error);
@@ -170,7 +191,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Messages',
       value: stats.messages,
-      change: '+2 aujourd\'hui',
+      change: 'Non lus',
       icon: MessageSquare,
       color: 'blue',
       path: '/acheteur/messages'
@@ -178,7 +199,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Notifications',
       value: stats.notifications,
-      change: 'Dernière il y a 2h',
+      change: 'Non lues',
       icon: Bell,
       color: 'yellow',
       path: '/acheteur/notifications'
@@ -186,7 +207,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Tickets Support',
       value: stats.tickets,
-      change: '1 en cours',
+      change: 'En cours',
       icon: Ticket,
       color: 'red',
       path: '/acheteur/tickets'
@@ -194,7 +215,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Demandes',
       value: stats.demandes,
-      change: '2 en traitement',
+      change: 'Total',
       icon: FileText,
       color: 'green',
       path: '/acheteur/demandes-terrains'
@@ -202,7 +223,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Documents',
       value: stats.documents,
-      change: '100% vérifiés',
+      change: 'Total',
       icon: FileText,
       color: 'purple',
       path: '/acheteur/documents'
@@ -210,7 +231,7 @@ const DashboardParticulierHome = () => {
     {
       title: 'Favoris',
       value: stats.favoris,
-      change: '+1 cette semaine',
+      change: 'Total',
       icon: Star,
       color: 'orange',
       path: '/acheteur/favoris'
@@ -310,14 +331,20 @@ const DashboardParticulierHome = () => {
               Gérez vos dossiers immobiliers en toute simplicité
             </p>
             <div className="flex items-center gap-4 mt-4">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-green-300" />
-                <span className="text-sm">Compte vérifié</span>
-              </div>
-              <div className="flex items-center gap-2">
-                <Sparkles className="h-5 w-5 text-yellow-300" />
-                <span className="text-sm">Membre depuis 2025</span>
-              </div>
+              {profile?.is_verified && (
+                <div className="flex items-center gap-2">
+                  <CheckCircle className="h-5 w-5 text-green-300" />
+                  <span className="text-sm">Compte vérifié</span>
+                </div>
+              )}
+              {(profile?.created_at || user?.created_at) && (
+                <div className="flex items-center gap-2">
+                  <Sparkles className="h-5 w-5 text-yellow-300" />
+                  <span className="text-sm">
+                    Membre depuis {new Date(profile?.created_at || user?.created_at).getFullYear()}
+                  </span>
+                </div>
+              )}
             </div>
           </div>
           <div className="hidden lg:block">
@@ -488,30 +515,30 @@ const DashboardParticulierHome = () => {
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Profil complet</span>
-                <span className="text-sm text-slate-500">85%</span>
+                <span className="text-sm text-slate-500">{objectifs.profil}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-blue-600 h-2 rounded-full" style={{ width: '85%' }}></div>
+                <div className="bg-blue-600 h-2 rounded-full" style={{ width: `${objectifs.profil}%` }}></div>
               </div>
             </div>
-            
+
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Documents validés</span>
-                <span className="text-sm text-slate-500">60%</span>
+                <span className="text-sm text-slate-500">{objectifs.documents}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-green-600 h-2 rounded-full" style={{ width: '60%' }}></div>
+                <div className="bg-green-600 h-2 rounded-full" style={{ width: `${objectifs.documents}%` }}></div>
               </div>
             </div>
-            
+
             <div>
               <div className="flex justify-between items-center mb-2">
                 <span className="text-sm font-medium">Demandes actives</span>
-                <span className="text-sm text-slate-500">75%</span>
+                <span className="text-sm text-slate-500">{objectifs.demandes}%</span>
               </div>
               <div className="w-full bg-slate-200 rounded-full h-2">
-                <div className="bg-orange-600 h-2 rounded-full" style={{ width: '75%' }}></div>
+                <div className="bg-orange-600 h-2 rounded-full" style={{ width: `${objectifs.demandes}%` }}></div>
               </div>
             </div>
 

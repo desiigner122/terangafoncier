@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -39,19 +40,10 @@ const InvestisseurAI = () => {
       id: 1,
       type: 'ai',
       message: 'Bonjour ! Je suis votre assistant IA spécialisé en investissement immobilier. Comment puis-je vous aider aujourd\'hui ?',
-      timestamp: '10:30'
-    },
-    {
-      id: 2,
-      type: 'user',
-      message: 'Peux-tu analyser la performance de mon portefeuille ce mois ?',
-      timestamp: '10:32'
-    },
-    {
-      id: 3,
-      type: 'ai',
-      message: 'Votre portefeuille a une excellente performance ce mois avec +8.5% de croissance. Voici l\'analyse détaillée:\n\n✅ Résidence Les Almadies: +12% (construction avance bien)\n✅ Centre Commercial Liberté 6: +6% (nouveaux locataires)\n⚠️ Entrepôt Rufisque: +2% (retard mineur)\n\nRecommandation: Considérez diversifier avec plus de commercial.',
-      timestamp: '10:33'
+      timestamp: new Date().toLocaleTimeString('fr-FR', {
+        hour: '2-digit',
+        minute: '2-digit'
+      })
     }
   ]);
 
@@ -108,66 +100,47 @@ const InvestisseurAI = () => {
   ];
 
   // Analyses récentes
-  const recentAnalyses = [
-    {
-      id: 1,
-      title: 'Analyse Quartier Almadies',
-      type: 'Marché Local',
-      result: 'Tendance haussière +15%',
-      confidence: 89,
-      date: '2 heures',
-      positive: true
-    },
-    {
-      id: 2,
-      title: 'ROI Projet Commercial VDN',
-      type: 'Calculateur ROI',
-      result: 'ROI prévu: 22.5%',
-      confidence: 94,
-      date: '5 heures',
-      positive: true
-    },
-    {
-      id: 3,
-      title: 'Risque Secteur Industriel',
-      type: 'Évaluation Risque',
-      result: 'Risque modéré - Monitor',
-      confidence: 76,
-      date: '1 jour',
-      positive: false
-    }
-  ];
+  const [recentAnalyses, setRecentAnalyses] = useState([]);
 
   // Recommandations IA
-  const aiRecommendations = [
-    {
-      id: 1,
-      type: 'opportunity',
-      title: 'Opportunité Détectée',
-      description: 'Villa moderne à VDN - Prix sous-évalué de 15%',
-      action: 'Analyser maintenant',
-      priority: 'high',
-      potential: '+18% ROI estimé'
-    },
-    {
-      id: 2,
-      type: 'diversification',
-      title: 'Diversification Recommandée',
-      description: 'Votre portefeuille manque d\'exposition aux bureaux',
-      action: 'Voir options',
-      priority: 'medium',
-      potential: 'Réduction risque 12%'
-    },
-    {
-      id: 3,
-      type: 'optimization',
-      title: 'Optimisation Fiscale',
-      description: 'Restructuration possible pour économiser 2.1M XOF/an',
-      action: 'Planifier',
-      priority: 'high',
-      potential: 'Économies fiscales'
-    }
-  ];
+  const [aiRecommendations, setAiRecommendations] = useState([]);
+
+  useEffect(() => {
+    const loadAnalyses = async () => {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id;
+        if (!userId) return;
+
+        const { data, error } = await supabase
+          .from('ai_analyses')
+          .select('*')
+          .eq('user_id', userId)
+          .order('created_at', { ascending: false })
+          .limit(5);
+
+        if (error) throw error;
+
+        setRecentAnalyses(
+          (data || []).map((a) => ({
+            id: a.id,
+            title: a.title || a.type || 'Analyse',
+            type: a.type || '',
+            result: a.result || a.summary || '',
+            confidence: Number(a.confidence) || 0,
+            date: a.created_at
+              ? new Date(a.created_at).toLocaleDateString('fr-FR')
+              : '',
+            positive: true
+          }))
+        );
+      } catch (error) {
+        console.error('Erreur chargement analyses IA:', error);
+      }
+    };
+
+    loadAnalyses();
+  }, []);
 
   const handleSendMessage = () => {
     if (!message.trim()) return;
@@ -412,6 +385,11 @@ const InvestisseurAI = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {recentAnalyses.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-6">
+                        Aucune analyse récente.
+                      </p>
+                    )}
                     {recentAnalyses.map((analysis) => (
                       <div key={analysis.id} className="border rounded-lg p-4">
                         <div className="flex items-center justify-between mb-2">
@@ -454,11 +432,11 @@ const InvestisseurAI = () => {
                   <div className="space-y-6">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-blue-600">94%</p>
+                        <p className="text-2xl font-bold text-blue-600">0%</p>
                         <p className="text-xs text-gray-600">Précision analyses</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-2xl font-bold text-green-600">87</p>
+                        <p className="text-2xl font-bold text-green-600">{recentAnalyses.length}</p>
                         <p className="text-xs text-gray-600">Analyses ce mois</p>
                       </div>
                     </div>
@@ -467,28 +445,28 @@ const InvestisseurAI = () => {
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
                           <span>Analyses de marché</span>
-                          <span>32</span>
+                          <span>0</span>
                         </div>
                         <div className="bg-gray-200 rounded-full h-2">
-                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: '68%' }} />
+                          <div className="bg-blue-600 h-2 rounded-full" style={{ width: '0%' }} />
                         </div>
                       </div>
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
                           <span>Calculateurs ROI</span>
-                          <span>28</span>
+                          <span>0</span>
                         </div>
                         <div className="bg-gray-200 rounded-full h-2">
-                          <div className="bg-green-600 h-2 rounded-full" style={{ width: '58%' }} />
+                          <div className="bg-green-600 h-2 rounded-full" style={{ width: '0%' }} />
                         </div>
                       </div>
                       <div>
                         <div className="flex items-center justify-between text-sm mb-1">
                           <span>Évaluations risque</span>
-                          <span>27</span>
+                          <span>0</span>
                         </div>
                         <div className="bg-gray-200 rounded-full h-2">
-                          <div className="bg-orange-600 h-2 rounded-full" style={{ width: '56%' }} />
+                          <div className="bg-orange-600 h-2 rounded-full" style={{ width: '0%' }} />
                         </div>
                       </div>
                     </div>
@@ -509,6 +487,11 @@ const InvestisseurAI = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {aiRecommendations.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-6">
+                      Aucune recommandation disponible pour le moment.
+                    </p>
+                  )}
                   {aiRecommendations.map((rec) => (
                     <motion.div
                       key={rec.id}

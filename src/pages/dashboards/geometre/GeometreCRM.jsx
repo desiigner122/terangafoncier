@@ -54,7 +54,7 @@ const GeometreCRM = () => {
   const stats = [
     {
       title: 'Clients Actifs',
-      value: '—',
+      value: clients.filter(c => c.status === 'active').length,
       change: null,
       changeType: 'positive',
       icon: Users,
@@ -62,7 +62,7 @@ const GeometreCRM = () => {
     },
     {
       title: 'Prospects',
-      value: '—',
+      value: clients.filter(c => c.status === 'prospect').length,
       change: null,
       changeType: 'positive',
       icon: Target,
@@ -116,8 +116,8 @@ const GeometreCRM = () => {
 
   const filteredClients = clients.filter(client => {
     const matchesFilter = activeFilter === 'all' || client.status === activeFilter;
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.contact.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (client.contact || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesFilter && matchesSearch;
   });
 
@@ -223,6 +223,9 @@ const GeometreCRM = () => {
         transition={{ delay: 0.3 }}
         className="grid gap-6"
       >
+        {filteredClients.length === 0 && (
+          <p className="text-sm text-gray-500 text-center py-8">Aucun client pour le moment</p>
+        )}
         {filteredClients.map((client, index) => {
           const TypeIcon = getTypeIcon(client.type);
           return (

@@ -29,91 +29,11 @@ const GeometrePartenaires = () => {
   const [activeTab, setActiveTab] = useState('notaires');
 
   // Données des partenaires par catégorie
+  // Aucune table Supabase dédiée aux partenaires géomètre — listes vides (aucune donnée fictive)
   const partenaires = {
-    notaires: [
-      {
-        id: 1,
-        name: 'Me Fatou Sow Sarr',
-        office: 'Étude Notariale Centrale',
-        location: 'Plateau, Dakar',
-        email: 'contact@etude-centrale.sn',
-        phone: '+221 33 821 45 67',
-        collaborations: 15,
-        rating: 4.9,
-        specialities: ['Foncier', 'Immobilier', 'Succession'],
-        lastProject: 'Lotissement VDN',
-        status: 'active'
-      },
-      {
-        id: 2,
-        name: 'Me Abdou Karim Diop',
-        office: 'SCP Diop & Associés',
-        location: 'Almadies, Dakar',
-        email: 'diop.associes@notaire.sn',
-        phone: '+221 33 864 32 10',
-        collaborations: 23,
-        rating: 4.8,
-        specialities: ['Urbanisme', 'Cadastre'],
-        lastProject: 'Complexe Cité Keur Gorgui',
-        status: 'active'
-      }
-    ],
-    bureaux: [
-      {
-        id: 3,
-        name: 'Bureau d\'Études TEKNIKA',
-        type: 'Ingénierie & VRD',
-        location: 'Sacré-Cœur, Dakar',
-        email: 'contact@teknika.sn',
-        phone: '+221 77 654 32 18',
-        collaborations: 8,
-        rating: 4.7,
-        specialities: ['VRD', 'Assainissement', 'Routes'],
-        lastProject: 'Aménagement Zone Industrielle',
-        status: 'active'
-      },
-      {
-        id: 4,
-        name: 'CONSULTING PLUS',
-        type: 'Études Techniques',
-        location: 'Mermoz, Dakar',
-        email: 'info@consultingplus.sn',
-        phone: '+221 78 432 65 91',
-        collaborations: 12,
-        rating: 4.6,
-        specialities: ['Géotechnique', 'Environnement'],
-        lastProject: 'Étude impact environnemental',
-        status: 'prospect'
-      }
-    ],
-    entreprises: [
-      {
-        id: 5,
-        name: 'EIFFAGE Sénégal',
-        type: 'BTP & Construction',
-        location: 'Zone Industrielle, Dakar',
-        email: 'senegal@eiffage.com',
-        phone: '+221 33 832 45 67',
-        collaborations: 6,
-        rating: 4.8,
-        specialities: ['Gros œuvre', 'Infrastructure'],
-        lastProject: 'Autoroute à péage Dakar-Diamniadio',
-        status: 'active'
-      },
-      {
-        id: 6,
-        name: 'Groupe CCBM',
-        type: 'Matériaux & Construction',
-        location: 'Rufisque',
-        email: 'contact@ccbm.sn',
-        phone: '+221 33 954 78 32',
-        collaborations: 4,
-        rating: 4.5,
-        specialities: ['Béton', 'Préfabriqué'],
-        lastProject: 'Centre commercial Sea Plaza',
-        status: 'active'
-      }
-    ]
+    notaires: [],
+    bureaux: [],
+    entreprises: []
   };
 
   const stats = [
@@ -315,6 +235,9 @@ const GeometrePartenaires = () => {
               <p className="text-sm text-gray-600">Collaboration pour les actes authentiques et certifications foncières</p>
             </div>
             <div className="grid gap-6">
+              {partenaires.notaires.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {partenaires.notaires.map(renderPartenaireCard)}
             </div>
           </TabsContent>
@@ -325,6 +248,9 @@ const GeometrePartenaires = () => {
               <p className="text-sm text-gray-600">Partenariat pour les études d'ingénierie et projets techniques</p>
             </div>
             <div className="grid gap-6">
+              {partenaires.bureaux.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {partenaires.bureaux.map(renderPartenaireCard)}
             </div>
           </TabsContent>
@@ -335,6 +261,9 @@ const GeometrePartenaires = () => {
               <p className="text-sm text-gray-600">Collaboration pour la réalisation des projets d'aménagement</p>
             </div>
             <div className="grid gap-6">
+              {partenaires.entreprises.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {partenaires.entreprises.map(renderPartenaireCard)}
             </div>
           </TabsContent>

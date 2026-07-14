@@ -50,18 +50,6 @@ const AgentFoncierGPSVerification = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Statistiques GPS
-  const gpsStats = {
-    totalProperties: 2456,
-    verifiedProperties: 2234,
-    pendingVerification: 156,
-    gpsAccuracy: 98.2,
-    lastUpdate: '2024-03-01 15:30',
-    activeSurveys: 23,
-    completedSurveys: 145,
-    averageAccuracy: 2.3 // en mètres
-  };
-
   // Propriétés avec coordonnées GPS
   // properties RÉEL depuis Supabase (aucune donnée fictive)
   const [properties, setProperties] = useState([]);
@@ -79,6 +67,17 @@ const AgentFoncierGPSVerification = () => {
     })();
     return () => { active = false; };
   }, []);
+
+  // Statistiques GPS dérivées des données réelles (0 par défaut)
+  const gpsStats = {
+    totalProperties: properties.length,
+    verifiedProperties: properties.filter(p => (p.status || p.statut) === 'verified').length,
+    pendingVerification: properties.filter(p => (p.status || p.statut) === 'pending').length,
+    gpsAccuracy: 0,
+    activeSurveys: 0,
+    completedSurveys: 0,
+    averageAccuracy: 0
+  };
 
   // Équipements GPS
   const gpsEquipment = []; // démo retirée
@@ -110,9 +109,9 @@ const AgentFoncierGPSVerification = () => {
   };
 
   const filteredProperties = properties.filter(property =>
-    property.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.owner.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    property.location.toLowerCase().includes(searchTerm.toLowerCase())
+    (property.reference || property.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (property.owner || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (property.location || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   return (
@@ -315,29 +314,29 @@ const AgentFoncierGPSVerification = () => {
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Précision GPS</span>
-                    <span className={`font-semibold ${getAccuracyColor(selectedProperty.coordinates.accuracy)}`}>
-                      ±{selectedProperty.coordinates.accuracy}m
+                    <span className={`font-semibold ${getAccuracyColor(selectedProperty.coordinates?.accuracy ?? 0)}`}>
+                      ±{selectedProperty.coordinates?.accuracy ?? 0}m
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-slate-600">Altitude</span>
-                    <span className="font-semibold">{selectedProperty.coordinates.elevation}m</span>
+                    <span className="font-semibold">{selectedProperty.coordinates?.elevation ?? 0}m</span>
                   </div>
                 </div>
 
                 <div>
                   <p className="text-sm text-slate-600 mb-2">Coordonnées</p>
                   <div className="bg-slate-50 p-2 rounded text-xs font-mono">
-                    <div>Lat: {selectedProperty.coordinates.lat}°</div>
-                    <div>Lng: {selectedProperty.coordinates.lng}°</div>
+                    <div>Lat: {selectedProperty.coordinates?.lat ?? '—'}°</div>
+                    <div>Lng: {selectedProperty.coordinates?.lng ?? '—'}°</div>
                   </div>
                 </div>
 
-                {selectedProperty.conflicts.length > 0 && (
+                {(selectedProperty.conflicts || []).length > 0 && (
                   <div>
                     <p className="text-sm text-slate-600 mb-2">Conflits</p>
                     <div className="space-y-1">
-                      {selectedProperty.conflicts.map((conflict, idx) => (
+                      {(selectedProperty.conflicts || []).map((conflict, idx) => (
                         <Badge key={idx} variant="outline" className="text-xs text-red-600 border-red-200">
                           {conflict}
                         </Badge>
@@ -410,6 +409,12 @@ const AgentFoncierGPSVerification = () => {
 
             {/* Tableau des propriétés */}
             <div className="space-y-3">
+              {filteredProperties.length === 0 && (
+                <div className="text-center py-8 text-slate-500">
+                  <MapPin className="w-10 h-10 mx-auto mb-2 opacity-50" />
+                  <p>Aucune propriété géolocalisée</p>
+                </div>
+              )}
               {filteredProperties.map((property, index) => (
                 <motion.div
                   key={property.id}
@@ -438,8 +443,8 @@ const AgentFoncierGPSVerification = () => {
                       </div>
                       <div className="text-center">
                         <p className="text-xs text-slate-500">Précision</p>
-                        <p className={`font-semibold ${getAccuracyColor(property.coordinates.accuracy)}`}>
-                          ±{property.coordinates.accuracy}m
+                        <p className={`font-semibold ${getAccuracyColor(property.coordinates?.accuracy ?? 0)}`}>
+                          ±{property.coordinates?.accuracy ?? 0}m
                         </p>
                       </div>
                       <div className="text-center">
@@ -452,12 +457,12 @@ const AgentFoncierGPSVerification = () => {
                     </div>
                   </div>
 
-                  {property.conflicts.length > 0 && (
+                  {(property.conflicts || []).length > 0 && (
                     <div className="mt-3 pt-3 border-t">
                       <div className="flex items-center space-x-2">
                         <AlertTriangle className="w-4 h-4 text-red-500" />
                         <span className="text-sm text-red-600">
-                          {property.conflicts.length} conflit(s) détecté(s)
+                          {(property.conflicts || []).length} conflit(s) détecté(s)
                         </span>
                       </div>
                     </div>

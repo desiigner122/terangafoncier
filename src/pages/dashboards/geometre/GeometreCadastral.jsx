@@ -99,10 +99,10 @@ const GeometreCadastral = () => {
   };
 
   const filteredParcelles = parcelles.filter(parcelle => {
-    const matchesSearch = parcelle.numeroTitre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         parcelle.numeroParcelle.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         parcelle.proprietaire.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         parcelle.lieu.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (parcelle.numeroTitre || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (parcelle.numeroParcelle || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (parcelle.proprietaire || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (parcelle.lieu || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'tous' || parcelle.typeProprietaire === typeFilter;
     const matchesStatus = statusFilter === 'tous' || parcelle.statut === statusFilter;
     
@@ -250,9 +250,12 @@ const GeometreCadastral = () => {
 
         <TabsContent value="parcelles" className="mt-6">
           <div className="space-y-4">
+            {filteredParcelles.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8">Aucune parcelle pour le moment</p>
+            )}
             {filteredParcelles.map((parcelle, index) => {
               const TypeIcon = getTypeProprietaireIcon(parcelle.typeProprietaire);
-              const ParcelleIcon = parcelle.icon;
+              const ParcelleIcon = parcelle.icon || Map;
               
               return (
                 <motion.div
@@ -295,7 +298,7 @@ const GeometreCadastral = () => {
                                   </div>
                                   <div className="flex items-center gap-2">
                                     <Navigation className="h-3 w-3" />
-                                    {parcelle.coordonnees.lat.toFixed(4)}°N, {parcelle.coordonnees.lng.toFixed(4)}°W
+                                    {parcelle.coordonnees ? `${parcelle.coordonnees.lat.toFixed(4)}°N, ${parcelle.coordonnees.lng.toFixed(4)}°W` : '—'}
                                   </div>
                                 </div>
                               </div>
@@ -348,7 +351,7 @@ const GeometreCadastral = () => {
                       <div className="mb-4">
                         <h4 className="text-sm font-medium text-gray-900 mb-2">Limites & Confrontations</h4>
                         <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
-                          {parcelle.limites.map((limite, idx) => (
+                          {(parcelle.limites || []).map((limite, idx) => (
                             <div key={idx} className="text-xs bg-gray-50 p-2 rounded">
                               <span className="font-medium">{limite.direction}:</span> {limite.limite}
                             </div>
@@ -361,7 +364,7 @@ const GeometreCadastral = () => {
                         <div className="flex items-center gap-2">
                           <span className="text-sm text-gray-600">Documents:</span>
                           <div className="flex gap-1">
-                            {parcelle.documents.map((doc, idx) => (
+                            {(parcelle.documents || []).map((doc, idx) => (
                               <Badge key={idx} variant="outline" className="text-xs">
                                 {doc}
                               </Badge>
@@ -467,7 +470,7 @@ const GeometreCadastral = () => {
                 <div className="space-y-3">
                   {['résidentiel', 'commercial', 'industriel', 'agricole'].map((usage) => {
                     const count = parcelles.filter(p => p.usage === usage).length;
-                    const percentage = (count / parcelles.length * 100).toFixed(1);
+                    const percentage = parcelles.length ? (count / parcelles.length * 100).toFixed(1) : '0.0';
                     return (
                       <div key={usage} className="flex items-center justify-between">
                         <span className="text-sm capitalize">{usage}</span>
@@ -516,15 +519,15 @@ const GeometreCadastral = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Impôts collectés</span>
-                    <span className="font-medium">3,930,000 XOF</span>
+                    <span className="font-medium">—</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Taux moyen</span>
-                    <span className="font-medium">2%</span>
+                    <span className="font-medium">—</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Exemptions</span>
-                    <span className="font-medium">2 parcelles</span>
+                    <span className="font-medium">0 parcelles</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">En retard</span>

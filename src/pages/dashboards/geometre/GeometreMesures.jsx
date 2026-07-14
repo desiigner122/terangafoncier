@@ -108,9 +108,9 @@ const GeometreMesures = () => {
   };
 
   const filteredMesures = mesures.filter(mesure => {
-    const matchesSearch = mesure.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         mesure.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         mesure.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (mesure.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (mesure.client || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (mesure.location || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'tous' || mesure.type === typeFilter;
     const matchesStatus = statusFilter === 'tous' || mesure.status === statusFilter;
     
@@ -259,6 +259,9 @@ const GeometreMesures = () => {
 
         <TabsContent value="liste" className="mt-6">
           <div className="space-y-4">
+            {filteredMesures.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+            )}
             {filteredMesures.map((mesure, index) => {
               const TypeIcon = getTypeIcon(mesure.type);
               
@@ -320,7 +323,7 @@ const GeometreMesures = () => {
                               <div className="space-y-2">
                                 <h4 className="text-sm font-medium text-gray-900">Résultats</h4>
                                 <div className="text-xs text-gray-600 space-y-1">
-                                  {Object.entries(mesure.results).slice(0, 3).map(([key, value]) => (
+                                  {Object.entries(mesure.results || {}).slice(0, 3).map(([key, value]) => (
                                     <div key={key}>{key}: {value}</div>
                                   ))}
                                 </div>
@@ -344,7 +347,7 @@ const GeometreMesures = () => {
                       {/* Actions */}
                       <div className="flex items-center justify-between pt-4 border-t">
                         <div className="text-sm text-gray-500">
-                          Coordonnées: {mesure.coordinates.lat.toFixed(4)}°N, {mesure.coordinates.lng.toFixed(4)}°W
+                          Coordonnées: {mesure.coordinates ? `${mesure.coordinates.lat.toFixed(4)}°N, ${mesure.coordinates.lng.toFixed(4)}°W` : '—'}
                         </div>
                         
                         <div className="flex gap-2">
@@ -411,7 +414,7 @@ const GeometreMesures = () => {
                 <div className="space-y-4">
                   {['gps', 'station_totale', 'nivellement', 'drone', 'polygonation', 'architectural'].map((type) => {
                     const count = mesures.filter(m => m.type === type).length;
-                    const percentage = (count / mesures.length * 100).toFixed(1);
+                    const percentage = mesures.length > 0 ? (count / mesures.length * 100).toFixed(1) : '0.0';
                     return (
                       <div key={type} className="flex items-center justify-between">
                         <span className="text-sm">{getTypeText(type)}</span>

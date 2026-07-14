@@ -36,14 +36,15 @@ import { Progress } from '@/components/ui/progress';
 const AgentFoncierServicesDigitaux = () => {
   const [activeService, setActiveService] = useState('overview');
 
-  // Données des services digitaux
+  // Données des services digitaux (aucune donnée fictive — valeurs à 0 par défaut,
+  // aucune table Supabase pertinente pour ces métriques d'infrastructure)
   const servicesStats = {
-    cloudStorage: { used: 45.2, total: 100, unit: 'GB' },
-    apiCalls: { today: 2847, monthly: 45230 },
-    uptime: 99.9,
-    activeUsers: 156,
-    digitalTransactions: 1284,
-    automatedProcesses: 23
+    cloudStorage: { used: 0, total: 0, unit: 'GB' },
+    apiCalls: { today: 0, monthly: 0 },
+    uptime: 0,
+    activeUsers: 0,
+    digitalTransactions: 0,
+    automatedProcesses: 0
   };
 
   const digitalServices = [
@@ -54,13 +55,8 @@ const AgentFoncierServicesDigitaux = () => {
       icon: Cloud,
       color: 'from-blue-500 to-cyan-600',
       status: 'active',
-      usage: 78,
-      metrics: {
-        totalFiles: 15420,
-        totalSize: '45.2 GB',
-        lastBackup: '2024-03-01 14:30',
-        syncStatus: 'Synchronisé'
-      }
+      usage: 0,
+      metrics: {}
     },
     {
       id: 'mobile-app',
@@ -69,13 +65,8 @@ const AgentFoncierServicesDigitaux = () => {
       icon: Smartphone,
       color: 'from-green-500 to-emerald-600',
       status: 'active',
-      usage: 92,
-      metrics: {
-        activeUsers: 234,
-        dailyLogins: 89,
-        appVersion: '2.1.4',
-        lastUpdate: '2024-02-28'
-      }
+      usage: 0,
+      metrics: {}
     },
     {
       id: 'api-services',
@@ -84,13 +75,8 @@ const AgentFoncierServicesDigitaux = () => {
       icon: Network,
       color: 'from-purple-500 to-indigo-600',
       status: 'active',
-      usage: 65,
-      metrics: {
-        endpoints: 24,
-        requests: '2.8K/jour',
-        latency: '120ms',
-        errorRate: '0.2%'
-      }
+      usage: 0,
+      metrics: {}
     },
     {
       id: 'iot-monitoring',
@@ -99,13 +85,8 @@ const AgentFoncierServicesDigitaux = () => {
       icon: Wifi,
       color: 'from-orange-500 to-red-600',
       status: 'maintenance',
-      usage: 45,
-      metrics: {
-        sensors: 67,
-        dataPoints: '15M/jour',
-        batteryLevel: '78%',
-        connectivity: '94%'
-      }
+      usage: 0,
+      metrics: {}
     },
     {
       id: 'automation',
@@ -114,13 +95,8 @@ const AgentFoncierServicesDigitaux = () => {
       icon: Zap,
       color: 'from-yellow-500 to-orange-600',
       status: 'active',
-      usage: 88,
-      metrics: {
-        workflows: 23,
-        executions: '456/jour',
-        successRate: '97.8%',
-        timeSaved: '12h/jour'
-      }
+      usage: 0,
+      metrics: {}
     },
     {
       id: 'analytics',
@@ -129,46 +105,12 @@ const AgentFoncierServicesDigitaux = () => {
       icon: BarChart3,
       color: 'from-teal-500 to-cyan-600',
       status: 'active',
-      usage: 73,
-      metrics: {
-        datasets: 145,
-        reports: 67,
-        predictions: '89% précision',
-        insights: 234
-      }
+      usage: 0,
+      metrics: {}
     }
   ];
 
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'api',
-      message: 'Nouvelle intégration API avec le service cadastre',
-      timestamp: '2024-03-01 10:30',
-      status: 'success'
-    },
-    {
-      id: 2,
-      type: 'mobile',
-      message: 'Mise à jour de l\'application mobile v2.1.4',
-      timestamp: '2024-02-28 16:45',
-      status: 'success'
-    },
-    {
-      id: 3,
-      type: 'cloud',
-      message: 'Sauvegarde automatique terminée (45.2 GB)',
-      timestamp: '2024-03-01 14:30',
-      status: 'success'
-    },
-    {
-      id: 4,
-      type: 'iot',
-      message: 'Maintenance des capteurs IoT programmée',
-      timestamp: '2024-03-02 09:00',
-      status: 'warning'
-    }
-  ];
+  const recentActivities = []; // démo retirée
 
   const getStatusColor = (status) => {
     switch(status) {
@@ -337,6 +279,9 @@ const AgentFoncierServicesDigitaux = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {recentActivities.length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-6">Aucune activité récente</p>
+              )}
               {recentActivities.map((activity, index) => (
                 <motion.div
                   key={activity.id}

@@ -84,7 +84,7 @@ const AgentFoncierSettings = () => {
                   </label>
                   <input
                     type="text"
-                    value={settings.fullName}
+                    value={settings.fullName || ''}
                     onChange={(e) => setSettings({...settings, fullName: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
@@ -95,7 +95,7 @@ const AgentFoncierSettings = () => {
                   </label>
                   <input
                     type="email"
-                    value={settings.email}
+                    value={settings.email || ''}
                     onChange={(e) => setSettings({...settings, email: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
@@ -106,7 +106,7 @@ const AgentFoncierSettings = () => {
                   </label>
                   <input
                     type="tel"
-                    value={settings.phone}
+                    value={settings.phone || ''}
                     onChange={(e) => setSettings({...settings, phone: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
@@ -127,7 +127,7 @@ const AgentFoncierSettings = () => {
                     Spécialisation
                   </label>
                   <select
-                    value={settings.specialisation}
+                    value={settings.specialisation || ''}
                     onChange={(e) => setSettings({...settings, specialisation: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   >
@@ -143,7 +143,7 @@ const AgentFoncierSettings = () => {
                   </label>
                   <input
                     type="text"
-                    value={settings.certification}
+                    value={settings.certification || ''}
                     onChange={(e) => setSettings({...settings, certification: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
@@ -448,25 +448,25 @@ const AgentFoncierSettings = () => {
                   <div>
                     <div className="flex justify-between mb-1">
                       <span className="text-sm text-gray-600">Évaluations</span>
-                      <span className="text-sm font-medium">{settings.usage.evaluations}%</span>
+                      <span className="text-sm font-medium">{settings.usage?.evaluations ?? 0}%</span>
                     </div>
-                    <Progress value={settings.usage.evaluations} className="h-2" />
+                    <Progress value={settings.usage?.evaluations ?? 0} className="h-2" />
                   </div>
                   
                   <div>
                     <div className="flex justify-between mb-1">
                       <span className="text-sm text-gray-600">Documents</span>
-                      <span className="text-sm font-medium">{settings.usage.documents}%</span>
+                      <span className="text-sm font-medium">{settings.usage?.documents ?? 0}%</span>
                     </div>
-                    <Progress value={settings.usage.documents} className="h-2" />
+                    <Progress value={settings.usage?.documents ?? 0} className="h-2" />
                   </div>
                   
                   <div>
                     <div className="flex justify-between mb-1">
                       <span className="text-sm text-gray-600">Clients</span>
-                      <span className="text-sm font-medium">{settings.usage.clients}%</span>
+                      <span className="text-sm font-medium">{settings.usage?.clients ?? 0}%</span>
                     </div>
-                    <Progress value={settings.usage.clients} className="h-2" />
+                    <Progress value={settings.usage?.clients ?? 0} className="h-2" />
                   </div>
                 </div>
               </CardContent>

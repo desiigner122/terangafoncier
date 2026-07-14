@@ -57,67 +57,53 @@ const GeometreBlockchain = () => {
     return () => { active = false; };
   }, []);
 
-  // Transactions blockchain récentes
-  const transactions = [
-    {
-      id: 1,
-      type: "Certification",
-      description: "Levé topographique validé",
-      hash: "0x7f9fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2c5f7",
-      timestamp: "2025-01-10 14:30:25",
-      gasUsed: "21,000",
-      status: "Confirmé"
-    },
-    {
-      id: 2,
-      type: "Signature",
-      description: "Document signé numériquement",
-      hash: "0x2c5f7af66ab4ead7fade1c0d57a7af66ab4ead79f2c5f7af66ab4e",
-      timestamp: "2025-01-09 16:45:12",
-      gasUsed: "15,500",
-      status: "Confirmé"
-    },
-    {
-      id: 3,
-      type: "Horodatage",
-      description: "Mesures GPS horodatées",
-      hash: "0x4ead7fade1c0d57a7af66ab4ead79fade1c0d57a7af66ab4ead7c2",
-      timestamp: "2025-01-08 09:15:08",
-      gasUsed: "18,200",
-      status: "Confirmé"
-    }
-  ];
+  // Transactions blockchain récentes RÉEL depuis Supabase (aucune donnée fictive)
+  const [transactions, setTransactions] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('blockchain_transactions').select('*').order('created_at', { ascending: false }).limit(50);
+        if (error) throw error;
+        if (active) setTransactions(data || []);
+      } catch (err) {
+        console.warn('transactions indisponible:', err?.message);
+        if (active) setTransactions([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
-  // Stats blockchain
+  // Stats blockchain dérivées des données réelles
   const blockchainStats = [
     {
       title: "Certificats émis",
-      value: "247",
-      change: "+18 ce mois",
+      value: certificates.length,
+      change: null,
       icon: FileText,
       color: "text-blue-600",
       bgColor: "bg-blue-50"
     },
     {
       title: "Validations",
-      value: "234",
-      change: "94.7% de succès",
+      value: certificates.filter(c => c.status === 'Validé' || c.status === 'validated').length,
+      change: null,
       icon: CheckCircle,
       color: "text-green-600",
       bgColor: "bg-green-50"
     },
     {
       title: "Transactions",
-      value: "1,425",
-      change: "+156 ce mois",
+      value: transactions.length,
+      change: null,
       icon: Hash,
       color: "text-purple-600",
       bgColor: "bg-purple-50"
     },
     {
       title: "Économies gaz",
-      value: "12.5 ETH",
-      change: "Optimisé -23%",
+      value: "—",
+      change: null,
       icon: TrendingUp,
       color: "text-orange-600",
       bgColor: "bg-orange-50"
@@ -147,6 +133,7 @@ const GeometreBlockchain = () => {
   };
 
   const truncateHash = (hash) => {
+    if (!hash) return '—';
     return `${hash.substring(0, 10)}...${hash.substring(hash.length - 8)}`;
   };
 
@@ -209,6 +196,9 @@ const GeometreBlockchain = () => {
           </TabsList>
 
           <TabsContent value="certificates" className="space-y-4">
+            {certificates.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8">Aucun certificat pour le moment</p>
+            )}
             {certificates.map((cert, index) => {
               const TypeIcon = getTypeIcon(cert.type);
               return (
@@ -238,7 +228,7 @@ const GeometreBlockchain = () => {
                               </div>
                               <div className="flex items-center">
                                 <Calendar className="w-4 h-4 mr-1" />
-                                {new Date(cert.date).toLocaleDateString('fr-FR')}
+                                {(cert.date || cert.created_at) ? new Date(cert.date || cert.created_at).toLocaleDateString('fr-FR') : '—'}
                               </div>
                             </div>
                           </div>
@@ -316,6 +306,9 @@ const GeometreBlockchain = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {transactions.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-8">Aucune transaction pour le moment</p>
+                  )}
                   {transactions.map((tx, index) => {
                     const TypeIcon = getTypeIcon(tx.type);
                     return (
@@ -366,17 +359,17 @@ const GeometreBlockchain = () => {
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Dernière synchronisation</span>
-                      <span className="text-sm text-gray-900">Il y a 2 minutes</span>
+                      <span className="text-sm text-gray-900">—</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Nœuds connectés</span>
-                      <span className="text-sm text-gray-900">847</span>
+                      <span className="text-sm text-gray-900">—</span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-sm text-gray-600">Niveau de sécurité</span>
                       <div className="flex items-center">
-                        <Progress value={95} className="w-20 h-2 mr-2" />
-                        <span className="text-sm font-medium text-green-600">95%</span>
+                        <Progress value={0} className="w-20 h-2 mr-2" />
+                        <span className="text-sm font-medium text-green-600">—</span>
                       </div>
                     </div>
                   </div>
@@ -396,7 +389,7 @@ const GeometreBlockchain = () => {
                       <p className="text-sm font-medium text-gray-600 mb-2">Clé publique</p>
                       <div className="flex items-center">
                         <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono flex-1">
-                          0x742d35Cc6634C0532925a3b8D...
+                          —
                         </code>
                         <Button variant="ghost" size="sm" className="ml-2 p-1">
                           <Copy className="w-3 h-3" />
@@ -409,7 +402,7 @@ const GeometreBlockchain = () => {
                     </div>
                     <div>
                       <p className="text-sm font-medium text-gray-600 mb-2">Dernière utilisation</p>
-                      <p className="text-sm text-gray-900">Hier à 16:45</p>
+                      <p className="text-sm text-gray-900">—</p>
                     </div>
                     <Button variant="outline" className="w-full">
                       <Shield className="w-4 h-4 mr-2" />

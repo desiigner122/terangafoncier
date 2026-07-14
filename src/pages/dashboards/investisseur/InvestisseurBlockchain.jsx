@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -38,62 +39,85 @@ const InvestisseurBlockchain = () => {
   const [selectedTransaction, setSelectedTransaction] = useState(null);
 
   // Certificats blockchain
-  const blockchainCertificates = []; // démo retirée
+  const [blockchainCertificates, setBlockchainCertificates] = useState([]); // démo retirée
 
   // Historique des transactions
-  const transactionHistory = [
-    {
-      id: 'tx-001',
-      type: 'Création Certificat',
-      certificateId: 'cert-001',
-      hash: '0xa1b2c3d4e5f6789012345678901234567890abcdef1234567890abcdef123456',
-      block: 18459372,
-      timestamp: '2024-01-15T10:30:00Z',
-      gas: 0.0023,
-      status: 'Confirmé',
-      value: 450000,
-      from: '0x742d35Cc6532C85B84a0e8C1A87Ef74c4a1f8A9D',
-      to: '0x8ba1f109551bD432803012645Hac189451c0078D'
-    },
-    {
-      id: 'tx-002',
-      type: 'Validation Notaire',
-      certificateId: 'cert-001',
-      hash: '0xd4e5f6789012345678901234567890abcdef1234567890abcdef1234567890ab',
-      block: 18459375,
-      timestamp: '2024-01-15T10:32:00Z',
-      gas: 0.0018,
-      status: 'Confirmé',
-      value: 0,
-      from: '0x8ba1f109551bD432803012645Hac189451c0078D',
-      to: '0x742d35Cc6532C85B84a0e8C1A87Ef74c4a1f8A9D'
-    },
-    {
-      id: 'tx-003',
-      type: 'Mise à jour Valeur',
-      certificateId: 'cert-002',
-      hash: '0xe5f6789012345678901234567890abcdef1234567890abcdef1234567890abcd',
-      block: 18459380,
-      timestamp: '2024-01-15T11:45:00Z',
-      gas: 0.0015,
-      status: 'Confirmé',
-      value: 920000,
-      from: '0x742d35Cc6532C85B84a0e8C1A87Ef74c4a1f8A9D',
-      to: '0x9cb2f210662cE543904013756Ibd290562d1089E'
-    }
-  ];
+  const [transactionHistory, setTransactionHistory] = useState([]);
 
   // Métriques de sécurité
-  const securityMetrics = {
-    totalCertificates: 12,
-    validatedCertificates: 10,
-    pendingValidation: 2,
-    totalValue: 2850000,
-    averageConfirmations: 2847,
-    lastUpdate: '2024-12-15T14:30:00Z',
-    networkUptime: 99.97,
-    securityScore: 96
-  };
+  const [securityMetrics, setSecurityMetrics] = useState({
+    totalCertificates: 0,
+    validatedCertificates: 0,
+    pendingValidation: 0,
+    totalValue: 0,
+    averageConfirmations: 0,
+    lastUpdate: null,
+    networkUptime: 0,
+    securityScore: 0
+  });
+
+  useEffect(() => {
+    const loadBlockchainData = async () => {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id;
+        if (!userId) return;
+
+        const [certRes, txRes] = await Promise.all([
+          supabase
+            .from('blockchain_certificates')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('blockchain_transactions')
+            .select('*')
+            .eq('user_id', userId)
+            .order('created_at', { ascending: false })
+            .limit(10)
+        ]);
+
+        const certificates = certRes?.data || [];
+        const transactions = txRes?.data || [];
+
+        setBlockchainCertificates(certificates);
+        setTransactionHistory(
+          transactions.map((tx) => ({
+            id: tx.id,
+            type: tx.type || tx.transaction_type || 'Transaction',
+            certificateId: tx.certificate_id || '',
+            hash: tx.hash || tx.transaction_hash || '',
+            block: tx.block || tx.block_number || 0,
+            timestamp: tx.created_at,
+            gas: Number(tx.gas) || 0,
+            status: tx.status || '',
+            value: Number(tx.value) || Number(tx.amount) || 0,
+            from: tx.from_address || '',
+            to: tx.to_address || ''
+          }))
+        );
+
+        setSecurityMetrics((prev) => ({
+          ...prev,
+          totalCertificates: certificates.length,
+          validatedCertificates: certificates.filter(
+            (c) => c.status === 'validated' || c.status === 'Validé'
+          ).length,
+          pendingValidation: certificates.filter(
+            (c) => c.status === 'pending' || c.status === 'En cours'
+          ).length,
+          totalValue: certificates.reduce(
+            (sum, c) => sum + (Number(c.value) || 0),
+            0
+          )
+        }));
+      } catch (error) {
+        console.error('Erreur chargement données blockchain:', error);
+      }
+    };
+
+    loadBlockchainData();
+  }, []);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {

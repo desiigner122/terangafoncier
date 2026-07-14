@@ -47,27 +47,16 @@ const AgentFoncierBlockchain = () => {
   const [searchHash, setSearchHash] = useState('');
   const [selectedDocument, setSelectedDocument] = useState(null);
   const [networkStats, setNetworkStats] = useState({
-    blockHeight: 2847395,
-    hashRate: '145.2 TH/s',
-    difficulty: '26.69T',
-    pendingTx: 23,
-    confirmedTx: 1247,
-    gasPrice: '45 gwei'
+    blockHeight: 0,
+    hashRate: '—',
+    difficulty: '—',
+    pendingTx: 0,
+    confirmedTx: 0,
+    gasPrice: '—'
   });
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 800);
-    
-    // Simuler mise à jour temps réel
-    const interval = setInterval(() => {
-      setNetworkStats(prev => ({
-        ...prev,
-        blockHeight: prev.blockHeight + 0,
-        pendingTx: Math.max(0, prev.pendingTx + 0 - 2)
-      }));
-    }, 5000);
-
-    return () => clearInterval(interval);
   }, []);
 
   // documentsBlockchain RÉEL depuis Supabase (aucune donnée fictive)
@@ -87,106 +76,51 @@ const AgentFoncierBlockchain = () => {
     return () => { active = false; };
   }, []);
 
-  const smartContracts = [
-    {
-      id: 1,
-      nom: 'TerangaFoncier_TitleRegistry',
-      address: '0xA1B2C3D4E5F6789012345678901234567890ABCD',
-      type: 'Registre des Titres',
-      status: 'actif',
-      deployedAt: '2024-08-15',
-      transactions: 1247,
-      gasUsed: '12.45 ETH',
-      version: '2.1.0'
-    },
-    {
-      id: 2,
-      nom: 'TerangaFoncier_Escrow',
-      address: '0xEFGH5678IJKL9012MNOP3456QRST7890UVWX1234',
-      type: 'Séquestre Automatique',
-      status: 'actif',
-      deployedAt: '2024-08-20',
-      transactions: 89,
-      gasUsed: '3.67 ETH',
-      version: '1.8.2'
-    },
-    {
-      id: 3,
-      nom: 'TerangaFoncier_Validation',
-      address: '0x567890ABCDEF123456789012ABCDEF567890ABCD',
-      type: 'Validation Documents',
-      status: 'maintenance',
-      deployedAt: '2024-09-01',
-      transactions: 456,
-      gasUsed: '7.89 ETH',
-      version: '1.5.1'
-    }
-  ];
+  // Smart contracts réels (aucune donnée fictive)
+  const smartContracts = [];
 
-  const recentTransactions = [
-    {
-      id: 1,
-      hash: '0xa1b2c3d4e5f6789012345678901234567890abcd',
-      type: 'Document Certification',
-      from: '0x1234...5678',
-      to: '0xabcd...ef90',
-      value: '—',
-      gasUsed: '21,000',
-      timestamp: '2024-09-26 14:32:15',
-      status: 'confirmé',
-      confirmations: 12
-    },
-    {
-      id: 2,
-      hash: '0xb2c3d4e5f6789012345678901234567890abcdef',
-      type: 'Smart Contract Call',
-      from: '0x5678...9012',
-      to: '0xef90...1234',
-      value: '—',
-      gasUsed: '45,230',
-      timestamp: '2024-09-26 14:28:42',
-      status: 'confirmé',
-      confirmations: 18
-    },
-    {
-      id: 3,
-      hash: '0xc3d4e5f6789012345678901234567890abcdef12',
-      type: 'Title Transfer',
-      from: '0x9012...3456',
-      to: '0x1234...5678',
-      value: '—',
-      gasUsed: '67,890',
-      timestamp: '2024-09-26 14:15:20',
-      status: 'pending',
-      confirmations: 0
-    }
-  ];
+  // recentTransactions RÉEL depuis Supabase (aucune donnée fictive)
+  const [recentTransactions, setRecentTransactions] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('blockchain_transactions').select('*').order('created_at', { ascending: false }).limit(10);
+        if (error) throw error;
+        if (active) setRecentTransactions(data || []);
+      } catch (err) {
+        console.warn('recentTransactions indisponible:', err?.message);
+        if (active) setRecentTransactions([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const blockchainMetrics = [
     {
       title: 'Documents Sécurisés',
-      value: '—',
+      value: documentsBlockchain.length,
       change: null,
       icon: Shield,
       color: 'bg-green-100 text-green-600'
     },
     {
       title: 'Transactions Blockchain',
-      value: '—',
+      value: recentTransactions.length,
       change: null,
       icon: Activity,
       color: 'bg-blue-100 text-blue-600'
     },
     {
       title: 'Smart Contracts',
-      value: '—',
+      value: smartContracts.length,
       change: null,
       icon: Cpu,
       color: 'bg-purple-100 text-purple-600'
     },
     {
       title: 'Certificats Validés',
-      value: '—',
+      value: documentsBlockchain.length,
       change: null,
       icon: Award,
       color: 'bg-orange-100 text-orange-600'
@@ -336,38 +270,23 @@ const AgentFoncierBlockchain = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <CheckCircle className="h-5 w-5 text-green-600" />
-                      <div>
-                        <p className="font-medium text-green-900">Document Certifié</p>
-                        <p className="text-sm text-green-700">TF-2024-001 validé</p>
+                  {recentTransactions.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-6">Aucune activité récente</p>
+                  )}
+                  {recentTransactions.slice(0, 3).map((tx) => (
+                    <div key={tx.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div className="flex items-center gap-3">
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                        <div>
+                          <p className="font-medium text-green-900">{tx.transaction_type || tx.type || 'Transaction'}</p>
+                          <p className="text-sm text-green-700">{tx.status || '—'}</p>
+                        </div>
                       </div>
+                      <span className="text-xs text-green-600">
+                        {tx.created_at ? new Date(tx.created_at).toLocaleString('fr-FR') : ''}
+                      </span>
                     </div>
-                    <span className="text-xs text-green-600">Il y a 5 min</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Zap className="h-5 w-5 text-blue-600" />
-                      <div>
-                        <p className="font-medium text-blue-900">Smart Contract Executé</p>
-                        <p className="text-sm text-blue-700">Escrow automatique</p>
-                      </div>
-                    </div>
-                    <span className="text-xs text-blue-600">Il y a 12 min</span>
-                  </div>
-                  
-                  <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <Upload className="h-5 w-5 text-purple-600" />
-                      <div>
-                        <p className="font-medium text-purple-900">Nouveau Document</p>
-                        <p className="text-sm text-purple-700">AV-2024-012 en attente</p>
-                      </div>
-                    </div>
-                    <span className="text-xs text-purple-600">Il y a 25 min</span>
-                  </div>
+                  ))}
                 </div>
               </CardContent>
             </Card>
@@ -384,25 +303,25 @@ const AgentFoncierBlockchain = () => {
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Documents stockés</span>
-                      <span className="text-sm font-medium">1,247 / 10,000</span>
+                      <span className="text-sm font-medium">{documentsBlockchain.length}</span>
                     </div>
-                    <Progress value={12.47} className="h-2" />
+                    <Progress value={0} className="h-2" />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Espace utilisé</span>
-                      <span className="text-sm font-medium">2.4 GB / 50 GB</span>
+                      <span className="text-sm font-medium">—</span>
                     </div>
-                    <Progress value={4.8} className="h-2" />
+                    <Progress value={0} className="h-2" />
                   </div>
-                  
+
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Bande passante</span>
-                      <span className="text-sm font-medium">145 MB / 1 GB</span>
+                      <span className="text-sm font-medium">—</span>
                     </div>
-                    <Progress value={14.5} className="h-2" />
+                    <Progress value={0} className="h-2" />
                   </div>
                 </div>
               </CardContent>
@@ -433,6 +352,9 @@ const AgentFoncierBlockchain = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {documentsBlockchain.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucun document disponible</p>
+                )}
                 {documentsBlockchain.map((doc, index) => (
                   <motion.div
                     key={doc.id}
@@ -456,8 +378,8 @@ const AgentFoncierBlockchain = () => {
                           )}
                         </div>
                         <div className="flex-1">
-                          <h4 className="font-semibold text-gray-900">{doc.nom}</h4>
-                          <p className="text-sm text-gray-600 mb-2">{doc.client} • {doc.location}</p>
+                          <h4 className="font-semibold text-gray-900">{doc.nom || doc.name || doc.certificate_number || 'Certificat'}</h4>
+                          <p className="text-sm text-gray-600 mb-2">{doc.client || '—'} • {doc.location || '—'}</p>
                           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                             <div>
                               <span className="text-gray-500">Type:</span>
@@ -478,7 +400,7 @@ const AgentFoncierBlockchain = () => {
                           </div>
                           <div className="mt-2 flex items-center gap-2">
                             <code className="text-xs bg-gray-100 px-2 py-1 rounded font-mono">
-                              {doc.shortHash}
+                              {doc.shortHash || (doc.hash ? `${String(doc.hash).slice(0, 10)}...` : '—')}
                             </code>
                             <Button
                               variant="ghost"
@@ -530,6 +452,9 @@ const AgentFoncierBlockchain = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {smartContracts.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucun smart contract déployé</p>
+                )}
                 {smartContracts.map((contract, index) => (
                   <motion.div
                     key={contract.id}
@@ -590,6 +515,9 @@ const AgentFoncierBlockchain = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
+                {recentTransactions.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucune transaction disponible</p>
+                )}
                 {recentTransactions.map((tx, index) => (
                   <motion.div
                     key={tx.id}
@@ -603,13 +531,13 @@ const AgentFoncierBlockchain = () => {
                         tx.status === 'confirmé' ? 'bg-green-500' : 'bg-yellow-500'
                       }`}></div>
                       <div>
-                        <div className="font-medium text-sm">{tx.type}</div>
-                        <code className="text-xs text-gray-500 font-mono">{tx.hash}</code>
+                        <div className="font-medium text-sm">{tx.transaction_type || tx.type || 'Transaction'}</div>
+                        <code className="text-xs text-gray-500 font-mono">{tx.hash || tx.transaction_hash || tx.tx_hash || '—'}</code>
                       </div>
                     </div>
                     <div className="text-right text-sm">
-                      <div className="font-medium">{tx.value}</div>
-                      <div className="text-gray-500">{tx.confirmations} confirmations</div>
+                      <div className="font-medium">{tx.value ?? tx.amount ?? '—'}</div>
+                      <div className="text-gray-500">{tx.confirmations ?? 0} confirmations</div>
                     </div>
                   </motion.div>
                 ))}

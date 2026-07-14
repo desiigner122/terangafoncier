@@ -114,9 +114,9 @@ const GeometreSettings = () => {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="fullName">Nom complet</Label>
-                      <Input 
+                      <Input
                         id="fullName"
-                        value={profileData.fullName}
+                        value={profileData.fullName || ''}
                         onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
                       />
                     </div>
@@ -126,25 +126,25 @@ const GeometreSettings = () => {
                       <Input 
                         id="email"
                         type="email"
-                        value={profileData.email}
+                        value={profileData.email || ''}
                         onChange={(e) => setProfileData({...profileData, email: e.target.value})}
                       />
                     </div>
                     
                     <div>
                       <Label htmlFor="phone">Téléphone</Label>
-                      <Input 
+                      <Input
                         id="phone"
-                        value={profileData.phone}
+                        value={profileData.phone || ''}
                         onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
                       />
                     </div>
 
                     <div>
                       <Label htmlFor="license">Numéro de licence</Label>
-                      <Input 
+                      <Input
                         id="license"
-                        value={profileData.license}
+                        value={profileData.license || ''}
                         onChange={(e) => setProfileData({...profileData, license: e.target.value})}
                       />
                     </div>
@@ -153,9 +153,9 @@ const GeometreSettings = () => {
                   <div className="space-y-4">
                     <div>
                       <Label htmlFor="address">Adresse</Label>
-                      <Input 
+                      <Input
                         id="address"
-                        value={profileData.address}
+                        value={profileData.address || ''}
                         onChange={(e) => setProfileData({...profileData, address: e.target.value})}
                       />
                     </div>
@@ -166,7 +166,7 @@ const GeometreSettings = () => {
                         id="bio"
                         rows={4}
                         className="w-full px-3 py-2 border rounded-md"
-                        value={profileData.bio}
+                        value={profileData.bio || ''}
                         onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
                       />
                     </div>
@@ -174,7 +174,7 @@ const GeometreSettings = () => {
                     <div>
                       <Label>Spécialités</Label>
                       <div className="flex flex-wrap gap-2 mt-2">
-                        {profileData.specialities.map((spec, index) => (
+                        {(profileData.specialities || []).map((spec, index) => (
                           <Badge key={index} variant="secondary">
                             {spec}
                           </Badge>
@@ -206,19 +206,7 @@ const GeometreSettings = () => {
               </CardHeader>
               <CardContent>
                 <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">Plan Professional</h3>
-                      <p className="text-gray-600">Outils avancés pour géomètres experts</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Renouvelé le 15 décembre 2024
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-green-600">1.5M XOF</p>
-                      <p className="text-sm text-gray-500">/mois</p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
                 </div>
               </CardContent>
             </Card>
@@ -273,11 +261,6 @@ const GeometreSettings = () => {
 
                   {/* Plan Professional */}
                   <div className="border-2 border-green-500 rounded-lg p-6 relative">
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm">
-                        Actuel
-                      </span>
-                    </div>
                     <div className="text-center mb-4">
                       <Crown className="h-8 w-8 mx-auto mb-2 text-green-500" />
                       <h3 className="text-xl font-semibold">Professional</h3>
@@ -310,7 +293,7 @@ const GeometreSettings = () => {
                       </li>
                     </ul>
                     <Button className="w-full bg-green-500 hover:bg-green-600">
-                      Plan actuel
+                      Choisir ce plan
                     </Button>
                   </div>
 
@@ -365,32 +348,7 @@ const GeometreSettings = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Décembre 2024</p>
-                        <p className="text-sm text-gray-500">Plan Professional</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">1.5M XOF</p>
-                      <p className="text-sm text-green-600">Payé</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Novembre 2024</p>
-                        <p className="text-sm text-gray-500">Plan Professional</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">1.5M XOF</p>
-                      <p className="text-sm text-green-600">Payé</p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
                 </div>
               </CardContent>
             </Card>

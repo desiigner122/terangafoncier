@@ -55,15 +55,32 @@ const AgentFoncierCommunication = () => {
     return () => { active = false; };
   }, []);
 
+  // Compteur de messages réel depuis Supabase (0 par défaut)
+  const [totalMessages, setTotalMessages] = useState(0);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { count, error } = await supabase.from('messages').select('*', { count: 'exact', head: true });
+        if (error) throw error;
+        if (active) setTotalMessages(count || 0);
+      } catch (err) {
+        console.warn('totalMessages indisponible:', err?.message);
+        if (active) setTotalMessages(0);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
   const stats = {
-    totalMessages: 248,
-    messagesNonLus: 5,
-    conversationsActives: 12,
-    tempsReponse: '2h15'
+    totalMessages,
+    messagesNonLus: conversations.reduce((acc, c) => acc + (Number(c.unread) || 0), 0),
+    conversationsActives: conversations.length,
+    tempsReponse: '—'
   };
 
   const filteredConversations = conversations.filter(conv =>
-    conv.name.toLowerCase().includes(searchTerm.toLowerCase())
+    (conv.name || conv.title || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleSendMessage = () => {
@@ -181,6 +198,9 @@ const AgentFoncierCommunication = () => {
           </CardHeader>
           <CardContent className="p-0">
             <div className="space-y-1 overflow-y-auto max-h-[480px]">
+              {filteredConversations.length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-6">Aucune conversation disponible</p>
+              )}
               {filteredConversations.map((conversation) => (
                 <motion.div
                   key={conversation.id}
@@ -196,7 +216,7 @@ const AgentFoncierCommunication = () => {
                     <Avatar className="h-10 w-10">
                       <AvatarImage src={conversation.avatar} />
                       <AvatarFallback className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white">
-                        {conversation.name.split(' ').map(n => n[0]).join('')}
+                        {(conversation.name || conversation.title || '?').split(' ').map(n => n[0]).join('')}
                       </AvatarFallback>
                     </Avatar>
                     <div className={`absolute -bottom-1 -right-1 ${getStatusIndicator(conversation.status)} border-2 border-white`}></div>
@@ -204,12 +224,12 @@ const AgentFoncierCommunication = () => {
                   
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-slate-900 truncate">{conversation.name}</p>
+                      <p className="font-medium text-slate-900 truncate">{conversation.name || conversation.title || 'Conversation'}</p>
                       <div className="flex items-center space-x-1">
                         <Badge className={`text-xs ${getTypeColor(conversation.type)}`}>
                           {conversation.type}
                         </Badge>
-                        {conversation.unread > 0 && (
+                        {(conversation.unread || 0) > 0 && (
                           <Badge className="bg-red-500 text-white text-xs px-1.5 py-0.5">
                             {conversation.unread}
                           </Badge>
@@ -237,14 +257,14 @@ const AgentFoncierCommunication = () => {
                       <Avatar className="h-10 w-10">
                         <AvatarImage src={selectedConversation.avatar} />
                         <AvatarFallback className="bg-gradient-to-r from-blue-500 to-cyan-600 text-white">
-                          {selectedConversation.name.split(' ').map(n => n[0]).join('')}
+                          {(selectedConversation.name || selectedConversation.title || '?').split(' ').map(n => n[0]).join('')}
                         </AvatarFallback>
                       </Avatar>
                       <div className={`absolute -bottom-1 -right-1 ${getStatusIndicator(selectedConversation.status)} border-2 border-white`}></div>
                     </div>
                     <div>
-                      <h3 className="font-semibold text-slate-900">{selectedConversation.name}</h3>
-                      <p className="text-sm text-slate-600 capitalize">{selectedConversation.status}</p>
+                      <h3 className="font-semibold text-slate-900">{selectedConversation.name || selectedConversation.title || 'Conversation'}</h3>
+                      <p className="text-sm text-slate-600 capitalize">{selectedConversation.status || ''}</p>
                     </div>
                   </div>
                   
@@ -264,7 +284,10 @@ const AgentFoncierCommunication = () => {
 
               {/* Messages */}
               <CardContent className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[400px]">
-                {selectedConversation.messages.map((message, index) => (
+                {(selectedConversation.messages || []).length === 0 && (
+                  <p className="text-sm text-slate-500 text-center py-6">Aucun message</p>
+                )}
+                {(selectedConversation.messages || []).map((message, index) => (
                   <motion.div
                     key={message.id}
                     initial={{ opacity: 0, y: 10 }}

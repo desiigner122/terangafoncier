@@ -45,6 +45,12 @@ const AgentFoncierTerrains = () => {
     return () => { active = false; };
   }, []);
 
+  // Stats dérivées des données réelles (0 par défaut)
+  const totalTerrains = terrains.length;
+  const valeurTotale = terrains.reduce((sum, t) => sum + (Number(t.price ?? t.valeur ?? 0) || 0), 0);
+  const enEvaluation = terrains.filter(t => ['en_cours', 'pending', 'en_evaluation'].includes(t.statut || t.status)).length;
+  const superficieTotale = terrains.reduce((sum, t) => sum + (Number(t.superficie ?? t.area ?? t.surface ?? 0) || 0), 0);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center h-64">
@@ -80,7 +86,7 @@ const AgentFoncierTerrains = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Total Terrains</p>
-                <p className="text-2xl font-bold text-gray-900">1,250</p>
+                <p className="text-2xl font-bold text-gray-900">{totalTerrains.toLocaleString()}</p>
               </div>
               <Map className="h-8 w-8 text-green-600" />
             </div>
@@ -91,7 +97,7 @@ const AgentFoncierTerrains = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Valeur Totale</p>
-                <p className="text-2xl font-bold text-gray-900">2.5B XOF</p>
+                <p className="text-2xl font-bold text-gray-900">{valeurTotale.toLocaleString()} XOF</p>
               </div>
               <BarChart3 className="h-8 w-8 text-blue-600" />
             </div>
@@ -102,7 +108,7 @@ const AgentFoncierTerrains = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">En Évaluation</p>
-                <p className="text-2xl font-bold text-gray-900">23</p>
+                <p className="text-2xl font-bold text-gray-900">{enEvaluation}</p>
               </div>
               <TrendingUp className="h-8 w-8 text-orange-600" />
             </div>
@@ -113,7 +119,7 @@ const AgentFoncierTerrains = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Superficie Totale</p>
-                <p className="text-2xl font-bold text-gray-900">145 Ha</p>
+                <p className="text-2xl font-bold text-gray-900">{superficieTotale.toLocaleString()} m²</p>
               </div>
               <Ruler className="h-8 w-8 text-purple-600" />
             </div>
@@ -146,6 +152,13 @@ const AgentFoncierTerrains = () => {
         </CardHeader>
         <CardContent>
           <div className="space-y-4">
+            {terrains.length === 0 && (
+              <div className="text-center py-12">
+                <Map className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">Aucun terrain</h3>
+                <p className="text-gray-600">Aucune donnée disponible pour le moment</p>
+              </div>
+            )}
             {terrains.map((terrain, index) => (
               <motion.div
                 key={terrain.id}
@@ -159,7 +172,7 @@ const AgentFoncierTerrains = () => {
                     <Map className="h-6 w-6 text-green-600" />
                   </div>
                   <div>
-                    <h4 className="font-medium text-gray-900">{terrain.nom}</h4>
+                    <h4 className="font-medium text-gray-900">{terrain.nom || terrain.title || terrain.name || 'Terrain'}</h4>
                     <p className="text-sm text-gray-600">{terrain.proprietaire}</p>
                     <div className="flex items-center space-x-4 mt-1">
                       <div className="flex items-center space-x-1">

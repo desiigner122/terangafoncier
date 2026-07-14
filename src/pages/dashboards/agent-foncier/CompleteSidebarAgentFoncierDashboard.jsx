@@ -1,4 +1,5 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -64,15 +65,43 @@ const CompleteSidebarAgentFoncierDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
 
-  // Stats du dashboard
-  const dashboardStats = {
-    totalTerrains: 245,
-    clientsActifs: 89,
-    documentsTraites: 156,
-    notifications: 12,
-    messages: 8,
-    communicationAlerts: 3
-  };
+  // Stats du dashboard — compteurs RÉELS depuis Supabase (0 par défaut, aucune donnée fictive)
+  const [dashboardStats, setDashboardStats] = useState({
+    totalTerrains: 0,
+    clientsActifs: 0,
+    documentsTraites: 0,
+    notifications: 0,
+    messages: 0,
+    communicationAlerts: 0
+  });
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [terrainsRes, clientsRes, documentsRes, notificationsRes, messagesRes] = await Promise.all([
+          supabase.from('properties').select('*', { count: 'exact', head: true }),
+          supabase.from('crm_contacts').select('*', { count: 'exact', head: true }),
+          supabase.from('documents').select('*', { count: 'exact', head: true }),
+          supabase.from('notifications').select('*', { count: 'exact', head: true }),
+          supabase.from('messages').select('*', { count: 'exact', head: true })
+        ]);
+        if (active) {
+          setDashboardStats({
+            totalTerrains: terrainsRes.count || 0,
+            clientsActifs: clientsRes.count || 0,
+            documentsTraites: documentsRes.count || 0,
+            notifications: notificationsRes.count || 0,
+            messages: messagesRes.count || 0,
+            communicationAlerts: 0
+          });
+        }
+      } catch (err) {
+        console.warn('stats dashboard indisponibles:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Configuration des onglets de la sidebar avec descriptions détaillées
   const sidebarTabs = [

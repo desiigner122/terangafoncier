@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
 import { 
   Shield,
   Lock,
@@ -35,70 +37,95 @@ import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const ParticulierBlockchain = () => {
+  const outletContext = useOutletContext();
+  const { user } = outletContext || {};
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
+  const [certificates, setCertificates] = useState([]);
+  const [transactions, setTransactions] = useState([]);
+  const [portfolioStats, setPortfolioStats] = useState({
+    totalValue: 0,
+    properties: 0,
+    certificates: 0,
+    transactions: 0
+  });
 
-  // Certificats blockchain
-  const certificates = [
-    {
-      id: 1,
-      title: "Certificat de propriété",
-      property: "Appartement - Dakar Plateau",
-      hash: "0x7d4c...f8a2",
-      status: "verified",
-      date: "2024-03-15",
-      type: "ownership"
-    },
-    {
-      id: 2,
-      title: "Contrat de vente",
-      property: "Villa - Almadies",
-      hash: "0x9a1b...c3d4",
-      status: "pending",
-      date: "2024-03-20",
-      type: "contract"
-    },
-    {
-      id: 3,
-      title: "Attestation d'évaluation",
-      property: "Terrain - Saly",
-      hash: "0x2e5f...b7c8",
-      status: "verified",
-      date: "2024-03-18",
-      type: "evaluation"
+  useEffect(() => {
+    loadBlockchainData();
+  }, [user]);
+
+  const loadBlockchainData = async () => {
+    try {
+      setLoading(true);
+
+      if (!user?.id) {
+        setCertificates([]);
+        setTransactions([]);
+        setPortfolioStats({ totalValue: 0, properties: 0, certificates: 0, transactions: 0 });
+        return;
+      }
+
+      const [certsResult, txResult, propsResult] = await Promise.allSettled([
+        supabase
+          .from('blockchain_certificates')
+          .select('id, certificate_hash, status, created_at, properties!inner(id, title, owner_id)')
+          .eq('properties.owner_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('blockchain_transactions')
+          .select('id, amount, status, transaction_hash, block_number, created_at, properties:property_id(title)')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('properties')
+          .select('id', { count: 'exact' })
+          .eq('owner_id', user.id)
+          .limit(0)
+      ]);
+
+      const certsData = certsResult.value?.data || [];
+      const txData = txResult.value?.data || [];
+
+      const mappedCertificates = certsData.map(cert => ({
+        id: cert.id,
+        title: 'Certificat blockchain',
+        property: cert.properties?.title || 'Propriété',
+        hash: cert.certificate_hash,
+        status: cert.status || 'pending',
+        date: cert.created_at ? new Date(cert.created_at).toLocaleDateString('fr-FR') : '—',
+        type: 'ownership'
+      }));
+
+      const mappedTransactions = txData.map(tx => ({
+        id: tx.id,
+        type: 'Transaction',
+        property: tx.properties?.title || 'Propriété',
+        amount: tx.amount ? `${new Intl.NumberFormat('fr-FR').format(tx.amount)} FCFA` : '-',
+        rawAmount: Number(tx.amount) || 0,
+        hash: tx.transaction_hash,
+        status: tx.status || 'pending',
+        confirmations: tx.status === 'confirmed' ? 12 : 0,
+        timestamp: tx.created_at ? new Date(tx.created_at).toLocaleString('fr-FR') : '—'
+      }));
+
+      setCertificates(mappedCertificates);
+      setTransactions(mappedTransactions);
+      setPortfolioStats({
+        totalValue: mappedTransactions
+          .filter(tx => tx.status === 'confirmed')
+          .reduce((sum, tx) => sum + tx.rawAmount, 0),
+        properties: propsResult.value?.count || 0,
+        certificates: mappedCertificates.length,
+        transactions: mappedTransactions.length
+      });
+    } catch (error) {
+      console.error('Erreur chargement données blockchain:', error);
+      setCertificates([]);
+      setTransactions([]);
+      setPortfolioStats({ totalValue: 0, properties: 0, certificates: 0, transactions: 0 });
+    } finally {
+      setLoading(false);
     }
-  ];
-
-  // Transactions blockchain
-  const transactions = [
-    {
-      id: 1,
-      type: "Achat",
-      property: "Appartement 3P - Plateau",
-      amount: "45,000,000 FCFA",
-      hash: "0x1a2b3c4d5e6f...",
-      status: "confirmed",
-      confirmations: 12,
-      timestamp: "2024-03-20 14:30"
-    },
-    {
-      id: 2,
-      type: "Certification",
-      property: "Villa - Almadies",
-      amount: "-",
-      hash: "0x9f8e7d6c5b4a...",
-      status: "pending",
-      confirmations: 3,
-      timestamp: "2024-03-20 16:45"
-    }
-  ];
-
-  // Portfolio blockchain
-  const portfolioStats = {
-    totalValue: "125,000,000",
-    properties: 3,
-    certificates: 8,
-    transactions: 15,
-    securityScore: 98
   };
 
   const getStatusColor = (status) => {
@@ -120,8 +147,18 @@ const ParticulierBlockchain = () => {
   };
 
   const truncateHash = (hash) => {
+    if (!hash) return '—';
+    if (hash.length <= 18) return hash;
     return `${hash.substring(0, 10)}...${hash.substring(hash.length - 8)}`;
   };
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-64">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-6 space-y-6">
@@ -150,7 +187,7 @@ const ParticulierBlockchain = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-blue-600">Valeur Portfolio</p>
-                <p className="text-2xl font-bold text-blue-900">{portfolioStats.totalValue} FCFA</p>
+                <p className="text-2xl font-bold text-blue-900">{new Intl.NumberFormat('fr-FR').format(portfolioStats.totalValue)} FCFA</p>
               </div>
               <div className="p-3 bg-blue-100 rounded-full">
                 <Wallet className="w-6 h-6 text-blue-600" />
@@ -191,8 +228,8 @@ const ParticulierBlockchain = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-orange-600">Score Sécurité</p>
-                <p className="text-2xl font-bold text-orange-900">{portfolioStats.securityScore}%</p>
+                <p className="text-sm font-medium text-orange-600">Transactions</p>
+                <p className="text-2xl font-bold text-orange-900">{portfolioStats.transactions}</p>
               </div>
               <div className="p-3 bg-orange-100 rounded-full">
                 <Shield className="w-6 h-6 text-orange-600" />
@@ -233,32 +270,36 @@ const ParticulierBlockchain = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Certificat vérifié</p>
-                    <p className="text-xs text-slate-600">Appartement - Dakar Plateau</p>
+                {transactions.length === 0 && certificates.length === 0 && (
+                  <div className="text-center py-8">
+                    <Activity className="w-12 h-12 text-slate-300 mx-auto mb-3" />
+                    <p className="text-sm text-slate-500">Aucune activité blockchain pour le moment</p>
                   </div>
-                  <span className="text-xs text-slate-500">Il y a 2h</span>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
-                  <Database className="w-5 h-5 text-blue-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Transaction confirmée</p>
-                    <p className="text-xs text-slate-600">45M FCFA - Achat propriété</p>
+                )}
+                {transactions.slice(0, 2).map((tx) => (
+                  <div key={`tx-${tx.id}`} className="flex items-center gap-3 p-3 bg-blue-50 rounded-lg">
+                    <Database className="w-5 h-5 text-blue-600" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">
+                        {tx.status === 'confirmed' ? 'Transaction confirmée' : 'Transaction en attente'}
+                      </p>
+                      <p className="text-xs text-slate-600">{tx.amount !== '-' ? `${tx.amount} - ` : ''}{tx.property}</p>
+                    </div>
+                    <span className="text-xs text-slate-500">{tx.timestamp}</span>
                   </div>
-                  <span className="text-xs text-slate-500">Il y a 1j</span>
-                </div>
-                
-                <div className="flex items-center gap-3 p-3 bg-purple-50 rounded-lg">
-                  <Key className="w-5 h-5 text-purple-600" />
-                  <div className="flex-1">
-                    <p className="font-medium text-sm">Clé privée générée</p>
-                    <p className="text-xs text-slate-600">Nouveau portefeuille créé</p>
+                ))}
+                {certificates.slice(0, 2).map((cert) => (
+                  <div key={`cert-${cert.id}`} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    <div className="flex-1">
+                      <p className="font-medium text-sm">
+                        {cert.status === 'verified' ? 'Certificat vérifié' : 'Certificat en attente'}
+                      </p>
+                      <p className="text-xs text-slate-600">{cert.property}</p>
+                    </div>
+                    <span className="text-xs text-slate-500">{cert.date}</span>
                   </div>
-                  <span className="text-xs text-slate-500">Il y a 3j</span>
-                </div>
+                ))}
               </CardContent>
             </Card>
 
@@ -297,8 +338,10 @@ const ParticulierBlockchain = () => {
                 
                 <div className="pt-4 border-t">
                   <div className="flex items-center justify-between">
-                    <span className="font-semibold">Score Global</span>
-                    <span className="text-2xl font-bold text-green-600">{portfolioStats.securityScore}%</span>
+                    <span className="font-semibold">Certificats vérifiés</span>
+                    <span className="text-2xl font-bold text-green-600">
+                      {certificates.filter(c => c.status === 'verified').length}/{certificates.length}
+                    </span>
                   </div>
                 </div>
               </CardContent>
@@ -307,6 +350,15 @@ const ParticulierBlockchain = () => {
         </TabsContent>
 
         <TabsContent value="certificates" className="space-y-6">
+          {certificates.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Award className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucun certificat blockchain</h3>
+                <p className="text-slate-500">Vos certificats de propriété apparaîtront ici une fois émis.</p>
+              </CardContent>
+            </Card>
+          )}
           <div className="space-y-4">
             {certificates.map((cert) => {
               const StatusIcon = getStatusIcon(cert.status);
@@ -353,6 +405,15 @@ const ParticulierBlockchain = () => {
         </TabsContent>
 
         <TabsContent value="transactions" className="space-y-6">
+          {transactions.length === 0 && (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Coins className="w-16 h-16 text-slate-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-slate-900 mb-2">Aucune transaction blockchain</h3>
+                <p className="text-slate-500">Vos transactions sécurisées apparaîtront ici.</p>
+              </CardContent>
+            </Card>
+          )}
           <div className="space-y-4">
             {transactions.map((tx) => {
               const StatusIcon = getStatusIcon(tx.status);
@@ -474,7 +535,7 @@ const ParticulierBlockchain = () => {
                 <div className="p-4 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-xl">
                   <div className="text-center">
                     <p className="text-sm text-blue-600 mb-1">Adresse du portefeuille</p>
-                    <p className="font-mono text-sm font-semibold mb-3">0x742d35Cc6634C0532925a3b8D1E...</p>
+                    <p className="font-mono text-sm font-semibold mb-3">Aucun portefeuille connecté</p>
                     <div className="flex justify-center gap-2">
                       <Button size="sm" variant="outline">
                         <QrCode className="w-4 h-4 mr-1" />
@@ -487,19 +548,19 @@ const ParticulierBlockchain = () => {
                     </div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between">
-                    <span className="text-sm">Solde TERA</span>
-                    <span className="font-semibold">1,250 TERA</span>
+                    <span className="text-sm">Transactions confirmées</span>
+                    <span className="font-semibold">{transactions.filter(tx => tx.status === 'confirmed').length}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Valeur USD</span>
-                    <span className="font-semibold text-green-600">$2,500</span>
+                    <span className="text-sm">Valeur totale</span>
+                    <span className="font-semibold text-green-600">{new Intl.NumberFormat('fr-FR').format(portfolioStats.totalValue)} FCFA</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-sm">Récompenses</span>
-                    <span className="font-semibold text-blue-600">+15 TERA</span>
+                    <span className="text-sm">Certificats</span>
+                    <span className="font-semibold text-blue-600">{portfolioStats.certificates}</span>
                   </div>
                 </div>
                 

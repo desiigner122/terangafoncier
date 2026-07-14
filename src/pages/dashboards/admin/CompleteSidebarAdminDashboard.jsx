@@ -802,44 +802,7 @@ const CompleteSidebarAdminDashboard = () => {
   // Données pour les aperçus rapides - CONTROLLABLES
   const [headerMessages, setHeaderMessages] = useState([]); // démo retirée
 
-  const [headerNotifications, setHeaderNotifications] = useState([
-    {
-      id: 1,
-      type: 'security',
-      title: 'Alerte sécurité',
-      message: 'Tentatives de connexion suspectes détectées',
-      time: '5 min',
-      priority: 'high',
-      unread: true
-    },
-    {
-      id: 2,
-      type: 'system',
-      title: 'Maintenance programmée',
-      message: 'Redémarrage des serveurs dans 2 heures',
-      time: '30 min',
-      priority: 'medium',
-      unread: true
-    },
-    {
-      id: 3,
-      type: 'business',
-      title: 'Objectif atteint',
-      message: 'Revenus mensuels dépassés de 120%',
-      time: '2h',
-      priority: 'low',
-      unread: false
-    },
-    {
-      id: 4,
-      type: 'user',
-      title: 'Nouveau compte',
-      message: '15 nouveaux utilisateurs aujourd\'hui',
-      time: '4h',
-      priority: 'low',
-      unread: false
-    }
-  ]);
+  const [headerNotifications, setHeaderNotifications] = useState([]); // démo retirée
 
   useEffect(() => {
     // Simulation chargement des données

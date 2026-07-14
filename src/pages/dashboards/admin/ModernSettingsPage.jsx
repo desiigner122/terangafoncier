@@ -425,7 +425,7 @@ const ModernSettingsPage = () => {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <div className="text-center">
             <div className="text-2xl font-bold text-green-600 mb-1">
-              {systemStats.uptime || '99.9'}%
+              {systemStats.uptime || '0'}%
             </div>
             <p className="text-sm text-gray-600">Uptime</p>
           </div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -30,93 +31,22 @@ const GeometreDocuments = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [viewMode, setViewMode] = useState('grid');
 
-  // Documents simulés
-  const documents = [
-    {
-      id: 1,
-      name: 'Plan topographique - Parcelle 1247',
-      type: 'Plan CAD',
-      category: 'topographie',
-      size: '2.4 MB',
-      format: 'DWG',
-      dateCreated: '2025-09-20',
-      lastModified: '2025-09-25',
-      client: 'SARL Sénégal Construction',
-      status: 'finalisé',
-      isPrivate: false,
-      thumbnail: '/api/placeholder/150/100'
-    },
-    {
-      id: 2,
-      name: 'Rapport de levé GPS - Zone Industrielle',
-      type: 'Rapport',
-      category: 'mesures',
-      size: '856 KB',
-      format: 'PDF',
-      dateCreated: '2025-09-18',
-      lastModified: '2025-09-24',
-      client: 'Ministère de l\'Urbanisme',
-      status: 'en_cours',
-      isPrivate: true,
-      thumbnail: '/api/placeholder/150/100'
-    },
-    {
-      id: 3,
-      name: 'Certificat de bornage - Résidence Les Almadies',
-      type: 'Certificat',
-      category: 'cadastral',
-      size: '1.2 MB',
-      format: 'PDF',
-      dateCreated: '2025-09-15',
-      lastModified: '2025-09-23',
-      client: 'Promoteur Almadies SA',
-      status: 'approuvé',
-      isPrivate: false,
-      thumbnail: '/api/placeholder/150/100'
-    },
-    {
-      id: 4,
-      name: 'Modèle 3D - Terrain Parcelles',
-      type: 'Modèle 3D',
-      category: 'modelisation',
-      size: '15.7 MB',
-      format: 'OBJ',
-      dateCreated: '2025-09-12',
-      lastModified: '2025-09-22',
-      client: 'Direction du Cadastre',
-      status: 'révision',
-      isPrivate: true,
-      thumbnail: '/api/placeholder/150/100'
-    },
-    {
-      id: 5,
-      name: 'Contrat de prestation - Lotissement Keur Massar',
-      type: 'Contrat',
-      category: 'administratif',
-      size: '425 KB',
-      format: 'DOCX',
-      dateCreated: '2025-09-10',
-      lastModified: '2025-09-21',
-      client: 'Mairie de Keur Massar',
-      status: 'signé',
-      isPrivate: false,
-      thumbnail: '/api/placeholder/150/100'
-    },
-    {
-      id: 6,
-      name: 'Données LiDAR - Forêt de Mbao',
-      type: 'Données LiDAR',
-      category: 'mesures',
-      size: '234 MB',
-      format: 'LAS',
-      dateCreated: '2025-09-08',
-      lastModified: '2025-09-20',
-      client: 'Ministère de l\'Environnement',
-      status: 'traitement',
-      isPrivate: true,
-      thumbnail: '/api/placeholder/150/100'
-    }
-  ];
+  // Documents RÉELS depuis Supabase (aucune donnée fictive)
+  const [documents, setDocuments] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('documents').select('*').order('created_at', { ascending: false }).limit(100);
+        if (error) throw error;
+        if (active) setDocuments(data || []);
+      } catch (err) {
+        console.warn('documents indisponible:', err?.message);
+        if (active) setDocuments([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const categories = [
     { value: 'all', label: 'Tous les documents' },
@@ -137,8 +67,8 @@ const GeometreDocuments = () => {
   };
 
   const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.client.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (doc.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (doc.client || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || doc.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -165,9 +95,9 @@ const GeometreDocuments = () => {
       </h3>
       
       <div className="space-y-1 text-sm text-gray-600 mb-3">
-        <p>Client: {doc.client}</p>
-        <p>Format: {doc.format} • {doc.size}</p>
-        <p>Modifié: {new Date(doc.lastModified).toLocaleDateString('fr-FR')}</p>
+        <p>Client: {doc.client || '—'}</p>
+        <p>Format: {doc.format || '—'} • {doc.size || '—'}</p>
+        <p>Modifié: {(doc.lastModified || doc.updated_at || doc.created_at) ? new Date(doc.lastModified || doc.updated_at || doc.created_at).toLocaleDateString('fr-FR') : '—'}</p>
       </div>
       
       <div className="flex items-center justify-between pt-3 border-t border-gray-100">
@@ -255,7 +185,7 @@ const GeometreDocuments = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Taille totale</p>
-                <p className="text-2xl font-bold text-green-600">256 MB</p>
+                <p className="text-2xl font-bold text-green-600">—</p>
               </div>
               <FolderOpen className="h-8 w-8 text-green-600" />
             </div>
@@ -317,8 +247,8 @@ const GeometreDocuments = () => {
 
         <TabsContent value="recent" className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredDocuments
-              .sort((a, b) => new Date(b.lastModified) - new Date(a.lastModified))
+            {[...filteredDocuments]
+              .sort((a, b) => new Date(b.lastModified || b.updated_at || b.created_at || 0) - new Date(a.lastModified || a.updated_at || a.created_at || 0))
               .slice(0, 6)
               .map(doc => (
                 <DocumentCard key={doc.id} document={doc} />

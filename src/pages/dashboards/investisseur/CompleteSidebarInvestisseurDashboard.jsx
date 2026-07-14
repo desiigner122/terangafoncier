@@ -32,6 +32,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 // Lazy loading des composants
 const InvestisseurOverview = React.lazy(() => import('./InvestisseurOverview'));
@@ -55,17 +56,55 @@ const CompleteSidebarInvestisseurDashboard = () => {
   const profileDropdownRef = useRef(null);
 
   const [dashboardStats, setDashboardStats] = useState({
-    portfolioValue: 850000000,
-    activeInvestments: 12,
-    monthlyReturn: 8.5,
-    opportunities: 28,
-    totalProfit: 125000000,
-    notifications: 7
+    portfolioValue: 0,
+    activeInvestments: 0,
+    monthlyReturn: 0,
+    opportunities: 0,
+    totalProfit: 0,
+    notifications: 0
   });
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
+    const loadDashboardStats = async () => {
+      try {
+        if (!user?.id) return;
+
+        const [txRes, notifRes, oppRes] = await Promise.all([
+          supabase
+            .from('financial_transactions')
+            .select('*')
+            .eq('user_id', user.id),
+          supabase
+            .from('notifications')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id),
+          supabase
+            .from('properties')
+            .select('id', { count: 'exact', head: true })
+        ]);
+
+        const transactions = txRes?.data || [];
+        const portfolioValue = transactions.reduce(
+          (sum, t) => sum + (Number(t.amount) || 0),
+          0
+        );
+
+        setDashboardStats((prev) => ({
+          ...prev,
+          portfolioValue,
+          activeInvestments: transactions.length,
+          opportunities: oppRes?.count || 0,
+          notifications: notifRes?.count || 0
+        }));
+      } catch (error) {
+        console.error('Erreur chargement statistiques investisseur:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardStats();
+  }, [user?.id]);
 
   // Fermer le dropdown profil quand on clique à l'extérieur
   useEffect(() => {

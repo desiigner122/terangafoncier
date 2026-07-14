@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -26,116 +28,99 @@ import {
 
 const InvestisseurOverview = () => {
   const [timeframe, setTimeframe] = useState('30d');
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   // Données du portefeuille
-  const portfolioStats = {
-    totalValue: 2850000,
-    monthlyGrowth: 8.5,
-    totalInvestments: 12,
-    activeProjects: 8,
-    monthlyReturn: 125000,
-    yearlyReturn: 15.2
-  };
+  const [portfolioStats, setPortfolioStats] = useState({
+    totalValue: 0,
+    monthlyGrowth: 0,
+    totalInvestments: 0,
+    activeProjects: 0,
+    monthlyReturn: 0,
+    yearlyReturn: 0
+  });
 
   // Investissements actifs
-  const activeInvestments = [
-    {
-      id: 1,
-      title: 'Résidence Les Almadies',
-      location: 'Almadies, Dakar',
-      type: 'Résidentiel',
-      invested: 450000,
-      currentValue: 485000,
-      roi: 7.8,
-      status: 'En construction',
-      completion: 65,
-      expectedReturn: 18.5,
-      timeframe: '24 mois'
-    },
-    {
-      id: 2,
-      title: 'Centre Commercial Liberté 6',
-      location: 'Liberté 6, Dakar',
-      type: 'Commercial',
-      invested: 800000,
-      currentValue: 920000,
-      roi: 15.0,
-      status: 'Opérationnel',
-      completion: 100,
-      expectedReturn: 22.0,
-      timeframe: '36 mois'
-    },
-    {
-      id: 3,
-      title: 'Lotissement Diamaguène',
-      location: 'Diamaguène, Sicap',
-      type: 'Foncier',
-      invested: 320000,
-      currentValue: 385000,
-      roi: 20.3,
-      status: 'Disponible',
-      completion: 100,
-      expectedReturn: 25.0,
-      timeframe: '18 mois'
-    }
-  ];
+  const [activeInvestments, setActiveInvestments] = useState([]);
 
   // Opportunités récentes
-  const recentOpportunities = [
-    {
-      id: 1,
-      title: 'Villa Moderne VDN',
-      location: 'VDN, Dakar',
-      type: 'Résidentiel',
-      minInvestment: 200000,
-      expectedRoi: 16.5,
-      duration: '30 mois',
-      riskLevel: 'Modéré',
-      status: 'Nouveau'
-    },
-    {
-      id: 2,
-      title: 'Entrepôt Industriel Rufisque',
-      location: 'Rufisque',
-      type: 'Industriel',
-      minInvestment: 500000,
-      expectedRoi: 19.2,
-      duration: '42 mois',
-      riskLevel: 'Élevé',
-      status: 'En cours'
-    }
-  ];
+  const [recentOpportunities, setRecentOpportunities] = useState([]);
 
   // Activités récentes
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'investment',
-      title: 'Nouvel investissement',
-      description: 'Résidence Les Almadies - 450K XOF',
-      time: '2 heures',
-      amount: 450000,
-      positive: false
-    },
-    {
-      id: 2,
-      type: 'return',
-      title: 'Retour sur investissement',
-      description: 'Centre Commercial Liberté 6 - Dividendes Q4',
-      time: '1 jour',
-      amount: 85000,
-      positive: true
-    },
-    {
-      id: 3,
-      type: 'sale',
-      title: 'Vente réalisée',
-      description: 'Terrain Yoff - Plus-value',
-      time: '3 jours',
-      amount: 150000,
-      positive: true
-    }
-  ];
+  const [recentActivities, setRecentActivities] = useState([]);
+
+  useEffect(() => {
+    const loadOverviewData = async () => {
+      try {
+        setLoading(true);
+
+        const [txRes, propRes] = await Promise.all([
+          user?.id
+            ? supabase
+                .from('financial_transactions')
+                .select('*')
+                .eq('user_id', user.id)
+                .order('created_at', { ascending: false })
+            : Promise.resolve({ data: [] }),
+          supabase
+            .from('properties')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(4)
+        ]);
+
+        const transactions = txRes?.data || [];
+        const totalValue = transactions.reduce(
+          (sum, t) => sum + (Number(t.amount) || 0),
+          0
+        );
+
+        setPortfolioStats((prev) => ({
+          ...prev,
+          totalValue,
+          totalInvestments: transactions.length,
+          activeProjects: transactions.filter(
+            (t) => t.status === 'active' || t.status === 'pending'
+          ).length
+        }));
+
+        setRecentActivities(
+          transactions.slice(0, 3).map((t) => ({
+            id: t.id,
+            type: t.type || 'investment',
+            title: t.description || t.type || 'Transaction',
+            description: t.description || '',
+            time: t.created_at
+              ? new Date(t.created_at).toLocaleDateString('fr-FR')
+              : '',
+            amount: Math.abs(Number(t.amount) || 0),
+            positive: (Number(t.amount) || 0) >= 0
+          }))
+        );
+
+        setRecentOpportunities(
+          (propRes?.data || []).map((p) => ({
+            id: p.id,
+            title: p.title || p.name || 'Propriété',
+            location: p.location || p.city || '',
+            type: p.type || p.property_type || '',
+            minInvestment: Number(p.price) || 0,
+            expectedRoi: 0,
+            duration: '',
+            riskLevel: '',
+            status: p.status || ''
+          }))
+        );
+      } catch (error) {
+        console.error("Erreur chargement vue d'ensemble investisseur:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadOverviewData();
+  }, [user?.id]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -279,6 +264,11 @@ const InvestisseurOverview = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {activeInvestments.length === 0 && !loading && (
+                    <p className="text-sm text-gray-500 text-center py-8">
+                      Aucun investissement actif pour le moment.
+                    </p>
+                  )}
                   {activeInvestments.map((investment) => (
                     <motion.div
                       key={investment.id}
@@ -344,11 +334,16 @@ const InvestisseurOverview = () => {
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
                   Nouvelles Opportunités
-                  <Badge variant="secondary">2 nouvelles</Badge>
+                  <Badge variant="secondary">{recentOpportunities.length} nouvelles</Badge>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {recentOpportunities.length === 0 && !loading && (
+                    <p className="text-sm text-gray-500 text-center py-6">
+                      Aucune opportunité disponible.
+                    </p>
+                  )}
                   {recentOpportunities.map((opportunity) => (
                     <div key={opportunity.id} className="border rounded-lg p-3">
                       <div className="flex items-center justify-between mb-2">
@@ -399,6 +394,11 @@ const InvestisseurOverview = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  {recentActivities.length === 0 && !loading && (
+                    <p className="text-sm text-gray-500 text-center py-6">
+                      Aucune activité récente.
+                    </p>
+                  )}
                   {recentActivities.map((activity) => (
                     <div key={activity.id} className="flex items-center space-x-3">
                       <div className={`w-8 h-8 rounded-full flex items-center justify-center ${

@@ -112,9 +112,9 @@ const GeometreTopographie = () => {
   };
 
   const filteredLeves = levesTopo.filter(leve => {
-    const matchesSearch = leve.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         leve.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         leve.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (leve.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (leve.client || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (leve.location || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'tous' || leve.type === typeFilter;
     const matchesStatus = statusFilter === 'tous' || leve.status === statusFilter;
     
@@ -263,6 +263,9 @@ const GeometreTopographie = () => {
 
         <TabsContent value="leves" className="mt-6">
           <div className="space-y-4">
+            {filteredLeves.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+            )}
             {filteredLeves.map((leve, index) => {
               const TypeIcon = getTypeIcon(leve.type);
               
@@ -341,7 +344,7 @@ const GeometreTopographie = () => {
                               <div className="space-y-2">
                                 <h4 className="text-sm font-medium text-gray-900">Équipement Utilisé</h4>
                                 <div className="flex flex-wrap gap-1">
-                                  {leve.equipment.map((equip, idx) => (
+                                  {(leve.equipment || []).map((equip, idx) => (
                                     <Badge key={idx} variant="outline" className="text-xs">
                                       {equip}
                                     </Badge>
@@ -352,7 +355,7 @@ const GeometreTopographie = () => {
                               <div className="space-y-2">
                                 <h4 className="text-sm font-medium text-gray-900">Conditions</h4>
                                 <div className="text-xs text-gray-600">
-                                  <div>Météo: {leve.weather.temp}, {leve.weather.humidity} humidité</div>
+                                  <div>Météo: {leve.weather?.temp}, {leve.weather?.humidity} humidité</div>
                                   <div>Opérateur: {leve.operator}</div>
                                   <div>Précision: {leve.precision}</div>
                                 </div>
@@ -525,27 +528,27 @@ const GeometreTopographie = () => {
                 <div className="space-y-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-3 bg-blue-50 rounded-lg">
-                      <div className="text-lg font-bold text-blue-600">18.4 m</div>
+                      <div className="text-lg font-bold text-blue-600">—</div>
                       <div className="text-sm text-blue-700">Altitude Moyenne</div>
                     </div>
                     <div className="text-center p-3 bg-green-50 rounded-lg">
-                      <div className="text-lg font-bold text-green-600">8.5%</div>
+                      <div className="text-lg font-bold text-green-600">—</div>
                       <div className="text-sm text-green-700">Pente Moyenne</div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2">
                     <div className="flex justify-between text-sm">
                       <span>Point le plus bas</span>
-                      <span className="font-medium">-2.5 m</span>
+                      <span className="font-medium">—</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Point le plus haut</span>
-                      <span className="font-medium">67.8 m</span>
+                      <span className="font-medium">—</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Dénivelé total</span>
-                      <span className="font-medium">70.3 m</span>
+                      <span className="font-medium">—</span>
                     </div>
                   </div>
                 </div>
@@ -568,28 +571,28 @@ const GeometreTopographie = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="text-center p-4 bg-green-50 rounded-lg">
                       <TrendingUp className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-green-600">25,475 m³</div>
+                      <div className="text-2xl font-bold text-green-600">—</div>
                       <div className="text-sm text-green-700">Volume Remblai</div>
                     </div>
                     <div className="text-center p-4 bg-red-50 rounded-lg">
                       <TrendingDown className="h-8 w-8 text-red-600 mx-auto mb-2" />
-                      <div className="text-2xl font-bold text-red-600">18,767 m³</div>
+                      <div className="text-2xl font-bold text-red-600">—</div>
                       <div className="text-sm text-red-700">Volume Déblai</div>
                     </div>
                   </div>
-                  
+
                   <div className="space-y-2 pt-4 border-t">
                     <div className="flex justify-between text-sm">
                       <span>Volume net</span>
-                      <span className="font-medium text-green-600">+6,708 m³</span>
+                      <span className="font-medium text-green-600">—</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Coefficient foisonnement</span>
-                      <span className="font-medium">1.25</span>
+                      <span className="font-medium">—</span>
                     </div>
                     <div className="flex justify-between text-sm">
                       <span>Volume transport</span>
-                      <span className="font-medium">23,459 m³</span>
+                      <span className="font-medium">—</span>
                     </div>
                   </div>
                 </div>

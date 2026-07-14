@@ -21,7 +21,7 @@ import {
   DollarSign,
   AlertTriangle
 } from 'lucide-react';
-import { supabase } from '@/services/supabaseClient';
+import { supabase } from '@/lib/supabaseClient';
 
 const ParticulierOverview = () => {
   // Gestion sécurisée du contexte Outlet
@@ -78,16 +78,34 @@ const ParticulierOverview = () => {
 
   const loadMessages = async () => {
     try {
-      // Si pas d'utilisateur, utiliser des données de fallback
+      // Pas d'utilisateur : compteur à zéro
       if (!user?.id) {
-        setStats(prev => ({ ...prev, messages: 3 }));
+        setStats(prev => ({ ...prev, messages: 0 }));
+        return;
+      }
+
+      const { data: participations, error: convError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+
+      if (convError) {
+        console.warn('Conversations non disponibles:', convError.message);
+        setStats(prev => ({ ...prev, messages: 0 }));
+        return;
+      }
+
+      const conversationIds = (participations || []).map(p => p.conversation_id);
+      if (conversationIds.length === 0) {
+        setStats(prev => ({ ...prev, messages: 0 }));
         return;
       }
 
       const { data, error } = await supabase
         .from('messages')
-        .select('*')
-        .eq('recipient_id', user.id)
+        .select('id, content, created_at')
+        .in('conversation_id', conversationIds)
+        .neq('sender_id', user.id)
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -98,14 +116,14 @@ const ParticulierOverview = () => {
       }
 
       setStats(prev => ({ ...prev, messages: data?.length || 0 }));
-      
+
       // Ajouter à l'activité récente
       if (data && data.length > 0) {
         const messageActivity = data.slice(0, 2).map(msg => ({
           id: `msg-${msg.id}`,
           type: 'message',
-          title: msg.subject,
-          description: `Message de l'administration`,
+          title: 'Nouveau message',
+          description: (msg.content || '').substring(0, 80),
           time: msg.created_at,
           icon: MessageSquare,
           color: 'blue'
@@ -120,9 +138,9 @@ const ParticulierOverview = () => {
 
   const loadNotifications = async () => {
     try {
-      // Si pas d'utilisateur, utiliser des données de fallback
+      // Pas d'utilisateur : compteur à zéro
       if (!user?.id) {
-        setStats(prev => ({ ...prev, notifications: 2 }));
+        setStats(prev => ({ ...prev, notifications: 0 }));
         return;
       }
 
@@ -130,7 +148,7 @@ const ParticulierOverview = () => {
         .from('notifications')
         .select('*')
         .eq('user_id', user.id)
-        .is('read_at', null)
+        .eq('read', false)
         .order('created_at', { ascending: false })
         .limit(5);
 
@@ -149,16 +167,16 @@ const ParticulierOverview = () => {
 
   const loadDemandesTerrains = async () => {
     try {
-      // Si pas d'utilisateur, utiliser des données de fallback
+      // Pas d'utilisateur : compteur à zéro
       if (!user?.id) {
-        setStats(prev => ({ ...prev, demandes: 1 }));
+        setStats(prev => ({ ...prev, demandes: 0 }));
         return;
       }
 
       const { data, error } = await supabase
-        .from('demandes_terrains_communaux')
+        .from('communal_requests')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('applicant_id', user.id)
         .order('created_at', { ascending: false })
         .limit(3);
 
@@ -175,11 +193,11 @@ const ParticulierOverview = () => {
         const demandeActivity = data.slice(0, 1).map(demande => ({
           id: `demande-${demande.id}`,
           type: 'demande',
-          title: `Demande terrain ${demande.commune}`,
-          description: `Statut: ${demande.statut}`,
+          title: `Demande terrain ${demande.commune || ''}`.trim(),
+          description: `Statut: ${demande.status || 'inconnu'}`,
           time: demande.created_at,
           icon: MapPin,
-          color: demande.statut === 'acceptee' ? 'green' : demande.statut === 'en_cours' ? 'orange' : 'gray'
+          color: ['approved', 'acceptee'].includes(demande.status) ? 'green' : ['pending', 'en_cours', 'processing'].includes(demande.status) ? 'orange' : 'gray'
         }));
         setRecentActivity(prev => [...prev, ...demandeActivity]);
       }
@@ -191,16 +209,16 @@ const ParticulierOverview = () => {
 
   const loadDocuments = async () => {
     try {
-      // Si pas d'utilisateur, utiliser des données de fallback
+      // Pas d'utilisateur : compteur à zéro
       if (!user?.id) {
-        setStats(prev => ({ ...prev, documents: 2 }));
+        setStats(prev => ({ ...prev, documents: 0 }));
         return;
       }
 
       const { data, error } = await supabase
-        .from('user_documents')
+        .from('documents')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false })
         .limit(3);
 
@@ -216,30 +234,6 @@ const ParticulierOverview = () => {
       setStats(prev => ({ ...prev, documents: 0 }));
     }
   };
-
-  // Données de fallback si les tables n'existent pas
-  const fallbackActivity = [
-    {
-      id: 'welcome',
-      type: 'system',
-      title: 'Bienvenue sur Teranga Foncier',
-      description: 'Votre dashboard particulier est prêt',
-      time: new Date().toISOString(),
-      icon: Users,
-      color: 'blue'
-    },
-    {
-      id: 'setup',
-      type: 'info',
-      title: 'Configuration base de données',
-      description: 'Exécutez les scripts SQL pour activer toutes les fonctionnalités',
-      time: new Date().toISOString(),
-      icon: AlertTriangle,
-      color: 'orange'
-    }
-  ];
-
-  const displayActivity = recentActivity.length > 0 ? recentActivity : fallbackActivity;
 
   if (loading) {
     return (
@@ -330,8 +324,14 @@ const ParticulierOverview = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {recentActivity.length === 0 && (
+              <div className="text-center py-8">
+                <Users className="h-12 w-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-sm text-gray-500">Aucune activité récente pour le moment</p>
+              </div>
+            )}
             <div className="space-y-4">
-              {displayActivity.slice(0, 5).map((activity, index) => (
+              {recentActivity.slice(0, 5).map((activity, index) => (
                 <motion.div
                   key={activity.id}
                   initial={{ opacity: 0, y: 20 }}
@@ -426,7 +426,7 @@ const ParticulierOverview = () => {
                   </code>
                 </p>
                 <p className="text-xs text-orange-600 mt-2">
-                  Le dashboard fonctionne en mode dégradé avec des données de démonstration.
+                  Le dashboard fonctionne en mode dégradé : les compteurs indisponibles sont affichés à zéro.
                 </p>
               </div>
             </div>

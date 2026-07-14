@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Bell, 
@@ -29,86 +30,38 @@ const GeometreNotifications = () => {
   const [filterType, setFilterType] = useState('all');
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
-  // Notifications simulées
-  const notifications = [
-    {
-      id: 1,
-      type: 'mission',
-      title: 'Nouvelle mission assignée',
-      message: 'Levé topographique requis pour la parcelle 1247 à Keur Massar',
-      timestamp: '2025-09-27T14:30:00',
-      isRead: false,
-      priority: 'high',
-      client: 'SARL Sénégal Construction',
-      action: 'Voir la mission'
-    },
-    {
-      id: 2,
-      type: 'deadline',
-      title: 'Échéance approchant',
-      message: 'Le rapport pour Promoteur Almadies SA doit être livré dans 2 jours',
-      timestamp: '2025-09-27T11:15:00',
-      isRead: false,
-      priority: 'high',
-      client: 'Promoteur Almadies SA',
-      action: 'Voir le projet'
-    },
-    {
-      id: 3,
-      type: 'message',
-      title: 'Nouveau message client',
-      message: 'Le Ministère de l\'Urbanisme a envoyé un message concernant l\'étude cadastrale',
-      timestamp: '2025-09-27T09:45:00',
-      isRead: true,
-      priority: 'medium',
-      client: 'Ministère de l\'Urbanisme',
-      action: 'Répondre'
-    },
-    {
-      id: 4,
-      type: 'instrument',
-      title: 'Calibrage requis',
-      message: 'La station totale Leica TS16 nécessite un calibrage',
-      timestamp: '2025-09-26T16:20:00',
-      isRead: false,
-      priority: 'medium',
-      client: null,
-      action: 'Programmer'
-    },
-    {
-      id: 5,
-      type: 'payment',
-      title: 'Paiement reçu',
-      message: 'Paiement de 450 000 FCFA reçu de Direction du Cadastre',
-      timestamp: '2025-09-26T14:10:00',
-      isRead: true,
-      priority: 'low',
-      client: 'Direction du Cadastre',
-      action: 'Voir les détails'
-    },
-    {
-      id: 6,
-      type: 'system',
-      title: 'Mise à jour disponible',
-      message: 'Une nouvelle version du logiciel de topographie est disponible',
-      timestamp: '2025-09-25T10:30:00',
-      isRead: true,
-      priority: 'low',
-      client: null,
-      action: 'Mettre à jour'
-    },
-    {
-      id: 7,
-      type: 'weather',
-      title: 'Alerte météo',
-      message: 'Conditions météorologiques défavorables prévues demain - reportez les levés extérieurs',
-      timestamp: '2025-09-25T07:00:00',
-      isRead: false,
-      priority: 'high',
-      client: null,
-      action: 'Voir la météo'
-    }
-  ];
+  // Notifications RÉEL depuis Supabase (aucune donnée fictive)
+  const [notifications, setNotifications] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('notifications')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (error) throw error;
+        if (active) {
+          setNotifications((data || []).map((n) => ({
+            id: n.id,
+            type: n.type || 'system',
+            title: n.title || 'Notification',
+            message: n.message || n.body || n.content || '',
+            timestamp: n.created_at,
+            isRead: n.is_read ?? n.read ?? false,
+            priority: n.priority || 'low',
+            client: n.client || null,
+            action: n.action || 'Voir'
+          })));
+        }
+      } catch (err) {
+        console.warn('notifications indisponible:', err?.message);
+        if (active) setNotifications([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getNotificationIcon = (type) => {
     switch (type) {
@@ -139,8 +92,8 @@ const GeometreNotifications = () => {
   };
 
   const filteredNotifications = notifications.filter(notif => {
-    const matchesSearch = notif.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notif.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    const matchesSearch = (notif.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (notif.message || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
                          (notif.client && notif.client.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesType = filterType === 'all' || notif.type === filterType;
     const matchesReadStatus = !showUnreadOnly || !notif.isRead;

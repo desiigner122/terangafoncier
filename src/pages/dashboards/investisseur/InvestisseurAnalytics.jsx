@@ -16,6 +16,7 @@ import {
   Users,
   Activity
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
@@ -27,24 +28,57 @@ const InvestisseurAnalytics = () => {
 
   const [analyticsData, setAnalyticsData] = useState({
     performance: {
-      totalReturn: 145000000,
-      returnRate: 18.5,
-      bestInvestment: 'Centre Commercial Teranga',
-      bestROI: 23.3,
-      riskScore: 6.8
+      totalReturn: 0,
+      returnRate: 0,
+      bestInvestment: '',
+      bestROI: 0,
+      riskScore: 0
     },
     sectors: [],
     trends: [],
     regions: [],
     predictions: {
-      nextMonth: { roi: 19.8, confidence: 85 },
-      nextQuarter: { roi: 21.2, confidence: 78 },
-      nextYear: { roi: 24.5, confidence: 65 }
+      nextMonth: { roi: 0, confidence: 0 },
+      nextQuarter: { roi: 0, confidence: 0 },
+      nextYear: { roi: 0, confidence: 0 }
     }
   });
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 1200);
+    const loadAnalytics = async () => {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id;
+        if (!userId) return;
+
+        const { data, error } = await supabase
+          .from('financial_transactions')
+          .select('*')
+          .eq('user_id', userId);
+
+        if (error) throw error;
+
+        const transactions = data || [];
+        const totalReturn = transactions.reduce(
+          (sum, t) => sum + (Number(t.amount) || 0),
+          0
+        );
+
+        setAnalyticsData((prev) => ({
+          ...prev,
+          performance: {
+            ...prev.performance,
+            totalReturn
+          }
+        }));
+      } catch (error) {
+        console.error('Erreur chargement analytics investisseur:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadAnalytics();
   }, []);
 
   const formatCurrency = (amount) => {

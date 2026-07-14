@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { 
   TrendingUp, 
   BarChart3, 
@@ -82,12 +84,53 @@ const InvestisseurDashboardLayout = ({ children }) => {
     }
   ];
 
+  const { user } = useAuth();
+  const [portfolioStats, setPortfolioStats] = useState({
+    portfolioValue: 0,
+    activeInvestments: 0
+  });
+
+  useEffect(() => {
+    const loadPortfolioStats = async () => {
+      try {
+        if (!user?.id) return;
+
+        const { data, error } = await supabase
+          .from('financial_transactions')
+          .select('amount')
+          .eq('user_id', user.id);
+
+        if (error) throw error;
+
+        const transactions = data || [];
+        setPortfolioStats({
+          portfolioValue: transactions.reduce(
+            (sum, t) => sum + (Number(t.amount) || 0),
+            0
+          ),
+          activeInvestments: transactions.length
+        });
+      } catch (error) {
+        console.error('Erreur chargement portefeuille investisseur:', error);
+      }
+    };
+
+    loadPortfolioStats();
+  }, [user?.id]);
+
   const userProfile = {
-    name: '',
+    name:
+      user?.user_metadata?.full_name ||
+      user?.user_metadata?.name ||
+      user?.email ||
+      '',
     role: 'Investisseur Premium',
-    avatar: '/api/placeholder/40/40',
-    portfolioValue: '2.8M XOF',
-    activeInvestments: 12
+    avatar: user?.user_metadata?.avatar_url || '',
+    portfolioValue: `${new Intl.NumberFormat('fr-FR', {
+      notation: 'compact',
+      maximumFractionDigits: 1
+    }).format(portfolioStats.portfolioValue)} XOF`,
+    activeInvestments: portfolioStats.activeInvestments
   };
 
   return (

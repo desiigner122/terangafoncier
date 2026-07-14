@@ -34,6 +34,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { supabase } from '@/lib/supabaseClient';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
@@ -85,102 +86,98 @@ const InvestisseurDashboard = () => {
 
   const [dashboardData, setDashboardData] = useState({
     stats: {
-      totalInvestments: 15,
-      activeProjects: 8,
-      portfolioValue: 850000000,
-      monthlyReturn: 12.8,
-      totalROI: 34.5,
-      diversificationScore: 85
+      totalInvestments: 0,
+      activeProjects: 0,
+      portfolioValue: 0,
+      monthlyReturn: 0,
+      totalROI: 0,
+      diversificationScore: 0
     },
-    portfolio: [
-      {
-        id: 1,
-        name: 'Résidence Les Almadies',
-        type: 'Résidentiel',
-        location: 'Almadies, Dakar',
-        investment: 50000000,
-        currentValue: 65000000,
-        roi: 30.0,
-        status: 'Actif',
-        acquisitionDate: '2023-06-15',
-        expectedReturn: 15.5,
-        risk: 'Faible'
-      },
-      {
-        id: 2,
-        name: 'Centre Commercial Plateau',
-        type: 'Commercial',
-        location: 'Plateau, Dakar',
-        investment: 120000000,
-        currentValue: 158000000,
-        roi: 31.7,
-        status: 'Actif',
-        acquisitionDate: '2023-03-10',
-        expectedReturn: 18.2,
-        risk: 'Moyen'
-      },
-      {
-        id: 3,
-        name: 'Lotissement Diamniadio',
-        type: 'Terrain',
-        location: 'Diamniadio',
-        investment: 75000000,
-        currentValue: 95000000,
-        roi: 26.7,
-        status: 'En développement',
-        acquisitionDate: '2023-09-20',
-        expectedReturn: 22.0,
-        risk: 'Élevé'
-      }
-    ],
-    opportunities: [
-      {
-        id: 1,
-        title: 'Projet Villa Moderne Saly',
-        type: 'Résidentiel',
-        location: 'Saly, Mbour',
-        minimumInvestment: 25000000,
-        expectedROI: 28.5,
-        duration: '18 mois',
-        risk: 'Faible',
-        promoter: 'Teranga Development',
-        funding: 65,
-        investors: 12
-      },
-      {
-        id: 2,
-        title: 'Complexe Bureaux Nouvelle Ville',
-        type: 'Commercial',
-        location: 'Diamniadio',
-        minimumInvestment: 50000000,
-        expectedROI: 35.2,
-        duration: '24 mois',
-        risk: 'Moyen',
-        promoter: 'ABC Promotion',
-        funding: 40,
-        investors: 8
-      }
-    ],
+    portfolio: [],
+    opportunities: [],
     analytics: {
-      monthlyReturns: [8.5, 12.3, 15.1, 11.8, 14.2, 12.8],
-      sectorDistribution: {
-        'Résidentiel': 45,
-        'Commercial': 35,
-        'Terrain': 20
-      },
-      riskDistribution: {
-        'Faible': 40,
-        'Moyen': 45,
-        'Élevé': 15
-      }
+      monthlyReturns: [],
+      sectorDistribution: {},
+      riskDistribution: {}
     }
   });
 
   useEffect(() => {
-    // Simulation chargement des données
-    setTimeout(() => {
-      setLoading(false);
-    }, 1500);
+    const loadDashboardData = async () => {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id;
+
+        const [txRes, projRes] = await Promise.all([
+          userId
+            ? supabase
+                .from('financial_transactions')
+                .select('*')
+                .eq('user_id', userId)
+                .order('created_at', { ascending: false })
+            : Promise.resolve({ data: [] }),
+          supabase
+            .from('developer_projects')
+            .select('*')
+            .order('created_at', { ascending: false })
+            .limit(6)
+        ]);
+
+        const transactions = txRes?.data || [];
+        const portfolio = transactions.map((t) => ({
+          id: t.id,
+          name: t.description || t.type || 'Investissement',
+          type: t.type || '',
+          location: '',
+          investment: Math.abs(Number(t.amount) || 0),
+          currentValue: Math.abs(Number(t.amount) || 0),
+          roi: 0,
+          status: t.status || '',
+          acquisitionDate: t.created_at,
+          expectedReturn: 0,
+          risk: ''
+        }));
+
+        const opportunities = (projRes?.data || []).map((p) => ({
+          id: p.id,
+          title: p.title || p.name || 'Projet',
+          type: p.type || p.project_type || '',
+          location: p.location || p.city || '',
+          minimumInvestment: Number(p.min_investment) || Number(p.price) || 0,
+          expectedROI: 0,
+          duration: '',
+          risk: '',
+          promoter: '',
+          funding: 0,
+          investors: 0
+        }));
+
+        const portfolioValue = portfolio.reduce(
+          (sum, inv) => sum + inv.investment,
+          0
+        );
+
+        setDashboardData((prev) => ({
+          ...prev,
+          stats: {
+            ...prev.stats,
+            totalInvestments: portfolio.length,
+            activeProjects: portfolio.filter(
+              (inv) => inv.status !== 'completed' && inv.status !== 'cancelled'
+            ).length,
+            portfolioValue
+          },
+          portfolio,
+          opportunities
+        }));
+      } catch (error) {
+        console.error('Erreur chargement dashboard investisseur:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
   const stats = [
@@ -446,6 +443,11 @@ const InvestisseurDashboard = () => {
             </div>
 
             <div className="grid gap-6">
+              {dashboardData.portfolio.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">
+                  Aucun investissement dans votre portefeuille.
+                </p>
+              )}
               {dashboardData.portfolio.map((investment) => (
                 <Card key={investment.id}>
                   <CardContent className="p-6">
@@ -537,6 +539,11 @@ const InvestisseurDashboard = () => {
             </div>
 
             <div className="grid gap-6">
+              {dashboardData.opportunities.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">
+                  Aucune opportunité disponible pour le moment.
+                </p>
+              )}
               {dashboardData.opportunities.map((opportunity) => (
                 <Card key={opportunity.id}>
                   <CardContent className="p-6">
@@ -629,7 +636,7 @@ const InvestisseurDashboard = () => {
                     <div>
                       <p className="text-sm text-gray-600">Rendement Moyen</p>
                       <p className="text-2xl font-bold text-green-600">
-                        {formatPercentage(dashboardData.analytics.monthlyReturns.reduce((a, b) => a + b, 0) / dashboardData.analytics.monthlyReturns.length)}
+                        {formatPercentage(dashboardData.analytics.monthlyReturns.length ? dashboardData.analytics.monthlyReturns.reduce((a, b) => a + b, 0) / dashboardData.analytics.monthlyReturns.length : 0)}
                       </p>
                     </div>
                     <TrendingUp className="h-8 w-8 text-green-600" />
@@ -642,7 +649,7 @@ const InvestisseurDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Volatilité</p>
-                      <p className="text-2xl font-bold text-blue-600">8.2%</p>
+                      <p className="text-2xl font-bold text-blue-600">0%</p>
                     </div>
                     <BarChart3 className="h-8 w-8 text-blue-600" />
                   </div>
@@ -654,7 +661,7 @@ const InvestisseurDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Ratio Sharpe</p>
-                      <p className="text-2xl font-bold text-purple-600">1.45</p>
+                      <p className="text-2xl font-bold text-purple-600">0</p>
                     </div>
                     <Target className="h-8 w-8 text-purple-600" />
                   </div>
@@ -666,7 +673,7 @@ const InvestisseurDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Alpha</p>
-                      <p className="text-2xl font-bold text-orange-600">+3.2%</p>
+                      <p className="text-2xl font-bold text-orange-600">0%</p>
                     </div>
                     <Star className="h-8 w-8 text-orange-600" />
                   </div>

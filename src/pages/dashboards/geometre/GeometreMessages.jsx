@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   MessageSquare, 
@@ -27,76 +28,82 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const GeometreMessages = () => {
-  const [selectedConversation, setSelectedConversation] = useState(1);
+  const [selectedConversation, setSelectedConversation] = useState(null);
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Conversations simulées
-  const conversations = []; // données graphiques réelles requises
+  // Conversations RÉEL depuis Supabase (aucune donnée fictive)
+  const [conversations, setConversations] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('conversations')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(50);
+        if (error) throw error;
+        if (active) {
+          setConversations((data || []).map((c) => ({
+            id: c.id,
+            client: {
+              name: c.title || c.name || c.subject || 'Conversation',
+              avatar: c.avatar_url || '',
+              location: c.location || ''
+            },
+            project: c.subject || c.title || '',
+            lastMessage: c.last_message || '',
+            timestamp: c.updated_at || c.created_at,
+            unreadCount: c.unread_count || 0,
+            status: c.status || 'offline'
+          })));
+        }
+      } catch (err) {
+        console.warn('conversations indisponible:', err?.message);
+        if (active) setConversations([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
-  // Messages simulés pour la conversation sélectionnée
-  const messages = [
-    {
-      id: 1,
-      sender: 'client',
-      content: 'Bonjour, nous avons besoin d\'un levé topographique pour notre nouvelle parcelle.',
-      timestamp: '2025-09-27T09:00:00',
-      status: 'read'
-    },
-    {
-      id: 2,
-      sender: 'geometre',
-      content: 'Bonjour ! Bien sûr, je peux vous aider. Pouvez-vous me donner plus de détails sur la parcelle ? Localisation, superficie approximative ?',
-      timestamp: '2025-09-27T09:15:00',
-      status: 'read'
-    },
-    {
-      id: 3,
-      sender: 'client',
-      content: 'C\'est une parcelle de 2 hectares située à Keur Massar, près de la nouvelle route. Nous prévoyons une construction résidentielle.',
-      timestamp: '2025-09-27T09:30:00',
-      status: 'read'
-    },
-    {
-      id: 4,
-      sender: 'geometre',
-      content: 'Parfait ! Pour ce type de projet, je recommande un levé complet avec GPS différentiel et nivellement. Le délai serait de 3-4 jours ouvrables.',
-      timestamp: '2025-09-27T10:00:00',
-      status: 'read'
-    },
-    {
-      id: 5,
-      sender: 'client',
-      content: 'Excellent. Quel serait le coût pour cette prestation ?',
-      timestamp: '2025-09-27T10:15:00',
-      status: 'read'
-    },
-    {
-      id: 6,
-      sender: 'geometre',
-      content: 'Pour 2 hectares avec toutes les prestations incluses : 850 000 FCFA. Cela comprend le levé, le plan CAD, et le rapport technique.',
-      timestamp: '2025-09-27T10:30:00',
-      status: 'read'
-    },
-    {
-      id: 7,
-      sender: 'client',
-      content: 'C\'est dans notre budget. Pouvons-nous programmer la visite du terrain pour demain ?',
-      timestamp: '2025-09-27T14:30:00',
-      status: 'delivered'
-    },
-    {
-      id: 8,
-      sender: 'geometre',
-      content: 'Parfaitement ! Je suis disponible demain à partir de 8h. Préférez-vous le matin ou l\'après-midi ?',
-      timestamp: '2025-09-27T14:35:00',
-      status: 'sent'
+  // Messages RÉEL depuis Supabase pour la conversation sélectionnée
+  const [messages, setMessages] = useState([]);
+  useEffect(() => {
+    let active = true;
+    if (!selectedConversation) {
+      setMessages([]);
+      return () => { active = false; };
     }
-  ];
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', selectedConversation)
+          .order('created_at', { ascending: true })
+          .limit(200);
+        if (error) throw error;
+        if (active) {
+          setMessages((data || []).map((m) => ({
+            id: m.id,
+            sender: m.sender || 'client',
+            content: m.content || m.body || m.message || '',
+            timestamp: m.created_at,
+            status: m.status || 'sent'
+          })));
+        }
+      } catch (err) {
+        console.warn('messages indisponible:', err?.message);
+        if (active) setMessages([]);
+      }
+    })();
+    return () => { active = false; };
+  }, [selectedConversation]);
 
   const filteredConversations = conversations.filter(conv =>
-    conv.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.project.toLowerCase().includes(searchTerm.toLowerCase())
+    (conv.client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (conv.project || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const getStatusColor = (status) => {
@@ -231,9 +238,13 @@ const GeometreMessages = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {filteredConversations.map(conversation => (
-            <ConversationItem key={conversation.id} conversation={conversation} />
-          ))}
+          {filteredConversations.length === 0 ? (
+            <p className="p-4 text-sm text-gray-500">Aucune conversation</p>
+          ) : (
+            filteredConversations.map(conversation => (
+              <ConversationItem key={conversation.id} conversation={conversation} />
+            ))
+          )}
         </div>
       </div>
 

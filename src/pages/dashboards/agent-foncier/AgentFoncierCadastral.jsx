@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
-import { 
-  Ruler, 
+import {
+  Ruler,
   Map, 
   FileText, 
   Camera, 
@@ -54,72 +55,28 @@ const AgentFoncierCadastral = () => {
   const [showGrid, setShowGrid] = useState(true);
   const [zoom, setZoom] = useState(100);
 
-  // Données simulées
-  const [cadastralPlans] = useState([
-    {
-      id: 'CAD-001',
-      title: 'Secteur Nord - Dakar Plateau',
-      type: 'Plan de masse',
-      surface: '2.5 ha',
-      parcels: 24,
-      status: 'Validé',
-      date: '2024-09-20',
-      surveyor: 'M. Diop',
-      progress: 100,
-      coordinates: { lat: 14.6937, lng: -17.4441 }
-    },
-    {
-      id: 'CAD-002', 
-      title: 'Zone Industrielle - Rufisque',
-      type: 'Levé topographique',
-      surface: '5.2 ha',
-      parcels: 8,
-      status: 'En cours',
-      date: '2024-09-25',
-      surveyor: 'Mme Fall',
-      progress: 75,
-      coordinates: { lat: 14.7167, lng: -17.2667 }
-    },
-    {
-      id: 'CAD-003',
-      title: 'Résidentiel Almadies',
-      type: 'Bornage',
-      surface: '1.8 ha',
-      parcels: 45,
-      status: 'Révision',
-      date: '2024-09-15',
-      surveyor: 'M. Ndiaye',
-      progress: 90,
-      coordinates: { lat: 14.7644, lng: -17.5175 }
-    },
-    {
-      id: 'CAD-004',
-      title: 'Projet Diamniadio',
-      type: 'Plan cadastral',
-      surface: '12.0 ha',
-      parcels: 156,
-      status: 'Planifié',
-      date: '2024-10-01',
-      surveyor: 'Équipe Tech',
-      progress: 25,
-      coordinates: { lat: 14.7167, lng: -17.1833 }
-    }
-  ]);
+  // Plans cadastraux réels (aucune donnée fictive)
+  const [cadastralPlans] = useState([]);
 
-  const [recentMeasures] = useState([
-    { id: 1, parcel: 'PAR-A-001', type: 'Surface', value: '—', date: '2024-09-26', precision: '±0.5m' },
-    { id: 2, parcel: 'PAR-B-023', type: 'Périmètre', value: '—', date: '2024-09-25', precision: '±0.2m' },
-    { id: 3, parcel: 'PAR-C-112', type: 'Altitude', value: '—', date: '2024-09-24', precision: '±0.1m' },
-    { id: 4, parcel: 'PAR-D-034', type: 'Orientation', value: '—', date: '2024-09-24', precision: '±0.05°' },
-    { id: 5, parcel: 'PAR-E-067', type: 'Distance', value: '—', date: '2024-09-23', precision: '±0.1m' }
-  ]);
+  // recentMeasures RÉEL depuis Supabase (aucune donnée fictive)
+  const [recentMeasures, setRecentMeasures] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase.from('field_measurements').select('*').order('created_at', { ascending: false }).limit(10);
+        if (error) throw error;
+        if (active) setRecentMeasures(data || []);
+      } catch (err) {
+        console.warn('recentMeasures indisponible:', err?.message);
+        if (active) setRecentMeasures([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
-  const [surveyTools] = useState([
-    { name: 'Station totale', status: 'Disponible', lastCalib: '2024-09-01', precision: '±2mm + 2ppm' },
-    { name: 'GPS RTK', status: 'En service', lastCalib: '2024-08-15', precision: '±1cm' },
-    { name: 'Niveau optique', status: 'Maintenance', lastCalib: '2024-07-30', precision: '±1mm/km' },
-    { name: 'Distancemètre laser', status: 'Disponible', lastCalib: '2024-09-10', precision: '±1.5mm' }
-  ]);
+  // Instruments de mesure réels (aucune donnée fictive)
+  const [surveyTools] = useState([]);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 800);
@@ -184,7 +141,7 @@ const AgentFoncierCadastral = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Plans Actifs</p>
-                <p className="text-2xl font-bold text-gray-900">24</p>
+                <p className="text-2xl font-bold text-gray-900">{cadastralPlans.length}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <Map className="h-6 w-6 text-green-600" />
@@ -198,7 +155,7 @@ const AgentFoncierCadastral = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Surfaces Mesurées</p>
-                <p className="text-2xl font-bold text-gray-900">156.8 ha</p>
+                <p className="text-2xl font-bold text-gray-900">{recentMeasures.length}</p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
                 <Square className="h-6 w-6 text-blue-600" />
@@ -212,7 +169,7 @@ const AgentFoncierCadastral = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Bornages</p>
-                <p className="text-2xl font-bold text-gray-900">89</p>
+                <p className="text-2xl font-bold text-gray-900">0</p>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
                 <Target className="h-6 w-6 text-orange-600" />
@@ -226,7 +183,7 @@ const AgentFoncierCadastral = () => {
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm font-medium text-gray-600 mb-1">Précision Moy.</p>
-                <p className="text-2xl font-bold text-gray-900">±0.8cm</p>
+                <p className="text-2xl font-bold text-gray-900">—</p>
               </div>
               <div className="bg-purple-100 p-3 rounded-full">
                 <Compass className="h-6 w-6 text-purple-600" />
@@ -289,6 +246,9 @@ const AgentFoncierCadastral = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {cadastralPlans.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucun plan disponible</p>
+                )}
                 {cadastralPlans.map((plan) => (
                   <motion.div
                     key={plan.id}
@@ -357,15 +317,18 @@ const AgentFoncierCadastral = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
+                  {recentMeasures.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-6">Aucune mesure disponible</p>
+                  )}
                   {recentMeasures.map((measure) => (
                     <div key={measure.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                       <div>
-                        <p className="font-medium text-gray-900">{measure.parcel}</p>
-                        <p className="text-sm text-gray-600">{measure.type}</p>
+                        <p className="font-medium text-gray-900">{measure.parcel || measure.parcel_id || measure.reference || '—'}</p>
+                        <p className="text-sm text-gray-600">{measure.type || measure.measurement_type || '—'}</p>
                       </div>
                       <div className="text-right">
-                        <p className="font-semibold text-green-600">{measure.value}</p>
-                        <p className="text-xs text-gray-500">{measure.precision}</p>
+                        <p className="font-semibold text-green-600">{measure.value ?? '—'}</p>
+                        <p className="text-xs text-gray-500">{measure.precision || ''}</p>
                       </div>
                     </div>
                   ))}
@@ -472,6 +435,9 @@ const AgentFoncierCadastral = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {surveyTools.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-6">Aucun instrument enregistré</p>
+                  )}
                   {surveyTools.map((tool, index) => (
                     <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
                       <div>

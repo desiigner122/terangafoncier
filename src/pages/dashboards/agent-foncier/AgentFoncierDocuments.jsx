@@ -79,7 +79,7 @@ const AgentFoncierDocuments = () => {
     {
       id: 1,
       nom: 'Titres Fonciers',
-      count: 24,
+      count: 0,
       icon: FolderOpen,
       color: 'text-blue-600',
       description: 'Documents de propriété foncière'
@@ -87,7 +87,7 @@ const AgentFoncierDocuments = () => {
     {
       id: 2,
       nom: 'Actes de Vente',
-      count: 18,
+      count: 0,
       icon: Folder,
       color: 'text-green-600',
       description: 'Contrats et actes de vente'
@@ -95,7 +95,7 @@ const AgentFoncierDocuments = () => {
     {
       id: 3,
       nom: 'Permis & Autorisations',
-      count: 12,
+      count: 0,
       icon: Folder,
       color: 'text-orange-600',
       description: 'Permis de construire et autorisations'
@@ -103,7 +103,7 @@ const AgentFoncierDocuments = () => {
     {
       id: 4,
       nom: 'Rapports d\'Expertise',
-      count: 31,
+      count: 0,
       icon: Folder,
       color: 'text-purple-600',
       description: 'Rapports d\'évaluation et d\'expertise'
@@ -111,7 +111,7 @@ const AgentFoncierDocuments = () => {
     {
       id: 5,
       nom: 'Plans & Cadastre',
-      count: 15,
+      count: 0,
       icon: Folder,
       color: 'text-indigo-600',
       description: 'Plans cadastraux et topographiques'
@@ -119,38 +119,39 @@ const AgentFoncierDocuments = () => {
     {
       id: 6,
       nom: 'Archives',
-      count: 89,
+      count: 0,
       icon: Archive,
       color: 'text-gray-600',
       description: 'Documents archivés'
     }
   ];
 
+  // Stats dérivées des données réelles (0 par défaut)
   const documentStats = [
     {
       title: 'Total Documents',
-      value: '—',
+      value: documents.length,
       change: null,
       icon: FileText,
       color: 'bg-blue-100 text-blue-600'
     },
     {
       title: 'En Attente',
-      value: '—',
+      value: documents.filter(d => ['en_attente', 'pending'].includes(d.statut || d.status)).length,
       change: null,
       icon: Clock,
       color: 'bg-yellow-100 text-yellow-600'
     },
     {
       title: 'Validés',
-      value: '—',
+      value: documents.filter(d => ['validé', 'valide', 'validated', 'approved'].includes(d.statut || d.status)).length,
       change: null,
       icon: CheckCircle,
       color: 'bg-green-100 text-green-600'
     },
     {
       title: 'Sécurisés',
-      value: '—',
+      value: documents.filter(d => Boolean(d.blockchain)).length,
       change: null,
       icon: Lock,
       color: 'bg-purple-100 text-purple-600'
@@ -159,7 +160,7 @@ const AgentFoncierDocuments = () => {
 
   // Fonctions utilitaires
   const getFileIcon = (format) => {
-    switch (format.toLowerCase()) {
+    switch ((format || '').toLowerCase()) {
       case 'pdf': return FilePdf;  
       case 'docx': 
       case 'doc': return FileText;
@@ -185,21 +186,21 @@ const AgentFoncierDocuments = () => {
   const filteredDocuments = documents
     .filter(doc => {
       if (activeTab === 'tous') return true;
-      if (activeTab === 'recents') return new Date(doc.date) > new Date(Date.now() - 7*24*60*60*1000);
-      if (activeTab === 'partages') return doc.partage.length > 0;
+      if (activeTab === 'recents') return new Date(doc.date || doc.created_at) > new Date(Date.now() - 7*24*60*60*1000);
+      if (activeTab === 'partages') return (doc.partage || []).length > 0;
       if (activeTab === 'favoris') return doc.priority === 'haute';
-      return doc.statut === activeTab;
+      return (doc.statut || doc.status) === activeTab;
     })
-    .filter(doc => 
-      doc.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.type.toLowerCase().includes(searchTerm.toLowerCase())
+    .filter(doc =>
+      (doc.nom || doc.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.client || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (doc.type || '').toLowerCase().includes(searchTerm.toLowerCase())
     )
     .sort((a, b) => {
       const order = sortOrder === 'asc' ? 1 : -1;
-      if (sortBy === 'nom') return order * a.nom.localeCompare(b.nom);
-      if (sortBy === 'date') return order * (new Date(a.date) - new Date(b.date));
-      if (sortBy === 'taille') return order * (parseFloat(a.taille) - parseFloat(b.taille));
+      if (sortBy === 'nom') return order * (a.nom || a.name || '').localeCompare(b.nom || b.name || '');
+      if (sortBy === 'date') return order * (new Date(a.date || a.created_at) - new Date(b.date || b.created_at));
+      if (sortBy === 'taille') return order * ((parseFloat(a.taille) || 0) - (parseFloat(b.taille) || 0));
       return 0;
     });
 
@@ -258,7 +259,9 @@ const AgentFoncierDocuments = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
                     <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    <p className="text-sm text-green-600 font-medium">{stat.change} ce mois</p>
+                    {stat.change && (
+                      <p className="text-sm text-green-600 font-medium">{stat.change} ce mois</p>
+                    )}
                   </div>
                   <div className={`p-3 rounded-full ${stat.color}`}>
                     <stat.icon className="h-6 w-6" />
@@ -399,7 +402,7 @@ const AgentFoncierDocuments = () => {
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 mb-1">
-                              <h4 className="font-semibold text-gray-900 truncate">{doc.nom}</h4>
+                              <h4 className="font-semibold text-gray-900 truncate">{doc.nom || doc.name || 'Document'}</h4>
                               {doc.signature && <CheckCircle className="h-4 w-4 text-green-500" />}
                               {doc.priority === 'haute' && <Star className="h-4 w-4 text-yellow-500" />}
                             </div>
@@ -442,9 +445,9 @@ const AgentFoncierDocuments = () => {
                               )}
                             </div>
                             
-                            {doc.tags.length > 0 && (
+                            {(doc.tags || []).length > 0 && (
                               <div className="flex flex-wrap gap-1 mb-2">
-                                {doc.tags.map((tag, idx) => (
+                                {(doc.tags || []).map((tag, idx) => (
                                   <span
                                     key={idx}
                                     className="inline-flex items-center gap-1 px-2 py-1 bg-gray-100 text-gray-700 text-xs rounded-full"
@@ -458,10 +461,10 @@ const AgentFoncierDocuments = () => {
                             
                             <p className="text-sm text-gray-500 line-clamp-2">{doc.description}</p>
                             
-                            {doc.partage.length > 0 && (
+                            {(doc.partage || []).length > 0 && (
                               <div className="mt-2 flex items-center gap-1 text-xs text-blue-600">
                                 <Share2 className="h-3 w-3" />
-                                <span>Partagé avec {doc.partage.length} personne(s)</span>
+                                <span>Partagé avec {(doc.partage || []).length} personne(s)</span>
                               </div>
                             )}
                           </div>

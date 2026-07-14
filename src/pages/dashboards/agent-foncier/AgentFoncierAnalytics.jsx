@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
-import { 
+import {
   BarChart3,
   TrendingUp,
   TrendingDown,
@@ -25,14 +26,51 @@ const AgentFoncierAnalytics = () => {
   const [loading, setLoading] = useState(true);
   const [selectedPeriod, setSelectedPeriod] = useState('month');
 
+  // KPIs réels depuis Supabase (0 par défaut)
+  const [kpiData, setKpiData] = useState({
+    revenus: 0,
+    terrains: 0,
+    clients: 0,
+    tempsMoyen: 0
+  });
+
   useEffect(() => {
     setTimeout(() => setLoading(false), 800);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [transactionsRes, propertiesRes, contactsRes] = await Promise.all([
+          supabase.from('financial_transactions').select('*').order('created_at', { ascending: false }).limit(500),
+          supabase.from('properties').select('*', { count: 'exact', head: true }),
+          supabase.from('crm_contacts').select('*', { count: 'exact', head: true })
+        ]);
+        if (active) {
+          const revenus = (transactionsRes.data || []).reduce(
+            (acc, t) => acc + (Number(t.amount ?? t.montant ?? 0) || 0),
+            0
+          );
+          setKpiData({
+            revenus,
+            terrains: propertiesRes.count || 0,
+            clients: contactsRes.count || 0,
+            tempsMoyen: 0
+          });
+        }
+      } catch (err) {
+        console.warn('KPIs indisponibles:', err?.message);
+        if (active) setKpiData({ revenus: 0, terrains: 0, clients: 0, tempsMoyen: 0 });
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const performanceKPIs = [
     {
       title: 'Revenus Totaux',
-      value: '—',
+      value: kpiData.revenus,
       unit: 'XOF',
       change: null,
       trend: 'up',
@@ -42,7 +80,7 @@ const AgentFoncierAnalytics = () => {
     },
     {
       title: 'Terrains Évalués',
-      value: '—',
+      value: kpiData.terrains,
       change: null,
       trend: 'up',
       icon: Map,
@@ -51,7 +89,7 @@ const AgentFoncierAnalytics = () => {
     },
     {
       title: 'Nouveaux Clients',
-      value: '—',
+      value: kpiData.clients,
       change: null,
       trend: 'up',
       icon: Users,
@@ -60,7 +98,7 @@ const AgentFoncierAnalytics = () => {
     },
     {
       title: 'Temps Moyen/Dossier',
-      value: '—',
+      value: kpiData.tempsMoyen,
       unit: 'jours',
       change: null,
       trend: 'down',
@@ -163,6 +201,9 @@ const AgentFoncierAnalytics = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {zoneAnalysis.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucune donnée disponible</p>
+                )}
                 {zoneAnalysis.map((zone, index) => (
                   <motion.div
                     key={zone.zone}
@@ -203,6 +244,9 @@ const AgentFoncierAnalytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {monthlyTrends.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-6">Aucune donnée disponible</p>
+                  )}
                   {monthlyTrends.map((trend, index) => (
                     <div key={trend.month} className="flex items-center justify-between">
                       <span className="text-sm font-medium text-gray-600">{trend.month}</span>
@@ -223,33 +267,7 @@ const AgentFoncierAnalytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Dakar Centre</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div className="bg-green-500 h-2 rounded-full" style={{width: '45%'}}></div>
-                      </div>
-                      <span className="text-sm font-medium">45%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Banlieue</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div className="bg-blue-500 h-2 rounded-full" style={{width: '35%'}}></div>
-                      </div>
-                      <span className="text-sm font-medium">35%</span>
-                    </div>
-                  </div>
-                  <div className="flex justify-between items-center">
-                    <span className="text-sm text-gray-600">Zone Rurale</span>
-                    <div className="flex items-center space-x-2">
-                      <div className="w-20 bg-gray-200 rounded-full h-2">
-                        <div className="bg-purple-500 h-2 rounded-full" style={{width: '20%'}}></div>
-                      </div>
-                      <span className="text-sm font-medium">20%</span>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-500 text-center py-6">Aucune donnée disponible</p>
                 </div>
               </CardContent>
             </Card>
@@ -266,6 +284,9 @@ const AgentFoncierAnalytics = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {typeDocuments.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucune donnée disponible</p>
+                )}
                 {typeDocuments.map((doc, index) => (
                   <motion.div
                     key={doc.type}
@@ -302,24 +323,7 @@ const AgentFoncierAnalytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div className="p-4 bg-green-50 rounded-lg">
-                    <h4 className="font-medium text-green-900">Demande Croissante</h4>
-                    <p className="text-sm text-green-700 mt-1">
-                      Zone Almadies: +35% d'évaluations prévues
-                    </p>
-                  </div>
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <h4 className="font-medium text-blue-900">Opportunité Marché</h4>
-                    <p className="text-sm text-blue-700 mt-1">
-                      Terrains agricoles: Valorisation attendue +20%
-                    </p>
-                  </div>
-                  <div className="p-4 bg-orange-50 rounded-lg">
-                    <h4 className="font-medium text-orange-900">Attention Requise</h4>
-                    <p className="text-sm text-orange-700 mt-1">
-                      Zone Rufisque: Ralentissement possible -5%
-                    </p>
-                  </div>
+                  <p className="text-sm text-gray-500 text-center py-6">Aucune prédiction disponible</p>
                 </div>
               </CardContent>
             </Card>
@@ -330,39 +334,7 @@ const AgentFoncierAnalytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-3">
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-green-500 rounded-full mt-2"></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Développer le portefeuille Almadies
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Forte demande prévue pour les 6 prochains mois
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-blue-500 rounded-full mt-2"></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Spécialisation terrains agricoles
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Marché en expansion avec peu de concurrence
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-start space-x-3">
-                    <div className="w-2 h-2 bg-purple-500 rounded-full mt-2"></div>
-                    <div>
-                      <p className="text-sm font-medium text-gray-900">
-                        Formation blockchain recommandée
-                      </p>
-                      <p className="text-xs text-gray-600">
-                        Nouvelle technologie pour les titres fonciers
-                      </p>
-                    </div>
-                  </div>
+                  <p className="text-sm text-gray-500 text-center py-6">Aucune recommandation disponible</p>
                 </div>
               </CardContent>
             </Card>

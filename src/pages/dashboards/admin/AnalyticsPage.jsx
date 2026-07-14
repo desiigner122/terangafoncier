@@ -45,7 +45,7 @@ const AnalyticsPage = () => {
         title: 'Chiffre d\'affaires',
         value: '—',
         unit: 'XOF',
-        change: 18.5,
+        change: 0,
         period: 'vs mois dernier',
         icon: DollarSign,
         color: 'text-green-600',
@@ -56,7 +56,7 @@ const AnalyticsPage = () => {
         title: 'Nouvelles inscriptions',
         value: '—',
         unit: 'utilisateurs',
-        change: 12.3,
+        change: 0,
         period: 'vs mois dernier',
         icon: Users,
         color: 'text-blue-600',
@@ -67,7 +67,7 @@ const AnalyticsPage = () => {
         title: 'Propriétés listées',
         value: '—',
         unit: 'annonces',
-        change: -2.4,
+        change: 0,
         period: 'vs mois dernier',
         icon: Building,
         color: 'text-orange-600',
@@ -78,7 +78,7 @@ const AnalyticsPage = () => {
         title: 'Taux de conversion',
         value: '—',
         unit: '%',
-        change: 5.2,
+        change: 0,
         period: 'vs mois dernier',
         icon: Target,
         color: 'text-purple-600',
@@ -86,20 +86,8 @@ const AnalyticsPage = () => {
       }
     ],
     regionPerformance: [],
-    propertyTypes: [
-      { type: 'Maisons', count: 543, percentage: 42.1, avgPrice: 35000000 },
-      { type: 'Appartements', count: 387, percentage: 30.0, avgPrice: 18500000 },
-      { type: 'Terrains', count: 289, percentage: 22.4, avgPrice: 12000000 },
-      { type: 'Commerces', count: 71, percentage: 5.5, avgPrice: 55000000 }
-    ],
-    userActivity: [
-      { hour: '00h', visits: 45, conversions: 2 },
-      { hour: '04h', visits: 23, conversions: 1 },
-      { hour: '08h', visits: 189, conversions: 12 },
-      { hour: '12h', visits: 267, conversions: 18 },
-      { hour: '16h', visits: 234, conversions: 15 },
-      { hour: '20h', visits: 198, conversions: 13 }
-    ]
+    propertyTypes: [],
+    userActivity: []
   };
 
   useEffect(() => {
@@ -201,8 +189,8 @@ const AnalyticsPage = () => {
         users: stats.activeUsers || 0,
         properties: stats.totalProperties || 0,
         transactions: stats.totalTransactions || 0,
-        topRegion: 'Dakar',
-        growthRate: 15.2
+        topRegion: stats.topRegion || '',
+        growthRate: parseFloat(stats.growthRate) || 0
       });
       setIaInsights(insights);
     } catch (error) {

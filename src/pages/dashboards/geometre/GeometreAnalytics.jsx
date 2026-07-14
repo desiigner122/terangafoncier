@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   BarChart3, 
@@ -38,11 +39,50 @@ const GeometreAnalytics = () => {
   const [dateFilter, setDateFilter] = useState('30j');
   const [typeFilter, setTypeFilter] = useState('tous');
 
+  // KPIs RÉELS depuis Supabase (aucune donnée fictive)
+  const [totalRevenue, setTotalRevenue] = useState(0);
+  const [missionsCount, setMissionsCount] = useState(0);
+  const [clientsCount, setClientsCount] = useState(0);
+  const [reviews, setReviews] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [missionsRes, clientsRes, txRes, reviewsRes] = await Promise.all([
+          supabase.from('field_measurements').select('*', { count: 'exact', head: true }),
+          supabase.from('crm_contacts').select('*', { count: 'exact', head: true }),
+          supabase.from('financial_transactions').select('*').order('created_at', { ascending: false }).limit(1000),
+          supabase.from('reviews').select('*').order('created_at', { ascending: false }).limit(500)
+        ]);
+        if (active) {
+          setMissionsCount(missionsRes.count || 0);
+          setClientsCount(clientsRes.count || 0);
+          setTotalRevenue((txRes.data || []).reduce((sum, t) => sum + (Number(t.amount) || 0), 0));
+          setReviews(reviewsRes.data || []);
+        }
+      } catch (err) {
+        console.warn('analytics indisponibles:', err?.message);
+        if (active) {
+          setMissionsCount(0);
+          setClientsCount(0);
+          setTotalRevenue(0);
+          setReviews([]);
+        }
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const totalReviews = reviews.length;
+  const avgRating = totalReviews
+    ? (reviews.reduce((sum, r) => sum + (Number(r.rating) || 0), 0) / totalReviews)
+    : 0;
+
   // Données analytiques
   const kpiData = [
     {
       title: 'Revenus Totaux',
-      value: '—',
+      value: `${totalRevenue.toLocaleString('fr-FR')} XOF`,
       change: null,
       trend: 'up',
       icon: DollarSign,
@@ -51,7 +91,7 @@ const GeometreAnalytics = () => {
     },
     {
       title: 'Missions Complétées',
-      value: '—',
+      value: missionsCount,
       change: null,
       trend: 'up', 
       icon: Target,
@@ -60,7 +100,7 @@ const GeometreAnalytics = () => {
     },
     {
       title: 'Clients Actifs',
-      value: '—',
+      value: clientsCount,
       change: null,
       trend: 'up',
       icon: Users,
@@ -200,15 +240,15 @@ const GeometreAnalytics = () => {
                 </div>
                 <div className="grid grid-cols-3 gap-4 text-center">
                   <div>
-                    <div className="text-lg font-bold text-blue-600">35</div>
+                    <div className="text-lg font-bold text-blue-600">{missionsCount}</div>
                     <div className="text-xs text-gray-600">Missions/mois</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-green-600">6.2M</div>
+                    <div className="text-lg font-bold text-green-600">{totalRevenue.toLocaleString('fr-FR')}</div>
                     <div className="text-xs text-gray-600">Revenus/mois</div>
                   </div>
                   <div>
-                    <div className="text-lg font-bold text-purple-600">4.8</div>
+                    <div className="text-lg font-bold text-purple-600">{avgRating ? avgRating.toFixed(1) : '—'}</div>
                     <div className="text-xs text-gray-600">Satisfaction</div>
                   </div>
                 </div>
@@ -300,7 +340,7 @@ const GeometreAnalytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center mb-6">
-                  <div className="text-4xl font-bold text-green-600 mb-2">4.7</div>
+                  <div className="text-4xl font-bold text-green-600 mb-2">{avgRating ? avgRating.toFixed(1) : '—'}</div>
                   <div className="text-sm text-gray-600 mb-4">Note moyenne sur 5</div>
                   <div className="flex justify-center gap-1 mb-4">
                     {[...Array(5)].map((_, i) => (
@@ -311,8 +351,8 @@ const GeometreAnalytics = () => {
                 
                 <div className="space-y-3">
                   {[5, 4, 3, 2, 1].map((rating) => {
-                    const count = rating === 5 ? 85 : rating === 4 ? 12 : rating === 3 ? 3 : 0;
-                    const percentage = (count / 100 * 100);
+                    const count = reviews.filter(r => Math.round(Number(r.rating) || 0) === rating).length;
+                    const percentage = totalReviews ? (count / totalReviews * 100) : 0;
                     return (
                       <div key={rating} className="flex items-center gap-3">
                         <span className="text-sm w-8">{rating}★</span>
@@ -405,19 +445,19 @@ const GeometreAnalytics = () => {
                 <div className="space-y-4">
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Cette semaine</span>
-                    <span className="font-medium">1.8M XOF</span>
+                    <span className="font-medium">—</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Ce mois</span>
-                    <span className="font-medium">6.2M XOF</span>
+                    <span className="font-medium">—</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Ce trimestre</span>
-                    <span className="font-medium">18.9M XOF</span>
+                    <span className="font-medium">—</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-sm text-gray-600">Cette année</span>
-                    <span className="font-medium">47.3M XOF</span>
+                    <span className="font-medium">{totalRevenue.toLocaleString('fr-FR')} XOF</span>
                   </div>
                 </div>
               </CardContent>
@@ -433,21 +473,21 @@ const GeometreAnalytics = () => {
               </CardHeader>
               <CardContent>
                 <div className="text-center mb-4">
-                  <div className="text-3xl font-bold text-green-600">68%</div>
+                  <div className="text-3xl font-bold text-green-600">—</div>
                   <div className="text-sm text-gray-600">Marge brute</div>
                 </div>
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span>Chiffre d'affaires</span>
-                    <span className="font-medium">28.5M XOF</span>
+                    <span className="font-medium">{totalRevenue.toLocaleString('fr-FR')} XOF</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Coûts directs</span>
-                    <span className="font-medium text-red-600">9.1M XOF</span>
+                    <span className="font-medium text-red-600">—</span>
                   </div>
                   <div className="flex justify-between text-sm font-medium border-t pt-2">
                     <span>Bénéfice brut</span>
-                    <span className="text-green-600">19.4M XOF</span>
+                    <span className="text-green-600">—</span>
                   </div>
                 </div>
               </CardContent>
@@ -464,15 +504,15 @@ const GeometreAnalytics = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <div className="text-lg font-bold text-green-600">24.2M XOF</div>
+                    <div className="text-lg font-bold text-green-600">0 XOF</div>
                     <div className="text-sm text-green-700">Facturé</div>
                   </div>
                   <div className="text-center p-3 bg-yellow-50 rounded-lg">
-                    <div className="text-lg font-bold text-yellow-600">4.3M XOF</div>
+                    <div className="text-lg font-bold text-yellow-600">0 XOF</div>
                     <div className="text-sm text-yellow-700">En attente</div>
                   </div>
                   <div className="text-center p-3 bg-red-50 rounded-lg">
-                    <div className="text-lg font-bold text-red-600">0.8M XOF</div>
+                    <div className="text-lg font-bold text-red-600">0 XOF</div>
                     <div className="text-sm text-red-700">En retard</div>
                   </div>
                 </div>
@@ -525,31 +565,31 @@ const GeometreAnalytics = () => {
               <CardContent>
                 <div className="grid grid-cols-2 gap-4 mb-6">
                   <div className="text-center p-3 bg-blue-50 rounded-lg">
-                    <div className="text-2xl font-bold text-blue-600">4.2</div>
+                    <div className="text-2xl font-bold text-blue-600">—</div>
                     <div className="text-sm text-blue-700">Jours/mission</div>
                   </div>
                   <div className="text-center p-3 bg-green-50 rounded-lg">
-                    <div className="text-2xl font-bold text-green-600">92%</div>
+                    <div className="text-2xl font-bold text-green-600">—</div>
                     <div className="text-sm text-green-700">Respect délais</div>
                   </div>
                 </div>
-                
+
                 <div className="space-y-3">
                   <div className="flex justify-between text-sm">
                     <span>Topographie</span>
-                    <span className="font-medium">3.8 jours</span>
+                    <span className="font-medium">—</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Cadastral</span>
-                    <span className="font-medium">5.2 jours</span>
+                    <span className="font-medium">—</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Bornage</span>
-                    <span className="font-medium">2.5 jours</span>
+                    <span className="font-medium">—</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span>Plans</span>
-                    <span className="font-medium">6.1 jours</span>
+                    <span className="font-medium">—</span>
                   </div>
                 </div>
               </CardContent>

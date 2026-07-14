@@ -37,17 +37,93 @@ import { Progress } from '@/components/ui/progress';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
+import { supabase } from '@/lib/supabaseClient';
+
+const EMPTY_DASHBOARD_DATA = {
+  stats: { totalDossiers: 0, dossiersMois: 0, actesEnCours: 0, satisfaction: 0, revenus: 0 },
+  actes: [],
+  clients: [],
+  rdv: [],
+  analytics: { delaisMoyens: 0, typesActes: {} }
+};
 
 const NotaireDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
 
-  const [dashboardData, setDashboardData] = useState({}); // démo retirée
+  const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD_DATA);
 
   useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 1500);
+    const loadDashboardData = async () => {
+      try {
+        const [{ count: totalDossiers }, { data: contracts }, { data: clientsNotaire }] = await Promise.all([
+          supabase.from('contracts').select('*', { count: 'exact', head: true }),
+          supabase.from('contracts').select('*').order('created_at', { ascending: false }).limit(50),
+          supabase.from('clients_notaire').select('*').order('created_at', { ascending: false }).limit(50)
+        ]);
+
+        const actes = (contracts || []).map((c) => ({
+          id: c.id,
+          numero: c.reference || c.numero || `ACT-${String(c.id).slice(0, 8)}`,
+          type: c.contract_type || c.type || 'Acte',
+          statut: c.status || c.statut || 'En attente',
+          bien: c.property_title || c.bien || '—',
+          valeur: Number(c.value ?? c.amount ?? c.valeur ?? 0) || 0,
+          honoraires: Number(c.fees ?? c.honoraires ?? 0) || 0,
+          progression: Number(c.progress ?? c.progression ?? 0) || 0,
+          dateSignature: c.signature_date || c.date_signature || c.created_at,
+          vendeur: c.vendeur || '—',
+          acheteur: c.acheteur || '—'
+        }));
+
+        const clients = (clientsNotaire || []).map((cl) => ({
+          id: cl.id,
+          nom: cl.full_name || cl.name || cl.nom || '—',
+          typeClient: cl.client_type || cl.type_client || cl.type || 'Particulier',
+          email: cl.email || '—',
+          telephone: cl.phone || cl.telephone || '—',
+          nbActes: Number(cl.nb_actes ?? 0) || 0,
+          valeurTotale: Number(cl.valeur_totale ?? 0) || 0,
+          dernierActe: cl.dernier_acte || cl.created_at
+        }));
+
+        const now = new Date();
+        const dossiersMois = (contracts || []).filter((c) => {
+          if (!c.created_at) return false;
+          const d = new Date(c.created_at);
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        }).length;
+
+        const typesActes = {};
+        actes.forEach((a) => {
+          typesActes[a.type] = (typesActes[a.type] || 0) + 1;
+        });
+        Object.keys(typesActes).forEach((type) => {
+          typesActes[type] = Math.round((typesActes[type] / actes.length) * 100);
+        });
+
+        setDashboardData({
+          stats: {
+            totalDossiers: totalDossiers || 0,
+            dossiersMois,
+            actesEnCours: actes.filter((a) => a.statut === 'En cours').length,
+            satisfaction: 0,
+            revenus: actes.reduce((sum, a) => sum + (a.honoraires || 0), 0)
+          },
+          actes,
+          clients,
+          rdv: [],
+          analytics: { delaisMoyens: 0, typesActes }
+        });
+      } catch (error) {
+        console.error('Erreur chargement dashboard notaire:', error);
+        setDashboardData(EMPTY_DASHBOARD_DATA);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
   const stats = [
@@ -117,7 +193,7 @@ const NotaireDashboard = () => {
               </div>
               <div className="flex items-center mt-2 text-sm">
                 <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-                <span className="text-green-600">+12% vs mois dernier</span>
+                <span className="text-green-600">Honoraires en cours</span>
               </div>
             </CardContent>
           </Card>
@@ -134,7 +210,7 @@ const NotaireDashboard = () => {
                 <Clock className="h-8 w-8 text-blue-600" />
               </div>
               <div className="mt-2">
-                <Progress value={75} className="h-2" />
+                <Progress value={0} className="h-2" />
               </div>
             </CardContent>
           </Card>
@@ -144,12 +220,21 @@ const NotaireDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Taux Réussite</p>
-                  <p className="text-lg font-bold text-green-600">98%</p>
+                  <p className="text-lg font-bold text-green-600">
+                    {dashboardData.actes.length > 0
+                      ? Math.round((dashboardData.actes.filter(a => a.statut === 'Finalisé').length / dashboardData.actes.length) * 100)
+                      : 0}%
+                  </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
               <div className="mt-2">
-                <Progress value={98} className="h-2" />
+                <Progress
+                  value={dashboardData.actes.length > 0
+                    ? Math.round((dashboardData.actes.filter(a => a.statut === 'Finalisé').length / dashboardData.actes.length) * 100)
+                    : 0}
+                  className="h-2"
+                />
               </div>
             </CardContent>
           </Card>
@@ -159,7 +244,7 @@ const NotaireDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Certifications</p>
-                  <p className="text-lg font-bold text-purple-600">5</p>
+                  <p className="text-lg font-bold text-purple-600">0</p>
                 </div>
                 <Award className="h-8 w-8 text-purple-600" />
               </div>
@@ -225,6 +310,9 @@ const NotaireDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {dashboardData.actes.filter(a => a.statut === 'En cours').length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {dashboardData.actes.filter(a => a.statut === 'En cours').slice(0, 3).map((acte) => (
                       <div key={acte.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
@@ -265,6 +353,9 @@ const NotaireDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {dashboardData.rdv.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {dashboardData.rdv.slice(0, 3).map((rdv) => (
                       <div key={rdv.id} className="border rounded-lg p-3">
                         <div className="flex justify-between items-start mb-2">
@@ -301,7 +392,7 @@ const NotaireDashboard = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Actes finalisés</span>
-                      <span className="font-bold text-blue-600">16</span>
+                      <span className="font-bold text-blue-600">{dashboardData.actes.filter(a => a.statut === 'Finalisé').length}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Revenus générés</span>
@@ -372,7 +463,7 @@ const NotaireDashboard = () => {
                 <CardContent className="p-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">
-                      {formatCurrency(dashboardData.actes.reduce((sum, a) => sum + a.honoraires, 0))}
+                      {formatCurrency(dashboardData.actes.reduce((sum, a) => sum + (a.honoraires || 0), 0))}
                     </p>
                     <p className="text-sm text-gray-600">Honoraires Total</p>
                   </div>
@@ -382,6 +473,9 @@ const NotaireDashboard = () => {
 
             {/* Liste des Actes */}
             <div className="grid gap-6">
+              {dashboardData.actes.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.actes.map((acte) => (
                 <Card key={acte.id}>
                   <CardContent className="p-6">
@@ -467,6 +561,9 @@ const NotaireDashboard = () => {
             </div>
 
             <div className="grid gap-4">
+              {dashboardData.clients.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.clients.map((client) => (
                 <Card key={client.id}>
                   <CardContent className="p-6">
@@ -535,6 +632,9 @@ const NotaireDashboard = () => {
             </div>
 
             <div className="grid gap-4">
+              {dashboardData.rdv.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.rdv.map((rdv) => (
                 <Card key={rdv.id}>
                   <CardContent className="p-6">
@@ -601,6 +701,9 @@ const NotaireDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {Object.keys(dashboardData.analytics.typesActes).length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {Object.entries(dashboardData.analytics.typesActes).map(([type, percentage]) => (
                       <div key={type}>
                         <div className="flex justify-between items-center mb-1">
@@ -625,8 +728,8 @@ const NotaireDashboard = () => {
                       <p className="text-sm text-gray-600">Dossiers ce mois</p>
                     </div>
                     <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">+15%</p>
-                      <p className="text-sm text-gray-600">vs mois dernier</p>
+                      <p className="text-2xl font-bold text-green-600">{dashboardData.stats.totalDossiers}</p>
+                      <p className="text-sm text-gray-600">Dossiers au total</p>
                     </div>
                   </div>
                 </CardContent>

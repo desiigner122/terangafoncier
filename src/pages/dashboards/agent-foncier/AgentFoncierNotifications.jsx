@@ -109,7 +109,9 @@ const AgentFoncierNotifications = () => {
 
       {/* Liste des notifications */}
       <div className="space-y-4">
-        {filteredNotifications.map((notification, index) => (
+        {filteredNotifications.map((notification, index) => {
+          const NotifIcon = notification.icon || Bell;
+          return (
           <motion.div
             key={notification.id}
             initial={{ opacity: 0, y: 20 }}
@@ -125,7 +127,7 @@ const AgentFoncierNotifications = () => {
                     notification.priority === 'high' ? 'bg-red-100' :
                     notification.priority === 'medium' ? 'bg-yellow-100' : 'bg-gray-100'
                   }`}>
-                    <notification.icon className={`h-5 w-5 ${
+                    <NotifIcon className={`h-5 w-5 ${
                       notification.priority === 'high' ? 'text-red-600' :
                       notification.priority === 'medium' ? 'text-yellow-600' : 'text-gray-600'
                     }`} />
@@ -142,7 +144,7 @@ const AgentFoncierNotifications = () => {
                           {notification.priority === 'high' ? 'Urgent' :
                            notification.priority === 'medium' ? 'Moyen' : 'Info'}
                         </Badge>
-                        <span className="text-xs text-gray-500">{notification.time}</span>
+                        <span className="text-xs text-gray-500">{notification.time || (notification.created_at ? new Date(notification.created_at).toLocaleString() : '')}</span>
                       </div>
                     </div>
                     
@@ -176,7 +178,8 @@ const AgentFoncierNotifications = () => {
               </CardContent>
             </Card>
           </motion.div>
-        ))}
+          );
+        })}
       </div>
 
       {/* Message si aucune notification */}

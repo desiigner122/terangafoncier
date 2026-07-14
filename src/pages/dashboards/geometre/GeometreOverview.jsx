@@ -30,42 +30,6 @@ import { Progress } from '@/components/ui/progress';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
 const GeometreOverview = () => {
-  // Stats données
-  const stats = [
-    {
-      title: "Missions Actives",
-      value: "12",
-      change: "+3 ce mois",
-      icon: Target,
-      color: "text-blue-600",
-      bgColor: "bg-blue-50"
-    },
-    {
-      title: "Levés Terminés",
-      value: "247",
-      change: "+18 ce mois",
-      icon: CheckCircle,
-      color: "text-green-600",
-      bgColor: "bg-green-50"
-    },
-    {
-      title: "Surface Mesurée",
-      value: "1,250 ha",
-      change: "+87 ha ce mois",
-      icon: Layers,
-      color: "text-purple-600",
-      bgColor: "bg-purple-50"
-    },
-    {
-      title: "Revenus",
-      value: "8.5M XOF",
-      change: "+12% ce mois",
-      icon: TrendingUp,
-      color: "text-orange-600",
-      bgColor: "bg-orange-50"
-    }
-  ];
-
   // Missions récentes
   // recentMissions RÉEL depuis Supabase (aucune donnée fictive)
   const [recentMissions, setRecentMissions] = useState([]);
@@ -83,6 +47,42 @@ const GeometreOverview = () => {
     })();
     return () => { active = false; };
   }, []);
+
+  // Stats données RÉEL calculées depuis Supabase (défaut 0)
+  const stats = [
+    {
+      title: "Missions Actives",
+      value: recentMissions.filter(m => m.status === 'En cours' || m.status === 'en_cours').length,
+      change: "",
+      icon: Target,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50"
+    },
+    {
+      title: "Levés Terminés",
+      value: recentMissions.filter(m => m.status === 'Terminé' || m.status === 'complete').length,
+      change: "",
+      icon: CheckCircle,
+      color: "text-green-600",
+      bgColor: "bg-green-50"
+    },
+    {
+      title: "Surface Mesurée",
+      value: "—",
+      change: "",
+      icon: Layers,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50"
+    },
+    {
+      title: "Revenus",
+      value: "—",
+      change: "",
+      icon: TrendingUp,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50"
+    }
+  ];
 
   // Activités récentes
   const recentActivities = []; // démo retirée
@@ -170,6 +170,9 @@ const GeometreOverview = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {recentMissions.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                  )}
                   {recentMissions.map((mission) => {
                     const TypeIcon = getTypeIcon(mission.type);
                     return (
@@ -229,6 +232,9 @@ const GeometreOverview = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {recentActivities.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                  )}
                   {recentActivities.map((activity) => {
                     const Icon = activity.icon;
                     return (

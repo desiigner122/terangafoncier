@@ -78,7 +78,7 @@ const SettingsPage = () => {
     enabled: true,
     provider: 'openai',
     model: 'gpt-4-turbo',
-    apiKey: '••••••••••••••••••••••••••••sk-1234',
+    apiKey: '',
     maxTokens: 2000,
     temperature: 0.7,
     autoInsights: true,

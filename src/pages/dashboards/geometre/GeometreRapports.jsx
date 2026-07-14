@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,22 +34,45 @@ const GeometreRapports = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedReport, setSelectedReport] = useState(null);
 
-  // Rapports et documents
-  const reports = []; // démo retirée
+  // Rapports et documents RÉEL depuis Supabase (aucune donnée fictive)
+  const [reports, setReports] = useState([]);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(100);
+        if (error) throw error;
+        if (active) setReports(data || []);
+      } catch (err) {
+        console.warn('rapports indisponible:', err?.message);
+        if (active) setReports([]);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
-  // Statistiques
+  // Statistiques calculées depuis les données chargées (défaut 0)
+  const now = new Date();
   const reportStats = {
-    totalReports: 127,
-    thisMonth: 18,
-    pending: 5,
-    completed: 122,
-    totalSize: '186.7 MB',
+    totalReports: reports.length,
+    thisMonth: reports.filter(r => {
+      if (!r.created_at) return false;
+      const d = new Date(r.created_at);
+      return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+    }).length,
+    pending: reports.filter(r => r.status === 'En cours' || r.status === 'en_cours').length,
+    completed: reports.filter(r => r.status === 'Terminé' || r.status === 'complete').length,
+    totalSize: '—',
     categories: {
-      topographie: 45,
-      cadastre: 32,
-      bornage: 28,
-      etude: 15,
-      geotechnique: 7
+      topographie: reports.filter(r => r.category === 'topographie').length,
+      cadastre: reports.filter(r => r.category === 'cadastre').length,
+      bornage: reports.filter(r => r.category === 'bornage').length,
+      etude: reports.filter(r => r.category === 'etude').length,
+      geotechnique: reports.filter(r => r.category === 'geotechnique').length
     }
   };
 
@@ -60,7 +84,7 @@ const GeometreRapports = () => {
       description: 'Modèle pour levés topographiques classiques',
       category: 'topographie',
       pages: 12,
-      usage: 45
+      usage: 0
     },
     {
       id: 2,
@@ -68,7 +92,7 @@ const GeometreRapports = () => {
       description: 'Modèle conforme aux normes cadastrales',
       category: 'cadastre',
       pages: 8,
-      usage: 32
+      usage: 0
     },
     {
       id: 3,
@@ -76,7 +100,7 @@ const GeometreRapports = () => {
       description: 'Modèle standard de bornage',
       category: 'bornage',
       pages: 6,
-      usage: 28
+      usage: 0
     }
   ];
 
@@ -112,9 +136,9 @@ const GeometreRapports = () => {
   };
 
   const filteredReports = reports.filter(report => {
-    const matchesSearch = report.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         report.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (report.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (report.client || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (report.location || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesCategory = selectedCategory === 'all' || report.category === selectedCategory;
     return matchesSearch && matchesCategory;
   });
@@ -280,6 +304,9 @@ const GeometreRapports = () => {
 
                 {/* Liste des rapports */}
                 <div className="space-y-4">
+                  {filteredReports.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+                  )}
                   {filteredReports.map((report) => (
                     <motion.div
                       key={report.id}

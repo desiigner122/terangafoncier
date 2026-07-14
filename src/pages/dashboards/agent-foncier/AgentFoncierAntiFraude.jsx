@@ -44,155 +44,23 @@ const AgentFoncierAntiFraude = () => {
   const [activeFilter, setActiveFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Statistiques anti-fraude
+  // Alertes réelles (aucune table anti-fraude dédiée — aucune donnée fictive)
+  const alertes = [];
+
+  // Statistiques anti-fraude dérivées des données chargées (0 par défaut)
   const fraudeStats = {
-    totalAlerts: 156,
-    criticalAlerts: 23,
-    resolvedCases: 134,
-    pendingCases: 22,
-    fraudePrevented: 2840000, // en FCFA
-    detectionRate: 94.7,
-    falsePositiveRate: 2.1,
-    responseTime: 12 // en minutes
+    totalAlerts: alertes.length,
+    criticalAlerts: alertes.filter(a => a.severity === 'critical').length,
+    resolvedCases: alertes.filter(a => a.status === 'resolved').length,
+    pendingCases: alertes.filter(a => a.status === 'pending').length,
+    fraudePrevented: 0, // en FCFA
+    detectionRate: 0,
+    falsePositiveRate: 0,
+    responseTime: 0 // en minutes
   };
 
-  // Alertes récentes
-  const alertes = [
-    {
-      id: 1,
-      type: 'document',
-      severity: 'critical',
-      title: 'Document falsifié détecté',
-      description: 'Titre foncier avec signatures suspectes',
-      location: 'Dakar, Parcelles Assainies',
-      timestamp: '2024-03-01 14:30',
-      status: 'investigating',
-      riskScore: 95,
-      evidence: [
-        'Analyse des signatures',
-        'Vérification tampon',
-        'Cross-reference cadastre'
-      ]
-    },
-    {
-      id: 2,
-      type: 'identity',
-      severity: 'high',
-      title: 'Usurpation d\'identité suspectée',
-      description: 'Tentative de transaction avec faux papiers',
-      location: 'Thiès, Zone industrielle',
-      timestamp: '2024-03-01 11:15',
-      status: 'pending',
-      riskScore: 87,
-      evidence: [
-        'Photo non concordante',
-        'Numéro CNI invalide',
-        'Historique suspect'
-      ]
-    },
-    {
-      id: 3,
-      type: 'transaction',
-      severity: 'medium',
-      title: 'Transaction inhabituelle',
-      description: 'Vente rapide multiple propriétés',
-      location: 'Saint-Louis, Centre-ville',
-      timestamp: '2024-03-01 09:45',
-      status: 'resolved',
-      riskScore: 72,
-      evidence: [
-        'Pattern de vente',
-        'Prix en dessous marché',
-        'Vendeur récurrent'
-      ]
-    },
-    {
-      id: 4,
-      type: 'geolocation',
-      severity: 'high',
-      title: 'Coordonnées GPS incohérentes',
-      description: 'Parcelle avec localisation conflictuelle',
-      location: 'Kaolack, Quartier médina',
-      timestamp: '2024-02-29 16:20',
-      status: 'investigating',
-      riskScore: 83,
-      evidence: [
-        'GPS vs cadastre',
-        'Limites chevauchantes',
-        'Historique modifications'
-      ]
-    },
-    {
-      id: 5,
-      type: 'behavioral',
-      severity: 'low',
-      title: 'Comportement atypique',
-      description: 'Client avec pattern d\'accès suspect',
-      location: 'Ziguinchor, Boucotte',
-      timestamp: '2024-02-29 13:10',
-      status: 'monitoring',
-      riskScore: 45,
-      evidence: [
-        'Heures de connexion',
-        'Géolocalisation',
-        'Fréquence accès'
-      ]
-    }
-  ];
-
-  // Systèmes de détection
-  const detectionSystems = [
-    {
-      id: 'signature',
-      name: 'Analyse de Signatures',
-      description: 'IA d\'analyse des signatures manuscrites',
-      icon: Fingerprint,
-      status: 'active',
-      accuracy: 96.8,
-      lastUpdate: '2024-03-01',
-      detected: 45
-    },
-    {
-      id: 'document',
-      name: 'Vérification Documents',
-      description: 'Authentification des documents officiels',
-      icon: FileText,
-      status: 'active',
-      accuracy: 94.2,
-      lastUpdate: '2024-02-28',
-      detected: 67
-    },
-    {
-      id: 'biometric',
-      name: 'Biométrie Faciale',
-      description: 'Reconnaissance et vérification faciale',
-      icon: Scan,
-      status: 'active',
-      accuracy: 98.5,
-      lastUpdate: '2024-03-01',
-      detected: 23
-    },
-    {
-      id: 'gps',
-      name: 'Vérification GPS',
-      description: 'Cohérence des coordonnées géographiques',
-      icon: MapPin,
-      status: 'active',
-      accuracy: 91.3,
-      lastUpdate: '2024-03-01',
-      detected: 34
-    },
-    {
-      id: 'behavioral',
-      name: 'Analyse Comportementale',
-      description: 'Détection de patterns suspects',
-      icon: Activity,
-      status: 'maintenance',
-      accuracy: 87.9,
-      lastUpdate: '2024-02-27',
-      detected: 12
-    }
-  ];
+  // Systèmes de détection (aucune donnée fictive)
+  const detectionSystems = [];
 
   const getSeverityColor = (severity) => {
     switch(severity) {
@@ -370,6 +238,9 @@ const AgentFoncierAntiFraude = () => {
 
             {/* Liste des alertes */}
             <div className="space-y-4">
+              {filteredAlertes.length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-6">Aucune alerte disponible</p>
+              )}
               {filteredAlertes.map((alerte, index) => (
                 <motion.div
                   key={alerte.id}
@@ -475,6 +346,9 @@ const AgentFoncierAntiFraude = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {detectionSystems.length === 0 && (
+              <p className="text-sm text-slate-500 text-center py-6">Aucune donnée disponible</p>
+            )}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {detectionSystems.map((system, index) => (
                 <motion.div
@@ -542,6 +416,9 @@ const AgentFoncierAntiFraude = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {[].length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-6">Aucune donnée disponible</p>
+              )}
               {[].map((data, index) => (
                 <div key={data.month} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
                   <div>
@@ -569,6 +446,9 @@ const AgentFoncierAntiFraude = () => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {[].length === 0 && (
+                <p className="text-sm text-slate-500 text-center py-6">Aucune donnée disponible</p>
+              )}
               {[].map((metric, index) => (
                 <div key={metric.name} className="flex items-center justify-between">
                   <div>

@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Compass, 
@@ -33,10 +34,32 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const GeometreDashboardLayout = ({ children }) => {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [activeSection, setActiveSection] = useState('dashboard');
+  const { user, profile } = useAuth();
+
+  // Compteur de notifications RÉEL depuis Supabase (aucune donnée fictive)
+  const [notificationsCount, setNotificationsCount] = useState(0);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { count, error } = await supabase.from('notifications').select('*', { count: 'exact', head: true });
+        if (error) throw error;
+        if (active) setNotificationsCount(count || 0);
+      } catch (err) {
+        console.warn('notifications indisponibles:', err?.message);
+        if (active) setNotificationsCount(0);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
+
+  const displayName = profile?.full_name || user?.email || 'Géomètre';
+  const displayInitial = (profile?.full_name || 'G').charAt(0).toUpperCase();
 
   // Navigation structure based on surveyor activities
   const navigationSections = [
@@ -156,12 +179,12 @@ const GeometreDashboardLayout = ({ children }) => {
         <div className="p-4 border-t border-gray-200">
           <div className={`flex items-center ${sidebarCollapsed ? 'justify-center' : 'space-x-3'}`}>
             <Avatar className="w-8 h-8">
-              <AvatarImage src="/api/placeholder/32/32" />
-              <AvatarFallback className="bg-green-600 text-white text-sm">MA</AvatarFallback>
+              <AvatarImage src={profile?.avatar_url} />
+              <AvatarFallback className="bg-green-600 text-white text-sm">{displayInitial}</AvatarFallback>
             </Avatar>
             {!sidebarCollapsed && (
               <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-gray-900 truncate">Mamadou Aly</p>
+                <p className="text-sm font-medium text-gray-900 truncate">{displayName}</p>
                 <p className="text-xs text-gray-500 truncate">Géomètre Expert</p>
               </div>
             )}
@@ -192,15 +215,17 @@ const GeometreDashboardLayout = ({ children }) => {
               {/* Notifications */}
               <Button variant="ghost" size="sm" className="relative">
                 <Bell className="w-5 h-5" />
-                <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-green-600">
-                  3
-                </Badge>
+                {notificationsCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 w-5 h-5 flex items-center justify-center p-0 bg-green-600">
+                    {notificationsCount}
+                  </Badge>
+                )}
               </Button>
 
               {/* Profile */}
               <Avatar className="w-8 h-8 cursor-pointer">
-                <AvatarImage src="/api/placeholder/32/32" />
-                <AvatarFallback className="bg-green-600 text-white">MA</AvatarFallback>
+                <AvatarImage src={profile?.avatar_url} />
+                <AvatarFallback className="bg-green-600 text-white">{displayInitial}</AvatarFallback>
               </Avatar>
             </div>
           </div>

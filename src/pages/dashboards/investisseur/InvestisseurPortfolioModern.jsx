@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import {
   Briefcase,
   TrendingUp,
@@ -30,114 +32,85 @@ const InvestisseurPortfolio = () => {
   const [sortBy, setSortBy] = useState('performance');
 
   // Données détaillées du portefeuille
-  const portfolioData = {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [portfolioData, setPortfolioData] = useState({
     summary: {
-      totalValue: 2485000000, // 2.48 milliards FCFA
-      totalInvested: 1850000000, // 1.85 milliards FCFA
-      totalGain: 635000000, // 635 millions FCFA
-      overallROI: 34.3,
-      activeInvestments: 12,
-      completedInvestments: 8
+      totalValue: 0,
+      totalInvested: 0,
+      totalGain: 0,
+      overallROI: 0,
+      activeInvestments: 0,
+      completedInvestments: 0
     },
-    investments: [
-      {
-        id: 1,
-        name: 'Résidence Almadies Premium',
-        type: 'Résidentiel',
-        category: 'Appartements de luxe',
-        location: 'Almadies, Dakar',
-        invested: 450000000,
-        currentValue: 720000000,
-        gain: 270000000,
-        roi: 60.0,
-        status: 'Actif',
-        performance: 'Excellent',
-        startDate: '2023-01-15',
-        expectedDuration: '24 mois',
-        completionRate: 75,
-        risk: 'Faible',
-        lastUpdate: '2024-03-20',
-        description: '50 appartements haut standing avec vue mer',
-        keyMetrics: {
-          occupancyRate: 92,
-          rentalYield: 8.5,
-          appreciation: 15.2
-        }
-      },
-      {
-        id: 2,
-        name: 'Centre Commercial Plateau',
-        type: 'Commercial',
-        category: 'Commerce de détail',
-        location: 'Plateau, Dakar',
-        invested: 680000000,
-        currentValue: 850000000,
-        gain: 170000000,
-        roi: 25.0,
-        status: 'Actif',
-        performance: 'Bon',
-        startDate: '2022-08-10',
-        expectedDuration: '36 mois',
-        completionRate: 85,
-        risk: 'Moyen',
-        lastUpdate: '2024-03-19',
-        description: 'Centre commercial avec 40 boutiques',
-        keyMetrics: {
-          occupancyRate: 88,
-          rentalYield: 12.3,
-          appreciation: 8.7
-        }
-      },
-      {
-        id: 3,
-        name: 'Lotissement Saly Beach',
-        type: 'Foncier',
-        category: 'Terrain résidentiel',
-        location: 'Saly, Mbour',
-        invested: 320000000,
-        currentValue: 385000000,
-        gain: 65000000,
-        roi: 20.3,
-        status: 'Actif',
-        performance: 'Satisfaisant',
-        startDate: '2023-05-20',
-        expectedDuration: '18 mois',
-        completionRate: 60,
-        risk: 'Faible',
-        lastUpdate: '2024-03-18',
-        description: '150 lots avec accès plage privée',
-        keyMetrics: {
-          soldLots: 90,
-          reservedLots: 35,
-          appreciation: 12.1
-        }
-      },
-      {
-        id: 4,
-        name: 'Tours de Bureaux Diamniadio',
-        type: 'Commercial',
-        category: 'Bureaux',
-        location: 'Diamniadio',
-        invested: 400000000,
-        currentValue: 530000000,
-        gain: 130000000,
-        roi: 32.5,
-        status: 'Actif',
-        performance: 'Très bon',
-        startDate: '2022-11-05',
-        expectedDuration: '30 mois',
-        completionRate: 90,
-        risk: 'Moyen',
-        lastUpdate: '2024-03-17',
-        description: 'Complexe de bureaux modernes',
-        keyMetrics: {
-          occupancyRate: 95,
-          rentalYield: 10.8,
-          appreciation: 18.5
-        }
+    investments: []
+  });
+
+  useEffect(() => {
+    const loadPortfolio = async () => {
+      try {
+        setLoading(true);
+        if (!user?.id) return;
+
+        const { data, error } = await supabase
+          .from('financial_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const transactions = data || [];
+        const investments = transactions.map((t) => ({
+          id: t.id,
+          name: t.description || t.type || 'Investissement',
+          type: t.type || '',
+          category: '',
+          location: '',
+          invested: Math.abs(Number(t.amount) || 0),
+          currentValue: Math.abs(Number(t.amount) || 0),
+          gain: 0,
+          roi: 0,
+          status: t.status || '',
+          performance: '',
+          startDate: t.created_at,
+          expectedDuration: '',
+          completionRate: 0,
+          risk: '',
+          lastUpdate: t.updated_at || t.created_at,
+          description: t.description || '',
+          keyMetrics: {}
+        }));
+
+        const totalInvested = investments.reduce(
+          (sum, inv) => sum + inv.invested,
+          0
+        );
+
+        setPortfolioData({
+          summary: {
+            totalValue: totalInvested,
+            totalInvested,
+            totalGain: 0,
+            overallROI: 0,
+            activeInvestments: investments.filter(
+              (inv) => inv.status !== 'completed' && inv.status !== 'cancelled'
+            ).length,
+            completedInvestments: investments.filter(
+              (inv) => inv.status === 'completed'
+            ).length
+          },
+          investments
+        });
+      } catch (error) {
+        console.error('Erreur chargement portefeuille:', error);
+      } finally {
+        setLoading(false);
       }
-    ]
-  };
+    };
+
+    loadPortfolio();
+  }, [user?.id]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -285,6 +258,11 @@ const InvestisseurPortfolio = () => {
 
         {/* Investments Grid */}
         <div className="grid gap-6">
+          {filteredInvestments.length === 0 && !loading && (
+            <p className="text-sm text-gray-500 text-center py-8 col-span-full">
+              Aucun investissement dans votre portefeuille.
+            </p>
+          )}
           {filteredInvestments.map((investment, index) => (
             <motion.div
               key={investment.id}

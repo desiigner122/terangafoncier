@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
-import { 
-  Brain, 
+import {
+  Brain,
   Lightbulb, 
   Target, 
   TrendingUp, 
@@ -47,12 +48,12 @@ const AgentFoncierAI = () => {
   const [chatInput, setChatInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Données simulées pour l'IA
-  const [aiMetrics] = useState({
-    accuracyRate: 94.5,
-    predictionsGenerated: 1247,
-    timesSaved: 156,
-    reportsGenerated: 89
+  // Métriques IA réelles depuis Supabase (0 par défaut)
+  const [aiMetrics, setAiMetrics] = useState({
+    accuracyRate: 0,
+    predictionsGenerated: 0,
+    timesSaved: 0,
+    reportsGenerated: 0
   });
 
   const [chatHistory, setChatHistory] = useState([
@@ -61,121 +62,73 @@ const AgentFoncierAI = () => {
       type: 'ai',
       message: 'Bonjour ! Je suis votre assistant IA foncier. Comment puis-je vous aider aujourd\'hui ?',
       timestamp: '09:00'
-    },
-    {
-      id: 2,
-      type: 'user',
-      message: 'Peux-tu analyser le marché des Almadies ?',
-      timestamp: '09:01'
-    },
-    {
-      id: 3,
-      type: 'ai',
-      message: 'Analyse du marché des Almadies terminée ! La zone montre une croissance de +15% avec une forte demande pour les terrains avec vue mer. Prix moyen: 1.2M XOF/m². Recommandation: Excellent moment pour les évaluations premium.',
-      timestamp: '09:02'
     }
   ]);
 
-  const [marketPredictions] = useState([
-    {
-      zone: 'Almadies',
-      currentPrice: '1.2M XOF/m²',
-      prediction: '+15%',
-      confidence: 92,
-      trend: 'up',
-      timeframe: '6 mois',
-      factors: ['Vue mer', 'Infrastructures', 'Demande diaspora'],
-      color: 'green'
-    },
-    {
-      zone: 'Dakar Plateau',
-      currentPrice: '850K XOF/m²',
-      prediction: '+8%',
-      confidence: 88,
-      trend: 'up',
-      timeframe: '6 mois',
-      factors: ['Zone commerciale', 'Transport', 'Bureaux'],
-      color: 'blue'
-    },
-    {
-      zone: 'Parcelles Assainies',
-      currentPrice: '420K XOF/m²',
-      prediction: '+12%',
-      confidence: 85,
-      trend: 'up',
-      timeframe: '8 mois',
-      factors: ['Accessibilité', 'Projets résidentiels'],
-      color: 'purple'
-    },
-    {
-      zone: 'Rufisque',
-      currentPrice: '280K XOF/m²',
-      prediction: '+5%',
-      confidence: 78,
-      trend: 'stable',
-      timeframe: '12 mois',
-      factors: ['Zone industrielle', 'Transport en développement'],
-      color: 'orange'
-    }
-  ]);
+  // Prédictions de marché réelles (aucune donnée fictive)
+  const [marketPredictions] = useState([]);
 
   const [aiFeatures] = useState([
     {
       title: 'Évaluation Automatique',
       description: 'IA calcule la valeur basée sur 50+ critères',
       icon: Calculator,
-      accuracy: '94.5%',
+      accuracy: null,
       color: 'bg-blue-50 text-blue-600'
     },
     {
       title: 'Analyse de Marché',
       description: 'Prédictions basées sur big data',
       icon: BarChart3,
-      accuracy: '91.2%',
+      accuracy: null,
       color: 'bg-green-50 text-green-600'
     },
     {
       title: 'Détection Fraude',
       description: 'Identifie les documents suspects',
       icon: AlertTriangle,
-      accuracy: '98.7%',
+      accuracy: null,
       color: 'bg-red-50 text-red-600'
     },
     {
       title: 'Reconnaissance Image',
       description: 'Analyse automatique des plans',
       icon: Camera,
-      accuracy: '89.3%',
+      accuracy: null,
       color: 'bg-purple-50 text-purple-600'
     }
   ]);
 
-  const [aiRecommendations] = useState([
-    {
-      priority: 'haute',
-      title: 'Opportunité Almadies',
-      description: 'Forte demande détectée pour terrains vue mer. Recommandation d\'évaluation premium.',
-      action: 'Programmer visite',
-      confidence: 94
-    },
-    {
-      priority: 'moyenne',
-      title: 'Tendance Rufisque',
-      description: 'Développement infrastructure détecté. Surveillez évolution prix.',
-      action: 'Analyser zone',
-      confidence: 82
-    },
-    {
-      priority: 'faible',
-      title: 'Documentation Manquante',
-      description: '3 dossiers clients nécessitent documents additionnels.',
-      action: 'Relancer clients',
-      confidence: 76
-    }
-  ]);
+  // Recommandations IA réelles (aucune donnée fictive)
+  const [aiRecommendations] = useState([]);
 
   useEffect(() => {
     setTimeout(() => setLoading(false), 800);
+  }, []);
+
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [interactionsRes, analysesRes] = await Promise.all([
+          supabase.from('ai_interactions').select('*', { count: 'exact', head: true }),
+          supabase.from('ai_analyses').select('*', { count: 'exact', head: true })
+        ]);
+        if (active) {
+          setAiMetrics(prev => ({
+            ...prev,
+            predictionsGenerated: interactionsRes.count || 0,
+            reportsGenerated: analysesRes.count || 0
+          }));
+        }
+      } catch (err) {
+        console.warn('aiMetrics indisponible:', err?.message);
+        if (active) {
+          setAiMetrics({ accuracyRate: 0, predictionsGenerated: 0, timesSaved: 0, reportsGenerated: 0 });
+        }
+      }
+    })();
+    return () => { active = false; };
   }, []);
 
   const handleSendMessage = () => {
@@ -402,6 +355,9 @@ const AgentFoncierAI = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {aiRecommendations.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-6">Aucune recommandation disponible</p>
+                    )}
                     {aiRecommendations.map((rec, index) => (
                       <motion.div
                         key={index}
@@ -444,6 +400,9 @@ const AgentFoncierAI = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {marketPredictions.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-6">Aucune prédiction disponible</p>
+              )}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                 {marketPredictions.map((pred, index) => (
                   <motion.div
@@ -509,9 +468,11 @@ const AgentFoncierAI = () => {
                       <div className={`p-3 rounded-lg ${feature.color}`}>
                         <feature.icon className="h-6 w-6" />
                       </div>
-                      <Badge className="bg-green-100 text-green-800">
-                        {feature.accuracy}
-                      </Badge>
+                      {feature.accuracy && (
+                        <Badge className="bg-green-100 text-green-800">
+                          {feature.accuracy}
+                        </Badge>
+                      )}
                     </div>
                     <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
                     <p className="text-gray-600 mb-4">{feature.description}</p>
@@ -537,23 +498,23 @@ const AgentFoncierAI = () => {
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Précision Évaluations</span>
-                      <span className="text-sm font-medium">94.5%</span>
+                      <span className="text-sm font-medium">{aiMetrics.accuracyRate}%</span>
                     </div>
-                    <Progress value={94.5} className="h-2" />
+                    <Progress value={aiMetrics.accuracyRate} className="h-2" />
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Prédictions Correctes</span>
-                      <span className="text-sm font-medium">91.2%</span>
+                      <span className="text-sm font-medium">{aiMetrics.accuracyRate}%</span>
                     </div>
-                    <Progress value={91.2} className="h-2" />
+                    <Progress value={aiMetrics.accuracyRate} className="h-2" />
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
                       <span className="text-sm text-gray-600">Détection Fraude</span>
-                      <span className="text-sm font-medium">98.7%</span>
+                      <span className="text-sm font-medium">{aiMetrics.accuracyRate}%</span>
                     </div>
-                    <Progress value={98.7} className="h-2" />
+                    <Progress value={aiMetrics.accuracyRate} className="h-2" />
                   </div>
                 </div>
               </CardContent>
@@ -568,14 +529,14 @@ const AgentFoncierAI = () => {
                   <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                     <div>
                       <p className="font-medium text-blue-900">Requêtes Aujourd'hui</p>
-                      <p className="text-2xl font-bold text-blue-600">247</p>
+                      <p className="text-2xl font-bold text-blue-600">{aiMetrics.predictionsGenerated}</p>
                     </div>
                     <Cpu className="h-8 w-8 text-blue-600" />
                   </div>
                   <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
                     <div>
                       <p className="font-medium text-green-900">Temps Économisé</p>
-                      <p className="text-2xl font-bold text-green-600">12.5h</p>
+                      <p className="text-2xl font-bold text-green-600">{aiMetrics.timesSaved}h</p>
                     </div>
                     <Clock className="h-8 w-8 text-green-600" />
                   </div>

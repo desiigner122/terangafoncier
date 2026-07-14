@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,11 +39,8 @@ const GeometreOutils = () => {
       id: 'rtk-positioning',
       name: 'Positionnement RTK',
       description: 'Positionnement centimétrique en temps réel',
-      status: 'active',
-      accuracy: '2cm',
-      lastUpdate: '15:30',
-      satellites: 18,
-      quality: 'Excellent'
+      status: 'ready',
+      accuracy: '2cm'
     },
     {
       id: 'coordinate-converter',
@@ -50,8 +48,7 @@ const GeometreOutils = () => {
       description: 'Conversion entre systèmes de coordonnées',
       status: 'ready',
       fromSystem: 'WGS84',
-      toSystem: 'UTM Zone 28N',
-      lastConversion: 'Dakar - Almadies'
+      toSystem: 'UTM Zone 28N'
     },
     {
       id: 'datum-transform',
@@ -69,8 +66,7 @@ const GeometreOutils = () => {
       id: 'distance-calculator',
       name: 'Calcul de Distance',
       description: 'Calcul de distances et azimuts',
-      status: 'active',
-      lastMeasurement: '1,247.65m',
+      status: 'ready',
       precision: '±5mm',
       type: 'Horizontale'
     },
@@ -79,7 +75,6 @@ const GeometreOutils = () => {
       name: 'Calcul de Surface',
       description: 'Calcul de superficies polygonales',
       status: 'ready',
-      lastArea: '2,150.43m²',
       precision: '±0.1m²',
       method: 'Coordonnées'
     },
@@ -89,8 +84,7 @@ const GeometreOutils = () => {
       description: 'Gestion des altitudes et dénivelés',
       status: 'ready',
       altitudeSystem: 'NGF',
-      precision: '±2cm',
-      lastElevation: '45.67m'
+      precision: '±2cm'
     }
   ];
 
@@ -100,19 +94,14 @@ const GeometreOutils = () => {
       id: 'layer-manager',
       name: 'Gestionnaire de Couches',
       description: 'Gestion des couches cartographiques',
-      status: 'active',
-      activeLayers: 8,
-      totalLayers: 15,
-      lastUpdate: '14:45'
+      status: 'ready'
     },
     {
       id: 'spatial-analysis',
       name: 'Analyse Spatiale',
       description: 'Outils d\'analyse géospatiale',
       status: 'ready',
-      analysisType: 'Buffer',
-      lastAnalysis: 'Zone influence 500m',
-      processingTime: '2.3s'
+      analysisType: 'Buffer'
     },
     {
       id: 'map-export',
@@ -120,19 +109,33 @@ const GeometreOutils = () => {
       description: 'Export de cartes et plans',
       status: 'ready',
       formats: ['PDF', 'DWG', 'PNG'],
-      lastExport: 'Plan cadastral - Lot 15',
       resolution: '300 DPI'
     }
   ];
 
-  // Statistiques d'utilisation
-  const toolStats = {
-    totalMeasurements: 1247,
-    averageAccuracy: '3.2cm',
-    activeTools: 12,
-    weeklyUsage: 89,
-    savedProjects: 45
-  };
+  // Statistiques d'utilisation RÉEL depuis Supabase (aucune donnée fictive)
+  const [toolStats, setToolStats] = useState({
+    totalMeasurements: 0,
+    averageAccuracy: '—',
+    activeTools: gpsTools.length + measurementTools.length + sigTools.length,
+    weeklyUsage: 0,
+    savedProjects: 0
+  });
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const { count, error } = await supabase
+          .from('field_measurements')
+          .select('*', { count: 'exact', head: true });
+        if (error) throw error;
+        if (active) setToolStats(prev => ({ ...prev, totalMeasurements: count || 0 }));
+      } catch (err) {
+        console.warn('statistiques outils indisponible:', err?.message);
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   const getStatusColor = (status) => {
     switch (status) {

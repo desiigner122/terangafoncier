@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import { 
   Brain,
@@ -44,33 +45,35 @@ const GeometreAI = () => {
   // Suggestions de l'IA
   const aiSuggestions = []; // démo retirée
 
-  // Historique des conversations
-  const chatHistory = [
-    {
-      id: 1,
-      type: 'user',
-      message: "Comment calculer la surface d'un terrain irrégulier avec 7 points GPS ?",
-      time: "10:30"
-    },
-    {
-      id: 2,
-      type: 'ai',
-      message: "Pour calculer la surface d'un polygone irrégulier avec 7 points GPS, je recommande la méthode de Gauss (formule du lacet). Voici les étapes:\n\n1. Ordonnez vos points dans le sens horaire ou anti-horaire\n2. Appliquez la formule: S = ½|Σ(xi(yi+1 - yi-1))|\n3. Convertissez les coordonnées GPS en mètres si nécessaire\n\nVoulez-vous que je calcule automatiquement avec vos coordonnées ?",
-      time: "10:31"
-    },
-    {
-      id: 3,
-      type: 'user',
-      message: "Oui, voici mes coordonnées : (14.7167, -17.4677), (14.7170, -17.4680), ...",
-      time: "10:32"
-    },
-    {
-      id: 4,
-      type: 'ai',
-      message: "Calcul en cours... ✨\n\nRésultat : Surface = 2,847 m² (0,28 ha)\n\nPrécision estimée : ±0.5%\nMéthode utilisée : Formule de Gauss avec correction géodésique\n\nVoulez-vous que je génère un rapport détaillé ?",
-      time: "10:33"
-    }
-  ];
+  // Historique des conversations RÉEL depuis Supabase (aucune donnée fictive)
+  const [chatHistory, setChatHistory] = useState([]);
+  const [analyses, setAnalyses] = useState([]);
+  const [aiRequestsCount, setAiRequestsCount] = useState(0);
+  useEffect(() => {
+    let active = true;
+    (async () => {
+      try {
+        const [historyRes, analysesRes, interactionsRes] = await Promise.all([
+          supabase.from('ai_chat_history').select('*').order('created_at', { ascending: false }).limit(20),
+          supabase.from('ai_analyses').select('*').order('created_at', { ascending: false }).limit(10),
+          supabase.from('ai_interactions').select('*', { count: 'exact', head: true })
+        ]);
+        if (active) {
+          setChatHistory(historyRes.data || []);
+          setAnalyses(analysesRes.data || []);
+          setAiRequestsCount(interactionsRes.count || 0);
+        }
+      } catch (err) {
+        console.warn('données IA indisponibles:', err?.message);
+        if (active) {
+          setChatHistory([]);
+          setAnalyses([]);
+          setAiRequestsCount(0);
+        }
+      }
+    })();
+    return () => { active = false; };
+  }, []);
 
   // Outils IA disponibles
   const aiTools = [
@@ -78,29 +81,25 @@ const GeometreAI = () => {
       name: "Calcul de surface intelligent",
       description: "Calcul automatique avec correction d'erreurs",
       icon: Calculator,
-      color: "bg-blue-50 text-blue-600",
-      usage: "156 fois ce mois"
+      color: "bg-blue-50 text-blue-600"
     },
     {
       name: "Optimisation de parcours",
       description: "Route optimale pour les relevés terrain",
       icon: Map,
-      color: "bg-green-50 text-green-600",
-      usage: "89 fois ce mois"
+      color: "bg-green-50 text-green-600"
     },
     {
       name: "Analyse de précision",
       description: "Évaluation de la qualité des mesures",
       icon: Target,
-      color: "bg-purple-50 text-purple-600",
-      usage: "203 fois ce mois"
+      color: "bg-purple-50 text-purple-600"
     },
     {
       name: "Génération de rapports",
       description: "Rapports automatiques personnalisés",
       icon: FileText,
-      color: "bg-orange-50 text-orange-600",
-      usage: "127 fois ce mois"
+      color: "bg-orange-50 text-orange-600"
     }
   ];
 
@@ -152,6 +151,9 @@ const GeometreAI = () => {
                   <CardContent className="flex-1 flex flex-col">
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+                      {chatHistory.length === 0 && (
+                        <p className="text-sm text-gray-500 text-center py-8">Aucune conversation pour le moment</p>
+                      )}
                       {chatHistory.map((msg) => (
                         <div
                           key={msg.id}
@@ -218,7 +220,7 @@ const GeometreAI = () => {
                                 <div>
                                   <h3 className="font-semibold text-gray-900">{tool.name}</h3>
                                   <p className="text-gray-600 text-sm">{tool.description}</p>
-                                  <p className="text-xs text-gray-500 mt-1">{tool.usage}</p>
+                                  {tool.usage && <p className="text-xs text-gray-500 mt-1">{tool.usage}</p>}
                                 </div>
                               </div>
                               <Button variant="outline">
@@ -243,27 +245,18 @@ const GeometreAI = () => {
                   </CardHeader>
                   <CardContent>
                     <div className="space-y-4">
-                      <div className="flex items-center space-x-3">
-                        <Clock className="w-5 h-5 text-orange-500" />
-                        <div>
-                          <p className="font-medium">Analyse de précision GPS</p>
-                          <p className="text-sm text-gray-600">Parcelle A127 - En cours...</p>
+                      {analyses.length === 0 && (
+                        <p className="text-sm text-gray-500 text-center py-8">Aucune analyse en cours</p>
+                      )}
+                      {analyses.map((analysis) => (
+                        <div key={analysis.id} className="flex items-center space-x-3">
+                          <Clock className="w-5 h-5 text-orange-500" />
+                          <div>
+                            <p className="font-medium">{analysis.title || analysis.type || 'Analyse'}</p>
+                            <p className="text-sm text-gray-600">{analysis.status || ''}</p>
+                          </div>
                         </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <div>
-                          <p className="font-medium">Optimisation du parcours</p>
-                          <p className="text-sm text-gray-600">Route optimale générée pour demain</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center space-x-3">
-                        <AlertCircle className="w-5 h-5 text-red-500" />
-                        <div>
-                          <p className="font-medium">Détection d'anomalie</p>
-                          <p className="text-sm text-gray-600">Point GPS aberrant détecté - Position 7</p>
-                        </div>
-                      </div>
+                      ))}
                     </div>
                   </CardContent>
                 </Card>
@@ -321,19 +314,19 @@ const GeometreAI = () => {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Précision moyenne</span>
-                    <span className="font-bold text-green-600">97.8%</span>
+                    <span className="font-bold text-green-600">—</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Temps de réponse</span>
-                    <span className="font-bold text-blue-600">1.2s</span>
+                    <span className="font-bold text-blue-600">—</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Requêtes ce mois</span>
-                    <span className="font-bold text-purple-600">1,247</span>
+                    <span className="font-bold text-purple-600">{aiRequestsCount}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">Économie de temps</span>
-                    <span className="font-bold text-orange-600">23.5h</span>
+                    <span className="font-bold text-orange-600">—</span>
                   </div>
                 </div>
               </CardContent>

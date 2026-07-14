@@ -1,5 +1,6 @@
-import React, { useState, Suspense } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
 import {
   BarChart3,
   PieChart,
@@ -43,14 +44,50 @@ const InvestisseurDashboardModern = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Données du dashboard investisseur
-  const dashboardStats = {
-    portfolioValue: 2850000000, // 2.85 milliards FCFA
-    monthlyReturn: 12.8,
-    activeInvestments: 24,
-    totalROI: 34.5,
-    availableCash: 450000000, // 450 millions FCFA
-    opportunitiesWatched: 18
-  };
+  const [dashboardStats, setDashboardStats] = useState({
+    portfolioValue: 0,
+    monthlyReturn: 0,
+    activeInvestments: 0,
+    totalROI: 0,
+    availableCash: 0,
+    opportunitiesWatched: 0
+  });
+
+  useEffect(() => {
+    const loadStats = async () => {
+      try {
+        const { data: authData } = await supabase.auth.getUser();
+        const userId = authData?.user?.id;
+        if (!userId) return;
+
+        const [txRes, favRes] = await Promise.all([
+          supabase
+            .from('financial_transactions')
+            .select('amount, status')
+            .eq('user_id', userId),
+          supabase
+            .from('favorites')
+            .select('id', { count: 'exact', head: true })
+            .eq('user_id', userId)
+        ]);
+
+        const transactions = txRes?.data || [];
+        setDashboardStats((prev) => ({
+          ...prev,
+          portfolioValue: transactions.reduce(
+            (sum, t) => sum + (Number(t.amount) || 0),
+            0
+          ),
+          activeInvestments: transactions.length,
+          opportunitiesWatched: favRes?.count || 0
+        }));
+      } catch (error) {
+        console.error('Erreur chargement statistiques investisseur:', error);
+      }
+    };
+
+    loadStats();
+  }, []);
 
   const menuItems = [
     { id: 'overview', label: 'Vue d\'ensemble', icon: BarChart3 },
@@ -254,38 +291,38 @@ const InvestisseurDashboardModern = () => {
 
 // Composant Vue d'ensemble
 const OverviewContent = ({ stats, formatCurrency }) => {
-  const opportunities = [
-    {
-      id: 1,
-      title: 'Résidence Les Almadies',
-      location: 'Almadies, Dakar',
-      roi: 18.5,
-      investment: 150000000,
-      category: 'Résidentiel',
-      risk: 'Faible',
-      duration: '24 mois'
-    },
-    {
-      id: 2,
-      title: 'Centre Commercial Plateau',
-      location: 'Plateau, Dakar',
-      roi: 22.3,
-      investment: 350000000,
-      category: 'Commercial',
-      risk: 'Moyen',
-      duration: '36 mois'
-    },
-    {
-      id: 3,
-      title: 'Lotissement Saly Beach',
-      location: 'Saly, Mbour',
-      roi: 15.2,
-      investment: 80000000,
-      category: 'Foncier',
-      risk: 'Faible',
-      duration: '18 mois'
-    }
-  ];
+  const [opportunities, setOpportunities] = useState([]);
+
+  useEffect(() => {
+    const loadOpportunities = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('properties')
+          .select('*')
+          .order('created_at', { ascending: false })
+          .limit(3);
+
+        if (error) throw error;
+
+        setOpportunities(
+          (data || []).map((p) => ({
+            id: p.id,
+            title: p.title || p.name || 'Propriété',
+            location: p.location || p.city || '',
+            roi: 0,
+            investment: Number(p.price) || 0,
+            category: p.type || p.property_type || '',
+            risk: '',
+            duration: ''
+          }))
+        );
+      } catch (error) {
+        console.error('Erreur chargement opportunités:', error);
+      }
+    };
+
+    loadOpportunities();
+  }, []);
 
   const portfolioData = []; // données graphiques réelles requises
 
@@ -390,6 +427,11 @@ const OverviewContent = ({ stats, formatCurrency }) => {
         </div>
 
         <div className="grid gap-4">
+          {opportunities.length === 0 && (
+            <p className="text-sm text-gray-500 text-center py-6">
+              Aucune opportunité disponible pour le moment.
+            </p>
+          )}
           {opportunities.map((opportunity, index) => (
             <motion.div
               key={opportunity.id}

@@ -117,9 +117,9 @@ const GeometrePlans = () => {
   };
 
   const filteredPlans = plans.filter(plan => {
-    const matchesSearch = plan.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         plan.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         plan.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (plan.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (plan.client || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (plan.location || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'tous' || plan.type === typeFilter;
     const matchesStatus = statusFilter === 'tous' || plan.status === statusFilter;
     
@@ -268,6 +268,9 @@ const GeometrePlans = () => {
 
         <TabsContent value="grille" className="mt-6">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPlans.length === 0 && (
+              <p className="text-sm text-gray-500 text-center py-8 col-span-full">Aucune donnée</p>
+            )}
             {filteredPlans.map((plan, index) => {
               const TypeIcon = getTypeIcon(plan.type);
               
@@ -304,7 +307,7 @@ const GeometrePlans = () => {
                         </div>
 
                         <div className="flex flex-wrap gap-1">
-                          {plan.tags.slice(0, 3).map((tag, idx) => (
+                          {(plan.tags || []).slice(0, 3).map((tag, idx) => (
                             <Badge key={idx} variant="outline" className="text-xs">
                               {tag}
                             </Badge>

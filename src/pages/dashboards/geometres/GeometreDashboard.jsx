@@ -40,17 +40,82 @@ import { Progress } from '@/components/ui/progress';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
+import { supabase } from '@/lib/supabaseClient';
+
+const EMPTY_DASHBOARD_DATA = {
+  stats: { totalMissions: 0, missionsActives: 0, missionsMois: 0, precision: 0, revenus: 0 },
+  missions: [],
+  equipment: [],
+  clients: [],
+  analytics: { delaisMoyens: 0, precisionMoyenne: 0, satisfactionClient: 0, typesMissions: {} }
+};
 
 const GeometreDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [loading, setLoading] = useState(true);
 
-  const [dashboardData, setDashboardData] = useState({}); // démo retirée
+  const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD_DATA);
 
   useEffect(() => {
-    setTimeout(() => {
-      setLoading(false);
-    }, 1500);
+    const loadDashboardData = async () => {
+      try {
+        const [{ count: totalMissions }, { data: measurements }] = await Promise.all([
+          supabase.from('field_measurements').select('*', { count: 'exact', head: true }),
+          supabase.from('field_measurements').select('*').order('created_at', { ascending: false }).limit(50)
+        ]);
+
+        const missions = (measurements || []).map((m) => ({
+          id: m.id,
+          numero: m.reference || m.numero || `MES-${String(m.id).slice(0, 8)}`,
+          type: m.measurement_type || m.type || 'Mesure',
+          projet: m.project_name || m.projet || '—',
+          statut: m.status || m.statut || 'En attente',
+          superficie: m.area || m.superficie || '—',
+          prix: Number(m.price ?? m.prix ?? 0) || 0,
+          progression: Number(m.progress ?? m.progression ?? 0) || 0,
+          dateFin: m.due_date || m.date_fin || m.created_at,
+          localisation: m.location || m.localisation || '—',
+          client: m.client_name || m.client || '—',
+          equipment: Array.isArray(m.equipment) ? m.equipment : []
+        }));
+
+        const now = new Date();
+        const missionsMois = (measurements || []).filter((m) => {
+          if (!m.created_at) return false;
+          const d = new Date(m.created_at);
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        }).length;
+
+        const typesMissions = {};
+        missions.forEach((m) => {
+          typesMissions[m.type] = (typesMissions[m.type] || 0) + 1;
+        });
+        Object.keys(typesMissions).forEach((type) => {
+          typesMissions[type] = Math.round((typesMissions[type] / missions.length) * 100);
+        });
+
+        setDashboardData({
+          stats: {
+            totalMissions: totalMissions || 0,
+            missionsActives: missions.filter((m) => m.statut === 'En cours').length,
+            missionsMois,
+            precision: 0,
+            revenus: missions.reduce((sum, m) => sum + (m.prix || 0), 0)
+          },
+          missions,
+          equipment: [],
+          clients: [],
+          analytics: { delaisMoyens: 0, precisionMoyenne: 0, satisfactionClient: 0, typesMissions }
+        });
+      } catch (error) {
+        console.error('Erreur chargement dashboard géomètre:', error);
+        setDashboardData(EMPTY_DASHBOARD_DATA);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
   const stats = [
@@ -122,7 +187,7 @@ const GeometreDashboard = () => {
               </div>
               <div className="flex items-center mt-2 text-sm">
                 <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-                <span className="text-green-600">+18% vs mois dernier</span>
+                <span className="text-green-600">Missions en cours</span>
               </div>
             </CardContent>
           </Card>
@@ -139,7 +204,7 @@ const GeometreDashboard = () => {
                 <Clock className="h-8 w-8 text-blue-600" />
               </div>
               <div className="mt-2">
-                <Progress value={80} className="h-2" />
+                <Progress value={0} className="h-2" />
               </div>
             </CardContent>
           </Card>
@@ -156,7 +221,7 @@ const GeometreDashboard = () => {
                 <Target className="h-8 w-8 text-green-600" />
               </div>
               <div className="mt-2">
-                <Progress value={85} className="h-2" />
+                <Progress value={0} className="h-2" />
               </div>
             </CardContent>
           </Card>
@@ -166,7 +231,7 @@ const GeometreDashboard = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="font-medium">Certifications</p>
-                  <p className="text-lg font-bold text-purple-600">4</p>
+                  <p className="text-lg font-bold text-purple-600">0</p>
                 </div>
                 <Award className="h-8 w-8 text-purple-600" />
               </div>
@@ -232,6 +297,9 @@ const GeometreDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {dashboardData.missions.filter(m => m.statut === 'En cours').length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {dashboardData.missions.filter(m => m.statut === 'En cours').slice(0, 3).map((mission) => (
                       <div key={mission.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
@@ -272,6 +340,9 @@ const GeometreDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {dashboardData.equipment.length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {dashboardData.equipment.slice(0, 3).map((eq) => (
                       <div key={eq.id} className="border rounded-lg p-3">
                         <div className="flex justify-between items-start mb-2">
@@ -308,7 +379,7 @@ const GeometreDashboard = () => {
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Missions finalisées</span>
-                      <span className="font-bold text-blue-600">9</span>
+                      <span className="font-bold text-blue-600">{dashboardData.missions.filter(m => m.statut === 'Finalisé').length}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Revenus générés</span>
@@ -379,7 +450,7 @@ const GeometreDashboard = () => {
                 <CardContent className="p-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">
-                      {formatCurrency(dashboardData.missions.reduce((sum, m) => sum + m.prix, 0))}
+                      {formatCurrency(dashboardData.missions.reduce((sum, m) => sum + (m.prix || 0), 0))}
                     </p>
                     <p className="text-sm text-gray-600">CA Total</p>
                   </div>
@@ -389,6 +460,9 @@ const GeometreDashboard = () => {
 
             {/* Liste des Missions */}
             <div className="grid gap-6">
+              {dashboardData.missions.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.missions.map((mission) => (
                 <Card key={mission.id}>
                   <CardContent className="p-6">
@@ -473,6 +547,9 @@ const GeometreDashboard = () => {
             </div>
 
             <div className="grid gap-4">
+              {dashboardData.equipment.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.equipment.map((eq) => (
                 <Card key={eq.id}>
                   <CardContent className="p-6">
@@ -550,6 +627,9 @@ const GeometreDashboard = () => {
             </div>
 
             <div className="grid gap-4">
+              {dashboardData.clients.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.clients.map((client) => (
                 <Card key={client.id}>
                   <CardContent className="p-6">
@@ -627,6 +707,9 @@ const GeometreDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {Object.keys(dashboardData.analytics.typesMissions).length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {Object.entries(dashboardData.analytics.typesMissions).map(([type, percentage]) => (
                       <div key={type}>
                         <div className="flex justify-between items-center mb-1">

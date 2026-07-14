@@ -51,43 +51,7 @@ const GeometreCommunication = () => {
   }, []);
 
   // Messages pour une conversation
-  const messages = [
-    {
-      id: 1,
-      sender: 'client',
-      content: 'Bonjour, j\'aimerais connaître l\'avancement du levé topographique',
-      timestamp: '09:30',
-      type: 'text'
-    },
-    {
-      id: 2,
-      sender: 'me',
-      content: 'Bonjour ! Le levé est terminé à 80%. Je vous envoie un rapport d\'avancement.',
-      timestamp: '09:35',
-      type: 'text'
-    },
-    {
-      id: 3,
-      sender: 'me',
-      content: 'rapport_avancement_topographie.pdf',
-      timestamp: '09:36',
-      type: 'file'
-    },
-    {
-      id: 4,
-      sender: 'client',
-      content: 'Parfait ! Quand pensez-vous finaliser ?',
-      timestamp: '09:40',
-      type: 'text'
-    },
-    {
-      id: 5,
-      sender: 'me',
-      content: 'D\'ici vendredi maximum. Je vous tiendrai informé.',
-      timestamp: '09:42',
-      type: 'text'
-    }
-  ];
+  const messages = []; // démo retirée
 
   // Réunions à venir
   const meetings = []; // démo retirée
@@ -242,6 +206,9 @@ const GeometreCommunication = () => {
               </CardHeader>
               <CardContent className="p-4 flex flex-col h-96">
                 <div className="flex-1 overflow-y-auto space-y-4 mb-4">
+                  {messages.length === 0 && (
+                    <p className="text-sm text-gray-500 text-center py-8">Aucun message pour le moment</p>
+                  )}
                   {messages.map((msg) => (
                     <div key={msg.id} className={`flex ${msg.sender === 'me' ? 'justify-end' : 'justify-start'}`}>
                       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-xl ${
@@ -307,6 +274,9 @@ const GeometreCommunication = () => {
           </CardHeader>
           <CardContent>
             <div className="grid gap-4">
+              {meetings.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune réunion planifiée</p>
+              )}
               {meetings.map((meeting) => (
                 <div key={meeting.id} className="p-4 bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg border border-blue-100">
                   <div className="flex items-center justify-between">

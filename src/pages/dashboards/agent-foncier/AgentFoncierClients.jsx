@@ -91,7 +91,9 @@ const AgentFoncierClients = () => {
     },
     {
       title: 'Satisfaction Moy.',
-      value: Math.round(clients.reduce((acc, c) => acc + c.satisfaction, 0) / clients.length) + '%',
+      value: (clients.length > 0
+        ? Math.round(clients.reduce((acc, c) => acc + (Number(c.satisfaction) || 0), 0) / clients.length)
+        : 0) + '%',
       change: null,
       icon: Star,
       color: 'text-orange-600',
@@ -120,8 +122,8 @@ const AgentFoncierClients = () => {
   };
 
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = (client.nom || client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (client.email || '').toLowerCase().includes(searchTerm.toLowerCase());
     const matchesFilter = selectedFilter === 'tous' || client.statut === selectedFilter;
     return matchesSearch && matchesFilter;
   });
@@ -255,6 +257,9 @@ const AgentFoncierClients = () => {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
+                {filteredClients.length === 0 && (
+                  <p className="text-sm text-gray-500 text-center py-6">Aucun client disponible</p>
+                )}
                 {filteredClients.map((client, index) => (
                   <motion.div
                     key={client.id}
@@ -273,7 +278,7 @@ const AgentFoncierClients = () => {
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
-                            <h3 className="font-semibold text-gray-900">{client.nom}</h3>
+                            <h3 className="font-semibold text-gray-900">{client.nom || client.name || 'Contact'}</h3>
                             <Badge className={getStatusColor(client.statut)}>
                               {client.statut === 'actif' ? 'Actif' :
                                client.statut === 'vip' ? 'VIP' :
@@ -286,36 +291,36 @@ const AgentFoncierClients = () => {
                           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm text-gray-600">
                             <div className="flex items-center">
                               <Mail className="h-3 w-3 mr-1" />
-                              {client.email}
+                              {client.email || '—'}
                             </div>
                             <div className="flex items-center">
                               <Phone className="h-3 w-3 mr-1" />
-                              {client.telephone}
+                              {client.telephone || client.phone || '—'}
                             </div>
                             <div className="flex items-center">
                               <MapPin className="h-3 w-3 mr-1" />
-                              {client.adresse}
+                              {client.adresse || '—'}
                             </div>
                           </div>
                           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mt-3 text-sm">
                             <div>
                               <span className="text-gray-500">Projets: </span>
-                              <span className="font-medium">{client.projetsActifs}/{client.projetsTotal}</span>
+                              <span className="font-medium">{client.projetsActifs ?? 0}/{client.projetsTotal ?? 0}</span>
                             </div>
                             <div>
                               <span className="text-gray-500">Portefeuille: </span>
-                              <span className="font-medium text-green-600">{client.valeurPortefeuille}</span>
+                              <span className="font-medium text-green-600">{client.valeurPortefeuille || '—'}</span>
                             </div>
                             <div>
                               <span className="text-gray-500">Satisfaction: </span>
                               <div className="flex items-center gap-1">
-                                <Progress value={client.satisfaction} className="w-12 h-2" />
-                                <span className="font-medium">{client.satisfaction}%</span>
+                                <Progress value={Number(client.satisfaction) || 0} className="w-12 h-2" />
+                                <span className="font-medium">{Number(client.satisfaction) || 0}%</span>
                               </div>
                             </div>
                             <div>
                               <span className="text-gray-500">Prochain RDV: </span>
-                              <span className="font-medium">{client.prochainRdv}</span>
+                              <span className="font-medium">{client.prochainRdv || '—'}</span>
                             </div>
                           </div>
                         </div>
@@ -362,9 +367,9 @@ const AgentFoncierClients = () => {
                         {client.avatar}
                       </div>
                       <div>
-                        <h3 className="font-bold text-lg text-gray-900">{client.nom}</h3>
+                        <h3 className="font-bold text-lg text-gray-900">{client.nom || client.name || 'Contact'}</h3>
                         <Badge className="bg-purple-100 text-purple-800">
-                          {client.statut.toUpperCase()}
+                          {(client.statut || '').toUpperCase()}
                         </Badge>
                       </div>
                     </div>
@@ -373,17 +378,17 @@ const AgentFoncierClients = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Valeur Portefeuille:</span>
-                      <span className="font-bold text-green-600">{client.valeurPortefeuille}</span>
+                      <span className="font-bold text-green-600">{client.valeurPortefeuille || '—'}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Projets Actifs:</span>
-                      <span className="font-medium">{client.projetsActifs}</span>
+                      <span className="font-medium">{client.projetsActifs ?? 0}</span>
                     </div>
                     <div className="flex justify-between">
                       <span className="text-gray-600">Satisfaction:</span>
                       <div className="flex items-center gap-2">
-                        <Progress value={client.satisfaction} className="w-16 h-2" />
-                        <span className="font-medium">{client.satisfaction}%</span>
+                        <Progress value={Number(client.satisfaction) || 0} className="w-16 h-2" />
+                        <span className="font-medium">{Number(client.satisfaction) || 0}%</span>
                       </div>
                     </div>
                   </div>
@@ -411,12 +416,12 @@ const AgentFoncierClients = () => {
                         {client.avatar}
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{client.nom}</p>
-                        <p className="text-sm text-gray-600">Dernier contact: {client.dernierContact}</p>
+                        <p className="font-medium text-gray-900">{client.nom || client.name || 'Contact'}</p>
+                        <p className="text-sm text-gray-600">Dernier contact: {client.dernierContact || '—'}</p>
                       </div>
                     </div>
                     <Badge variant="outline">
-                      {client.projetsActifs} projets actifs
+                      {client.projetsActifs ?? 0} projets actifs
                     </Badge>
                   </div>
                 ))}
@@ -436,7 +441,7 @@ const AgentFoncierClients = () => {
                 <div className="space-y-4">
                   {['Particulier', 'Entreprise'].map((type) => {
                     const count = clients.filter(c => c.type === type).length;
-                    const percentage = Math.round((count / clients.length) * 100);
+                    const percentage = clients.length > 0 ? Math.round((count / clients.length) * 100) : 0;
                     return (
                       <div key={type} className="flex items-center justify-between">
                         <span className="font-medium">{type}</span>
@@ -459,7 +464,9 @@ const AgentFoncierClients = () => {
                 <div className="space-y-4">
                   <div className="text-center">
                     <div className="text-4xl font-bold text-green-600 mb-2">
-                      {Math.round(clients.reduce((acc, c) => acc + c.satisfaction, 0) / clients.length)}%
+                      {clients.length > 0
+                        ? Math.round(clients.reduce((acc, c) => acc + (Number(c.satisfaction) || 0), 0) / clients.length)
+                        : 0}%
                     </div>
                     <p className="text-gray-600">Satisfaction Moyenne</p>
                   </div>

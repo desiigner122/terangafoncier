@@ -40,7 +40,8 @@ import {
   Archive,
   BookOpen,
   GraduationCap,
-  UserCheck
+  UserCheck,
+  Trophy
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -50,19 +51,99 @@ import { Progress } from '@/components/ui/progress';
 import DashboardLayout from '@/components/dashboard/shared/DashboardLayout';
 import AIAssistantWidget from '@/components/dashboard/ai/AIAssistantWidget';
 import BlockchainWidget from '@/components/dashboard/blockchain/BlockchainWidget';
+import { supabase } from '@/lib/supabaseClient';
+
+const EMPTY_DASHBOARD_DATA = {
+  stats: { totalClients: 0, activeProjects: 0, completedProjects: 0, rating: 0, monthlyRevenue: 0, certifications: 0 },
+  projects: [],
+  clients: [],
+  services: [],
+  certifications: [],
+  analytics: {
+    performance: { satisfaction: 0, retention: 0, referrals: 0 },
+    serviceDistribution: {},
+    clientTypes: {}
+  }
+};
 
 const ProfessionnelsDashboard = () => {
   const [activeTab, setActiveTab] = useState('overview');
   const [userType, setUserType] = useState('agent'); // agent, notaire, geometre, architecte, banque
   const [loading, setLoading] = useState(true);
 
-  const [dashboardData, setDashboardData] = useState({}); // démo retirée
+  const [dashboardData, setDashboardData] = useState(EMPTY_DASHBOARD_DATA);
 
   useEffect(() => {
-    // Simulation chargement des données
-    setTimeout(() => {
-      setLoading(false);
-    }, 1500);
+    const loadDashboardData = async () => {
+      try {
+        const [{ count: totalClients }, { data: contacts }, { data: deals }] = await Promise.all([
+          supabase.from('crm_contacts').select('*', { count: 'exact', head: true }),
+          supabase.from('crm_contacts').select('*').order('created_at', { ascending: false }).limit(50),
+          supabase.from('crm_deals').select('*').order('created_at', { ascending: false }).limit(50)
+        ]);
+
+        const projects = (deals || []).map((d) => ({
+          id: d.id,
+          title: d.title || d.name || `Projet ${String(d.id).slice(0, 8)}`,
+          client: d.client_name || d.contact_name || '—',
+          status: d.status || 'En attente',
+          type: d.type || d.deal_type || 'Projet',
+          value: Number(d.value ?? d.amount ?? 0) || 0,
+          commission: Number(d.commission ?? 0) || 0,
+          progress: Number(d.progress ?? d.progression ?? 0) || 0,
+          deadline: d.expected_close_date || d.deadline || d.created_at,
+          startDate: d.start_date || d.created_at,
+          location: d.location || '—'
+        }));
+
+        const clients = (contacts || []).map((c) => ({
+          id: c.id,
+          name: c.full_name || c.name || c.nom || '—',
+          status: c.status || 'Actif',
+          type: c.type || c.contact_type || 'Particulier',
+          email: c.email || '—',
+          phone: c.phone || c.telephone || '—',
+          projects: Number(c.projects_count ?? 0) || 0,
+          totalValue: Number(c.total_value ?? 0) || 0,
+          since: c.created_at
+        }));
+
+        const clientTypes = {};
+        clients.forEach((c) => {
+          clientTypes[c.type] = (clientTypes[c.type] || 0) + 1;
+        });
+        Object.keys(clientTypes).forEach((type) => {
+          clientTypes[type] = Math.round((clientTypes[type] / clients.length) * 100);
+        });
+
+        setDashboardData({
+          stats: {
+            totalClients: totalClients || 0,
+            activeProjects: projects.filter((p) => p.status === 'En cours').length,
+            completedProjects: projects.filter((p) => p.status === 'Finalisé').length,
+            rating: 0,
+            monthlyRevenue: projects.reduce((sum, p) => sum + (p.commission || 0), 0),
+            certifications: 0
+          },
+          projects,
+          clients,
+          services: [],
+          certifications: [],
+          analytics: {
+            performance: { satisfaction: 0, retention: 0, referrals: 0 },
+            serviceDistribution: {},
+            clientTypes
+          }
+        });
+      } catch (error) {
+        console.error('Erreur chargement dashboard professionnels:', error);
+        setDashboardData(EMPTY_DASHBOARD_DATA);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadDashboardData();
   }, []);
 
   const stats = [
@@ -167,7 +248,7 @@ const ProfessionnelsDashboard = () => {
               </div>
               <div className="flex items-center mt-2 text-sm">
                 <TrendingUp className="h-4 w-4 text-green-600 mr-1" />
-                <span className="text-green-600">+15% vs mois dernier</span>
+                <span className="text-green-600">Commissions en cours</span>
               </div>
             </CardContent>
           </Card>
@@ -280,6 +361,9 @@ const ProfessionnelsDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {dashboardData.projects.filter(p => p.status === 'En cours').length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {dashboardData.projects.filter(p => p.status === 'En cours').slice(0, 3).map((project) => (
                       <div key={project.id} className="border rounded-lg p-4">
                         <div className="flex justify-between items-start mb-2">
@@ -320,27 +404,7 @@ const ProfessionnelsDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm">Immobilier Résidentiel</span>
-                        <span className="text-sm font-medium">Expert</span>
-                      </div>
-                      <Progress value={95} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm">Immobilier Commercial</span>
-                        <span className="text-sm font-medium">Avancé</span>
-                      </div>
-                      <Progress value={82} className="h-2" />
-                    </div>
-                    <div>
-                      <div className="flex justify-between items-center mb-1">
-                        <span className="text-sm">Blockchain & FinTech</span>
-                        <span className="text-sm font-medium">Intermédiaire</span>
-                      </div>
-                      <Progress value={68} className="h-2" />
-                    </div>
+                    <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
                   </div>
                 </CardContent>
               </Card>
@@ -356,11 +420,16 @@ const ProfessionnelsDashboard = () => {
                   <div className="space-y-4">
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Nouveaux clients</span>
-                      <span className="font-bold text-green-600">+8</span>
+                      <span className="font-bold text-green-600">+{dashboardData.clients.filter(c => {
+                        if (!c.since) return false;
+                        const d = new Date(c.since);
+                        const now = new Date();
+                        return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+                      }).length}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Projets finalisés</span>
-                      <span className="font-bold text-blue-600">12</span>
+                      <span className="font-bold text-blue-600">{dashboardData.projects.filter(p => p.status === 'Finalisé').length}</span>
                     </div>
                     <div className="flex justify-between items-center">
                       <span className="text-sm">Revenus générés</span>
@@ -431,7 +500,7 @@ const ProfessionnelsDashboard = () => {
                 <CardContent className="p-4">
                   <div className="text-center">
                     <p className="text-2xl font-bold text-purple-600">
-                      {formatCurrency(dashboardData.projects.reduce((sum, p) => sum + p.commission, 0))}
+                      {formatCurrency(dashboardData.projects.reduce((sum, p) => sum + (p.commission || 0), 0))}
                     </p>
                     <p className="text-sm text-gray-600">Commissions Total</p>
                   </div>
@@ -441,6 +510,9 @@ const ProfessionnelsDashboard = () => {
 
             {/* Projects List */}
             <div className="grid gap-6">
+              {dashboardData.projects.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.projects.map((project) => (
                 <Card key={project.id}>
                   <CardContent className="p-6">
@@ -554,7 +626,9 @@ const ProfessionnelsDashboard = () => {
                     <div>
                       <p className="text-sm text-gray-600">Valeur Moyenne/Client</p>
                       <p className="text-2xl font-bold text-green-600">
-                        {formatCurrency(dashboardData.clients.reduce((sum, c) => sum + c.totalValue, 0) / dashboardData.clients.length)}
+                        {formatCurrency(dashboardData.clients.length > 0
+                          ? dashboardData.clients.reduce((sum, c) => sum + (c.totalValue || 0), 0) / dashboardData.clients.length
+                          : 0)}
                       </p>
                     </div>
                     <DollarSign className="h-8 w-8 text-green-600" />
@@ -568,7 +642,9 @@ const ProfessionnelsDashboard = () => {
                     <div>
                       <p className="text-sm text-gray-600">Projets Moyens/Client</p>
                       <p className="text-2xl font-bold text-blue-600">
-                        {Math.round(dashboardData.clients.reduce((sum, c) => sum + c.projects, 0) / dashboardData.clients.length)}
+                        {dashboardData.clients.length > 0
+                          ? Math.round(dashboardData.clients.reduce((sum, c) => sum + (c.projects || 0), 0) / dashboardData.clients.length)
+                          : 0}
                       </p>
                     </div>
                     <Briefcase className="h-8 w-8 text-blue-600" />
@@ -579,6 +655,9 @@ const ProfessionnelsDashboard = () => {
 
             {/* Clients List */}
             <div className="grid gap-4">
+              {dashboardData.clients.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.clients.map((client) => (
                 <Card key={client.id}>
                   <CardContent className="p-6">
@@ -650,6 +729,9 @@ const ProfessionnelsDashboard = () => {
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {dashboardData.services.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8 md:col-span-2 lg:col-span-3">Aucune donnée</p>
+              )}
               {dashboardData.services.map((service) => (
                 <Card key={service.id}>
                   <CardContent className="p-6">
@@ -707,6 +789,9 @@ const ProfessionnelsDashboard = () => {
             </div>
 
             <div className="grid gap-4">
+              {dashboardData.certifications.length === 0 && (
+                <p className="text-sm text-gray-500 text-center py-8">Aucune donnée</p>
+              )}
               {dashboardData.certifications.map((cert) => (
                 <Card key={cert.id}>
                   <CardContent className="p-6">
@@ -764,7 +849,7 @@ const ProfessionnelsDashboard = () => {
                   <div className="text-center p-4 border rounded-lg">
                     <BookOpen className="h-8 w-8 text-green-600 mx-auto mb-2" />
                     <p className="font-medium">Formation Continue</p>
-                    <p className="text-sm text-gray-600">32h cette année</p>
+                    <p className="text-sm text-gray-600">—</p>
                   </div>
                   <div className="text-center p-4 border rounded-lg">
                     <UserCheck className="h-8 w-8 text-blue-600 mx-auto mb-2" />
@@ -774,7 +859,7 @@ const ProfessionnelsDashboard = () => {
                   <div className="text-center p-4 border rounded-lg">
                     <Trophy className="h-8 w-8 text-purple-600 mx-auto mb-2" />
                     <p className="font-medium">Niveau Expertise</p>
-                    <p className="text-sm text-gray-600">Expert Certifié</p>
+                    <p className="text-sm text-gray-600">—</p>
                   </div>
                 </div>
               </CardContent>
@@ -797,7 +882,7 @@ const ProfessionnelsDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Croissance Client</p>
-                      <p className="text-2xl font-bold text-blue-600">+18%</p>
+                      <p className="text-2xl font-bold text-blue-600">—</p>
                     </div>
                     <TrendingUp className="h-8 w-8 text-blue-600" />
                   </div>
@@ -809,7 +894,7 @@ const ProfessionnelsDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Taux Conversion</p>
-                      <p className="text-2xl font-bold text-green-600">24%</p>
+                      <p className="text-2xl font-bold text-green-600">—</p>
                     </div>
                     <Target className="h-8 w-8 text-green-600" />
                   </div>
@@ -821,7 +906,7 @@ const ProfessionnelsDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Temps Moyen/Projet</p>
-                      <p className="text-2xl font-bold text-purple-600">45j</p>
+                      <p className="text-2xl font-bold text-purple-600">—</p>
                     </div>
                     <Clock className="h-8 w-8 text-purple-600" />
                   </div>
@@ -833,7 +918,7 @@ const ProfessionnelsDashboard = () => {
                   <div className="flex items-center justify-between">
                     <div>
                       <p className="text-sm text-gray-600">Revenus/Heure</p>
-                      <p className="text-2xl font-bold text-orange-600">12,500</p>
+                      <p className="text-2xl font-bold text-orange-600">—</p>
                     </div>
                     <DollarSign className="h-8 w-8 text-orange-600" />
                   </div>
@@ -849,6 +934,9 @@ const ProfessionnelsDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {Object.keys(dashboardData.analytics.serviceDistribution).length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {Object.entries(dashboardData.analytics.serviceDistribution).map(([service, percentage]) => (
                       <div key={service}>
                         <div className="flex justify-between items-center mb-1">
@@ -868,6 +956,9 @@ const ProfessionnelsDashboard = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
+                    {Object.keys(dashboardData.analytics.clientTypes).length === 0 && (
+                      <p className="text-sm text-gray-500 text-center py-4">Aucune donnée</p>
+                    )}
                     {Object.entries(dashboardData.analytics.clientTypes).map(([type, percentage]) => (
                       <div key={type}>
                         <div className="flex justify-between items-center mb-1">

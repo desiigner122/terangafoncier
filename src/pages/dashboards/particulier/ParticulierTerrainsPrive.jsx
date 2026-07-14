@@ -32,74 +32,9 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
   const [activeTab, setActiveTab] = useState('demandes');
 
   // Demandes d'achat de terrains privés
-  const [demandesTerrains] = useState([
-    {
-      id: 'DTP-2024-001',
-      titre: 'Terrain Résidentiel - Almadies',
-      proprietaire: 'Société SENEGAL IMMOBILIER',
-      superficie: '500m²',
-      prix: 75000000, // 75M FCFA
-      localisation: 'Almadies, Dakar',
-      statut: 'Négociation',
-      dateOffre: '2024-01-15',
-      dernierContact: '2024-01-28',
-      progression: 60,
-      description: 'Terrain viabilisé avec vue sur mer, idéal pour villa haut standing',
-      caracteristiques: ['Viabilisé', 'Vue mer', 'Titre foncier', 'Accès goudronné'],
-      contact: {
-        nom: '',
-        telephone: '+221 77 123 45 67',
-        email: 'a.diallo@senegalimmobilier.sn'
-      },
-      documents: ['Titre foncier', 'Plan de bornage', 'Certificat viabilisation'],
-      prochainEtape: 'Visite avec géomètre',
-      echeance: '2024-02-10'
-    },
-    {
-      id: 'DTP-2024-002',
-      titre: 'Terrain Commercial - Plateau',
-      proprietaire: 'M. Cheikh NDIAYE',
-      superficie: '800m²',
-      prix: 120000000, // 120M FCFA
-      localisation: 'Plateau, Dakar',
-      statut: 'En attente réponse',
-      dateOffre: '2024-01-20',
-      dernierContact: '2024-01-25',
-      progression: 30,
-      description: 'Terrain commercial au cœur du Plateau, parfait pour immeuble',
-      caracteristiques: ['Zone commerciale', 'Proche métro', 'Services publics', 'Parking'],
-      contact: {
-        nom: '',
-        telephone: '+221 76 987 65 43',
-        email: 'cheikh.ndiaye@gmail.com'
-      },
-      documents: ['Titre foncier', 'Autorisation commerciale'],
-      prochainEtape: 'Réponse propriétaire',
-      echeance: '2024-02-05'
-    },
-    {
-      id: 'DTP-2024-003',
-      titre: 'Terrain Agricole - Thiès',
-      proprietaire: 'Coopérative BOKK JËKK',
-      superficie: '2000m²',
-      prix: 25000000, // 25M FCFA
-      localisation: 'Thiès, Thiès',
-      statut: 'Approuvé',
-      dateOffre: '2024-01-10',
-      dernierContact: '2024-01-30',
-      progression: 90,
-      description: 'Grand terrain agricole fertile, idéal pour projet agro-pastoral',
-      caracteristiques: ['Sol fertile', 'Point d\'eau', 'Accès route', 'Électricité proche'],
-      contact: {
-        nom: '',
-        telephone: '+221 78 234 56 78',
-        email: 'fatou.sarr@bokkjekk.sn'
-      },
-      documents: ['Titre foncier', 'Étude sol', 'Autorisation agricole'],
-      prochainEtape: 'Signature acte',
-      echeance: '2024-02-08'
-    }
-  ]);
+  // Aucune table dédiée n'existe encore pour ces demandes : pas de données simulées,
+  // la liste reste vide et l'état vide ci-dessous s'affiche.
+  const [demandesTerrains] = useState([]);
 
   // Statistiques des demandes
   const statsTerrains = {

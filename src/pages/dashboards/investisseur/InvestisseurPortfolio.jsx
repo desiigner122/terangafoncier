@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -32,108 +34,104 @@ import {
 const InvestisseurPortfolio = () => {
   const [filterType, setFilterType] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
 
   // Portfolio complet
-  const portfolioSummary = {
-    totalValue: 2850000,
-    totalInvested: 2400000,
-    totalGains: 450000,
-    averageRoi: 18.75,
-    activeInvestments: 12,
-    completedInvestments: 8
-  };
+  const [portfolioSummary, setPortfolioSummary] = useState({
+    totalValue: 0,
+    totalInvested: 0,
+    totalGains: 0,
+    averageRoi: 0,
+    activeInvestments: 0,
+    completedInvestments: 0
+  });
 
   // Répartition par type
-  const allocationData = []; // données graphiques réelles requises
+  const [allocationData, setAllocationData] = useState([]); // données graphiques réelles requises
 
   // Tous les investissements
-  const allInvestments = [
-    {
-      id: 1,
-      title: 'Résidence Les Almadies',
-      location: 'Almadies, Dakar',
-      type: 'Résidentiel',
-      status: 'En construction',
-      dateInvestment: '2024-01-15',
-      invested: 450000,
-      currentValue: 485000,
-      roi: 7.8,
-      expectedRoi: 18.5,
-      completion: 65,
-      nextMilestone: 'Fin de gros œuvre - Mars 2025',
-      riskLevel: 'Modéré',
-      duration: '24 mois'
-    },
-    {
-      id: 2,
-      title: 'Centre Commercial Liberté 6',
-      location: 'Liberté 6, Dakar',
-      type: 'Commercial',
-      status: 'Opérationnel',
-      dateInvestment: '2023-08-10',
-      invested: 800000,
-      currentValue: 920000,
-      roi: 15.0,
-      expectedRoi: 22.0,
-      completion: 100,
-      monthlyRevenue: 45000,
-      occupancyRate: 95,
-      riskLevel: 'Faible',
-      duration: '36 mois'
-    },
-    {
-      id: 3,
-      title: 'Lotissement Diamaguène',
-      location: 'Diamaguène, Sicap',
-      type: 'Foncier',
-      status: 'Disponible',
-      dateInvestment: '2023-12-05',
-      invested: 320000,
-      currentValue: 385000,
-      roi: 20.3,
-      expectedRoi: 25.0,
-      completion: 100,
-      lotsTotal: 15,
-      lotsSold: 8,
-      riskLevel: 'Modéré',
-      duration: '18 mois'
-    },
-    {
-      id: 4,
-      title: 'Entrepôt Rufisque',
-      location: 'Rufisque',
-      type: 'Industriel',
-      status: 'En construction',
-      dateInvestment: '2024-03-01',
-      invested: 280000,
-      currentValue: 295000,
-      roi: 5.4,
-      expectedRoi: 19.2,
-      completion: 40,
-      nextMilestone: 'Installation équipements - Avril 2025',
-      riskLevel: 'Élevé',
-      duration: '30 mois'
-    },
-    {
-      id: 5,
-      title: 'Villa Duplex VDN',
-      location: 'VDN, Dakar',
-      type: 'Résidentiel',
-      status: 'Vendu',
-      dateInvestment: '2023-05-20',
-      dateSale: '2024-11-15',
-      invested: 650000,
-      salePrice: 780000,
-      roi: 20.0,
-      riskLevel: 'Faible',
-      duration: '18 mois'
-    }
-  ];
+  const [allInvestments, setAllInvestments] = useState([]);
+
+  useEffect(() => {
+    const loadPortfolio = async () => {
+      try {
+        setLoading(true);
+        if (!user?.id) return;
+
+        const { data, error } = await supabase
+          .from('financial_transactions')
+          .select('*')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+
+        const transactions = data || [];
+        const investments = transactions.map((t) => ({
+          id: t.id,
+          title: t.description || t.type || 'Investissement',
+          location: '',
+          type: t.type || '',
+          status: t.status || '',
+          dateInvestment: t.created_at,
+          invested: Math.abs(Number(t.amount) || 0),
+          currentValue: Math.abs(Number(t.amount) || 0),
+          roi: 0,
+          expectedRoi: 0,
+          completion: 0,
+          riskLevel: '',
+          duration: ''
+        }));
+
+        setAllInvestments(investments);
+
+        const totalInvested = investments.reduce(
+          (sum, inv) => sum + inv.invested,
+          0
+        );
+        setPortfolioSummary({
+          totalValue: totalInvested,
+          totalInvested,
+          totalGains: 0,
+          averageRoi: 0,
+          activeInvestments: investments.filter(
+            (inv) => inv.status !== 'completed' && inv.status !== 'cancelled'
+          ).length,
+          completedInvestments: investments.filter(
+            (inv) => inv.status === 'completed'
+          ).length
+        });
+
+        // Répartition par type calculée sur les données réelles
+        const byType = {};
+        investments.forEach((inv) => {
+          const key = inv.type || 'Autre';
+          byType[key] = (byType[key] || 0) + inv.invested;
+        });
+        setAllocationData(
+          Object.entries(byType).map(([type, value]) => ({
+            type,
+            value,
+            percentage: totalInvested
+              ? Math.round((value / totalInvested) * 100)
+              : 0
+          }))
+        );
+      } catch (error) {
+        console.error('Erreur chargement portefeuille investisseur:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPortfolio();
+  }, [user?.id]);
 
   const filteredInvestments = allInvestments.filter(investment => {
-    const matchesType = filterType === 'all' || investment.type.toLowerCase() === filterType.toLowerCase();
-    const matchesSearch = investment.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         investment.location.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesType = filterType === 'all' || (investment.type || '').toLowerCase() === filterType.toLowerCase();
+    const matchesSearch = (investment.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         (investment.location || '').toLowerCase().includes(searchTerm.toLowerCase());
     return matchesType && matchesSearch;
   });
 
@@ -330,6 +328,11 @@ const InvestisseurPortfolio = () => {
 
                 {/* Liste des investissements */}
                 <div className="space-y-4">
+                  {filteredInvestments.length === 0 && !loading && (
+                    <p className="text-sm text-gray-500 text-center py-8">
+                      Aucun investissement dans votre portefeuille.
+                    </p>
+                  )}
                   {filteredInvestments.map((investment) => (
                     <motion.div
                       key={investment.id}
@@ -455,6 +458,11 @@ const InvestisseurPortfolio = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
+                  {allocationData.length === 0 && !loading && (
+                    <p className="text-sm text-gray-500 text-center py-6">
+                      Aucune donnée de répartition disponible.
+                    </p>
+                  )}
                   {allocationData.map((item) => (
                     <div key={item.type}>
                       <div className="flex items-center justify-between mb-2">

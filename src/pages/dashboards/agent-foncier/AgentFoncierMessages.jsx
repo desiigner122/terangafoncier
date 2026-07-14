@@ -50,53 +50,40 @@ const AgentFoncierMessages = () => {
     return () => { active = false; };
   }, []);
 
-  const messages = selectedConversation ? [
-    {
-      id: 1,
-      sender: 'client',
-      content: 'Bonjour, j\'ai besoin d\'une évaluation pour mon terrain aux Almadies.',
-      timestamp: '08:30',
-      date: 'Aujourd\'hui'
-    },
-    {
-      id: 2,
-      sender: 'agent',
-      content: 'Bonjour M. Diallo. Je peux vous aider avec l\'évaluation. Avez-vous les documents de propriété ?',
-      timestamp: '08:35',
-      date: 'Aujourd\'hui'
-    },
-    {
-      id: 3,
-      sender: 'client',
-      content: 'Oui, j\'ai le titre foncier et les plans. Quand pouvez-vous passer pour voir le terrain ?',
-      timestamp: '08:40',
-      date: 'Aujourd\'hui'
-    },
-    {
-      id: 4,
-      sender: 'agent',
-      content: 'Perfect! Je peux me déplacer demain matin vers 10h. Le terrain fait quelle superficie exactement ?',
-      timestamp: '08:45',
-      date: 'Aujourd\'hui'
-    },
-    {
-      id: 5,
-      sender: 'client',
-      content: 'C\'est un terrain de 500m² avec une belle vue sur l\'océan. Merci pour votre réactivité !',
-      timestamp: '10:30',
-      date: 'Aujourd\'hui'
+  // messages RÉELS depuis Supabase pour la conversation sélectionnée (aucune donnée fictive)
+  const [messages, setMessages] = useState([]);
+  useEffect(() => {
+    if (!selectedConversation) {
+      setMessages([]);
+      return;
     }
-  ] : [];
+    let active = true;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('messages')
+          .select('*')
+          .eq('conversation_id', selectedConversation.id)
+          .order('created_at', { ascending: true });
+        if (error) throw error;
+        if (active) setMessages(data || []);
+      } catch (err) {
+        console.warn('messages indisponible:', err?.message);
+        if (active) setMessages([]);
+      }
+    })();
+    return () => { active = false; };
+  }, [selectedConversation]);
 
   const filteredConversations = conversations.filter(conv => {
-    const matchesFilter = messageFilter === 'all' || 
+    const matchesFilter = messageFilter === 'all' ||
       (messageFilter === 'unread' && conv.unread > 0) ||
       (messageFilter === 'active' && conv.status === 'active') ||
       (messageFilter === 'completed' && conv.status === 'completed');
-    
-    const matchesSearch = conv.clientName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      conv.subject.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
+    const matchesSearch = (conv.clientName || conv.title || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (conv.subject || '').toLowerCase().includes(searchTerm.toLowerCase());
+
     return matchesFilter && matchesSearch;
   });
 
@@ -258,7 +245,7 @@ const AgentFoncierMessages = () => {
                         <span className={`text-xs ${
                           message.sender === 'agent' ? 'text-green-100' : 'text-gray-500'
                         }`}>
-                          {message.timestamp}
+                          {message.timestamp || (message.created_at ? new Date(message.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }) : '')}
                         </span>
                         {message.sender === 'agent' && (
                           <CheckCheck className="h-3 w-3 text-green-100" />

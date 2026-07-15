@@ -53,6 +53,42 @@ class StatsService {
       return { success: false, stats };
     }
   }
+
+  /**
+   * Prix moyen réel par région (calculé depuis les propriétés actives).
+   * @returns {Promise<Array<{region, avgPricePerM2, count, avgPrice}>>}
+   */
+  async getRegionMarket() {
+    try {
+      const { data, error } = await supabase
+        .from('properties')
+        .select('region, price, surface')
+        .eq('status', 'active')
+        .not('region', 'is', null);
+      if (error) throw error;
+
+      const byRegion = {};
+      (data || []).forEach(p => {
+        if (!p.region) return;
+        if (!byRegion[p.region]) byRegion[p.region] = { region: p.region, prices: [], perM2: [], count: 0 };
+        const g = byRegion[p.region];
+        g.count += 1;
+        if (p.price) g.prices.push(Number(p.price));
+        if (p.price && p.surface) g.perM2.push(Number(p.price) / Number(p.surface));
+      });
+
+      const avg = arr => arr.length ? arr.reduce((a, b) => a + b, 0) / arr.length : 0;
+      return Object.values(byRegion).map(g => ({
+        region: g.region,
+        count: g.count,
+        avgPrice: Math.round(avg(g.prices)),
+        avgPricePerM2: Math.round(avg(g.perM2))
+      }));
+    } catch (error) {
+      console.error('Erreur StatsService.getRegionMarket:', error);
+      return [];
+    }
+  }
 }
 
 export default new StatsService();

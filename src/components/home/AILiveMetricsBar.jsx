@@ -20,176 +20,98 @@ import {
   Activity,
   DollarSign
 } from 'lucide-react';
-import { advancedAIService } from '../../services/AdvancedAIService';
+import StatsService from '../../services/StatsService';
 
 const AILiveMetricsBar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [aiInsights, setAiInsights] = useState(null);
-  const [blockchainMetrics, setBlockchainMetrics] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentMetricIndex, setCurrentMetricIndex] = useState(0);
+  const [stats, setStats] = useState({ verifiedProperties: 0, totalProperties: 0, regions: 0, articles: 0, reviews: 0, avgRating: null });
 
-  // Mettre à jour l'heure et les données IA
+  // Horloge + chargement des vrais compteurs plateforme
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
     }, 1000);
 
-    // Charger les données IA initiales
-    loadAIData();
-
-    // Actualiser les données IA toutes les 30 secondes
-    const aiTimer = setInterval(loadAIData, 30000);
-
-    // Faire défiler les métriques toutes les 5 secondes
-    const metricsTimer = setInterval(() => {
-      setCurrentMetricIndex(prev => (prev + 1) % aiMetrics.length);
-    }, 5000);
+    let active = true;
+    StatsService.getPlatformStats().then(({ stats: s }) => {
+      if (active) setStats(s);
+    });
 
     return () => {
+      active = false;
       clearInterval(timer);
-      clearInterval(aiTimer);
-      clearInterval(metricsTimer);
     };
   }, []);
 
-  const loadAIData = async () => {
-    try {
-      setIsLoading(true);
-      const [insights, blockchain] = await Promise.all([
-        advancedAIService.generateMarketInsights(),
-        advancedAIService.getBlockchainMetrics()
-      ]);
-      
-      setAiInsights(insights);
-      setBlockchainMetrics(blockchain);
-    } catch (error) {
-      console.error('Erreur chargement données IA:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
+  // Métriques : compteurs réels Supabase là où c'est disponible,
+  // valeurs indicatives statiques ailleurs (plus de données générées aléatoirement).
+  const satisfaction = stats.avgRating ? `${stats.avgRating}/5` : '—';
   const aiMetrics = [
-    { 
-      label: "Terrains Analysés par IA", 
-      value: "1,247", 
-      aiData: aiInsights?.zoneAnalysis?.length || 0,
-      subtext: "Évaluation automatique en cours",
-      trend: "+47 nouvelles analyses", 
-      icon: Brain, 
+    {
+      label: "Terrains Vérifiés",
+      value: `${stats.verifiedProperties}`,
+      subtext: "Vérification documentaire complète",
+      trend: "Données réelles",
+      icon: Brain,
       color: "text-cyan-400",
       bgColor: "bg-cyan-500/20",
       pulse: true,
       category: "ai"
     },
-    { 
-      label: "Prédictions Prix Temps Réel", 
-      value: aiInsights?.pricePredictions?.shortTerm?.prediction || "+2.5%", 
-      aiData: aiInsights?.pricePredictions?.shortTerm?.confidence || 0.92,
-      subtext: `Confiance: ${((aiInsights?.pricePredictions?.shortTerm?.confidence || 0.92) * 100).toFixed(1)}%`,
-      trend: "Modèle mis à jour", 
-      icon: TrendingUp, 
+    {
+      label: "Terrains Répertoriés",
+      value: `${stats.totalProperties}`,
+      subtext: "Total des biens sur la plateforme",
+      trend: "Données réelles",
+      icon: TrendingUp,
       color: "text-green-400",
       bgColor: "bg-green-500/20",
-      pulse: true,
+      pulse: false,
       category: "prediction"
     },
-    { 
-      label: "Sentiment Marché IA", 
-      value: aiInsights?.marketSentiment?.status || "Optimiste", 
-      aiData: aiInsights?.marketSentiment?.score || 0.75,
-      subtext: `Score: ${((aiInsights?.marketSentiment?.score || 0.75) * 100).toFixed(1)}/100`,
-      trend: "Analyse continue", 
-      icon: BarChart3, 
+    {
+      label: "Régions Couvertes",
+      value: `${stats.regions}`,
+      subtext: "Zones géographiques actives",
+      trend: "Sénégal",
+      icon: Globe,
       color: "text-emerald-400",
       bgColor: "bg-emerald-500/20",
       pulse: false,
       category: "sentiment"
     },
-    { 
-      label: "Blockchain Transactions", 
-      value: blockchainMetrics?.totalTransactions || "15,247", 
-      aiData: blockchainMetrics?.dailyVolume || 2.4,
-      subtext: `${blockchainMetrics?.dailyVolume || 2.4}M FCFA volume/jour`,
-      trend: "+89 transactions/h", 
-      icon: Zap, 
+    {
+      label: "Satisfaction Clients",
+      value: satisfaction,
+      subtext: `${stats.reviews} avis vérifiés`,
+      trend: "Avis clients",
+      icon: BarChart3,
       color: "text-yellow-400",
       bgColor: "bg-yellow-500/20",
-      pulse: true,
+      pulse: false,
       category: "blockchain"
     },
-    { 
-      label: "Smart Contracts Actifs", 
-      value: blockchainMetrics?.smartContractsActive || "89", 
-      aiData: blockchainMetrics?.propertyTokens || 342,
-      subtext: `${blockchainMetrics?.propertyTokens || 342} NFT Propriétés`,
-      trend: "100% automatisé", 
-      icon: Shield, 
+    {
+      label: "Articles & Guides",
+      value: `${stats.articles}`,
+      subtext: "Contenus experts publiés",
+      trend: "Blog Teranga",
+      icon: Shield,
       color: "text-blue-400",
       bgColor: "bg-blue-500/20",
-      pulse: true,
+      pulse: false,
       category: "smart_contracts"
     },
-    { 
-      label: "Surveillance IA Active", 
-      value: "24/7", 
-      aiData: advancedAIService.realtimeMetrics.aiMonitoring,
-      subtext: `${advancedAIService.realtimeMetrics.aiMonitoring} projets surveillés`,
-      trend: "97.8% précision", 
-      icon: Eye, 
+    {
+      label: "Vérification Sécurisée",
+      value: "24/7",
+      subtext: "Contrôle documentaire continu",
+      trend: "Sécurité",
+      icon: Eye,
       color: "text-pink-400",
       bgColor: "bg-pink-500/20",
       pulse: true,
       category: "monitoring"
-    },
-    { 
-      label: "Opportunities IA Détectées", 
-      value: "23", 
-      aiData: 23,
-      subtext: "Investissements recommandés",
-      trend: "+5 cette semaine", 
-      icon: Target, 
-      color: "text-purple-400",
-      bgColor: "bg-purple-500/20",
-      pulse: false,
-      category: "opportunities"
-    },
-    { 
-      label: "Diaspora Analytics", 
-      value: "284", 
-      aiData: blockchainMetrics?.diasporaActivity?.activeUsers || 284,
-      subtext: "Investisseurs internationaux",
-      trend: "+12 nouveaux ce mois", 
-      icon: Globe, 
-      color: "text-orange-400",
-      bgColor: "bg-orange-500/20",
-      pulse: true,
-      category: "diaspora"
-    },
-    { 
-      label: "Risques Détectés IA", 
-      value: "3", 
-      aiData: 3,
-      subtext: "Niveau de risque: Faible",
-      trend: "Monitoring actif", 
-      icon: AlertTriangle, 
-      color: "text-red-400",
-      bgColor: "bg-red-500/20",
-      pulse: false,
-      category: "risk"
-    },
-    { 
-      label: "Performance Réseau", 
-      value: `${((blockchainMetrics?.networkHealth || 0.96) * 100).toFixed(1)}%`, 
-      aiData: blockchainMetrics?.networkHealth || 0.96,
-      subtext: "Santé blockchain optimale",
-      trend: "Sécurisé", 
-      icon: Activity, 
-      color: "text-teal-400",
-      bgColor: "bg-teal-500/20",
-      pulse: true,
-      category: "network"
     }
   ];
 
@@ -216,24 +138,6 @@ const AILiveMetricsBar = () => {
     };
     return colors[category] || 'text-gray-400';
   };
-
-  if (isLoading) {
-    return (
-      <div className="bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 border-y border-gray-700/50 py-4 overflow-hidden relative">
-        <div className="flex items-center justify-center">
-          <div className="flex items-center gap-3">
-            <Brain className="h-6 w-6 text-cyan-400 animate-pulse" />
-            <span className="text-white text-lg font-semibold">IA Teranga en cours d'analyse...</span>
-            <div className="flex gap-1">
-              {[...Array(3)].map((_, i) => (
-                <div key={i} className="w-2 h-2 bg-cyan-400 rounded-full animate-pulse" style={{animationDelay: `${i * 0.2}s`}}></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="bg-gradient-to-r from-gray-900 via-slate-800 to-gray-900 border-y border-gray-700/50 py-3 overflow-hidden relative">
@@ -334,7 +238,7 @@ const AILiveMetricsBar = () => {
         <motion.div 
           className="h-full bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500"
           initial={{ width: 0 }}
-          animate={{ width: `${(aiInsights?.confidenceScore || 0.89) * 100}%` }}
+          animate={{ width: '92%' }}
           transition={{ duration: 2, ease: "easeOut" }}
         ></motion.div>
       </div>

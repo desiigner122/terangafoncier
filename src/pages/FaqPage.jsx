@@ -1,4 +1,5 @@
-﻿import React, { useState } from 'react';
+﻿import React, { useState, useEffect } from 'react';
+import { supabase } from '@/lib/supabaseClient';
 import { motion } from 'framer-motion';
 import SEO from '@/components/SEO';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion";
@@ -37,68 +38,24 @@ const FaqPage = () => {
     { id: 'juridique', name: 'Aspects juridiques', icon: CheckCircle2 }
   ];
 
-  const faqData = [
-    {
-      id: 1,
-      category: 'verification',
-      question: "Comment Teranga Foncier vérifie-t-il l'authenticité des parcelles ?",
-      answer: "Notre processus de vérification comprend 10 étapes rigoureuses : vérification de l'identité du propriétaire, contrôle du titre foncier (TF, bail, délibération), vérification cadastrale, recherche d'hypothèques, contrôle urbanistique, vérification des taxes, inspection physique, validation des limites, recherche de litiges et rapport de synthèse complet. Nous travaillons avec des partenaires certifiés pour garantir l'authenticité."
-    },
-    {
-      id: 2,
-      category: 'general',
-      question: "Quels sont les frais de service de Teranga Foncier ?",
-      answer: "Nos frais sont transparents et communiqués avant toute transaction. Ils couvrent la vérification approfondie, l'accompagnement par nos agents, la sécurisation administrative, l'accès Ï  notre plateforme et la mise en relation avec des professionnels. Les tarifs varient selon le type de service (pourcentage ou forfait). Demandez un devis personnalisé gratuit."
-    },
-    {
-      id: 3,
-      category: 'diaspora',
-      question: "Je vis Ï  l'étranger, puis-je acheter un terrain via Teranga Foncier ?",
-      answer: "Absolument ! Teranga Foncier est spécialement conçu pour la diaspora sénégalaise. Nous gérons l'achat Ï  distance : procurations sécurisées, transferts de fonds, représentation locale, suivi en temps réel. Notre équipe vous accompagne comme si vous étiez au Sénégal, avec des outils numériques avancés."
-    },
-    {
-      id: 4,
-      category: 'achat',
-      question: "Quels documents sont nécessaires pour acheter un terrain ?",
-      answer: "Documents requis : pièce d'identité valide (CNI ou passeport), justificatif de domicile récent, justificatifs de revenus. Pour les sociétés : registre de commerce, statuts, K-bis. Notre équipe vous fournit une liste précise et vous aide Ï  constituer votre dossier complet pour le notaire."
-    },
-    {
-      id: 5,
-      category: 'vente',
-      question: "Comment vendre mon terrain sur votre plateforme ?",
-      answer: "Processus simple : créez un compte vendeur, utilisez la section 'Vendre un terrain', fournissez les informations détaillées (localisation, superficie, titre), téléchargez les documents de propriété. Notre équipe vérifie avant publication et vous accompagne jusqu'Ï  la vente finale."
-    },
-    {
-      id: 6,
-      category: 'juridique',
-      question: "Quel est le rôle du notaire dans une transaction ?",
-      answer: "Le notaire est un officier public qui sécurise la transaction : vérification légale des documents, rédaction de l'acte de vente, paiement des taxes et droits d'enregistrement, inscription au conservatoire foncier. Il protège acheteur et vendeur. Nous travaillons avec un réseau de notaires partenaires certifiés."
-    },
-    {
-      id: 7,
-      category: 'verification',
-      question: "Quelles garanties contre les litiges ?",
-      answer: "Notre vérification approfondie minimise drastiquement les risques : contrôle des antécédents, vérification des charges et hypothèques, recherche de litiges existants. Nous proposons une assurance responsabilité civile professionnelle et un accompagnement juridique complet. En cas de doute, nous suspendons la transaction."
-    },
-    {
-      id: 8,
-      category: 'achat',
-      question: "Combien de temps prend l'achat d'un terrain ?",
-      answer: "En moyenne 15 Ï  30 jours selon la complexité du dossier. Délai de vérification : 24-48h. Négociation et compromis : 3-7 jours. Finalisation notariale : 7-15 jours. Notre tableau de bord vous permet de suivre l'avancement en temps réel Ï  chaque étape."
-    },
-    {
-      id: 9,
-      category: 'general',
-      question: "Comment contacter le support client ?",
-      answer: "Plusieurs canaux disponibles : chat en direct sur le site, email palaye122@gmail.com, téléphone +221 77 593 42 41, centre d'aide en ligne. Notre équipe répond sous 2h en moyenne. Pour les urgences, utilisez le chat direct disponible 24h/7j."
-    },
-    {
-      id: 10,
-      category: 'diaspora',
-      question: "Quels moyens de paiement pour la diaspora ?",
-      answer: "Paiements sécurisés adaptés : virements bancaires internationaux, Western Union, MoneyGram, crypto-monnaies (Bitcoin, USDT), cartes de crédit internationales. Nous proposons un service d'escrow (séquestre) pour sécuriser les fonds jusqu'Ï  finalisation."
-    }
-  ];
+  const [faqData, setFaqData] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    const loadFaq = async () => {
+      const { data, error } = await supabase
+        .from('faq_items')
+        .select('id, question, answer, category')
+        .order('created_at', { ascending: true });
+      if (!active || error) {
+        if (error) console.error('Erreur chargement FAQ:', error);
+        return;
+      }
+      setFaqData(data || []);
+    };
+    loadFaq();
+    return () => { active = false; };
+  }, []);
 
   const filteredFaqs = faqData.filter(faq => {
     const matchesCategory = selectedCategory === 'all' || faq.category === selectedCategory;

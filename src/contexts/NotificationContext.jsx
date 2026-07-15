@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import { Bell, X, AlertCircle, CheckCircle, Info, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { supabase } from '@/lib/supabaseClient';
 
 const NotificationContext = createContext();
 
@@ -14,64 +15,7 @@ export const useNotifications = () => {
 };
 
 export const NotificationProvider = ({ children }) => {
-  const [notifications, setNotifications] = useState([
-    {
-      id: 1,
-      type: 'urgent',
-      title: 'Paiement VEFA à effectuer',
-      message: 'Villa Cité Jardin - Échéance dans 7 jours (11,250,000 FCFA)',
-      timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2h ago
-      read: false,
-      category: 'payment',
-      actionUrl: '/acheteur/promoter-reservations',
-      actionText: 'Voir détails'
-    },
-    {
-      id: 2,
-      type: 'warning',
-      title: 'Documents manquants',
-      message: 'Demande Mbour - 3 documents à fournir avant le 30/09',
-      timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000), // 6h ago
-      read: false,
-      category: 'documents',
-      actionUrl: '/acheteur/municipal-applications',
-      actionText: 'Compléter dossier'
-    },
-    {
-      id: 3,
-      type: 'info',
-      title: 'Nouveau message vendeur',
-      message: 'Amadou Diallo a répondu à votre offre pour le terrain Almadies',
-      timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000), // 12h ago
-      read: false,
-      category: 'message',
-      actionUrl: '/acheteur/private-interests',
-      actionText: 'Voir message'
-    },
-    {
-      id: 4,
-      type: 'success',
-      title: 'NFT mis à jour',
-      message: 'Propriété Almadies Premium #001 - Nouvelle évaluation: +23%',
-      timestamp: new Date(Date.now() - 24 * 60 * 60 * 1000), // 1 day ago
-      read: true,
-      category: 'blockchain',
-      actionUrl: '/acheteur/owned-properties',
-      actionText: 'Voir propriété'
-    },
-    {
-      id: 5,
-      type: 'info',
-      title: 'RDV confirmé',
-      message: 'Visite chantier Villa VEFA - Demain 14h avec Ing. Ndiaye',
-      timestamp: new Date(Date.now() - 36 * 60 * 60 * 1000), // 1.5 days ago
-      read: true,
-      category: 'appointment',
-      actionUrl: '/acheteur/promoter-reservations',
-      actionText: 'Voir détails'
-    }
-  ]);
-
+  const [notifications, setNotifications] = useState([]);
   const [showNotificationPanel, setShowNotificationPanel] = useState(false);
 
   const addNotification = (notification) => {
@@ -85,21 +29,33 @@ export const NotificationProvider = ({ children }) => {
   };
 
   const markAsRead = (id) => {
-    setNotifications(prev => 
-      prev.map(notif => 
+    setNotifications(prev =>
+      prev.map(notif =>
         notif.id === id ? { ...notif, read: true } : notif
       )
     );
+    supabase.from('notifications').update({ read: true }).eq('id', id).then(({ error }) => {
+      if (error) console.error('Erreur markAsRead:', error);
+    });
   };
 
   const markAllAsRead = () => {
-    setNotifications(prev => 
+    const unreadIds = notifications.filter(n => !n.read).map(n => n.id);
+    setNotifications(prev =>
       prev.map(notif => ({ ...notif, read: true }))
     );
+    if (unreadIds.length > 0) {
+      supabase.from('notifications').update({ read: true }).in('id', unreadIds).then(({ error }) => {
+        if (error) console.error('Erreur markAllAsRead:', error);
+      });
+    }
   };
 
   const removeNotification = (id) => {
     setNotifications(prev => prev.filter(notif => notif.id !== id));
+    supabase.from('notifications').delete().eq('id', id).then(({ error }) => {
+      if (error) console.error('Erreur removeNotification:', error);
+    });
   };
 
   const getUnreadCount = () => {
@@ -110,32 +66,50 @@ export const NotificationProvider = ({ children }) => {
     return notifications.filter(n => n.category === category);
   };
 
-  // Simulation de nouvelles notifications
+  // Charger les vraies notifications de l'utilisateur connecté depuis Supabase
   useEffect(() => {
-    const interval = setInterval(() => {
-      // Ajouter une notification aléatoire toutes les 5 minutes (pour demo)
-      const sampleNotifications = [
-        {
-          type: 'info',
-          title: 'Nouvelle opportunité',
-          message: 'Terrain correspondant à vos critères disponible à Thiès',
-          category: 'opportunity'
-        },
-        {
-          type: 'warning',
-          title: 'Prix marché en hausse',
-          message: 'Zone Almadies: +5% ce mois - Vos favoris impactés',
-          category: 'market'
-        }
-      ];
-      
-      if (Math.random() > 0.7) { // 30% chance
-        const randomNotif = sampleNotifications[Math.floor(Math.random() * sampleNotifications.length)];
-        addNotification(randomNotif);
-      }
-    }, 300000); // 5 minutes
+    let active = true;
 
-    return () => clearInterval(interval);
+    const loadNotifications = async (userId) => {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('id, title, message, type, read, created_at')
+        .eq('user_id', userId)
+        .order('created_at', { ascending: false })
+        .limit(50);
+      if (!active) return;
+      if (error) {
+        console.error('Erreur chargement notifications:', error);
+        return;
+      }
+      setNotifications((data || []).map(n => ({
+        id: n.id,
+        type: n.type || 'info',
+        title: n.title,
+        message: n.message,
+        read: !!n.read,
+        timestamp: new Date(n.created_at)
+      })));
+    };
+
+    supabase.auth.getUser().then(({ data }) => {
+      if (data?.user) {
+        loadNotifications(data.user.id);
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session?.user) {
+        loadNotifications(session.user.id);
+      } else {
+        setNotifications([]);
+      }
+    });
+
+    return () => {
+      active = false;
+      subscription?.unsubscribe();
+    };
   }, []);
 
   return (

@@ -25,8 +25,9 @@ import StatsService from '../../services/StatsService';
 const AILiveMetricsBar = () => {
   const [currentTime, setCurrentTime] = useState(new Date());
   const [stats, setStats] = useState({ verifiedProperties: 0, totalProperties: 0, regions: 0, articles: 0, reviews: 0, avgRating: null });
+  const [chain, setChain] = useState({ transactions: 0, certificates: 0, smartContracts: 0, nftProperties: 0, aiOpportunities: 0, openDisputes: 0 });
 
-  // Horloge + chargement des vrais compteurs plateforme
+  // Horloge + chargement des vrais compteurs plateforme (properties, blockchain, IA)
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -35,6 +36,9 @@ const AILiveMetricsBar = () => {
     let active = true;
     StatsService.getPlatformStats().then(({ stats: s }) => {
       if (active) setStats(s);
+    });
+    StatsService.getBlockchainStats().then(({ stats: s }) => {
+      if (active) setChain(s);
     });
 
     return () => {
@@ -92,15 +96,70 @@ const AILiveMetricsBar = () => {
       category: "blockchain"
     },
     {
+      label: "Transactions Blockchain",
+      value: `${chain.transactions}`,
+      subtext: "Enregistrées sur la plateforme",
+      trend: "blockchain_transactions",
+      icon: Zap,
+      color: "text-yellow-400",
+      bgColor: "bg-yellow-500/20",
+      pulse: chain.transactions > 0,
+      category: "blockchain"
+    },
+    {
+      label: "Smart Contracts Actifs",
+      value: `${chain.smartContracts}`,
+      subtext: "Terrains liés à un smart contract",
+      trend: "Sécurisé",
+      icon: Shield,
+      color: "text-blue-400",
+      bgColor: "bg-blue-500/20",
+      pulse: chain.smartContracts > 0,
+      category: "smart_contracts"
+    },
+    {
+      label: "NFT Propriétés",
+      value: `${chain.nftProperties}`,
+      subtext: "Terrains tokenisés",
+      trend: "Blockchain",
+      icon: Shield,
+      color: "text-teal-400",
+      bgColor: "bg-teal-500/20",
+      pulse: chain.nftProperties > 0,
+      category: "blockchain"
+    },
+    {
+      label: "Opportunités IA Détectées",
+      value: `${chain.aiOpportunities}`,
+      subtext: "Terrains avec score IA ≥ 80",
+      trend: "Score IA",
+      icon: Target,
+      color: "text-purple-400",
+      bgColor: "bg-purple-500/20",
+      pulse: chain.aiOpportunities > 0,
+      category: "opportunities"
+    },
+    {
+      label: "Litiges en Cours",
+      value: `${chain.openDisputes}`,
+      subtext: "Dossiers sous surveillance",
+      trend: chain.openDisputes > 0 ? "À traiter" : "Aucun litige actif",
+      icon: AlertTriangle,
+      color: chain.openDisputes > 0 ? "text-red-400" : "text-green-400",
+      bgColor: chain.openDisputes > 0 ? "bg-red-500/20" : "bg-green-500/20",
+      pulse: chain.openDisputes > 0,
+      category: "risk"
+    },
+    {
       label: "Articles & Guides",
       value: `${stats.articles}`,
       subtext: "Contenus experts publiés",
       trend: "Blog Teranga",
-      icon: Shield,
-      color: "text-blue-400",
-      bgColor: "bg-blue-500/20",
+      icon: BarChart3,
+      color: "text-cyan-400",
+      bgColor: "bg-cyan-500/20",
       pulse: false,
-      category: "smart_contracts"
+      category: "content"
     },
     {
       label: "Vérification Sécurisée",

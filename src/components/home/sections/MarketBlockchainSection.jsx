@@ -30,10 +30,10 @@ const MarketBlockchainSection = () => {
   const [markets, setMarkets] = useState([]);
   const [selectedMarket, setSelectedMarket] = useState(null);
   const [cryptoMetrics, setCryptoMetrics] = useState([
-    { title: "Terrains Vérifiés", value: "—", change: "", icon: Blocks, color: "text-blue-500" },
-    { title: "Terrains Répertoriés", value: "—", change: "", icon: Zap, color: "text-purple-500" },
-    { title: "Régions Couvertes", value: "—", change: "", icon: Sparkles, color: "text-teal-500" },
-    { title: "Avis Clients Vérifiés", value: "—", change: "", icon: Brain, color: "text-green-500" }
+    { title: "Volume Blockchain (24h)", value: "—", change: "", icon: Blocks, color: "text-blue-500" },
+    { title: "Transactions Smart Contract", value: "—", change: "", icon: Zap, color: "text-purple-500" },
+    { title: "NFT Propriétés", value: "—", change: "", icon: Sparkles, color: "text-teal-500" },
+    { title: "Certificats Vérifiés", value: "—", change: "", icon: Brain, color: "text-green-500" }
   ]);
   const [liveUpdates, setLiveUpdates] = useState([]);
 
@@ -41,9 +41,9 @@ const MarketBlockchainSection = () => {
     let active = true;
 
     (async () => {
-      const [{ stats }, regions] = await Promise.all([
-        StatsService.getPlatformStats(),
-        StatsService.getRegionMarket()
+      const [regions, { stats: chain }] = await Promise.all([
+        StatsService.getRegionMarket(),
+        StatsService.getBlockchainStats()
       ]);
       if (!active) return;
 
@@ -54,17 +54,17 @@ const MarketBlockchainSection = () => {
         change: '',
         transactions: `${r.count}`,
         volume: `${r.count}`,
-        smartContracts: '—',
-        verifications: '100'
+        smartContracts: `${r.smartContracts}`,
+        verifications: `${r.verificationRate}`
       }));
       setMarkets(m);
       setSelectedMarket(m[0]?.key || null);
 
       setCryptoMetrics([
-        { title: "Terrains Vérifiés", value: `${stats.verifiedProperties}`, change: "", icon: Blocks, color: "text-blue-500" },
-        { title: "Terrains Répertoriés", value: `${stats.totalProperties}`, change: "", icon: Zap, color: "text-purple-500" },
-        { title: "Régions Couvertes", value: `${stats.regions}`, change: "", icon: Sparkles, color: "text-teal-500" },
-        { title: "Avis Clients Vérifiés", value: `${stats.reviews}`, change: "", icon: Brain, color: "text-green-500" }
+        { title: "Volume Blockchain (24h)", value: `${chain.volume24h.toLocaleString('fr-FR')} FCFA`, change: "", icon: Blocks, color: "text-blue-500" },
+        { title: "Transactions Smart Contract", value: `${chain.transactions}`, change: "", icon: Zap, color: "text-purple-500" },
+        { title: "NFT Propriétés", value: `${chain.nftProperties}`, change: "", icon: Sparkles, color: "text-teal-500" },
+        { title: "Certificats Vérifiés", value: `${chain.verifiedCertificates}/${chain.certificates}`, change: "", icon: Brain, color: "text-green-500" }
       ]);
     })();
 

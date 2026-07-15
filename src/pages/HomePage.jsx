@@ -32,6 +32,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import StatsService from '@/services/StatsService';
 import SEO from '@/components/SEO';
 import MarketTickerBar from '@/components/home/MarketTickerBar';
 import LiveMetricsBar from '@/components/home/LiveMetricsBar';
@@ -49,44 +51,45 @@ const HomePage = () => {
   const [currentStat, setCurrentStat] = useState(0);
   const { user, isLocalMode } = useAuth();
 
-  const testimonials = [
-    {
-      name: "Aminata Diallo",
-      role: "Diaspora - France", 
-      content: "Financement bancaire approuvé en 48h et suivi construction en temps réel depuis Paris. Révolutionnaire !",
-      rating: 5,
-      avatar: "/api/YOUR_API_KEY/60/60"
-    },
-    {
-      name: "Moussa Seck",
-      role: "Investisseur - Dakar",
-      content: "Partenariat bancaire UBA facilite tout. NFT blockchain sécurise mes investissements terrains.",
-      rating: 5,
-      avatar: "/api/YOUR_API_KEY/60/60"
-    },
-    {
-      name: "Fatou Ba",
-      role: "Diaspora - USA",
-      content: "Crédit Agricole approuve directement sur plateforme. Photos quotidiennes de ma construction !",
-      rating: 5,
-      avatar: "/api/YOUR_API_KEY/60/60"
-    },
-    {
-      name: "Ibrahim Touré",
-      role: "Mairie - Thiès",
-      content: "Demandes de terrains communaux simplifiées. Blockchain transparent pour tous citoyens.",
-      rating: 5,
-      avatar: "/api/YOUR_API_KEY/60/60"
-    }
-  ];
+  const [testimonials, setTestimonials] = useState([]);
+  const [stats, setStats] = useState([
+    { number: "—", label: "Terrains disponibles", icon: MapPin, color: "text-blue-600" },
+    { number: "—", label: "Régions couvertes", icon: Users, color: "text-emerald-600" },
+    { number: "—", label: "Articles & guides", icon: CreditCard, color: "text-indigo-600" },
+    { number: "—", label: "Satisfaction", icon: TrendingUp, color: "text-green-600" },
+    { number: "24/7", label: "Vérification", icon: Shield, color: "text-purple-600" }
+  ]);
 
-  const stats = [
-    { number: "15K+", label: "Terrains disponibles", icon: MapPin, color: "text-blue-600" },
-    { number: "8.2K", label: "Sénégalais connectés", icon: Users, color: "text-emerald-600" },
-    { number: "12", label: "Banques partenaires", icon: CreditCard, color: "text-indigo-600" },
-    { number: "95%", label: "Projets financés", icon: TrendingUp, color: "text-green-600" },
-    { number: "24/7", label: "Suivi construction", icon: Shield, color: "text-purple-600" }
-  ];
+  useEffect(() => {
+    let active = true;
+    supabase
+      .from('reviews')
+      .select('author_name, author_role, content, rating, avatar_url')
+      .eq('is_approved', true)
+      .order('created_at', { ascending: false })
+      .limit(6)
+      .then(({ data }) => {
+        if (!active || !data) return;
+        setTestimonials(data.map(r => ({
+          name: r.author_name,
+          role: r.author_role,
+          content: r.content,
+          rating: r.rating || 5,
+          avatar: r.avatar_url
+        })));
+      });
+    StatsService.getPlatformStats().then(({ stats: s }) => {
+      if (!active) return;
+      setStats([
+        { number: `${s.verifiedProperties}`, label: "Terrains disponibles", icon: MapPin, color: "text-blue-600" },
+        { number: `${s.regions}`, label: "Régions couvertes", icon: Users, color: "text-emerald-600" },
+        { number: `${s.articles}`, label: "Articles & guides", icon: CreditCard, color: "text-indigo-600" },
+        { number: s.avgRating ? `${s.avgRating}/5` : "—", label: "Satisfaction", icon: TrendingUp, color: "text-green-600" },
+        { number: "24/7", label: "Vérification", icon: Shield, color: "text-purple-600" }
+      ]);
+    });
+    return () => { active = false; };
+  }, []);
 
   const mainFeatures = [
     {
@@ -176,14 +179,14 @@ const HomePage = () => {
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentTestimonial((prev) => (prev + 1) % testimonials.length);
+      setCurrentTestimonial((prev) => (testimonials.length ? (prev + 1) % testimonials.length : 0));
     }, 5000);
     return () => clearInterval(timer);
   }, []);
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setCurrentStat((prev) => (prev + 1) % stats.length);
+      setCurrentStat((prev) => (stats.length ? (prev + 1) % stats.length : 0));
     }, 3000);
     return () => clearInterval(timer);
   }, []);
@@ -491,25 +494,27 @@ const HomePage = () => {
               className="bg-white rounded-2xl p-8 shadow-lg"
             >
               <div className="flex justify-center mb-4">
-                {[...Array(testimonials[currentTestimonial].rating)].map((_, i) => (
+                {[...Array(testimonials[currentTestimonial]?.rating || 0)].map((_, i) => (
                   <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
                 ))}
               </div>
               <blockquote className="text-lg text-gray-700 mb-6 italic">
-                "{testimonials[currentTestimonial].content}"
+                "{testimonials[currentTestimonial]?.content}"
               </blockquote>
               <div className="flex items-center justify-center">
-                <img 
-                  src={testimonials[currentTestimonial].avatar}
-                  alt={testimonials[currentTestimonial].name}
-                  className="w-12 h-12 rounded-full mr-4"
-                />
+                {testimonials[currentTestimonial]?.avatar && (
+                  <img
+                    src={testimonials[currentTestimonial].avatar}
+                    alt={testimonials[currentTestimonial]?.name}
+                    className="w-12 h-12 rounded-full mr-4"
+                  />
+                )}
                 <div>
                   <div className="font-semibold text-gray-900">
-                    {testimonials[currentTestimonial].name}
+                    {testimonials[currentTestimonial]?.name}
                   </div>
                   <div className="text-gray-600">
-                    {testimonials[currentTestimonial].role}
+                    {testimonials[currentTestimonial]?.role}
                   </div>
                 </div>
               </div>

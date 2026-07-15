@@ -23,126 +23,66 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
+import StatsService from '@/services/StatsService';
+import PropertyService from '@/services/PropertyService';
 
 const MarketBlockchainSection = () => {
-  const [selectedMarket, setSelectedMarket] = useState('dakar');
-  const [marketData, setMarketData] = useState({});
-
-  // Données de marché simulées avec blockchain
-  const marketsData = {
-    dakar: {
-      name: "Dakar Métropolitaine",
-      price: "85,500",
-      change: "+12.5%",
-      trend: "up",
-      volume: "234",
-      transactions: "1,847",
-      verifications: "100%",
-      smartContracts: "156"
-    },
-    almadies: {
-      name: "Almadies Premium",
-      price: "125,000",
-      change: "+8.3%", 
-      trend: "up",
-      volume: "89",
-      transactions: "567",
-      verifications: "100%",
-      smartContracts: "78"
-    },
-    thies: {
-      name: "Thiès Centre",
-      price: "32,400",
-      change: "+15.7%",
-      trend: "up", 
-      volume: "156",
-      transactions: "892",
-      verifications: "100%",
-      smartContracts: "124"
-    },
-    mbour: {
-      name: "Mbour Touristique",
-      price: "45,800",
-      change: "+6.9%",
-      trend: "up",
-      volume: "67",
-      transactions: "445",
-      verifications: "100%",
-      smartContracts: "89"
-    }
-  };
-
-  const cryptoMetrics = [
-    {
-      title: "Volume Blockchain 24h",
-      value: "8.7M FCFA",
-      change: "+23.4%",
-      icon: Blocks,
-      color: "text-blue-500"
-    },
-    {
-      title: "Transactions Smart",
-      value: "3,751",
-      change: "+67.8%", 
-      icon: Zap,
-      color: "text-purple-500"
-    },
-    {
-      title: "NFT Propriétés",
-      value: "1,289",
-      change: "+89.2%",
-      icon: Sparkles,
-      color: "text-teal-500"
-    },
-    {
-      title: "Vérifications IA",
-      value: "5,643",
-      change: "+45.1%",
-      icon: Brain,
-      color: "text-green-500"
-    }
-  ];
-
-  const liveUpdates = [
-    {
-      type: "verification",
-      message: "Terrain TF-2024-892 vérifié par blockchain",
-      time: "Il y a 2 min",
-      icon: Shield
-    },
-    {
-      type: "transaction", 
-      message: "Smart contract exécuté: 50M FCFA",
-      time: "Il y a 5 min",
-      icon: Coins
-    },
-    {
-      type: "listing",
-      message: "Nouveau terrain NFT listé à Almadies",
-      time: "Il y a 8 min", 
-      icon: Sparkles
-    },
-    {
-      type: "analysis",
-      message: "IA détecte opportunité d'investissement",
-      time: "Il y a 12 min",
-      icon: Brain
-    }
-  ];
+  const [markets, setMarkets] = useState([]);
+  const [selectedMarket, setSelectedMarket] = useState(null);
+  const [cryptoMetrics, setCryptoMetrics] = useState([
+    { title: "Terrains Vérifiés", value: "—", change: "", icon: Blocks, color: "text-blue-500" },
+    { title: "Terrains Répertoriés", value: "—", change: "", icon: Zap, color: "text-purple-500" },
+    { title: "Régions Couvertes", value: "—", change: "", icon: Sparkles, color: "text-teal-500" },
+    { title: "Avis Clients Vérifiés", value: "—", change: "", icon: Brain, color: "text-green-500" }
+  ]);
+  const [liveUpdates, setLiveUpdates] = useState([]);
 
   useEffect(() => {
-    // Simulation de mise à jour des données en temps réel
-    const interval = setInterval(() => {
-      setMarketData(prev => ({
-        ...prev,
-        timestamp: new Date().toLocaleTimeString()
-      }));
-    }, 5000);
+    let active = true;
 
-    return () => clearInterval(interval);
+    (async () => {
+      const [{ stats }, regions] = await Promise.all([
+        StatsService.getPlatformStats(),
+        StatsService.getRegionMarket()
+      ]);
+      if (!active) return;
+
+      const m = regions.map(r => ({
+        key: r.region,
+        name: r.region,
+        price: r.avgPricePerM2 ? r.avgPricePerM2.toLocaleString('fr-FR') : '—',
+        change: '',
+        transactions: `${r.count}`,
+        volume: `${r.count}`,
+        smartContracts: '—',
+        verifications: '100'
+      }));
+      setMarkets(m);
+      setSelectedMarket(m[0]?.key || null);
+
+      setCryptoMetrics([
+        { title: "Terrains Vérifiés", value: `${stats.verifiedProperties}`, change: "", icon: Blocks, color: "text-blue-500" },
+        { title: "Terrains Répertoriés", value: `${stats.totalProperties}`, change: "", icon: Zap, color: "text-purple-500" },
+        { title: "Régions Couvertes", value: `${stats.regions}`, change: "", icon: Sparkles, color: "text-teal-500" },
+        { title: "Avis Clients Vérifiés", value: `${stats.reviews}`, change: "", icon: Brain, color: "text-green-500" }
+      ]);
+    })();
+
+    // Activité récente : dernières propriétés réelles
+    PropertyService.getProperties({ limit: 4 }).then(({ properties }) => {
+      if (!active) return;
+      setLiveUpdates((properties || []).map(p => ({
+        type: 'listing',
+        message: `Terrain vérifié : ${p.title || p.name} (${p.region || 'Sénégal'})`,
+        time: p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '',
+        icon: Shield
+      })));
+    });
+
+    return () => { active = false; };
   }, []);
 
-  const currentMarket = marketsData[selectedMarket];
+  const currentMarket = markets.find(mk => mk.key === selectedMarket);
 
   return (
     <section className="py-20 bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 relative overflow-hidden">
@@ -163,7 +103,7 @@ const MarketBlockchainSection = () => {
         >
           <div className="flex items-center justify-center gap-2 mb-4">
             <div className="w-3 h-3 bg-green-400 rounded-full animate-pulse"></div>
-            <span className="text-sm text-gray-600 font-medium">DONNÉES EN TEMPS RÉEL</span>
+            <span className="text-sm text-gray-600 font-medium">DONNÉES PLATEFORME</span>
           </div>
           
           <h2 className="text-4xl lg:text-5xl font-bold mb-4">
@@ -217,14 +157,14 @@ const MarketBlockchainSection = () => {
               <CardContent>
                 {/* Sélecteur de zone */}
                 <div className="flex flex-wrap gap-2 mb-6">
-                  {Object.entries(marketsData).map(([key, market]) => (
+                  {markets.map((market) => (
                     <Button
-                      key={key}
-                      variant={selectedMarket === key ? "default" : "outline"}
+                      key={market.key}
+                      variant={selectedMarket === market.key ? "default" : "outline"}
                       size="sm"
-                      onClick={() => setSelectedMarket(key)}
+                      onClick={() => setSelectedMarket(market.key)}
                       className={`${
-                        selectedMarket === key 
+                        selectedMarket === market.key
                           ? 'bg-gradient-to-r from-blue-500 to-purple-500 text-white' 
                           : 'hover:bg-blue-50'
                       } transition-all duration-300`}

@@ -1,16 +1,40 @@
-﻿import React from 'react';
+﻿import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { 
-  ArrowRight, 
-  CalendarDays, 
+import {
+  ArrowRight,
+  CalendarDays,
   TrendingUp
 } from 'lucide-react';
-import { sampleBlogPosts } from '@/data'; 
+import BlogService from '@/services/admin/BlogService';
+
+const FALLBACK_NEWS_IMAGE = 'https://images.unsplash.com/photo-1667118300849-1872d823219f';
 
 const MarketNewsSection = () => {
+  const [newsItems, setNewsItems] = useState([]);
+
+  useEffect(() => {
+    let active = true;
+    const loadNews = async () => {
+      const result = await BlogService.getPosts({ status: 'published', limit: 3 });
+      if (!active || !result.success) return;
+      const items = (result.posts || []).map((post) => ({
+        id: post.id,
+        title: post.title,
+        date: new Date(post.published_at || post.created_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
+        excerpt: post.excerpt,
+        category: post.category || 'Actualités',
+        image: post.cover_image || FALLBACK_NEWS_IMAGE,
+        slug: `/blog/${post.slug}`
+      }));
+      setNewsItems(items);
+    };
+    loadNews();
+    return () => { active = false; };
+  }, []);
+
   const sectionVariants = {
     hidden: { opacity: 0 },
     visible: { opacity: 1, transition: { staggerChildren: 0.1 } }
@@ -20,17 +44,11 @@ const MarketNewsSection = () => {
     hidden: { opacity: 0, y: 20 },
     visible: { opacity: 1, y: 0, transition: { duration: 0.5 } }
   };
-  
-  const newsItems = sampleBlogPosts.filter(post => post.category === "Marché Immobilier" || post.category === "Juridique").slice(0, 3).map((post) => ({
-    id: post.id,
-    title: post.title,
-    date: new Date(post.published_at).toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' }),
-    excerpt: post.excerpt,
-    category: post.category,
-    imageYOUR_API_KEY: post.title,
-    slug: `/blog/${post.slug}`, 
-    description: `Actualité du marché immobilier au Sénégal: ${post.title}`
-  }));
+
+  // Ne rien afficher tant qu'aucun article publié n'est disponible
+  if (newsItems.length === 0) {
+    return null;
+  }
 
 
   return (
@@ -61,7 +79,7 @@ const MarketNewsSection = () => {
           <motion.div key={newsItem.id} variants={itemVariants}>
             <Card className="h-full flex flex-col overflow-hidden hover:shadow-lg transition-shadow duration-300 border rounded-xl bg-card">
               <div className="aspect-video bg-muted relative">
-                 <img  className="w-full h-full object-cover" alt={newsItem.imageYOUR_API_KEY} src="https://images.unsplash.com/photo-1667118300849-1872d823219f" />
+                 <img className="w-full h-full object-cover" alt={newsItem.title} src={newsItem.image} />
                  <div className="absolute inset-0 bg-black/10"></div>
                  <span className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-semibold px-2 py-1 rounded">
                     {newsItem.category}

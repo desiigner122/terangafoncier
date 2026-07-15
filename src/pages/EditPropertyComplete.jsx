@@ -45,7 +45,10 @@ const EditPropertyComplete = () => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(null);
-  
+  // Photos réelles (table property_photos) et documents réels (table documents) liés à cette propriété
+  const [photos, setPhotos] = useState([]);
+  const [realDocuments, setRealDocuments] = useState([]);
+
   const [propertyData, setPropertyData] = useState({
     // === ÉTAPE 1: INFORMATIONS DE BASE ===
     title: '',
@@ -96,9 +99,13 @@ const EditPropertyComplete = () => {
     accepted_cryptos: [],
     crypto_discount: '',
     
-    // === ÉTAPE 7: BLOCKCHAIN & NFT ===
-    nft_available: false,
-    blockchain_network: 'Polygon',
+    // === ÉTAPE 7: BLOCKCHAIN & NFT (statut réel, lecture seule — aucune colonne éditable n'existe) ===
+    nft_token_id: null,
+    blockchain_hash: null,
+    transaction_hash: null,
+    smart_contract_address: null,
+    nft_readiness_score: null,
+    verification_status: '',
     
     // === ÉTAPE 8: DOCUMENTS ===
     has_title_deed: false,
@@ -258,71 +265,64 @@ const EditPropertyComplete = () => {
         return;
       }
 
-      // Mapper TOUTES les données de la propriété
-      setPropertyData({
+      // Mapper UNIQUEMENT les colonnes qui existent réellement dans la table 'properties'.
+      // Les champs des étapes 4, 5, 6 et les cases à cocher de l'étape 8 (zonage, équipements,
+      // financement, documents légaux) n'ont aucune colonne correspondante en base : ils
+      // conservent donc leur valeur locale par défaut (voir useState initial) et ne sont pas
+      // écrasés ici. Cela évite d'afficher de fausses valeurs "chargées depuis la base".
+      setPropertyData(prev => ({
+        ...prev,
         // Étape 1
         title: data.title || '',
         description: data.description || '',
-        property_type: data.property_type || 'terrain',
         type: data.type || 'Résidentiel',
-        
-        // Étape 2
-        address: data.address || '',
+
+        // Étape 2 — 'address' n'existe pas en base ; la colonne réelle la plus proche est 'location'
+        address: data.location || '',
         city: data.city || '',
         region: data.region || '',
-        postal_code: data.postal_code || '',
-        latitude: data.latitude || null,
-        longitude: data.longitude || null,
-        nearby_landmarks: data.nearby_landmarks || [],
-        
+        latitude: data.latitude ?? null,
+        longitude: data.longitude ?? null,
+
         // Étape 3
-        price: data.price || '',
-        currency: data.currency || 'XOF',
-        surface: data.surface || '',
-        surface_unit: data.surface_unit || 'm²',
-        
-        // Étape 4
-        zoning: data.zoning || '',
-        buildable_ratio: data.buildable_ratio || '',
-        max_floors: data.max_floors || '',
-        land_registry_ref: data.land_registry_ref || '',
-        title_deed_number: data.title_deed_number || '',
-        legal_status: data.legal_status || '',
-        main_features: data.main_features || [],
-        
-        // Étape 5
-        utilities: data.utilities || [],
-        access: data.access || [],
-        amenities: data.amenities || [],
-        nearby_facilities: data.nearby_facilities || [],
-        
-        // Étape 6
-        financing_methods: data.financing_methods || [],
-        bank_financing_available: data.bank_financing_available || false,
-        min_down_payment: data.min_down_payment || '',
-        max_duration: data.max_duration || '',
-        partner_banks: data.partner_banks || [],
-        installment_available: data.installment_available || false,
-        installment_duration: data.installment_duration || '',
-        monthly_payment: data.monthly_payment || '',
-        crypto_available: data.crypto_available || false,
-        accepted_cryptos: data.accepted_cryptos || [],
-        crypto_discount: data.crypto_discount || '',
-        
-        // Étape 7
-        nft_available: data.nft_available || false,
-        blockchain_network: data.blockchain_network || 'Polygon',
-        
-        // Étape 8
-        has_title_deed: data.has_title_deed || false,
-        has_survey: data.has_survey || false,
-        has_building_permit: data.has_building_permit || false,
-        has_urban_certificate: data.has_urban_certificate || false,
-        documents: data.documents || [],
-        
-        // Images
-        images: data.images || []
-      });
+        price: data.price ?? '',
+        surface: data.surface ?? '',
+
+        // Étape 7 — statut blockchain/NFT réel (lecture seule)
+        nft_token_id: data.nft_token_id || null,
+        blockchain_hash: data.blockchain_hash || null,
+        transaction_hash: data.transaction_hash || null,
+        smart_contract_address: data.smart_contract_address || null,
+        nft_readiness_score: data.nft_readiness_score ?? null,
+        verification_status: data.verification_status || ''
+      }));
+
+      // Photos réelles de la propriété (table property_photos)
+      const { data: photosData, error: photosError } = await supabase
+        .from('property_photos')
+        .select('*')
+        .eq('property_id', id)
+        .order('is_primary', { ascending: false })
+        .order('created_at', { ascending: true });
+
+      if (photosError) {
+        console.error('Erreur chargement photos:', photosError);
+      } else {
+        setPhotos(photosData || []);
+        setPropertyData(prev => ({ ...prev, images: (photosData || []).map(p => p.url) }));
+      }
+
+      // Documents réellement déposés pour cette propriété (table documents)
+      const { data: docsData, error: docsError } = await supabase
+        .from('documents')
+        .select('*')
+        .eq('property_id', id);
+
+      if (docsError) {
+        console.error('Erreur chargement documents:', docsError);
+      } else {
+        setRealDocuments(docsData || []);
+      }
     } catch (err) {
       console.error('Erreur chargement propriété:', err);
       setError(err.message);
@@ -337,72 +337,30 @@ const EditPropertyComplete = () => {
     setSaving(true);
 
     try {
+      // Seules les colonnes qui existent réellement dans la table 'properties' sont envoyées.
+      // Les champs de zonage/équipements/financement/documents légaux (étapes 4, 5, 6, 8) n'ont
+      // aucune colonne correspondante en base : les envoyer ferait échouer toute la requête
+      // (PostgREST rejette une colonne inconnue). Ils restent donc des champs locaux uniquement,
+      // avec un avertissement affiché à l'utilisateur dans le formulaire.
       const { error: updateError } = await supabase
         .from('properties')
         .update({
           // Étape 1
           title: propertyData.title,
           description: propertyData.description,
-          property_type: propertyData.property_type,
           type: propertyData.type,
-          
-          // Étape 2
-          address: propertyData.address,
+
+          // Étape 2 — 'address' est enregistré dans la colonne réelle 'location'
+          location: propertyData.address,
           city: propertyData.city,
           region: propertyData.region,
-          postal_code: propertyData.postal_code,
           latitude: propertyData.latitude,
           longitude: propertyData.longitude,
-          nearby_landmarks: propertyData.nearby_landmarks,
-          
+
           // Étape 3
           price: parseFloat(propertyData.price) || 0,
-          currency: propertyData.currency,
           surface: parseFloat(propertyData.surface) || 0,
-          surface_unit: propertyData.surface_unit,
-          
-          // Étape 4
-          zoning: propertyData.zoning,
-          buildable_ratio: parseFloat(propertyData.buildable_ratio) || null,
-          max_floors: parseInt(propertyData.max_floors) || null,
-          land_registry_ref: propertyData.land_registry_ref,
-          title_deed_number: propertyData.title_deed_number,
-          legal_status: propertyData.legal_status,
-          main_features: propertyData.main_features,
-          
-          // Étape 5
-          utilities: propertyData.utilities,
-          access: propertyData.access,
-          amenities: propertyData.amenities,
-          nearby_facilities: propertyData.nearby_facilities,
-          
-          // Étape 6
-          financing_methods: propertyData.financing_methods,
-          bank_financing_available: propertyData.bank_financing_available,
-          min_down_payment: parseFloat(propertyData.min_down_payment) || null,
-          max_duration: parseInt(propertyData.max_duration) || null,
-          partner_banks: propertyData.partner_banks,
-          installment_available: propertyData.installment_available,
-          installment_duration: parseInt(propertyData.installment_duration) || null,
-          monthly_payment: parseFloat(propertyData.monthly_payment) || null,
-          crypto_available: propertyData.crypto_available,
-          accepted_cryptos: propertyData.accepted_cryptos,
-          crypto_discount: parseFloat(propertyData.crypto_discount) || null,
-          
-          // Étape 7
-          nft_available: propertyData.nft_available,
-          blockchain_network: propertyData.blockchain_network,
-          
-          // Étape 8
-          has_title_deed: propertyData.has_title_deed,
-          has_survey: propertyData.has_survey,
-          has_building_permit: propertyData.has_building_permit,
-          has_urban_certificate: propertyData.has_urban_certificate,
-          documents: propertyData.documents,
-          
-          // Images
-          images: propertyData.images,
-          
+
           updated_at: new Date().toISOString()
         })
         .eq('id', id)
@@ -433,6 +391,28 @@ const EditPropertyComplete = () => {
         return { ...prev, [field]: [...currentArray, value] };
       }
     });
+  };
+
+  const handleDeletePhoto = async (index) => {
+    const photo = photos[index];
+    if (!photo) return;
+
+    try {
+      const { error: deletePhotoError } = await supabase
+        .from('property_photos')
+        .delete()
+        .eq('id', photo.id);
+
+      if (deletePhotoError) throw deletePhotoError;
+
+      const updatedPhotos = photos.filter((_, i) => i !== index);
+      setPhotos(updatedPhotos);
+      handleChange('images', updatedPhotos.map(p => p.url));
+      toast.success('Photo supprimée');
+    } catch (err) {
+      console.error('Erreur suppression photo:', err);
+      toast.error('Erreur lors de la suppression de la photo');
+    }
   };
 
   const nextStep = () => {
@@ -788,7 +768,14 @@ const EditPropertyComplete = () => {
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-xl font-semibold mb-4">Caractéristiques</h2>
-                      
+
+                      <Alert className="mb-4">
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          Ces informations ne sont pas encore reliées à la base de données et ne seront pas enregistrées pour le moment.
+                        </AlertDescription>
+                      </Alert>
+
                       <Tabs defaultValue="zoning" className="space-y-4">
                         <TabsList className="grid grid-cols-3 w-full">
                           <TabsTrigger value="zoning">Zonage</TabsTrigger>
@@ -921,7 +908,14 @@ const EditPropertyComplete = () => {
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-xl font-semibold mb-4">Équipements & Accès</h2>
-                      
+
+                      <Alert className="mb-4">
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          Ces informations ne sont pas encore reliées à la base de données et ne seront pas enregistrées pour le moment.
+                        </AlertDescription>
+                      </Alert>
+
                       <div className="space-y-6">
                         <div>
                           <Label className="mb-3 block">Utilités disponibles</Label>
@@ -1013,7 +1007,14 @@ const EditPropertyComplete = () => {
                   <div className="space-y-6">
                     <div>
                       <h2 className="text-xl font-semibold mb-4">Options de financement</h2>
-                      
+
+                      <Alert className="mb-4">
+                        <Info className="h-4 w-4" />
+                        <AlertDescription>
+                          Ces informations ne sont pas encore reliées à la base de données et ne seront pas enregistrées pour le moment.
+                        </AlertDescription>
+                      </Alert>
+
                       <div className="space-y-6">
                         <div>
                           <Label className="mb-3 block">Modes de paiement acceptés</Label>
@@ -1230,10 +1231,7 @@ const EditPropertyComplete = () => {
                               />
                               <button
                                 type="button"
-                                onClick={() => {
-                                  const newImages = propertyData.images.filter((_, i) => i !== index);
-                                  handleChange('images', newImages);
-                                }}
+                                onClick={() => handleDeletePhoto(index)}
                                 className="absolute top-2 right-2 bg-red-500 text-white p-1 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
                               >
                                 <X className="h-4 w-4" />
@@ -1252,34 +1250,46 @@ const EditPropertyComplete = () => {
                         <Label>Blockchain & NFT</Label>
                         <div className="flex items-center justify-between p-4 border rounded-lg mt-2">
                           <div>
-                            <p className="font-medium">Activer la propriété NFT</p>
+                            <p className="font-medium">Statut de tokenisation</p>
                             <p className="text-sm text-muted-foreground">
-                              Tokeniser ce terrain sur la blockchain
+                              Statut réel enregistré pour cette propriété
                             </p>
                           </div>
-                          <Switch
-                            checked={propertyData.nft_available}
-                            onCheckedChange={(checked) => handleChange('nft_available', checked)}
-                          />
+                          <Badge variant={propertyData.nft_token_id ? 'default' : 'secondary'}>
+                            {propertyData.nft_token_id ? 'Tokenisé' : 'Non tokenisé'}
+                          </Badge>
                         </div>
 
-                        {propertyData.nft_available && (
-                          <div className="mt-4">
-                            <Label htmlFor="blockchain_network">Réseau blockchain</Label>
-                            <Select
-                              value={propertyData.blockchain_network}
-                              onValueChange={(value) => handleChange('blockchain_network', value)}
-                            >
-                              <SelectTrigger>
-                                <SelectValue />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="Polygon">Polygon (MATIC)</SelectItem>
-                                <SelectItem value="Ethereum">Ethereum (ETH)</SelectItem>
-                                <SelectItem value="Binance">Binance Smart Chain (BNB)</SelectItem>
-                              </SelectContent>
-                            </Select>
+                        {(propertyData.nft_token_id || propertyData.blockchain_hash || propertyData.transaction_hash || propertyData.smart_contract_address) ? (
+                          <div className="mt-4 space-y-2 text-sm">
+                            {propertyData.nft_token_id && (
+                              <div className="flex justify-between border-b pb-1">
+                                <span className="text-muted-foreground">Token ID</span>
+                                <span className="font-mono">{propertyData.nft_token_id}</span>
+                              </div>
+                            )}
+                            {propertyData.blockchain_hash && (
+                              <div className="flex justify-between border-b pb-1">
+                                <span className="text-muted-foreground">Hash blockchain</span>
+                                <span className="font-mono">
+                                  {propertyData.blockchain_hash.slice(0, 10)}...{propertyData.blockchain_hash.slice(-6)}
+                                </span>
+                              </div>
+                            )}
+                            {propertyData.smart_contract_address && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Contrat</span>
+                                <span className="font-mono">{propertyData.smart_contract_address.slice(0, 10)}...</span>
+                              </div>
+                            )}
                           </div>
+                        ) : (
+                          <Alert className="mt-4">
+                            <Info className="h-4 w-4" />
+                            <AlertDescription>
+                              Cette propriété n'est pas encore tokenisée sur la blockchain.
+                            </AlertDescription>
+                          </Alert>
                         )}
                       </div>
                     </div>
@@ -1334,8 +1344,8 @@ const EditPropertyComplete = () => {
                         <Alert>
                           <Info className="h-4 w-4" />
                           <AlertDescription>
-                            Les documents scannés restent stockés dans la base de données.
-                            Cette section permet de marquer quels documents sont disponibles.
+                            Ces cases indiquent localement quels documents existent, mais ne sont pas encore enregistrées en base.
+                            Le nombre de documents réellement déposés pour cette propriété est indiqué ci-dessous.
                           </AlertDescription>
                         </Alert>
 
@@ -1343,7 +1353,7 @@ const EditPropertyComplete = () => {
                           <h3 className="font-semibold mb-3">Récapitulatif</h3>
                           <div className="space-y-2">
                             <div className="flex justify-between">
-                              <span>Documents disponibles:</span>
+                              <span>Cases cochées (indicatif, non enregistré):</span>
                               <Badge variant="secondary">
                                 {[
                                   propertyData.has_title_deed,
@@ -1352,6 +1362,10 @@ const EditPropertyComplete = () => {
                                   propertyData.has_urban_certificate
                                 ].filter(Boolean).length} / 4
                               </Badge>
+                            </div>
+                            <div className="flex justify-between">
+                              <span>Documents réellement déposés:</span>
+                              <Badge variant="secondary">{realDocuments.length}</Badge>
                             </div>
                           </div>
                         </div>

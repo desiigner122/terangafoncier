@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   ShoppingBag, 
@@ -42,14 +41,11 @@ import { supabase } from '@/lib/supabaseClient';
 import { format, formatDistanceToNow } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { toast } from 'sonner';
-import PurchaseWorkflowService from '@/services/PurchaseWorkflowService';
-import NotificationService from '@/services/NotificationService';
-import RealtimeSyncService from '@/services/RealtimeSyncService';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import NegotiationModal from '@/components/modals/NegotiationModal';
 import RequestDetailsModal from '@/components/modals/RequestDetailsModal';
 
 const VendeurPurchaseRequests = ({ user: propsUser }) => {
-  const navigate = useNavigate();
   // FIX: Accepter user via props (passé par le sidebar) au lieu de outletContext
   const user = propsUser;
 
@@ -64,31 +60,27 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [isNegotiating, setIsNegotiating] = useState(false);
-  
-  // FIX #1: Persistent state for accepted requests
-  const [acceptedRequests, setAcceptedRequests] = useState(new Set());
-  const [caseNumbers, setCaseNumbers] = useState({});
-
-  console.log('🎯 [VENDEUR REQUESTS] User reçu via props:', user);
 
   useEffect(() => {
-    if (user) {
-      loadRequests();
-      
-      // 🔄 REALTIME: Subscribe aux requests changes pour les parcelles du vendeur
-      const unsubscribe = RealtimeSyncService.subscribeToVendorRequests(
-        [], // Les parcel IDs seront chargés dans loadRequests
-        (payload) => {
-          console.log('🔄 [REALTIME] Vendor request update detected, reloading...');
-          // Recharger les demandes quand il y a un changement
+    if (!user?.id) return;
+
+    loadRequests();
+
+    // 🔄 REALTIME: Rechargement automatique quand une offre change pour ce vendeur
+    const channel = supabase
+      .channel(`vendeur-purchase-requests-${user.id}`)
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'financial_transactions' },
+        () => {
           loadRequests();
         }
-      );
-      
-      return unsubscribe;
-    } else {
-      console.warn('⚠️ [VENDEUR REQUESTS] Pas de user, attente...');
-    }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
   }, [user]);
 
   // Actions sur les demandes
@@ -99,188 +91,36 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   const handleAccept = async (requestId) => {
     setActionLoading(requestId);
     try {
-      console.log('🎯 [ACCEPT] Début acceptation:', requestId);
-      setActionLoading(requestId);
-      
-      // 1. Récupérer la transaction COMPLÈTE depuis la DB
-      const { data: transaction, error: txError } = await supabase
-        .from('transactions')
-        .select('*')
-        .eq('id', requestId)
-        .single();
-      
-      if (txError) {
-        console.error('❌ Erreur récupération transaction:', txError);
-        throw new Error('Impossible de récupérer la transaction: ' + txError.message);
-      }
-      
-      console.log('📊 [ACCEPT] Transaction récupérée:', transaction);
-      
-      // 2. Récupérer les relations séparément pour éviter les problèmes RLS
-      let buyer = null, seller = null, parcel = null;
-      
-      if (transaction.buyer_id) {
-        const { data: buyerData } = await supabase
-          .from('profiles')
-          .select('id, email, first_name, last_name')
-          .eq('id', transaction.buyer_id)
-          .single();
-        buyer = buyerData;
-      }
-      
-      if (transaction.seller_id) {
-        const { data: sellerData } = await supabase
-          .from('profiles')
-          .select('id, email, first_name, last_name')
-          .eq('id', transaction.seller_id)
-          .single();
-        seller = sellerData;
-      }
-      
-      if (transaction.parcel_id) {
-        const { data: parcelData } = await supabase
-          .from('parcels')
-          .select('id, title, location, surface, price, seller_id')
-          .eq('id', transaction.parcel_id)
-          .single();
-        parcel = parcelData;
-      }
-      
-      // 3. Vérifier que toutes les données essentielles existent
-      if (!transaction.buyer_id || !transaction.seller_id || !transaction.parcel_id) {
-        throw new Error('Transaction incomplète - données manquantes');
-      }
-      
-      // 4. Vérifier s'il existe déjà un dossier
-      const { data: existingCase } = await supabase
-        .from('purchase_cases')
-        .select('*')
-        .eq('request_id', requestId)
-        .single();
+      const request = requests.find(r => r.id === requestId);
 
-      let purchaseCase;
-      
-      if (!existingCase) {
-        console.log('📋 [ACCEPT] Création nouveau dossier...');
-        
-        // Créer le dossier avec le workflow service
-        const result = await PurchaseWorkflowService.createPurchaseCase({
-          request_id: requestId,
-          buyer_id: transaction.buyer_id,
-          seller_id: transaction.seller_id,
-          parcelle_id: transaction.parcel_id,
-          purchase_price: transaction.amount,
-          payment_method: transaction.payment_method || 'unknown',
-          initiation_method: 'seller_acceptance',
-          property_details: {
-            title: parcel?.title,
-            location: parcel?.location,
-            surface: parcel?.surface
-          },
-          buyer_details: {
-            name: buyer?.first_name && buyer?.last_name 
-              ? `${buyer.first_name} ${buyer.last_name}` 
-              : 'Acheteur',
-            email: buyer?.email,
-            phone: transaction.metadata?.buyer_phone || 'Non fourni'
-          },
-          payment_details: transaction.metadata?.payment_details || {}
-        });
+      // Accepter l'offre (met à jour financial_transactions.status = 'accepted')
+      const result = await VendeurSupabaseService.acceptOffer(requestId);
+      if (!result.success) throw new Error(result.error || 'Erreur lors de l\'acceptation');
 
-        if (!result.success) throw new Error(result.error);
-        purchaseCase = result.case;
-        
-        console.log('✅ [ACCEPT] Dossier créé:', purchaseCase.case_number);
-        toast.success(`🎉 Offre acceptée ! Dossier créé: ${purchaseCase.case_number}`);
-      } else {
-        console.log('📋 [ACCEPT] Dossier existant, vérification du statut...');
-        
-        // Vérifier le statut actuel du dossier
-        const currentStatus = existingCase.status;
-        
-        // Si le dossier est déjà accepté ou plus loin, ne pas essayer une transition invalide
-        if (currentStatus === 'preliminary_agreement' || currentStatus === 'contract_preparation' || currentStatus === 'accepted') {
-          console.log('✅ [ACCEPT] Dossier déjà accepté, pas de mise à jour nécessaire');
-          purchaseCase = existingCase;
-          toast.success('✅ Cette demande a déjà été acceptée ! Consultez votre dossier.');
-        } else if (currentStatus === 'initiated' || currentStatus === 'seller_notification') {
-          // Mettre à jour le statut du dossier existant
-          const result = await PurchaseWorkflowService.updateCaseStatus(
-            existingCase.id,
-            'preliminary_agreement',
-            user.id,
-            'Vendeur a accepté l\'offre d\'achat'
-          );
-
-          if (!result.success) throw new Error(result.error);
-          purchaseCase = existingCase;
-          
-          toast.success('✅ Offre acceptée ! Passage à l\'accord préliminaire');
-        } else {
-          console.log('⚠️ [ACCEPT] Statut dossier incompatible:', currentStatus);
-          purchaseCase = existingCase;
-          toast.info(`Dossier en état: ${currentStatus}. Consultez votre dossier pour plus d'infos.`);
+      // Notifier l'acheteur (best-effort, non bloquant)
+      if (request?.user_id) {
+        try {
+          await supabase.from('notifications').insert({
+            user_id: request.user_id,
+            title: '✅ Offre acceptée',
+            message: `Votre offre de ${formatCurrency(request.offered_price)} pour "${request.parcels?.title || request.parcels?.name || 'la propriété'}" a été acceptée par le vendeur.`,
+            type: 'purchase_accepted',
+            read: false
+          });
+        } catch (notifError) {
+          console.warn('⚠️ [ACCEPT] Notification non envoyée (non bloquant):', notifError);
         }
       }
 
-      // 4. Mettre à jour le statut de la transaction
-      const { error: updateError } = await supabase
-        .from('transactions')
-        .update({ 
-          status: 'accepted',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', requestId);
-
-      if (updateError) throw updateError;
-
-      // 5. Envoyer notification à l'acheteur
-      try {
-        await NotificationService.sendPurchaseRequestAccepted({
-          buyerId: transaction.buyer_id,
-          buyerEmail: buyer?.email,
-          sellerName: user.email,
-          caseNumber: purchaseCase.case_number,
-          parcelTitle: parcel?.title,
-          purchasePrice: transaction.amount
-        });
-        console.log('✅ [ACCEPT] Notification envoyée à l\'acheteur');
-      } catch (notifError) {
-        console.error('⚠️ [ACCEPT] Erreur notification (non bloquante):', notifError);
-      }
-
-      // 6. FIX #1: Track this acceptance in persistent state
-      console.log('📍 [ACCEPT] Tracking acceptance in persistent state');
-      setAcceptedRequests(prev => new Set(prev).add(requestId));
-      setCaseNumbers(prev => ({
-        ...prev,
-        [requestId]: purchaseCase.case_number
-      }));
-
-      // 7. Mettre à jour l'état local directement
-      console.log('🔄 [ACCEPT] Mise à jour locale du statut → accepted');
+      // Mise à jour locale immédiate
       setRequests(prevRequests =>
         prevRequests.map(req =>
-          req.id === requestId 
-            ? { ...req, status: 'accepted', caseNumber: purchaseCase.case_number, hasCase: true }
-            : req
+          req.id === requestId ? { ...req, status: 'accepted' } : req
         )
       );
-      
-      toast.success(
-        `🚀 Workflow d'achat lancé ! Dossier: ${purchaseCase.case_number}`,
-        { duration: 5000 }
-      );
-      
-      // 8. Recharger après un court délai pour laisser la DB se mettre à jour
-      // BUT: This won't override our persistent state
-      setTimeout(() => {
-        console.log('🔄 [ACCEPT] Rechargement des demandes après delay...');
-        loadRequests().catch(err => {
-          console.warn('⚠️ Rechargement en arrière-plan échoué:', err);
-        });
-      }, 3000); // Augmenté à 3 secondes
 
+      toast.success('✅ Offre acceptée avec succès');
+      await loadRequests();
     } catch (error) {
       console.error('❌ [ACCEPT] Erreur:', error);
       toast.error('Erreur lors de l\'acceptation: ' + error.message);
@@ -292,43 +132,38 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   const handleReject = async (requestId) => {
     setActionLoading(requestId);
     try {
-      // 1. Vérifier s'il y a un dossier workflow existant
-      const { data: existingCase } = await supabase
-        .from('purchase_cases')
-        .select('*')
-        .eq('request_id', requestId)
-        .single();
+      const request = requests.find(r => r.id === requestId);
 
-      if (existingCase) {
-        // Mettre à jour le workflow vers "seller_declined"
-        const result = await PurchaseWorkflowService.updateCaseStatus(
-          existingCase.id,
-          'seller_declined',
-          user.id,
-          'Vendeur a refusé l\'offre d\'achat'
-        );
+      // Refuser l'offre (met à jour financial_transactions.status = 'rejected')
+      const result = await VendeurSupabaseService.rejectOffer(requestId);
+      if (!result.success) throw new Error(result.error || 'Erreur lors du refus');
 
-        if (!result.success) throw new Error(result.error);
-        toast.success('Offre refusée - Dossier workflow mis à jour');
+      // Notifier l'acheteur (best-effort, non bloquant)
+      if (request?.user_id) {
+        try {
+          await supabase.from('notifications').insert({
+            user_id: request.user_id,
+            title: '❌ Offre refusée',
+            message: `Votre offre pour "${request.parcels?.title || request.parcels?.name || 'la propriété'}" a été refusée par le vendeur.`,
+            type: 'purchase_rejected',
+            read: false
+          });
+        } catch (notifError) {
+          console.warn('⚠️ [REJECT] Notification non envoyée (non bloquant):', notifError);
+        }
       }
 
-      // 2. Mettre à jour la transaction
-      const { error } = await supabase
-        .from('transactions')
-        .update({ 
-          status: 'rejected',
-          updated_at: new Date().toISOString()
-        })
-        .eq('id', requestId);
-
-      if (error) throw error;
+      setRequests(prevRequests =>
+        prevRequests.map(req =>
+          req.id === requestId ? { ...req, status: 'rejected' } : req
+        )
+      );
 
       toast.success('Offre refusée avec succès');
       await loadRequests();
-      
     } catch (error) {
       console.error('❌ Erreur refus:', error);
-      toast.error('Erreur lors du refus de l\'offre');
+      toast.error('Erreur lors du refus de l\'offre: ' + error.message);
     } finally {
       setActionLoading(null);
     }
@@ -343,77 +178,57 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   const handleSubmitNegotiation = async (counterOffer) => {
     setIsNegotiating(true);
     try {
-      console.log('💬 [NEGOTIATE] Soumission contre-offre:', counterOffer);
-      
-      // 1. Vérifier/créer le dossier workflow
-      const { data: existingCase } = await supabase
-        .from('purchase_cases')
-        .select('*')
-        .eq('request_id', selectedRequest.id)
-        .single();
+      const property = selectedRequest?.parcels || selectedRequest?.properties;
 
-      let caseId = existingCase?.id;
-      
-      if (!existingCase) {
-        // Créer le dossier en mode négociation
-        const result = await PurchaseWorkflowService.createPurchaseCase({
-          request_id: selectedRequest.id,
-          buyer_id: selectedRequest.user_id || selectedRequest.buyer_id,
-          seller_id: user.id,
-          parcelle_id: selectedRequest.parcel_id,
-          purchase_price: selectedRequest.offered_price || selectedRequest.offer_price,
-          payment_method: selectedRequest.payment_method || 'unknown',
-          initiation_method: 'seller_negotiation'
-        });
-
-        if (!result.success) throw new Error(result.error);
-        caseId = result.case.id;
-        
-        console.log('📋 [NEGOTIATE] Dossier créé:', caseId);
-      }
-      
-      // 2. Mettre le dossier en mode négociation
-      await PurchaseWorkflowService.updateCaseStatus(
-        caseId,
-        'negotiation',
-        user.id,
-        `Vendeur a proposé une contre-offre: ${counterOffer.new_price} FCFA`
-      );
-      
-      // 3. Enregistrer la contre-offre dans purchase_case_negotiations
+      // 1. Enregistrer la contre-offre comme une nouvelle transaction financière
+      //    (pas de table dédiée aux négociations : on modélise la contre-offre
+      //    du vendeur comme une financial_transactions liée à l'offre initiale)
       const { error: negotiationError } = await supabase
-        .from('purchase_case_negotiations')
+        .from('financial_transactions')
         .insert({
-          case_id: caseId,
-          proposed_by: user.id,
-          proposed_to: selectedRequest.user_id || selectedRequest.buyer_id,
-          proposed_price: counterOffer.new_price,
-          message: counterOffer.message,
-          conditions: counterOffer.conditions,
-          valid_until: counterOffer.valid_until,
-          status: 'pending'
+          user_id: selectedRequest.user_id,
+          property_id: selectedRequest.parcel_id,
+          type: 'counter_offer',
+          transaction_type: 'counter_offer',
+          amount: counterOffer.new_price,
+          currency: 'XOF',
+          status: 'pending',
+          category: 'negotiation',
+          description: counterOffer.message || `Contre-offre du vendeur: ${counterOffer.new_price} FCFA`,
+          reference: selectedRequest.id,
+          client_name: selectedRequest.buyer_name
         });
-      
+
       if (negotiationError) throw negotiationError;
-      
-      // 4. Mettre à jour la transaction
+
+      // 2. Mettre l'offre initiale en négociation
       const { error: txError } = await supabase
-        .from('transactions')
-        .update({
-          status: 'negotiation',
-          updated_at: new Date().toISOString()
-        })
+        .from('financial_transactions')
+        .update({ status: 'negotiation' })
         .eq('id', selectedRequest.id);
-      
+
       if (txError) throw txError;
-      
-      // 5. Fermer modal et recharger
+
+      // 3. Notifier l'acheteur (best-effort, non bloquant)
+      try {
+        await supabase.from('notifications').insert({
+          user_id: selectedRequest.user_id,
+          title: '💬 Contre-offre reçue',
+          message: `Le vendeur propose ${formatCurrency(counterOffer.new_price)} pour "${property?.title || property?.name || 'votre propriété'}".`,
+          type: 'purchase_negotiation',
+          read: false
+        });
+      } catch (notifError) {
+        console.warn('⚠️ [NEGOTIATE] Notification non envoyée (non bloquant):', notifError);
+      }
+
+      // 4. Fermer modal et recharger
       setShowNegotiationModal(false);
       setSelectedRequest(null);
       await loadRequests();
-      
+
       toast.success('💬 Contre-offre envoyée avec succès ! L\'acheteur sera notifié.');
-      
+
     } catch (error) {
       console.error('❌ [NEGOTIATE] Erreur:', error);
       toast.error('Erreur lors de l\'envoi de la contre-offre: ' + error.message);
@@ -441,187 +256,110 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
     // TODO: Générer PDF du contrat de vente
   };
 
-  const loadRequests = async (retryCount = 0) => {
-    const MAX_RETRIES = 2;
+  const loadRequests = async () => {
     try {
       setLoading(true);
-      console.log('🔍 [VENDEUR] Chargement demandes pour user:', user.id);
 
-      // Récupérer les parcelles du vendeur
-      const { data: sellerParcels, error: parcelsError } = await supabase
-        .from('parcels')
-        .select('id')
-        .eq('seller_id', user.id);
+      // 1. Offres d'achat reçues (financial_transactions liées aux propriétés du vendeur)
+      const offersResult = await VendeurSupabaseService.getVendeurOffers(user.id);
+      if (!offersResult.success) throw new Error(offersResult.error || 'Erreur de chargement des offres');
 
-      if (parcelsError) throw parcelsError;
-
-      const parcelIds = sellerParcels?.map(p => p.id) || [];
-      console.log('🏠 [VENDEUR] Parcelles trouvées:', parcelIds.length, parcelIds);
-
-      if (parcelIds.length === 0) {
+      const offers = offersResult.data || [];
+      if (offers.length === 0) {
         setRequests([]);
         setLoading(false);
         return;
       }
 
-      // Charger depuis transactions au lieu de requests
-      // ✅ CORRECTION: Charger TOUTES les transactions (purchase + request)
-      const { data: transactionsData, error } = await supabase
-        .from('transactions')
-        .select('*')
-        .in('parcel_id', parcelIds)
-        .in('transaction_type', ['purchase', 'request', 'offer']) // Accepter plusieurs types
-        .order('created_at', { ascending: false });
+      // 2. Compléter les infos propriété (surface / statut, non fournis par getVendeurOffers)
+      const propertyIds = [...new Set(offers.map(o => o.property_id).filter(Boolean))];
+      const { data: propertiesExtra } = propertyIds.length > 0
+        ? await supabase
+            .from('properties')
+            .select('id, title, name, price, location, surface, status')
+            .in('id', propertyIds)
+        : { data: [] };
+      const propertyMap = Object.fromEntries((propertiesExtra || []).map(p => [p.id, p]));
 
-      if (error) {
-        // Si NetworkError et retries disponibles, réessayer
-        if (error.message?.includes('NetworkError') || error.message?.includes('Failed to fetch')) {
-          if (retryCount < MAX_RETRIES) {
-            console.warn(`⚠️ NetworkError détecté. Retry ${retryCount + 1}/${MAX_RETRIES}`);
-            await new Promise(resolve => setTimeout(resolve, 1000 * (retryCount + 1))); // Délai croissant
-            return loadRequests(retryCount + 1);
-          }
-        }
-        throw error;
-      }
+      // 3. Profils des acheteurs
+      const buyerIds = [...new Set(offers.map(o => o.user_id).filter(Boolean))];
+      const { data: buyerProfiles } = buyerIds.length > 0
+        ? await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, full_name, email, phone')
+            .in('id', buyerIds)
+        : { data: [] };
+      const buyerMap = Object.fromEntries((buyerProfiles || []).map(b => [b.id, b]));
 
-      console.log('📊 [VENDEUR] Transactions brutes:', transactionsData);
+      // 4. Transformer les offres en demandes affichables
+      const enrichedRequests = offers.map(offer => {
+        const buyer = buyerMap[offer.user_id];
+        const property = propertyMap[offer.property_id] || offer.property || null;
 
-      if (!transactionsData || transactionsData.length === 0) {
-        setRequests([]);
-        setLoading(false);
-        return;
-      }
-
-      // Charger les parcelles
-      const { data: parcelsData } = await supabase
-        .from('parcels')
-        .select('id, title, name, price, location, surface, status')
-        .in('id', parcelIds);
-
-      // Charger les profils acheteurs
-      const buyerIds = [...new Set(transactionsData.map(t => t.buyer_id).filter(Boolean))];
-      const { data: profilesData } = await supabase
-        .from('profiles')
-        .select('id, first_name, last_name, email')
-        .in('id', buyerIds);
-
-      // FIX #1: Charger les purchase_cases pour savoir lesquels sont acceptés
-      console.log('📋 [VENDEUR] Chargement des purchase_cases...');
-      const { data: purchaseCases } = await supabase
-        .from('purchase_cases')
-        .select('id, request_id, case_number, status')
-        .in('request_id', transactionsData.map(t => t.id));
-
-      // Créer une map request_id -> case_number
-      const requestCaseMap = {};
-      if (purchaseCases && purchaseCases.length > 0) {
-        purchaseCases.forEach(pc => {
-          requestCaseMap[pc.request_id] = {
-            caseNumber: pc.case_number,
-            caseId: pc.id,
-            caseStatus: pc.status
-          };
-        });
-        console.log('✅ [VENDEUR] Purchase cases trouvées:', Object.keys(requestCaseMap).length);
-      }
-
-      // Transformer les transactions
-      const enrichedRequests = transactionsData.map(transaction => {
-        const buyer = profilesData?.find(p => p.id === transaction.buyer_id);
-        const parcel = parcelsData?.find(p => p.id === transaction.parcel_id);
-        const buyerInfo = transaction.buyer_info || {};
-        
-        // FIX #1: Vérifier si un case existe pour cette transaction
-        const caseInfo = requestCaseMap[transaction.id];
-        const hasCase = !!caseInfo;
-        const caseNumber = caseInfo?.caseNumber;
-        const caseStatus = caseInfo?.caseStatus;
-
-        // ✅ Prioriser le statut workflow lorsqu'il existe pour refléter l'acceptation vendeur
-        const effectiveStatus = caseStatus || transaction.status;
-        
         return {
-          id: transaction.id,
-          user_id: transaction.buyer_id,
-          parcel_id: transaction.parcel_id,
-          status: effectiveStatus,
-          created_at: transaction.created_at,
-          updated_at: transaction.updated_at,
-          payment_method: transaction.payment_method,
-          offered_price: transaction.amount,
-          offer_price: transaction.amount,
-          request_type: transaction.payment_method || 'general',
-          message: transaction.description || '',
-          buyer_info: buyerInfo,
-          buyer_name: buyerInfo.full_name || `${buyer?.first_name || ''} ${buyer?.last_name || ''}`.trim() || 'Acheteur',
-          buyer_email: buyerInfo.email || buyer?.email || '',
-          buyer_phone: buyerInfo.phone || buyer?.phone || '',
-          parcels: parcel,
-          properties: parcel,
+          id: offer.id,
+          user_id: offer.user_id,
+          parcel_id: offer.property_id,
+          status: offer.status || 'pending',
+          created_at: offer.created_at,
+          payment_method: offer.channel || offer.category || 'other',
+          offered_price: offer.amount,
+          offer_price: offer.amount,
+          message: offer.description || '',
+          buyer_name: buyer?.full_name || `${buyer?.first_name || ''} ${buyer?.last_name || ''}`.trim() || offer.client_name || 'Acheteur',
+          buyer_email: buyer?.email || '',
+          buyer_phone: buyer?.phone || '',
+          parcels: property,
+          properties: property,
           profiles: buyer,
           buyer: buyer,
-          transactions: [transaction],
-          // FIX #1: Add case info
-          hasCase,
-          caseNumber,
-          caseStatus,
-          rawStatus: transaction.status,
-          effectiveStatus
+          transactions: [offer]
         };
       });
 
-      console.log('✅ [VENDEUR] Transactions chargées:', enrichedRequests.length, enrichedRequests);
       setRequests(enrichedRequests);
     } catch (error) {
       console.error('❌ Erreur chargement demandes:', error);
-      // Ne pas toast l'erreur pour ne pas surcharger l'UI
-      // Les demandes restent dans l'état précédent (optimistic update)
+      toast.error('Erreur lors du chargement des demandes d\'achat');
     } finally {
       setLoading(false);
     }
   };
 
-  // Filtrer les demandes - FIX: Vérifier hasCase ET status
+  // Filtrer les demandes par statut réel (financial_transactions.status)
   const filteredRequests = requests.filter(request => {
     let matchesTab = false;
-    
+
     if (activeTab === 'all') {
       matchesTab = true;
     } else if (activeTab === 'pending') {
-      // Demandes en attente: pas de purchase_case ET status pending/initiated
-      matchesTab = !request.hasCase && (request.status === 'pending' || request.status === 'initiated');
+      matchesTab = request.status === 'pending';
     } else if (activeTab === 'accepted') {
-      // Demandes acceptées: purchase_case EXISTS OU status='accepted'
-      // (Même si hasCase est temporairement faux, hasCase=true le rendra vrai)
-      matchesTab = !!request.hasCase || request.status === 'accepted' || request.status === 'seller_accepted';
+      matchesTab = request.status === 'accepted';
     } else if (activeTab === 'negotiation') {
-      // En négociation: transaction status = 'negotiation'
       matchesTab = request.status === 'negotiation';
     } else if (activeTab === 'completed') {
-      // Complétées: purchase_case status = 'completed'
-      matchesTab = request.hasCase && request.caseStatus === 'completed';
+      matchesTab = request.status === 'completed';
     } else if (activeTab === 'rejected') {
-      // Refusées: transaction status = 'rejected'
       matchesTab = request.status === 'rejected';
     }
-    
-    const matchesSearch = searchTerm === '' || 
+
+    const matchesSearch = searchTerm === '' ||
       request.buyer_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.buyer_email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       request.parcels?.title?.toLowerCase().includes(searchTerm.toLowerCase());
     return matchesTab && matchesSearch;
   });
 
-  // Statistiques - FIX: Inclure status='accepted' et 'seller_accepted'
+  // Statistiques basées sur le statut réel des offres
   const stats = {
     total: requests.length,
-    pending: requests.filter(r => !r.hasCase && (r.status === 'pending' || r.status === 'initiated')).length,
-    accepted: requests.filter(r => !!r.hasCase || r.status === 'accepted' || r.status === 'seller_accepted').length,
+    pending: requests.filter(r => r.status === 'pending').length,
+    accepted: requests.filter(r => r.status === 'accepted').length,
     negotiation: requests.filter(r => r.status === 'negotiation').length,
-    completed: requests.filter(r => r.hasCase && r.caseStatus === 'completed').length,
+    completed: requests.filter(r => r.status === 'completed').length,
     rejected: requests.filter(r => r.status === 'rejected').length,
-    revenue: requests.filter(r => r.hasCase && r.caseStatus === 'completed').reduce((sum, r) => sum + (r.offered_price || 0), 0)
+    revenue: requests.filter(r => r.status === 'completed').reduce((sum, r) => sum + (r.offered_price || 0), 0)
   };
 
   // Helpers
@@ -644,18 +382,6 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
   };
 
   const getStatusBadge = (status) => {
-    // Map case statuses to simple statuses for display
-    let displayStatus = status;
-    if (status && status !== 'pending' && status !== 'accepted' && status !== 'negotiation' && status !== 'completed' && status !== 'rejected' && status !== 'cancelled') {
-      // If it's a case status, map it to accepted/completed
-      if (status === 'completed' || status === 'property_transfer' || status === 'payment_processing') {
-        displayStatus = 'completed';
-      } else {
-        // All other case statuses show as 'accepted'
-        displayStatus = 'accepted';
-      }
-    }
-    
     const configs = {
       pending: { color: 'bg-amber-100 text-amber-700 border-amber-200', icon: Clock, label: 'En attente' },
       accepted: { color: 'bg-blue-100 text-blue-700 border-blue-200', icon: CheckCircle2, label: 'Acceptée' },
@@ -664,7 +390,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
       rejected: { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle, label: 'Refusée' },
       cancelled: { color: 'bg-red-100 text-red-700 border-red-200', icon: XCircle, label: 'Annulée' }
     };
-    const config = configs[displayStatus] || configs.pending;
+    const config = configs[status] || configs.pending;
     const Icon = config.icon;
     return (
       <Badge className={`${config.color} border`}>
@@ -873,14 +599,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                               <h3 className="text-xl font-bold text-slate-900">
                                 {request.buyer_name}
                               </h3>
-                              {/* Afficher le case number si accepté */}
-                              {request.hasCase && (
-                                <Badge className="bg-purple-100 text-purple-700 border border-purple-300">
-                                  Dossier #{request.caseNumber}
-                                </Badge>
-                              )}
-                              {/* Afficher le status du case ou de la transaction */}
-                              {getStatusBadge(request.caseStatus || request.status)}
+                              {getStatusBadge(request.status)}
                               <Badge className="bg-blue-100 text-blue-700 border-blue-200">
                                 {getPaymentMethodIcon(request.payment_method)}
                                 <span className="ml-1">{getPaymentMethodLabel(request.payment_method)}</span>
@@ -962,28 +681,35 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                         </div>
 
                         {/* Actions selon le statut */}
-                        {/* FIX #1: Check for hasCase first, then check status */}
-                        {(request.hasCase || request.status === 'accepted' || acceptedRequests.has(request.id)) && (
+                        {request.status === 'accepted' && (
                           <div className="flex gap-2">
-                            <Button 
-                              className="bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 rounded-xl flex-1"
-                              onClick={() => {
-                                const caseNum = request.caseNumber || caseNumbers[request.id];
-                                if (caseNum) {
-                                  navigate(`/vendeur/cases/${caseNum}`);
-                                } else {
-                                  toast.error('Numéro de dossier non disponible');
-                                }
-                              }}
+                            <div className="flex-1 p-3 bg-blue-50 rounded-lg border border-blue-200 flex items-center gap-2">
+                              <CheckCircle2 className="w-4 h-4 text-blue-600" />
+                              <p className="text-sm text-blue-700 font-medium">
+                                Offre acceptée — contactez l'acheteur pour finaliser la vente
+                              </p>
+                            </div>
+                            <Button
+                              variant="outline"
+                              className="rounded-xl border-blue-200 text-blue-600 hover:bg-blue-50"
+                              onClick={() => handleContact(request)}
                             >
-                              <FileText className="w-4 h-4 mr-2" />
-                              👁️ Voir le dossier {request.caseNumber && `(${request.caseNumber})`}
+                              <MessageSquare className="w-4 h-4 mr-2" />
+                              Contacter
                             </Button>
                           </div>
                         )}
 
+                        {request.status === 'completed' && (
+                          <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200">
+                            <p className="text-sm text-emerald-700 font-medium">
+                              ✓ Vente finalisée
+                            </p>
+                          </div>
+                        )}
+
                         {/* Standard actions for pending requests */}
-                        {request.status === 'pending' && !request.hasCase && !acceptedRequests.has(request.id) && (
+                        {request.status === 'pending' && (
                           <div className="flex gap-2 flex-wrap">
                             <Button 
                               className="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 rounded-xl"
@@ -1038,7 +764,7 @@ const VendeurPurchaseRequests = ({ user: propsUser }) => {
                         )}
                         
                         {/* Demande refusée/annulée */}
-                        {['rejected', 'seller_declined', 'cancelled'].includes(request.status) && (
+                        {['rejected', 'cancelled'].includes(request.status) && (
                           <div className="p-3 bg-red-50 rounded-lg border border-red-200">
                             <p className="text-sm text-red-700 font-medium">
                               ✗ Demande refusée ou annulée

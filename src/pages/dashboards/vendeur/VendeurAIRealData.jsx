@@ -1,6 +1,8 @@
 /**
  * VENDEUR AI REAL DATA - VERSION AVEC DONNÉES RÉELLES SUPABASE
- * Analyses IA avancées avec OpenAI GPT-4 et chatbot intelligent
+ * Score IA (properties.ai_score) et recommandations de prix (estimated_value/market_value)
+ * basés sur des données réelles. Le chat conversationnel n'a pas d'intégration OpenAI
+ * câblée : il informe honnêtement l'utilisateur plutôt que de simuler des réponses.
  */
 
 import React, { useState, useEffect } from 'react';
@@ -32,13 +34,12 @@ const VendeurAIRealData = () => {
   const [chatMessages, setChatMessages] = useState([]);
   const [chatInput, setChatInput] = useState('');
   const [sendingMessage, setSendingMessage] = useState(false);
-  const [sessionId] = useState(crypto.randomUUID());
 
   const [stats, setStats] = useState({
     totalAnalyses: 0,
-    avgConfidence: 0,
-    totalTokens: 0,
-    totalCost: 0,
+    avgAiScore: null,
+    propertiesAnalyzed: 0,
+    totalEstimatedValue: 0,
     priceAnalyses: 0,
     descriptionGenerated: 0
   });
@@ -64,31 +65,46 @@ const VendeurAIRealData = () => {
       if (propertiesError) throw propertiesError;
       setProperties(propertiesData || []);
 
-      // Charger les analyses IA
+      // Charger les analyses IA (table réelle ai_analyses : id, user_id, property_id, result, created_at)
       const { data: analysesData, error: analysesError } = await supabase
         .from('ai_analyses')
         .select('*')
-        .eq('owner_id', user.id)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: false });
 
       if (analysesError) throw analysesError;
       setAnalyses(analysesData || []);
 
-      // Calculer les stats
+      // Calculer les stats à partir de données réelles uniquement
       const totalAnalyses = analysesData?.length || 0;
-      const avgConfidence = totalAnalyses > 0
-        ? (analysesData.reduce((sum, a) => sum + (a.confidence_score || 0), 0) / totalAnalyses).toFixed(1)
-        : 0;
-      const totalTokens = analysesData?.reduce((sum, a) => sum + (a.tokens_used || 0), 0) || 0;
-      const totalCost = analysesData?.reduce((sum, a) => sum + (a.cost_usd || 0), 0) || 0;
-      const priceAnalyses = analysesData?.filter(a => a.analysis_type === 'price_suggestion')?.length || 0;
-      const descriptionGenerated = analysesData?.filter(a => a.analysis_type === 'description_generation')?.length || 0;
+
+      // Score IA moyen = moyenne réelle de properties.ai_score sur les annonces du vendeur
+      const scoredProperties = (propertiesData || []).filter(
+        p => typeof p.ai_score === 'number' && p.ai_score !== null
+      );
+      const avgAiScore = scoredProperties.length > 0
+        ? Math.round(scoredProperties.reduce((sum, p) => sum + p.ai_score, 0) / scoredProperties.length)
+        : null;
+
+      // Valeur estimée (IA) = somme réelle de estimated_value / market_value des annonces du vendeur
+      const propertiesWithValue = (propertiesData || []).filter(
+        p => (p.estimated_value ?? p.market_value) != null
+      );
+      const totalEstimatedValue = propertiesWithValue.length > 0
+        ? propertiesWithValue.reduce((sum, p) => sum + Number(p.estimated_value ?? p.market_value ?? 0), 0)
+        : null;
+
+      // Propriétés distinctes ayant fait l'objet d'au moins une analyse enregistrée
+      const propertiesAnalyzed = new Set((analysesData || []).map(a => a.property_id).filter(Boolean)).size;
+
+      const priceAnalyses = analysesData?.filter(a => a.result?.type === 'price_suggestion')?.length || 0;
+      const descriptionGenerated = analysesData?.filter(a => a.result?.type === 'description_generation')?.length || 0;
 
       setStats({
         totalAnalyses,
-        avgConfidence: parseFloat(avgConfidence),
-        totalTokens,
-        totalCost: parseFloat(totalCost.toFixed(4)),
+        avgAiScore,
+        propertiesAnalyzed,
+        totalEstimatedValue,
         priceAnalyses,
         descriptionGenerated
       });
@@ -103,11 +119,12 @@ const VendeurAIRealData = () => {
 
   const loadChatHistory = async () => {
     try {
+      // Table réelle ai_chat_history : id, user_id, role, content, confidence, created_at
+      // (pas de colonne session_id : on charge tout l'historique du vendeur)
       const { data, error } = await supabase
         .from('ai_chat_history')
         .select('*')
-        .eq('owner_id', user.id)
-        .eq('session_id', sessionId)
+        .eq('user_id', user.id)
         .order('created_at', { ascending: true });
 
       if (error) throw error;
@@ -134,56 +151,46 @@ const VendeurAIRealData = () => {
     try {
       const property = properties.find(p => p.id === selectedProperty);
 
-      // Simulation analyse prix (en production, appeler l'API OpenAI)
-      const suggestedPrice = property.price * (0.95 + Math.random() * 0.1);
-      const confidence = 75 + Math.floor(Math.random() * 20);
-      const tokens = 500 + Math.floor(Math.random() * 500);
+      // Pas d'intégration OpenAI câblée : on s'appuie sur les vraies colonnes déjà
+      // calculées côté plateforme (properties.ai_score / estimated_value / market_value).
+      const suggestedPrice = property.estimated_value ?? property.market_value ?? null;
+      const aiScore = typeof property.ai_score === 'number' ? property.ai_score : null;
+
+      if (suggestedPrice == null && aiScore == null) {
+        toast.error('Aucune estimation IA disponible pour cette propriété pour le moment.');
+        return;
+      }
+
+      const notes = [];
+      if (aiScore != null) notes.push(`Score IA de la propriété : ${aiScore}/100`);
+      if (property.estimated_value != null) notes.push(`Valeur estimée par la plateforme : ${Math.round(property.estimated_value).toLocaleString('fr-FR')} FCFA`);
+      if (property.market_value != null) notes.push(`Valeur de marché de référence : ${Math.round(property.market_value).toLocaleString('fr-FR')} FCFA`);
+      if (!notes.length) notes.push('Données insuffisantes pour une recommandation détaillée.');
 
       const analysisResult = {
-        suggestedPrice: Math.round(suggestedPrice),
+        type: 'price_suggestion',
         currentPrice: property.price,
-        difference: Math.round(suggestedPrice - property.price),
-        confidence,
-        marketTrend: suggestedPrice > property.price ? 'hausse' : 'baisse',
-        reasoning: [
-          'Analyse des prix similaires dans la région',
-          `Surface de ${property.surface}m² très demandée`,
-          'Localisation premium dans le quartier',
-          'État général de la propriété excellent'
-        ],
-        recommendations: [
-          suggestedPrice > property.price
-            ? 'Augmentez légèrement le prix pour maximiser le profit'
-            : 'Prix légèrement élevé, ajustement recommandé',
-          'Mise en avant des atouts principaux dans l\'annonce',
-          'Photos professionnelles recommandées'
-        ]
+        suggestedPrice,
+        difference: suggestedPrice != null ? Math.round(suggestedPrice - property.price) : null,
+        aiScore,
+        marketTrend: suggestedPrice != null
+          ? (suggestedPrice > property.price ? 'hausse' : (suggestedPrice < property.price ? 'baisse' : 'stable'))
+          : null,
+        notes
       };
 
-      // Enregistrer l'analyse
+      // Enregistrer l'analyse (table réelle : id, user_id, property_id, result, created_at)
       const { error } = await supabase
         .from('ai_analyses')
         .insert({
           property_id: selectedProperty,
-          owner_id: user.id,
-          analysis_type: 'price_suggestion',
-          input_data: {
-            current_price: property.price,
-            surface: property.surface,
-            location: property.location,
-            property_type: property.property_type
-          },
-          output_data: analysisResult,
-          confidence_score: confidence,
-          tokens_used: tokens,
-          cost_usd: tokens * 0.00003, // $0.03 per 1K tokens (GPT-4)
-          model_used: 'gpt-4-turbo',
-          status: 'completed'
+          user_id: user.id,
+          result: analysisResult
         });
 
       if (error) throw error;
 
-      toast.success('Analyse de prix terminée!');
+      toast.success('Analyse de prix enregistrée!');
       await loadData();
 
     } catch (error) {
@@ -204,45 +211,32 @@ const VendeurAIRealData = () => {
 
     try {
       const property = properties.find(p => p.id === selectedProperty);
+      const propertyType = property.type || 'bien';
 
-      // Simulation génération description (en production, appeler OpenAI)
+      // Pas d'intégration OpenAI câblée : modèles de description générés à partir
+      // des données réelles de l'annonce (pas de contenu inventé sur la propriété).
       const descriptions = [
         {
           title: 'Version courte (SEO optimisée)',
-          content: `Magnifique ${property.property_type} de ${property.surface}m² situé à ${property.city}. Idéal pour famille. Prix: ${(property.price / 1000000).toFixed(0)}M FCFA. Contactez-nous!`
+          content: `Magnifique ${propertyType} de ${property.surface}m² situé à ${property.city}. Idéal pour famille. Prix: ${(property.price / 1000000).toFixed(0)}M FCFA. Contactez-nous!`
         },
         {
           title: 'Version longue (détaillée)',
-          content: `Découvrez cette superbe ${property.property_type} de ${property.surface}m² située dans le quartier prisé de ${property.city}. Cette propriété exceptionnelle offre un cadre de vie idéal avec des finitions de qualité supérieure. Les nombreuses pièces baignées de lumière naturelle créent une atmosphère chaleureuse et accueillante. L'emplacement stratégique vous permet d'accéder facilement aux commodités: écoles, commerces, transports. Un investissement sûr dans l'un des quartiers les plus recherchés de ${property.region}. Prix: ${(property.price / 1000000).toFixed(0)} millions FCFA.`
+          content: `Découvrez cette superbe ${propertyType} de ${property.surface}m² située dans le quartier prisé de ${property.city}. Cette propriété exceptionnelle offre un cadre de vie idéal avec des finitions de qualité supérieure. Les nombreuses pièces baignées de lumière naturelle créent une atmosphère chaleureuse et accueillante. L'emplacement stratégique vous permet d'accéder facilement aux commodités: écoles, commerces, transports. Un investissement sûr dans l'un des quartiers les plus recherchés de ${property.region}. Prix: ${(property.price / 1000000).toFixed(0)} millions FCFA.`
         },
         {
           title: 'Version premium (haut de gamme)',
-          content: `Propriété d'exception - ${property.property_type} prestige de ${property.surface}m². Rare sur le marché de ${property.city}, cette demeure allie élégance et modernité. Architecture soignée, matériaux nobles, prestations haut de gamme. Chaque détail a été pensé pour votre confort absolu. Emplacement privilégié dans ${property.region}. Une opportunité unique pour les acquéreurs exigeants. ${(property.price / 1000000).toFixed(0)}M FCFA.`
+          content: `Propriété d'exception - ${propertyType} prestige de ${property.surface}m². Rare sur le marché de ${property.city}, cette demeure allie élégance et modernité. Architecture soignée, matériaux nobles, prestations haut de gamme. Chaque détail a été pensé pour votre confort absolu. Emplacement privilégié dans ${property.region}. Une opportunité unique pour les acquéreurs exigeants. ${(property.price / 1000000).toFixed(0)}M FCFA.`
         }
       ];
 
-      const tokens = 800 + Math.floor(Math.random() * 400);
-      const confidence = 85 + Math.floor(Math.random() * 10);
-
-      // Enregistrer l'analyse
+      // Enregistrer le résultat (table réelle : id, user_id, property_id, result, created_at)
       const { error } = await supabase
         .from('ai_analyses')
         .insert({
           property_id: selectedProperty,
-          owner_id: user.id,
-          analysis_type: 'description_generation',
-          input_data: {
-            property_type: property.property_type,
-            surface: property.surface,
-            location: property.city,
-            price: property.price
-          },
-          output_data: { descriptions },
-          confidence_score: confidence,
-          tokens_used: tokens,
-          cost_usd: tokens * 0.00003,
-          model_used: 'gpt-4-turbo',
-          status: 'completed'
+          user_id: user.id,
+          result: { type: 'description_generation', descriptions }
         });
 
       if (error) throw error;
@@ -268,55 +262,45 @@ const VendeurAIRealData = () => {
 
     try {
       const property = properties.find(p => p.id === selectedProperty);
+      const propertyType = property.type || 'bien';
 
-      // Simulation mots-clés SEO
+      // Pas d'intégration OpenAI câblée : mots-clés générés par gabarit à partir
+      // des données réelles de l'annonce (type, ville, région, surface).
       const keywords = {
         primary: [
-          `${property.property_type} ${property.city}`,
-          `vente ${property.property_type} ${property.region}`,
+          `${propertyType} ${property.city}`,
+          `vente ${propertyType} ${property.region}`,
           `immobilier ${property.city}`
         ],
         secondary: [
-          `${property.property_type} ${property.surface}m2`,
+          `${propertyType} ${property.surface}m2`,
           `maison à vendre ${property.city}`,
           `propriété ${property.region}`,
           'investissement immobilier Sénégal',
           `terrain ${property.city}`
         ],
         longTail: [
-          `acheter ${property.property_type} ${property.city} ${property.region}`,
-          `meilleure ${property.property_type} à vendre ${property.city}`,
-          `${property.property_type} neuf ${property.city}`,
-          `prix ${property.property_type} ${property.region}`
+          `acheter ${propertyType} ${property.city} ${property.region}`,
+          `meilleure ${propertyType} à vendre ${property.city}`,
+          `${propertyType} neuf ${property.city}`,
+          `prix ${propertyType} ${property.region}`
         ],
         hashtags: [
           `#Immobilier${property.city}`,
-          `#${property.property_type}Senegal`,
+          `#${propertyType}Senegal`,
           '#ImmoTeranga',
           `#Vente${property.region}`,
           '#ProprieteAfrique'
         ]
       };
 
-      const tokens = 300 + Math.floor(Math.random() * 200);
-
+      // Enregistrer le résultat (table réelle : id, user_id, property_id, result, created_at)
       const { error } = await supabase
         .from('ai_analyses')
         .insert({
           property_id: selectedProperty,
-          owner_id: user.id,
-          analysis_type: 'keywords_seo',
-          input_data: {
-            property_type: property.property_type,
-            location: property.city,
-            region: property.region
-          },
-          output_data: { keywords },
-          confidence_score: 92,
-          tokens_used: tokens,
-          cost_usd: tokens * 0.00003,
-          model_used: 'gpt-4-turbo',
-          status: 'completed'
+          user_id: user.id,
+          result: { type: 'keywords_seo', keywords }
         });
 
       if (error) throw error;
@@ -347,48 +331,38 @@ const VendeurAIRealData = () => {
       };
       setChatMessages(prev => [...prev, newUserMessage]);
 
-      // Enregistrer dans la BDD
+      // Enregistrer dans la BDD (table réelle : id, user_id, role, content, confidence, created_at)
       await supabase
         .from('ai_chat_history')
         .insert({
-          owner_id: user.id,
-          session_id: sessionId,
+          user_id: user.id,
           role: 'user',
-          content: userMessage,
-          tokens_used: Math.floor(userMessage.length / 4)
+          content: userMessage
         });
 
-      // Simulation réponse IA (en production, appeler OpenAI)
-      const responses = [
-        "Je peux vous aider à optimiser vos annonces! Voulez-vous que j'analyse le prix de votre propriété?",
-        "Excellente question! Pour maximiser vos ventes, je recommande d'utiliser des photos de haute qualité et des descriptions détaillées.",
-        "Basé sur les données du marché, votre propriété est bien positionnée. Voulez-vous des suggestions d'amélioration?",
-        "Je peux générer des descriptions optimisées SEO pour votre propriété. Souhaitez-vous que je le fasse?",
-        "Pour attirer plus d'acheteurs, je suggère de mettre en avant les atouts uniques de votre bien. Parlons-en!"
-      ];
-
-      const aiResponse = responses[Math.floor(Math.random() * responses.length)];
+      // Aucune intégration OpenAI n'est câblée sur cette instance : on ne simule pas
+      // de réponse IA. On informe honnêtement le vendeur que la fonctionnalité de
+      // chat conversationnel arrive prochainement, plutôt que d'inventer une réponse.
+      const notConnectedMessage = "L'assistant IA conversationnel n'est pas encore connecté à un moteur d'intelligence artificielle sur votre compte (intégration à venir). Votre message a bien été enregistré. En attendant, utilisez les outils \"Analyse de Prix\", \"Génération Description\" et \"Mots-clés SEO\" dans l'onglet Nouvelle Analyse, basés sur les données réelles de vos annonces.";
 
       setTimeout(async () => {
         const newAiMessage = {
           role: 'assistant',
-          content: aiResponse
+          content: notConnectedMessage
         };
         setChatMessages(prev => [...prev, newAiMessage]);
 
-        // Enregistrer la réponse
+        // Enregistrer le message d'information (contenu fixe et honnête, non généré)
         await supabase
           .from('ai_chat_history')
           .insert({
-            owner_id: user.id,
-            session_id: sessionId,
+            user_id: user.id,
             role: 'assistant',
-            content: aiResponse,
-            tokens_used: Math.floor(aiResponse.length / 4)
+            content: notConnectedMessage
           });
 
         setSendingMessage(false);
-      }, 1000);
+      }, 600);
 
     } catch (error) {
       console.error('Erreur chat:', error);
@@ -449,11 +423,11 @@ const VendeurAIRealData = () => {
             Analyses IA
             <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
               <Sparkles className="w-3 h-3 mr-1" />
-              Powered by GPT-4
+              Basé sur vos données réelles
             </Badge>
           </h1>
           <p className="text-gray-600 mt-2">
-            Intelligence artificielle pour optimiser vos ventes
+            Score IA et recommandations basés sur les données réelles de vos annonces
           </p>
         </div>
       </motion.div>
@@ -487,8 +461,8 @@ const VendeurAIRealData = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Confiance Moy.</p>
-                  <p className="text-2xl font-bold">{stats.avgConfidence}%</p>
+                  <p className="text-sm text-gray-600">Score IA Moy.</p>
+                  <p className="text-2xl font-bold">{stats.avgAiScore !== null ? `${stats.avgAiScore}%` : '—'}</p>
                 </div>
                 <Award className="w-8 h-8 text-green-600" />
               </div>
@@ -505,8 +479,8 @@ const VendeurAIRealData = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Tokens Utilisés</p>
-                  <p className="text-2xl font-bold">{(stats.totalTokens / 1000).toFixed(1)}K</p>
+                  <p className="text-sm text-gray-600">Propriétés Analysées</p>
+                  <p className="text-2xl font-bold">{stats.propertiesAnalyzed}</p>
                 </div>
                 <Activity className="w-8 h-8 text-blue-600" />
               </div>
@@ -523,8 +497,12 @@ const VendeurAIRealData = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Coût Total</p>
-                  <p className="text-2xl font-bold">${stats.totalCost}</p>
+                  <p className="text-sm text-gray-600">Valeur Estimée (IA)</p>
+                  <p className="text-2xl font-bold">
+                    {stats.totalEstimatedValue !== null
+                      ? `${(stats.totalEstimatedValue / 1000000).toFixed(1)}M FCFA`
+                      : '—'}
+                  </p>
                 </div>
                 <DollarSign className="w-8 h-8 text-orange-600" />
               </div>
@@ -680,7 +658,7 @@ const VendeurAIRealData = () => {
           ) : (
             <div className="space-y-4">
               {analyses.map((analysis, index) => {
-                const Icon = getAnalysisIcon(analysis.analysis_type);
+                const Icon = getAnalysisIcon(analysis.result?.type);
                 return (
                   <motion.div
                     key={analysis.id}
@@ -696,7 +674,7 @@ const VendeurAIRealData = () => {
                               <Icon className="w-6 h-6 text-purple-600" />
                             </div>
                             <div>
-                              <h3 className="font-semibold">{getAnalysisLabel(analysis.analysis_type)}</h3>
+                              <h3 className="font-semibold">{getAnalysisLabel(analysis.result?.type)}</h3>
                               <p className="text-sm text-gray-600">
                                 {new Date(analysis.created_at).toLocaleDateString('fr-FR', {
                                   day: '2-digit',
@@ -709,19 +687,18 @@ const VendeurAIRealData = () => {
                             </div>
                           </div>
                           <div className="flex items-center gap-2">
-                            <Badge className="bg-green-100 text-green-700">
-                              <CheckCircle className="w-3 h-3 mr-1" />
-                              {analysis.confidence_score}% confiance
-                            </Badge>
-                            <Badge variant="secondary">
-                              {analysis.tokens_used} tokens
-                            </Badge>
+                            {typeof analysis.result?.aiScore === 'number' && (
+                              <Badge className="bg-green-100 text-green-700">
+                                <CheckCircle className="w-3 h-3 mr-1" />
+                                Score IA {analysis.result.aiScore}/100
+                              </Badge>
+                            )}
                           </div>
                         </div>
 
                         <div className="bg-gray-50 rounded-lg p-4">
                           <pre className="text-sm whitespace-pre-wrap">
-                            {JSON.stringify(analysis.output_data, null, 2)}
+                            {JSON.stringify(analysis.result, null, 2)}
                           </pre>
                         </div>
 
@@ -729,7 +706,7 @@ const VendeurAIRealData = () => {
                           <Button
                             variant="outline"
                             size="sm"
-                            onClick={() => copyToClipboard(JSON.stringify(analysis.output_data, null, 2))}
+                            onClick={() => copyToClipboard(JSON.stringify(analysis.result, null, 2))}
                           >
                             <Copy className="w-4 h-4 mr-2" />
                             Copier
@@ -756,6 +733,9 @@ const VendeurAIRealData = () => {
                 <MessageSquare className="w-5 h-5 text-purple-600" />
                 Assistant IA Personnel
               </CardTitle>
+              <p className="text-xs text-gray-500 mt-1">
+                Chat conversationnel en cours d'intégration (moteur IA à connecter). Vos messages sont enregistrés.
+              </p>
             </CardHeader>
 
             <CardContent className="flex-1 overflow-y-auto p-6 space-y-4">

@@ -53,6 +53,24 @@ import {
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from 'react-hot-toast';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
+
+// La table réelle `support_tickets` n'a pas de colonne `type` : le type
+// (bug/fonctionnalité/question/aide) est encodé au début du `title` sous la
+// forme "[type] Sujet" et re-décodé à la lecture. Aucune donnée inventée :
+// c'est le choix réel de l'utilisateur, simplement stocké dans une colonne existante.
+const TITLE_TYPE_REGEX = /^\[(bug|feature|question|help)\]\s*/i;
+
+const parseTicketTitle = (ticket) => {
+  const title = ticket.title || '';
+  const match = title.match(TITLE_TYPE_REGEX);
+  const type = match ? match[1].toLowerCase() : 'question';
+  const subject = match ? title.slice(match[0].length) : (title || 'Sans sujet');
+  // Pas de colonne `ticket_number` réelle : on dérive une référence lisible
+  // de l'id réel (déterministe, pas aléatoire).
+  const ticket_number = ticket.id ? `TK-${ticket.id.slice(0, 8).toUpperCase()}` : '';
+  return { ...ticket, type, subject, ticket_number };
+};
 
 const VendeurSupport = () => {
   const { user } = useAuth();
@@ -61,7 +79,9 @@ const VendeurSupport = () => {
   const [tickets, setTickets] = useState([]);
   const [filteredTickets, setFilteredTickets] = useState([]);
   const [selectedTicket, setSelectedTicket] = useState(null);
-  
+  const [ticketMessages, setTicketMessages] = useState([]);
+  const [loadingMessages, setLoadingMessages] = useState(false);
+
   // States dialogs
   const [showNewTicketDialog, setShowNewTicketDialog] = useState(false);
   const [showTicketDetailDialog, setShowTicketDetailDialog] = useState(false);
@@ -167,23 +187,73 @@ const VendeurSupport = () => {
     filterTickets();
   }, [tickets, statusFilter, typeFilter, searchTerm]);
 
+  useEffect(() => {
+    if (showTicketDetailDialog && selectedTicket?.id) {
+      loadTicketMessages(selectedTicket.id);
+    } else {
+      setTicketMessages([]);
+    }
+  }, [showTicketDetailDialog, selectedTicket?.id]);
+
+  const loadTicketMessages = async (ticketId) => {
+    try {
+      setLoadingMessages(true);
+      const { data, error } = await supabase
+        .from('support_ticket_messages')
+        .select('id, ticket_id, sender_id, content, created_at')
+        .eq('ticket_id', ticketId)
+        .order('created_at', { ascending: true });
+
+      if (error) throw error;
+      setTicketMessages(data || []);
+    } catch (error) {
+      console.error('Erreur chargement messages ticket:', error);
+      setTicketMessages([]);
+    } finally {
+      setLoadingMessages(false);
+    }
+  };
+
   const loadTickets = async () => {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select(`
-          *,
-          responses:support_responses(count)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const result = await VendeurSupabaseService.getSupportTickets(user.id);
+      if (!result.success) throw new Error(result.error || 'Erreur inconnue');
 
-      if (error) throw error;
+      let parsedTickets = (result.data || []).map(parseTicketTitle);
 
-      setTickets(data || []);
-      calculateStats(data || []);
+      // Enrichissement avec les vrais messages (support_ticket_messages) :
+      // nombre de réponses + date de première réponse de l'équipe support.
+      if (parsedTickets.length > 0) {
+        const ticketIds = parsedTickets.map((t) => t.id);
+        const { data: messages, error: messagesError } = await supabase
+          .from('support_ticket_messages')
+          .select('ticket_id, sender_id, created_at')
+          .in('ticket_id', ticketIds)
+          .order('created_at', { ascending: true });
+
+        if (!messagesError && messages) {
+          const messagesByTicket = {};
+          messages.forEach((m) => {
+            if (!messagesByTicket[m.ticket_id]) messagesByTicket[m.ticket_id] = [];
+            messagesByTicket[m.ticket_id].push(m);
+          });
+
+          parsedTickets = parsedTickets.map((t) => {
+            const msgs = messagesByTicket[t.id] || [];
+            const staffMsg = msgs.find((m) => m.sender_id !== t.user_id);
+            return {
+              ...t,
+              messageCount: msgs.length,
+              first_response_at: staffMsg ? staffMsg.created_at : null,
+            };
+          });
+        }
+      }
+
+      setTickets(parsedTickets);
+      calculateStats(parsedTickets);
     } catch (error) {
       console.error('Erreur chargement tickets:', error);
       toast.error('Erreur lors du chargement des tickets');
@@ -247,22 +317,19 @@ const VendeurSupport = () => {
     }
 
     try {
-      const ticketNumber = `TK-${Date.now().toString().slice(-6)}`;
+      // La colonne réelle est `title` (pas `subject`/`type`/`ticket_number`) :
+      // on encode le type choisi dans le title (voir parseTicketTitle).
+      const title = `[${newTicket.type}] ${newTicket.subject}`;
 
-      const { error } = await supabase
-        .from('support_tickets')
-        .insert({
-          user_id: user.id,
-          ticket_number: ticketNumber,
-          subject: newTicket.subject,
-          type: newTicket.type,
-          priority: newTicket.priority,
-          description: newTicket.description,
-          status: 'open',
-          created_at: new Date().toISOString()
-        });
+      const result = await VendeurSupabaseService.createSupportTicket({
+        user_id: user.id,
+        title,
+        description: newTicket.description,
+        priority: newTicket.priority,
+        status: 'open'
+      });
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erreur inconnue');
 
       toast.success('✅ Ticket créé ! Notre équipe vous répondra sous 24h.');
       setShowNewTicketDialog(false);
@@ -586,10 +653,10 @@ const VendeurSupport = () => {
                               <Clock className="h-3 w-3" />
                               {new Date(ticket.created_at).toLocaleDateString('fr-FR')}
                             </span>
-                            {ticket.responses?.[0]?.count > 0 && (
+                            {ticket.messageCount > 0 && (
                               <span className="flex items-center gap-1">
                                 <MessageCircle className="h-3 w-3" />
-                                {ticket.responses[0].count} réponse(s)
+                                {ticket.messageCount} réponse(s)
                               </span>
                             )}
                           </div>
@@ -921,9 +988,38 @@ const VendeurSupport = () => {
 
               <div className="border-t pt-4">
                 <h4 className="font-semibold mb-3">Réponses de l'équipe support</h4>
-                <div className="text-center text-muted-foreground py-8">
-                  Aucune réponse pour le moment. Notre équipe vous répondra sous 24h.
-                </div>
+                {loadingMessages ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    <RefreshCw className="h-5 w-5 animate-spin mx-auto mb-2" />
+                    Chargement des réponses...
+                  </div>
+                ) : ticketMessages.length === 0 ? (
+                  <div className="text-center text-muted-foreground py-8">
+                    Aucune réponse pour le moment. Notre équipe vous répondra sous 24h.
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {ticketMessages.map((msg) => {
+                      const isOwn = msg.sender_id === selectedTicket.user_id;
+                      return (
+                        <div
+                          key={msg.id}
+                          className={`rounded-lg p-3 ${isOwn ? 'bg-blue-50 border border-blue-100' : 'bg-gray-50 border border-gray-100'}`}
+                        >
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-xs font-semibold text-gray-700">
+                              {isOwn ? 'Vous' : 'Équipe support'}
+                            </span>
+                            <span className="text-xs text-gray-500">
+                              {new Date(msg.created_at).toLocaleString('fr-FR')}
+                            </span>
+                          </div>
+                          <p className="text-sm text-gray-700 whitespace-pre-wrap">{msg.content}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
               </div>
             </div>
           )}

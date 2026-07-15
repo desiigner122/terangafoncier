@@ -8,10 +8,10 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   TrendingUp, Building2, Users, MessageSquare, Eye, Star, DollarSign,
   Calendar, ArrowUp, ArrowDown, Plus, BarChart3, Activity, Target,
-  Zap, Brain, Shield, Sparkles, Clock, Heart, CheckCircle, AlertCircle,
+  Zap, Brain, Shield, Sparkles, Clock, CheckCircle, AlertCircle,
   Bell, TrendingDown, Award, Home, Settings, FileText, Camera, Edit,
   ExternalLink, RefreshCw
 } from 'lucide-react';
@@ -43,7 +43,7 @@ const VendeurOverviewRealDataModern = () => {
     pendingProperties: 0,
     soldProperties: 0,
     totalViews: 0,
-    totalFavorites: 0,
+    totalOffers: 0,
     totalInquiries: 0,
     pendingInquiries: 0,
     totalRevenue: 0,
@@ -121,7 +121,7 @@ const VendeurOverviewRealDataModern = () => {
         }
       );
 
-      // ✅ REQUÊTE CORRIGÉE - Charger les propriétés
+      // ✅ REQUÊTE CORRIGÉE - Charger les propriétés (colonnes réelles du schéma `properties`)
       const { data: properties, error: propError } = await supabase
         .from('properties')
         .select(`
@@ -132,34 +132,54 @@ const VendeurOverviewRealDataModern = () => {
           price,
           surface,
           views_count,
-          favorites_count,
-          ai_analysis,
-          blockchain_verified,
-          is_featured,
+          ai_score,
+          blockchain_hash,
           created_at,
           updated_at,
-          images
+          photos:property_photos ( id, url, is_primary )
         `)
         .eq('owner_id', user.id);
 
       if (propError) throw propError;
 
-      // Calculer les stats principales
+      // Calculer les stats principales (uniquement des colonnes réelles)
       const stats = {
         totalProperties: properties?.length || 0,
         activeProperties: properties?.filter(p => p.status === 'active').length || 0,
         pendingProperties: properties?.filter(p => p.verification_status === 'pending').length || 0,
         soldProperties: properties?.filter(p => p.status === 'sold').length || 0,
         totalViews: properties?.reduce((sum, p) => sum + (p.views_count || 0), 0) || 0,
-        totalFavorites: properties?.reduce((sum, p) => sum + (p.favorites_count || 0), 0) || 0,
-        aiOptimizedCount: properties?.filter(p => p.ai_analysis && Object.keys(p.ai_analysis).length > 0).length || 0,
-        blockchainVerifiedCount: properties?.filter(p => p.blockchain_verified).length || 0,
+        // "Optimisée IA" = la propriété a reçu un score IA (colonne réelle ai_score)
+        aiOptimizedCount: properties?.filter(p => typeof p.ai_score === 'number' && p.ai_score > 0).length || 0,
+        // "Certifiée blockchain" = un hash d'ancrage existe réellement sur la propriété
+        blockchainVerifiedCount: properties?.filter(p => Boolean(p.blockchain_hash)).length || 0,
       };
 
-      // ✅ Calculer inquiries depuis la table properties (colonne directe)
-      // Note: La table contact_requests n'existe pas selon l'erreur, on utilise les données de properties
-      stats.totalInquiries = 0; // Sera calculé si on a accès à system_requests ou autre table
-      stats.pendingInquiries = 0;
+      // ✅ Offres reçues (financial_transactions liées aux propriétés du vendeur).
+      // Remplace l'ancien compteur "favoris" (colonne favorites_count inexistante en base) :
+      // c'est la donnée réelle la plus proche d'un signal d'intérêt acheteur.
+      const propertyIds = (properties || []).map(p => p.id);
+      let offers = [];
+      if (propertyIds.length > 0) {
+        const { data: offersData, error: offersError } = await supabase
+          .from('financial_transactions')
+          .select('id, property_id, status, amount')
+          .in('property_id', propertyIds);
+        if (offersError) {
+          console.log('Offres non disponibles:', offersError);
+        } else {
+          offers = offersData || [];
+        }
+      }
+
+      const offersByProperty = offers.reduce((acc, offer) => {
+        acc[offer.property_id] = (acc[offer.property_id] || 0) + 1;
+        return acc;
+      }, {});
+
+      stats.totalOffers = offers.length;
+      stats.totalInquiries = offers.length;
+      stats.pendingInquiries = offers.filter(o => o.status === 'pending').length;
 
       // Revenus
       stats.totalRevenue = properties
@@ -193,7 +213,7 @@ const VendeurOverviewRealDataModern = () => {
         const { data: crmContacts } = await supabase
           .from('crm_contacts')
           .select('id, status')
-          .eq('user_id', user.id);
+          .eq('owner_id', user.id);
 
         stats.newProspects = crmContacts?.filter(c => c.status === 'new').length || 0;
         stats.hotLeads = crmContacts?.filter(c => c.status === 'hot').length || 0;
@@ -209,15 +229,19 @@ const VendeurOverviewRealDataModern = () => {
       const topProps = [...(properties || [])]
         .sort((a, b) => (b.views_count || 0) - (a.views_count || 0))
         .slice(0, 5)
-        .map(p => ({
-          id: p.id,
-          title: p.title,
-          views: p.views_count || 0,
-          favorites: p.favorites_count || 0,
-          aiOptimized: p.ai_analysis && Object.keys(p.ai_analysis).length > 0,
-          blockchainVerified: p.blockchain_verified || false,
-          image: Array.isArray(p.images) && p.images.length > 0 ? p.images[0] : null
-        }));
+        .map(p => {
+          const photos = Array.isArray(p.photos) ? p.photos : [];
+          const primaryPhoto = photos.find(ph => ph.is_primary) || photos[0] || null;
+          return {
+            id: p.id,
+            title: p.title,
+            views: p.views_count || 0,
+            offers: offersByProperty[p.id] || 0,
+            aiOptimized: typeof p.ai_score === 'number' && p.ai_score > 0,
+            blockchainVerified: Boolean(p.blockchain_hash),
+            image: primaryPhoto?.url || null
+          };
+        });
 
       setTopProperties(topProps);
 
@@ -252,9 +276,9 @@ const VendeurOverviewRealDataModern = () => {
       property.title,
       property.price,
       property.surface,
-      property.images && property.images.length >= 3,
-      property.ai_analysis && Object.keys(property.ai_analysis).length > 0,
-      property.blockchain_verified
+      Array.isArray(property.photos) && property.photos.length >= 3,
+      typeof property.ai_score === 'number' && property.ai_score > 0,
+      Boolean(property.blockchain_hash)
     ];
     checks.forEach(check => { if (check) score += 100 / checks.length; });
     return Math.round(score);
@@ -430,15 +454,14 @@ const VendeurOverviewRealDataModern = () => {
           value={dashboardStats.totalViews.toLocaleString('fr-FR')}
           icon={Eye}
           color="purple"
-          trend={{ value: 15, direction: 'up' }}
-          description="vs mois dernier"
+          description="Cumulées sur vos annonces"
         />
         <StatsCard
-          title="Favoris"
-          value={dashboardStats.totalFavorites}
-          icon={Heart}
+          title="Offres Reçues"
+          value={dashboardStats.totalOffers}
+          icon={MessageSquare}
           color="pink"
-          description="Propriétés sauvegardées"
+          description="Manifestations d'intérêt reçues"
         />
         <StatsCard
           title="Taux Conversion"
@@ -528,7 +551,7 @@ const VendeurOverviewRealDataModern = () => {
                             <Eye className="h-3 w-3" /> {property.views}
                           </span>
                           <span className="text-xs text-muted-foreground flex items-center gap-1">
-                            <Heart className="h-3 w-3" /> {property.favorites}
+                            <MessageSquare className="h-3 w-3" /> {property.offers}
                           </span>
                         </div>
                       </div>

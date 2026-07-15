@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Network, Shield, Bitcoin, Wallet, Link2, Award,
   TrendingUp, Users, Globe, Lock, Key, Zap,
   ArrowRight, Copy, ExternalLink, CheckCircle,
@@ -17,6 +17,7 @@ import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { toast } from 'sonner';
 
 const VendeurBlockchainRealData = () => {
@@ -24,19 +25,20 @@ const VendeurBlockchainRealData = () => {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('certificates');
   const [searchTerm, setSearchTerm] = useState('');
-  
+
   // États
   const [certificates, setCertificates] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [properties, setProperties] = useState([]);
   const [walletConnections, setWalletConnections] = useState([]);
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [isMinting, setIsMinting] = useState(false);
   const [stats, setStats] = useState({
     totalCertificates: 0,
-    activeNFTs: 0,
+    verifiedCertificates: 0,
+    pendingCertificates: 0,
     totalTransactions: 0,
-    totalValue: 0,
-    pendingMints: 0
+    totalValue: 0
   });
 
   // Charger données blockchain
@@ -48,10 +50,20 @@ const VendeurBlockchainRealData = () => {
     }
   }, [user]);
 
+  // Index des propriétés du vendeur par id, pour enrichir certificats/transactions
+  // (blockchain_certificates et blockchain_transactions ne stockent que property_id)
+  const propertiesById = useMemo(() => {
+    const map = {};
+    properties.forEach(p => { map[p.id] = p; });
+    return map;
+  }, [properties]);
+
   const loadProperties = async () => {
     try {
       const { data, error } = await supabase
-        .from('properties').select('id, title, location, price, surface, property_type, images').eq('owner_id', user.id)
+        .from('properties')
+        .select('id, title, location, price, surface, type')
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (error) throw error;
@@ -64,45 +76,37 @@ const VendeurBlockchainRealData = () => {
   const loadBlockchainData = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('blockchain_certificates')
-        .select(`
-          *,
-          properties (
-            id,
-            title,
-            price,
-            location,
-            surface,
-            property_type,
-            images
-          )
-        `)
-        .eq('vendor_id', user.id)
-        .order('created_at', { ascending: false });
 
-      if (error) throw error;
+      const [certResult, txResult] = await Promise.all([
+        VendeurSupabaseService.getBlockchainCertificates(user.id),
+        VendeurSupabaseService.getBlockchainTransactions(user.id, { limit: 100 })
+      ]);
 
-      setCertificates(data || []);
-      
-      // Calculer stats
-      const activeNFTs = data?.filter(c => c.status === 'active').length || 0;
-      const totalValue = data?.reduce((sum, c) => sum + (c.token_value || 0), 0) || 0;
-      const pendingMints = data?.filter(c => c.status === 'pending').length || 0;
-      const totalTransactions = data?.reduce((sum, c) => sum + (c.transaction_count || 0), 0) || 0;
+      if (!certResult.success) throw new Error(certResult.error || 'Erreur certificats');
+      if (!txResult.success) throw new Error(txResult.error || 'Erreur transactions');
+
+      const certs = certResult.data || [];
+      const txs = txResult.data || [];
+
+      setCertificates(certs);
+      setTransactions(txs);
+
+      // Calculer stats à partir des vraies données (certificate_hash, status, transaction_hash, amount...)
+      const verifiedCertificates = certs.filter(c => c.status === 'verified').length;
+      const pendingCertificates = certs.filter(c => c.status === 'pending').length;
+      const totalValue = txs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
 
       setStats({
-        totalCertificates: data?.length || 0,
-        activeNFTs,
-        totalTransactions,
-        totalValue,
-        pendingMints
+        totalCertificates: certs.length,
+        verifiedCertificates,
+        pendingCertificates,
+        totalTransactions: txs.length,
+        totalValue
       });
-
-      setLoading(false);
     } catch (error) {
       console.error('Erreur chargement blockchain:', error);
-      toast.error('Erreur lors du chargement des certificats blockchain');
+      toast.error('Erreur lors du chargement des données blockchain');
+    } finally {
       setLoading(false);
     }
   };
@@ -113,12 +117,14 @@ const VendeurBlockchainRealData = () => {
         .from('wallet_connections')
         .select('*')
         .eq('user_id', user.id)
-        .order('created_at', { ascending: false }); // ✅ Correction: connected_at → created_at
+        .order('created_at', { ascending: false });
 
       if (error) throw error;
       setWalletConnections(walletsData || []);
     } catch (error) {
+      // Table optionnelle selon l'environnement : on affiche simplement l'état vide plutôt que de fabriquer des wallets
       console.error('Erreur chargement wallets:', error);
+      setWalletConnections([]);
     }
   };
 
@@ -130,57 +136,10 @@ const VendeurBlockchainRealData = () => {
 
     setIsMinting(true);
     try {
-      // 1. Récupérer la propriété sélectionnée
-      const property = properties.find(p => p.id === propertyId) || selectedProperty;
-      
-      // 2. Générer token ID unique
-      const tokenId = `TERA${Date.now()}`;
-      
-      // 3. Simuler transaction blockchain
-      const txHash = `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-      
-      // 4. Créer certificat blockchain (sans blockchain_network s'il n'existe pas)
-      const certData = {
-        vendor_id: user.id,
-        property_id: propertyId,
-        token_id: tokenId,
-        token_standard: 'ERC-721',
-        contract_address: '0x742d35cc6634c0532925a3b844bc9e7595f0aae8',
-        token_value: property?.price || 0,
-        transaction_hash: txHash,
-        mint_date: new Date().toISOString(),
-        status: 'active',
-        transaction_count: 0,
-        metadata: {
-          name: property?.title || 'Property NFT',
-          description: `NFT Certificate for ${property?.title || 'Property'}`,
-          image: property?.images?.[0] || '',
-          attributes: {
-            location: property?.location || 'Unknown',
-            surface: property?.surface || 0,
-            type: property?.property_type || 'Property',
-            price: property?.price || 0,
-            blockchain_network: 'Polygon'
-          }
-        }
-      };
-
-      const { data: newCert, error } = await supabase
-        .from('blockchain_certificates')
-        .insert(certData)
-        .select()
-        .single();
-
-      if (error) throw error;
-
-      toast.success('✅ NFT minté avec succès !', {
-        description: `Token ID: ${tokenId} sur Polygon`
-      });
-      loadBlockchainData();
-      setSelectedProperty(null);
-    } catch (error) {
-      console.error('Erreur mint NFT:', error);
-      toast.error('❌ Erreur lors du minting du NFT');
+      // La certification on-chain (émission réelle d'un hash de certificat sur la blockchain)
+      // n'est pas encore câblée côté backend : on informe honnêtement plutôt que de générer
+      // un faux hash de transaction.
+      toast.info('La certification blockchain de cette propriété sera bientôt disponible.');
     } finally {
       setIsMinting(false);
     }
@@ -188,20 +147,14 @@ const VendeurBlockchainRealData = () => {
 
   const handleVerifyCertificate = async (certificateId) => {
     try {
-      // Simuler vérification blockchain
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('blockchain_certificates')
-        .update({ 
-          verified_at: new Date().toISOString(),
-          verification_status: 'verified'
-        })
-        .eq('id', certificateId)
-        .select()
-        .single();
+        .update({ status: 'verified' })
+        .eq('id', certificateId);
 
       if (error) throw error;
 
-      toast.success('Certificat vérifié sur la blockchain');
+      toast.success('Certificat marqué comme vérifié');
       loadBlockchainData();
     } catch (error) {
       console.error('Erreur vérification:', error);
@@ -209,143 +162,61 @@ const VendeurBlockchainRealData = () => {
     }
   };
 
-  const handleTransfer = async (certificateId, toAddress) => {
-    try {
-      const txHash = `0x${Math.random().toString(36).substring(2, 15)}${Math.random().toString(36).substring(2, 15)}`;
-      
-      const { error } = await supabase
-        .from('blockchain_certificates')
-        .update({ 
-          current_owner: toAddress,
-          transaction_hash: txHash,
-          transaction_count: supabase.sql`transaction_count + 1`,
-          last_transfer_date: new Date().toISOString()
-        })
-        .eq('id', certificateId);
-
-      if (error) throw error;
-
-      toast.success('NFT transféré avec succès');
-      loadBlockchainData();
-    } catch (error) {
-      console.error('Erreur transfert:', error);
-      toast.error('Erreur lors du transfert');
-    }
-  };
-
   const handleConnectWallet = async (walletType) => {
-    try {
-      // Simuler connexion wallet
-      const walletAddress = `0x${Math.random().toString(36).substring(2, 15)}`;
-      
-      const { error } = await supabase
-        .from('wallet_connections')
-        .insert({
-          user_id: user.id,
-          wallet_address: walletAddress,
-          wallet_type: walletType,
-          network: 'Polygon',
-          is_active: true
-          // created_at sera auto-généré par Supabase
-        });
-
-      if (error) throw error;
-
-      toast.success(`Wallet ${walletType} connecté avec succès`);
-      loadWalletConnections();
-    } catch (error) {
-      console.error('Erreur connexion wallet:', error);
-      toast.error('Erreur lors de la connexion du wallet');
-    }
+    // La connexion réelle d'un wallet (MetaMask, WalletConnect...) nécessite une intégration
+    // Web3 côté navigateur qui n'est pas encore branchée ici. On ne fabrique plus d'adresse
+    // aléatoire : on informe honnêtement l'utilisateur.
+    toast.info(`La connexion du wallet ${walletType || ''} sera bientôt disponible.`.trim());
   };
 
-  const handleViewOnChain = (certificate) => {
-    // Ouvrir transaction sur PolygonScan
-    const explorerUrl = `https://polygonscan.com/tx/${certificate.transaction_hash}`;
+  const handleViewOnChain = (transactionHash) => {
+    if (!transactionHash) {
+      toast.error('Hash de transaction indisponible');
+      return;
+    }
+    const explorerUrl = `https://polygonscan.com/tx/${transactionHash}`;
     window.open(explorerUrl, '_blank');
     toast.success('🔗 Ouverture de PolygonScan...');
   };
 
-  const handleViewNFT = (certificate) => {
-    // Ouvrir NFT sur OpenSea
-    const openSeaUrl = `https://opensea.io/assets/matic/${certificate.contract_address}/${certificate.token_id}`;
-    window.open(openSeaUrl, '_blank');
-    toast.success('🖼️ Ouverture sur OpenSea...');
-  };
-
   const handleDownloadCertificate = (certificate) => {
-    // Générer certificat PDF/Texte
-    const cert = `CERTIFICAT BLOCKCHAIN NFT
+    const property = propertiesById[certificate.property_id];
+    const cert = `CERTIFICAT BLOCKCHAIN
 ======================================
 Généré le: ${new Date().toLocaleString('fr-FR')}
 
 PROPRIÉTÉ
 ---------
-Titre: ${certificate.properties?.title || 'N/A'}
-Localisation: ${certificate.properties?.location || 'N/A'}
-Surface: ${certificate.properties?.surface || 'N/A'} m²
-Type: ${certificate.properties?.property_type || 'N/A'}
-Prix: ${certificate.properties?.price?.toLocaleString('fr-FR') || 'N/A'} FCFA
+Titre: ${property?.title || 'N/A'}
+Localisation: ${property?.location || 'N/A'}
+Surface: ${property?.surface || 'N/A'} m²
+Type: ${property?.type || 'N/A'}
+Prix: ${property?.price?.toLocaleString('fr-FR') || 'N/A'} FCFA
 
 BLOCKCHAIN
 ----------
-Token ID: ${certificate.token_id}
-Standard: ${certificate.token_standard}
-Réseau: ${certificate.blockchain_network}
-Contrat: ${certificate.contract_address}
-Hash Transaction: ${certificate.transaction_hash}
-Statut: ${certificate.status}
-
-VALEUR
-------
-Valeur Token: ${certificate.token_value?.toLocaleString('fr-FR') || 0} FCFA
-Transactions: ${certificate.transaction_count || 0}
-Propriétaire Actuel: ${certificate.current_owner || certificate.owner_id}
-
-DATES
------
-Date Mint: ${new Date(certificate.mint_date).toLocaleString('fr-FR')}
-${certificate.last_transfer_date ? 
-  `Dernier Transfert: ${new Date(certificate.last_transfer_date).toLocaleString('fr-FR')}` : 
-  'Aucun transfert'}
-${certificate.verified_at ? 
-  `Date Vérification: ${new Date(certificate.verified_at).toLocaleString('fr-FR')}` : 
-  ''}
-
-MÉTADONNÉES
------------
-Nom: ${certificate.metadata?.name || 'N/A'}
-Description: ${certificate.metadata?.description || 'N/A'}
-Image: ${certificate.metadata?.image || 'N/A'}
-${certificate.metadata?.attributes ? 
-  '\nAttributs:\n' + Object.entries(certificate.metadata.attributes)
-    .map(([key, value]) => `  - ${key}: ${value}`).join('\n') : 
-  ''}
-
-LIENS
------
-PolygonScan: https://polygonscan.com/tx/${certificate.transaction_hash}
-OpenSea: https://opensea.io/assets/matic/${certificate.contract_address}/${certificate.token_id}
-Contrat: https://polygonscan.com/address/${certificate.contract_address}
+ID Certificat: ${certificate.id}
+Hash du Certificat: ${certificate.certificate_hash || "En attente d'attribution"}
+Statut: ${certificate.status || 'N/A'}
+Date de création: ${certificate.created_at ? new Date(certificate.created_at).toLocaleString('fr-FR') : 'N/A'}
 
 ---
 Certificat authentifié par Teranga Foncier
-Blockchain: ${certificate.blockchain_network}
-Smart Contract: ${certificate.contract_address}
 `;
 
     const blob = new Blob([cert], { type: 'text/plain;charset=utf-8' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `certificat-nft-${certificate.token_id}-${new Date().toISOString().split('T')[0]}.txt`;
+    a.download = `certificat-${certificate.id}-${new Date().toISOString().split('T')[0]}.txt`;
     a.click();
     URL.revokeObjectURL(url);
 
-    toast.success('📄 Certificat NFT téléchargé');
+    toast.success('📄 Certificat téléchargé');
   };
 
   const copyToClipboard = (text) => {
+    if (!text) return;
     navigator.clipboard.writeText(text);
     toast.success('Copié dans le presse-papier');
   };
@@ -360,15 +231,15 @@ Smart Contract: ${certificate.contract_address}
       style: 'currency',
       currency: 'XOF',
       minimumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const getStatusColor = (status) => {
     const colors = {
-      active: 'bg-green-100 text-green-800 border-green-200',
+      verified: 'bg-green-100 text-green-800 border-green-200',
+      accepted: 'bg-green-100 text-green-800 border-green-200',
       pending: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      transferred: 'bg-blue-100 text-blue-800 border-blue-200',
-      burned: 'bg-red-100 text-red-800 border-red-200'
+      rejected: 'bg-red-100 text-red-800 border-red-200'
     };
     return colors[status] || 'bg-gray-100 text-gray-800 border-gray-200';
   };
@@ -382,10 +253,12 @@ Smart Contract: ${certificate.contract_address}
     return colors[network] || 'bg-gray-100 text-gray-800';
   };
 
-  const filteredCertificates = certificates.filter(cert =>
-    cert.token_id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    cert.properties?.title?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCertificates = certificates.filter(cert => {
+    const property = propertiesById[cert.property_id];
+    const term = searchTerm.toLowerCase();
+    return (cert.certificate_hash || '').toLowerCase().includes(term) ||
+      (property?.title || '').toLowerCase().includes(term);
+  });
 
   if (loading) {
     return (
@@ -417,7 +290,7 @@ Smart Contract: ${certificate.contract_address}
             Certificats blockchain et NFTs de vos propriétés
           </p>
         </div>
-        <Button 
+        <Button
           onClick={() => handleConnectWallet('MetaMask')}
           className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700"
         >
@@ -437,21 +310,21 @@ Smart Contract: ${certificate.contract_address}
             trend: null
           },
           {
-            label: 'NFTs Actifs',
-            value: stats.activeNFTs,
+            label: 'Certificats Vérifiés',
+            value: stats.verifiedCertificates,
             icon: Award,
             color: 'green',
-            trend: '+12%'
+            trend: null
           },
           {
             label: 'Transactions',
             value: stats.totalTransactions,
             icon: Activity,
             color: 'blue',
-            trend: '+5'
+            trend: null
           },
           {
-            label: 'Valeur Totale',
+            label: 'Valeur des Transactions',
             value: formatCFA(stats.totalValue),
             icon: DollarSign,
             color: 'purple',
@@ -459,7 +332,7 @@ Smart Contract: ${certificate.contract_address}
           },
           {
             label: 'En Attente',
-            value: stats.pendingMints,
+            value: stats.pendingCertificates,
             icon: Clock,
             color: 'yellow',
             trend: null
@@ -501,11 +374,11 @@ Smart Contract: ${certificate.contract_address}
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="certificates">
             <Award className="h-4 w-4 mr-2" />
-            Certificats NFT
+            Certificats
           </TabsTrigger>
           <TabsTrigger value="mint">
             <Sparkles className="h-4 w-4 mr-2" />
-            Mint NFT
+            Certification
           </TabsTrigger>
           <TabsTrigger value="wallets">
             <Wallet className="h-4 w-4 mr-2" />
@@ -513,11 +386,11 @@ Smart Contract: ${certificate.contract_address}
           </TabsTrigger>
           <TabsTrigger value="analytics">
             <Activity className="h-4 w-4 mr-2" />
-            Analytics
+            Transactions
           </TabsTrigger>
         </TabsList>
 
-        {/* Certificats NFT */}
+        {/* Certificats */}
         <TabsContent value="certificates" className="space-y-4">
           <Card>
             <CardHeader>
@@ -525,7 +398,7 @@ Smart Contract: ${certificate.contract_address}
                 <div>
                   <CardTitle>Mes Certificats Blockchain</CardTitle>
                   <CardDescription>
-                    NFTs et certificats de propriété sur la blockchain
+                    Certificats de propriété enregistrés sur la blockchain
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
@@ -535,7 +408,7 @@ Smart Contract: ${certificate.contract_address}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-64"
                   />
-                  <Button variant="outline">
+                  <Button variant="outline" onClick={loadBlockchainData}>
                     <RefreshCw className="h-4 w-4" />
                   </Button>
                 </div>
@@ -551,157 +424,140 @@ Smart Contract: ${certificate.contract_address}
                     className="bg-gradient-to-r from-orange-500 to-orange-600"
                   >
                     <Sparkles className="h-4 w-4 mr-2" />
-                    Créer mon premier NFT
+                    Demander une certification
                   </Button>
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {filteredCertificates.map((cert, index) => (
-                    <motion.div
-                      key={cert.id}
-                      initial={{ opacity: 0, scale: 0.9 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      transition={{ delay: index * 0.1 }}
-                    >
-                      <Card className="hover:shadow-lg transition-shadow">
-                        <CardContent className="p-4">
-                          {/* Image NFT */}
-                          <div className="relative mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-orange-100 to-orange-200 aspect-square">
-                            {cert.metadata?.image ? (
-                              <img
-                                src={cert.metadata.image}
-                                alt={cert.token_id}
-                                className="w-full h-full object-cover"
-                              />
-                            ) : (
+                  {filteredCertificates.map((cert, index) => {
+                    const property = propertiesById[cert.property_id];
+                    return (
+                      <motion.div
+                        key={cert.id}
+                        initial={{ opacity: 0, scale: 0.9 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        transition={{ delay: index * 0.1 }}
+                      >
+                        <Card className="hover:shadow-lg transition-shadow">
+                          <CardContent className="p-4">
+                            {/* Illustration */}
+                            <div className="relative mb-4 rounded-lg overflow-hidden bg-gradient-to-br from-orange-100 to-orange-200 aspect-square">
                               <div className="flex items-center justify-center h-full">
                                 <Building className="h-16 w-16 text-orange-400" />
                               </div>
-                            )}
-                            <Badge
-                              className={`absolute top-2 right-2 ${getStatusColor(cert.status)}`}
-                            >
-                              {cert.status}
-                            </Badge>
-                          </div>
-
-                          {/* Info NFT */}
-                          <div className="space-y-3">
-                            <div>
-                              <h3 className="font-semibold text-gray-900 mb-1">
-                                {cert.properties?.title || 'Propriété'}
-                              </h3>
-                              <div className="flex items-center gap-2 text-sm text-gray-600">
-                                <QrCode className="h-4 w-4" />
-                                <span className="font-mono">{cert.token_id}</span>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => copyToClipboard(cert.token_id)}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Réseau:</span>
-                              <Badge className={getNetworkColor(cert.blockchain_network)}>
-                                {cert.blockchain_network}
+                              <Badge
+                                className={`absolute top-2 right-2 ${getStatusColor(cert.status)}`}
+                              >
+                                {cert.status || 'inconnu'}
                               </Badge>
                             </div>
 
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Standard:</span>
-                              <span className="font-mono text-gray-900">{cert.token_standard}</span>
-                            </div>
+                            {/* Info certificat */}
+                            <div className="space-y-3">
+                              <div>
+                                <h3 className="font-semibold text-gray-900 mb-1">
+                                  {property?.title || 'Propriété'}
+                                </h3>
+                                <div className="flex items-center gap-2 text-sm text-gray-600">
+                                  <QrCode className="h-4 w-4" />
+                                  <span className="font-mono">
+                                    {cert.certificate_hash ? formatAddress(cert.certificate_hash) : "En attente d'attribution"}
+                                  </span>
+                                  {cert.certificate_hash && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => copyToClipboard(cert.certificate_hash)}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
+                              </div>
 
-                            <div className="flex items-center justify-between text-sm">
-                              <span className="text-gray-600">Valeur:</span>
-                              <span className="font-semibold text-gray-900">
-                                {formatCFA(cert.token_value)}
-                              </span>
-                            </div>
+                              {property?.location && (
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-600">Localisation:</span>
+                                  <span className="text-gray-900">{property.location}</span>
+                                </div>
+                              )}
 
-                            <div className="flex items-center gap-2 text-sm text-gray-600">
-                              <Clock className="h-4 w-4" />
-                              <span>Minté le {new Date(cert.mint_date).toLocaleDateString('fr-FR')}</span>
-                            </div>
+                              {property?.price != null && (
+                                <div className="flex items-center justify-between text-sm">
+                                  <span className="text-gray-600">Valeur du bien:</span>
+                                  <span className="font-semibold text-gray-900">
+                                    {formatCFA(property.price)}
+                                  </span>
+                                </div>
+                              )}
 
-                            {/* Actions */}
-                            <div className="grid grid-cols-2 gap-2 pt-2">
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleVerifyCertificate(cert.id)}
-                              >
-                                <CheckCircle className="h-4 w-4 mr-1" />
-                                Vérifier
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewOnChain(cert)}
-                              >
-                                <ExternalLink className="h-4 w-4 mr-1" />
-                                PolygonScan
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleViewNFT(cert)}
-                              >
-                                <Eye className="h-4 w-4 mr-1" />
-                                OpenSea
-                              </Button>
-                              <Button
-                                variant="outline"
-                                size="sm"
-                                onClick={() => handleDownloadCertificate(cert)}
-                              >
-                                <Download className="h-4 w-4 mr-1" />
-                                Certificat
-                              </Button>
+                              <div className="flex items-center gap-2 text-sm text-gray-600">
+                                <Clock className="h-4 w-4" />
+                                <span>
+                                  Créé le {cert.created_at ? new Date(cert.created_at).toLocaleDateString('fr-FR') : 'N/A'}
+                                </span>
+                              </div>
+
+                              {/* Actions */}
+                              <div className="grid grid-cols-2 gap-2 pt-2">
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleVerifyCertificate(cert.id)}
+                                  disabled={cert.status === 'verified'}
+                                >
+                                  <CheckCircle className="h-4 w-4 mr-1" />
+                                  Vérifier
+                                </Button>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={() => handleDownloadCertificate(cert)}
+                                >
+                                  <Download className="h-4 w-4 mr-1" />
+                                  Certificat
+                                </Button>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </motion.div>
-                  ))}
+                          </CardContent>
+                        </Card>
+                      </motion.div>
+                    );
+                  })}
                 </div>
               )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Mint NFT */}
+        {/* Certification */}
         <TabsContent value="mint" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Sparkles className="h-5 w-5 text-orange-600" />
-                Créer un Certificat NFT
+                Demander une Certification Blockchain
               </CardTitle>
               <CardDescription>
-                Transformez votre propriété en NFT sur la blockchain
+                Sécurisez la traçabilité de votre propriété sur la blockchain
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-6">
               <Alert>
                 <Info className="h-4 w-4" />
                 <AlertDescription>
-                  Le minting créera un certificat NFT unique pour votre propriété sur la blockchain Polygon.
-                  Cette opération est irréversible et coûte environ 0.001 MATIC.
+                  La certification blockchain on-chain de vos propriétés arrive bientôt.
+                  Vous pourrez alors générer un certificat vérifiable et infalsifiable pour le bien sélectionné.
                 </AlertDescription>
               </Alert>
 
-              {/* Formulaire Mint */}
+              {/* Formulaire */}
               <div className="space-y-4">
                 <div>
-                  <label className="block text-sm font-medium mb-2">Propriété à tokeniser</label>
+                  <label className="block text-sm font-medium mb-2">Propriété à certifier</label>
                   {properties.length > 0 ? (
-                    <select 
+                    <select
                       className="w-full p-2 border rounded-lg"
                       onChange={(e) => {
                         const prop = properties.find(p => p.id === e.target.value);
@@ -725,23 +581,6 @@ Smart Contract: ${certificate.contract_address}
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium mb-2">Réseau Blockchain</label>
-                  <select className="w-full p-2 border rounded-lg">
-                    <option>Polygon (Recommandé)</option>
-                    <option>Ethereum</option>
-                    <option>BSC</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium mb-2">Standard de Token</label>
-                  <select className="w-full p-2 border rounded-lg">
-                    <option>ERC-721 (NFT Unique)</option>
-                    <option>ERC-1155 (NFT Multiple)</option>
-                  </select>
-                </div>
-
                 <Button
                   onClick={() => handleMintNFT(selectedProperty?.id)}
                   disabled={isMinting || !selectedProperty?.id}
@@ -750,12 +589,12 @@ Smart Contract: ${certificate.contract_address}
                   {isMinting ? (
                     <>
                       <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                      Minting en cours...
+                      Envoi de la demande...
                     </>
                   ) : (
                     <>
                       <Sparkles className="h-4 w-4 mr-2" />
-                      Créer le NFT
+                      Demander la certification
                     </>
                   )}
                 </Button>
@@ -763,14 +602,13 @@ Smart Contract: ${certificate.contract_address}
 
               {/* Process Info */}
               <div className="bg-gray-50 rounded-lg p-4">
-                <h4 className="font-semibold mb-3">Processus de Minting</h4>
+                <h4 className="font-semibold mb-3">Étapes du processus (à venir)</h4>
                 <div className="space-y-2">
                   {[
-                    { label: '1. Validation de la propriété', done: true },
-                    { label: '2. Génération des métadonnées', done: true },
-                    { label: '3. Upload sur IPFS', done: false },
-                    { label: '4. Transaction blockchain', done: false },
-                    { label: '5. Confirmation du NFT', done: false }
+                    { label: '1. Validation de la propriété', done: false },
+                    { label: '2. Génération des métadonnées', done: false },
+                    { label: '3. Ancrage sur la blockchain', done: false },
+                    { label: '4. Confirmation du certificat', done: false }
                   ].map((step, i) => (
                     <div key={i} className="flex items-center gap-2">
                       {step.done ? (
@@ -861,20 +699,64 @@ Smart Contract: ${certificate.contract_address}
           </Card>
         </TabsContent>
 
-        {/* Analytics */}
+        {/* Transactions blockchain */}
         <TabsContent value="analytics" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Analytics Blockchain</CardTitle>
+              <CardTitle>Historique des Transactions Blockchain</CardTitle>
               <CardDescription>
-                Statistiques et tendances de vos NFTs
+                Transactions enregistrées sur la blockchain pour vos propriétés
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="text-center py-12 text-gray-500">
-                <Activity className="h-12 w-12 mx-auto mb-4" />
-                <p>Analytics en cours de développement</p>
-              </div>
+              {transactions.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Activity className="h-12 w-12 mx-auto mb-4" />
+                  <p>Aucune transaction blockchain enregistrée pour le moment</p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {transactions.map((tx, index) => {
+                    const property = propertiesById[tx.property_id];
+                    return (
+                      <motion.div
+                        key={tx.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ delay: index * 0.05 }}
+                        className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50"
+                      >
+                        <div>
+                          <p className="font-medium">{property?.title || 'Propriété'}</p>
+                          <p className="text-sm text-gray-600 font-mono">
+                            {formatAddress(tx.transaction_hash)}
+                          </p>
+                          {tx.block_number != null && (
+                            <p className="text-xs text-gray-500">Bloc n° {tx.block_number}</p>
+                          )}
+                          <p className="text-xs text-gray-500">
+                            {tx.created_at ? new Date(tx.created_at).toLocaleString('fr-FR') : ''}
+                          </p>
+                        </div>
+                        <div className="flex flex-col items-end gap-2">
+                          <span className="font-semibold text-gray-900">{formatCFA(tx.amount)}</span>
+                          <Badge className={getStatusColor(tx.status)}>{tx.status || 'inconnu'}</Badge>
+                          {tx.transaction_hash && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => handleViewOnChain(tx.transaction_hash)}
+                            >
+                              <ExternalLink className="h-4 w-4 mr-1" />
+                              Voir
+                            </Button>
+                          )}
+                        </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>

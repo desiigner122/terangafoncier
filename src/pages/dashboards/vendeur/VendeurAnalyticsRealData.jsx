@@ -55,16 +55,15 @@ const VendeurAnalyticsRealData = () => {
       // Calculer période
       const { startDate, endDate } = getPeriodDates(selectedPeriod);
 
-      // 1. Charger toutes les propriétés du vendeur
+      // 1. Charger toutes les propriétés du vendeur (colonnes réelles uniquement)
       const { data: properties, error: propError } = await supabase
         .from('properties').select(`
           id,
           title,
           views_count,
-          favorites_count,
-          contact_requests_count,
-          ai_analysis,
-          blockchain_verified,
+          ai_score,
+          nft_token_id,
+          blockchain_hash,
           created_at,
           updated_at
         `).eq('owner_id', user.id)
@@ -72,25 +71,52 @@ const VendeurAnalyticsRealData = () => {
 
       if (propError) throw propError;
 
-      // 2. Statistiques globales
+      const propertyIds = (properties || []).map(p => p.id);
+
+      // 2. Statistiques globales à partir des colonnes réelles de "properties"
       const totalViews = properties?.reduce((sum, p) => sum + (p.views_count || 0), 0) || 0;
-      const totalFavorites = properties?.reduce((sum, p) => sum + (p.favorites_count || 0), 0) || 0;
-      const totalInquiries = properties?.reduce((sum, p) => sum + (p.contact_requests_count || 0), 0) || 0;
-      const aiOptimizedCount = properties?.filter(p => p.ai_analysis && Object.keys(p.ai_analysis).length > 0).length || 0;
-      const blockchainCount = properties?.filter(p => p.blockchain_verified).length || 0;
+      // "Optimisée IA" = un score IA a été calculé pour l'annonce (colonne réelle ai_score)
+      const aiOptimizedCount = properties?.filter(p => (p.ai_score || 0) > 0).length || 0;
+      // "Tokenisée" = un NFT a été émis pour l'annonce (colonne réelle nft_token_id)
+      const blockchainCount = properties?.filter(p => Boolean(p.nft_token_id)).length || 0;
 
-      // 3. property_views table n'existe pas encore - utiliser données mockées temporairement
-      // TODO: Créer table property_views dans Supabase
-      console.warn('⚠️ Table property_views non disponible - statistiques limitées');
-      const views = []; // Initialiser views vide pour éviter erreur
-      
-      const uniqueVisitors = 0; // Temporaire
-      const averageTime = 0; // Temporaire
+      // 3. Demandes de contact : la colonne "contact_requests_count" n'existe pas sur properties.
+      // Le proxy réel le plus proche est le nombre de conversations ouvertes sur chaque
+      // propriété (table "conversations", colonne property_id).
+      let inquiriesByProperty = {};
+      let totalInquiries = 0;
+      if (propertyIds.length > 0) {
+        const { data: conversationsData, error: convError } = await supabase
+          .from('conversations')
+          .select('id, property_id, created_at')
+          .in('property_id', propertyIds)
+          .gte('created_at', startDate.toISOString());
 
-      // 4. Taux de conversion
+        if (convError) throw convError;
+
+        totalInquiries = conversationsData?.length || 0;
+        inquiriesByProperty = (conversationsData || []).reduce((acc, c) => {
+          if (c.property_id) acc[c.property_id] = (acc[c.property_id] || 0) + 1;
+          return acc;
+        }, {});
+      }
+
+      // 4. Aucune table "favoris" (property_favorites / user_favorites) n'existe dans le schéma
+      // actuel : impossible de fournir un vrai total. On garde `null` (affiché "—" dans l'UI)
+      // plutôt que d'inventer un chiffre.
+      const totalFavorites = null;
+
+      // 5. Visiteurs uniques / temps moyen sur la page : nécessitent un historique d'événements
+      // "property_views" (une ligne par visite, avec session/visiteur) qui n'existe pas dans le
+      // schéma Supabase actuel. On ne simule plus ces valeurs (elles ne sont plus mises à 0
+      // artificiellement) : elles restent `null` et l'UI affiche un état "non disponible" honnête.
+      const uniqueVisitors = null;
+      const averageTime = null;
+
+      // 6. Taux de conversion (vues → demandes de contact réelles)
       const conversionRate = totalViews > 0 ? ((totalInquiries / totalViews) * 100).toFixed(1) : 0;
 
-      // 5. Croissance (comparaison avec période précédente)
+      // 7. Croissance (comparaison avec période précédente, sur la vraie colonne views_count)
       const previousStartDate = new Date(startDate);
       previousStartDate.setDate(previousStartDate.getDate() - getDaysDiff(selectedPeriod));
 
@@ -116,54 +142,39 @@ const VendeurAnalyticsRealData = () => {
         growthRate: parseFloat(growthRate)
       });
 
-      // 6. Top 5 propriétés
+      // 8. Top 5 propriétés (classées par vues réelles)
       const topProps = [...(properties || [])]
         .sort((a, b) => (b.views_count || 0) - (a.views_count || 0))
         .slice(0, 5)
-        .map(p => ({
-          id: p.id,
-          title: p.title,
-          views: p.views_count || 0,
-          inquiries: p.contact_requests_count || 0,
-          favorites: p.favorites_count || 0,
-          conversion: p.views_count > 0 ? ((p.contact_requests_count / p.views_count) * 100).toFixed(1) : 0,
-          aiOptimized: p.ai_analysis && Object.keys(p.ai_analysis).length > 0,
-          blockchainVerified: p.blockchain_verified || false
-        }));
+        .map(p => {
+          const propertyInquiries = inquiriesByProperty[p.id] || 0;
+          return {
+            id: p.id,
+            title: p.title,
+            views: p.views_count || 0,
+            inquiries: propertyInquiries,
+            favorites: null, // pas de table de favoris réelle disponible (voir note ci-dessus)
+            conversion: p.views_count > 0 ? ((propertyInquiries / p.views_count) * 100).toFixed(1) : 0,
+            aiOptimized: (p.ai_score || 0) > 0,
+            blockchainVerified: Boolean(p.nft_token_id)
+          };
+        });
 
       setTopProperties(topProps);
 
-      // 7. Vues par mois (6 derniers mois)
-      const monthlyData = calculateMonthlyViews(properties);
-      setViewsByMonth(monthlyData);
+      // 9. Vues par mois : aucune table d'historique de vues (property_views) n'existe dans le
+      // schéma Supabase actuel. On ne dispose que d'un compteur cumulé (properties.views_count),
+      // pas d'un événement horodaté par vue : impossible de reconstruire une vraie courbe
+      // mensuelle. La distribution fictive (Math.floor(...)) a été retirée : le tableau reste
+      // vide et l'UI affiche un état "non disponible" honnête à la place du graphique.
+      setViewsByMonth([]);
 
-      // 8. Sources de trafic
-      if (views && views.length > 0) {
-        const sourceCounts = views.reduce((acc, v) => {
-          const source = v.source || 'direct';
-          acc[source] = (acc[source] || 0) + 1;
-          return acc;
-        }, {});
+      // 10. Sources de trafic : nécessite un tracking par visite (referrer/UTM) qui n'existe pas
+      // dans le schéma actuel. On ne fabrique plus de répartition par défaut : état vide honnête
+      // affiché côté UI.
+      setSourceTraffic([]);
 
-        const totalSources = views.length;
-        const trafficSources = Object.entries(sourceCounts)
-          .map(([source, count]) => ({
-            source: formatSourceName(source),
-            visits: count,
-            percentage: Math.round((count / totalSources) * 100)
-          }))
-          .sort((a, b) => b.visits - a.visits);
-
-        setSourceTraffic(trafficSources);
-      } else {
-        // Données par défaut si pas de vues
-        setSourceTraffic([
-          { source: 'Recherche directe', visits: 0, percentage: 0 },
-          { source: 'Réseaux sociaux', visits: 0, percentage: 0 }
-        ]);
-      }
-
-      // 9. Générer AI Insights
+      // 11. Générer les recommandations (règles basées sur les métriques réelles ci-dessus)
       generateAIInsights({
         totalViews,
         totalInquiries,
@@ -216,43 +227,6 @@ const VendeurAnalyticsRealData = () => {
     }
   };
 
-  const calculateMonthlyViews = (properties) => {
-    const months = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
-    const monthlyData = [];
-
-    for (let i = 5; i >= 0; i--) {
-      const date = new Date();
-      date.setMonth(date.getMonth() - i);
-      const monthIndex = date.getMonth();
-
-      // Pour simplification, distribuer les vues
-      const viewsForMonth = Math.floor((properties?.length || 0) * (10 + i * 5));
-      const inquiriesForMonth = Math.floor(viewsForMonth * 0.1);
-
-      monthlyData.push({
-        month: months[monthIndex],
-        views: viewsForMonth,
-        inquiries: inquiriesForMonth
-      });
-    }
-
-    return monthlyData;
-  };
-
-  const formatSourceName = (source) => {
-    const names = {
-      direct: 'Recherche directe',
-      search: 'Moteur de recherche',
-      social: 'Réseaux sociaux',
-      email: 'Email marketing',
-      referral: 'Référencement',
-      facebook: 'Facebook',
-      linkedin: 'LinkedIn',
-      whatsapp: 'WhatsApp'
-    };
-    return names[source] || source;
-  };
-
   const generateAIInsights = (data) => {
     const insights = [];
 
@@ -265,7 +239,7 @@ const VendeurAnalyticsRealData = () => {
           icon: DollarSign,
           color: 'blue',
           title: '📈 Optimisation des prix',
-          description: `Vos propriétés ont une visibilité faible (${Math.round(avgViews)} vues moy.). Envisagez d'ajuster vos prix de -5% à -10% pour augmenter l'attractivité.`
+          description: `Vos propriétés ont une visibilité faible (${Math.round(avgViews)} vues moy.). Envisagez de revoir votre positionnement prix pour augmenter l'attractivité.`
         });
       }
     }
@@ -277,7 +251,7 @@ const VendeurAnalyticsRealData = () => {
         icon: Brain,
         color: 'purple',
         title: '📸 Amélioration IA des photos',
-        description: `${data.properties.length - data.aiOptimizedCount} propriétés sans optimisation IA. Activez l'analyse IA pour augmenter l'engagement de +35%.`
+        description: `${data.properties.length - data.aiOptimizedCount} propriétés sans score IA calculé. Activez l'analyse IA pour améliorer l'attractivité de ces annonces.`
       });
     }
 
@@ -288,7 +262,7 @@ const VendeurAnalyticsRealData = () => {
         icon: Shield,
         color: 'orange',
         title: '🔐 Certification Blockchain',
-        description: 'Aucune propriété tokenisée. La certification blockchain augmente la confiance des acheteurs de +42% et accélère les ventes.'
+        description: 'Aucune propriété tokenisée. La certification blockchain peut renforcer la confiance des acheteurs et accélérer les ventes.'
       });
     }
 
@@ -317,17 +291,19 @@ const VendeurAnalyticsRealData = () => {
       icon: Clock,
       color: 'yellow',
       title: '⏰ Timing optimal de publication',
-      description: 'Publiez vos nouvelles annonces le mardi entre 14h-16h pour maximiser la visibilité (+41% de vues).'
+      description: 'Publier vos nouvelles annonces en début de semaine, en journée, tend à maximiser leur visibilité initiale.'
     });
 
     setAiInsights(insights);
   };
 
   const formatNumber = (num) => {
+    if (num === null || num === undefined) return '—';
     return new Intl.NumberFormat('fr-FR').format(num);
   };
 
   const formatTime = (seconds) => {
+    if (seconds === null || seconds === undefined) return '—';
     const minutes = Math.floor(seconds / 60);
     const secs = seconds % 60;
     return `${minutes}m ${secs}s`;
@@ -566,7 +542,7 @@ const VendeurAnalyticsRealData = () => {
                     Total favoris
                   </p>
                   <p className="text-3xl font-bold text-blue-600">
-                    {analyticsData.totalFavorites}
+                    {formatNumber(analyticsData.totalFavorites)}
                   </p>
                 </div>
                 <Heart className="w-12 h-12 text-blue-400" />
@@ -591,25 +567,36 @@ const VendeurAnalyticsRealData = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {viewsByMonth.map((data, index) => (
-                  <div key={data.month} className="flex items-center justify-between">
-                    <div className="flex items-center space-x-3 flex-1">
-                      <div className="w-12 text-sm font-medium text-gray-600">{data.month}</div>
-                      <div className="flex-1">
-                        <Progress 
-                          value={data.views > 0 ? Math.min((data.views / Math.max(...viewsByMonth.map(v => v.views))) * 100, 100) : 0}
-                          className="h-3" 
-                        />
+              {viewsByMonth.length > 0 ? (
+                <div className="space-y-4">
+                  {viewsByMonth.map((data, index) => (
+                    <div key={data.month} className="flex items-center justify-between">
+                      <div className="flex items-center space-x-3 flex-1">
+                        <div className="w-12 text-sm font-medium text-gray-600">{data.month}</div>
+                        <div className="flex-1">
+                          <Progress
+                            value={data.views > 0 ? Math.min((data.views / Math.max(...viewsByMonth.map(v => v.views))) * 100, 100) : 0}
+                            className="h-3"
+                          />
+                        </div>
+                      </div>
+                      <div className="text-right ml-4">
+                        <div className="text-sm font-bold text-gray-900">{formatNumber(data.views)}</div>
+                        <div className="text-xs text-gray-500">{data.inquiries} demandes</div>
                       </div>
                     </div>
-                    <div className="text-right ml-4">
-                      <div className="text-sm font-bold text-gray-900">{formatNumber(data.views)}</div>
-                      <div className="text-xs text-gray-500">{data.inquiries} demandes</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <LineChart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>Historique mensuel non disponible</p>
+                  <p className="text-xs mt-1">
+                    Le suivi des vues par mois nécessite un historique d'événements (non implémenté).
+                    Vues totales cumulées sur la période : {formatNumber(analyticsData.totalViews)}
+                  </p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -628,18 +615,26 @@ const VendeurAnalyticsRealData = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {sourceTraffic.map((source, index) => (
-                  <div key={source.source} className="space-y-2">
-                    <div className="flex items-center justify-between">
-                      <div className="text-sm font-medium text-gray-900">{source.source}</div>
-                      <div className="text-sm font-bold text-blue-600">{source.percentage}%</div>
+              {sourceTraffic.length > 0 ? (
+                <div className="space-y-4">
+                  {sourceTraffic.map((source, index) => (
+                    <div key={source.source} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <div className="text-sm font-medium text-gray-900">{source.source}</div>
+                        <div className="text-sm font-bold text-blue-600">{source.percentage}%</div>
+                      </div>
+                      <Progress value={source.percentage} className="h-2" />
+                      <div className="text-xs text-gray-500">{formatNumber(source.visits)} visites</div>
                     </div>
-                    <Progress value={source.percentage} className="h-2" />
-                    <div className="text-xs text-gray-500">{formatNumber(source.visits)} visites</div>
-                  </div>
-                ))}
-              </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <PieChart className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                  <p>Sources de trafic non disponibles</p>
+                  <p className="text-xs mt-1">Le suivi des sources de trafic (referrer) n'est pas encore implémenté.</p>
+                </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -699,7 +694,7 @@ const VendeurAnalyticsRealData = () => {
                         <td className="py-4 px-4 text-center">
                           <div className="flex items-center justify-center">
                             <Heart className="w-4 h-4 text-red-600 mr-1" />
-                            {property.favorites}
+                            {formatNumber(property.favorites)}
                           </div>
                         </td>
                         <td className="py-4 px-4 text-center">

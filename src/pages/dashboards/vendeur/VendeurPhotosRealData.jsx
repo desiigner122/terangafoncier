@@ -1,15 +1,17 @@
 /**
  * VENDEUR PHOTOS REAL DATA - VERSION AVEC DONNÉES RÉELLES SUPABASE
- * Gestion des photos avec analyse IA et optimisation automatique
+ * Galerie photos des terrains du vendeur (upload, géolocalisation, score de
+ * qualité réel property_photos.quality_score, suppression) via
+ * VendeurSupabaseService.
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Upload, Image as ImageIcon, Trash2, Eye, Download, Star,
-  CheckCircle, XCircle, AlertCircle, Sparkles, Brain, Zap,
-  Grid3x3, List, Filter, Search, MoreVertical, Edit, Copy,
-  Share2, Camera, Maximize2, RefreshCw, TrendingUp, Award,
+  Sparkles, Brain,
+  Grid3x3, List, Search, MoreVertical,
+  Camera, RefreshCw, Award,
   MapPin, Satellite, FileDown
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -28,6 +30,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { useDropzone } from 'react-dropzone';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { toast } from 'react-hot-toast';
 
 const VendeurPhotosRealData = () => {
@@ -40,16 +43,15 @@ const VendeurPhotosRealData = () => {
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [selectedPhoto, setSelectedPhoto] = useState(null);
   const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
-  const [categoryFilter, setCategoryFilter] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [showUploadDialog, setShowUploadDialog] = useState(false);
 
   const [stats, setStats] = useState({
     totalPhotos: 0,
     totalProperties: 0,
-    aiEnhanced: 0,
-    avgQualityScore: 0,
-    storageUsed: 0,
+    highQuality: 0,
+    avgQualityScore: null,
+    withGPS: 0,
     recentUploads: 0
   });
 
@@ -61,49 +63,62 @@ const VendeurPhotosRealData = () => {
 
   useEffect(() => {
     filterPhotos();
-  }, [photos, categoryFilter, searchTerm, selectedProperty]);
+  }, [photos, searchTerm, selectedProperty]);
+
+  // Extrait un nom de fichier lisible depuis l'URL réelle stockée (property_photos.url)
+  const getPhotoDisplayName = (photo) => {
+    if (!photo?.url) return 'Photo';
+    try {
+      const lastSegment = decodeURIComponent(photo.url.split('/').pop().split('?')[0]);
+      // Le service d'upload stocke sous la forme `${timestamp}_${nomOriginal}`
+      const match = lastSegment.match(/^\d+_(.+)$/);
+      return match ? match[1] : lastSegment;
+    } catch {
+      return 'Photo';
+    }
+  };
 
   const loadData = async () => {
     try {
       setLoading(true);
 
-      // Charger les propriétés du vendeur
+      // Charger les propriétés du vendeur (pour le sélecteur et le comptage)
       const { data: propertiesData, error: propertiesError } = await supabase
-        .from('properties').select('id, title, status, images').eq('owner_id', user.id)
+        .from('properties')
+        .select('id, title, name')
+        .eq('owner_id', user.id)
         .order('created_at', { ascending: false });
 
       if (propertiesError) throw propertiesError;
       setProperties(propertiesData || []);
 
-      // Charger toutes les photos
-      const { data: photosData, error: photosError } = await supabase
-        .from('property_photos')
-        .select('*')
-        .eq('vendor_id', user.id)
-        .order('created_at', { ascending: false });
+      // Charger toutes les photos du vendeur (via le service réel)
+      const photosResult = await VendeurSupabaseService.getUserPhotos(user.id);
+      if (!photosResult.success) throw new Error(photosResult.error);
+      const photosData = photosResult.data || [];
+      setPhotos(photosData);
 
-      if (photosError) throw photosError;
-      setPhotos(photosData || []);
-
-      // Calculer les stats
-      const totalPhotos = photosData?.length || 0;
-      const aiEnhanced = photosData?.filter(p => p.ai_enhanced)?.length || 0;
-      const totalQuality = photosData?.reduce((sum, p) => sum + (p.quality_score || 0), 0) || 0;
-      const avgQuality = totalPhotos > 0 ? (totalQuality / totalPhotos).toFixed(1) : 0;
-      const totalStorage = photosData?.reduce((sum, p) => sum + (p.file_size || 0), 0) || 0;
-      const recent = photosData?.filter(p => {
-        const uploadDate = new Date(p.uploaded_at);
+      // Calculer les stats à partir de colonnes réelles uniquement
+      const totalPhotos = photosData.length;
+      const scored = photosData.filter(p => typeof p.quality_score === 'number' && p.quality_score !== null);
+      const highQuality = scored.filter(p => p.quality_score >= 85).length;
+      const avgQuality = scored.length > 0
+        ? parseFloat((scored.reduce((sum, p) => sum + p.quality_score, 0) / scored.length).toFixed(1))
+        : null;
+      const withGPS = photosData.filter(p => p.gps_latitude && p.gps_longitude).length;
+      const recent = photosData.filter(p => {
+        const uploadDate = new Date(p.created_at);
         const weekAgo = new Date();
         weekAgo.setDate(weekAgo.getDate() - 7);
         return uploadDate >= weekAgo;
-      })?.length || 0;
+      }).length;
 
       setStats({
         totalPhotos,
         totalProperties: propertiesData?.length || 0,
-        aiEnhanced,
-        avgQualityScore: parseFloat(avgQuality),
-        storageUsed: (totalStorage / (1024 * 1024)).toFixed(2), // MB
+        highQuality,
+        avgQualityScore: avgQuality,
+        withGPS,
         recentUploads: recent
       });
 
@@ -123,21 +138,36 @@ const VendeurPhotosRealData = () => {
       filtered = filtered.filter(p => p.property_id === selectedProperty);
     }
 
-    // Filtre par catégorie
-    if (categoryFilter !== 'all') {
-      filtered = filtered.filter(p => p.category === categoryFilter);
-    }
-
-    // Recherche
+    // Recherche (nom de fichier dérivé de l'URL réelle, ou titre de la propriété)
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(p =>
-        p.file_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        p.category?.toLowerCase().includes(searchTerm.toLowerCase())
+        getPhotoDisplayName(p).toLowerCase().includes(term) ||
+        (p.property?.title || p.property?.name || '').toLowerCase().includes(term)
       );
     }
 
     setFilteredPhotos(filtered);
   };
+
+  // Tente d'obtenir la position GPS réelle de l'appareil au moment de l'upload
+  // (remplace l'ancienne génération aléatoire de coordonnées près de Dakar).
+  // Best-effort : si l'utilisateur refuse ou si l'API n'est pas disponible, on
+  // n'enregistre aucune coordonnée plutôt que d'inventer une valeur.
+  const getCurrentGPSPosition = () => new Promise((resolve) => {
+    if (!('geolocation' in navigator)) {
+      resolve({ latitude: null, longitude: null });
+      return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      (position) => resolve({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude
+      }),
+      () => resolve({ latitude: null, longitude: null }),
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 60000 }
+    );
+  });
 
   const onDrop = useCallback(async (acceptedFiles) => {
     if (!selectedProperty) {
@@ -148,6 +178,9 @@ const VendeurPhotosRealData = () => {
     setUploading(true);
 
     try {
+      // Une seule tentative de géolocalisation pour le lot de photos uploadées
+      const gpsPosition = await getCurrentGPSPosition();
+
       for (const file of acceptedFiles) {
         // Vérifier la taille (max 10MB)
         if (file.size > 10 * 1024 * 1024) {
@@ -155,108 +188,16 @@ const VendeurPhotosRealData = () => {
           continue;
         }
 
-        // Générer un nom unique
-        const fileExt = file.name.split('.').pop();
-        const fileName = `${user.id}/${selectedProperty}/${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const result = await VendeurSupabaseService.uploadPropertyPhoto(selectedProperty, file, {
+          is_primary: false,
+          gps_latitude: gpsPosition.latitude,
+          gps_longitude: gpsPosition.longitude
+          // quality_score volontairement omis : aucune évaluation réelle de la
+          // qualité n'est disponible côté client. La colonne reste NULL tant
+          // qu'aucun système de scoring réel n'est branché (voir résumé).
+        });
 
-        // Upload vers Supabase Storage
-        const { data: uploadData, error: uploadError } = await supabase.storage
-          .from('property-photos')
-          .upload(fileName, file, {
-            cacheControl: '3600',
-            upsert: false
-          });
-
-        if (uploadError) throw uploadError;
-
-        // Obtenir l'URL publique
-        const { data: { publicUrl } } = supabase.storage
-          .from('property-photos')
-          .getPublicUrl(fileName);
-
-        // Extraire les métadonnées EXIF (GPS) de l'image
-        let gpsLatitude = null;
-        let gpsLongitude = null;
-        let exifData = {};
-
-        try {
-          // Créer une Image pour extraire les EXIF
-          const img = new Image();
-          const reader = new FileReader();
-          
-          await new Promise((resolve) => {
-            reader.onload = (e) => {
-              img.src = e.target.result;
-              img.onload = () => {
-                // Tentative d'extraction des coordonnées GPS depuis EXIF
-                // Note: Dans un environnement de production, utilisez une lib comme exif-js ou piexifjs
-                // Pour cette démo, nous simulons les coordonnées ou les extrayons si disponibles
-                
-                // Simuler des coordonnées GPS (en production, extraire depuis EXIF réel)
-                if (Math.random() > 0.5) {
-                  // Coordonnées Dakar, Sénégal (exemple)
-                  gpsLatitude = 14.6928 + (Math.random() - 0.5) * 0.1;
-                  gpsLongitude = -17.4467 + (Math.random() - 0.5) * 0.1;
-                }
-                
-                exifData = {
-                  width: img.width,
-                  height: img.height,
-                  takenAt: new Date().toISOString()
-                };
-                
-                resolve();
-              };
-            };
-            reader.readAsDataURL(file);
-          });
-        } catch (error) {
-          console.warn('Impossible d\'extraire les EXIF:', error);
-        }
-
-        // Créer l'enregistrement dans la BDD avec analyse IA simulée
-        const qualityScore = Math.floor(Math.random() * 30) + 70; // 70-100
-        const detectedObjects = getRandomObjects();
-
-        const { data: photoData, error: photoError } = await supabase
-          .from('property_photos')
-          .insert({
-            property_id: selectedProperty,
-            vendor_id: user.id,
-            file_path: publicUrl,
-            storage_path: fileName,
-            file_name: file.name,
-            file_size: file.size,
-            mime_type: file.type,
-            width: exifData.width || null,
-            height: exifData.height || null,
-            // Sauvegarder les coordonnées GPS
-            latitude: gpsLatitude,
-            longitude: gpsLongitude,
-            gps_metadata: gpsLatitude ? {
-              latitude: gpsLatitude,
-              longitude: gpsLongitude,
-              accuracy: 'high',
-              source: 'exif'
-            } : null,
-            exif_data: exifData,
-            quality_score: qualityScore,
-            ai_enhanced: qualityScore > 85,
-            detected_objects: detectedObjects,
-            detected_features: {
-              brightness: Math.floor(Math.random() * 30) + 70,
-              contrast: Math.floor(Math.random() * 30) + 70,
-              sharpness: Math.floor(Math.random() * 30) + 70
-            },
-            ai_suggestions: generateSuggestions(qualityScore),
-            category: detectCategory(detectedObjects),
-            is_primary: false,
-            display_order: photos.length
-          })
-          .select()
-          .single();
-
-        if (photoError) throw photoError;
+        if (!result.success) throw new Error(result.error || 'Erreur upload');
 
         toast.success(`${file.name} uploadé avec succès!`);
       }
@@ -271,7 +212,7 @@ const VendeurPhotosRealData = () => {
     } finally {
       setUploading(false);
     }
-  }, [selectedProperty, user, photos.length]);
+  }, [selectedProperty, user]);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop,
@@ -281,52 +222,12 @@ const VendeurPhotosRealData = () => {
     multiple: true
   });
 
-  const getRandomObjects = () => {
-    const objects = ['bedroom', 'living_room', 'kitchen', 'bathroom', 'exterior', 'garden'];
-    const count = Math.floor(Math.random() * 3) + 1;
-    return Array.from({ length: count }, () =>
-      objects[Math.floor(Math.random() * objects.length)]
-    );
-  };
-
-  const detectCategory = (objects) => {
-    if (objects.includes('kitchen')) return 'kitchen';
-    if (objects.includes('bedroom')) return 'bedroom';
-    if (objects.includes('bathroom')) return 'bathroom';
-    if (objects.includes('living_room')) return 'living_room';
-    if (objects.includes('garden')) return 'garden';
-    if (objects.includes('exterior')) return 'exterior';
-    return 'interior';
-  };
-
-  const generateSuggestions = (score) => {
-    const suggestions = [];
-    if (score < 80) suggestions.push('Augmenter la luminosité');
-    if (score < 85) suggestions.push('Améliorer le contraste');
-    if (score < 90) suggestions.push('Recadrer l\'image');
-    if (suggestions.length === 0) suggestions.push('Photo de qualité optimale');
-    return suggestions;
-  };
-
   const handleDeletePhoto = async (photoId) => {
     if (!confirm('Êtes-vous sûr de vouloir supprimer cette photo ?')) return;
 
     try {
-      const photo = photos.find(p => p.id === photoId);
-      
-      // Supprimer du storage
-      const filePath = photo.file_path.split('/').pop();
-      await supabase.storage
-        .from('property-photos')
-        .remove([filePath]);
-
-      // Supprimer de la BDD
-      const { error } = await supabase
-        .from('property_photos')
-        .delete()
-        .eq('id', photoId);
-
-      if (error) throw error;
+      const result = await VendeurSupabaseService.deletePhoto(photoId);
+      if (!result.success) throw new Error(result.error);
 
       toast.success('Photo supprimée');
       await loadData();
@@ -365,25 +266,25 @@ const VendeurPhotosRealData = () => {
   // ============ NOUVELLES FONCTIONS GPS ============
 
   const handleShowOnMap = (photo) => {
-    if (!photo.latitude || !photo.longitude) {
+    if (!photo.gps_latitude || !photo.gps_longitude) {
       toast.error('Cette photo ne contient pas de coordonnées GPS');
       return;
     }
 
     // Ouvrir Google Maps avec les coordonnées
-    const url = `https://maps.google.com/?q=${photo.latitude},${photo.longitude}`;
+    const url = `https://maps.google.com/?q=${photo.gps_latitude},${photo.gps_longitude}`;
     window.open(url, '_blank');
     toast.success('Ouverture de Google Maps...');
   };
 
   const handleShowSatellite = (photo) => {
-    if (!photo.latitude || !photo.longitude) {
+    if (!photo.gps_latitude || !photo.gps_longitude) {
       toast.error('Cette photo ne contient pas de coordonnées GPS');
       return;
     }
 
     // Ouvrir Google Maps en vue satellite
-    const url = `https://maps.google.com/?q=${photo.latitude},${photo.longitude}&t=k&z=18`;
+    const url = `https://maps.google.com/?q=${photo.gps_latitude},${photo.gps_longitude}&t=k&z=18`;
     window.open(url, '_blank');
     toast.success('Ouverture de la vue satellite...');
   };
@@ -391,8 +292,8 @@ const VendeurPhotosRealData = () => {
   const handleDownloadGPSReport = async () => {
     try {
       // Filtrer les photos avec coordonnées GPS
-      const photosWithGPS = filteredPhotos.filter(p => p.latitude && p.longitude);
-      
+      const photosWithGPS = filteredPhotos.filter(p => p.gps_latitude && p.gps_longitude);
+
       if (photosWithGPS.length === 0) {
         toast.error('Aucune photo avec coordonnées GPS trouvée');
         return;
@@ -401,24 +302,22 @@ const VendeurPhotosRealData = () => {
       // Générer un rapport CSV
       const headers = [
         'Nom du fichier',
-        'Propriété ID',
+        'Propriété',
         'Latitude',
         'Longitude',
-        'Date de prise',
-        'Catégorie',
+        'Date d\'ajout',
         'Score qualité',
         'Lien Google Maps'
       ];
 
       const rows = photosWithGPS.map(photo => [
-        photo.file_name,
-        photo.property_id,
-        photo.latitude.toFixed(6),
-        photo.longitude.toFixed(6),
+        getPhotoDisplayName(photo),
+        photo.property?.title || photo.property?.name || photo.property_id,
+        photo.gps_latitude.toFixed(6),
+        photo.gps_longitude.toFixed(6),
         new Date(photo.created_at).toLocaleDateString('fr-FR'),
-        getCategoryLabel(photo.category),
-        `${photo.quality_score}%`,
-        `https://maps.google.com/?q=${photo.latitude},${photo.longitude}`
+        photo.quality_score != null ? `${photo.quality_score}%` : '—',
+        `https://maps.google.com/?q=${photo.gps_latitude},${photo.gps_longitude}`
       ]);
 
       // Créer le contenu CSV
@@ -448,23 +347,10 @@ const VendeurPhotosRealData = () => {
   };
 
   const getQualityColor = (score) => {
+    if (score === null || score === undefined) return 'text-gray-500 bg-gray-100';
     if (score >= 90) return 'text-green-600 bg-green-100';
     if (score >= 75) return 'text-yellow-600 bg-yellow-100';
     return 'text-red-600 bg-red-100';
-  };
-
-  const getCategoryLabel = (category) => {
-    const labels = {
-      exterior: 'Extérieur',
-      interior: 'Intérieur',
-      bedroom: 'Chambre',
-      kitchen: 'Cuisine',
-      bathroom: 'Salle de bain',
-      living_room: 'Salon',
-      garden: 'Jardin',
-      other: 'Autre'
-    };
-    return labels[category] || category;
   };
 
   if (loading) {
@@ -491,12 +377,12 @@ const VendeurPhotosRealData = () => {
             <Camera className="w-8 h-8 text-purple-600" />
             Gestion Photos
             <Badge className="bg-purple-100 text-purple-700">
-              <Brain className="w-3 h-3 mr-1" />
-              IA Optimisé
+              <ImageIcon className="w-3 h-3 mr-1" />
+              {stats.totalPhotos} photo{stats.totalPhotos > 1 ? 's' : ''}
             </Badge>
           </h1>
           <p className="text-gray-600 mt-2">
-            Upload et optimisation automatique par IA
+            Upload et organisation des photos de vos terrains
           </p>
         </div>
 
@@ -504,7 +390,7 @@ const VendeurPhotosRealData = () => {
           <Button
             onClick={handleDownloadGPSReport}
             variant="outline"
-            disabled={filteredPhotos.filter(p => p.latitude && p.longitude).length === 0}
+            disabled={filteredPhotos.filter(p => p.gps_latitude && p.gps_longitude).length === 0}
           >
             <FileDown className="w-4 h-4 mr-2" />
             Rapport GPS
@@ -566,8 +452,8 @@ const VendeurPhotosRealData = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">IA Optimisé</p>
-                  <p className="text-2xl font-bold">{stats.aiEnhanced}</p>
+                  <p className="text-sm text-gray-600">Haute qualité</p>
+                  <p className="text-2xl font-bold">{stats.highQuality}</p>
                 </div>
                 <Brain className="w-8 h-8 text-green-600" />
               </div>
@@ -585,7 +471,9 @@ const VendeurPhotosRealData = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-gray-600">Qualité Moy.</p>
-                  <p className="text-2xl font-bold">{stats.avgQualityScore}%</p>
+                  <p className="text-2xl font-bold">
+                    {stats.avgQualityScore !== null ? `${stats.avgQualityScore}%` : '—'}
+                  </p>
                 </div>
                 <Award className="w-8 h-8 text-yellow-600" />
               </div>
@@ -602,10 +490,10 @@ const VendeurPhotosRealData = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Stockage</p>
-                  <p className="text-2xl font-bold">{stats.storageUsed} MB</p>
+                  <p className="text-sm text-gray-600">Avec GPS</p>
+                  <p className="text-2xl font-bold">{stats.withGPS}</p>
                 </div>
-                <TrendingUp className="w-8 h-8 text-orange-600" />
+                <MapPin className="w-8 h-8 text-orange-600" />
               </div>
             </CardContent>
           </Card>
@@ -643,25 +531,9 @@ const VendeurPhotosRealData = () => {
               <option value="">Toutes les propriétés</option>
               {properties.map(prop => (
                 <option key={prop.id} value={prop.id}>
-                  {prop.title}
+                  {prop.title || prop.name}
                 </option>
               ))}
-            </select>
-
-            {/* Category Filter */}
-            <select
-              value={categoryFilter}
-              onChange={(e) => setCategoryFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-purple-500"
-            >
-              <option value="all">Toutes catégories</option>
-              <option value="exterior">Extérieur</option>
-              <option value="interior">Intérieur</option>
-              <option value="bedroom">Chambre</option>
-              <option value="kitchen">Cuisine</option>
-              <option value="bathroom">Salle de bain</option>
-              <option value="living_room">Salon</option>
-              <option value="garden">Jardin</option>
             </select>
 
             {/* Search */}
@@ -728,11 +600,11 @@ const VendeurPhotosRealData = () => {
                     {/* Image */}
                     <div className="relative group">
                       <img
-                        src={photo.file_path}
-                        alt={photo.file_name}
+                        src={photo.url}
+                        alt={getPhotoDisplayName(photo)}
                         className="w-full h-48 object-cover rounded-t-lg"
                       />
-                      
+
                       {/* Overlay */}
                       <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-60 transition-all rounded-t-lg flex items-center justify-center opacity-0 group-hover:opacity-100">
                         <div className="flex gap-2">
@@ -746,7 +618,7 @@ const VendeurPhotosRealData = () => {
                           <Button
                             size="sm"
                             variant="secondary"
-                            onClick={() => window.open(photo.file_path, '_blank')}
+                            onClick={() => window.open(photo.url, '_blank')}
                           >
                             <Download className="w-4 h-4" />
                           </Button>
@@ -761,10 +633,10 @@ const VendeurPhotosRealData = () => {
                             Principal
                           </Badge>
                         )}
-                        {photo.ai_enhanced && (
+                        {photo.quality_score >= 85 && (
                           <Badge className="bg-purple-100 text-purple-700">
                             <Brain className="w-3 h-3 mr-1" />
-                            IA
+                            Haute qualité
                           </Badge>
                         )}
                       </div>
@@ -772,7 +644,7 @@ const VendeurPhotosRealData = () => {
                       {/* Quality Score */}
                       <div className="absolute top-2 right-2">
                         <Badge className={getQualityColor(photo.quality_score)}>
-                          {photo.quality_score}%
+                          {photo.quality_score != null ? `${photo.quality_score}%` : '—'}
                         </Badge>
                       </div>
                     </div>
@@ -780,7 +652,7 @@ const VendeurPhotosRealData = () => {
                     {/* Info */}
                     <div className="p-4 space-y-2">
                       <div className="flex items-center justify-between">
-                        <p className="font-medium text-sm truncate">{photo.file_name}</p>
+                        <p className="font-medium text-sm truncate">{getPhotoDisplayName(photo)}</p>
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
                             <Button variant="ghost" size="sm">
@@ -798,7 +670,7 @@ const VendeurPhotosRealData = () => {
                             </DropdownMenuItem>
                             
                             {/* Boutons GPS - Afficher seulement si coordonnées disponibles */}
-                            {photo.latitude && photo.longitude && (
+                            {photo.gps_latitude && photo.gps_longitude && (
                               <>
                                 <DropdownMenuSeparator />
                                 <DropdownMenuItem onClick={() => handleShowOnMap(photo)}>
@@ -826,30 +698,19 @@ const VendeurPhotosRealData = () => {
 
                       <div className="flex items-center gap-2 text-xs text-gray-600">
                         <Badge variant="secondary" className="text-xs">
-                          {getCategoryLabel(photo.category)}
+                          {photo.property?.title || photo.property?.name || 'Propriété'}
                         </Badge>
-                        <span>{(photo.file_size / 1024).toFixed(0)} KB</span>
+                        <span>{new Date(photo.created_at).toLocaleDateString('fr-FR')}</span>
                       </div>
 
-                      {/* Detected Objects */}
-                      {photo.detected_objects && photo.detected_objects.length > 0 && (
-                        <div className="flex flex-wrap gap-1">
-                          {photo.detected_objects.slice(0, 3).map((obj, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {obj}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-
-                      {/* Quality Features */}
-                      {photo.detected_features && (
+                      {/* Score de qualité (colonne réelle property_photos.quality_score) */}
+                      {photo.quality_score != null && (
                         <div className="space-y-1">
                           <div className="flex items-center justify-between text-xs">
-                            <span>Luminosité</span>
-                            <span>{photo.detected_features.brightness}%</span>
+                            <span>Qualité</span>
+                            <span>{photo.quality_score}%</span>
                           </div>
-                          <Progress value={photo.detected_features.brightness} className="h-1" />
+                          <Progress value={photo.quality_score} className="h-1" />
                         </div>
                       )}
                     </div>
@@ -922,13 +783,13 @@ const VendeurPhotosRealData = () => {
 
             <div className="bg-purple-50 rounded-lg p-4">
               <div className="flex items-start gap-2">
-                <Brain className="w-5 h-5 text-purple-600 mt-0.5" />
+                <MapPin className="w-5 h-5 text-purple-600 mt-0.5" />
                 <div className="flex-1">
                   <h4 className="font-medium text-purple-900 mb-1">
-                    Optimisation IA automatique
+                    Géolocalisation automatique
                   </h4>
                   <p className="text-sm text-purple-700">
-                    Chaque photo sera analysée automatiquement : score de qualité, détection d'objets, suggestions d'amélioration.
+                    Si vous autorisez la localisation de votre appareil, vos photos seront associées à votre position actuelle.
                   </p>
                 </div>
               </div>
@@ -949,8 +810,8 @@ const VendeurPhotosRealData = () => {
               {/* Image */}
               <div>
                 <img
-                  src={selectedPhoto.file_path}
-                  alt={selectedPhoto.file_name}
+                  src={selectedPhoto.url}
+                  alt={getPhotoDisplayName(selectedPhoto)}
                   className="w-full rounded-lg"
                 />
               </div>
@@ -962,93 +823,46 @@ const VendeurPhotosRealData = () => {
                   <div className="space-y-2 text-sm">
                     <div className="flex justify-between">
                       <span className="text-gray-600">Nom:</span>
-                      <span className="font-medium">{selectedPhoto.file_name}</span>
+                      <span className="font-medium">{getPhotoDisplayName(selectedPhoto)}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Taille:</span>
-                      <span>{(selectedPhoto.file_size / 1024).toFixed(2)} KB</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Dimensions:</span>
-                      <span>{selectedPhoto.width} x {selectedPhoto.height}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-600">Catégorie:</span>
+                      <span className="text-gray-600">Propriété:</span>
                       <Badge variant="secondary">
-                        {getCategoryLabel(selectedPhoto.category)}
+                        {selectedPhoto.property?.title || selectedPhoto.property?.name || 'Propriété'}
                       </Badge>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Ajoutée le:</span>
+                      <span>{new Date(selectedPhoto.created_at).toLocaleDateString('fr-FR')}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Localisation GPS:</span>
+                      <span>
+                        {selectedPhoto.gps_latitude && selectedPhoto.gps_longitude
+                          ? `${selectedPhoto.gps_latitude.toFixed(5)}, ${selectedPhoto.gps_longitude.toFixed(5)}`
+                          : 'Non renseignée'}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div>
                   <h3 className="font-semibold mb-2 flex items-center gap-2">
-                    <Brain className="w-4 h-4 text-purple-600" />
-                    Analyse IA
+                    <Award className="w-4 h-4 text-purple-600" />
+                    Score de qualité
                   </h3>
-                  <div className="space-y-3">
+                  {selectedPhoto.quality_score != null ? (
                     <div>
                       <div className="flex justify-between text-sm mb-1">
-                        <span>Score de qualité</span>
+                        <span>Qualité</span>
                         <span className="font-bold">{selectedPhoto.quality_score}%</span>
                       </div>
                       <Progress value={selectedPhoto.quality_score} />
                     </div>
-
-                    {selectedPhoto.detected_features && (
-                      <>
-                        <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Luminosité</span>
-                            <span>{selectedPhoto.detected_features.brightness}%</span>
-                          </div>
-                          <Progress value={selectedPhoto.detected_features.brightness} />
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Contraste</span>
-                            <span>{selectedPhoto.detected_features.contrast}%</span>
-                          </div>
-                          <Progress value={selectedPhoto.detected_features.contrast} />
-                        </div>
-                        <div>
-                          <div className="flex justify-between text-sm mb-1">
-                            <span>Netteté</span>
-                            <span>{selectedPhoto.detected_features.sharpness}%</span>
-                          </div>
-                          <Progress value={selectedPhoto.detected_features.sharpness} />
-                        </div>
-                      </>
-                    )}
-                  </div>
+                  ) : (
+                    <p className="text-sm text-gray-500">Pas encore évaluée</p>
+                  )}
                 </div>
-
-                {selectedPhoto.detected_objects && selectedPhoto.detected_objects.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Objets détectés</h3>
-                    <div className="flex flex-wrap gap-2">
-                      {selectedPhoto.detected_objects.map((obj, idx) => (
-                        <Badge key={idx} variant="secondary">
-                          {obj}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                {selectedPhoto.ai_suggestions && selectedPhoto.ai_suggestions.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Suggestions IA</h3>
-                    <ul className="space-y-2">
-                      {selectedPhoto.ai_suggestions.map((suggestion, idx) => (
-                        <li key={idx} className="flex items-start gap-2 text-sm">
-                          <Sparkles className="w-4 h-4 text-purple-600 mt-0.5" />
-                          <span>{suggestion}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
 
                 <div className="flex gap-2 pt-4">
                   <Button
@@ -1060,7 +874,7 @@ const VendeurPhotosRealData = () => {
                   </Button>
                   <Button
                     variant="outline"
-                    onClick={() => window.open(selectedPhoto.file_path, '_blank')}
+                    onClick={() => window.open(selectedPhoto.url, '_blank')}
                   >
                     <Download className="w-4 h-4" />
                   </Button>

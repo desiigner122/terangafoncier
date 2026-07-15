@@ -14,8 +14,40 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { supabase } from '@/lib/supabaseClient';
+import VendeurSupabaseService from '@/services/VendeurSupabaseService';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
+
+// Calcule le temps de réponse moyen réel du vendeur : délai entre le dernier
+// message reçu d'un acheteur et la réponse suivante envoyée par le vendeur,
+// à partir des messages effectivement chargés. Retourne '—' si aucune paire
+// question/réponse n'est disponible (aucune métrique inventée).
+const computeAverageResponseTime = (messagesByConversation, vendorId) => {
+  const deltas = [];
+
+  messagesByConversation.forEach(convMessages => {
+    const sorted = [...convMessages].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
+
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
+      if (prev.sender_id !== vendorId && curr.sender_id === vendorId) {
+        deltas.push(new Date(curr.created_at) - new Date(prev.created_at));
+      }
+    }
+  });
+
+  if (deltas.length === 0) return '—';
+
+  const avgMs = deltas.reduce((sum, d) => sum + d, 0) / deltas.length;
+  const avgHours = avgMs / 3600000;
+
+  if (avgHours < 1) return `${Math.round(avgMs / 60000)}min`;
+  if (avgHours < 24) return `${avgHours.toFixed(1)}h`;
+  return `${Math.round(avgHours / 24)}j`;
+};
 
 const VendeurMessagesRealData = () => {
   const { user } = useAuth();
@@ -33,7 +65,7 @@ const VendeurMessagesRealData = () => {
     totalConversations: 0,
     unreadCount: 0,
     todayMessages: 0,
-    responseTime: '0h'
+    responseTime: '—'
   });
 
   // Charger conversations
@@ -58,62 +90,107 @@ const VendeurMessagesRealData = () => {
   const loadConversations = async () => {
     try {
       setLoading(true);
-      
-      // Charger vraies conversations vendeur depuis Supabase
-      // Note: conversations utilise participant1_id et participant2_id, pas buyer_id
-      const { data: conversationsData, error } = await supabase
-        .from('conversations')
-        .select(`
-          *,
-          profiles!participant1_id(
-            id,
-            first_name,
-            last_name,
-            email,
-            avatar_url
-          ),
-          properties!property_id(
-            id,
-            title,
-            reference
-          )
-        `)
-        .eq('participant2_id', user.id)
-        .eq('is_archived_by_p2', false)
-        .order('updated_at', { ascending: false });
 
-      if (error) throw error;
+      // Conversations réelles auxquelles le vendeur participe
+      // (conversation_participants + conversations, schéma réel)
+      const { success, data: conversationsData, error } = await VendeurSupabaseService.getConversations(user.id);
+      if (!success) throw new Error(error || 'Erreur chargement conversations');
 
-      // Mapper les données: participant1_id devient 'profiles' (le participant1)
-      const formattedConversations = (conversationsData || []).map(conv => {
-        const participant = conv.profiles || {};
+      if (!conversationsData || conversationsData.length === 0) {
+        setConversations([]);
+        setStats({ totalConversations: 0, unreadCount: 0, todayMessages: 0, responseTime: '—' });
+        setLoading(false);
+        return;
+      }
+
+      const conversationIds = conversationsData.map(c => c.id);
+
+      // Identifier l'autre participant (l'acheteur) de chaque conversation
+      const otherParticipantIds = [...new Set(
+        conversationsData.flatMap(c =>
+          (c.participants || [])
+            .map(p => p.user_id)
+            .filter(id => id && id !== user.id)
+        )
+      )];
+
+      const propertyIds = [...new Set(conversationsData.map(c => c.property_id).filter(Boolean))];
+
+      const [profilesRes, propertiesRes, messagesRes] = await Promise.all([
+        otherParticipantIds.length > 0
+          ? supabase.from('profiles').select('id, first_name, last_name, email, avatar_url').in('id', otherParticipantIds)
+          : Promise.resolve({ data: [] }),
+        propertyIds.length > 0
+          ? supabase.from('properties').select('id, title').in('id', propertyIds)
+          : Promise.resolve({ data: [] }),
+        supabase
+          .from('messages')
+          .select('id, conversation_id, sender_id, content, read, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: true })
+      ]);
+
+      const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
+      const propertiesById = new Map((propertiesRes.data || []).map(p => [p.id, p]));
+      const allMessages = messagesRes.data || [];
+
+      // Grouper les messages par conversation pour calculer dernier message,
+      // non-lus et temps de réponse à partir de vraies données
+      const messagesByConversation = new Map();
+      allMessages.forEach(msg => {
+        if (!messagesByConversation.has(msg.conversation_id)) {
+          messagesByConversation.set(msg.conversation_id, []);
+        }
+        messagesByConversation.get(msg.conversation_id).push(msg);
+      });
+
+      const formattedConversations = conversationsData.map(conv => {
+        const otherId = (conv.participants || []).map(p => p.user_id).find(id => id && id !== user.id);
+        const participant = otherId ? profilesById.get(otherId) : null;
+        const property = conv.property_id ? propertiesById.get(conv.property_id) : null;
+        const convMessages = messagesByConversation.get(conv.id) || [];
+        const lastMessage = convMessages[convMessages.length - 1];
+        const unreadCount = convMessages.filter(m => !m.read && m.sender_id !== user.id).length;
+
         return {
           id: conv.id,
-          buyer_name: `${participant?.first_name || ''} ${participant?.last_name || ''}`.trim() || 'Utilisateur',
+          buyer_name: participant
+            ? `${participant.first_name || ''} ${participant.last_name || ''}`.trim() || 'Utilisateur'
+            : 'Utilisateur',
           buyer_email: participant?.email || '',
           buyer_avatar: participant?.avatar_url,
-          property_title: conv.properties?.title || 'Propriété',
-          property_id: conv.properties?.reference || '',
-          last_message: conv.last_message_preview || '',
-          last_message_time: conv.updated_at,
-          unread_count: conv.unread_count_p2 || 0,
-          is_pinned: conv.is_pinned_by_p2 || false,
-          is_archived: conv.is_archived_by_p2 || false,
+          property_title: property?.title || conv.subject || 'Conversation',
+          property_id: property?.id || '',
+          last_message: lastMessage?.content || '',
+          last_message_time: lastMessage?.created_at || conv.updated_at,
+          unread_count: unreadCount,
+          // Pas de colonne de pin/archivage par utilisateur dans le schéma réel
+          // (conversations n'a que id, subject, property_id, created_at, updated_at) :
+          // ces indicateurs restent locaux à la session, cf. handlePinConversation.
+          is_pinned: false,
+          is_archived: false,
           status: 'active'
         };
       });
 
       setConversations(formattedConversations);
 
-      // Calculer stats
+      // Stats calculées à partir des vraies conversations/messages chargés
       const unreadCount = formattedConversations.reduce((sum, c) => sum + c.unread_count, 0);
-      const todayMessages = await getTodayMessagesCount();
-      
+
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayMessages = allMessages.filter(
+        m => m.sender_id === user.id && new Date(m.created_at) >= today
+      ).length;
+
+      const responseTime = computeAverageResponseTime(messagesByConversation, user.id);
+
       setStats({
         totalConversations: formattedConversations.length,
         unreadCount,
         todayMessages,
-        responseTime: '2h' // À calculer vraiment
+        responseTime
       });
 
       setLoading(false);
@@ -124,52 +201,24 @@ const VendeurMessagesRealData = () => {
     }
   };
 
-  const getTodayMessagesCount = async () => {
-    try {
-      const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      
-      const { data, error } = await supabase
-        .from('messages_vendeur')
-        .select('id')
-        .eq('sender_id', user.id)
-        .gte('created_at', today.toISOString());
-
-      if (error) throw error;
-      return data?.length || 0;
-    } catch (error) {
-      console.error('Erreur comptage messages:', error);
-      return 0;
-    }
-  };
-
   const loadMessages = async (conversationId) => {
     try {
-      // Charger vraies messages depuis Supabase
-      const { data: messagesData, error } = await supabase
-        .from('messages_vendeur')
-        .select(`
-          *,
-          sender:profiles!messages_vendeur_sender_id_fkey(
-            id,
-            first_name,
-            last_name,
-            role
-          )
-        `)
-        .eq('thread_id', conversationId)
-        .order('created_at', { ascending: true });
+      // Charger les vrais messages depuis Supabase (table réelle 'messages')
+      const { success, data: messagesData, error } = await VendeurSupabaseService.getMessages(conversationId);
+      if (!success) throw new Error(error || 'Erreur chargement messages');
 
-      if (error) throw error;
-
+      // Le type d'expéditeur est déduit par comparaison d'id (fiable), pas d'un
+      // rôle de profil : plus robuste que de deviner via profiles.role.
       const formattedMessages = (messagesData || []).map(msg => ({
         id: msg.id,
         conversation_id: msg.conversation_id,
-        sender_type: msg.sender?.role === 'vendeur' ? 'vendor' : 'buyer',
+        sender_type: msg.sender_id === user.id ? 'vendor' : 'buyer',
         content: msg.content,
         sent_at: msg.created_at,
-        read_at: msg.read_at,
-        attachments: msg.attachments || []
+        // 'messages' n'a qu'un booléen 'read' (pas de timestamp read_at réel) :
+        // on garde ce champ pour l'icône Check/CheckCheck existante.
+        read_at: msg.read ? msg.created_at : null,
+        attachments: []
       }));
 
       setMessages(formattedMessages);
@@ -184,12 +233,12 @@ const VendeurMessagesRealData = () => {
 
   const markAsRead = async (conversationId) => {
     try {
-      // Marquer messages comme lus
+      // Marquer les messages reçus (pas envoyés par le vendeur) comme lus
       const { error } = await supabase
-        .from('messages_vendeur')
-        .update({ read_at: new Date().toISOString() })
-        .eq('thread_id', conversationId)
-        .is('read_at', null)
+        .from('messages')
+        .update({ read: true })
+        .eq('conversation_id', conversationId)
+        .eq('read', false)
         .neq('sender_id', user.id);
 
       if (error) throw error;
@@ -213,19 +262,13 @@ const VendeurMessagesRealData = () => {
     if (!newMessage.trim() || !selectedConversation) return;
 
     try {
-      // Envoyer via Supabase
-      const { data, error } = await supabase
-        .from('messages_vendeur')
-        .insert({
-          conversation_id: selectedConversation.id,
-          sender_id: user.id,
-          content: newMessage.trim(),
-          read_at: null
-        })
-        .select()
-        .single();
-
-      if (error) throw error;
+      // Envoyer via VendeurSupabaseService (table réelle 'messages')
+      const { success, data, error } = await VendeurSupabaseService.sendMessage(
+        selectedConversation.id,
+        user.id,
+        newMessage.trim()
+      );
+      if (!success) throw new Error(error || 'Erreur envoi message');
 
       const message = {
         id: data.id,
@@ -240,13 +283,13 @@ const VendeurMessagesRealData = () => {
       setMessages(prev => [...prev, message]);
       setNewMessage('');
 
-      // Mettre à jour conversation
+      // Mettre à jour la date de dernière activité de la conversation.
+      // Note: 'conversations' n'a pas de colonne 'last_message' (schéma réel :
+      // id, subject, property_id, created_at, updated_at), donc seul
+      // updated_at est mis à jour ici.
       const { error: updateError } = await supabase
         .from('conversations')
-        .update({
-          last_message: message.content,
-          updated_at: new Date().toISOString()
-        })
+        .update({ updated_at: new Date().toISOString() })
         .eq('id', selectedConversation.id);
 
       if (updateError) throw updateError;
@@ -265,48 +308,30 @@ const VendeurMessagesRealData = () => {
     }
   };
 
-  const handlePinConversation = async (conversationId) => {
-    try {
-      const conversation = conversations.find(c => c.id === conversationId);
-      const newPinnedState = !conversation.is_pinned;
+  // Le schéma réel de 'conversations' (id, subject, property_id, created_at,
+  // updated_at) ne comporte aucune colonne de pin/archivage par utilisateur :
+  // aucune table ne peut nourrir cet état de façon persistante aujourd'hui.
+  // Plutôt que de fabriquer une fausse persistance, ces actions restent
+  // locales à la session (l'UI et le tri par épingle continuent de fonctionner,
+  // sans prétendre sauvegarder une donnée qui n'existe pas en base).
+  const handlePinConversation = (conversationId) => {
+    const conversation = conversations.find(c => c.id === conversationId);
+    const newPinnedState = !conversation?.is_pinned;
 
-      const { error } = await supabase
-        .from('conversations')
-        .update({ is_pinned_by_p2: newPinnedState })
-        .eq('id', conversationId);
+    setConversations(prev => prev.map(c =>
+      c.id === conversationId ? { ...c, is_pinned: newPinnedState } : c
+    ));
 
-      if (error) throw error;
-
-      setConversations(prev => prev.map(c =>
-        c.id === conversationId ? { ...c, is_pinned: newPinnedState } : c
-      ));
-
-      toast.success(newPinnedState ? 'Conversation épinglée' : 'Conversation désépinglée');
-    } catch (error) {
-      console.error('Erreur épinglage:', error);
-      toast.error('Erreur lors de l\'épinglage');
-    }
+    toast.success(newPinnedState ? 'Conversation épinglée' : 'Conversation désépinglée');
   };
 
-  const handleArchiveConversation = async (conversationId) => {
-    try {
-      const { error } = await supabase
-        .from('conversations')
-        .update({ is_archived_by_p2: true })
-        .eq('id', conversationId);
-
-      if (error) throw error;
-
-      setConversations(prev => prev.filter(c => c.id !== conversationId));
-      if (selectedConversation?.id === conversationId) {
-        setSelectedConversation(null);
-      }
-
-      toast.success('Conversation archivée');
-    } catch (error) {
-      console.error('Erreur archivage:', error);
-      toast.error('Erreur lors de l\'archivage');
+  const handleArchiveConversation = (conversationId) => {
+    setConversations(prev => prev.filter(c => c.id !== conversationId));
+    if (selectedConversation?.id === conversationId) {
+      setSelectedConversation(null);
     }
+
+    toast.success('Conversation archivée');
   };
 
   const scrollToBottom = () => {

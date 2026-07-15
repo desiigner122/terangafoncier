@@ -92,6 +92,7 @@ const VendeurSettingsRealData = () => {
     if (user) {
       loadSettings();
       loadSubscription();
+      loadMfaStatus();
     }
   }, [user]);
 
@@ -120,9 +121,10 @@ const VendeurSettingsRealData = () => {
         });
       }
 
-      // Charger préférences (simulées pour l'instant)
-      // Dans une vraie app, créer une table user_preferences
-      
+      // Préférences de notifications : aucune table dédiée (ex: user_notification_settings)
+      // n'existe encore dans le schéma autorisé pour ce dashboard. Elles restent donc
+      // appliquées localement pour cette session (voir handleSaveNotifications).
+
       setLoading(false);
     } catch (error) {
       console.error('Erreur chargement paramètres:', error);
@@ -135,21 +137,28 @@ const VendeurSettingsRealData = () => {
     try {
       setLoadingSubscription(true);
       
-      // 1. Charger abonnement actuel
+      // 1. Charger abonnement actuel (table réelle: user_subscriptions + subscription_plans)
       const { data: subscription, error: subError } = await supabase
-        .from('subscriptions')
-        .select('*')
+        .from('user_subscriptions')
+        .select('*, plan:subscription_plans(name, price, max_properties)')
         .eq('user_id', user.id)
         .eq('status', 'active')
-        .single();
-      
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
       if (!subError && subscription) {
-        setCurrentSubscription(subscription);
-      } else {
-        // Abonnement gratuit par défaut
         setCurrentSubscription({
-          plan: 'Gratuit',
-          price: 0,
+          ...subscription,
+          plan_name: (subscription.plan?.name || 'free').toLowerCase(),
+          amount_monthly: subscription.plan?.price || 0,
+          properties_limit: subscription.plan?.max_properties ?? 3
+        });
+      } else {
+        // Abonnement gratuit par défaut (aucune ligne active en base)
+        setCurrentSubscription({
+          plan_name: 'free',
+          amount_monthly: 0,
           status: 'active',
           properties_limit: 3
         });
@@ -169,6 +178,18 @@ const VendeurSettingsRealData = () => {
     } catch (error) {
       console.error('Erreur chargement abonnement:', error);
       setLoadingSubscription(false);
+    }
+  };
+
+  const loadMfaStatus = async () => {
+    try {
+      const { data, error } = await supabase.auth.mfa.listFactors();
+      if (error) throw error;
+
+      const hasVerifiedFactor = (data?.totp || []).some(f => f.status === 'verified');
+      setSecuritySettings(prev => ({ ...prev, two_factor_enabled: hasVerifiedFactor }));
+    } catch (error) {
+      console.error('Erreur chargement statut 2FA:', error);
     }
   };
 
@@ -199,26 +220,28 @@ const VendeurSettingsRealData = () => {
     }
   };
 
-  const handleUpgrade = async (planName, price, propertiesLimit) => {
+  const handleUpgrade = async (planName) => {
     try {
       setSaving(true);
-      
-      const { data, error } = await supabase
-        .from('subscriptions')
-        .upsert({
-          user_id: user.id,
-          plan: planName,
-          price: price,
-          status: 'active',
-          properties_limit: propertiesLimit,
-          next_billing_date: new Date(Date.now() + 30*24*60*60*1000).toISOString(),
-          updated_at: new Date().toISOString()
-        }, {
-          onConflict: 'user_id'
-        })
-        .select()
+
+      // Résoudre le plan réel par nom (table subscription_plans)
+      const { data: plan, error: planError } = await supabase
+        .from('subscription_plans')
+        .select('id')
+        .ilike('name', planName)
         .single();
-      
+      if (planError || !plan) throw planError || new Error(`Plan "${planName}" introuvable`);
+
+      const { error } = await supabase
+        .from('user_subscriptions')
+        .insert({
+          user_id: user.id,
+          plan_id: plan.id,
+          status: 'active',
+          start_date: new Date().toISOString().split('T')[0],
+          auto_renew: true
+        });
+
       if (!error) {
         toast.success(`✅ Plan ${planName} activé avec succès !`);
         loadSubscription();
@@ -243,12 +266,14 @@ const VendeurSettingsRealData = () => {
       setSaving(true);
       
       const { error } = await supabase
-        .from('subscriptions')
-        .update({ 
-          status: 'canceled',
-          canceled_at: new Date().toISOString()
+        .from('user_subscriptions')
+        .update({
+          status: 'cancelled',
+          auto_renew: false,
+          end_date: new Date().toISOString().split('T')[0]
         })
-        .eq('user_id', user.id);
+        .eq('user_id', user.id)
+        .eq('status', 'active');
       
       if (!error) {
         toast.success('Abonnement annulé. Vous conservez l\'accès jusqu\'à la fin de la période.');
@@ -333,11 +358,32 @@ const VendeurSettingsRealData = () => {
     }
   };
 
+  const handleDeleteAvatar = async () => {
+    if (!profileData.avatar_url) return;
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({ avatar_url: null, updated_at: new Date().toISOString() })
+        .eq('id', user.id);
+
+      if (error) throw error;
+
+      setProfileData(prev => ({ ...prev, avatar_url: '' }));
+      toast.success('Photo de profil supprimée');
+    } catch (error) {
+      console.error('Erreur suppression avatar:', error);
+      toast.error('Erreur lors de la suppression de la photo');
+    }
+  };
+
   const handleSaveNotifications = async () => {
     try {
       setSaving(true);
-      // Sauvegarder dans user_preferences (à créer)
-      toast.success('Préférences de notifications mises à jour');
+      // Aucune table de préférences de notifications n'existe encore dans le schéma
+      // autorisé (ex: user_notification_settings) : les réglages restent appliqués
+      // localement pour cette session, sans persistance serveur pour l'instant.
+      toast.success('Préférences appliquées pour cette session (persistance serveur bientôt disponible)');
       setSaving(false);
     } catch (error) {
       console.error('Erreur sauvegarde notifications:', error);
@@ -346,16 +392,36 @@ const VendeurSettingsRealData = () => {
     }
   };
 
+  const handleSaveSocialLinks = () => {
+    // Aucune colonne/table dédiée aux liens de réseaux sociaux n'existe encore
+    // dans le schéma autorisé (profiles n'a pas de champs facebook/twitter/...):
+    // les liens restent modifiables localement en attendant une évolution du schéma.
+    toast.info('Les liens seront sauvegardés dès qu\'un espace de stockage dédié sera disponible');
+  };
+
   const handleToggle2FA = async () => {
     try {
-      setSecuritySettings(prev => ({
-        ...prev,
-        two_factor_enabled: !prev.two_factor_enabled
-      }));
-      toast.success('Authentification à deux facteurs mise à jour');
+      if (securitySettings.two_factor_enabled) {
+        // Désactivation réelle : désenrôle les facteurs TOTP vérifiés auprès de Supabase Auth
+        const { data, error: listError } = await supabase.auth.mfa.listFactors();
+        if (listError) throw listError;
+
+        const verifiedFactors = (data?.totp || []).filter(f => f.status === 'verified');
+        for (const factor of verifiedFactors) {
+          const { error: unenrollError } = await supabase.auth.mfa.unenroll({ factorId: factor.id });
+          if (unenrollError) throw unenrollError;
+        }
+
+        setSecuritySettings(prev => ({ ...prev, two_factor_enabled: false }));
+        toast.success('Authentification à deux facteurs désactivée');
+      } else {
+        // L'activation nécessite un flux d'inscription complet (QR code + code de
+        // vérification) qui n'est pas encore disponible depuis ce panneau.
+        toast.info('L\'activation de la 2FA nécessite une configuration supplémentaire, bientôt disponible');
+      }
     } catch (error) {
       console.error('Erreur 2FA:', error);
-      toast.error('Erreur lors de la mise à jour');
+      toast.error('Erreur lors de la mise à jour de la 2FA');
     }
   };
 
@@ -467,7 +533,12 @@ const VendeurSettingsRealData = () => {
                         className="absolute inset-0 opacity-0 cursor-pointer"
                       />
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleDeleteAvatar}
+                      disabled={!profileData.avatar_url}
+                    >
                       <Trash2 className="h-4 w-4" />
                     </Button>
                   </div>
@@ -884,7 +955,10 @@ const VendeurSettingsRealData = () => {
                 </div>
               ))}
 
-              <Button className="bg-blue-600 hover:bg-blue-700">
+              <Button
+                className="bg-blue-600 hover:bg-blue-700"
+                onClick={handleSaveSocialLinks}
+              >
                 <Save className="h-4 w-4 mr-2" />
                 Enregistrer les liens
               </Button>

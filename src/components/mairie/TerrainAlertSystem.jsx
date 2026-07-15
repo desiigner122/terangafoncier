@@ -11,7 +11,7 @@ import {
   Flag, 
   X
 } from 'lucide-react';
-import { sampleParcels, sampleUsers } from '@/data';
+import PropertyService from '@/services/PropertyService';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
@@ -19,57 +19,27 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
   const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
-    // Simuler des alertes en temps réel pour les nouveaux terrains
-    const generateAlerts = () => {
-      const recentTerrains = sampleParcels
-        .filter(parcel => parcel.zone === municipalityName)
-        .slice(0, 3)
-        .map((parcel, index) => {
-          const seller = sampleUsers.find(user => user.id === parcel.seller_id);
-          const alertTypes = [
-            'new_listing',
-            'price_change', 
-            'status_change',
-            'suspicious_activity',
-            'FileText_missing'
-          ];
-          
-          return {
-            id: `alert-${parcel.id}-${index}`,
-            type: alertTypes[Math.floor(Math.random() * alertTypes.length)],
-            terrain: parcel,
-            seller: seller,
-            timestamp: new Date(Date.now() - Math.random() * 24 * 60 * 60 * 1000),
-            read: false,
-            priority: Math.random() > 0.7 ? 'high' : 'normal'
-          };
-        });
+    let active = true;
+    // Construire les alertes à partir des vrais terrains récents de la commune
+    const loadAlerts = async () => {
+      const result = await PropertyService.getPropertiesByZone(municipalityName, { limit: 5 });
+      if (!active) return;
+      const realAlerts = (result.properties || []).map((property) => ({
+        id: `alert-${property.id}`,
+        type: 'new_listing',
+        terrain: PropertyService.normalizeForCard(property),
+        seller: null,
+        timestamp: new Date(property.created_at),
+        read: false,
+        priority: 'normal'
+      }));
 
-      setAlerts(recentTerrains);
-      setUnreadCount(recentTerrains.filter(alert => !alert.read).length);
+      setAlerts(realAlerts);
+      setUnreadCount(realAlerts.length);
     };
 
-    generateAlerts();
-    
-    // Simuler des nouvelles alertes périodiquement
-    const interval = setInterval(() => {
-      if (Math.random() > 0.8) { // 20% de chance d'avoir une nouvelle alerte
-        const newAlert = {
-          id: `alert-new-${Date.now()}`,
-          type: 'new_listing',
-          terrain: sampleParcels.find(p => p.zone === municipalityName),
-          seller: sampleUsers.find(u => u.role === 'Vendeur Particulier'),
-          timestamp: new Date(),
-          read: false,
-          priority: 'normal'
-        };
-        
-        setAlerts(prev => [newAlert, ...prev.slice(0, 9)]); // Garder max 10 alertes
-        setUnreadCount(prev => prev + 1);
-      }
-    }, 30000); // Nouvelle alerte potentielle toutes les 30 secondes
-
-    return () => clearInterval(interval);
+    loadAlerts();
+    return () => { active = false; };
   }, [municipalityName]);
 
   const getAlertIcon = (type) => {
@@ -87,7 +57,7 @@ const TerrainAlertSystem = ({ municipalityName = "Saly" }) => {
     const { type, terrain, seller } = alert;
     switch (type) {
       case 'new_listing':
-        return `Nouveau terrain mis en vente par ${seller?.name || 'Vendeur inconnu'}`;
+        return `Nouveau terrain en vente : ${terrain?.title || 'terrain'}`;
       case 'price_change':
         return `Prix modifié pour ${terrain?.title || 'terrain'}`;
       case 'status_change':

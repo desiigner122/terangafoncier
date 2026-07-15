@@ -725,7 +725,7 @@ function App() {
                 <Route path="reports" element={<AdminReportsPage />} />
                 <Route path="blog" element={<AdminBlogPage />} />
                 <Route path="blog/new" element={<AdminBlogFormPage />} />
-                <Route path="blog/edit/:slug" element={<AdminBlogFormPage />} />
+                <Route path="blog/edit/:id" element={<AdminBlogFormPage />} />
                 <Route path="audit-log" element={<AdminAuditLogPage />} />
                 <Route path="admin-settings" element={<AdminSettingsPage />} />
                 <Route path="security-diagnostic" element={<SecurityDiagnosticTool />} />

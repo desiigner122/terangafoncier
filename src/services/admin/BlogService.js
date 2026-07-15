@@ -38,11 +38,14 @@ class BlogService {
         `)
         .order('published_at', { ascending: false });
 
-      // Filtrer par status (published par défaut pour frontend)
-      if (filters.status) {
+      // Filtrer par status.
+      // - status absent  => 'published' par défaut (frontend public)
+      // - status: 'all'  => aucun filtre (back-office : inclut les brouillons)
+      // - status: 'x'    => filtre exact
+      if (!filters.status) {
+        query = query.eq('status', 'published');
+      } else if (filters.status !== 'all') {
         query = query.eq('status', filters.status);
-      } else {
-        query = query.eq('status', 'published'); // Par défaut: articles publiés
       }
 
       // Recherche par titre
@@ -128,6 +131,8 @@ class BlogService {
       // Générer slug depuis titre si non fourni
       const slug = postData.slug || this.generateSlug(postData.title);
 
+      const status = postData.status === 'published' ? 'published' : 'draft';
+
       const { data, error } = await supabase
         .from('blog_posts')
         .insert({
@@ -140,9 +145,9 @@ class BlogService {
           author_avatar: postData.author_avatar || userData?.user?.user_metadata?.avatar_url || '',
           category: postData.category || 'Actualités',
           tags: postData.tags || [],
-          status: 'draft',
+          status,
           reading_time: postData.reading_time || this.calculateReadingTime(postData.content || ''),
-          published_at: null
+          published_at: status === 'published' ? new Date().toISOString() : null
         })
         .select()
         .single();
@@ -167,6 +172,18 @@ class BlogService {
       // Recalculer reading_time si content modifié
       if (updates.content) {
         updates.reading_time = this.calculateReadingTime(updates.content);
+      }
+
+      // Si on publie un article qui n'avait pas de date de publication, la fixer
+      if (updates.status === 'published' && !updates.published_at) {
+        const { data: existing } = await supabase
+          .from('blog_posts')
+          .select('published_at')
+          .eq('id', postId)
+          .single();
+        if (!existing?.published_at) {
+          updates.published_at = new Date().toISOString();
+        }
       }
 
       const { data, error } = await supabase

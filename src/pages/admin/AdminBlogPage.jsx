@@ -27,12 +27,12 @@ const AdminBlogPage = () => {
       setLoading(true);
       setFetchError(null);
       try {
-        // Phase 1: Use BlogService for centralized blog logic
-        const result = await BlogService.getPosts();
+        // Back-office : récupérer tous les articles (publiés ET brouillons)
+        const result = await BlogService.getPosts({ status: 'all' });
         if (!result.success) {
           throw new Error(result.error || 'Erreur lors du chargement des articles');
         }
-        setPosts(result.data || []);
+        setPosts(result.posts || []);
       } catch (err) {
         setFetchError(err.message);
         setPosts([]);
@@ -121,7 +121,14 @@ const AdminBlogPage = () => {
                 <tbody className="bg-background divide-y divide-gray-200 dark:divide-gray-700">
                   {filteredPosts.map((post) => (
                     <tr key={post.id}>
-                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{post.title}</td>
+                      <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
+                        <div className="flex items-center gap-2">
+                          {post.title}
+                          {post.status !== 'published' && (
+                            <Badge variant="outline" className="text-amber-600 border-amber-300">Brouillon</Badge>
+                          )}
+                        </div>
+                      </td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground"><Badge variant="secondary">{post.category}</Badge></td>
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{post.published_at ? new Date(post.published_at).toLocaleDateString('fr-FR') : ''}</td>
                       <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium space-x-2">

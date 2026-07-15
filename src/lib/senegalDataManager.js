@@ -149,10 +149,23 @@ export const updatePropertiesWithFCFA = async () => {
 };
 
 // Fonction pour créer des données de démonstration réalistes
+// ⚠️ SÉCURITÉ : cette fonction insère de fausses propriétés dans la table Supabase
+// `properties`. Elle est verrouillée hors mode développement pour éviter de polluer
+// la base de production. Pour l'exécuter volontairement en local :
+//   VITE_ALLOW_DEMO_SEED=true (dans le .env de dev) puis appeler createRealisticDemoData()
 export const createRealisticDemoData = async () => {
+  const seedingAllowed = import.meta.env.DEV && import.meta.env.VITE_ALLOW_DEMO_SEED === 'true';
+  if (!seedingAllowed) {
+    console.warn(
+      '⛔ createRealisticDemoData() bloqué : injection de fausses données désactivée. ' +
+      'Activez VITE_ALLOW_DEMO_SEED=true en mode développement uniquement.'
+    );
+    return { blocked: true, inserted: 0 };
+  }
+
   try {
     console.log('🏗️ Création de données de démonstration réalistes...');
-    
+
     const demoProperties = [];
     const regions = Object.keys(REALISTIC_SENEGAL_DATA.regions);
     

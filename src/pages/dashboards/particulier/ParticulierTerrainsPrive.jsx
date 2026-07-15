@@ -1,131 +1,126 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Building2,
   MapPin,
   Eye,
   MessageSquare,
-  Calendar,
   Clock,
   CheckCircle,
-  AlertCircle,
   DollarSign,
-  Phone,
-  Mail,
-  Star,
   Filter,
   Search,
   Plus,
   Heart,
-  Share2,
-  Download
+  Loader2
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { toast } from 'react-hot-toast';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import PropertyService from '@/services/PropertyService';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 
-const ParticulierTerrainsPrive = ({ dashboardStats }) => {
+const ParticulierTerrainsPrive = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('tous');
-  const [activeTab, setActiveTab] = useState('demandes');
+  const [loading, setLoading] = useState(true);
 
-  // Demandes d'achat de terrains privés
-  const [demandesTerrains] = useState([
-    {
-      id: 'DTP-2024-001',
-      titre: 'Terrain Résidentiel - Almadies',
-      proprietaire: 'Société SENEGAL IMMOBILIER',
-      superficie: '500m²',
-      prix: 75000000, // 75M FCFA
-      localisation: 'Almadies, Dakar',
-      statut: 'Négociation',
-      dateOffre: '2024-01-15',
-      dernierContact: '2024-01-28',
-      progression: 60,
-      description: 'Terrain viabilisé avec vue sur mer, idéal pour villa haut standing',
-      caracteristiques: ['Viabilisé', 'Vue mer', 'Titre foncier', 'Accès goudronné'],
-      contact: {
-        nom: 'Amadou DIALLO',
-        telephone: '+221 77 123 45 67',
-        email: 'a.diallo@senegalimmobilier.sn'
-      },
-      documents: ['Titre foncier', 'Plan de bornage', 'Certificat viabilisation'],
-      prochainEtape: 'Visite avec géomètre',
-      echeance: '2024-02-10'
-    },
-    {
-      id: 'DTP-2024-002',
-      titre: 'Terrain Commercial - Plateau',
-      proprietaire: 'M. Cheikh NDIAYE',
-      superficie: '800m²',
-      prix: 120000000, // 120M FCFA
-      localisation: 'Plateau, Dakar',
-      statut: 'En attente réponse',
-      dateOffre: '2024-01-20',
-      dernierContact: '2024-01-25',
-      progression: 30,
-      description: 'Terrain commercial au cœur du Plateau, parfait pour immeuble',
-      caracteristiques: ['Zone commerciale', 'Proche métro', 'Services publics', 'Parking'],
-      contact: {
-        nom: 'Cheikh NDIAYE',
-        telephone: '+221 76 987 65 43',
-        email: 'cheikh.ndiaye@gmail.com'
-      },
-      documents: ['Titre foncier', 'Autorisation commerciale'],
-      prochainEtape: 'Réponse propriétaire',
-      echeance: '2024-02-05'
-    },
-    {
-      id: 'DTP-2024-003',
-      titre: 'Terrain Agricole - Thiès',
-      proprietaire: 'Coopérative BOKK JËKK',
-      superficie: '2000m²',
-      prix: 25000000, // 25M FCFA
-      localisation: 'Thiès, Thiès',
-      statut: 'Approuvé',
-      dateOffre: '2024-01-10',
-      dernierContact: '2024-01-30',
-      progression: 90,
-      description: 'Grand terrain agricole fertile, idéal pour projet agro-pastoral',
-      caracteristiques: ['Sol fertile', 'Point d\'eau', 'Accès route', 'Électricité proche'],
-      contact: {
-        nom: 'Fatou SARR',
-        telephone: '+221 78 234 56 78',
-        email: 'fatou.sarr@bokkjekk.sn'
-      },
-      documents: ['Titre foncier', 'Étude sol', 'Autorisation agricole'],
-      prochainEtape: 'Signature acte',
-      echeance: '2024-02-08'
+  // Terrains privés = catalogue réel (properties actives/vérifiées) — table `properties`
+  const [terrains, setTerrains] = useState([]);
+  // Favoris réels de l'utilisateur — table `favorites` (map property_id -> favorite.id)
+  const [favorites, setFavorites] = useState({});
+  const [favBusy, setFavBusy] = useState(null);
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const [propsRes, favRes] = await Promise.all([
+        PropertyService.getProperties({ verifiedOnly: true }),
+        user?.id ? ParticulierSupabaseService.getFavorites(user.id) : Promise.resolve({ success: true, data: [] })
+      ]);
+
+      if (propsRes.success) {
+        setTerrains(propsRes.properties || []);
+      }
+
+      if (favRes.success) {
+        const map = {};
+        (favRes.data || []).forEach((f) => {
+          if (f.property?.id) map[f.property.id] = f.id;
+        });
+        setFavorites(map);
+      }
+    } catch (error) {
+      console.error('Erreur chargement terrains privés:', error);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  }, [user?.id]);
 
-  // Statistiques des demandes
-  const statsTerrains = {
-    totalDemandes: demandesTerrains.length,
-    enNegociation: demandesTerrains.filter(d => d.statut === 'Négociation').length,
-    approuvees: demandesTerrains.filter(d => d.statut === 'Approuvé').length,
-    enAttente: demandesTerrains.filter(d => d.statut === 'En attente réponse').length,
-    budgetTotal: demandesTerrains.reduce((sum, d) => sum + d.prix, 0)
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const toggleFavorite = async (propertyId) => {
+    if (!user?.id) {
+      toast.error('Connectez-vous pour gérer vos favoris');
+      return;
+    }
+    setFavBusy(propertyId);
+    try {
+      const existing = favorites[propertyId];
+      if (existing) {
+        const res = await ParticulierSupabaseService.removeFavorite(existing);
+        if (res.success) {
+          setFavorites((prev) => {
+            const next = { ...prev };
+            delete next[propertyId];
+            return next;
+          });
+          toast.success('Retiré des favoris');
+        } else {
+          toast.error('Impossible de retirer le favori');
+        }
+      } else {
+        const res = await ParticulierSupabaseService.addFavorite(user.id, propertyId);
+        if (res.success) {
+          setFavorites((prev) => ({ ...prev, [propertyId]: res.data.id }));
+          toast.success('Ajouté aux favoris');
+        } else {
+          toast.error("Impossible d'ajouter aux favoris");
+        }
+      }
+    } finally {
+      setFavBusy(null);
+    }
   };
 
-  const getStatutColor = (statut) => {
-    switch (statut) {
-      case 'Approuvé': return 'bg-green-100 text-green-800 border-green-200';
-      case 'Négociation': return 'bg-blue-100 text-blue-800 border-blue-200';
-      case 'En attente réponse': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+  const getStatutLabel = (status) => {
+    switch (status) {
+      case 'active': return 'Disponible';
+      case 'reserved': return 'Réservé';
+      case 'pending': return 'En cours';
+      case 'sold': return 'Vendu';
+      default: return status || 'Disponible';
+    }
+  };
+
+  const getStatutColor = (status) => {
+    switch (status) {
+      case 'active': return 'bg-green-100 text-green-800 border-green-200';
+      case 'reserved': return 'bg-yellow-100 text-yellow-800 border-yellow-200';
+      case 'pending': return 'bg-blue-100 text-blue-800 border-blue-200';
+      case 'sold': return 'bg-gray-100 text-gray-800 border-gray-200';
       default: return 'bg-gray-100 text-gray-800 border-gray-200';
     }
   };
 
-  const getProgressionColor = (progression) => {
-    if (progression >= 80) return 'text-green-600';
-    if (progression >= 50) return 'text-blue-600';
-    return 'text-yellow-600';
-  };
-
   const formatPrice = (price) => {
+    if (price === null || price === undefined) return null;
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
@@ -133,12 +128,31 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
     }).format(price);
   };
 
-  const filteredDemandes = demandesTerrains.filter(demande => {
-    const matchesSearch = demande.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         demande.localisation.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'tous' || demande.statut === filterType;
+  const getLocation = (t) =>
+    t.location || [t.city, t.region].filter(Boolean).join(', ') || 'Localisation non précisée';
+
+  // Types réellement présents dans le catalogue (pour le filtre)
+  const availableTypes = Array.from(
+    new Set(terrains.map((t) => t.type).filter(Boolean))
+  );
+
+  const filteredTerrains = terrains.filter((t) => {
+    const title = (t.title || t.name || '').toLowerCase();
+    const location = getLocation(t).toLowerCase();
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = title.includes(term) || location.includes(term);
+    const matchesFilter = filterType === 'tous' || t.type === filterType;
     return matchesSearch && matchesFilter;
   });
+
+  // Statistiques dérivées de données réelles (aucun chiffre fabriqué)
+  const prices = terrains.map((t) => Number(t.price)).filter((p) => p > 0);
+  const statsTerrains = {
+    total: terrains.length,
+    verifies: terrains.filter((t) => t.verification_status === 'verified').length,
+    favoris: Object.keys(favorites).length,
+    prixMoyen: prices.length ? Math.round(prices.reduce((a, b) => a + b, 0) / prices.length) : 0
+  };
 
   return (
     <div className="space-y-6 p-6">
@@ -151,15 +165,8 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
         <div>
           <h1 className="text-3xl font-bold text-gray-900">Terrains Privés</h1>
           <p className="text-gray-600 mt-2">
-            Demandes d'achat et négociations de terrains privés
+            Catalogue des terrains privés vérifiés disponibles à l'achat
           </p>
-        </div>
-        
-        <div className="flex items-center gap-3">
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Nouvelle demande
-          </Button>
         </div>
       </motion.div>
 
@@ -173,22 +180,10 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-blue-600">Total Demandes</p>
-                <p className="text-2xl font-bold text-blue-900">{statsTerrains.totalDemandes}</p>
+                <p className="text-sm font-medium text-blue-600">Terrains Disponibles</p>
+                <p className="text-2xl font-bold text-blue-900">{statsTerrains.total}</p>
               </div>
               <Building2 className="w-8 h-8 text-blue-600" />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-gradient-to-br from-yellow-50 to-yellow-100 border-yellow-200">
-          <CardContent className="p-6">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium text-yellow-600">En Négociation</p>
-                <p className="text-2xl font-bold text-yellow-900">{statsTerrains.enNegociation}</p>
-              </div>
-              <MessageSquare className="w-8 h-8 text-yellow-600" />
             </div>
           </CardContent>
         </Card>
@@ -197,10 +192,22 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-green-600">Approuvées</p>
-                <p className="text-2xl font-bold text-green-900">{statsTerrains.approuvees}</p>
+                <p className="text-sm font-medium text-green-600">Vérifiés</p>
+                <p className="text-2xl font-bold text-green-900">{statsTerrains.verifies}</p>
               </div>
               <CheckCircle className="w-8 h-8 text-green-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm font-medium text-red-600">Mes Favoris</p>
+                <p className="text-2xl font-bold text-red-900">{statsTerrains.favoris}</p>
+              </div>
+              <Heart className="w-8 h-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
@@ -209,9 +216,11 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-purple-600">Budget Total</p>
+                <p className="text-sm font-medium text-purple-600">Prix Moyen</p>
                 <p className="text-lg font-bold text-purple-900">
-                  {formatPrice(statsTerrains.budgetTotal).replace('XOF', 'FCFA')}
+                  {statsTerrains.prixMoyen
+                    ? formatPrice(statsTerrains.prixMoyen).replace('XOF', 'FCFA')
+                    : '—'}
                 </p>
               </div>
               <DollarSign className="w-8 h-8 text-purple-600" />
@@ -235,7 +244,7 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
             className="pl-10"
           />
         </div>
-        
+
         <div className="flex items-center gap-2">
           <Filter className="w-4 h-4 text-gray-500" />
           <select
@@ -243,140 +252,165 @@ const ParticulierTerrainsPrive = ({ dashboardStats }) => {
             onChange={(e) => setFilterType(e.target.value)}
             className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <option value="tous">Tous les statuts</option>
-            <option value="Négociation">En négociation</option>
-            <option value="Approuvé">Approuvé</option>
-            <option value="En attente réponse">En attente</option>
+            <option value="tous">Tous les types</option>
+            {availableTypes.map((type) => (
+              <option key={type} value={type}>{type}</option>
+            ))}
           </select>
         </div>
       </motion.div>
 
-      {/* Liste des demandes */}
-      <motion.div
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0, transition: { delay: 0.3 } }}
-        className="space-y-4"
-      >
-        {filteredDemandes.map((demande, index) => (
-          <Card key={demande.id} className="hover:shadow-lg transition-all duration-200">
-            <CardContent className="p-6">
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-                <div className="flex items-start gap-4 flex-1">
-                  <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-white" />
-                  </div>
-                  
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between mb-2">
-                      <div>
-                        <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                          {demande.titre}
-                        </h3>
-                        <p className="text-sm text-gray-600 mb-2">{demande.description}</p>
-                        
-                        <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
-                          <div className="flex items-center gap-1">
-                            <MapPin className="w-4 h-4" />
-                            {demande.localisation}
+      {/* Liste des terrains */}
+      {loading ? (
+        <div className="flex items-center justify-center py-16">
+          <Loader2 className="w-8 h-8 text-blue-600 animate-spin" />
+        </div>
+      ) : (
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0, transition: { delay: 0.3 } }}
+          className="space-y-4"
+        >
+          {filteredTerrains.map((terrain) => {
+            const isFav = Boolean(favorites[terrain.id]);
+            const priceLabel = formatPrice(terrain.price);
+            return (
+              <Card key={terrain.id} className="hover:shadow-lg transition-all duration-200">
+                <CardContent className="p-6">
+                  <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+                    <div className="flex items-start gap-4 flex-1">
+                      <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-500 rounded-xl flex items-center justify-center">
+                        <Building2 className="w-6 h-6 text-white" />
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                              {terrain.title || terrain.name || 'Terrain privé'}
+                            </h3>
+                            {terrain.description && (
+                              <p className="text-sm text-gray-600 mb-2 line-clamp-2">{terrain.description}</p>
+                            )}
+
+                            <div className="flex flex-wrap items-center gap-4 text-sm text-gray-600">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4" />
+                                {getLocation(terrain)}
+                              </div>
+                              {terrain.surface && (
+                                <div className="flex items-center gap-1">
+                                  <Building2 className="w-4 h-4" />
+                                  {Number(terrain.surface).toLocaleString('fr-FR')} m²
+                                </div>
+                              )}
+                              {priceLabel && (
+                                <div className="flex items-center gap-1">
+                                  <DollarSign className="w-4 h-4" />
+                                  {priceLabel.replace('XOF', 'FCFA')}
+                                </div>
+                              )}
+                            </div>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Building2 className="w-4 h-4" />
-                            {demande.superficie}
-                          </div>
-                          <div className="flex items-center gap-1">
-                            <DollarSign className="w-4 h-4" />
-                            {formatPrice(demande.prix).replace('XOF', 'FCFA')}
-                          </div>
+
+                          <Badge className={`${getStatutColor(terrain.status)} whitespace-nowrap`}>
+                            {getStatutLabel(terrain.status)}
+                          </Badge>
+                        </div>
+
+                        {/* Type + vérification (données réelles) */}
+                        <div className="flex flex-wrap gap-2 mb-3">
+                          {terrain.type && (
+                            <span className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md border border-blue-200">
+                              {terrain.type}
+                            </span>
+                          )}
+                          {terrain.verification_status === 'verified' && (
+                            <span className="px-2 py-1 bg-green-50 text-green-700 text-xs rounded-md border border-green-200 flex items-center gap-1">
+                              <CheckCircle className="w-3 h-3" /> Vérifié
+                            </span>
+                          )}
+                          {terrain.region && (
+                            <span className="px-2 py-1 bg-gray-50 text-gray-700 text-xs rounded-md border border-gray-200">
+                              {terrain.region}
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Métadonnées réelles */}
+                        <div className="flex items-center gap-4 text-sm text-gray-500">
+                          {typeof terrain.views_count === 'number' && (
+                            <span className="flex items-center gap-1">
+                              <Eye className="w-4 h-4" />
+                              {terrain.views_count} vues
+                            </span>
+                          )}
+                          {terrain.created_at && (
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-4 h-4" />
+                              {new Date(terrain.created_at).toLocaleDateString('fr-FR')}
+                            </span>
+                          )}
                         </div>
                       </div>
-                      
-                      <Badge className={`${getStatutColor(demande.statut)} whitespace-nowrap`}>
-                        {demande.statut}
-                      </Badge>
                     </div>
 
-                    {/* Caractéristiques */}
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {demande.caracteristiques.map((carac, idx) => (
-                        <span
-                          key={idx}
-                          className="px-2 py-1 bg-blue-50 text-blue-700 text-xs rounded-md border border-blue-200"
-                        >
-                          {carac}
-                        </span>
-                      ))}
-                    </div>
-
-                    {/* Progression */}
-                    <div className="mb-3">
-                      <div className="flex items-center justify-between mb-1">
-                        <span className="text-sm font-medium text-gray-700">Progression</span>
-                        <span className={`text-sm font-bold ${getProgressionColor(demande.progression)}`}>
-                          {demande.progression}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
-                        <div
-                          className={`h-2 rounded-full transition-all duration-300 ${
-                            demande.progression >= 80 ? 'bg-green-500' :
-                            demande.progression >= 50 ? 'bg-blue-500' : 'bg-yellow-500'
-                          }`}
-                          style={{ width: `${demande.progression}%` }}
-                        />
-                      </div>
-                    </div>
-
-                    {/* Prochaine étape */}
-                    <div className="flex items-center gap-2 text-sm">
-                      <Clock className="w-4 h-4 text-blue-600" />
-                      <span className="text-gray-600">Prochaine étape:</span>
-                      <span className="font-medium text-blue-600">{demande.prochainEtape}</span>
-                      <span className="text-gray-500">({demande.echeance})</span>
+                    {/* Actions */}
+                    <div className="flex items-center gap-2">
+                      <Button variant="outline" size="sm">
+                        <Eye className="w-4 h-4 mr-1" />
+                        Détails
+                      </Button>
+                      <Button variant="outline" size="sm">
+                        <MessageSquare className="w-4 h-4 mr-1" />
+                        Contact
+                      </Button>
+                      <Button
+                        variant={isFav ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => toggleFavorite(terrain.id)}
+                        disabled={favBusy === terrain.id}
+                        className={isFav ? 'bg-red-500 hover:bg-red-600 text-white' : ''}
+                      >
+                        {favBusy === terrain.id ? (
+                          <Loader2 className="w-4 h-4 mr-1 animate-spin" />
+                        ) : (
+                          <Heart className={`w-4 h-4 mr-1 ${isFav ? 'fill-current' : ''}`} />
+                        )}
+                        {isFav ? 'Favori' : 'Favoris'}
+                      </Button>
                     </div>
                   </div>
-                </div>
+                </CardContent>
+              </Card>
+            );
+          })}
 
-                {/* Actions */}
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm">
-                    <Eye className="w-4 h-4 mr-1" />
-                    Détails
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <MessageSquare className="w-4 h-4 mr-1" />
-                    Contact
-                  </Button>
-                  <Button variant="outline" size="sm">
-                    <Heart className="w-4 h-4 mr-1" />
-                    Favoris
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
-      </motion.div>
-
-      {filteredDemandes.length === 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="text-center py-12"
-        >
-          <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-gray-900 mb-2">
-            Aucune demande trouvée
-          </h3>
-          <p className="text-gray-600 mb-4">
-            {searchTerm || filterType !== 'tous' 
-              ? 'Essayez de modifier vos critères de recherche'
-              : 'Vous n\'avez pas encore fait de demande d\'achat de terrain privé'
-            }
-          </p>
-          <Button className="bg-gradient-to-r from-blue-600 to-purple-600">
-            <Plus className="w-4 h-4 mr-2" />
-            Créer une nouvelle demande
-          </Button>
+          {filteredTerrains.length === 0 && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              className="text-center py-12"
+            >
+              <Building2 className="w-16 h-16 text-gray-400 mx-auto mb-4" />
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                Aucun terrain trouvé
+              </h3>
+              <p className="text-gray-600 mb-4">
+                {searchTerm || filterType !== 'tous'
+                  ? 'Essayez de modifier vos critères de recherche'
+                  : 'Aucun terrain privé vérifié n\'est disponible pour le moment'}
+              </p>
+              {(searchTerm || filterType !== 'tous') && (
+                <Button
+                  variant="outline"
+                  onClick={() => { setSearchTerm(''); setFilterType('tous'); }}
+                >
+                  Réinitialiser les filtres
+                </Button>
+              )}
+            </motion.div>
+          )}
         </motion.div>
       )}
     </div>

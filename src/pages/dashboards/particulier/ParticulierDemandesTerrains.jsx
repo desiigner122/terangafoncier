@@ -26,15 +26,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 
 const ParticulierDemandesTerrains = () => {
   const outletContext = useOutletContext();
-  const { user } = outletContext || {};
+  const { user, profile } = outletContext || {};
   const [loading, setLoading] = useState(true);
   const [demandes, setDemandes] = useState([]);
   const [activeTab, setActiveTab] = useState('mes_demandes');
@@ -43,15 +42,13 @@ const ParticulierDemandesTerrains = () => {
   const [selectedDemande, setSelectedDemande] = useState(null);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  // Formulaire nouvelle demande
+  // Formulaire nouvelle demande (colonnes réelles de communal_requests)
   const [newDemande, setNewDemande] = useState({
     commune: '',
-    quartier: '',
-    superficie_souhaitee: '',
-    budget_max: '',
-    usage_prevu: '',
-    description: '',
-    priorite: 'normale'
+    zone: '',
+    surface: '',
+    type: '',
+    priority: 'normale'
   });
 
   useEffect(() => {
@@ -71,18 +68,15 @@ const ParticulierDemandesTerrains = () => {
       setLoading(true);
       console.log('📊 Chargement des demandes de terrains communaux...');
 
-      const { data, error } = await supabase
-        .from('demandes_terrains_communaux')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const result = await ParticulierSupabaseService.getCommunalRequests(user.id);
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error);
 
-      setDemandes(data || []);
-      console.log(`✅ ${data?.length || 0} demandes chargées`);
+      setDemandes(result.data || []);
+      console.log(`✅ ${result.data?.length || 0} demandes chargées`);
     } catch (error) {
       console.error('❌ Erreur lors du chargement des demandes:', error);
+      setDemandes([]);
     } finally {
       setLoading(false);
     }
@@ -92,29 +86,34 @@ const ParticulierDemandesTerrains = () => {
     try {
       console.log('🆕 Création nouvelle demande terrain communal...');
 
-      const { data, error } = await supabase
-        .from('demandes_terrains_communaux')
-        .insert([{
-          ...newDemande,
-          user_id: user.id,
-          statut: 'en_attente',
-          numero_demande: `DTC-${Date.now()}`
-        }])
-        .select()
-        .single();
+      const applicantName =
+        profile?.full_name ||
+        [profile?.first_name, profile?.last_name].filter(Boolean).join(' ') ||
+        user?.user_metadata?.full_name ||
+        user?.email ||
+        'Demandeur';
 
-      if (error) throw error;
+      const result = await ParticulierSupabaseService.createCommunalRequest({
+        applicant_id: user.id,
+        applicant_name: applicantName,
+        commune: newDemande.commune,
+        zone: newDemande.zone,
+        type: newDemande.type,
+        surface: newDemande.surface ? Number(newDemande.surface) : null,
+        priority: newDemande.priority,
+        status: 'en_attente'
+      });
 
-      setDemandes(prev => [data, ...prev]);
+      if (!result.success) throw new Error(result.error);
+
+      setDemandes(prev => [result.data, ...prev]);
       setIsCreateModalOpen(false);
       setNewDemande({
         commune: '',
-        quartier: '',
-        superficie_souhaitee: '',
-        budget_max: '',
-        usage_prevu: '',
-        description: '',
-        priorite: 'normale'
+        zone: '',
+        surface: '',
+        type: '',
+        priority: 'normale'
       });
 
       console.log('✅ Demande créée avec succès');
@@ -151,15 +150,19 @@ const ParticulierDemandesTerrains = () => {
     });
   };
 
-  const formatPrice = (price) => {
-    return new Intl.NumberFormat('fr-FR').format(price) + ' FCFA';
-  };
+  // Référence lisible dérivée de l'id réel (pas de colonne numero_demande)
+  const getReference = (demande) =>
+    `DTC-${(demande?.id || '').toString().slice(0, 8).toUpperCase()}`;
 
-  const filteredDemandes = demandes.filter(demande =>
-    demande.commune?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    demande.quartier?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    demande.numero_demande?.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredDemandes = demandes.filter(demande => {
+    const term = searchTerm.toLowerCase();
+    return (
+      demande.commune?.toLowerCase().includes(term) ||
+      demande.zone?.toLowerCase().includes(term) ||
+      demande.type?.toLowerCase().includes(term) ||
+      getReference(demande).toLowerCase().includes(term)
+    );
+  });
 
   if (loading) {
     return (
@@ -227,37 +230,27 @@ const ParticulierDemandesTerrains = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="quartier">Quartier</Label>
+                <Label htmlFor="zone">Zone / Quartier</Label>
                 <Input
-                  value={newDemande.quartier}
-                  onChange={(e) => setNewDemande(prev => ({...prev, quartier: e.target.value}))}
-                  placeholder="Nom du quartier"
+                  value={newDemande.zone}
+                  onChange={(e) => setNewDemande(prev => ({...prev, zone: e.target.value}))}
+                  placeholder="Nom de la zone ou du quartier"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="superficie">Superficie souhaitée (m²)</Label>
+                <Label htmlFor="surface">Superficie souhaitée (m²)</Label>
                 <Input
                   type="number"
-                  value={newDemande.superficie_souhaitee}
-                  onChange={(e) => setNewDemande(prev => ({...prev, superficie_souhaitee: e.target.value}))}
+                  value={newDemande.surface}
+                  onChange={(e) => setNewDemande(prev => ({...prev, surface: e.target.value}))}
                   placeholder="500"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="budget">Budget maximum (FCFA)</Label>
-                <Input
-                  type="number"
-                  value={newDemande.budget_max}
-                  onChange={(e) => setNewDemande(prev => ({...prev, budget_max: e.target.value}))}
-                  placeholder="5000000"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="usage">Usage prévu</Label>
-                <Select value={newDemande.usage_prevu} onValueChange={(value) => setNewDemande(prev => ({...prev, usage_prevu: value}))}>
+                <Label htmlFor="type">Usage prévu</Label>
+                <Select value={newDemande.type} onValueChange={(value) => setNewDemande(prev => ({...prev, type: value}))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Type d'usage" />
                   </SelectTrigger>
@@ -271,8 +264,8 @@ const ParticulierDemandesTerrains = () => {
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="priorite">Priorité</Label>
-                <Select value={newDemande.priorite} onValueChange={(value) => setNewDemande(prev => ({...prev, priorite: value}))}>
+                <Label htmlFor="priority">Priorité</Label>
+                <Select value={newDemande.priority} onValueChange={(value) => setNewDemande(prev => ({...prev, priority: value}))}>
                   <SelectTrigger>
                     <SelectValue placeholder="Niveau de priorité" />
                   </SelectTrigger>
@@ -282,16 +275,6 @@ const ParticulierDemandesTerrains = () => {
                     <SelectItem value="tres_urgente">Très Urgente</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="col-span-2 space-y-2">
-                <Label htmlFor="description">Description détaillée</Label>
-                <Textarea
-                  value={newDemande.description}
-                  onChange={(e) => setNewDemande(prev => ({...prev, description: e.target.value}))}
-                  placeholder="Décrivez votre projet et vos besoins spécifiques..."
-                  rows={3}
-                />
               </div>
             </div>
 
@@ -330,7 +313,7 @@ const ParticulierDemandesTerrains = () => {
               <div>
                 <p className="text-sm text-slate-600">En Attente</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {demandes.filter(d => d.statut === 'en_attente').length}
+                  {demandes.filter(d => d.status === 'en_attente').length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
@@ -344,7 +327,7 @@ const ParticulierDemandesTerrains = () => {
               <div>
                 <p className="text-sm text-slate-600">Acceptées</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {demandes.filter(d => d.statut === 'acceptee').length}
+                  {demandes.filter(d => d.status === 'acceptee').length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -358,7 +341,7 @@ const ParticulierDemandesTerrains = () => {
               <div>
                 <p className="text-sm text-slate-600">En Cours</p>
                 <p className="text-2xl font-bold text-blue-600">
-                  {demandes.filter(d => d.statut === 'en_cours').length}
+                  {demandes.filter(d => d.status === 'en_cours').length}
                 </p>
               </div>
               <RefreshCw className="h-8 w-8 text-blue-600" />
@@ -408,19 +391,19 @@ const ParticulierDemandesTerrains = () => {
                 <div className="flex-1">
                   <div className="flex items-center gap-3 mb-2">
                     <h3 className="font-semibold text-slate-900">
-                      {demande.numero_demande}
+                      {getReference(demande)}
                     </h3>
-                    {getStatutBadge(demande.statut)}
+                    {getStatutBadge(demande.status)}
                   </div>
-                  
+
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                     <div className="flex items-center gap-2">
                       <MapPin className="h-4 w-4 text-slate-400" />
-                      <span>{demande.commune} - {demande.quartier}</span>
+                      <span>{demande.commune}{demande.zone ? ` - ${demande.zone}` : ''}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Building2 className="h-4 w-4 text-slate-400" />
-                      <span>{demande.superficie_souhaitee} m²</span>
+                      <span>{demande.surface ? `${demande.surface} m²` : '—'}</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <Calendar className="h-4 w-4 text-slate-400" />
@@ -428,15 +411,9 @@ const ParticulierDemandesTerrains = () => {
                     </div>
                     <div className="flex items-center gap-2">
                       <FileText className="h-4 w-4 text-slate-400" />
-                      <span>{demande.usage_prevu}</span>
+                      <span>{demande.type || '—'}</span>
                     </div>
                   </div>
-
-                  {demande.description && (
-                    <p className="text-sm text-slate-600 mt-2 line-clamp-2">
-                      {demande.description}
-                    </p>
-                  )}
                 </div>
 
                 <div className="flex gap-2 ml-4">
@@ -450,8 +427,8 @@ const ParticulierDemandesTerrains = () => {
                   >
                     <Eye className="h-4 w-4" />
                   </Button>
-                  
-                  {demande.statut === 'en_attente' && (
+
+                  {demande.status === 'en_attente' && (
                     <Button
                       variant="outline"
                       size="sm"
@@ -461,12 +438,6 @@ const ParticulierDemandesTerrains = () => {
                   )}
                 </div>
               </div>
-
-              {demande.budget_max && (
-                <div className="text-sm text-slate-600">
-                  Budget maximum: <span className="font-medium">{formatPrice(demande.budget_max)}</span>
-                </div>
-              )}
             </motion.div>
           ))
         ) : (
@@ -501,7 +472,7 @@ const ParticulierDemandesTerrains = () => {
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Building2 className="h-5 w-5" />
-                  {selectedDemande.numero_demande}
+                  {getReference(selectedDemande)}
                 </DialogTitle>
                 <DialogDescription>
                   Détails de votre demande de terrain communal
@@ -510,7 +481,7 @@ const ParticulierDemandesTerrains = () => {
               
               <div className="space-y-4">
                 <div className="flex items-center gap-2">
-                  {getStatutBadge(selectedDemande.statut)}
+                  {getStatutBadge(selectedDemande.status)}
                   <span className="text-sm text-slate-500">
                     Créée le {formatDate(selectedDemande.created_at)}
                   </span>
@@ -520,48 +491,28 @@ const ParticulierDemandesTerrains = () => {
                   <div>
                     <Label className="text-sm font-medium">Localisation</Label>
                     <p className="text-sm text-slate-600">
-                      {selectedDemande.commune} - {selectedDemande.quartier}
+                      {selectedDemande.commune}{selectedDemande.zone ? ` - ${selectedDemande.zone}` : ''}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Superficie</Label>
                     <p className="text-sm text-slate-600">
-                      {selectedDemande.superficie_souhaitee} m²
+                      {selectedDemande.surface ? `${selectedDemande.surface} m²` : '—'}
                     </p>
                   </div>
                   <div>
                     <Label className="text-sm font-medium">Usage prévu</Label>
                     <p className="text-sm text-slate-600">
-                      {selectedDemande.usage_prevu}
+                      {selectedDemande.type || '—'}
                     </p>
                   </div>
                   <div>
-                    <Label className="text-sm font-medium">Budget maximum</Label>
+                    <Label className="text-sm font-medium">Priorité</Label>
                     <p className="text-sm text-slate-600">
-                      {selectedDemande.budget_max ? formatPrice(selectedDemande.budget_max) : 'Non spécifié'}
+                      {selectedDemande.priority || '—'}
                     </p>
                   </div>
                 </div>
-
-                {selectedDemande.description && (
-                  <div>
-                    <Label className="text-sm font-medium">Description</Label>
-                    <p className="text-sm text-slate-600 mt-1">
-                      {selectedDemande.description}
-                    </p>
-                  </div>
-                )}
-
-                {selectedDemande.commentaire_admin && (
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <Label className="text-sm font-medium text-blue-800">
-                      Commentaire administratif
-                    </Label>
-                    <p className="text-sm text-blue-700 mt-1">
-                      {selectedDemande.commentaire_admin}
-                    </p>
-                  </div>
-                )}
               </div>
             </>
           )}

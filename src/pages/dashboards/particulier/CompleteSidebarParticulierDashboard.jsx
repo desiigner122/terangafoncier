@@ -47,6 +47,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { toast } from 'react-hot-toast';
 import TerangaLogo from '@/components/ui/TerangaLogo';
 
@@ -61,17 +62,21 @@ const CompleteSidebarParticulierDashboard = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [unreadMessagesCount, setUnreadMessagesCount] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [overviewStats, setOverviewStats] = useState(null);
 
   // Charger les compteurs au chargement
   React.useEffect(() => {
     if (user) {
       loadUnreadCounts();
-      
-      // Souscription aux changements en temps réel
+
+      // Souscription aux changements en temps réel.
+      // La table 'messages' n'a pas de colonne 'recipient_id' : on ne peut pas
+      // filtrer par destinataire au niveau realtime (le scoping réel se fait via
+      // les conversations dans loadUnreadCounts). On recharge donc sur tout INSERT.
       const messagesSubscription = supabase
         .channel('messages_changes')
-        .on('postgres_changes', 
-          { event: 'INSERT', schema: 'public', table: 'messages', filter: `recipient_id=eq.${user.id}` },
+        .on('postgres_changes',
+          { event: 'INSERT', schema: 'public', table: 'messages' },
           () => loadUnreadCounts()
         )
         .subscribe();
@@ -93,21 +98,30 @@ const CompleteSidebarParticulierDashboard = () => {
 
   const loadUnreadCounts = async () => {
     try {
-      const { count: messagesCount } = await supabase
-        .from('messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('recipient_id', user.id)
-        .is('read_at', null);
-      
-      setUnreadMessagesCount(messagesCount || 0);
+      // Compteurs agrégés réels (favoris, offres, dossiers, notifications non lues...)
+      const statsResult = await ParticulierSupabaseService.getOverviewStats(user.id);
+      if (statsResult.success && statsResult.data) {
+        setOverviewStats(statsResult.data);
+        setUnreadNotificationsCount(statsResult.data.unreadNotifications || 0);
+      }
 
-      const { count: notificationsCount } = await supabase
-        .from('notifications')
-        .select('*', { count: 'exact', head: true })
-        .eq('user_id', user.id)
-        .eq('is_read', false);
-      
-      setUnreadNotificationsCount(notificationsCount || 0);
+      // Messages non lus : messages non lus (colonne réelle 'read') envoyés par un
+      // tiers, dans les conversations où l'utilisateur est participant.
+      const convResult = await ParticulierSupabaseService.getConversations(user.id);
+      const conversationIds = (convResult.data || []).map((c) => c.id);
+
+      if (conversationIds.length > 0) {
+        const { count: messagesCount } = await supabase
+          .from('messages')
+          .select('id', { count: 'exact', head: true })
+          .in('conversation_id', conversationIds)
+          .eq('read', false)
+          .neq('sender_id', user.id);
+
+        setUnreadMessagesCount(messagesCount || 0);
+      } else {
+        setUnreadMessagesCount(0);
+      }
     } catch (error) {
       console.error('Erreur chargement compteurs:', error);
     }
@@ -142,7 +156,7 @@ const CompleteSidebarParticulierDashboard = () => {
       icon: FileText,
       description: 'Suivi demandes terrains communaux',
       path: '/acheteur/demandes-terrains',
-      badge: '0'
+      badge: overviewStats?.communalRequests > 0 ? overviewStats.communalRequests.toString() : null
     },
     {
       id: 'demandes-construction',
@@ -150,7 +164,7 @@ const CompleteSidebarParticulierDashboard = () => {
       icon: Building2,
       description: 'Demandes aux promoteurs',
       path: '/acheteur/construction',
-      badge: '0'
+      badge: overviewStats?.constructionRequests > 0 ? overviewStats.constructionRequests.toString() : null
     },
     {
       id: 'mes-offres',
@@ -158,7 +172,7 @@ const CompleteSidebarParticulierDashboard = () => {
       icon: Heart,
       description: 'Offres reçues des vendeurs',
       path: '/acheteur/offres',
-      badge: '0'
+      badge: overviewStats?.offers > 0 ? overviewStats.offers.toString() : null
     },
     {
       id: 'messages',

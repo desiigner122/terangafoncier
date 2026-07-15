@@ -24,12 +24,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { createClient } from '@supabase/supabase-js';
-
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 
 const ParticulierTickets = () => {
   const { user } = useOutletContext();
@@ -47,16 +42,11 @@ const ParticulierTickets = () => {
   const loadTickets = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('support_tickets')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTickets(data || []);
+      const res = await ParticulierSupabaseService.getSupportTickets(user.id);
+      setTickets(res.data || []);
     } catch (error) {
       console.error('Erreur chargement tickets:', error);
+      setTickets([]);
     } finally {
       setLoading(false);
     }
@@ -159,11 +149,10 @@ const ParticulierTickets = () => {
                           {getStatusBadge(ticket.status)}
                           <span className="text-xs text-gray-500">#{ticket.id.substring(0, 8)}</span>
                         </div>
-                        <h4 className="font-semibold text-gray-900 mb-1">{ticket.subject}</h4>
+                        <h4 className="font-semibold text-gray-900 mb-1">{ticket.title}</h4>
                         <p className="text-sm text-gray-600 line-clamp-2">{ticket.description}</p>
                         <div className="flex items-center space-x-4 mt-3 text-xs text-gray-500">
                           <span>{new Date(ticket.created_at).toLocaleDateString('fr-FR')}</span>
-                          <span className="px-2 py-1 bg-gray-100 rounded">{ticket.category}</span>
                           {ticket.priority && (
                             <span className={`px-2 py-1 rounded ${
                               ticket.priority === 'urgent' ? 'bg-red-100 text-red-800' :
@@ -205,13 +194,22 @@ const NewTicketForm = ({ user, onSuccess }) => {
     setSubmitting(true);
     
     try {
-      const { error } = await supabase.from('support_tickets').insert({
+      // La table support_tickets réelle n'a pas de colonne 'category' : on
+      // préfixe la catégorie choisie dans la description (colonne réelle) pour
+      // ne pas perdre l'information de classification, sans inventer de colonne.
+      const description = formData.category
+        ? `[${formData.category}] ${formData.description}`
+        : formData.description;
+
+      const res = await ParticulierSupabaseService.createSupportTicket({
         user_id: user.id,
-        user_type: 'particulier',
-        ...formData
+        title: formData.subject,
+        description,
+        priority: formData.priority,
+        status: 'open'
       });
 
-      if (error) throw error;
+      if (!res.success) throw new Error(res.error || 'Création échouée');
 
       window.safeGlobalToast({ description: 'Ticket créé avec succès', variant: 'success' });
       onSuccess();

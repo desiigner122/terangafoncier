@@ -30,10 +30,10 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { toast } from 'react-hot-toast';
 
 const ParticulierConstructions = () => {
@@ -50,13 +50,11 @@ const ParticulierConstructions = () => {
     rejettees: []
   });
 
+  // La table réelle construction_requests ne comporte que : title, status, budget
+  // (+ user_id, property_id). On ne collecte donc que ce qui peut être persisté.
   const [newDemande, setNewDemande] = useState({
-    type_construction: '',
-    surface_souhaitee: '',
-    budget_max: '',
-    localisation_preferee: '',
-    description: '',
-    date_souhaitee: ''
+    title: '',
+    budget: ''
   });
 
   useEffect(() => {
@@ -75,29 +73,19 @@ const ParticulierConstructions = () => {
     try {
       setLoading(true);
 
-      const { data, error } = await supabase
-        .from('demandes_construction')
-        .select(`
-          *,
-          promoteur:promoteur_id(full_name, company_name)
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      const result = await ParticulierSupabaseService.getConstructionRequests(user.id);
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Chargement impossible');
 
-      // Organiser par statut
-      const enCours = data?.filter(d => 
-        ['en_attente', 'en_cours', 'en_instruction'].includes(d.statut)
-      ) || [];
-      
-      const terminees = data?.filter(d => 
-        d.statut === 'approuvee'
-      ) || [];
-      
-      const rejettees = data?.filter(d => 
-        d.statut === 'rejetee'
-      ) || [];
+      const data = result.data || [];
+
+      // Organiser par statut réel (colonne 'status' de construction_requests)
+      const isRejected = (s) => ['rejected', 'rejetee', 'refusee', 'refused'].includes(s);
+      const isDone = (s) => ['completed', 'approved', 'approuvee', 'terminee', 'delivered'].includes(s);
+
+      const terminees = data.filter(d => isDone(d.status));
+      const rejettees = data.filter(d => isRejected(d.status));
+      const enCours = data.filter(d => !isDone(d.status) && !isRejected(d.status));
 
       setDemandesConstruction({ enCours, terminees, rejettees });
 
@@ -112,22 +100,22 @@ const ParticulierConstructions = () => {
   const handleCreateDemande = async (e) => {
     e.preventDefault();
     
-    if (!newDemande.type_construction || !newDemande.description) {
-      toast.error('Veuillez remplir tous les champs obligatoires');
+    if (!newDemande.title) {
+      toast.error('Veuillez renseigner le type / titre du projet');
       return;
     }
 
     try {
       setLoading(true);
 
+      // Insertion sur les colonnes réelles de construction_requests
       const { error } = await supabase
-        .from('demandes_construction')
+        .from('construction_requests')
         .insert([{
           user_id: user.id,
-          ...newDemande,
-          surface_souhaitee: parseInt(newDemande.surface_souhaitee) || null,
-          budget_max: parseFloat(newDemande.budget_max) || null,
-          statut: 'en_attente'
+          title: newDemande.title,
+          budget: parseFloat(newDemande.budget) || null,
+          status: 'pending'
         }]);
 
       if (error) throw error;
@@ -135,14 +123,10 @@ const ParticulierConstructions = () => {
       toast.success('Demande de construction soumise avec succès');
       setShowNewDemande(false);
       setNewDemande({
-        type_construction: '',
-        surface_souhaitee: '',
-        budget_max: '',
-        localisation_preferee: '',
-        description: '',
-        date_souhaitee: ''
+        title: '',
+        budget: ''
       });
-      
+
       loadConstructionRequests();
 
     } catch (error) {
@@ -155,20 +139,33 @@ const ParticulierConstructions = () => {
 
   const getStatusLabel = (statut) => {
     const statusMap = {
+      'pending': 'En attente',
+      'submitted': 'Soumise',
+      'in_progress': 'En cours',
+      'in_review': 'En instruction',
+      'approved': 'Approuvée',
+      'completed': 'Terminée',
+      'rejected': 'Rejetée',
+      // Alias FR au cas où
       'en_attente': 'En attente',
       'en_cours': 'En cours',
-      'en_instruction': 'En instruction',
       'approuvee': 'Approuvée',
       'rejetee': 'Rejetée'
     };
-    return statusMap[statut] || statut;
+    return statusMap[statut] || statut || 'Inconnu';
   };
 
   const getStatusColor = (statut) => {
     const colorMap = {
+      'pending': 'bg-blue-100 text-blue-800',
+      'submitted': 'bg-blue-100 text-blue-800',
+      'in_progress': 'bg-purple-100 text-purple-800',
+      'in_review': 'bg-yellow-100 text-yellow-800',
+      'approved': 'bg-green-100 text-green-800',
+      'completed': 'bg-green-100 text-green-800',
+      'rejected': 'bg-red-100 text-red-800',
       'en_attente': 'bg-blue-100 text-blue-800',
       'en_cours': 'bg-purple-100 text-purple-800',
-      'en_instruction': 'bg-yellow-100 text-yellow-800',
       'approuvee': 'bg-green-100 text-green-800',
       'rejetee': 'bg-red-100 text-red-800'
     };
@@ -208,64 +205,42 @@ const ParticulierConstructions = () => {
             <div>
               <CardTitle className="text-lg flex items-center">
                 <Building2 className="h-5 w-5 mr-2 text-blue-600" />
-                {demande.type_construction || 'Construction'}
+                {demande.title || 'Construction'}
               </CardTitle>
               <CardDescription className="flex items-center mt-1">
                 <Calendar className="h-4 w-4 mr-1" />
-                Soumise le {new Date(demande.created_at).toLocaleDateString('fr-FR')}
+                Soumise le {demande.created_at ? new Date(demande.created_at).toLocaleDateString('fr-FR') : '—'}
               </CardDescription>
             </div>
-            <Badge className={getStatusColor(demande.statut)}>
-              {getStatusLabel(demande.statut)}
+            <Badge className={getStatusColor(demande.status)}>
+              {getStatusLabel(demande.status)}
             </Badge>
           </div>
         </CardHeader>
-        
+
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-            {demande.surface_souhaitee && (
-              <div className="flex items-center">
-                <Home className="h-4 w-4 mr-2 text-slate-500" />
-                <span>{demande.surface_souhaitee} m²</span>
-              </div>
-            )}
-            
-            {demande.budget_max && (
+            {demande.budget != null && (
               <div className="flex items-center">
                 <Euro className="h-4 w-4 mr-2 text-slate-500" />
-                <span>{formatPrice(demande.budget_max)}</span>
-              </div>
-            )}
-            
-            {demande.localisation_preferee && (
-              <div className="flex items-center">
-                <MapPin className="h-4 w-4 mr-2 text-slate-500" />
-                <span>{demande.localisation_preferee}</span>
+                <span>{formatPrice(demande.budget)}</span>
               </div>
             )}
 
-            {demande.date_souhaitee && (
+            {demande.property?.location && (
               <div className="flex items-center">
-                <Calendar className="h-4 w-4 mr-2 text-slate-500" />
-                <span>Souhaité: {new Date(demande.date_souhaitee).toLocaleDateString('fr-FR')}</span>
+                <MapPin className="h-4 w-4 mr-2 text-slate-500" />
+                <span>{demande.property.location}</span>
               </div>
             )}
           </div>
 
-          {demande.description && (
-            <div className="border-t pt-3">
-              <p className="text-sm text-slate-600 line-clamp-3">
-                {demande.description}
-              </p>
-            </div>
-          )}
-
-          {demande.promoteur && (
+          {demande.property && (
             <div className="border-t pt-3">
               <div className="flex items-center text-sm text-slate-600">
-                <User className="h-4 w-4 mr-2" />
+                <Home className="h-4 w-4 mr-2" />
                 <span>
-                  Promoteur: {demande.promoteur.company_name || demande.promoteur.full_name}
+                  Terrain associé : {demande.property.title || demande.property.name || 'Bien lié'}
                 </span>
               </div>
             </div>
@@ -273,7 +248,7 @@ const ParticulierConstructions = () => {
 
           <div className="flex justify-between items-center pt-3 border-t">
             <span className="text-xs text-slate-500">
-              Mis à jour {getTimeAgo(demande.updated_at)}
+              Créée il y a {getTimeAgo(demande.created_at)}
             </span>
             <div className="flex gap-2">
               <Button size="sm" variant="outline">
@@ -294,9 +269,9 @@ const ParticulierConstructions = () => {
   const filteredDemandes = (demandes) => {
     if (!searchTerm) return demandes;
     return demandes.filter(demande =>
-      demande.type_construction?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      demande.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      demande.localisation_preferee?.toLowerCase().includes(searchTerm.toLowerCase())
+      demande.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      demande.property?.location?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      demande.property?.title?.toLowerCase().includes(searchTerm.toLowerCase())
     );
   };
 
@@ -427,77 +402,34 @@ const ParticulierConstructions = () => {
               <form onSubmit={handleCreateDemande} className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Type de construction *
+                    Type / titre du projet *
                   </label>
                   <Input
                     placeholder="Villa, Appartement, Bureau..."
-                    value={newDemande.type_construction}
-                    onChange={(e) => setNewDemande(prev => ({ ...prev, type_construction: e.target.value }))}
+                    value={newDemande.title}
+                    onChange={(e) => setNewDemande(prev => ({ ...prev, title: e.target.value }))}
                     required
                   />
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Surface souhaitée (m²)
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="200"
-                      value={newDemande.surface_souhaitee}
-                      onChange={(e) => setNewDemande(prev => ({ ...prev, surface_souhaitee: e.target.value }))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Budget maximum (XOF)
-                    </label>
-                    <Input
-                      type="number"
-                      placeholder="50000000"
-                      value={newDemande.budget_max}
-                      onChange={(e) => setNewDemande(prev => ({ ...prev, budget_max: e.target.value }))}
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Localisation préférée
-                    </label>
-                    <Input
-                      placeholder="Dakar, Thiès, Mbour..."
-                      value={newDemande.localisation_preferee}
-                      onChange={(e) => setNewDemande(prev => ({ ...prev, localisation_preferee: e.target.value }))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-2">
-                      Date souhaitée
-                    </label>
-                    <Input
-                      type="date"
-                      value={newDemande.date_souhaitee}
-                      onChange={(e) => setNewDemande(prev => ({ ...prev, date_souhaitee: e.target.value }))}
-                    />
-                  </div>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-2">
-                    Description détaillée *
+                    Budget estimé (XOF)
                   </label>
-                  <Textarea
-                    placeholder="Décrivez votre projet de construction..."
-                    value={newDemande.description}
-                    onChange={(e) => setNewDemande(prev => ({ ...prev, description: e.target.value }))}
-                    rows={4}
-                    required
+                  <Input
+                    type="number"
+                    placeholder="50000000"
+                    value={newDemande.budget}
+                    onChange={(e) => setNewDemande(prev => ({ ...prev, budget: e.target.value }))}
                   />
+                </div>
+
+                <div className="flex items-start gap-2 rounded-md bg-slate-50 border border-slate-200 p-3 text-xs text-slate-500">
+                  <Info className="h-4 w-4 mt-0.5 flex-shrink-0" />
+                  <span>
+                    Après création, un conseiller pourra détailler avec vous la surface,
+                    la localisation et le calendrier de votre projet.
+                  </span>
                 </div>
 
                 <div className="flex gap-3 pt-4">

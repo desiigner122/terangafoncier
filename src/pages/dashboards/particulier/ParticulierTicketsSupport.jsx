@@ -34,6 +34,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Separator } from '@/components/ui/separator';
 import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { toast } from 'sonner';
 
@@ -69,6 +70,8 @@ const ParticulierTicketsSupport = () => {
     try {
       setLoading(true);
       
+      // Colonnes réelles de support_ticket_messages : id, ticket_id, sender_id, content, created_at.
+      // (pas de colonne 'sender_type' — l'auteur est identifié via sender_id)
       const { data: ticketsData, error } = await supabase
         .from('support_tickets')
         .select(`
@@ -76,7 +79,7 @@ const ParticulierTicketsSupport = () => {
           messages:support_ticket_messages(
             id,
             content,
-            sender_type,
+            sender_id,
             created_at,
             sender:profiles(first_name, last_name, avatar_url)
           )
@@ -102,32 +105,38 @@ const ParticulierTicketsSupport = () => {
     }
 
     try {
-      // Créer le ticket
-      const { data: ticketData, error: ticketError } = await supabase
-        .from('support_tickets')
-        .insert([
-          {
-            title: newTicket.title,
-            description: newTicket.description,
-            category: newTicket.category,
-            priority: newTicket.priority,
-            status: 'nouveau',
-            user_id: user.id
-          }
-        ])
-        .select()
-        .single();
+      // La table support_tickets n'a pas de colonne 'category' :
+      // on conserve le choix de l'utilisateur en le préfixant à la description
+      // (aucune donnée inventée, l'info reste dans une colonne réelle).
+      const categoryLabels = {
+        technique: 'Problème technique',
+        compte: 'Compte utilisateur',
+        facturation: 'Facturation',
+        information: "Demande d'information",
+        fonctionnalite: 'Nouvelle fonctionnalité',
+        autre: 'Autre'
+      };
+      const descriptionWithCategory = `[Catégorie : ${categoryLabels[newTicket.category] || newTicket.category}]\n\n${newTicket.description}`;
 
-      if (ticketError) throw ticketError;
+      // Créer le ticket (colonnes réelles : title, description, status, priority, user_id)
+      const ticketResult = await ParticulierSupabaseService.createSupportTicket({
+        title: newTicket.title,
+        description: descriptionWithCategory,
+        priority: newTicket.priority,
+        status: 'nouveau',
+        user_id: user.id
+      });
 
-      // Créer le premier message
+      if (!ticketResult.success) throw new Error(ticketResult.error);
+      const ticketData = ticketResult.data;
+
+      // Créer le premier message (colonnes réelles : ticket_id, sender_id, content)
       const { error: messageError } = await supabase
         .from('support_ticket_messages')
         .insert([
           {
             ticket_id: ticketData.id,
             content: newTicket.description,
-            sender_type: 'user',
             sender_id: user.id
           }
         ]);
@@ -164,7 +173,6 @@ const ParticulierTicketsSupport = () => {
           {
             ticket_id: selectedTicket.id,
             content: newMessage.trim(),
-            sender_type: 'user',
             sender_id: user.id
           }
         ]);
@@ -444,13 +452,15 @@ const ParticulierTicketsSupport = () => {
                           <Calendar className="h-4 w-4 mr-1" />
                           {new Date(ticket.created_at).toLocaleDateString('fr-FR')}
                         </div>
-                        <div className="flex items-center">
-                          <Tag className="h-4 w-4 mr-1" />
-                          {ticket.category === 'technique' ? 'Technique' :
-                           ticket.category === 'compte' ? 'Compte' :
-                           ticket.category === 'facturation' ? 'Facturation' :
-                           ticket.category === 'information' ? 'Information' : ticket.category}
-                        </div>
+                        {ticket.category && (
+                          <div className="flex items-center">
+                            <Tag className="h-4 w-4 mr-1" />
+                            {ticket.category === 'technique' ? 'Technique' :
+                             ticket.category === 'compte' ? 'Compte' :
+                             ticket.category === 'facturation' ? 'Facturation' :
+                             ticket.category === 'information' ? 'Information' : ticket.category}
+                          </div>
+                        )}
                         {ticket.messages && (
                           <div className="flex items-center">
                             <MessageSquare className="h-4 w-4 mr-1" />
@@ -598,29 +608,33 @@ const ParticulierTicketsSupport = () => {
               <ScrollArea className="flex-1 max-h-96">
                 <div className="space-y-4">
                   {selectedTicket.messages && selectedTicket.messages.length > 0 ? (
-                    selectedTicket.messages.map((message, index) => (
+                    selectedTicket.messages.map((message, index) => {
+                      // L'auteur est identifié via sender_id (pas de colonne sender_type)
+                      const isOwnMessage = message.sender_id === user?.id;
+                      return (
                       <div key={message.id} className="flex space-x-3">
                         <Avatar className="h-8 w-8">
                           <AvatarImage src={message.sender?.avatar_url} />
-                          <AvatarFallback className={message.sender_type === 'user' ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}>
-                            {message.sender_type === 'user' ? 'U' : 'S'}
+                          <AvatarFallback className={isOwnMessage ? 'bg-blue-100 text-blue-600' : 'bg-green-100 text-green-600'}>
+                            {isOwnMessage ? 'U' : 'S'}
                           </AvatarFallback>
                         </Avatar>
                         <div className="flex-1">
                           <div className="flex items-center space-x-2 mb-1">
                             <span className="text-sm font-medium">
-                              {message.sender_type === 'user' ? 'Vous' : 'Support'}
+                              {isOwnMessage ? 'Vous' : 'Support'}
                             </span>
                             <span className="text-xs text-gray-500">
                               {new Date(message.created_at).toLocaleString('fr-FR')}
                             </span>
                           </div>
-                          <div className={`p-3 rounded-lg ${message.sender_type === 'user' ? 'bg-blue-50' : 'bg-green-50'}`}>
+                          <div className={`p-3 rounded-lg ${isOwnMessage ? 'bg-blue-50' : 'bg-green-50'}`}>
                             <p className="text-sm">{message.content}</p>
                           </div>
                         </div>
                       </div>
-                    ))
+                      );
+                    })
                   ) : (
                     <div className="text-center py-8">
                       <MessageSquare className="h-12 w-12 text-gray-400 mx-auto mb-4" />

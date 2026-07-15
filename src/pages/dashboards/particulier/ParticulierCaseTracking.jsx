@@ -13,6 +13,8 @@ import { useMaintenanceMode } from '@/contexts/MaintenanceContext';
 import { supabase } from '@/lib/supabaseClient';
 import { PurchaseWorkflowService } from '@/services/PurchaseWorkflowService';
 import { RealtimeSyncService } from '@/services/RealtimeSyncService';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+import AdvancedCaseTrackingService from '@/services/AdvancedCaseTrackingService';
 import { toast } from 'sonner';
 import {
   Card,
@@ -53,7 +55,6 @@ const ParticulierCaseTracking = () => {
   const maintenanceMode = useMaintenanceMode();
 
   const [purchaseCase, setPurchaseCase] = useState(null);
-  const [request, setRequest] = useState(null);
   const [seller, setSeller] = useState(null);
   const [parcel, setParcel] = useState(null);
   const [history, setHistory] = useState([]);
@@ -99,62 +100,36 @@ const ParticulierCaseTracking = () => {
       setLoading(true);
       console.log('📁 [BUYER CASE TRACKING] Chargement dossier:', caseNumber);
 
-      // 1. Charger le dossier
-      const { data: caseData, error: caseError } = await supabase
-        .from('purchase_cases')
-        .select('*')
-        .eq('case_number', caseNumber)
-        .eq('buyer_id', user.id)
-        .single();
-
-      if (caseError) throw caseError;
+      // 1. Charger le dossier + la propriété jointe (properties)
+      const caseResult = await ParticulierSupabaseService.getPurchaseCaseByNumber(caseNumber, user.id);
+      if (!caseResult.success || !caseResult.data) {
+        throw new Error(caseResult.error || 'Dossier introuvable');
+      }
+      const caseData = caseResult.data;
       setPurchaseCase(caseData);
+      setParcel(caseData.property || null);
       console.log('✅ [BUYER CASE] Dossier chargé:', caseData);
 
-      // 2. Charger la demande/transaction
-      const { data: requestData } = await supabase
-        .from('requests')
-        .select('*')
-        .eq('id', caseData.request_id)
-        .single();
+      // 2. Charger les données du vendeur (profiles)
+      if (caseData.seller_id) {
+        const { data: sellerData } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', caseData.seller_id)
+          .single();
 
-      if (requestData) {
-        setRequest(requestData);
+        if (sellerData) {
+          setSeller(sellerData);
+        }
       }
 
-      // 3. Charger les données du vendeur
-      const { data: sellerData } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', caseData.seller_id)
-        .single();
+      // 3. Résumé complet du dossier (timeline + documents réels via purchase_case_*)
+      const summary = await AdvancedCaseTrackingService.getCompleteCaseSummary(caseData.id);
+      setHistory(summary?.timeline || []);
+      setDocuments(summary?.documents || []);
+      console.log('✅ [BUYER CASE] Timeline/documents chargés:', summary?.timeline?.length, summary?.documents?.length);
 
-      if (sellerData) {
-        setSeller(sellerData);
-      }
-
-      // 4. Charger la parcelle
-      const { data: parcelData } = await supabase
-        .from('parcels')
-        .select('*')
-        .eq('id', caseData.parcelle_id)
-        .single();
-
-      if (parcelData) {
-        setParcel(parcelData);
-      }
-
-      // 5. Charger l'historique du workflow
-      const { data: historyData } = await supabase
-        .from('purchase_case_history')
-        .select('*')
-        .eq('case_id', caseData.id)
-        .order('created_at', { ascending: true });
-
-      setHistory(historyData || []);
-      console.log('✅ [BUYER CASE] Histoire chargée:', historyData?.length);
-
-      // 6. Charger les messages
+      // 4. Charger les messages du dossier (purchase_case_messages)
       const { data: messagesData } = await supabase
         .from('purchase_case_messages')
         .select('*')
@@ -163,16 +138,6 @@ const ParticulierCaseTracking = () => {
 
       setMessages(messagesData || []);
       console.log('✅ [BUYER CASE] Messages chargés:', messagesData?.length);
-
-      // 7. Charger les documents
-      const { data: docsData } = await supabase
-        .from('purchase_case_documents')
-        .select('*')
-        .eq('case_id', caseData.id)
-        .order('created_at', { ascending: false });
-
-      setDocuments(docsData || []);
-      console.log('✅ [BUYER CASE] Documents chargés:', docsData?.length);
     } catch (error) {
       console.error('❌ Erreur chargement dossier:', error);
       toast.error('Erreur lors du chargement du dossier');
@@ -354,8 +319,10 @@ const ParticulierCaseTracking = () => {
                         animate={{ opacity: 1, y: 0 }}
                         className="border-l-2 border-blue-400 pl-4 pb-4"
                       >
-                        <p className="font-semibold text-slate-900">{event.action}</p>
-                        <p className="text-sm text-slate-600">{event.description}</p>
+                        <p className="font-semibold text-slate-900">{event.title || event.event_type}</p>
+                        {event.description && (
+                          <p className="text-sm text-slate-600">{event.description}</p>
+                        )}
                         <p className="text-xs text-slate-500 mt-1">
                           {new Date(event.created_at).toLocaleDateString('fr-FR', {
                             weekday: 'short',
@@ -472,7 +439,7 @@ const ParticulierCaseTracking = () => {
                         className="flex items-center gap-2 p-2 hover:bg-slate-100 rounded text-blue-600 hover:underline text-sm"
                       >
                         <Download className="w-4 h-4" />
-                        {doc.file_name}
+                        {doc.title || doc.document_type || 'Document'}
                       </a>
                     ))}
                   </div>

@@ -16,6 +16,7 @@ import {
   Calendar,
   Shield,
   Trash2,
+  Download,
   AlertTriangle
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -32,6 +33,8 @@ const ParticulierSettings = () => {
   const { user } = useOutletContext();
   const [loading, setLoading] = useState(false);
   const [profile, setProfile] = useState({});
+  // ⚠️ Aucune table serveur fiable pour les préférences fines de notification.
+  // Ces toggles sont donc locaux à la session (pas de fausse persistance serveur).
   const [notifications, setNotifications] = useState({
     email_messages: true,
     email_notifications: true,
@@ -54,7 +57,6 @@ const ParticulierSettings = () => {
   useEffect(() => {
     if (user) {
       loadProfile();
-      loadNotificationSettings();
     }
   }, [user]);
 
@@ -62,23 +64,25 @@ const ParticulierSettings = () => {
     try {
       console.log('📊 Chargement du profil utilisateur...');
 
+      // Table réelle : profiles (clé = id = user.id), colonnes réelles.
       const { data, error } = await supabase
-        .from('user_profiles')
-        .select('*')
-        .eq('user_id', user.id)
+        .from('profiles')
+        .select('first_name, last_name, phone, address, city, region, profession, company, nationality')
+        .eq('id', user.id)
         .single();
 
       if (error && error.code !== 'PGRST116') throw error;
 
-      setProfile(data || {
-        nom: '',
-        prenom: '',
-        telephone: '',
-        adresse: '',
-        ville: '',
-        date_naissance: '',
-        profession: '',
-        bio: ''
+      setProfile({
+        first_name: data?.first_name || '',
+        last_name: data?.last_name || '',
+        phone: data?.phone || '',
+        address: data?.address || '',
+        city: data?.city || '',
+        region: data?.region || '',
+        profession: data?.profession || '',
+        company: data?.company || '',
+        nationality: data?.nationality || ''
       });
 
       console.log('✅ Profil chargé');
@@ -87,49 +91,28 @@ const ParticulierSettings = () => {
     }
   };
 
-  const loadNotificationSettings = async () => {
-    try {
-      console.log('📊 Chargement des paramètres de notification...');
-
-      const { data, error } = await supabase
-        .from('user_notification_settings')
-        .select('*')
-        .eq('user_id', user.id)
-        .single();
-
-      if (error && error.code !== 'PGRST116') {
-        // Si pas de paramètres, utiliser les valeurs par défaut
-        return;
-      }
-
-      if (data) {
-        setNotifications({
-          email_messages: data.email_messages ?? true,
-          email_notifications: data.email_notifications ?? true,
-          sms_notifications: data.sms_notifications ?? false,
-          push_notifications: data.push_notifications ?? true
-        });
-      }
-
-      console.log('✅ Paramètres notifications chargés');
-    } catch (error) {
-      console.error('❌ Erreur chargement paramètres notifications:', error);
-    }
-  };
-
   const updateProfile = async () => {
     try {
       setLoading(true);
       console.log('💾 Mise à jour du profil...');
 
+      // La ligne profiles existe déjà (créée à l'inscription) → update sur id.
       const { error } = await supabase
-        .from('user_profiles')
-        .upsert({
-          user_id: user.id,
-          email: user.email,
-          ...profile,
+        .from('profiles')
+        .update({
+          first_name: profile.first_name || null,
+          last_name: profile.last_name || null,
+          full_name: [profile.first_name, profile.last_name].filter(Boolean).join(' ') || null,
+          phone: profile.phone || null,
+          address: profile.address || null,
+          city: profile.city || null,
+          region: profile.region || null,
+          profession: profile.profession || null,
+          company: profile.company || null,
+          nationality: profile.nationality || null,
           updated_at: new Date().toISOString()
-        });
+        })
+        .eq('id', user.id);
 
       if (error) throw error;
 
@@ -141,27 +124,10 @@ const ParticulierSettings = () => {
     }
   };
 
-  const updateNotificationSettings = async () => {
-    try {
-      setLoading(true);
-      console.log('💾 Mise à jour des paramètres de notification...');
-
-      const { error } = await supabase
-        .from('user_notification_settings')
-        .upsert({
-          user_id: user.id,
-          ...notifications,
-          updated_at: new Date().toISOString()
-        });
-
-      if (error) throw error;
-
-      console.log('✅ Paramètres notifications mis à jour');
-    } catch (error) {
-      console.error('❌ Erreur mise à jour paramètres:', error);
-    } finally {
-      setLoading(false);
-    }
+  // ⚠️ Pas de table serveur fiable pour ces préférences → mise à jour locale
+  // à la session uniquement (aucune fausse persistance côté serveur).
+  const updateNotificationSettings = () => {
+    console.log('ℹ️ Préférences de notification appliquées localement (session uniquement)');
   };
 
   const updatePassword = async () => {
@@ -230,17 +196,17 @@ const ParticulierSettings = () => {
                   <Label htmlFor="prenom">Prénom</Label>
                   <Input
                     id="prenom"
-                    value={profile.prenom || ''}
-                    onChange={(e) => setProfile(prev => ({...prev, prenom: e.target.value}))}
+                    value={profile.first_name || ''}
+                    onChange={(e) => setProfile(prev => ({...prev, first_name: e.target.value}))}
                   />
                 </div>
-                
+
                 <div className="space-y-2">
                   <Label htmlFor="nom">Nom</Label>
                   <Input
                     id="nom"
-                    value={profile.nom || ''}
-                    onChange={(e) => setProfile(prev => ({...prev, nom: e.target.value}))}
+                    value={profile.last_name || ''}
+                    onChange={(e) => setProfile(prev => ({...prev, last_name: e.target.value}))}
                   />
                 </div>
               </div>
@@ -262,8 +228,8 @@ const ParticulierSettings = () => {
                   <Label htmlFor="telephone">Téléphone</Label>
                   <Input
                     id="telephone"
-                    value={profile.telephone || ''}
-                    onChange={(e) => setProfile(prev => ({...prev, telephone: e.target.value}))}
+                    value={profile.phone || ''}
+                    onChange={(e) => setProfile(prev => ({...prev, phone: e.target.value}))}
                   />
                 </div>
               </div>
@@ -272,8 +238,8 @@ const ParticulierSettings = () => {
                 <Label htmlFor="adresse">Adresse</Label>
                 <Input
                   id="adresse"
-                  value={profile.adresse || ''}
-                  onChange={(e) => setProfile(prev => ({...prev, adresse: e.target.value}))}
+                  value={profile.address || ''}
+                  onChange={(e) => setProfile(prev => ({...prev, address: e.target.value}))}
                 />
               </div>
 
@@ -282,8 +248,8 @@ const ParticulierSettings = () => {
                   <Label htmlFor="ville">Ville</Label>
                   <Input
                     id="ville"
-                    value={profile.ville || ''}
-                    onChange={(e) => setProfile(prev => ({...prev, ville: e.target.value}))}
+                    value={profile.city || ''}
+                    onChange={(e) => setProfile(prev => ({...prev, city: e.target.value}))}
                   />
                 </div>
                 
@@ -297,14 +263,24 @@ const ParticulierSettings = () => {
                 </div>
               </div>
 
-              <div className="space-y-2">
-                <Label htmlFor="bio">Bio</Label>
-                <Textarea
-                  id="bio"
-                  value={profile.bio || ''}
-                  onChange={(e) => setProfile(prev => ({...prev, bio: e.target.value}))}
-                  rows={3}
-                />
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label htmlFor="region">Région</Label>
+                  <Input
+                    id="region"
+                    value={profile.region || ''}
+                    onChange={(e) => setProfile(prev => ({...prev, region: e.target.value}))}
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="company">Société / Entreprise</Label>
+                  <Input
+                    id="company"
+                    value={profile.company || ''}
+                    onChange={(e) => setProfile(prev => ({...prev, company: e.target.value}))}
+                  />
+                </div>
               </div>
 
               <Button onClick={updateProfile} disabled={loading}>
@@ -397,18 +373,15 @@ const ParticulierSettings = () => {
                 />
               </div>
 
-              <Button onClick={updateNotificationSettings} disabled={loading}>
-                {loading ? (
-                  <>
-                    <RefreshCw className="h-4 w-4 mr-2 animate-spin" />
-                    Enregistrement...
-                  </>
-                ) : (
-                  <>
-                    <Save className="h-4 w-4 mr-2" />
-                    Enregistrer les préférences
-                  </>
-                )}
+              <div className="rounded-lg border border-amber-200 bg-amber-50 p-3 text-xs text-amber-700">
+                Ces préférences sont appliquées localement à votre session. La
+                synchronisation serveur des préférences de notification sera
+                bientôt disponible.
+              </div>
+
+              <Button onClick={updateNotificationSettings}>
+                <Save className="h-4 w-4 mr-2" />
+                Appliquer les préférences
               </Button>
             </CardContent>
           </Card>

@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { 
   Calendar as CalendarIcon,
   Plus,
@@ -39,90 +40,87 @@ const ParticulierCalendar = () => {
   const [filterType, setFilterType] = useState('all');
   const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState(null);
+  const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Événements du calendrier
-  const events = [
-    {
-      id: 1,
-      title: "Visite Villa Almadies",
-      type: "visit",
-      date: "2024-03-22",
-      time: "10:00",
-      duration: "1h",
-      location: "Almadies, Dakar",
-      agent: "Fatou Diop",
-      agentPhone: "+221 77 123 45 67",
-      property: "Villa moderne avec piscine",
-      status: "confirmed",
-      priority: "high",
-      notes: "Première visite - Vérifier les documents de propriété",
-      reminderSet: true
-    },
-    {
-      id: 2,
-      title: "Rdv Négociation Duplex",
-      type: "meeting",
-      date: "2024-03-23",
-      time: "14:30",
-      duration: "45min",
-      location: "Bureau Teranga",
-      agent: "Ousmane Diallo",
-      agentPhone: "+221 77 888 99 00",
-      property: "Duplex standing avec terrasse",
-      status: "pending",
-      priority: "medium",
-      notes: "Négociation finale du prix",
-      reminderSet: true
-    },
-    {
-      id: 3,
-      title: "Signature promesse de vente",
-      type: "contract",
-      date: "2024-03-25",
-      time: "16:00",
-      duration: "2h",
-      location: "Étude notariale Maître Sow",
-      agent: "Aissatou Ndiaye",
-      agentPhone: "+221 78 555 44 33",
-      property: "Terrain constructible vue mer",
-      status: "confirmed",
-      priority: "high",
-      notes: "Apporter pièces d'identité et chèque de garantie",
-      reminderSet: true
-    },
-    {
-      id: 4,
-      title: "Visite Appartement Plateau",
-      type: "visit",
-      date: "2024-03-26",
-      time: "09:30",
-      duration: "45min",
-      location: "Plateau, Dakar",
-      agent: "Mamadou Ba",
-      agentPhone: "+221 76 987 65 43",
-      property: "Appartement neuf 3 pièces",
-      status: "confirmed",
-      priority: "medium",
-      notes: "Deuxième visite avec expert bâtiment",
-      reminderSet: false
-    },
-    {
-      id: 5,
-      title: "Appel de suivi",
-      type: "call",
-      date: "2024-03-27",
-      time: "11:00",
-      duration: "30min",
-      location: "Téléphone",
-      agent: "Service Client",
-      agentPhone: "+221 77 000 00 00",
-      property: null,
-      status: "pending",
-      priority: "low",
-      notes: "Point sur avancement dossier financement",
-      reminderSet: true
-    }
-  ];
+  // Découpe un timestamp ISO en { date: 'YYYY-MM-DD', time: 'HH:MM' } (heure locale)
+  const splitDateTime = (isoString) => {
+    if (!isoString) return { date: null, time: '' };
+    const d = new Date(isoString);
+    if (isNaN(d.getTime())) return { date: null, time: '' };
+    const pad = (n) => String(n).padStart(2, '0');
+    return {
+      date: `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`,
+      time: `${pad(d.getHours())}:${pad(d.getMinutes())}`
+    };
+  };
+
+  // Chargement des événements réels : visites (property_visits) + dossiers d'achat (purchase_cases)
+  useEffect(() => {
+    const loadEvents = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        const [visitsRes, casesRes] = await Promise.all([
+          ParticulierSupabaseService.getMyVisits(user.id),
+          ParticulierSupabaseService.getMyPurchaseCases(user.id)
+        ]);
+
+        const visitEvents = (visitsRes?.data || []).map((v) => {
+          const propertyName = v.property?.title || v.property?.name || 'Bien';
+          const { date, time } = splitDateTime(v.confirmed_date || v.requested_date);
+          const locationParts = [
+            v.property?.location,
+            v.property?.city,
+            v.property?.region
+          ].filter(Boolean);
+          return {
+            id: `visit-${v.id}`,
+            title: `Visite ${propertyName}`,
+            type: 'visit',
+            date,
+            time,
+            location: locationParts.length ? Array.from(new Set(locationParts)).join(', ') : '—',
+            agent: v.owner?.full_name || null,
+            agentPhone: v.owner?.phone || null,
+            property: propertyName,
+            status: v.status || 'pending',
+            notes: v.visitor_notes || v.owner_instructions || null
+          };
+        }).filter((e) => e.date);
+
+        const caseEvents = (casesRes?.data || []).map((c) => {
+          const propertyName = c.property?.title || c.property?.name || null;
+          // Pas de colonne "échéance" réelle : on rattache le dossier à sa dernière mise à jour
+          const { date, time } = splitDateTime(c.updated_at || c.created_at);
+          return {
+            id: `case-${c.id}`,
+            title: `Dossier ${c.case_number || ''}`.trim(),
+            type: 'contract',
+            date,
+            time,
+            location: c.property?.location || '—',
+            agent: null,
+            agentPhone: null,
+            property: propertyName,
+            status: c.status || 'pending',
+            notes: propertyName ? `Dossier d'achat — ${propertyName}` : "Dossier d'achat"
+          };
+        }).filter((e) => e.date);
+
+        setEvents([...visitEvents, ...caseEvents]);
+      } catch (error) {
+        console.error('Erreur chargement calendrier:', error);
+        setEvents([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadEvents();
+  }, [user?.id]);
 
   const getEventTypeColor = (type) => {
     switch (type) {
@@ -147,6 +145,7 @@ const ParticulierCalendar = () => {
   const getStatusColor = (status) => {
     switch (status) {
       case 'confirmed': return 'bg-green-100 text-green-800';
+      case 'completed': return 'bg-blue-100 text-blue-800';
       case 'pending': return 'bg-yellow-100 text-yellow-800';
       case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
@@ -156,18 +155,10 @@ const ParticulierCalendar = () => {
   const getStatusText = (status) => {
     switch (status) {
       case 'confirmed': return 'Confirmé';
+      case 'completed': return 'Terminé';
       case 'pending': return 'En attente';
       case 'cancelled': return 'Annulé';
-      default: return 'Inconnu';
-    }
-  };
-
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'text-red-600';
-      case 'medium': return 'text-yellow-600';
-      case 'low': return 'text-green-600';
-      default: return 'text-gray-600';
+      default: return status || 'En cours';
     }
   };
 
@@ -221,30 +212,28 @@ const ParticulierCalendar = () => {
               <Badge className={getStatusColor(event.status)}>
                 {getStatusText(event.status)}
               </Badge>
-              {event.reminderSet && <Bell className="w-4 h-4 text-blue-500" />}
             </div>
           </div>
-          
+
           <div className="space-y-2 text-sm text-slate-600">
             <div className="flex items-center gap-2">
               <Clock className="w-4 h-4" />
-              <span>{event.time} ({event.duration})</span>
-              <span className={`ml-2 font-medium ${getPriorityColor(event.priority)}`}>
-                {event.priority === 'high' ? 'Urgent' : event.priority === 'medium' ? 'Normal' : 'Faible'}
-              </span>
+              <span>{event.time || '—'}</span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               <MapPin className="w-4 h-4" />
               <span>{event.location}</span>
             </div>
-            
-            <div className="flex items-center gap-2">
-              <User className="w-4 h-4" />
-              <span>{event.agent}</span>
-              <span className="text-slate-500">• {event.agentPhone}</span>
-            </div>
-            
+
+            {event.agent && (
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                <span>{event.agent}</span>
+                {event.agentPhone && <span className="text-slate-500">• {event.agentPhone}</span>}
+              </div>
+            )}
+
             {event.property && (
               <div className="flex items-center gap-2">
                 <Building2 className="w-4 h-4" />
@@ -511,7 +500,12 @@ const ParticulierCalendar = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="max-h-96 overflow-y-auto">
-              {filteredEvents.length === 0 ? (
+              {loading ? (
+                <div className="text-center py-8">
+                  <CalendarIcon className="w-12 h-12 text-slate-300 mx-auto mb-3 animate-pulse" />
+                  <p className="text-slate-500">Chargement...</p>
+                </div>
+              ) : filteredEvents.length === 0 ? (
                 <div className="text-center py-8">
                   <CalendarIcon className="w-12 h-12 text-slate-300 mx-auto mb-3" />
                   <p className="text-slate-500">Aucun événement prévu</p>

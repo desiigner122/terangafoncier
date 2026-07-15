@@ -39,21 +39,49 @@ import {
   Eye,
   Filter
 } from 'lucide-react';
-import { 
-  ResponsiveContainer, 
-  LineChart, 
-  Line, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
+import {
+  ResponsiveContainer,
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
   PieChart as RechartsPieChart,
+  Pie,
   Cell,
   BarChart,
   Bar,
   AreaChart,
   Area
 } from 'recharts';
+import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+
+// ===== Helpers de classification de statut (aucune donnée fabriquée) =====
+const EN_COURS = ['pending', 'en_cours', 'en cours', 'en_attente', 'en attente', 'attente', 'submitted', 'in_progress', 'processing', 'nouveau', 'new', 'review', 'traitement'];
+const ACCEPTE = ['accepted', 'acceptee', 'acceptée', 'approved', 'approuve', 'approuvé', 'approuvée', 'completed', 'complete', 'validated', 'valide', 'validé', 'validée', 'termine', 'terminé', 'terminée', 'signed'];
+const REFUSE = ['rejected', 'refusee', 'refusée', 'refused', 'cancelled', 'canceled', 'annule', 'annulee', 'annulée', 'declined'];
+const DOC_VALIDE = ['valide', 'validé', 'validée', 'validated', 'approved', 'approuve', 'approuvé', 'verified', 'verifie', 'vérifié', 'active', 'signed'];
+
+const classify = (status) => {
+  const s = (status || '').toString().toLowerCase().trim();
+  if (ACCEPTE.includes(s)) return 'accepte';
+  if (REFUSE.includes(s)) return 'refuse';
+  if (EN_COURS.includes(s)) return 'encours';
+  return 'autre';
+};
+
+const EMPTY_ANALYTICS = {
+  overview: { totalDemandes: 0, demandesEnCours: 0, demandesAcceptees: 0, demandesRefusees: 0, tauxSucces: 0, documentsTotal: 0 },
+  activiteMensuelle: [],
+  repartitionTypes: [],
+  performances: { documentsValides: 0, documentsTotal: 0, messagesTotal: 0, demandesEnCours: 0, favoris: 0 },
+  tendances: [],
+  tendanceDelta: null,
+  objectifs: {},
+  insights: []
+};
 
 const ParticulierAnalytics = () => {
   const { user, profile } = useOutletContext();
@@ -62,68 +90,168 @@ const ParticulierAnalytics = () => {
   const [analytics, setAnalytics] = useState(null);
 
   useEffect(() => {
-    loadAnalytics();
+    if (user?.id) loadAnalytics();
   }, [user, timeRange]);
 
   const loadAnalytics = async () => {
     try {
       setLoading(true);
-      
-      // Charger vraies données analytics depuis Supabase
-      const [demandesData, messagesData, documentsData] = await Promise.all([
-        supabase.from('demandes_terrains').select('*').eq('user_id', user.id),
-        supabase.from('messages_administratifs').select('*').eq('user_id', user.id),
-        supabase.from('user_documents').select('*').eq('user_id', user.id)
+
+      // Sources RÉELLES : communal_requests, construction_requests, demandes_financement,
+      // documents, favorites (via ParticulierSupabaseService) + messages (sender_id).
+      const [communalRes, constructionRes, financingRes, documentsRes, favoritesRes] = await Promise.all([
+        ParticulierSupabaseService.getCommunalRequests(user.id),
+        ParticulierSupabaseService.getConstructionRequests(user.id),
+        ParticulierSupabaseService.getFinancingRequests(user.id),
+        ParticulierSupabaseService.getDocuments(user.id),
+        ParticulierSupabaseService.getFavorites(user.id)
       ]);
-      
-      setAnalytics({
-        overview: {
-          totalDemandes: 8,
-          demandesEnCours: 3,
-          demandesAcceptees: 4,
-          demandesRefusees: 1,
-          tempsReponseModens: '5.2 jours',
-          tauxSucces: 80
-        },
-        activiteMensuelle: [
-          { mois: 'Jan', demandes: 2, messages: 5, documents: 3 },
-          { mois: 'Fév', demandes: 1, messages: 8, documents: 2 },
-          { mois: 'Mar', demandes: 3, messages: 12, documents: 5 },
-          { mois: 'Avr', demandes: 2, messages: 15, documents: 4 },
-          { mois: 'Mai', demandes: 0, messages: 10, documents: 1 },
-          { mois: 'Juin', demandes: 0, messages: 8, documents: 2 }
-        ],
-        repartitionTypes: [
-          { name: 'Terrains Communaux', value: 5, color: '#3B82F6' },
-          { name: 'Constructions', value: 2, color: '#10B981' },
-          { name: 'Zones Spéciales', value: 1, color: '#F59E0B' }
-        ],
-        performances: {
-          documentsValides: 12,
-          documentsTotal: 15,
-          messagesRepondus: 28,
-          messagesTotal: 32,
-          delaiMoyenReponse: 2.8,
-          satisfactionScore: 4.2
-        },
-        tendances: [
-          { periode: 'S1', activite: 65 },
-          { periode: 'S2', activite: 78 },
-          { periode: 'S3', activite: 82 },
-          { periode: 'S4', activite: 75 },
-          { periode: 'S5', activite: 88 },
-          { periode: 'S6', activite: 92 }
-        ],
-        objectifs: {
-          profilComplete: { actuel: 85, cible: 100 },
-          documentsValides: { actuel: 80, cible: 100 },
-          demandesActives: { actuel: 75, cible: 80 },
-          satisfactionClient: { actuel: 84, cible: 90 }
-        }
+
+      const communal = communalRes?.data || [];
+      const construction = constructionRes?.data || [];
+      const financing = financingRes?.data || [];
+      const documents = documentsRes?.data || [];
+      const favoris = favoritesRes?.data || [];
+
+      // Messages envoyés par l'utilisateur (table réelle 'messages')
+      let messages = [];
+      try {
+        const { data: msgData } = await supabase
+          .from('messages')
+          .select('created_at')
+          .eq('sender_id', user.id);
+        messages = msgData || [];
+      } catch (e) {
+        messages = [];
+      }
+
+      // ===== Vue d'ensemble (toutes les demandes réelles de l'acheteur) =====
+      const allDemandes = [...communal, ...construction, ...financing];
+      const totalDemandes = allDemandes.length;
+      let demandesEnCours = 0, demandesAcceptees = 0, demandesRefusees = 0;
+      allDemandes.forEach(d => {
+        const c = classify(d.status || d.statut);
+        if (c === 'encours') demandesEnCours++;
+        else if (c === 'accepte') demandesAcceptees++;
+        else if (c === 'refuse') demandesRefusees++;
       });
-      
+      const tauxSucces = totalDemandes > 0 ? Math.round((demandesAcceptees / totalDemandes) * 100) : 0;
+
+      // ===== Documents (validés vs total) =====
+      const documentsTotal = documents.length;
+      const documentsValides = documents.filter(d => DOC_VALIDE.includes((d.status || '').toString().toLowerCase().trim())).length;
+      const documentsEnAttente = documents.filter(d => classify(d.status) === 'encours').length;
+
+      // ===== Activité mensuelle réelle (6 derniers mois par created_at) =====
+      const now = new Date();
+      const monthBuckets = [];
+      for (let i = 5; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        monthBuckets.push({
+          key: `${d.getFullYear()}-${d.getMonth()}`,
+          mois: d.toLocaleDateString('fr-FR', { month: 'short' }),
+          demandes: 0,
+          messages: 0,
+          documents: 0
+        });
+      }
+      const bucketOf = (dateStr) => {
+        if (!dateStr) return null;
+        const d = new Date(dateStr);
+        if (isNaN(d)) return null;
+        return monthBuckets.find(b => b.key === `${d.getFullYear()}-${d.getMonth()}`);
+      };
+      allDemandes.forEach(x => { const b = bucketOf(x.created_at); if (b) b.demandes++; });
+      messages.forEach(x => { const b = bucketOf(x.created_at); if (b) b.messages++; });
+      documents.forEach(x => { const b = bucketOf(x.created_at); if (b) b.documents++; });
+      const activiteMensuelle = monthBuckets.map(({ key, ...rest }) => rest);
+
+      // ===== Répartition réelle par type de demande =====
+      const repartitionTypes = [
+        { name: 'Terrains Communaux', value: communal.length, color: '#3B82F6' },
+        { name: 'Constructions', value: construction.length, color: '#10B981' },
+        { name: 'Financement', value: financing.length, color: '#F59E0B' }
+      ].filter(t => t.value > 0);
+
+      // ===== Tendance d'activité réelle (événements par semaine, 6 dernières semaines) =====
+      const weekBuckets = [];
+      for (let i = 5; i >= 0; i--) {
+        const start = new Date(now);
+        start.setDate(now.getDate() - (i + 1) * 7);
+        const end = new Date(now);
+        end.setDate(now.getDate() - i * 7);
+        weekBuckets.push({ start, end, periode: `S${6 - i}`, activite: 0 });
+      }
+      const countInWeeks = (dateStr) => {
+        if (!dateStr) return;
+        const d = new Date(dateStr);
+        if (isNaN(d)) return;
+        const wb = weekBuckets.find(w => d >= w.start && d < w.end);
+        if (wb) wb.activite++;
+      };
+      allDemandes.forEach(x => countInWeeks(x.created_at));
+      messages.forEach(x => countInWeeks(x.created_at));
+      documents.forEach(x => countInWeeks(x.created_at));
+      const tendances = weekBuckets.map(({ start, end, ...rest }) => rest);
+      const firstWeek = tendances[0]?.activite || 0;
+      const lastWeek = tendances[tendances.length - 1]?.activite || 0;
+      const tendanceDelta = firstWeek > 0 ? Math.round(((lastWeek - firstWeek) / firstWeek) * 100) : null;
+
+      // ===== Objectifs réels (ratios calculés, cible 100%) =====
+      const profileFields = ['full_name', 'phone', 'email', 'address', 'city', 'region', 'nationality', 'profession', 'avatar_url'];
+      const filled = profileFields.filter(f => profile && profile[f]).length;
+      const profilComplete = profileFields.length > 0 ? Math.round((filled / profileFields.length) * 100) : 0;
+      const objectifs = {
+        profilComplete: { actuel: profilComplete, cible: 100 },
+        documentsValides: { actuel: documentsTotal > 0 ? Math.round((documentsValides / documentsTotal) * 100) : 0, cible: 100 },
+        tauxReussite: { actuel: tauxSucces, cible: 100 }
+      };
+
+      // ===== Insights dynamiques honnêtes (dérivés des vraies données) =====
+      const insights = [];
+      if (tendanceDelta !== null && tendanceDelta !== 0) {
+        insights.push({
+          type: tendanceDelta > 0 ? 'positif' : 'neutre',
+          title: tendanceDelta > 0 ? 'Activité en hausse' : 'Activité en baisse',
+          text: `Votre activité a ${tendanceDelta > 0 ? 'augmenté' : 'diminué'} de ${Math.abs(tendanceDelta)}% sur les 6 dernières semaines.`
+        });
+      }
+      if (documentsEnAttente > 0) {
+        insights.push({
+          type: 'attention',
+          title: 'Documents à valider',
+          text: `${documentsEnAttente} document(s) en attente de validation. Complétez-les pour accélérer vos demandes.`
+        });
+      }
+      if (demandesEnCours > 0) {
+        insights.push({
+          type: 'positif',
+          title: 'Demandes en cours',
+          text: `${demandesEnCours} demande(s) en cours de traitement.`
+        });
+      }
+      if (profilComplete < 100) {
+        insights.push({
+          type: 'attention',
+          title: 'Complétez votre profil',
+          text: `Votre profil est complété à ${profilComplete}%. Un profil complet facilite le traitement de vos demandes.`
+        });
+      }
+
+      setAnalytics({
+        overview: { totalDemandes, demandesEnCours, demandesAcceptees, demandesRefusees, tauxSucces, documentsTotal },
+        activiteMensuelle,
+        repartitionTypes,
+        performances: { documentsValides, documentsTotal, messagesTotal: messages.length, demandesEnCours, favoris: favoris.length },
+        tendances,
+        tendanceDelta,
+        objectifs,
+        insights
+      });
+
     } catch (error) {
       console.error('Erreur chargement analytics:', error);
+      setAnalytics(EMPTY_ANALYTICS);
     } finally {
       setLoading(false);
     }
@@ -201,8 +329,8 @@ const ParticulierAnalytics = () => {
                   <p className="text-sm font-medium text-slate-600">Total Demandes</p>
                   <p className="text-3xl font-bold text-slate-900">{analytics.overview.totalDemandes}</p>
                   <div className="flex items-center gap-1 mt-2">
-                    <TrendingUp className="h-4 w-4 text-green-600" />
-                    <span className="text-sm text-green-600">+15% ce mois</span>
+                    <FileText className="h-4 w-4 text-blue-600" />
+                    <span className="text-sm text-slate-500">Communaux, construction & financement</span>
                   </div>
                 </div>
                 <div className="p-3 bg-blue-100 rounded-lg">
@@ -219,8 +347,8 @@ const ParticulierAnalytics = () => {
                   <p className="text-sm font-medium text-slate-600">En Cours</p>
                   <p className="text-3xl font-bold text-slate-900">{analytics.overview.demandesEnCours}</p>
                   <div className="flex items-center gap-1 mt-2">
-                    <Clock className="h-4 w-4 text-orange-600" />
-                    <span className="text-sm text-orange-600">{analytics.overview.tempsReponseModens}</span>
+                    <AlertTriangle className="h-4 w-4 text-orange-600" />
+                    <span className="text-sm text-orange-600">{analytics.overview.demandesRefusees} refusée(s)</span>
                   </div>
                 </div>
                 <div className="p-3 bg-orange-100 rounded-lg">
@@ -252,15 +380,15 @@ const ParticulierAnalytics = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-slate-600">Score Satisfaction</p>
-                  <p className="text-3xl font-bold text-slate-900">{analytics.performances.satisfactionScore}/5</p>
+                  <p className="text-sm font-medium text-slate-600">Documents</p>
+                  <p className="text-3xl font-bold text-slate-900">{analytics.overview.documentsTotal}</p>
                   <div className="flex items-center gap-1 mt-2">
-                    <Sparkles className="h-4 w-4 text-purple-600" />
-                    <span className="text-sm text-purple-600">Excellent</span>
+                    <FileText className="h-4 w-4 text-purple-600" />
+                    <span className="text-sm text-purple-600">{analytics.performances.documentsValides} validé(s)</span>
                   </div>
                 </div>
                 <div className="p-3 bg-purple-100 rounded-lg">
-                  <Award className="h-6 w-6 text-purple-600" />
+                  <FileText className="h-6 w-6 text-purple-600" />
                 </div>
               </div>
             </CardContent>
@@ -319,36 +447,45 @@ const ParticulierAnalytics = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <RechartsPieChart>
-                  <Pie
-                    data={analytics.repartitionTypes}
-                    cx="50%"
-                    cy="50%"
-                    outerRadius={100}
-                    dataKey="value"
-                  >
-                    {analytics.repartitionTypes.map((entry, index) => (
-                      <Cell key={`cell-${index}`} fill={entry.color} />
+              {analytics.repartitionTypes.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center py-16 text-slate-400">
+                  <PieChart className="h-10 w-10 mb-3" />
+                  <p className="text-sm">Aucune demande enregistrée pour l'instant</p>
+                </div>
+              ) : (
+                <>
+                  <ResponsiveContainer width="100%" height={300}>
+                    <RechartsPieChart>
+                      <Pie
+                        data={analytics.repartitionTypes}
+                        cx="50%"
+                        cy="50%"
+                        outerRadius={100}
+                        dataKey="value"
+                      >
+                        {analytics.repartitionTypes.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip />
+                    </RechartsPieChart>
+                  </ResponsiveContainer>
+                  <div className="mt-4 space-y-2">
+                    {analytics.repartitionTypes.map((item, index) => (
+                      <div key={index} className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-3 h-3 rounded-full"
+                            style={{ backgroundColor: item.color }}
+                          ></div>
+                          <span className="text-sm text-slate-700">{item.name}</span>
+                        </div>
+                        <span className="text-sm font-medium">{item.value}</span>
+                      </div>
                     ))}
-                  </Pie>
-                  <Tooltip />
-                </RechartsPieChart>
-              </ResponsiveContainer>
-              <div className="mt-4 space-y-2">
-                {analytics.repartitionTypes.map((item, index) => (
-                  <div key={index} className="flex items-center justify-between">
-                    <div className="flex items-center gap-2">
-                      <div 
-                        className="w-3 h-3 rounded-full" 
-                        style={{ backgroundColor: item.color }}
-                      ></div>
-                      <span className="text-sm text-slate-700">{item.name}</span>
-                    </div>
-                    <span className="text-sm font-medium">{item.value}</span>
                   </div>
-                ))}
-              </div>
+                </>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -388,14 +525,20 @@ const ParticulierAnalytics = () => {
                   />
                 </AreaChart>
               </ResponsiveContainer>
-              <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4 text-indigo-600" />
-                  <span className="text-sm font-medium text-indigo-900">
-                    Progression de +42% sur la période
-                  </span>
+              {analytics.tendanceDelta !== null && (
+                <div className="mt-4 p-4 bg-indigo-50 rounded-lg">
+                  <div className="flex items-center gap-2">
+                    {analytics.tendanceDelta >= 0 ? (
+                      <TrendingUp className="h-4 w-4 text-indigo-600" />
+                    ) : (
+                      <TrendingDown className="h-4 w-4 text-indigo-600" />
+                    )}
+                    <span className="text-sm font-medium text-indigo-900">
+                      {analytics.tendanceDelta >= 0 ? 'Progression' : 'Recul'} de {analytics.tendanceDelta >= 0 ? '+' : ''}{analytics.tendanceDelta}% sur la période
+                    </span>
+                  </div>
                 </div>
-              </div>
+              )}
             </CardContent>
           </Card>
         </motion.div>
@@ -422,22 +565,21 @@ const ParticulierAnalytics = () => {
                 const labels = {
                   profilComplete: 'Profil Complet',
                   documentsValides: 'Documents Validés',
-                  demandesActives: 'Demandes Actives',
-                  satisfactionClient: 'Satisfaction Client'
+                  tauxReussite: 'Taux de Réussite Demandes'
                 };
-                
+
                 return (
                   <div key={key}>
                     <div className="flex justify-between items-center mb-2">
                       <span className="text-sm font-medium text-slate-700">
-                        {labels[key]}
+                        {labels[key] || key}
                       </span>
                       <span className="text-sm text-slate-500">
                         {obj.actuel}% / {obj.cible}%
                       </span>
                     </div>
                     <div className="w-full bg-slate-200 rounded-full h-2">
-                      <div 
+                      <div
                         className={`h-2 rounded-full transition-all duration-500 ${getProgressColor(percentage)}`}
                         style={{ width: `${Math.min(percentage, 100)}%` }}
                       ></div>
@@ -445,15 +587,22 @@ const ParticulierAnalytics = () => {
                   </div>
                 );
               })}
-              
-              <div className="mt-6 p-4 bg-green-50 rounded-lg">
-                <div className="flex items-center gap-2">
-                  <Award className="h-4 w-4 text-green-600" />
-                  <span className="text-sm font-medium text-green-900">
-                    Score global: 81% - Très bon niveau !
-                  </span>
-                </div>
-              </div>
+
+              {(() => {
+                const vals = Object.values(analytics.objectifs);
+                if (vals.length === 0) return null;
+                const scoreGlobal = Math.round(vals.reduce((s, o) => s + o.actuel, 0) / vals.length);
+                return (
+                  <div className="mt-6 p-4 bg-green-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Award className="h-4 w-4 text-green-600" />
+                      <span className="text-sm font-medium text-green-900">
+                        Score global: {scoreGlobal}%
+                      </span>
+                    </div>
+                  </div>
+                );
+              })()}
             </CardContent>
           </Card>
         </motion.div>
@@ -489,28 +638,26 @@ const ParticulierAnalytics = () => {
               
               <div className="text-center p-4 bg-green-50 rounded-lg">
                 <div className="text-2xl font-bold text-green-600">
-                  {formatNumber(analytics.performances.messagesRepondus)}/{formatNumber(analytics.performances.messagesTotal)}
+                  {formatNumber(analytics.performances.messagesTotal)}
                 </div>
-                <div className="text-sm text-green-700 mt-1">Messages Répondus</div>
-                <div className="text-xs text-green-600 mt-1">
-                  {Math.round((analytics.performances.messagesRepondus / analytics.performances.messagesTotal) * 100)}% taux réponse
-                </div>
+                <div className="text-sm text-green-700 mt-1">Messages Envoyés</div>
+                <div className="text-xs text-green-600 mt-1">Sur la messagerie</div>
               </div>
-              
+
               <div className="text-center p-4 bg-orange-50 rounded-lg">
                 <div className="text-2xl font-bold text-orange-600">
-                  {analytics.performances.delaiMoyenReponse}j
+                  {formatNumber(analytics.performances.demandesEnCours)}
                 </div>
-                <div className="text-sm text-orange-700 mt-1">Délai Réponse</div>
-                <div className="text-xs text-orange-600 mt-1">Moyenne générale</div>
+                <div className="text-sm text-orange-700 mt-1">Demandes en Cours</div>
+                <div className="text-xs text-orange-600 mt-1">En attente de traitement</div>
               </div>
-              
+
               <div className="text-center p-4 bg-purple-50 rounded-lg">
                 <div className="text-2xl font-bold text-purple-600">
-                  {analytics.performances.satisfactionScore}/5
+                  {formatNumber(analytics.performances.favoris)}
                 </div>
-                <div className="text-sm text-purple-700 mt-1">Note Satisfaction</div>
-                <div className="text-xs text-purple-600 mt-1">Basé sur vos retours</div>
+                <div className="text-sm text-purple-700 mt-1">Biens Favoris</div>
+                <div className="text-xs text-purple-600 mt-1">Enregistrés</div>
               </div>
             </div>
           </CardContent>
@@ -534,43 +681,35 @@ const ParticulierAnalytics = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <TrendingUp className="h-4 w-4 text-blue-600" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-blue-900">Activité en hausse</h4>
-                  <p className="text-sm text-blue-700 mt-1">
-                    Votre activité a augmenté de 42% ce mois. Continuez sur cette lancée !
-                  </p>
-                </div>
+            {analytics.insights.length === 0 ? (
+              <div className="flex flex-col items-center justify-center text-center py-10 text-slate-400">
+                <Eye className="h-8 w-8 mb-3" />
+                <p className="text-sm">Pas encore assez d'activité pour générer des recommandations.</p>
               </div>
-              
-              <div className="flex items-start gap-3 p-4 bg-yellow-50 rounded-lg">
-                <div className="p-2 bg-yellow-100 rounded-lg">
-                  <AlertTriangle className="h-4 w-4 text-yellow-600" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-yellow-900">Documents à valider</h4>
-                  <p className="text-sm text-yellow-700 mt-1">
-                    3 documents sont en attente de validation. Complétez-les pour accélérer vos demandes.
-                  </p>
-                </div>
+            ) : (
+              <div className="space-y-4">
+                {analytics.insights.map((insight, index) => {
+                  const styles = {
+                    positif: { bg: 'bg-green-50', iconBg: 'bg-green-100', iconColor: 'text-green-600', title: 'text-green-900', text: 'text-green-700', Icon: CheckCircle },
+                    attention: { bg: 'bg-yellow-50', iconBg: 'bg-yellow-100', iconColor: 'text-yellow-600', title: 'text-yellow-900', text: 'text-yellow-700', Icon: AlertTriangle },
+                    neutre: { bg: 'bg-blue-50', iconBg: 'bg-blue-100', iconColor: 'text-blue-600', title: 'text-blue-900', text: 'text-blue-700', Icon: TrendingUp }
+                  };
+                  const s = styles[insight.type] || styles.neutre;
+                  const Icon = s.Icon;
+                  return (
+                    <div key={index} className={`flex items-start gap-3 p-4 ${s.bg} rounded-lg`}>
+                      <div className={`p-2 ${s.iconBg} rounded-lg`}>
+                        <Icon className={`h-4 w-4 ${s.iconColor}`} />
+                      </div>
+                      <div>
+                        <h4 className={`font-medium ${s.title}`}>{insight.title}</h4>
+                        <p className={`text-sm ${s.text} mt-1`}>{insight.text}</p>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
-              
-              <div className="flex items-start gap-3 p-4 bg-green-50 rounded-lg">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <CheckCircle className="h-4 w-4 text-green-600" />
-                </div>
-                <div>
-                  <h4 className="font-medium text-green-900">Excellent taux de réponse</h4>
-                  <p className="text-sm text-green-700 mt-1">
-                    Vous répondez rapidement aux messages administratifs. Très bien !
-                  </p>
-                </div>
-              </div>
-            </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>

@@ -28,7 +28,7 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Label } from '@/components/ui/label';
-import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { 
@@ -71,100 +71,99 @@ const ParticulierMesAchats = () => {
     }
   }, [user]);
 
+  // Normalise une propriété (properties) vers la forme "parcels" attendue par le JSX
+  const toParcels = (property) => {
+    if (!property) return null;
+    return {
+      id: property.id,
+      title: property.title,
+      name: property.name,
+      price: property.price,
+      location: property.location,
+      surface: property.surface,
+      status: property.status
+    };
+  };
+
   const loadPurchaseRequests = async () => {
     try {
       setLoading(true);
       console.log('🎯 [LOAD] Starting loadPurchaseRequests for user:', user.id);
 
-      // Charger les requests de l'utilisateur
-      const { data: requestsData, error: requestsError } = await supabase
-        .from('requests')
-        .select(`
-          *,
-          parcels:parcel_id (
-            id,
-            title,
-            name,
-            price,
-            location,
-            surface,
-            status
-          )
-        `)
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // 🔗 SOURCES RÉELLES :
+      //   - purchase_cases (buyer_id) : dossiers d'achat (vendeur a accepté → suivi en cours)
+      //   - financial_transactions (user_id) : offres / demandes d'achat faites par l'acheteur
+      const [casesRes, offersRes] = await Promise.all([
+        ParticulierSupabaseService.getMyPurchaseCases(user.id),
+        ParticulierSupabaseService.getMyOffers(user.id)
+      ]);
 
-      if (requestsError) throw requestsError;
-      console.log('✅ [LOAD] Requests loaded:', requestsData?.length);
+      const casesData = casesRes?.data || [];
+      const offersData = offersRes?.data || [];
+      console.log('✅ [LOAD] Purchase cases:', casesData.length, '| Offres (financial_transactions):', offersData.length);
 
-      // Charger les transactions pour chaque request
-      if (requestsData && requestsData.length > 0) {
-        const requestIds = requestsData.map(r => r.id);
-        console.log('   Request IDs:', requestIds);
-        
-        // 🔥 FIX: Charger aussi les purchase_cases
-        const { data: transactionsData } = await supabase
-          .from('transactions')
-          .select('*')
-          .in('request_id', requestIds);
+      // Regrouper les transactions financières par propriété (pour rattacher le montant réel au dossier)
+      const offersByProperty = {};
+      offersData.forEach(tx => {
+        if (!tx.property_id) return;
+        (offersByProperty[tx.property_id] = offersByProperty[tx.property_id] || []).push(tx);
+      });
 
-        console.log('✅ [LOAD] Transactions loaded:', transactionsData?.length);
-        transactionsData?.forEach(t => {
-          console.log(`   - TX: ${t.id}, Status: ${t.status}, Request: ${t.request_id}`);
-        });
-
-        const { data: purchaseCasesData } = await supabase
-          .from('purchase_cases')
-          .select('id, request_id, case_number, status, created_at, updated_at')
-          .in('request_id', requestIds);
-
-        console.log('✅ [LOAD] Purchase cases loaded:', purchaseCasesData?.length);
-        purchaseCasesData?.forEach(pc => {
-          console.log(`   - PC: ${pc.id}, Case#: ${pc.case_number}, Status: ${pc.status}, RequestID: ${pc.request_id}`);
-        });
-
-        // Créer une map des purchase_cases par request_id
-        const purchaseCaseMap = {};
-        purchaseCasesData?.forEach(pc => {
-          purchaseCaseMap[pc.request_id] = {
+      // 1) Un "request" par dossier d'achat réel (purchase_cases)
+      const caseRequests = casesData.map(pc => {
+        const relatedTx = offersByProperty[pc.property_id] || [];
+        return {
+          id: pc.id,
+          parcels: toParcels(pc.property),
+          created_at: pc.created_at,
+          updated_at: pc.updated_at,
+          // Statut du dossier (sert aux filtres accepted/processing/completed)
+          status: pc.status,
+          type: pc.payment_method,
+          payment_type: pc.payment_method,
+          offered_price: pc.agreed_price || pc.purchase_price || null,
+          description: null,
+          metadata: pc.metadata || null,
+          transactions: relatedTx,
+          purchaseCase: {
             caseId: pc.id,
             caseNumber: pc.case_number,
             caseStatus: pc.status,
             caseCreatedAt: pc.created_at,
             caseUpdatedAt: pc.updated_at
-          };
-        });
+          }
+        };
+      });
 
-        console.log('📊 [LOAD] Purchase case map:', purchaseCaseMap);
+      // 2) Offres SANS dossier associé = demandes en attente / refusées / acceptées non encore ouvertes
+      const propertiesWithCase = new Set(casesData.map(pc => pc.property_id));
+      const offerRequests = offersData
+        .filter(tx => !tx.property_id || !propertiesWithCase.has(tx.property_id))
+        .map(tx => ({
+          id: `tx-${tx.id}`,
+          parcels: toParcels(tx.property),
+          created_at: tx.created_at,
+          updated_at: tx.created_at,
+          status: tx.status,
+          type: tx.transaction_type || tx.type,
+          payment_type: tx.transaction_type || tx.type,
+          offered_price: tx.amount || null,
+          description: tx.description || null,
+          transactions: [tx],
+          purchaseCase: null
+        }));
 
-        // Associer les transactions et purchase_cases aux requests
-        const requestsWithData = requestsData.map(request => {
-          const hasCase = !!purchaseCaseMap[request.id];
-          const caseStatus = purchaseCaseMap[request.id]?.caseStatus;
-          console.log(`   🔗 Request ${request.id}: hasCase=${hasCase}, caseStatus=${caseStatus}`);
-          
-          return {
-            ...request,
-            transactions: transactionsData?.filter(t => t.request_id === request.id) || [],
-            purchaseCase: purchaseCaseMap[request.id] || null,
-            // Pour l'affichage: utiliser le status du purchase_case si existe, sinon du request
-            displayStatus: purchaseCaseMap[request.id]?.caseStatus || request.status
-          };
-        });
+      // Fusion, triée par date (dossiers + offres restantes)
+      const merged = [...caseRequests, ...offerRequests].sort(
+        (a, b) => new Date(b.created_at) - new Date(a.created_at)
+      );
 
-        setRequests(requestsWithData);
-        console.log('✅ [LOAD] FINAL requests set:', requestsWithData.length);
-        console.log('   Stats:');
-        requestsWithData.forEach(r => {
-          console.log(`     - ID: ${r.id}, Status: ${r.status}, HasCase: ${!!r.purchaseCase}, CaseStatus: ${r.purchaseCase?.caseStatus}`);
-        });
-      } else {
-        setRequests([]);
-        console.log('✅ [LOAD] Aucune demande d\'achat trouvée');
-      }
+      setRequests(merged);
+      console.log('✅ [LOAD] FINAL requests set:', merged.length,
+        `(dossiers=${caseRequests.length}, offres=${offerRequests.length})`);
     } catch (error) {
       console.error('🔴 [LOAD] Error:', error);
-      window.safeGlobalToast({
+      window.safeGlobalToast?.({
         description: 'Erreur lors du chargement de vos demandes d\'achat',
         variant: 'destructive'
       });
@@ -558,7 +557,7 @@ const ParticulierMesAchats = () => {
                           <Button
                             size="sm"
                             className="whitespace-nowrap bg-blue-600 hover:bg-blue-700"
-                            onClick={() => navigate(`/acheteur/cases/${request.purchaseCase.case_number}`)}
+                            onClick={() => navigate(`/acheteur/cases/${request.purchaseCase.caseNumber}`)}
                           >
                             <ArrowRight className="w-4 h-4 mr-1" />
                             Suivi dossier

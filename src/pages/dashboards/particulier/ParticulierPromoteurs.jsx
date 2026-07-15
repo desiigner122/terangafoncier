@@ -33,7 +33,7 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 
 const ParticulierPromoteurs = () => {
   const { user } = useOutletContext();
@@ -70,23 +70,24 @@ const ParticulierPromoteurs = () => {
       setLoading(true);
       console.log('📊 Chargement des candidatures promoteurs...');
 
-      const { data, error } = await supabase
-        .from('candidatures_promoteurs')
-        .select('*')
-        .eq('candidat_id', user.id)
-        .order('created_at', { ascending: false });
+      // Table réelle : promoter_applications (candidat_id = user.id)
+      const result = await ParticulierSupabaseService.getPromoterApplications(user.id);
+      const data = result?.data || [];
 
-      if (error) throw error;
+      if (!result?.success) {
+        console.error('❌ Erreur getPromoterApplications:', result?.error);
+      }
 
-      // Séparer les candidatures par statut
-      const enCours = data?.filter(c => ['en_attente', 'pre_selectionne', 'en_cours'].includes(c.statut)) || [];
-      const acceptees = data?.filter(c => c.statut === 'acceptee') || [];
-      const refusees = data?.filter(c => c.statut === 'refusee') || [];
+      // Séparer les candidatures par statut (statuts réels : en_cours | acceptee | refusee)
+      const enCours = data.filter(c => ['en_attente', 'pre_selectionne', 'en_cours'].includes(c.statut));
+      const acceptees = data.filter(c => c.statut === 'acceptee');
+      const refusees = data.filter(c => c.statut === 'refusee');
 
       setCandidaturesPromoteurs({ enCours, acceptees, refusees });
-      console.log(`✅ ${data?.length || 0} candidatures promoteurs chargées`);
+      console.log(`✅ ${data.length} candidatures promoteurs chargées`);
     } catch (error) {
-      console.error('❌ Erreur lors du chargement des candidatures promoteurs:', error);  
+      console.error('❌ Erreur lors du chargement des candidatures promoteurs:', error);
+      setCandidaturesPromoteurs({ enCours: [], acceptees: [], refusees: [] });
     } finally {
       setLoading(false);
     }

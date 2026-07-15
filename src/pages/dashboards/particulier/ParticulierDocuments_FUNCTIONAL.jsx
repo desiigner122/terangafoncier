@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { 
+import {
   FileText,
   Upload,
   Download,
@@ -39,6 +39,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { supabase } from '@/lib/supabaseClient';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
+
+// Libellés lisibles pour les types de documents réels (colonne documents.type)
+const TYPE_LABELS = {
+  identite: 'Pièces d\'identité',
+  residence: 'Justificatifs de résidence',
+  financier: 'Documents financiers',
+  technique: 'Documents techniques',
+  demande: 'Demandes officielles',
+  autre: 'Autres'
+};
 
 const ParticulierDocuments = () => {
   const { user } = useOutletContext();
@@ -51,38 +62,33 @@ const ParticulierDocuments = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [isUploadModalOpen, setIsUploadModalOpen] = useState(false);
 
-  // Formulaire upload
+  // Formulaire upload (colonnes réelles: name, type, url, status)
   const [uploadForm, setUploadForm] = useState({
     nom: '',
     type_document: '',
-    description: '',
-    dossier_reference: '',
     file: null
   });
 
   useEffect(() => {
-    if (user) {
+    if (user?.id) {
       loadDocuments();
     }
-  }, [user]);
+  }, [user?.id]);
 
   const loadDocuments = async () => {
     try {
       setLoading(true);
-      console.log('📊 Chargement des documents depuis Supabase...');
 
-      const { data, error } = await supabase
-        .from('user_documents')
-        .select('*')
-        .eq('user_id', user.id)
-        .order('created_at', { ascending: false });
+      // Table réelle: documents (owner_id, name, type, url, status, created_at)
+      const result = await ParticulierSupabaseService.getDocuments(user.id);
 
-      if (error) throw error;
+      if (!result?.success) {
+        throw new Error(result?.error || 'Erreur de chargement');
+      }
 
-      setDocuments(data || []);
-      console.log(`✅ ${(data || []).length} documents chargés depuis Supabase`);
+      setDocuments(result.data || []);
     } catch (error) {
-      console.error('❌ Erreur chargement documents:', error);
+      console.error('Erreur chargement documents:', error);
       setDocuments([]);
     } finally {
       setLoading(false);
@@ -91,46 +97,39 @@ const ParticulierDocuments = () => {
 
   const handleFileUpload = async () => {
     if (!uploadForm.file || !uploadForm.nom) {
-      console.error('❌ Fichier ou nom manquant');
       return;
     }
 
     try {
       setIsUploading(true);
-      setUploadProgress(0);
+      setUploadProgress(20);
 
       // Upload vers Supabase Storage
       const fileExt = uploadForm.file.name.split('.').pop();
-      const fileName = `${user.id}/${Date.now()}.${fileExt}`;
-
-      console.log('📤 Upload du fichier vers Supabase Storage...');
+      const filePath = `${user.id}/${Date.now()}.${fileExt}`;
 
       const { data: uploadData, error: uploadError } = await supabase.storage
         .from('documents')
-        .upload(fileName, uploadForm.file, {
-          onUploadProgress: (progress) => {
-            setUploadProgress((progress.loaded / progress.total) * 50); // 50% pour l'upload
-          }
-        });
+        .upload(filePath, uploadForm.file);
 
       if (uploadError) throw uploadError;
 
-      // Enregistrer les métadonnées dans la base
-      console.log('💾 Enregistrement des métadonnées...');
+      setUploadProgress(60);
 
+      // URL publique du fichier stocké
+      const { data: publicUrlData } = supabase.storage
+        .from('documents')
+        .getPublicUrl(uploadData.path);
+
+      // Enregistrer les métadonnées dans la table réelle "documents"
       const { data: docData, error: docError } = await supabase
-        .from('user_documents')
+        .from('documents')
         .insert([{
-          user_id: user.id,
-          nom: uploadForm.nom,
-          type_document: uploadForm.type_document,
-          description: uploadForm.description,
-          dossier_reference: uploadForm.dossier_reference,
-          nom_fichier: uploadForm.file.name,
-          chemin_fichier: uploadData.path,
-          taille_fichier: uploadForm.file.size,
-          type_mime: uploadForm.file.type,
-          statut: 'actif'
+          owner_id: user.id,
+          name: uploadForm.nom,
+          type: uploadForm.type_document || 'autre',
+          url: publicUrlData?.publicUrl || uploadData.path,
+          status: 'pending'
         }])
         .select()
         .single();
@@ -143,162 +142,63 @@ const ParticulierDocuments = () => {
       setUploadForm({
         nom: '',
         type_document: '',
-        description: '',
-        dossier_reference: '',
         file: null
       });
-
-      console.log('✅ Document uploadé avec succès');
     } catch (error) {
-      console.error('❌ Erreur upload document:', error);
+      console.error('Erreur upload document:', error);
     } finally {
       setIsUploading(false);
       setUploadProgress(0);
     }
   };
 
-  const downloadDocument = async (document) => {
-    try {
-      console.log('📥 Téléchargement du document...');
-
-      const { data, error } = await supabase.storage
-        .from('documents')
-        .download(document.chemin_fichier);
-
-      if (error) throw error;
-
-      // Créer un lien de téléchargement
-      const url = URL.createObjectURL(data);
-      const a = window.document.createElement('a');
-      a.href = url;
-      a.download = document.nom_fichier || document.nom;
-      window.document.body.appendChild(a);
-      a.click();
-      window.document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      console.log('✅ Document téléchargé');
-    } catch (error) {
-      console.error('❌ Erreur téléchargement:', error);
-    }
+  const downloadDocument = (document) => {
+    if (!document?.url) return;
+    // La colonne url contient l'URL publique du fichier stocké
+    window.open(document.url, '_blank', 'noopener,noreferrer');
   };
 
   const deleteDocument = async (documentId) => {
     try {
-      console.log('🗑️ Suppression du document...');
-
       const { error } = await supabase
-        .from('user_documents')
+        .from('documents')
         .delete()
         .eq('id', documentId)
-        .eq('user_id', user.id);
+        .eq('owner_id', user.id);
 
       if (error) throw error;
 
       setDocuments(prev => prev.filter(doc => doc.id !== documentId));
-      console.log('✅ Document supprimé');
     } catch (error) {
-      console.error('❌ Erreur suppression:', error);
+      console.error('Erreur suppression:', error);
     }
   };
 
-  // État des documents utilisateur
-  const [sampleDocuments, setSampleDocuments] = useState([
-    {
-      id: 'DOC-001',
-      nom: 'Demande initiale terrain communal',
-      type_document: 'demande',
-      nom_fichier: 'demande_terrain_DT-2024-001.pdf',
-      taille_fichier: 2400000, // 2.4 MB
-      type_mime: 'application/pdf',
-      dossier_reference: 'DT-2024-001',
-      statut: 'Validé',
-      description: 'Demande officielle de terrain communal avec toutes les pièces justificatives',
-      created_at: '2024-01-15T10:30:00Z',
-      updated_at: '2024-01-15T10:30:00Z'
-    },
-    {
-      id: 'DOC-002',
-      nom: 'Copie CNI légalisée',
-      type_document: 'identite',
-      nom_fichier: 'cni_legalisee.pdf',
-      taille_fichier: 850000, // 850 KB
-      type_mime: 'application/pdf',
-      dossier_reference: 'DT-2024-001',
-      statut: 'Approuvé',
-      description: 'Carte d\'identité nationale légalisée en mairie',
-      created_at: '2024-01-15T11:15:00Z',
-      updated_at: '2024-01-16T09:20:00Z'
-    },
-    {
-      id: 'DOC-003',
-      nom: 'Certificat de résidence',
-      type_document: 'residence',
-      nom_fichier: 'certificat_residence.pdf',
-      taille_fichier: 650000, // 650 KB
-      type_mime: 'application/pdf',
-      dossier_reference: 'DT-2024-001',
-      statut: 'En cours',
-      description: 'Certificat de résidence délivré par les autorités locales',
-      created_at: '2024-01-16T14:45:00Z',
-      updated_at: '2024-01-16T14:45:00Z'
-    },
-    {
-      id: 'DOC-004',
-      nom: 'Justificatif de revenus',
-      type_document: 'financier',
-      nom_fichier: 'bulletin_salaire_dec2023.pdf',
-      taille_fichier: 420000, // 420 KB
-      type_mime: 'application/pdf',
-      dossier_reference: 'DT-2024-001',
-      statut: 'Validé',
-      description: 'Bulletin de salaire de décembre 2023',
-      created_at: '2024-01-18T08:30:00Z',
-      updated_at: '2024-01-20T16:10:00Z'
-    },
-    {
-      id: 'DOC-005',
-      nom: 'Plans architecturaux préliminaires',
-      type_document: 'technique',
-      nom_fichier: 'plans_maison_r1.dwg',
-      taille_fichier: 3200000, // 3.2 MB
-      type_mime: 'application/dwg',
-      dossier_reference: 'PC-2024-007',
-      statut: 'En révision',
-      description: 'Plans préliminaires de la maison R+1 avec jardin',
-      created_at: '2024-01-22T16:20:00Z',
-      updated_at: '2024-01-25T11:35:00Z'
-    }
-  ]);
-
-  useEffect(() => {
-    if (user?.id) {
-      loadDocuments();
-    }
-  }, [user?.id]);
-
-
-
-  const getFileIcon = (mimeType) => {
-    if (mimeType?.includes('pdf')) return FileText;
-    if (mimeType?.includes('image')) return FileImage;
-    if (mimeType?.includes('sheet') || mimeType?.includes('excel')) return FileSpreadsheet;
-    if (mimeType?.includes('word')) return FileText;
+  const getFileIcon = (nameOrUrl) => {
+    const ext = (nameOrUrl || '').split('.').pop()?.toLowerCase();
+    if (ext === 'pdf') return FileText;
+    if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'bmp'].includes(ext)) return FileImage;
+    if (['xls', 'xlsx', 'csv'].includes(ext)) return FileSpreadsheet;
+    if (['doc', 'docx'].includes(ext)) return FileText;
     return File;
   };
 
-  const getStatusBadge = (statut) => {
+  const getStatusBadge = (status) => {
     const configs = {
-      'actif': { label: 'Actif', variant: 'default', icon: CheckCircle },
+      'pending': { label: 'En attente', variant: 'secondary', icon: Clock },
+      'active': { label: 'Actif', variant: 'default', icon: CheckCircle },
+      'validated': { label: 'Validé', variant: 'default', icon: CheckCircle },
+      'approved': { label: 'Approuvé', variant: 'default', icon: CheckCircle },
+      'rejected': { label: 'Rejeté', variant: 'destructive', icon: AlertTriangle },
+      'archived': { label: 'Archivé', variant: 'outline', icon: Archive },
+      // Compat valeurs francophones éventuelles
       'Validé': { label: 'Validé', variant: 'default', icon: CheckCircle },
       'Approuvé': { label: 'Approuvé', variant: 'default', icon: CheckCircle },
       'En cours': { label: 'En cours', variant: 'secondary', icon: Clock },
-      'En révision': { label: 'En révision', variant: 'secondary', icon: AlertTriangle },
-      'Rejeté': { label: 'Rejeté', variant: 'destructive', icon: AlertTriangle },
-      'archive': { label: 'Archivé', variant: 'outline', icon: Archive }
+      'En révision': { label: 'En révision', variant: 'secondary', icon: AlertTriangle }
     };
 
-    const config = configs[statut] || configs.actif;
+    const config = configs[status] || { label: status || 'En attente', variant: 'secondary', icon: Clock };
     const Icon = config.icon;
 
     return (
@@ -309,36 +209,32 @@ const ParticulierDocuments = () => {
     );
   };
 
-  const formatFileSize = (bytes) => {
-    if (bytes === 0) return '0 Bytes';
-    const k = 1024;
-    const sizes = ['Bytes', 'KB', 'MB', 'GB'];
-    const i = Math.floor(Math.log(bytes) / Math.log(k));
-    return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
-  };
-
   const formatDate = (dateString) => {
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
-      month: '2-digit', 
+      month: '2-digit',
       year: 'numeric',
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
-  const filteredDocuments = documents.filter(doc => {
-    const matchesSearch = doc.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         doc.dossier_reference?.toLowerCase().includes(searchTerm.toLowerCase());
+  const isValidated = (status) => ['validated', 'approved', 'active', 'Validé', 'Approuvé'].includes(status);
+  const isPending = (status) => ['pending', 'En cours', 'En révision'].includes(status);
 
-    const matchesFilter = filterType === 'tous' || doc.type_document === filterType;
+  const filteredDocuments = documents.filter(doc => {
+    const matchesSearch = doc.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         doc.type?.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesFilter = filterType === 'tous' || doc.type === filterType;
 
     return matchesSearch && matchesFilter;
   });
 
+  // Regroupement par type de document (la table réelle n'a pas de "dossier de référence")
   const groupedDocuments = filteredDocuments.reduce((groups, doc) => {
-    const key = doc.dossier_reference || 'Autres';
+    const key = doc.type || 'autre';
     if (!groups[key]) groups[key] = [];
     groups[key].push(doc);
     return groups;
@@ -380,7 +276,7 @@ const ParticulierDocuments = () => {
                 Téléchargez un nouveau document dans votre dossier
               </DialogDescription>
             </DialogHeader>
-            
+
             <div className="space-y-4 py-4">
               <div className="space-y-2">
                 <Label htmlFor="nom">Nom du document</Label>
@@ -406,25 +302,6 @@ const ParticulierDocuments = () => {
                     <SelectItem value="autre">Autre</SelectItem>
                   </SelectContent>
                 </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="dossier">Dossier de référence (optionnel)</Label>
-                <Input
-                  id="dossier"
-                  value={uploadForm.dossier_reference}
-                  onChange={(e) => setUploadForm(prev => ({...prev, dossier_reference: e.target.value}))}
-                  placeholder="Ex: DT-2024-001"
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="description">Description (optionnelle)</Label>
-                <Input
-                  id="description"
-                  value={uploadForm.description}
-                  onChange={(e) => setUploadForm(prev => ({...prev, description: e.target.value}))}
-                />
               </div>
 
               <div className="space-y-2">
@@ -494,7 +371,7 @@ const ParticulierDocuments = () => {
               <div>
                 <p className="text-sm text-slate-600">Validés</p>
                 <p className="text-2xl font-bold text-green-600">
-                  {documents.filter(d => d.statut === 'Validé' || d.statut === 'Approuvé').length}
+                  {documents.filter(d => isValidated(d.status)).length}
                 </p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-600" />
@@ -508,7 +385,7 @@ const ParticulierDocuments = () => {
               <div>
                 <p className="text-sm text-slate-600">En cours</p>
                 <p className="text-2xl font-bold text-orange-600">
-                  {documents.filter(d => d.statut === 'En cours' || d.statut === 'En révision').length}
+                  {documents.filter(d => isPending(d.status)).length}
                 </p>
               </div>
               <Clock className="h-8 w-8 text-orange-600" />
@@ -520,7 +397,7 @@ const ParticulierDocuments = () => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-600">Dossiers</p>
+                <p className="text-sm text-slate-600">Catégories</p>
                 <p className="text-2xl font-bold text-blue-600">
                   {Object.keys(groupedDocuments).length}
                 </p>
@@ -539,14 +416,14 @@ const ParticulierDocuments = () => {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 h-4 w-4" />
                 <Input
-                  placeholder="Rechercher par nom, description ou référence..."
+                  placeholder="Rechercher par nom ou type..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10"
                 />
               </div>
             </div>
-            
+
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-48">
                 <SelectValue />
@@ -573,15 +450,15 @@ const ParticulierDocuments = () => {
         </CardContent>
       </Card>
 
-      {/* Documents groupés par dossier */}
+      {/* Documents groupés par type */}
       <div className="space-y-6">
         {Object.keys(groupedDocuments).length > 0 ? (
-          Object.entries(groupedDocuments).map(([dossier, docs]) => (
-            <Card key={dossier}>
+          Object.entries(groupedDocuments).map(([typeKey, docs]) => (
+            <Card key={typeKey}>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Folder className="h-5 w-5 mr-2 text-blue-600" />
-                  {dossier}
+                  {TYPE_LABELS[typeKey] || typeKey}
                   <Badge variant="outline" className="ml-2">
                     {docs.length} document{docs.length > 1 ? 's' : ''}
                   </Badge>
@@ -590,8 +467,8 @@ const ParticulierDocuments = () => {
               <CardContent>
                 <div className="grid gap-3">
                   {docs.map((document) => {
-                    const FileIcon = getFileIcon(document.type_mime);
-                    
+                    const FileIcon = getFileIcon(document.url || document.name);
+
                     return (
                       <motion.div
                         key={document.id}
@@ -603,22 +480,18 @@ const ParticulierDocuments = () => {
                           <div className="p-2 bg-blue-50 rounded-lg flex-shrink-0">
                             <FileIcon className="h-5 w-5 text-blue-600" />
                           </div>
-                          
+
                           <div className="flex-1 min-w-0">
                             <h4 className="font-medium text-slate-900 truncate">
-                              {document.nom}
+                              {document.name}
                             </h4>
                             <div className="flex items-center gap-4 text-sm text-slate-600 mt-1">
-                              <span>{formatFileSize(document.taille_fichier)}</span>
                               <span>{formatDate(document.created_at)}</span>
-                              {document.description && (
-                                <span className="truncate">{document.description}</span>
-                              )}
                             </div>
                           </div>
-                          
+
                           <div className="flex items-center gap-3 flex-shrink-0">
-                            {getStatusBadge(document.statut)}
+                            {getStatusBadge(document.status)}
                           </div>
                         </div>
 
@@ -627,10 +500,11 @@ const ParticulierDocuments = () => {
                             variant="ghost"
                             size="sm"
                             onClick={() => downloadDocument(document)}
+                            disabled={!document.url}
                           >
                             <Download className="h-4 w-4" />
                           </Button>
-                          
+
                           <Button
                             variant="ghost"
                             size="sm"
@@ -654,7 +528,7 @@ const ParticulierDocuments = () => {
                 Aucun document trouvé
               </h3>
               <p className="text-slate-600 mb-4">
-                {searchTerm || filterType !== 'tous' ? 
+                {searchTerm || filterType !== 'tous' ?
                   'Aucun document ne correspond à vos critères.' :
                   'Vous n\'avez pas encore téléchargé de documents.'
                 }

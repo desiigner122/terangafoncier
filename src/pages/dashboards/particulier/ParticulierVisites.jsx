@@ -23,12 +23,26 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Calendar } from '@/components/ui/calendar';
-import { createClient } from '@supabase/supabase-js';
+import ParticulierSupabaseService from '@/services/ParticulierSupabaseService';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
+const getStatusBadge = (status) => {
+  const statusConfig = {
+    pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
+    confirmed: { label: 'Confirmée', color: 'bg-green-100 text-green-800', icon: CheckCircle },
+    completed: { label: 'Effectuée', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
+    cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-800', icon: XCircle }
+  };
+
+  const config = statusConfig[status] || statusConfig.pending;
+  const Icon = config.icon;
+
+  return (
+    <Badge className={config.color}>
+      <Icon className="h-3 w-3 mr-1" />
+      {config.label}
+    </Badge>
+  );
+};
 
 const ParticulierVisites = () => {
   const outletContext = useOutletContext();
@@ -48,64 +62,22 @@ const ParticulierVisites = () => {
   const loadVisits = async () => {
     try {
       setLoading(true);
-      console.log('📅 Chargement des visites...');
 
-      const { data: visitsData, error } = await supabase
-        .from('visits')
-        .select(`
-          *,
-          property:properties(
-            id,
-            title,
-            city,
-            address,
-            surface_area,
-            images,
-            location_lat,
-            location_lng
-          ),
-          owner:profiles!owner_id(
-            id,
-            full_name,
-            email,
-            phone
-          )
-        `)
-        .eq('visitor_id', user.id)
-        .order('requested_date', { ascending: true });
+      const result = await ParticulierSupabaseService.getMyVisits(user.id);
 
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error || 'Erreur inconnue');
 
-      setVisits(visitsData || []);
-      console.log('✅ Visites chargées:', visitsData?.length || 0);
+      setVisits(result.data || []);
     } catch (error) {
       console.error('❌ Erreur chargement visites:', error);
-      window.safeGlobalToast({
+      setVisits([]);
+      window.safeGlobalToast?.({
         description: 'Erreur lors du chargement des visites',
         variant: 'destructive'
       });
     } finally {
       setLoading(false);
     }
-  };
-
-  const getStatusBadge = (status) => {
-    const statusConfig = {
-      pending: { label: 'En attente', color: 'bg-yellow-100 text-yellow-800', icon: Clock },
-      confirmed: { label: 'Confirmée', color: 'bg-green-100 text-green-800', icon: CheckCircle },
-      completed: { label: 'Effectuée', color: 'bg-blue-100 text-blue-800', icon: CheckCircle },
-      cancelled: { label: 'Annulée', color: 'bg-red-100 text-red-800', icon: XCircle }
-    };
-
-    const config = statusConfig[status] || statusConfig.pending;
-    const Icon = config.icon;
-
-    return (
-      <Badge className={config.color}>
-        <Icon className="h-3 w-3 mr-1" />
-        {config.label}
-      </Badge>
-    );
   };
 
   const getVisitsForDate = (date) => {
@@ -326,26 +298,19 @@ const VisitCard = ({ visit, onUpdate, isPast = false }) => {
         <CardContent className="p-6">
           <div className="flex items-start justify-between">
             <div className="flex space-x-4 flex-1">
-              {visit.property?.images?.[0] && (
-                <img
-                  src={visit.property.images[0]}
-                  alt={visit.property.title}
-                  className="w-24 h-24 object-cover rounded-lg"
-                />
-              )}
-              
               <div className="flex-1">
                 <div className="flex items-start justify-between mb-2">
                   <div>
                     <h3 className="font-semibold text-lg text-gray-900">
-                      {visit.property?.title || 'Terrain'}
+                      {visit.property?.title || visit.property?.name || 'Terrain'}
                     </h3>
                     <div className="flex items-center text-sm text-gray-600 mt-1">
                       <MapPin className="h-4 w-4 mr-1" />
-                      {visit.property?.city} • {visit.property?.surface_area}m²
+                      {visit.property?.city || visit.property?.region || visit.property?.location || 'Localisation non précisée'}
+                      {visit.property?.surface ? ` • ${visit.property.surface}m²` : ''}
                     </div>
                   </div>
-                  {visit.status && visit.status}
+                  {getStatusBadge(visit.status)}
                 </div>
 
                 <div className="grid grid-cols-2 gap-4 mt-4">

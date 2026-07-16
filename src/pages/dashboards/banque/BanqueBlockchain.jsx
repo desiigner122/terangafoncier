@@ -46,7 +46,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { 
+import {
   Table,
   TableBody,
   TableCell,
@@ -54,121 +54,87 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const BanqueBlockchain = () => {
+  const { user } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
   const [selectedTransaction, setSelectedTransaction] = useState(null);
   const [searchHash, setSearchHash] = useState('');
+  const [transactions, setTransactions] = useState([]);
+  const [certificates, setCertificates] = useState([]);
 
-  // Données blockchain spécifiques aux transactions bancaires de terrains
-  const blockchainData = {
-    networkStats: {
-      totalTransactions: 15847,
-      totalBlocks: 892,
-      networkHealth: 99.8,
-      avgBlockTime: 4.2,
-      totalValueLocked: 125000000000 // 125 milliards FCFA
-    },
-    recentTransactions: [
-      {
-        id: 'TX-BC-001',
-        hash: '0x4a2b8f9c3d1e7820abc456def789012345678901234567890123456789abcdef',
-        type: 'Garantie Terrain',
-        creditId: 'CR-TER-2024-001',
-        amount: 20000000,
-        landTitle: 'TF-OUAKAM-457/2023',
-        timestamp: '2024-01-25 14:30:25',
-        status: 'Confirmé',
-        blockNumber: 892,
-        confirmations: 12,
-        gasUsed: 85000,
-        parties: {
-          bank: 'CBAO - Agence Plateau',
-          borrower: 'Mamadou FALL',
-          notary: 'Me Fatou DIAGNE'
-        }
-      },
-      {
-        id: 'TX-BC-002',
-        hash: '0x7e5d3f2a1c9b8460def123abc789456012345678901234567890abcdef123456',
-        type: 'Transfert Garantie',
-        creditId: 'CR-TER-2024-002',
-        amount: 96000000,
-        landTitle: 'TF-PLATEAU-123/2023',
-        timestamp: '2024-01-25 13:15:42',
-        status: 'En Attente',
-        blockNumber: 891,
-        confirmations: 6,
-        gasUsed: 120000,
-        parties: {
-          bank: 'BHS - Direction Générale',
-          borrower: 'Société SENEGAL INVEST',
-          notary: 'Me Amadou NDIAYE'
-        }
-      },
-      {
-        id: 'TX-BC-003',
-        hash: '0x9c8b7a6e5d4f3210abc789def456123012345678901234567890123456abcdef',
-        type: 'Libération Garantie',
-        creditId: 'CR-TER-2024-003',
-        amount: 45000000,
-        landTitle: 'TF-THIES-AG-089/2023',
-        timestamp: '2024-01-25 11:48:17',
-        status: 'Confirmé',
-        blockNumber: 890,
-        confirmations: 25,
-        gasUsed: 95000,
-        parties: {
-          bank: 'SGBS - Agence Thiès',
-          borrower: 'Coopérative KAOLACK',
-          notary: 'Me Khadija SECK'
-        }
+  useEffect(() => {
+    if (user?.id) {
+      loadBlockchainData();
+    }
+  }, [user?.id]);
+
+  const loadBlockchainData = async () => {
+    setIsLoading(true);
+    try {
+      // Transactions blockchain réelles de la banque (user_id)
+      const { data: txs } = await supabase
+        .from('blockchain_transactions')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      const txList = txs || [];
+      setTransactions(txList);
+
+      // Certificats blockchain liés aux biens référencés dans les transactions
+      const propertyIds = [...new Set(txList.map((t) => t.property_id).filter(Boolean))];
+      if (propertyIds.length > 0) {
+        const { data: certs } = await supabase
+          .from('blockchain_certificates')
+          .select('*')
+          .in('property_id', propertyIds)
+          .order('created_at', { ascending: false });
+        setCertificates(certs || []);
+      } else {
+        setCertificates([]);
       }
-    ],
-    smartContracts: [
-      {
-        name: 'LandCreditGuarantee',
-        address: '0x1a2b3c4d5e6f7890abc123def456789012345678',
-        type: 'Garantie Terrain',
-        status: 'Actif',
-        deployedDate: '2024-01-15',
-        totalTransactions: 1247,
-        gasOptimization: 87
-      },
-      {
-        name: 'EscrowManager',
-        address: '0x9876543210abcdef1234567890abc123def456789',
-        type: 'Gestion Séquestre',
-        status: 'Actif',
-        deployedDate: '2024-01-10',
-        totalTransactions: 892,
-        gasOptimization: 92
-      },
-      {
-        name: 'CreditValidator',
-        address: '0xabcdef123456789012345678901234567890abcdef',
-        type: 'Validation Crédit',
-        status: 'Test',
-        deployedDate: '2024-01-20',
-        totalTransactions: 156,
-        gasOptimization: 78
-      }
-    ]
+    } catch (error) {
+      console.error('Erreur chargement blockchain:', error);
+      setTransactions([]);
+      setCertificates([]);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Statistiques réseau calculées à partir des vraies données (aucun chiffre fabriqué)
+  const uniqueBlocks = new Set(
+    transactions.map((t) => t.block_number).filter((b) => b != null)
+  );
+  const totalValueLocked = transactions.reduce((sum, t) => sum + (Number(t.amount) || 0), 0);
+  const networkStats = {
+    totalTransactions: transactions.length,
+    totalBlocks: uniqueBlocks.size,
+    certificates: certificates.length,
+    totalValueLocked
   };
 
   const handleRefreshNetwork = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Réseau actualisé",
-        description: "État du réseau blockchain mis à jour",
-        variant: "success"
-      });
-      setIsLoading(false);
-    }, 2000);
+    loadBlockchainData();
+    window.safeGlobalToast({
+      title: "Réseau actualisé",
+      description: "Données blockchain rechargées depuis Supabase",
+      variant: "success"
+    });
   };
 
   const handleVerifyTransaction = (txHash) => {
+    if (!txHash) {
+      window.safeGlobalToast({
+        title: "Aucun hash",
+        description: "Cette transaction n'a pas encore de hash on-chain",
+        variant: "warning"
+      });
+      return;
+    }
     window.safeGlobalToast({
       title: "Transaction vérifiée",
       description: `Hash: ${txHash.substring(0, 20)}...`,
@@ -176,59 +142,59 @@ const BanqueBlockchain = () => {
     });
   };
 
-  const handleCreateSmartContract = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Smart Contract créé",
-        description: "Nouveau contrat intelligent déployé",
-        variant: "success"
-      });
-      setIsLoading(false);
-    }, 3000);
-  };
-
   const handleCopyHash = (hash) => {
+    if (!hash) return;
     navigator.clipboard.writeText(hash);
     window.safeGlobalToast({
       title: "Hash copié",
-      description: "Hash de transaction copié dans le presse-papier",
+      description: "Hash copié dans le presse-papier",
       variant: "success"
     });
   };
 
-  const handleExploreTransaction = (txId) => {
-    window.safeGlobalToast({
-      title: "Explorateur ouvert",
-      description: `Détails de ${txId} dans l'explorateur blockchain`,
-      variant: "success"
-    });
+  const formatFcfa = (value) =>
+    value > 0 ? `${(Number(value) / 1000000).toFixed(1)}M FCFA` : '—';
+
+  const formatDate = (date) => {
+    if (!date) return '—';
+    try {
+      return new Date(date).toLocaleString('fr-FR');
+    } catch {
+      return '—';
+    }
   };
 
-  const handleSecureVault = () => {
-    window.safeGlobalToast({
-      title: "Coffre-fort sécurisé",
-      description: "Accès au coffre-fort blockchain bancaire",
-      variant: "success"
-    });
-  };
+  const shortHash = (hash) => (hash ? `${hash.substring(0, 20)}...` : "En attente d'attribution");
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Confirmé': return 'bg-green-100 text-green-800';
-      case 'En Attente': return 'bg-yellow-100 text-yellow-800';
-      case 'Échoué': return 'bg-red-100 text-red-800';
-      case 'Actif': return 'bg-blue-100 text-blue-800';
-      case 'Test': return 'bg-purple-100 text-purple-800';
+    switch ((status || '').toLowerCase()) {
+      case 'confirmed':
+      case 'confirmé':
+      case 'completed':
+      case 'verified':
+      case 'active':
+        return 'bg-green-100 text-green-800';
+      case 'pending':
+      case 'en attente':
+        return 'bg-yellow-100 text-yellow-800';
+      case 'failed':
+      case 'échoué':
+        return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTypeIcon = (type) => {
-    switch (type) {
-      case 'Garantie Terrain': return <Shield className="h-4 w-4" />;
-      case 'Transfert Garantie': return <CreditCard className="h-4 w-4" />;
-      case 'Libération Garantie': return <Unlock className="h-4 w-4" />;
+    switch ((type || '').toLowerCase()) {
+      case 'garantie':
+      case 'guarantee':
+        return <Shield className="h-4 w-4" />;
+      case 'transfert':
+      case 'transfer':
+        return <CreditCard className="h-4 w-4" />;
+      case 'liberation':
+      case 'release':
+        return <Unlock className="h-4 w-4" />;
       default: return <Activity className="h-4 w-4" />;
     }
   };
@@ -245,41 +211,26 @@ const BanqueBlockchain = () => {
         </div>
         
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-          <Button 
+          <Button
             variant="outline"
             onClick={handleRefreshNetwork}
             disabled={isLoading}
           >
-            <RefreshCw className="h-4 w-4 mr-2" />
+            <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
             Actualiser Réseau
-          </Button>
-          <Button 
-            variant="outline"
-            onClick={handleCreateSmartContract}
-            disabled={isLoading}
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau Contrat
-          </Button>
-          <Button 
-            className="bg-indigo-600 hover:bg-indigo-700"
-            onClick={handleSecureVault}
-          >
-            <Lock className="h-4 w-4 mr-2" />
-            Coffre-Fort
           </Button>
         </div>
       </div>
 
-      {/* Statistiques du réseau */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+      {/* Statistiques du réseau (calculées sur les vraies transactions blockchain) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center space-x-2">
               <Activity className="h-5 w-5 text-blue-600" />
               <div>
                 <p className="text-sm text-gray-600">Total Transactions</p>
-                <p className="text-xl font-bold">{blockchainData.networkStats.totalTransactions.toLocaleString()}</p>
+                <p className="text-xl font-bold">{networkStats.totalTransactions.toLocaleString()}</p>
               </div>
             </div>
           </CardContent>
@@ -290,8 +241,8 @@ const BanqueBlockchain = () => {
             <div className="flex items-center space-x-2">
               <Database className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm text-gray-600">Blocs Minés</p>
-                <p className="text-xl font-bold">{blockchainData.networkStats.totalBlocks}</p>
+                <p className="text-sm text-gray-600">Blocs référencés</p>
+                <p className="text-xl font-bold">{networkStats.totalBlocks}</p>
               </div>
             </div>
           </CardContent>
@@ -302,20 +253,8 @@ const BanqueBlockchain = () => {
             <div className="flex items-center space-x-2">
               <Shield className="h-5 w-5 text-purple-600" />
               <div>
-                <p className="text-sm text-gray-600">Santé Réseau</p>
-                <p className="text-xl font-bold">{blockchainData.networkStats.networkHealth}%</p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center space-x-2">
-              <Clock className="h-5 w-5 text-orange-600" />
-              <div>
-                <p className="text-sm text-gray-600">Temps Bloc Moyen</p>
-                <p className="text-xl font-bold">{blockchainData.networkStats.avgBlockTime}s</p>
+                <p className="text-sm text-gray-600">Certificats</p>
+                <p className="text-xl font-bold">{networkStats.certificates}</p>
               </div>
             </div>
           </CardContent>
@@ -326,8 +265,12 @@ const BanqueBlockchain = () => {
             <div className="flex items-center space-x-2">
               <Banknote className="h-5 w-5 text-green-600" />
               <div>
-                <p className="text-sm text-gray-600">TVL</p>
-                <p className="text-xl font-bold">{(blockchainData.networkStats.totalValueLocked / 1000000000).toFixed(0)}Md</p>
+                <p className="text-sm text-gray-600">Valeur transigée</p>
+                <p className="text-xl font-bold">
+                  {networkStats.totalValueLocked > 0
+                    ? `${(networkStats.totalValueLocked / 1000000).toFixed(1)}M`
+                    : '—'}
+                </p>
               </div>
             </div>
           </CardContent>
@@ -336,8 +279,8 @@ const BanqueBlockchain = () => {
 
       <Tabs defaultValue="transactions" className="space-y-4">
         <TabsList>
-          <TabsTrigger value="transactions">Transactions Récentes</TabsTrigger>
-          <TabsTrigger value="contracts">Smart Contracts</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions</TabsTrigger>
+          <TabsTrigger value="certificates">Certificats</TabsTrigger>
           <TabsTrigger value="explorer">Explorateur</TabsTrigger>
         </TabsList>
 
@@ -346,176 +289,159 @@ const BanqueBlockchain = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Activity className="h-5 w-5 mr-2 text-blue-600" />
-                Transactions Blockchain Récentes
+                Transactions Blockchain
               </CardTitle>
               <CardDescription>
-                Transactions de garanties et crédits terrains sur la blockchain
+                Transactions enregistrées sur la blockchain (données Supabase)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {blockchainData.recentTransactions.map((tx) => (
-                  <motion.div
-                    key={tx.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
-                  >
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center space-x-3 mb-2">
-                          {getTypeIcon(tx.type)}
-                          <span className="font-medium">{tx.type}</span>
-                          <Badge className={getStatusColor(tx.status)}>
-                            {tx.status}
-                          </Badge>
-                        </div>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-600">Hash de Transaction</p>
+              {isLoading ? (
+                <div className="text-center py-10 text-gray-500">Chargement…</div>
+              ) : transactions.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <Database className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                  <p className="font-medium">Aucune transaction blockchain</p>
+                  <p className="text-sm">Aucune transaction on-chain n'est encore enregistrée pour cette banque.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {transactions.map((tx) => (
+                    <motion.div
+                      key={tx.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="border rounded-lg p-4 hover:bg-gray-50 transition-colors"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center space-x-3 mb-2">
+                            {getTypeIcon(tx.transaction_type || tx.type)}
+                            <span className="font-medium">{tx.transaction_type || tx.type || 'Transaction'}</span>
+                            <Badge className={getStatusColor(tx.status)}>
+                              {tx.status || 'N/A'}
+                            </Badge>
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                            <div>
+                              <p className="text-gray-600">Hash de Transaction</p>
+                              <div className="flex items-center space-x-2">
+                                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                  {shortHash(tx.transaction_hash)}
+                                </code>
+                                {tx.transaction_hash && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleCopyHash(tx.transaction_hash)}
+                                    className="h-6 w-6 p-0"
+                                  >
+                                    <Copy className="h-3 w-3" />
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
+
+                            <div>
+                              <p className="text-gray-600">Montant</p>
+                              <p className="font-medium">{formatFcfa(tx.amount)}</p>
+                            </div>
+                          </div>
+
+                          <div className="mt-3 flex items-center justify-between">
+                            <div className="flex items-center space-x-4 text-xs text-gray-500">
+                              {tx.block_number != null && <span>Bloc #{tx.block_number}</span>}
+                              <span>{formatDate(tx.created_at)}</span>
+                            </div>
+
                             <div className="flex items-center space-x-2">
-                              <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                {tx.hash.substring(0, 20)}...
-                              </code>
                               <Button
-                                variant="ghost"
+                                variant="outline"
                                 size="sm"
-                                onClick={() => handleCopyHash(tx.hash)}
-                                className="h-6 w-6 p-0"
+                                onClick={() => handleVerifyTransaction(tx.transaction_hash)}
                               >
-                                <Copy className="h-3 w-3" />
+                                <Eye className="h-3 w-3 mr-1" />
+                                Vérifier
                               </Button>
                             </div>
                           </div>
-                          
-                          <div>
-                            <p className="text-gray-600">Montant</p>
-                            <p className="font-medium">{(tx.amount / 1000000).toFixed(1)}M FCFA</p>
-                          </div>
-                          
-                          <div>
-                            <p className="text-gray-600">Titre Foncier</p>
-                            <p className="font-medium">{tx.landTitle}</p>
-                          </div>
-                          
-                          <div>
-                            <p className="text-gray-600">Confirmations</p>
-                            <div className="flex items-center space-x-2">
-                              <span className="font-medium">{tx.confirmations}</span>
-                              <Progress value={(tx.confirmations / 12) * 100} className="w-16 h-2" />
-                            </div>
-                          </div>
-                        </div>
-
-                        <div className="mt-3 flex items-center justify-between">
-                          <div className="flex items-center space-x-4 text-xs text-gray-500">
-                            <span>Bloc #{tx.blockNumber}</span>
-                            <span>{tx.timestamp}</span>
-                            <span>Gas: {tx.gasUsed.toLocaleString()}</span>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleVerifyTransaction(tx.hash)}
-                            >
-                              <Eye className="h-3 w-3 mr-1" />
-                              Vérifier
-                            </Button>
-                            <Button
-                              variant="outline"
-                              size="sm"
-                              onClick={() => handleExploreTransaction(tx.id)}
-                            >
-                              <ExternalLink className="h-3 w-3 mr-1" />
-                              Explorer
-                            </Button>
-                          </div>
                         </div>
                       </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        <TabsContent value="contracts" className="space-y-4">
+        <TabsContent value="certificates" className="space-y-4">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <FileText className="h-5 w-5 mr-2 text-purple-600" />
-                Smart Contracts Bancaires
+                Certificats Blockchain
               </CardTitle>
               <CardDescription>
-                Contrats intelligents pour la gestion des crédits terrains
+                Certificats on-chain liés aux biens des transactions (données Supabase)
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {blockchainData.smartContracts.map((contract) => (
-                  <Card key={contract.address} className="border">
-                    <CardContent className="p-4">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <div className="flex items-center space-x-3 mb-2">
-                            <h3 className="font-semibold">{contract.name}</h3>
-                            <Badge className={getStatusColor(contract.status)}>
-                              {contract.status}
-                            </Badge>
-                          </div>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                            <div>
-                              <p className="text-gray-600">Adresse</p>
-                              <div className="flex items-center space-x-2">
-                                <code className="text-xs bg-gray-100 px-2 py-1 rounded">
-                                  {contract.address.substring(0, 15)}...
-                                </code>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleCopyHash(contract.address)}
-                                  className="h-6 w-6 p-0"
-                                >
-                                  <Copy className="h-3 w-3" />
-                                </Button>
+              {isLoading ? (
+                <div className="text-center py-10 text-gray-500">Chargement…</div>
+              ) : certificates.length === 0 ? (
+                <div className="text-center py-10 text-gray-500">
+                  <Shield className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                  <p className="font-medium">Aucun certificat blockchain</p>
+                  <p className="text-sm">Aucun certificat on-chain n'est associé aux transactions de cette banque.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {certificates.map((cert) => (
+                    <Card key={cert.id} className="border">
+                      <CardContent className="p-4">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <div className="flex items-center space-x-3 mb-2">
+                              <h3 className="font-semibold">Certificat {String(cert.id).substring(0, 8)}</h3>
+                              <Badge className={getStatusColor(cert.status)}>
+                                {cert.status || 'N/A'}
+                              </Badge>
+                            </div>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                              <div>
+                                <p className="text-gray-600">Hash du Certificat</p>
+                                <div className="flex items-center space-x-2">
+                                  <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                                    {shortHash(cert.certificate_hash)}
+                                  </code>
+                                  {cert.certificate_hash && (
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      onClick={() => handleCopyHash(cert.certificate_hash)}
+                                      className="h-6 w-6 p-0"
+                                    >
+                                      <Copy className="h-3 w-3" />
+                                    </Button>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                            
-                            <div>
-                              <p className="text-gray-600">Transactions</p>
-                              <p className="font-medium">{contract.totalTransactions.toLocaleString()}</p>
-                            </div>
-                            
-                            <div>
-                              <p className="text-gray-600">Optimisation Gas</p>
-                              <div className="flex items-center space-x-2">
-                                <span className="font-medium">{contract.gasOptimization}%</span>
-                                <Progress value={contract.gasOptimization} className="w-16 h-2" />
+
+                              <div>
+                                <p className="text-gray-600">Date d'émission</p>
+                                <p className="font-medium">{formatDate(cert.created_at)}</p>
                               </div>
                             </div>
                           </div>
                         </div>
-                        
-                        <div className="flex items-center space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-3 w-3 mr-1" />
-                            Examiner
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Settings className="h-3 w-3 mr-1" />
-                            Configurer
-                          </Button>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                ))}
-              </div>
+                      </CardContent>
+                    </Card>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -528,14 +454,14 @@ const BanqueBlockchain = () => {
                 Explorateur Blockchain
               </CardTitle>
               <CardDescription>
-                Rechercher et explorer les transactions blockchain
+                Rechercher parmi les transactions enregistrées
               </CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 <div className="flex items-center space-x-2">
                   <Input
-                    placeholder="Rechercher par hash de transaction, adresse, ou bloc..."
+                    placeholder="Rechercher par hash de transaction ou numéro de bloc..."
                     value={searchHash}
                     onChange={(e) => setSearchHash(e.target.value)}
                     className="flex-1"
@@ -545,41 +471,49 @@ const BanqueBlockchain = () => {
                     Rechercher
                   </Button>
                 </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <Card className="border">
-                    <CardContent className="p-4 text-center">
-                      <Globe className="h-8 w-8 mx-auto mb-2 text-blue-600" />
-                      <h3 className="font-semibold">Réseau Principal</h3>
-                      <p className="text-sm text-gray-600">TerangaChain Banking</p>
-                      <Button variant="outline" size="sm" className="mt-2">
-                        Explorer
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border">
-                    <CardContent className="p-4 text-center">
-                      <Server className="h-8 w-8 mx-auto mb-2 text-green-600" />
-                      <h3 className="font-semibold">Nœuds Actifs</h3>
-                      <p className="text-sm text-gray-600">47 nœuds validateurs</p>
-                      <Button variant="outline" size="sm" className="mt-2">
-                        Surveiller
-                      </Button>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card className="border">
-                    <CardContent className="p-4 text-center">
-                      <Layers className="h-8 w-8 mx-auto mb-2 text-purple-600" />
-                      <h3 className="font-semibold">API Blockchain</h3>
-                      <p className="text-sm text-gray-600">Interface développeur</p>
-                      <Button variant="outline" size="sm" className="mt-2">
-                        Documentation
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </div>
+
+                {searchHash.trim() && (
+                  <div className="space-y-3">
+                    {transactions
+                      .filter((t) => {
+                        const term = searchHash.trim().toLowerCase();
+                        return (
+                          (t.transaction_hash || '').toLowerCase().includes(term) ||
+                          String(t.block_number || '').includes(term)
+                        );
+                      })
+                      .map((t) => (
+                        <div key={t.id} className="border rounded-lg p-3 flex items-center justify-between">
+                          <div>
+                            <code className="text-xs bg-gray-100 px-2 py-1 rounded">
+                              {shortHash(t.transaction_hash)}
+                            </code>
+                            <p className="text-xs text-gray-500 mt-1">
+                              {t.block_number != null ? `Bloc #${t.block_number} · ` : ''}{formatDate(t.created_at)}
+                            </p>
+                          </div>
+                          <Badge className={getStatusColor(t.status)}>{t.status || 'N/A'}</Badge>
+                        </div>
+                      ))}
+                    {transactions.filter((t) => {
+                      const term = searchHash.trim().toLowerCase();
+                      return (
+                        (t.transaction_hash || '').toLowerCase().includes(term) ||
+                        String(t.block_number || '').includes(term)
+                      );
+                    }).length === 0 && (
+                      <p className="text-center py-6 text-sm text-gray-500">Aucun résultat pour cette recherche.</p>
+                    )}
+                  </div>
+                )}
+
+                <Card className="border">
+                  <CardContent className="p-4 text-center">
+                    <Globe className="h-8 w-8 mx-auto mb-2 text-blue-600" />
+                    <h3 className="font-semibold">Explorateur public on-chain</h3>
+                    <p className="text-sm text-gray-600">Intégration explorateur externe bientôt disponible</p>
+                  </CardContent>
+                </Card>
               </div>
             </CardContent>
           </Card>

@@ -1,42 +1,42 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Smartphone, 
-  CreditCard, 
-  QrCode, 
-  Shield, 
-  Zap, 
-  Globe, 
-  Download, 
-  Upload, 
-  FileText, 
-  Send, 
-  Wallet, 
-  ArrowUpRight, 
-  ArrowDownLeft, 
-  Activity, 
-  TrendingUp, 
-  Users, 
-  Clock, 
-  CheckCircle, 
-  AlertTriangle, 
-  Star, 
-  Settings, 
-  Bell, 
-  Camera, 
-  Scan, 
-  Fingerprint, 
-  Lock, 
-  Unlock, 
-  Eye, 
-  EyeOff, 
-  MessageSquare, 
-  Phone, 
-  Video, 
-  Calendar, 
-  Building, 
-  Home, 
-  DollarSign, 
+import {
+  Smartphone,
+  CreditCard,
+  QrCode,
+  Shield,
+  Zap,
+  Globe,
+  Download,
+  Upload,
+  FileText,
+  Send,
+  Wallet,
+  ArrowUpRight,
+  ArrowDownLeft,
+  Activity,
+  TrendingUp,
+  Users,
+  Clock,
+  CheckCircle,
+  AlertTriangle,
+  Star,
+  Settings,
+  Bell,
+  Camera,
+  Scan,
+  Fingerprint,
+  Lock,
+  Unlock,
+  Eye,
+  EyeOff,
+  MessageSquare,
+  Phone,
+  Video,
+  Calendar,
+  Building,
+  Home,
+  DollarSign,
   Percent,
   Banknote,
   Calculator,
@@ -52,7 +52,9 @@ import {
   Layers,
   BarChart3,
   PieChart,
-  LineChart
+  LineChart,
+  Link as LinkIcon,
+  LifeBuoy
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -62,169 +64,200 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Catalogue STATIQUE des outils digitaux réellement proposés par la plateforme.
+// Aucun chiffre d'usage/note n'est codé en dur : le compteur `usageKey` pointe vers
+// une vraie table Supabase (ou reste `null` quand aucune source n'existe → affichage "—").
+const DIGITAL_SERVICES = [
+  {
+    id: 1,
+    name: 'Crédit Immobilier Express',
+    category: 'credit',
+    description: 'Gestion digitale des dossiers de crédit immobilier',
+    icon: Home,
+    color: 'bg-blue-500',
+    status: 'active',
+    usageKey: 'loans',
+    features: ['Simulation en ligne', 'Upload documents', 'Signature électronique', 'Suivi temps réel']
+  },
+  {
+    id: 2,
+    name: 'Évaluation & Risque Digitale',
+    category: 'evaluation',
+    description: 'Évaluation du risque et scoring des dossiers',
+    icon: Calculator,
+    color: 'bg-green-500',
+    status: 'active',
+    usageKey: 'riskAssessments',
+    features: ['Scoring risque', 'Analyse dossier', 'Rapport détaillé', 'Comparaison marché']
+  },
+  {
+    id: 3,
+    name: 'Virements Immo Pro',
+    category: 'payment',
+    description: 'Transactions financières secteur immobilier',
+    icon: Send,
+    color: 'bg-purple-500',
+    status: 'active',
+    usageKey: 'transactions',
+    features: ['Virement instantané', 'Multi-bénéficiaires', 'Traçabilité', 'API intégration']
+  },
+  {
+    id: 4,
+    name: 'Assurance Habitation+',
+    category: 'insurance',
+    description: 'Souscription assurance habitation digitale',
+    icon: Shield,
+    color: 'bg-red-500',
+    status: 'coming_soon',
+    usageKey: null,
+    features: ['Devis instantané', 'Couverture adaptée', 'Gestion sinistres', 'Télé-expertise']
+  },
+  {
+    id: 5,
+    name: 'Épargne Logement Smart',
+    category: 'savings',
+    description: 'Plan épargne logement intelligent',
+    icon: PiggyBank,
+    color: 'bg-yellow-500',
+    status: 'coming_soon',
+    usageKey: null,
+    features: ['Objectif personnalisé', 'Simulation prêt', 'Versements auto', 'Conseils IA']
+  },
+  {
+    id: 6,
+    name: 'Consultation Bancaire Vidéo',
+    category: 'consultation',
+    description: 'Rendez-vous conseiller par visioconférence',
+    icon: Video,
+    color: 'bg-indigo-500',
+    status: 'coming_soon',
+    usageKey: null,
+    features: ['Réservation en ligne', 'Partage d\'écran', 'Signature électronique', 'Enregistrement']
+  },
+  {
+    id: 7,
+    name: 'Garanties & Sûretés',
+    category: 'guarantees',
+    description: 'Gestion digitale des garanties et sûretés',
+    icon: Layers,
+    color: 'bg-emerald-500',
+    status: 'active',
+    usageKey: 'guarantees',
+    features: ['Suivi garanties', 'Alertes échéance', 'Valorisation', 'Reporting']
+  },
+  {
+    id: 8,
+    name: 'Notarisation Blockchain',
+    category: 'legal',
+    description: 'Certification et traçabilité blockchain des actes',
+    icon: FileCheck,
+    color: 'bg-orange-500',
+    status: 'active',
+    usageKey: 'certificates',
+    features: ['Actes authentiques', 'Blockchain', 'Signatures multiples', 'Archivage sécurisé']
+  }
+];
 
 const BanqueServicesDigitaux = ({ dashboardStats }) => {
+  const { user } = useAuth();
   const [activeService, setActiveService] = useState(null);
-  const [transactionInProgress, setTransactionInProgress] = useState(false);
   const [selectedPlatform, setSelectedPlatform] = useState('mobile');
+  const [isLoading, setIsLoading] = useState(false);
 
-  // Statistiques services digitaux bancaires
-  const [digitalStats, setDigitalStats] = useState({
-    totalTransactions: 25847,
-    monthlyGrowth: 23.5,
-    activeUsers: 8945,
-    digitalizationRate: 78.6,
-    avgTransactionValue: 850000,
-    customerSatisfaction: 4.7,
-    mobileAppUsers: 6745,
-    webPlatformUsers: 2200
+  // Compteurs d'usage RÉELS (aucun Math.random, aucun chiffre codé en dur)
+  const [counts, setCounts] = useState({
+    clients: 0,
+    loans: 0,
+    guarantees: 0,
+    transactions: 0,
+    tickets: 0,
+    certificates: 0,
+    riskAssessments: 0,
+    documents: 0
   });
 
-  // Services digitaux bancaires
-  const [digitalServices, setDigitalServices] = useState([
-    {
-      id: 1,
-      name: 'Crédit Immobilier Express',
-      category: 'credit',
-      description: 'Demande de crédit immobilier 100% digitale',
-      icon: Home,
-      color: 'bg-blue-500',
-      status: 'active',
-      usage: 2847,
-      rating: 4.8,
-      processingTime: '24h',
-      features: ['Simulation en ligne', 'Upload documents', 'Signature électronique', 'Suivi temps réel']
-    },
-    {
-      id: 2,
-      name: 'Évaluation Bien Digitale',
-      category: 'evaluation',
-      description: 'Estimation automatique valeur immobilière',
-      icon: Calculator,
-      color: 'bg-green-500',
-      status: 'active',
-      usage: 1654,
-      rating: 4.6,
-      processingTime: '2h',
-      features: ['IA évaluation', 'Photos 360°', 'Rapport détaillé', 'Comparaison marché']
-    },
-    {
-      id: 3,
-      name: 'Virements Immo Pro',
-      category: 'payment',
-      description: 'Virements professionnels secteur immobilier',
-      icon: Send,
-      color: 'bg-purple-500',
-      status: 'active',
-      usage: 5423,
-      rating: 4.9,
-      processingTime: 'Instantané',
-      features: ['Virement instantané', 'Multi-bénéficiaires', 'Traçabilité', 'API intégration']
-    },
-    {
-      id: 4,
-      name: 'Assurance Habitation+',
-      category: 'insurance',
-      description: 'Souscription assurance habitation digitale',
-      icon: Shield,
-      color: 'bg-red-500',
-      status: 'active',
-      usage: 987,
-      rating: 4.4,
-      processingTime: '1h',
-      features: ['Devis instantané', 'Couverture adaptée', 'Gestion sinistres', 'Télé-expertise']
-    },
-    {
-      id: 5,
-      name: 'Épargne Logement Smart',
-      category: 'savings',
-      description: 'Plan épargne logement intelligent',
-      icon: PiggyBank,
-      color: 'bg-yellow-500',
-      status: 'active',
-      usage: 756,
-      rating: 4.7,
-      processingTime: '30min',
-      features: ['Objectif personnalisé', 'Simulation prêt', 'Versements auto', 'Conseils IA']
-    },
-    {
-      id: 6,
-      name: 'Consultation Bancaire Vidéo',
-      category: 'consultation',
-      description: 'Rendez-vous conseiller par visioconférence',
-      icon: Video,
-      color: 'bg-indigo-500',
-      status: 'active',
-      usage: 1245,
-      rating: 4.8,
-      processingTime: 'Sur RDV',
-      features: ['Réservation en ligne', 'Partage d\'écran', 'Signature électronique', 'Enregistrement']
-    },
-    {
-      id: 7,
-      name: 'Investment Tracker Pro',
-      category: 'investment',
-      description: 'Suivi investissements immobiliers',
-      icon: TrendingUp,
-      color: 'bg-emerald-500',
-      status: 'beta',
-      usage: 234,
-      rating: 4.5,
-      processingTime: 'Temps réel',
-      features: ['Dashboard personnalisé', 'Alertes marché', 'Analyse ROI', 'Reporting fiscal']
-    },
-    {
-      id: 8,
-      name: 'Notarisation Digitale',
-      category: 'legal',
-      description: 'Services notariaux dématérialisés',
-      icon: FileCheck,
-      color: 'bg-orange-500',
-      status: 'coming_soon',
-      usage: 0,
-      rating: 0,
-      processingTime: '2-5 jours',
-      features: ['Actes authentiques', 'Blockchain', 'Signatures multiples', 'Archivage sécurisé']
-    }
-  ]);
+  // Transactions récentes réelles (financial_transactions)
+  const [recentTransactions, setRecentTransactions] = useState([]);
 
-  // Transactions récentes
-  const [recentTransactions, setRecentTransactions] = useState([
-    {
-      id: 1,
-      type: 'credit_application',
-      client: 'M. Amadou Diallo',
-      amount: 25000000,
-      service: 'Crédit Immobilier Express',
-      status: 'approved',
-      timestamp: '2024-01-20 14:30',
-      processingTime: '18h'
-    },
-    {
-      id: 2,
-      type: 'property_valuation',
-      client: 'Société Immobilière Sénégal',
-      amount: 0,
-      service: 'Évaluation Bien Digitale',
-      status: 'completed',
-      timestamp: '2024-01-20 11:15',
-      processingTime: '1h45min'
-    },
-    {
-      id: 3,
-      type: 'wire_transfer',
-      client: 'Coopérative Habitat',
-      amount: 75000000,
-      service: 'Virements Immo Pro',
-      status: 'completed',
-      timestamp: '2024-01-20 09:22',
-      processingTime: 'Instantané'
+  useEffect(() => {
+    if (user?.id) {
+      loadDigitalData();
     }
-  ]);
+  }, [user?.id]);
 
-  const getServiceIcon = (service) => {
-    return service.icon;
+  const loadDigitalData = async () => {
+    setIsLoading(true);
+    try {
+      const bankId = user.id;
+
+      const [
+        clientsRes,
+        loansRes,
+        guaranteesRes,
+        riskRes,
+        blockchainRes,
+        ticketsRes,
+        txRes
+      ] = await Promise.all([
+        supabase.from('bank_clients').select('*', { count: 'exact', head: true }).eq('bank_id', bankId),
+        supabase.from('loans').select('*', { count: 'exact', head: true }).eq('bank_id', bankId),
+        supabase.from('guarantees').select('*', { count: 'exact', head: true }).eq('bank_id', bankId),
+        supabase.from('risk_assessments').select('*', { count: 'exact', head: true }).eq('bank_id', bankId),
+        supabase.from('blockchain_transactions').select('*', { count: 'exact', head: true }).eq('user_id', bankId),
+        supabase.from('support_tickets').select('*', { count: 'exact', head: true }).eq('user_id', bankId),
+        supabase
+          .from('financial_transactions')
+          .select('*')
+          .eq('user_id', bankId)
+          .order('created_at', { ascending: false })
+          .limit(10)
+      ]);
+
+      const txList = txRes.data || [];
+
+      // Comptage best-effort des documents dans le bucket de stockage réel
+      let documentsCount = 0;
+      try {
+        const { data: files } = await supabase.storage
+          .from('documents')
+          .list('', { limit: 1000 });
+        documentsCount = Array.isArray(files) ? files.length : 0;
+      } catch (e) {
+        documentsCount = 0;
+      }
+
+      setCounts({
+        clients: clientsRes.count || 0,
+        loans: loansRes.count || 0,
+        guarantees: guaranteesRes.count || 0,
+        transactions: txRes.error ? 0 : txList.length,
+        tickets: ticketsRes.count || 0,
+        certificates: blockchainRes.count || 0,
+        riskAssessments: riskRes.count || 0,
+        documents: documentsCount
+      });
+
+      setRecentTransactions(txList);
+    } catch (error) {
+      console.error('Erreur chargement services digitaux:', error);
+      setCounts({
+        clients: 0, loans: 0, guarantees: 0, transactions: 0,
+        tickets: 0, certificates: 0, riskAssessments: 0, documents: 0
+      });
+      setRecentTransactions([]);
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  const getServiceIcon = (service) => service.icon;
+
+  // Usage réel d'un service (ou null si aucune source réelle)
+  const getServiceUsage = (service) =>
+    service.usageKey ? (counts[service.usageKey] ?? 0) : null;
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -240,14 +273,39 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
       case 'completed': return 'text-green-600';
       case 'approved': return 'text-blue-600';
       case 'pending': return 'text-yellow-600';
-      case 'rejected': return 'text-red-600';
+      case 'rejected':
+      case 'failed': return 'text-red-600';
       default: return 'text-gray-600';
+    }
+  };
+
+  const getTransactionStatusLabel = (status) => {
+    switch (status) {
+      case 'completed': return 'Terminé';
+      case 'approved': return 'Approuvé';
+      case 'pending': return 'En cours';
+      case 'rejected': return 'Rejeté';
+      case 'failed': return 'Échec';
+      default: return status || '—';
+    }
+  };
+
+  const formatDate = (dateStr) => {
+    if (!dateStr) return '—';
+    try {
+      return new Date(dateStr).toLocaleString('fr-FR', {
+        day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit'
+      });
+    } catch {
+      return dateStr;
     }
   };
 
   const ServiceCard = ({ service, onClick }) => {
     const ServiceIcon = getServiceIcon(service);
-    
+    const usage = getServiceUsage(service);
+
     return (
       <motion.div
         whileHover={{ scale: 1.02 }}
@@ -273,7 +331,7 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
               </div>
               <div className="text-right">
                 <Badge className={`text-xs ${getStatusColor(service.status)}`}>
-                  {service.status === 'active' ? 'Actif' : 
+                  {service.status === 'active' ? 'Actif' :
                    service.status === 'beta' ? 'Bêta' : 'Bientôt'}
                 </Badge>
               </div>
@@ -282,22 +340,11 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
 
           <CardContent className="pt-0">
             <div className="space-y-4">
-              <div className="grid grid-cols-2 gap-4 text-sm">
-                <div>
-                  <span className="text-gray-600">Utilisations:</span>
-                  <span className="ml-2 font-semibold text-blue-600">{service.usage.toLocaleString()}</span>
-                </div>
-                <div>
-                  <span className="text-gray-600">Note:</span>
-                  <span className="ml-2 font-semibold text-yellow-600">
-                    {service.rating > 0 ? `${service.rating}/5 ⭐` : 'N/A'}
-                  </span>
-                </div>
-              </div>
-
               <div className="text-sm">
-                <span className="text-gray-600">Traitement:</span>
-                <span className="ml-2 font-semibold text-green-600">{service.processingTime}</span>
+                <span className="text-gray-600">Utilisations:</span>
+                <span className="ml-2 font-semibold text-blue-600">
+                  {usage === null ? '—' : usage.toLocaleString()}
+                </span>
               </div>
 
               <div className="space-y-2">
@@ -317,8 +364,8 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
               </div>
 
               <div className="pt-2 border-t">
-                <Button 
-                  size="sm" 
+                <Button
+                  size="sm"
                   className="w-full"
                   disabled={service.status === 'coming_soon'}
                 >
@@ -332,9 +379,23 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
     );
   };
 
+  // Répartition réelle des usages (uniquement des compteurs réels)
+  const usageBreakdown = [
+    { label: 'Documents', value: counts.documents, icon: FileText, color: 'text-blue-600' },
+    { label: 'Certificats Blockchain', value: counts.certificates, icon: LinkIcon, color: 'text-green-600' },
+    { label: 'Tickets Support', value: counts.tickets, icon: LifeBuoy, color: 'text-purple-600' }
+  ];
+  const usageBreakdownTotal = usageBreakdown.reduce((s, u) => s + (u.value || 0), 0);
+
+  // Services disposant d'un compteur réel non nul (pour l'onglet Analytics)
+  const servicesWithUsage = DIGITAL_SERVICES
+    .map((s) => ({ ...s, usage: getServiceUsage(s) }))
+    .filter((s) => s.usage !== null);
+  const maxServiceUsage = Math.max(1, ...servicesWithUsage.map((s) => s.usage));
+
   return (
     <div className="space-y-6">
-      {/* Header avec statistiques */}
+      {/* Header avec compteurs d'usage RÉELS */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -345,8 +406,8 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">Utilisateurs Actifs</p>
-                  <p className="text-2xl font-bold text-blue-900">{digitalStats.activeUsers.toLocaleString()}</p>
+                  <p className="text-blue-600 text-sm font-medium">Clients Digitaux</p>
+                  <p className="text-2xl font-bold text-blue-900">{counts.clients.toLocaleString()}</p>
                 </div>
                 <Users className="h-8 w-8 text-blue-600" />
               </div>
@@ -363,10 +424,10 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium">Croissance Mensuelle</p>
-                  <p className="text-2xl font-bold text-green-900">+{digitalStats.monthlyGrowth}%</p>
+                  <p className="text-green-600 text-sm font-medium">Dossiers de Crédit</p>
+                  <p className="text-2xl font-bold text-green-900">{counts.loans.toLocaleString()}</p>
                 </div>
-                <TrendingUp className="h-8 w-8 text-green-600" />
+                <CreditCard className="h-8 w-8 text-green-600" />
               </div>
             </CardContent>
           </Card>
@@ -381,10 +442,10 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-600 text-sm font-medium">Taux Digitalisation</p>
-                  <p className="text-2xl font-bold text-purple-900">{digitalStats.digitalizationRate}%</p>
+                  <p className="text-purple-600 text-sm font-medium">Certificats Blockchain</p>
+                  <p className="text-2xl font-bold text-purple-900">{counts.certificates.toLocaleString()}</p>
                 </div>
-                <Smartphone className="h-8 w-8 text-purple-600" />
+                <LinkIcon className="h-8 w-8 text-purple-600" />
               </div>
             </CardContent>
           </Card>
@@ -399,10 +460,10 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-yellow-600 text-sm font-medium">Satisfaction Client</p>
-                  <p className="text-2xl font-bold text-yellow-900">{digitalStats.customerSatisfaction}/5</p>
+                  <p className="text-yellow-600 text-sm font-medium">Tickets Support</p>
+                  <p className="text-2xl font-bold text-yellow-900">{counts.tickets.toLocaleString()}</p>
                 </div>
-                <Star className="h-8 w-8 text-yellow-600" />
+                <LifeBuoy className="h-8 w-8 text-yellow-600" />
               </div>
             </CardContent>
           </Card>
@@ -454,11 +515,11 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
                 </div>
               </div>
 
-              <motion.div 
+              <motion.div
                 className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
                 layout
               >
-                {digitalServices.map((service) => (
+                {DIGITAL_SERVICES.map((service) => (
                   <ServiceCard
                     key={service.id}
                     service={service}
@@ -472,46 +533,68 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
             <TabsContent value="transactions" className="space-y-6">
               <div className="flex items-center justify-between">
                 <h3 className="text-lg font-semibold text-gray-900">Transactions Récentes</h3>
-                <Button size="sm">
-                  <RefreshCw className="h-4 w-4 mr-2" />
+                <Button size="sm" onClick={loadDigitalData} disabled={isLoading}>
+                  <RefreshCw className={`h-4 w-4 mr-2 ${isLoading ? 'animate-spin' : ''}`} />
                   Actualiser
                 </Button>
               </div>
 
               <div className="space-y-4">
-                {recentTransactions.map((transaction) => (
-                  <Card key={transaction.id} className="hover:shadow-md transition-shadow">
-                    <CardContent className="p-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-4">
-                          <div className="bg-blue-100 p-2 rounded-lg">
-                            <Activity className="h-5 w-5 text-blue-600" />
-                          </div>
-                          <div>
-                            <h4 className="font-semibold text-gray-900">{transaction.service}</h4>
-                            <p className="text-sm text-gray-600">{transaction.client}</p>
-                            <p className="text-xs text-gray-500">{transaction.timestamp}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="text-right">
-                          {transaction.amount > 0 && (
-                            <div className="text-lg font-semibold text-green-600 mb-1">
-                              {(transaction.amount / 1000000).toFixed(1)}M CFA
-                            </div>
-                          )}
-                          <div className={`text-sm font-medium ${getTransactionStatusColor(transaction.status)}`}>
-                            {transaction.status === 'completed' ? 'Terminé' :
-                             transaction.status === 'approved' ? 'Approuvé' : 'En cours'}
-                          </div>
-                          <div className="text-xs text-gray-500">
-                            Traité en {transaction.processingTime}
-                          </div>
-                        </div>
-                      </div>
+                {recentTransactions.length === 0 ? (
+                  <Card>
+                    <CardContent className="p-8 text-center text-gray-500">
+                      <Activity className="h-8 w-8 mx-auto mb-3 text-gray-300" />
+                      Aucune transaction pour le moment
                     </CardContent>
                   </Card>
-                ))}
+                ) : (
+                  recentTransactions.map((transaction) => {
+                    const amount = Number(transaction.amount) || 0;
+                    const label = transaction.description
+                      || transaction.category
+                      || transaction.transaction_type
+                      || transaction.type
+                      || 'Transaction';
+                    return (
+                      <Card key={transaction.id} className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="bg-blue-100 p-2 rounded-lg">
+                                <Activity className="h-5 w-5 text-blue-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-gray-900">{label}</h4>
+                                <p className="text-sm text-gray-600">
+                                  {transaction.client_name || '—'}
+                                </p>
+                                <p className="text-xs text-gray-500">
+                                  {formatDate(transaction.created_at)}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="text-right">
+                              {amount > 0 && (
+                                <div className="text-lg font-semibold text-green-600 mb-1">
+                                  {(amount / 1000000).toFixed(1)}M {transaction.currency || 'CFA'}
+                                </div>
+                              )}
+                              <div className={`text-sm font-medium ${getTransactionStatusColor(transaction.status)}`}>
+                                {getTransactionStatusLabel(transaction.status)}
+                              </div>
+                              {transaction.category && (
+                                <div className="text-xs text-gray-500">
+                                  {transaction.category}
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </CardContent>
+                      </Card>
+                    );
+                  })
+                )}
               </div>
             </TabsContent>
 
@@ -526,20 +609,26 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      {digitalServices.filter(s => s.usage > 0).map((service) => (
-                        <div key={service.id} className="space-y-2">
-                          <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">{service.name}</span>
-                            <span className="font-semibold">{service.usage.toLocaleString()}</span>
+                    {servicesWithUsage.length === 0 ? (
+                      <p className="text-sm text-gray-500 py-4 text-center">
+                        Aucune donnée d'usage disponible
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {servicesWithUsage.map((service) => (
+                          <div key={service.id} className="space-y-2">
+                            <div className="flex justify-between text-sm">
+                              <span className="text-gray-600">{service.name}</span>
+                              <span className="font-semibold">{service.usage.toLocaleString()}</span>
+                            </div>
+                            <Progress
+                              value={(service.usage / maxServiceUsage) * 100}
+                              className="h-2"
+                            />
                           </div>
-                          <Progress 
-                            value={(service.usage / Math.max(...digitalServices.map(s => s.usage))) * 100} 
-                            className="h-2"
-                          />
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
 
@@ -547,29 +636,36 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <PieChart className="h-5 w-5 text-green-600" />
-                      <span>Répartition Plateformes</span>
+                      <span>Répartition des Usages</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Smartphone className="h-4 w-4 text-blue-600" />
-                          <span className="text-sm text-gray-600">Application Mobile</span>
-                        </div>
-                        <span className="font-semibold">{digitalStats.mobileAppUsers.toLocaleString()}</span>
+                    {usageBreakdownTotal === 0 ? (
+                      <p className="text-sm text-gray-500 py-4 text-center">
+                        Aucun usage enregistré
+                      </p>
+                    ) : (
+                      <div className="space-y-4">
+                        {usageBreakdown.map((item) => {
+                          const ItemIcon = item.icon;
+                          const pct = usageBreakdownTotal > 0
+                            ? (item.value / usageBreakdownTotal) * 100
+                            : 0;
+                          return (
+                            <div key={item.label} className="space-y-2">
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center space-x-2">
+                                  <ItemIcon className={`h-4 w-4 ${item.color}`} />
+                                  <span className="text-sm text-gray-600">{item.label}</span>
+                                </div>
+                                <span className="font-semibold">{item.value.toLocaleString()}</span>
+                              </div>
+                              <Progress value={pct} className="h-2" />
+                            </div>
+                          );
+                        })}
                       </div>
-                      <Progress value={75.4} className="h-2" />
-                      
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-2">
-                          <Globe className="h-4 w-4 text-green-600" />
-                          <span className="text-sm text-gray-600">Plateforme Web</span>
-                        </div>
-                        <span className="font-semibold">{digitalStats.webPlatformUsers.toLocaleString()}</span>
-                      </div>
-                      <Progress value={24.6} className="h-2" />
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -582,7 +678,7 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
                   <CardContent className="p-6 text-center">
                     <Headphones className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-gray-900 mb-2">Support Téléphonique</h3>
-                    <p className="text-sm text-gray-600 mb-4">Assistance 24/7 pour services digitaux</p>
+                    <p className="text-sm text-gray-600 mb-4">Assistance pour les services digitaux</p>
                     <Button size="sm">
                       <Phone className="h-4 w-4 mr-2" />
                       Appeler
@@ -616,11 +712,12 @@ const BanqueServicesDigitaux = ({ dashboardStats }) => {
               </div>
 
               <Alert>
-                <Headphones className="h-4 w-4" />
-                <AlertTitle>Support Prioritaire</AlertTitle>
+                <LifeBuoy className="h-4 w-4" />
+                <AlertTitle>Tickets de support</AlertTitle>
                 <AlertDescription>
-                  Les clients Premium bénéficient d'un support prioritaire avec temps de réponse garanti 
-                  sous 2h pour les services digitaux bancaires.
+                  {counts.tickets > 0
+                    ? `${counts.tickets.toLocaleString()} ticket(s) de support enregistré(s) pour votre établissement.`
+                    : "Aucun ticket de support ouvert pour le moment."}
                 </AlertDescription>
               </Alert>
             </TabsContent>

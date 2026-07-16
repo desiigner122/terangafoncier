@@ -67,218 +67,309 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart as RechartsPieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Formatage montant FCFA lisible
+const formatFCFA = (amount) => {
+  const n = Number(amount) || 0;
+  if (n >= 1_000_000_000) return `${(n / 1_000_000_000).toFixed(1)} Mrd FCFA`;
+  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)} M FCFA`;
+  if (n >= 1_000) return `${(n / 1_000).toFixed(0)} k FCFA`;
+  return `${n.toLocaleString('fr-FR')} FCFA`;
+};
+
+// Temps relatif court à partir d'une date ISO
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '—';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const min = Math.floor(diff / 60000);
+  if (min < 1) return "à l'instant";
+  if (min < 60) return `${min} min`;
+  const h = Math.floor(min / 60);
+  if (h < 24) return `${h}h`;
+  const j = Math.floor(h / 24);
+  return `${j}j`;
+};
+
+const MONTH_LABELS = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
 
 const BanqueOverview = ({ dashboardStats = {} }) => {
+  const { user } = useAuth();
   const [timeRange, setTimeRange] = useState('30d');
   const [selectedMetric, setSelectedMetric] = useState('credits');
   const [refreshing, setRefreshing] = useState(false);
-  const [realTimeData, setRealTimeData] = useState({});
+  const [loading, setLoading] = useState(true);
 
-  // Données temps réel simulées
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setRealTimeData({
-        activeClients: Math.floor(Math.random() * 50) + 150,
-        processingCredits: Math.floor(Math.random() * 10) + 25,
-        pendingApprovals: Math.floor(Math.random() * 5) + 8,
-        systemLoad: Math.floor(Math.random() * 30) + 45
+  // États alimentés par Supabase (aucune donnée fabriquée)
+  const [mainKPIs, setMainKPIs] = useState([]);
+  const [secondaryMetrics, setSecondaryMetrics] = useState([]);
+  const [creditEvolution, setCreditEvolution] = useState([]);
+  const [riskDistribution, setRiskDistribution] = useState([]);
+  const [recentActivities, setRecentActivities] = useState([]);
+  const [priorityClients, setPriorityClients] = useState([]);
+
+  const bankId = user?.id;
+
+  const fetchOverview = async () => {
+    if (!bankId) return;
+    try {
+      const [loansRes, clientsRes, guaranteesRes] = await Promise.all([
+        supabase.from('loans').select('*').eq('bank_id', bankId),
+        supabase.from('bank_clients').select('*').eq('bank_id', bankId),
+        supabase.from('guarantees').select('*').eq('bank_id', bankId)
+      ]);
+
+      const loans = loansRes.data || [];
+      const clients = clientsRes.data || [];
+      const guarantees = guaranteesRes.data || [];
+
+      const ACTIVE_STATUSES = ['approved', 'disbursed', 'pre_approved'];
+      const activeLoans = loans.filter((l) => ACTIVE_STATUSES.includes(l.status));
+      const approvedLoans = loans.filter((l) => ['approved', 'disbursed'].includes(l.status));
+      const pendingLoans = loans.filter((l) => ['pending', 'evaluating'].includes(l.status));
+      const rejectedLoans = loans.filter((l) => l.status === 'rejected');
+
+      const encours = activeLoans.reduce((s, l) => s + (Number(l.amount) || 0), 0);
+
+      // --- Séries mensuelles réelles (12 derniers mois) ---
+      const now = new Date();
+      const months = [];
+      for (let i = 8; i >= 0; i--) {
+        const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        months.push({
+          key: `${d.getFullYear()}-${d.getMonth()}`,
+          label: MONTH_LABELS[d.getMonth()],
+          approved: 0,
+          pending: 0,
+          rejected: 0,
+          count: 0,
+          amount: 0
+        });
+      }
+      const monthIndex = Object.fromEntries(months.map((m, i) => [m.key, i]));
+      loans.forEach((l) => {
+        if (!l.created_at) return;
+        const d = new Date(l.created_at);
+        const key = `${d.getFullYear()}-${d.getMonth()}`;
+        const idx = monthIndex[key];
+        if (idx === undefined) return;
+        months[idx].count += 1;
+        months[idx].amount += Number(l.amount) || 0;
+        if (['approved', 'disbursed'].includes(l.status)) months[idx].approved += 1;
+        else if (l.status === 'rejected') months[idx].rejected += 1;
+        else months[idx].pending += 1;
       });
-    }, 5000);
 
-    return () => clearInterval(interval);
-  }, []);
+      setCreditEvolution(
+        months.map((m) => ({ month: m.label, approved: m.approved, pending: m.pending, rejected: m.rejected }))
+      );
 
-  // KPIs principaux enrichis
-  const mainKPIs = [
-    {
-      title: 'Crédits Terrain Actifs',
-      value: '2.8M',
-      subtitle: '348 dossiers',
-      change: '+12.5%',
-      changeType: 'positive',
-      icon: Home,
-      color: 'bg-blue-500',
-      trend: [65, 72, 68, 75, 82, 78, 85, 88, 92, 89, 95, 98],
-      details: {
-        approved: '285 approuvés',
-        pending: '43 en attente',
-        rejected: '20 rejetés'
-      }
-    },
-    {
-      title: 'Portfolio Total',
-      value: '45.2M FCFA',
-      subtitle: 'Encours global',
-      change: '+8.3%',
-      changeType: 'positive',
-      icon: Wallet,
-      color: 'bg-green-500',
-      trend: [45, 48, 52, 47, 55, 58, 62, 59, 65, 68, 72, 75],
-      details: {
-        performing: '42.1M (93%)',
-        watchlist: '2.8M (6%)',
-        npls: '0.3M (1%)'
-      }
-    },
-    {
-      title: 'Nouveaux Clients',
-      value: '127',
-      subtitle: 'Ce mois',
-      change: '+23.1%',
-      changeType: 'positive',
-      icon: Users,
-      color: 'bg-purple-500',
-      trend: [20, 25, 18, 30, 35, 28, 42, 38, 45, 52, 48, 55],
-      details: {
-        individual: '98 particuliers',
-        corporate: '19 entreprises',
-        diaspora: '10 diaspora'
-      }
-    },
-    {
-      title: 'Score IA Moyen',
-      value: '87.3',
-      subtitle: 'Précision crédit',
-      change: '+2.1%',
-      changeType: 'positive',
-      icon: Zap,
-      color: 'bg-yellow-500',
-      trend: [82, 83, 85, 84, 86, 87, 85, 88, 89, 87, 90, 87],
-      details: {
-        excellent: '65% (>85)',
-        good: '28% (70-85)',
-        fair: '7% (<70)'
-      }
+      // Nouveaux clients ce mois vs mois précédent (bank_clients)
+      const thisMonthKey = `${now.getFullYear()}-${now.getMonth()}`;
+      const prevD = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+      const prevMonthKey = `${prevD.getFullYear()}-${prevD.getMonth()}`;
+      const clientMonthCount = (key) =>
+        clients.filter((c) => {
+          if (!c.created_at) return false;
+          const d = new Date(c.created_at);
+          return `${d.getFullYear()}-${d.getMonth()}` === key;
+        }).length;
+      const newClientsThisMonth = clientMonthCount(thisMonthKey);
+      const newClientsPrevMonth = clientMonthCount(prevMonthKey);
+
+      // Variation mensuelle (dossiers créés)
+      const momPct = (cur, prev) => {
+        if (!prev) return null;
+        return (((cur - prev) / prev) * 100).toFixed(1);
+      };
+      const creditsThisMonth = months[months.length - 1]?.count || 0;
+      const creditsPrevMonth = months[months.length - 2]?.count || 0;
+      const amountThisMonth = months[months.length - 1]?.amount || 0;
+      const amountPrevMonth = months[months.length - 2]?.amount || 0;
+
+      const buildChange = (pct) =>
+        pct === null
+          ? { change: null, changeType: 'positive' }
+          : { change: `${pct > 0 ? '+' : ''}${pct}%`, changeType: pct >= 0 ? 'positive' : 'negative' };
+
+      // Score de crédit moyen (bank_clients.credit_score)
+      const scoredClients = clients.filter((c) => c.credit_score != null);
+      const avgScore = scoredClients.length
+        ? Math.round(scoredClients.reduce((s, c) => s + Number(c.credit_score), 0) / scoredClients.length)
+        : null;
+
+      // Répartition par type de client (dynamique)
+      const typeCounts = {};
+      clients.forEach((c) => {
+        const t = c.client_type || 'Autre';
+        typeCounts[t] = (typeCounts[t] || 0) + 1;
+      });
+
+      // --- KPIs principaux ---
+      const kpis = [
+        {
+          title: 'Crédits Terrain Actifs',
+          value: String(activeLoans.length),
+          subtitle: `${loans.length} dossier${loans.length > 1 ? 's' : ''} au total`,
+          ...buildChange(momPct(creditsThisMonth, creditsPrevMonth)),
+          icon: Home,
+          color: 'bg-blue-500',
+          trend: months.map((m) => m.count),
+          details: {
+            approuvés: `${approvedLoans.length}`,
+            'en attente': `${pendingLoans.length}`,
+            rejetés: `${rejectedLoans.length}`
+          }
+        },
+        {
+          title: 'Encours Portefeuille',
+          value: formatFCFA(encours),
+          subtitle: 'Crédits actifs',
+          ...buildChange(momPct(amountThisMonth, amountPrevMonth)),
+          icon: Wallet,
+          color: 'bg-green-500',
+          trend: months.map((m) => Math.round(m.amount / 1_000_000)),
+          details: {
+            'dossiers actifs': `${activeLoans.length}`,
+            décaissés: `${loans.filter((l) => l.status === 'disbursed').length}`,
+            garanties: `${guarantees.length}`
+          }
+        },
+        {
+          title: 'Nouveaux Clients',
+          value: String(newClientsThisMonth),
+          subtitle: `Ce mois • ${clients.length} au total`,
+          ...buildChange(momPct(newClientsThisMonth, newClientsPrevMonth)),
+          icon: Users,
+          color: 'bg-purple-500',
+          trend: null,
+          details: Object.fromEntries(
+            Object.entries(typeCounts)
+              .sort((a, b) => b[1] - a[1])
+              .slice(0, 3)
+              .map(([k, v]) => [k, String(v)])
+          )
+        },
+        {
+          title: 'Score Crédit Moyen',
+          value: avgScore != null ? String(avgScore) : '—',
+          subtitle: scoredClients.length ? `${scoredClients.length} clients notés` : 'Aucune notation',
+          change: null,
+          changeType: 'positive',
+          icon: Zap,
+          color: 'bg-yellow-500',
+          trend: null,
+          details: {
+            'clients notés': `${scoredClients.length}`,
+            'sans score': `${clients.length - scoredClients.length}`
+          }
+        }
+      ];
+      setMainKPIs(kpis);
+
+      // --- Métriques secondaires (réelles + états honnêtes) ---
+      const approvalRate = loans.length
+        ? ((approvedLoans.length / loans.length) * 100).toFixed(1) + '%'
+        : '—';
+      const activeGuarantees = guarantees.filter((g) => (g.status || 'active') === 'active').length;
+      setSecondaryMetrics([
+        { title: "Taux d'approbation", value: approvalRate, change: null, icon: CheckCircle },
+        { title: 'Demandes en attente', value: String(pendingLoans.length), change: null, icon: Clock },
+        { title: 'Garanties actives', value: String(activeGuarantees), change: null, icon: Shield },
+        { title: 'Clients suivis', value: String(clients.length), change: null, icon: Users },
+        { title: 'Dossiers rejetés', value: String(rejectedLoans.length), change: null, icon: XCircle },
+        { title: 'Total garanties', value: formatFCFA(guarantees.reduce((s, g) => s + (Number(g.value) || 0), 0)), change: null, icon: Wallet }
+      ]);
+
+      // --- Répartition des risques (loans.risk_level) ---
+      const riskMap = {
+        low: { name: 'Faible risque', color: '#22c55e', value: 0 },
+        medium: { name: 'Risque modéré', color: '#f59e0b', value: 0 },
+        high: { name: 'Risque élevé', color: '#ef4444', value: 0 }
+      };
+      let riskTotal = 0;
+      loans.forEach((l) => {
+        const key = (l.risk_level || '').toLowerCase();
+        if (riskMap[key]) {
+          riskMap[key].value += 1;
+          riskTotal += 1;
+        }
+      });
+      setRiskDistribution(
+        riskTotal
+          ? Object.values(riskMap).map((r) => ({
+              name: r.name,
+              color: r.color,
+              value: Math.round((r.value / riskTotal) * 100)
+            }))
+          : []
+      );
+
+      // --- Activités récentes (derniers crédits) ---
+      const statusToActivity = {
+        approved: { type: 'credit_approved', label: 'approved' },
+        disbursed: { type: 'blockchain_verified', label: 'verified' },
+        pending: { type: 'credit_pending', label: 'pending' },
+        evaluating: { type: 'kyc_completed', label: 'processing' },
+        pre_approved: { type: 'compliance_check', label: 'compliant' },
+        rejected: { type: 'credit_pending', label: 'pending' }
+      };
+      const sortedLoans = [...loans].sort(
+        (a, b) => new Date(b.created_at || 0) - new Date(a.created_at || 0)
+      );
+      setRecentActivities(
+        sortedLoans.slice(0, 6).map((l) => {
+          const meta = statusToActivity[l.status] || { type: 'compliance_check', label: 'compliant' };
+          return {
+            id: l.id,
+            type: meta.type,
+            status: meta.label,
+            client: l.client_name || 'Client',
+            amount: formatFCFA(l.amount),
+            property: l.reference || l.type || 'Dossier crédit',
+            time: timeAgo(l.created_at),
+            agent: l.status
+          };
+        })
+      );
+
+      // --- Clients prioritaires (top total_credits) ---
+      const topClients = [...clients]
+        .sort((a, b) => (Number(b.total_credits) || 0) - (Number(a.total_credits) || 0))
+        .slice(0, 3);
+      setPriorityClients(
+        topClients.map((c) => ({
+          id: c.id,
+          name: c.name || 'Client',
+          type: c.client_type || 'Client',
+          portfolio: formatFCFA(c.total_credits),
+          status: c.status || 'active',
+          lastActivity: timeAgo(c.updated_at || c.created_at),
+          riskScore: c.credit_score != null ? c.credit_score : '—'
+        }))
+      );
+    } catch (error) {
+      console.error('Erreur chargement aperçu banque:', error);
+    } finally {
+      setLoading(false);
     }
-  ];
+  };
 
-  // Métriques secondaires
-  const secondaryMetrics = [
-    { title: 'Taux d\'approbation', value: '82.1%', change: '+3.2%', icon: CheckCircle },
-    { title: 'Délai moyen', value: '4.2j', change: '-15%', icon: Clock },
-    { title: 'Satisfaction client', value: '4.7/5', change: '+0.3', icon: Star },
-    { title: 'KYC automatisé', value: '94.5%', change: '+8.1%', icon: Shield },
-    { title: 'API Uptime', value: '99.8%', change: '0%', icon: Server },
-    { title: 'Blockchain sync', value: '100%', change: '0%', icon: Database }
-  ];
-
-  // Données graphiques
-  const creditEvolution = [
-    { month: 'Jan', approved: 45, pending: 12, rejected: 8 },
-    { month: 'Fév', approved: 52, pending: 15, rejected: 6 },
-    { month: 'Mar', approved: 48, pending: 18, rejected: 7 },
-    { month: 'Avr', approved: 61, pending: 14, rejected: 9 },
-    { month: 'Mai', approved: 55, pending: 16, rejected: 5 },
-    { month: 'Jun', approved: 67, pending: 11, rejected: 8 },
-    { month: 'Jul', approved: 73, pending: 13, rejected: 6 },
-    { month: 'Aoû', approved: 68, pending: 17, rejected: 7 },
-    { month: 'Sep', approved: 82, pending: 19, rejected: 4 }
-  ];
-
-  const riskDistribution = [
-    { name: 'Faible risque', value: 65, color: '#22c55e' },
-    { name: 'Risque modéré', value: 28, color: '#f59e0b' },
-    { name: 'Risque élevé', value: 7, color: '#ef4444' }
-  ];
-
-  // Dernières activités
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'credit_approved',
-      client: 'Amadou Diallo',
-      amount: '85M FCFA',
-      property: 'Terrain Almadies',
-      time: '5 min',
-      status: 'approved',
-      agent: 'Me Fatou Ndiaye'
-    },
-    {
-      id: 2,
-      type: 'kyc_completed',
-      client: 'Aïcha Sow',
-      amount: '120M FCFA',
-      property: 'Villa Mermoz',
-      time: '12 min',
-      status: 'processing',
-      agent: 'IA KYC System'
-    },
-    {
-      id: 3,
-      type: 'credit_pending',
-      client: 'Moussa Thiam',
-      amount: '65M FCFA',
-      property: 'Terrain Rufisque',
-      time: '25 min',
-      status: 'pending',
-      agent: 'Équipe crédit'
-    },
-    {
-      id: 4,
-      type: 'blockchain_verified',
-      client: 'Fatou Diop',
-      amount: '95M FCFA',
-      property: 'Appartement Plateau',
-      time: '1h',
-      status: 'verified',
-      agent: 'TerangaChain'
-    },
-    {
-      id: 5,
-      type: 'compliance_check',
-      client: 'Ibrahima Fall',
-      amount: '110M FCFA',
-      property: 'Terrain Liberté 6',
-      time: '2h',
-      status: 'compliant',
-      agent: 'Système conformité'
-    }
-  ];
-
-  // Clients prioritaires
-  const priorityClients = [
-    {
-      id: 1,
-      name: 'Amadou Diallo',
-      type: 'Premium',
-      portfolio: '450M FCFA',
-      properties: 5,
-      lastActivity: '2h',
-      status: 'active',
-      riskScore: 92
-    },
-    {
-      id: 2,
-      name: 'Aïcha Sow',
-      type: 'Diaspora VIP',
-      portfolio: '320M FCFA',
-      properties: 3,
-      lastActivity: '5h',
-      status: 'active',
-      riskScore: 88
-    },
-    {
-      id: 3,
-      name: 'Moussa Thiam',
-      type: 'Corporate', 
-      portfolio: '1.2B FCFA',
-      properties: 12,
-      lastActivity: '1j',
-      status: 'active',
-      riskScore: 95
-    }
-  ];
+  useEffect(() => {
+    fetchOverview();
+  }, [bankId]);
 
   const handleRefresh = () => {
     setRefreshing(true);
-    setTimeout(() => {
+    fetchOverview().finally(() => {
       setRefreshing(false);
-      window.safeGlobalToast({
+      window.safeGlobalToast?.({
         title: "Données actualisées",
         description: "Dashboard mis à jour avec les dernières données",
         variant: "success"
       });
-    }, 2000);
+    });
   };
 
   const handleExport = () => {
@@ -376,14 +467,16 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
                   <div className={`p-2 rounded-lg ${kpi.color} text-white`}>
                     <kpi.icon className="h-5 w-5" />
                   </div>
-                  <Badge variant={kpi.changeType === 'positive' ? 'default' : 'destructive'}>
-                    {kpi.changeType === 'positive' ? (
-                      <ArrowUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <ArrowDown className="h-3 w-3 mr-1" />
-                    )}
-                    {kpi.change}
-                  </Badge>
+                  {kpi.change && (
+                    <Badge variant={kpi.changeType === 'positive' ? 'default' : 'destructive'}>
+                      {kpi.changeType === 'positive' ? (
+                        <ArrowUp className="h-3 w-3 mr-1" />
+                      ) : (
+                        <ArrowDown className="h-3 w-3 mr-1" />
+                      )}
+                      {kpi.change}
+                    </Badge>
+                  )}
                 </div>
               </CardHeader>
               <CardContent>
@@ -393,24 +486,26 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
                     <p className="text-sm text-gray-600">{kpi.subtitle}</p>
                   </div>
                   
-                  {/* Mini graphique */}
-                  <div className="h-12">
-                    <ResponsiveContainer width="100%" height="100%">
-                      <LineChart data={kpi.trend.map((value, i) => ({ value, index: i }))}>
-                        <Line 
-                          type="monotone" 
-                          dataKey="value" 
-                          stroke={kpi.color.replace('bg-', '#').replace('-500', '')} 
-                          strokeWidth={2}
-                          dot={false}
-                        />
-                      </LineChart>
-                    </ResponsiveContainer>
-                  </div>
-                  
+                  {/* Mini graphique (série mensuelle réelle) */}
+                  {kpi.trend?.length ? (
+                    <div className="h-12">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={kpi.trend.map((value, i) => ({ value, index: i }))}>
+                          <Line
+                            type="monotone"
+                            dataKey="value"
+                            stroke="#3b82f6"
+                            strokeWidth={2}
+                            dot={false}
+                          />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  ) : null}
+
                   {/* Détails */}
                   <div className="space-y-1 text-xs text-gray-500">
-                    {Object.entries(kpi.details).map(([key, value]) => (
+                    {Object.entries(kpi.details || {}).map(([key, value]) => (
                       <div key={key} className="flex justify-between">
                         <span className="capitalize">{key}:</span>
                         <span className="font-medium">{value}</span>
@@ -435,9 +530,11 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
               <div>
                 <p className="text-lg font-semibold text-gray-900">{metric.value}</p>
                 <p className="text-xs text-gray-500">{metric.title}</p>
-                <p className={`text-xs ${metric.change.startsWith('+') ? 'text-green-600' : metric.change.startsWith('-') ? 'text-red-600' : 'text-gray-600'}`}>
-                  {metric.change}
-                </p>
+                {metric.change && (
+                  <p className={`text-xs ${metric.change.startsWith('+') ? 'text-green-600' : metric.change.startsWith('-') ? 'text-red-600' : 'text-gray-600'}`}>
+                    {metric.change}
+                  </p>
+                )}
               </div>
             </div>
           </Card>
@@ -486,6 +583,11 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {riskDistribution.length === 0 ? (
+              <div className="h-64 flex items-center justify-center text-sm text-gray-500">
+                Aucune évaluation de risque disponible
+              </div>
+            ) : (
             <div className="h-64">
               <ResponsiveContainer width="100%" height="100%">
                 <RechartsPieChart>
@@ -505,6 +607,7 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
                 </RechartsPieChart>
               </ResponsiveContainer>
             </div>
+            )}
             <div className="space-y-2 mt-4">
               {riskDistribution.map((item, index) => (
                 <div key={index} className="flex items-center justify-between">
@@ -537,6 +640,11 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
           </CardHeader>
           <CardContent>
             <ScrollArea className="h-80">
+              {recentActivities.length === 0 && (
+                <div className="h-72 flex items-center justify-center text-sm text-gray-500">
+                  Aucune activité récente
+                </div>
+              )}
               <div className="space-y-4">
                 {recentActivities.map((activity) => {
                   const Icon = getActivityIcon(activity.type);
@@ -578,6 +686,11 @@ const BanqueOverview = ({ dashboardStats = {} }) => {
           </CardHeader>
           <CardContent>
             <div className="space-y-4">
+              {priorityClients.length === 0 && (
+                <div className="py-10 text-center text-sm text-gray-500">
+                  Aucun client enregistré
+                </div>
+              )}
               {priorityClients.map((client) => (
                 <div key={client.id} className="flex items-center justify-between p-4 rounded-lg border">
                   <div className="flex items-center space-x-3">

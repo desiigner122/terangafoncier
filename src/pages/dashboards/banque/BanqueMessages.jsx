@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  MessageSquare, 
-  Send, 
-  Search, 
-  Filter, 
-  User, 
-  Clock, 
-  CheckCircle, 
+import {
+  MessageSquare,
+  Send,
+  Search,
+  Filter,
+  User,
+  Clock,
+  CheckCircle,
   AlertTriangle,
   Paperclip,
   MoreHorizontal,
@@ -31,7 +31,6 @@ import {
   Mail,
   Smartphone,
   Globe,
-  HeadphonesIcon,
   Mic,
   MicOff,
   Camera,
@@ -58,8 +57,7 @@ import {
   Bookmark,
   Flag,
   Hash,
-  AtSign,
-  Headphones
+  AtSign
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,253 +68,359 @@ import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+// Templates de messages bancaires : contenu éditorial statique et réutilisable
+// (aucune donnée chiffrée fabriquée ici), affiché tel quel et inséré dans la saisie.
+const messageTemplates = [
+  {
+    id: 'welcome',
+    name: 'Bienvenue client',
+    category: 'Onboarding',
+    content: 'Bienvenue ! Votre conseiller dédié vous accompagnera dans tous vos projets immobiliers.'
+  },
+  {
+    id: 'credit_approved',
+    name: 'Crédit approuvé',
+    category: 'Crédit',
+    content: 'Excellente nouvelle ! Votre demande de crédit immobilier a été approuvée. Nous vous contactons pour finaliser les modalités.'
+  },
+  {
+    id: 'documents_needed',
+    name: 'Documents requis',
+    category: 'Documentation',
+    content: 'Pour finaliser votre dossier, nous avons besoin des documents suivants : - Bulletin de salaire (3 derniers) - Relevé de compte (6 mois) - Justificatif de domicile'
+  },
+  {
+    id: 'meeting_reminder',
+    name: 'Rappel RDV',
+    category: 'Rendez-vous',
+    content: 'Rappel : Votre rendez-vous avec votre conseiller est prévu prochainement. Merci d\'apporter les documents demandés.'
+  }
+];
+
+// Calcule le temps de réponse moyen RÉEL de la banque : délai entre le dernier
+// message reçu d'un interlocuteur et la réponse suivante envoyée par la banque,
+// à partir des messages effectivement chargés. Retourne '—' si aucune paire
+// question/réponse n'existe (aucune métrique inventée).
+const computeAverageResponseTime = (messagesByConversation, bankId) => {
+  const deltas = [];
+  messagesByConversation.forEach(convMessages => {
+    const sorted = [...convMessages].sort(
+      (a, b) => new Date(a.created_at) - new Date(b.created_at)
+    );
+    for (let i = 1; i < sorted.length; i++) {
+      const prev = sorted[i - 1];
+      const curr = sorted[i];
+      if (prev.sender_id !== bankId && curr.sender_id === bankId) {
+        deltas.push(new Date(curr.created_at) - new Date(prev.created_at));
+      }
+    }
+  });
+  if (deltas.length === 0) return '—';
+  const avgMs = deltas.reduce((sum, d) => sum + d, 0) / deltas.length;
+  const avgHours = avgMs / 3600000;
+  if (avgHours < 1) return `${Math.round(avgMs / 60000)}min`;
+  if (avgHours < 24) return `${avgHours.toFixed(1)}h`;
+  return `${Math.round(avgHours / 24)}j`;
+};
 
 const BanqueMessages = () => {
-  const [selectedConversation, setSelectedConversation] = useState('conv-1');
+  const { user } = useAuth();
+  const messagesEndRef = useRef(null);
+
+  const [loading, setLoading] = useState(true);
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [messageText, setMessageText] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
-  const [activeTab, setActiveTab] = useState('conversations');
   const [filterStatus, setFilterStatus] = useState('all');
   const [showClientDetails, setShowClientDetails] = useState(false);
   const [isRecording, setIsRecording] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState('');
+  const [sending, setSending] = useState(false);
 
-  // Statistiques de communication
+  // Activités réelles (crédits) de l'interlocuteur sélectionné, tirées de 'loans'.
+  const [clientActivities, setClientActivities] = useState([]);
+
+  // Statistiques de communication calculées à partir des VRAIES données chargées.
   const [commStats, setCommStats] = useState({
-    totalConversations: 47,
-    activeClients: 32,
-    pendingResponses: 8,
-    averageResponseTime: '2.4h',
-    satisfactionScore: 4.7,
-    resolvedToday: 12
+    totalConversations: 0,
+    activeClients: 0,
+    unreadCount: 0,
+    averageResponseTime: '—',
+    messagesSent: 0,
+    responseRate: null
   });
 
-  // Templates de messages bancaires
-  const messageTemplates = [
-    {
-      id: 'welcome',
-      name: 'Bienvenue client',
-      category: 'Onboarding',
-      content: 'Bienvenue chez Banque Atlantique ! Votre conseiller dédié vous accompagnera dans tous vos projets immobiliers.'
-    },
-    {
-      id: 'credit_approved',
-      name: 'Crédit approuvé',
-      category: 'Crédit',
-      content: 'Excellente nouvelle ! Votre demande de crédit immobilier a été approuvée. Montant accordé : {amount}. Nous vous contactons pour finaliser les modalités.'
-    },
-    {
-      id: 'documents_needed',
-      name: 'Documents requis',
-      category: 'Documentation',
-      content: 'Pour finaliser votre dossier, nous avons besoin des documents suivants : - Bulletin de salaire (3 derniers) - Relevé de compte (6 mois) - Justificatif de domicile'
-    },
-    {
-      id: 'meeting_reminder',
-      name: 'Rappel RDV',
-      category: 'Rendez-vous',
-      content: 'Rappel : Votre rendez-vous avec votre conseiller est prévu le {date} à {time}. Merci d\'apporter les documents demandés.'
+  useEffect(() => {
+    if (user?.id) {
+      loadConversations();
     }
-  ];
+  }, [user?.id]);
 
-  // Conversations avancées avec CRM
-  const conversations = [
-    {
-      id: 'conv-1',
-      contact: 'Amadou Diallo',
-      type: 'Client Premium',
-      lastMessage: 'Ma demande de crédit terrain a-t-elle été approuvée ?',
-      timestamp: '10:30',
-      unread: 2,
-      priority: 'high',
-      status: 'En attente',
-      amount: '85M FCFA',
-      property: 'Terrain Almadies',
-      phone: '+221 77 123 45 67',
-      email: 'amadou.diallo@email.com',
-      clientSince: '2019',
-      portfolioValue: '340M FCFA',
-      riskLevel: 'Faible',
-      lastInteraction: '2024-01-28',
-      satisfactionScore: 4.8,
-      preferredChannel: 'WhatsApp',
-      nextAppointment: '2024-02-05 14:00',
-      advisorNotes: 'Client fidèle, investisseur immobilier actif'
-    },
-    {
-      id: 'conv-2', 
-      contact: 'Me Fatou Ndiaye',
-      type: 'Partenaire Notaire',
-      lastMessage: 'Les documents pour le crédit Sarr sont prêts',
-      timestamp: '09:45',
-      unread: 0,
-      priority: 'normal',
-      status: 'Documenté',
-      amount: '120M FCFA',
-      property: 'Villa Mermoz',
-      phone: '+221 33 456 78 90',
-      email: 'fatou.ndiaye@notaire.sn',
-      partnerSince: '2018',
-      collaborations: 156,
-      averageProcessingTime: '3.2 jours',
-      reliability: 'Excellent',
-      lastCollaboration: '2024-01-26'
-    },
-    {
-      id: 'conv-3',
-      contact: 'Teranga Foncier',
-      type: 'Plateforme Partenaire',
-      lastMessage: 'Nouvelle demande de financement reçue - TER-2024-015',
-      timestamp: '08:20',
-      unread: 1,
-      priority: 'normal',
-      status: 'Nouveau',
-      amount: '65M FCFA',
-      property: 'Terrain Rufisque',
-      referenceId: 'TER-2024-015',
-      platformCommission: '2.5%',
-      totalReferrals: 89,
-      approvalRate: '87%',
-      averageAmount: '45M FCFA'
-    },
-    {
-      id: 'conv-4',
-      contact: 'Moussa Thiam',
-      type: 'Client',
-      lastMessage: 'Merci pour l\'approbation rapide ! Quand peut-on signer ?',
-      timestamp: 'Hier',
-      unread: 0,
-      priority: 'low',
-      status: 'Approuvé',
-      amount: '95M FCFA',
-      property: 'Appartement Plateau',
-      phone: '+221 76 987 65 43',
-      email: 'moussa.thiam@entreprise.sn',
-      clientSince: '2023',
-      portfolioValue: '95M FCFA',
-      riskLevel: 'Très Faible',
-      satisfactionScore: 5.0,
-      advisorNotes: 'Premier achat immobilier, très satisfait du service'
-    },
-    {
-      id: 'conv-5',
-      contact: 'Khady Ba',
-      type: 'Prospect',
-      lastMessage: 'Je souhaite des informations sur vos crédits immobiliers',
-      timestamp: '14:20',
-      unread: 3,
-      priority: 'high',
-      status: 'Prospect',
-      estimatedAmount: '75M FCFA',
-      source: 'Site Web',
-      leadScore: 85,
-      conversionProbability: '78%',
-      followUpDate: '2024-02-02'
+  useEffect(() => {
+    if (selectedConversation?.id) {
+      loadMessages(selectedConversation.id);
+      loadClientActivities(selectedConversation.participantId);
+    } else {
+      setMessages([]);
+      setClientActivities([]);
     }
-  ];
+  }, [selectedConversation?.id]);
 
-  // Messages enrichis avec métadonnées
-  const messages = {
-    'conv-1': [
-      {
-        id: 1,
-        sender: 'Amadou Diallo',
-        text: 'Bonjour, j\'ai soumis ma demande de crédit terrain il y a une semaine via la plateforme Teranga Foncier.',
-        timestamp: '10:25',
-        isClient: true,
-        type: 'text',
-        status: 'read'
-      },
-      {
-        id: 2,
-        sender: 'Conseiller Bancaire',
-        text: 'Bonjour M. Diallo. Votre dossier est en cours d\'analyse par notre équipe crédit. Référence : CRED-2024-015',
-        timestamp: '10:27',
-        isClient: false,
-        type: 'text',
-        status: 'delivered'
-      },
-      {
-        id: 3,
-        sender: 'Amadou Diallo',
-        text: 'Ma demande de crédit terrain a-t-elle été approuvée ?',
-        timestamp: '10:30',
-        isClient: true,
-        type: 'text',
-        status: 'read'
-      },
-      {
-        id: 4,
-        sender: 'Conseiller Bancaire',
-        text: 'Je vérifie immédiatement l\'état de votre dossier avec l\'équipe crédit.',
-        timestamp: '10:32',
-        isClient: false,
-        type: 'text',
-        status: 'sending'
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+
+      // 1) Conversations réelles auxquelles la banque participe
+      const { data: participations, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+      if (partError) throw partError;
+
+      const conversationIds = [...new Set((participations || []).map(p => p.conversation_id))];
+      if (conversationIds.length === 0) {
+        setConversations([]);
+        setCommStats({ totalConversations: 0, activeClients: 0, unreadCount: 0, averageResponseTime: '—', messagesSent: 0, responseRate: null });
+        setLoading(false);
+        return;
       }
-    ]
-  };
 
-  // Activités récentes client
-  const clientActivities = [
-    {
-      id: 1,
-      type: 'credit_application',
-      description: 'Demande de crédit soumise',
-      amount: '85M FCFA',
-      date: '2024-01-20',
-      status: 'En cours'
-    },
-    {
-      id: 2,
-      type: 'document_upload',
-      description: 'Documents justificatifs envoyés',
-      date: '2024-01-22',
-      status: 'Validé'
-    },
-    {
-      id: 3,
-      type: 'call',
-      description: 'Appel téléphonique - Suivi dossier',
-      duration: '12 min',
-      date: '2024-01-25',
-      status: 'Terminé'
+      const { data: conversationsData, error: convError } = await supabase
+        .from('conversations')
+        .select('*, participants:conversation_participants(user_id)')
+        .in('id', conversationIds)
+        .order('updated_at', { ascending: false });
+      if (convError) throw convError;
+
+      // 2) Interlocuteurs (autres participants) + propriétés liées + messages
+      const otherParticipantIds = [...new Set(
+        (conversationsData || []).flatMap(c =>
+          (c.participants || []).map(p => p.user_id).filter(id => id && id !== user.id)
+        )
+      )];
+      const propertyIds = [...new Set((conversationsData || []).map(c => c.property_id).filter(Boolean))];
+
+      const [profilesRes, propertiesRes, clientsRes, messagesRes] = await Promise.all([
+        otherParticipantIds.length > 0
+          ? supabase.from('profiles').select('id, first_name, last_name, full_name, email, phone, avatar_url, role').in('id', otherParticipantIds)
+          : Promise.resolve({ data: [] }),
+        propertyIds.length > 0
+          ? supabase.from('properties').select('id, title, location').in('id', propertyIds)
+          : Promise.resolve({ data: [] }),
+        // Enrichissement CRM réel via bank_clients (crédit, statut, type) filtré par bank_id
+        otherParticipantIds.length > 0
+          ? supabase.from('bank_clients').select('client_id, client_type, status, credit_score, total_credits, created_at').eq('bank_id', user.id).in('client_id', otherParticipantIds)
+          : Promise.resolve({ data: [] }),
+        supabase
+          .from('messages')
+          .select('id, conversation_id, sender_id, content, read, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: true })
+      ]);
+
+      const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
+      const propertiesById = new Map((propertiesRes.data || []).map(p => [p.id, p]));
+      const clientsById = new Map((clientsRes.data || []).map(c => [c.client_id, c]));
+      const allMessages = messagesRes.data || [];
+
+      const messagesByConversation = new Map();
+      allMessages.forEach(msg => {
+        if (!messagesByConversation.has(msg.conversation_id)) {
+          messagesByConversation.set(msg.conversation_id, []);
+        }
+        messagesByConversation.get(msg.conversation_id).push(msg);
+      });
+
+      const nameFromProfile = (p) => {
+        if (!p) return 'Interlocuteur';
+        return (p.full_name || `${p.first_name || ''} ${p.last_name || ''}`.trim()) || p.email || 'Interlocuteur';
+      };
+
+      const formatted = (conversationsData || []).map(conv => {
+        const otherId = (conv.participants || []).map(p => p.user_id).find(id => id && id !== user.id);
+        const profile = otherId ? profilesById.get(otherId) : null;
+        const property = conv.property_id ? propertiesById.get(conv.property_id) : null;
+        const client = otherId ? clientsById.get(otherId) : null;
+        const convMessages = messagesByConversation.get(conv.id) || [];
+        const lastMessage = convMessages[convMessages.length - 1];
+        const unread = convMessages.filter(m => !m.read && m.sender_id !== user.id).length;
+
+        return {
+          id: conv.id,
+          participantId: otherId || null,
+          contact: nameFromProfile(profile),
+          type: client?.client_type || (profile?.role ? profile.role : 'Contact'),
+          email: profile?.email || '',
+          phone: profile?.phone || '',
+          avatar: profile?.avatar_url || null,
+          property: property?.title || conv.subject || '',
+          propertyLocation: property?.location || '',
+          lastMessage: lastMessage?.content || 'Aucun message',
+          lastMessageTime: lastMessage?.created_at || conv.updated_at,
+          unread,
+          priority: unread > 0 ? 'high' : 'normal',
+          // Champs CRM RÉELS issus de bank_clients (null si non client de la banque)
+          status: client?.status || null,
+          creditScore: client?.credit_score ?? null,
+          totalCredits: client?.total_credits ?? null,
+          clientSince: client?.created_at ? new Date(client.created_at).getFullYear() : null
+        };
+      });
+
+      setConversations(formatted);
+
+      // Sélection par défaut : première conversation
+      if (formatted.length > 0) {
+        setSelectedConversation(prev => prev || formatted[0]);
+      }
+
+      // Stats réelles
+      const unreadCount = formatted.reduce((s, c) => s + c.unread, 0);
+      const activeClients = otherParticipantIds.length;
+      const messagesSent = allMessages.filter(m => m.sender_id === user.id).length;
+      const respondedConvs = conversationIds.filter(cid =>
+        (messagesByConversation.get(cid) || []).some(m => m.sender_id === user.id)
+      ).length;
+      const responseRate = conversationIds.length > 0
+        ? Math.round((respondedConvs / conversationIds.length) * 100)
+        : null;
+      const averageResponseTime = computeAverageResponseTime(messagesByConversation, user.id);
+
+      setCommStats({
+        totalConversations: formatted.length,
+        activeClients,
+        unreadCount,
+        averageResponseTime,
+        messagesSent,
+        responseRate
+      });
+
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur chargement conversations:', error);
+      window.safeGlobalToast?.({
+        title: 'Erreur',
+        description: 'Impossible de charger les conversations',
+        variant: 'destructive'
+      });
+      setLoading(false);
     }
-  ];
-
-  const handleSendMessage = () => {
-    if (!messageText.trim()) return;
-    
-    window.safeGlobalToast({
-      title: "Message envoyé",
-      description: "Votre message a été envoyé avec succès",
-      variant: "success"
-    });
-    setMessageText('');
   };
 
-  const handleCallClient = (contact) => {
-    window.safeGlobalToast({
-      title: "Appel en cours",
-      description: `Appel vers ${contact}...`,
-      variant: "success"
-    });
+  const loadMessages = async (conversationId) => {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id, conversation_id, sender_id, content, read, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+
+      const formatted = (data || []).map(msg => ({
+        id: msg.id,
+        sender: msg.sender_id === user.id ? 'Banque' : (selectedConversation?.contact || 'Interlocuteur'),
+        text: msg.content,
+        timestamp: msg.created_at,
+        isClient: msg.sender_id !== user.id,
+        status: msg.read ? 'read' : 'delivered'
+      }));
+      setMessages(formatted);
+
+      // Marquer comme lus les messages reçus
+      await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('conversation_id', conversationId)
+        .eq('read', false)
+        .neq('sender_id', user.id);
+
+      setConversations(prev => prev.map(c => c.id === conversationId ? { ...c, unread: 0 } : c));
+    } catch (error) {
+      console.error('Erreur chargement messages:', error);
+    }
   };
 
-  const handleVideoCall = (contact) => {
-    window.safeGlobalToast({
-      title: "Visioconférence",
-      description: `Démarrage de la visio avec ${contact}`,
-      variant: "success"  
-    });
+  // Activités récentes RÉELLES de l'interlocuteur : ses dossiers de crédit (loans)
+  // gérés par cette banque. Pas de source => liste vide (état honnête).
+  const loadClientActivities = async (participantId) => {
+    if (!participantId) {
+      setClientActivities([]);
+      return;
+    }
+    try {
+      const { data, error } = await supabase
+        .from('loans')
+        .select('id, reference, type, amount, status, created_at')
+        .eq('bank_id', user.id)
+        .eq('client_id', participantId)
+        .order('created_at', { ascending: false })
+        .limit(10);
+      if (error) throw error;
+      setClientActivities(data || []);
+    } catch (error) {
+      console.error('Erreur chargement activités:', error);
+      setClientActivities([]);
+    }
   };
 
-  const handleScheduleMeeting = () => {
-    window.safeGlobalToast({
-      title: "Rendez-vous programmé",
-      description: "Le rendez-vous a été ajouté au calendrier",
-      variant: "success"  
-    });
+  const handleSendMessage = async () => {
+    if (!messageText.trim() || !selectedConversation || sending) return;
+    try {
+      setSending(true);
+      const content = messageText.trim();
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({ conversation_id: selectedConversation.id, sender_id: user.id, content, read: false })
+        .select()
+        .single();
+      if (error) throw error;
+
+      setMessages(prev => [...prev, {
+        id: data.id,
+        sender: 'Banque',
+        text: content,
+        timestamp: data.created_at,
+        isClient: false,
+        status: 'delivered'
+      }]);
+      setMessageText('');
+
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', selectedConversation.id);
+
+      setConversations(prev => prev.map(c =>
+        c.id === selectedConversation.id
+          ? { ...c, lastMessage: content, lastMessageTime: data.created_at }
+          : c
+      ));
+      setCommStats(prev => ({ ...prev, messagesSent: prev.messagesSent + 1 }));
+
+      window.safeGlobalToast?.({
+        title: 'Message envoyé',
+        description: 'Votre message a été envoyé avec succès',
+        variant: 'success'
+      });
+    } catch (error) {
+      console.error('Erreur envoi message:', error);
+      window.safeGlobalToast?.({
+        title: 'Erreur',
+        description: "Impossible d'envoyer le message",
+        variant: 'destructive'
+      });
+    } finally {
+      setSending(false);
+    }
   };
 
   const handleUseTemplate = (template) => {
@@ -326,11 +430,6 @@ const BanqueMessages = () => {
 
   const handleStartRecording = () => {
     setIsRecording(!isRecording);
-    window.safeGlobalToast({
-      title: isRecording ? "Enregistrement arrêté" : "Enregistrement démarré",
-      description: isRecording ? "Message vocal sauvegardé" : "Enregistrement du message vocal...",
-      variant: "success"  
-    });
   };
 
   const getPriorityColor = (priority) => {
@@ -344,30 +443,75 @@ const BanqueMessages = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Approuvé': return 'bg-green-100 text-green-800';
+      case 'active':
+      case 'Approuvé':
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'pending':
       case 'En attente': return 'bg-yellow-100 text-yellow-800';
+      case 'rejected':
       case 'Rejeté': return 'bg-red-100 text-red-800';
+      case 'evaluating':
       case 'Documenté': return 'bg-blue-100 text-blue-800';
-      case 'Nouveau': return 'bg-purple-100 text-purple-800';
-      case 'Prospect': return 'bg-orange-100 text-orange-800';
+      case 'disbursed': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'Très Faible': return 'text-green-700';
-      case 'Faible': return 'text-green-600';
-      case 'Moyen': return 'text-yellow-600';
-      case 'Élevé': return 'text-red-600';
-      default: return 'text-gray-600';
-    }
+  const formatAmount = (value) => {
+    if (value === null || value === undefined) return '—';
+    const n = Number(value);
+    if (Number.isNaN(n)) return '—';
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(n % 1_000_000 === 0 ? 0 : 1)}M FCFA`;
+    return `${n.toLocaleString('fr-FR')} FCFA`;
   };
 
-  const filteredConversations = conversations.filter(conv =>
-    conv.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.type.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const formatTime = (date) => {
+    if (!date) return '';
+    const now = new Date();
+    const d = new Date(date);
+    const diffMs = now - d;
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMs / 3600000);
+    const diffDays = Math.floor(diffMs / 86400000);
+    if (diffMins < 1) return "À l'instant";
+    if (diffMins < 60) return `${diffMins}min`;
+    if (diffHours < 24) return `${diffHours}h`;
+    if (diffDays < 7) return `${diffDays}j`;
+    return d.toLocaleDateString('fr-FR');
+  };
+
+  const getInitials = (name) => (name || '?')
+    .split(' ')
+    .map(n => n[0])
+    .join('')
+    .toUpperCase()
+    .slice(0, 2);
+
+  const filteredConversations = conversations
+    .filter(conv => {
+      if (filterStatus === 'unread') return conv.unread > 0;
+      if (filterStatus === 'priority') return conv.priority === 'high';
+      return true;
+    })
+    .filter(conv =>
+      conv.contact.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      (conv.type || '').toLowerCase().includes(searchTerm.toLowerCase())
+    );
+
+  const selected = selectedConversation
+    ? conversations.find(c => c.id === selectedConversation.id) || selectedConversation
+    : null;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center h-96">
+        <div className="text-center">
+          <RefreshCw className="h-8 w-8 animate-spin mx-auto mb-4 text-blue-600" />
+          <p className="text-gray-600">Chargement des conversations...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -382,7 +526,7 @@ const BanqueMessages = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">Conversations Actives</p>
+                  <p className="text-blue-600 text-sm font-medium">Conversations</p>
                   <p className="text-2xl font-bold text-blue-900">{commStats.totalConversations}</p>
                 </div>
                 <MessageSquare className="h-8 w-8 text-blue-600" />
@@ -400,7 +544,7 @@ const BanqueMessages = () => {
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium">Clients Actifs</p>
+                  <p className="text-green-600 text-sm font-medium">Interlocuteurs</p>
                   <p className="text-2xl font-bold text-green-900">{commStats.activeClients}</p>
                 </div>
                 <Users className="h-8 w-8 text-green-600" />
@@ -432,14 +576,14 @@ const BanqueMessages = () => {
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.4 }}
         >
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100 border-purple-200">
+          <Card className="bg-gradient-to-br from-red-50 to-red-100 border-red-200">
             <CardContent className="p-4">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-purple-600 text-sm font-medium">Satisfaction</p>
-                  <p className="text-2xl font-bold text-purple-900">{commStats.satisfactionScore}/5</p>
+                  <p className="text-red-600 text-sm font-medium">Messages non lus</p>
+                  <p className="text-2xl font-bold text-red-900">{commStats.unreadCount}</p>
                 </div>
-                <Star className="h-8 w-8 text-purple-600" />
+                <Bell className="h-8 w-8 text-red-600" />
               </div>
             </CardContent>
           </Card>
@@ -451,18 +595,14 @@ const BanqueMessages = () => {
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Communication CRM Bancaire</h2>
           <p className="text-gray-600 mt-1">
-            Gestion avancée des communications clients, partenaires et prospects
+            Gestion des communications clients, partenaires et prospects
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-          <Button variant="outline">
-            <Calendar className="h-4 w-4 mr-2" />
-            Programmer RDV
-          </Button>
-          <Button>
-            <Plus className="h-4 w-4 mr-2" />
-            Nouveau contact
+          <Button variant="outline" onClick={loadConversations}>
+            <RefreshCw className="h-4 w-4 mr-2" />
+            Actualiser
           </Button>
         </div>
       </div>
@@ -497,7 +637,7 @@ const BanqueMessages = () => {
                       <CardTitle className="text-lg">Conversations</CardTitle>
                       <Badge variant="secondary">{conversations.length}</Badge>
                     </div>
-                    
+
                     {/* Recherche et filtres */}
                     <div className="space-y-3">
                       <div className="relative">
@@ -509,24 +649,24 @@ const BanqueMessages = () => {
                           onChange={(e) => setSearchTerm(e.target.value)}
                         />
                       </div>
-                      
+
                       <div className="flex space-x-2">
-                        <Button 
-                          variant={filterStatus === 'all' ? 'default' : 'outline'} 
+                        <Button
+                          variant={filterStatus === 'all' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setFilterStatus('all')}
                         >
                           Tous
                         </Button>
-                        <Button 
-                          variant={filterStatus === 'unread' ? 'default' : 'outline'} 
+                        <Button
+                          variant={filterStatus === 'unread' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setFilterStatus('unread')}
                         >
                           Non lus
                         </Button>
-                        <Button 
-                          variant={filterStatus === 'priority' ? 'default' : 'outline'} 
+                        <Button
+                          variant={filterStatus === 'priority' ? 'default' : 'outline'}
                           size="sm"
                           onClick={() => setFilterStatus('priority')}
                         >
@@ -537,30 +677,38 @@ const BanqueMessages = () => {
                   </CardHeader>
                   <CardContent className="p-0">
                     <div className="space-y-1 max-h-[500px] overflow-y-auto">
-                      {filteredConversations.map((conv) => (
+                      {filteredConversations.length === 0 ? (
+                        <div className="text-center text-gray-500 py-12 px-4">
+                          <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                          <p className="text-sm">Aucune conversation</p>
+                        </div>
+                      ) : filteredConversations.map((conv) => (
                         <motion.div
                           key={conv.id}
                           whileHover={{ scale: 1.01 }}
-                          onClick={() => setSelectedConversation(conv.id)}
+                          onClick={() => setSelectedConversation(conv)}
                           className={`p-4 cursor-pointer transition-all duration-200 border-l-4 ${
-                            selectedConversation === conv.id 
-                              ? 'bg-blue-50 border-l-blue-600 shadow-sm' 
+                            selected?.id === conv.id
+                              ? 'bg-blue-50 border-l-blue-600 shadow-sm'
                               : 'border-l-transparent hover:bg-gray-50'
                           }`}
                         >
                           <div className="flex items-start justify-between mb-2">
                             <div className="flex items-center space-x-3">
                               <Avatar className="w-10 h-10">
+                                <AvatarImage src={conv.avatar} />
                                 <AvatarFallback className="text-sm font-semibold">
-                                  {conv.contact.split(' ').map(n => n[0]).join('')}
+                                  {getInitials(conv.contact)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <p className="font-semibold text-sm text-gray-900">{conv.contact}</p>
                                 <div className="flex items-center space-x-2">
-                                  <Badge variant="outline" className="text-xs">
-                                    {conv.type}
-                                  </Badge>
+                                  {conv.type && (
+                                    <Badge variant="outline" className="text-xs">
+                                      {conv.type}
+                                    </Badge>
+                                  )}
                                   {conv.priority === 'high' && (
                                     <Flag className="h-3 w-3 text-red-500" />
                                   )}
@@ -568,7 +716,7 @@ const BanqueMessages = () => {
                               </div>
                             </div>
                             <div className="text-right">
-                              <p className="text-xs text-gray-500">{conv.timestamp}</p>
+                              <p className="text-xs text-gray-500">{formatTime(conv.lastMessageTime)}</p>
                               {conv.unread > 0 && (
                                 <Badge className="bg-red-500 text-white text-xs mt-1">
                                   {conv.unread}
@@ -576,35 +724,24 @@ const BanqueMessages = () => {
                               )}
                             </div>
                           </div>
-                          
+
                           <p className="text-sm text-gray-600 mb-3 line-clamp-2">
                             {conv.lastMessage}
                           </p>
-                          
+
                           <div className="flex items-center justify-between text-xs">
-                            <Badge className={getStatusColor(conv.status)}>
-                              {conv.status}
-                            </Badge>
-                            <div className="text-gray-500 text-right">
-                              <div>{conv.amount || conv.estimatedAmount}</div>
-                              <div>{conv.property}</div>
-                            </div>
-                          </div>
-                          
-                          {/* Informations additionnelles */}
-                          {conv.satisfactionScore && (
-                            <div className="flex items-center justify-between mt-2 pt-2 border-t border-gray-100">
-                              <div className="flex items-center space-x-1">
-                                <Star className="h-3 w-3 text-yellow-500" />
-                                <span className="text-xs text-gray-600">{conv.satisfactionScore}</span>
+                            {conv.status ? (
+                              <Badge className={getStatusColor(conv.status)}>
+                                {conv.status}
+                              </Badge>
+                            ) : <span />}
+                            {conv.property && (
+                              <div className="text-gray-500 text-right">
+                                <div>{conv.property}</div>
+                                {conv.propertyLocation && <div>{conv.propertyLocation}</div>}
                               </div>
-                              {conv.preferredChannel && (
-                                <Badge variant="outline" className="text-xs">
-                                  {conv.preferredChannel}
-                                </Badge>
-                              )}
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </motion.div>
                       ))}
                     </div>
@@ -613,7 +750,7 @@ const BanqueMessages = () => {
 
                 {/* Zone de conversation avancée */}
                 <div className="lg:col-span-2 space-y-4">
-                  {selectedConversation ? (
+                  {selected ? (
                     <>
                       {/* Header conversation avec détails client */}
                       <Card>
@@ -621,56 +758,34 @@ const BanqueMessages = () => {
                           <div className="flex items-center justify-between">
                             <div className="flex items-center space-x-4">
                               <Avatar className="w-12 h-12">
+                                <AvatarImage src={selected.avatar} />
                                 <AvatarFallback className="font-semibold">
-                                  {conversations.find(c => c.id === selectedConversation)?.contact.split(' ').map(n => n[0]).join('')}
+                                  {getInitials(selected.contact)}
                                 </AvatarFallback>
                               </Avatar>
                               <div>
                                 <h3 className="font-semibold text-lg">
-                                  {conversations.find(c => c.id === selectedConversation)?.contact}
+                                  {selected.contact}
                                 </h3>
                                 <div className="flex items-center space-x-2 mb-1">
-                                  <Badge variant="outline">
-                                    {conversations.find(c => c.id === selectedConversation)?.type}
-                                  </Badge>
-                                  <Badge className={getStatusColor(conversations.find(c => c.id === selectedConversation)?.status)}>
-                                    {conversations.find(c => c.id === selectedConversation)?.status}
-                                  </Badge>
+                                  {selected.type && (
+                                    <Badge variant="outline">{selected.type}</Badge>
+                                  )}
+                                  {selected.status && (
+                                    <Badge className={getStatusColor(selected.status)}>
+                                      {selected.status}
+                                    </Badge>
+                                  )}
                                 </div>
                                 <div className="text-sm text-gray-600">
-                                  {conversations.find(c => c.id === selectedConversation)?.phone} • 
-                                  {conversations.find(c => c.id === selectedConversation)?.email}
+                                  {[selected.phone, selected.email].filter(Boolean).join(' • ') || '—'}
                                 </div>
                               </div>
                             </div>
-                            
+
                             <div className="flex items-center space-x-2">
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleCallClient(conversations.find(c => c.id === selectedConversation)?.contact)}
-                              >
-                                <Phone className="h-4 w-4 mr-1" />
-                                Appeler
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => handleVideoCall(conversations.find(c => c.id === selectedConversation)?.contact)}
-                              >
-                                <Video className="h-4 w-4 mr-1" />
-                                Visio
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={handleScheduleMeeting}
-                              >
-                                <Calendar className="h-4 w-4 mr-1" />
-                                RDV
-                              </Button>
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => setShowClientDetails(!showClientDetails)}
                               >
@@ -679,7 +794,7 @@ const BanqueMessages = () => {
                             </div>
                           </div>
 
-                          {/* Détails client étendus */}
+                          {/* Détails client étendus (données réelles bank_clients) */}
                           {showClientDetails && (
                             <motion.div
                               initial={{ opacity: 0, height: 0 }}
@@ -689,26 +804,23 @@ const BanqueMessages = () => {
                               <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                                 <div>
                                   <span className="text-gray-600">Client depuis:</span>
-                                  <div className="font-semibold">{conversations.find(c => c.id === selectedConversation)?.clientSince}</div>
+                                  <div className="font-semibold">{selected.clientSince || '—'}</div>
                                 </div>
                                 <div>
-                                  <span className="text-gray-600">Portfolio:</span>
+                                  <span className="text-gray-600">Total crédits:</span>
                                   <div className="font-semibold text-green-600">
-                                    {conversations.find(c => c.id === selectedConversation)?.portfolioValue}
+                                    {formatAmount(selected.totalCredits)}
                                   </div>
                                 </div>
                                 <div>
-                                  <span className="text-gray-600">Risque:</span>
-                                  <div className={`font-semibold ${getRiskColor(conversations.find(c => c.id === selectedConversation)?.riskLevel)}`}>
-                                    {conversations.find(c => c.id === selectedConversation)?.riskLevel}
+                                  <span className="text-gray-600">Score crédit:</span>
+                                  <div className="font-semibold">
+                                    {selected.creditScore ?? '—'}
                                   </div>
                                 </div>
                                 <div>
-                                  <span className="text-gray-600">Satisfaction:</span>
-                                  <div className="font-semibold flex items-center">
-                                    <Star className="h-3 w-3 text-yellow-500 mr-1" />
-                                    {conversations.find(c => c.id === selectedConversation)?.satisfactionScore}
-                                  </div>
+                                  <span className="text-gray-600">Statut:</span>
+                                  <div className="font-semibold">{selected.status || '—'}</div>
                                 </div>
                               </div>
                             </motion.div>
@@ -720,7 +832,12 @@ const BanqueMessages = () => {
                       <Card className="flex-1">
                         <CardContent className="p-4">
                           <div className="space-y-4 max-h-[400px] overflow-y-auto">
-                            {(messages[selectedConversation] || []).map((message) => (
+                            {messages.length === 0 ? (
+                              <div className="text-center text-gray-500 py-12">
+                                <MessageSquare className="h-12 w-12 mx-auto mb-3 text-gray-300" />
+                                <p className="text-sm">Aucun message dans cette conversation</p>
+                              </div>
+                            ) : messages.map((message) => (
                               <motion.div
                                 key={message.id}
                                 initial={{ opacity: 0, y: 10 }}
@@ -728,18 +845,17 @@ const BanqueMessages = () => {
                                 className={`flex ${message.isClient ? 'justify-start' : 'justify-end'}`}
                               >
                                 <div className={`max-w-[70%] p-3 rounded-lg shadow-sm ${
-                                  message.isClient 
-                                    ? 'bg-gray-100 text-gray-900' 
+                                  message.isClient
+                                    ? 'bg-gray-100 text-gray-900'
                                     : 'bg-blue-600 text-white'
                                 }`}>
                                   <p className="text-sm">{message.text}</p>
                                   <div className={`text-xs mt-2 flex items-center justify-between ${
                                     message.isClient ? 'text-gray-500' : 'text-blue-100'
                                   }`}>
-                                    <span>{message.timestamp}</span>
+                                    <span>{formatTime(message.timestamp)}</span>
                                     {!message.isClient && (
                                       <div className="flex items-center space-x-1">
-                                        {message.status === 'sending' && <Clock className="h-3 w-3" />}
                                         {message.status === 'delivered' && <CheckCircle className="h-3 w-3" />}
                                         {message.status === 'read' && <CheckCircle className="h-3 w-3 text-blue-300" />}
                                       </div>
@@ -748,36 +864,20 @@ const BanqueMessages = () => {
                                 </div>
                               </motion.div>
                             ))}
+                            <div ref={messagesEndRef} />
                           </div>
 
                           {/* Zone de saisie avancée */}
                           <div className="border-t pt-4 mt-4 space-y-3">
                             {/* Barre d'outils */}
                             <div className="flex items-center space-x-2 text-sm">
-                              <Button 
-                                variant="outline" 
+                              <Button
+                                variant="outline"
                                 size="sm"
                                 onClick={() => setSelectedTemplate(selectedTemplate ? '' : 'show')}
                               >
                                 <FileText className="h-3 w-3 mr-1" />
                                 Templates
-                              </Button>
-                              <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={handleStartRecording}
-                                className={isRecording ? 'bg-red-100 text-red-700' : ''}
-                              >
-                                {isRecording ? <MicOff className="h-3 w-3 mr-1" /> : <Mic className="h-3 w-3 mr-1" />}
-                                {isRecording ? 'Arrêter' : 'Vocal'}
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <Camera className="h-3 w-3 mr-1" />
-                                Photo
-                              </Button>
-                              <Button variant="outline" size="sm">
-                                <Paperclip className="h-3 w-3 mr-1" />
-                                Fichier
                               </Button>
                             </div>
 
@@ -818,7 +918,7 @@ const BanqueMessages = () => {
                                 }}
                                 className="flex-1 min-h-[80px] resize-none"
                               />
-                              <Button onClick={handleSendMessage} className="self-end">
+                              <Button onClick={handleSendMessage} disabled={sending || !messageText.trim()} className="self-end">
                                 <Send className="h-4 w-4" />
                               </Button>
                             </div>
@@ -852,49 +952,45 @@ const BanqueMessages = () => {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    {selectedConversation ? (
+                    {selected ? (
                       <div className="space-y-4">
                         <div className="text-center pb-4 border-b">
                           <Avatar className="w-20 h-20 mx-auto mb-3">
+                            <AvatarImage src={selected.avatar} />
                             <AvatarFallback className="text-lg">
-                              {conversations.find(c => c.id === selectedConversation)?.contact.split(' ').map(n => n[0]).join('')}
+                              {getInitials(selected.contact)}
                             </AvatarFallback>
                           </Avatar>
-                          <h3 className="font-semibold text-lg">
-                            {conversations.find(c => c.id === selectedConversation)?.contact}
-                          </h3>
-                          <Badge className={getStatusColor(conversations.find(c => c.id === selectedConversation)?.status)}>
-                            {conversations.find(c => c.id === selectedConversation)?.status}
-                          </Badge>
+                          <h3 className="font-semibold text-lg">{selected.contact}</h3>
+                          {selected.status && (
+                            <Badge className={getStatusColor(selected.status)}>
+                              {selected.status}
+                            </Badge>
+                          )}
                         </div>
 
                         <div className="space-y-3">
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Portfolio total:</span>
+                            <span className="text-gray-600">Total crédits:</span>
                             <span className="font-semibold text-green-600">
-                              {conversations.find(c => c.id === selectedConversation)?.portfolioValue}
+                              {formatAmount(selected.totalCredits)}
                             </span>
                           </div>
                           <div className="flex justify-between">
                             <span className="text-gray-600">Client depuis:</span>
-                            <span className="font-semibold">
-                              {conversations.find(c => c.id === selectedConversation)?.clientSince}
-                            </span>
+                            <span className="font-semibold">{selected.clientSince || '—'}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Niveau de risque:</span>
-                            <span className={`font-semibold ${getRiskColor(conversations.find(c => c.id === selectedConversation)?.riskLevel)}`}>
-                              {conversations.find(c => c.id === selectedConversation)?.riskLevel}
-                            </span>
+                            <span className="text-gray-600">Score crédit:</span>
+                            <span className="font-semibold">{selected.creditScore ?? '—'}</span>
                           </div>
                           <div className="flex justify-between">
-                            <span className="text-gray-600">Satisfaction:</span>
-                            <div className="flex items-center space-x-1">
-                              <Star className="h-4 w-4 text-yellow-500" />
-                              <span className="font-semibold">
-                                {conversations.find(c => c.id === selectedConversation)?.satisfactionScore}/5
-                              </span>
-                            </div>
+                            <span className="text-gray-600">Email:</span>
+                            <span className="font-semibold">{selected.email || '—'}</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-gray-600">Téléphone:</span>
+                            <span className="font-semibold">{selected.phone || '—'}</span>
                           </div>
                         </div>
                       </div>
@@ -911,33 +1007,49 @@ const BanqueMessages = () => {
                   <CardHeader>
                     <CardTitle className="flex items-center space-x-2">
                       <Activity className="h-5 w-5 text-green-600" />
-                      <span>Activités Récentes</span>
+                      <span>Dossiers de crédit</span>
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-3">
-                      {clientActivities.map((activity) => (
-                        <div key={activity.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                          <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
-                          <div className="flex-1">
-                            <p className="text-sm font-medium">{activity.description}</p>
-                            <div className="flex items-center space-x-2 text-xs text-gray-600">
-                              <Calendar className="h-3 w-3" />
-                              <span>{activity.date}</span>
-                              {activity.amount && (
-                                <>
-                                  <DollarSign className="h-3 w-3" />
-                                  <span>{activity.amount}</span>
-                                </>
+                    {!selected ? (
+                      <div className="text-center text-gray-500 py-8">
+                        <Activity className="h-12 w-12 mx-auto mb-4" />
+                        <p>Sélectionnez un client</p>
+                      </div>
+                    ) : clientActivities.length === 0 ? (
+                      <div className="text-center text-gray-500 py-8">
+                        <FileText className="h-12 w-12 mx-auto mb-4" />
+                        <p>Aucun dossier de crédit pour ce client</p>
+                      </div>
+                    ) : (
+                      <div className="space-y-3">
+                        {clientActivities.map((loan) => (
+                          <div key={loan.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                            <div className="w-2 h-2 bg-blue-600 rounded-full mt-2"></div>
+                            <div className="flex-1">
+                              <p className="text-sm font-medium">
+                                {loan.reference || 'Dossier'} {loan.type ? `— ${loan.type}` : ''}
+                              </p>
+                              <div className="flex items-center space-x-2 text-xs text-gray-600">
+                                <Calendar className="h-3 w-3" />
+                                <span>{loan.created_at ? new Date(loan.created_at).toLocaleDateString('fr-FR') : '—'}</span>
+                                {loan.amount != null && (
+                                  <>
+                                    <DollarSign className="h-3 w-3" />
+                                    <span>{formatAmount(loan.amount)}</span>
+                                  </>
+                                )}
+                              </div>
+                              {loan.status && (
+                                <Badge className={getStatusColor(loan.status)}>
+                                  {loan.status}
+                                </Badge>
                               )}
                             </div>
-                            <Badge size="sm" className={getStatusColor(activity.status)}>
-                              {activity.status}
-                            </Badge>
                           </div>
-                        </div>
-                      ))}
-                    </div>
+                        ))}
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>
@@ -961,16 +1073,13 @@ const BanqueMessages = () => {
                         {template.content}
                       </p>
                       <div className="flex space-x-2">
-                        <Button 
-                          size="sm" 
+                        <Button
+                          size="sm"
                           variant="outline"
                           onClick={() => handleUseTemplate(template)}
                         >
                           <Zap className="h-3 w-3 mr-1" />
                           Utiliser
-                        </Button>
-                        <Button size="sm" variant="outline">
-                          <Edit3 className="h-3 w-3" />
                         </Button>
                       </div>
                     </CardContent>
@@ -987,13 +1096,12 @@ const BanqueMessages = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600">Messages envoyés</p>
-                        <p className="text-2xl font-bold text-blue-600">247</p>
+                        <p className="text-2xl font-bold text-blue-600">{commStats.messagesSent}</p>
                       </div>
                       <Send className="h-8 w-8 text-blue-600" />
                     </div>
                     <div className="mt-2">
-                      <Progress value={75} className="h-2" />
-                      <p className="text-xs text-gray-500 mt-1">+15% ce mois</p>
+                      <p className="text-xs text-gray-500 mt-1">Total sur vos conversations</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -1003,13 +1111,17 @@ const BanqueMessages = () => {
                     <div className="flex items-center justify-between">
                       <div>
                         <p className="text-sm text-gray-600">Taux de réponse</p>
-                        <p className="text-2xl font-bold text-green-600">89%</p>
+                        <p className="text-2xl font-bold text-green-600">
+                          {commStats.responseRate != null ? `${commStats.responseRate}%` : '—'}
+                        </p>
                       </div>
                       <TrendingUp className="h-8 w-8 text-green-600" />
                     </div>
                     <div className="mt-2">
-                      <Progress value={89} className="h-2" />
-                      <p className="text-xs text-gray-500 mt-1">Excellent</p>
+                      {commStats.responseRate != null && (
+                        <Progress value={commStats.responseRate} className="h-2" />
+                      )}
+                      <p className="text-xs text-gray-500 mt-1">Conversations avec réponse</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -1024,8 +1136,7 @@ const BanqueMessages = () => {
                       <Clock className="h-8 w-8 text-yellow-600" />
                     </div>
                     <div className="mt-2">
-                      <Progress value={65} className="h-2" />
-                      <p className="text-xs text-gray-500 mt-1">Objectif: 2h</p>
+                      <p className="text-xs text-gray-500 mt-1">Délai de réponse observé</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -1034,14 +1145,13 @@ const BanqueMessages = () => {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div>
-                        <p className="text-sm text-gray-600">Satisfaction</p>
-                        <p className="text-2xl font-bold text-purple-600">{commStats.satisfactionScore}/5</p>
+                        <p className="text-sm text-gray-600">Non lus</p>
+                        <p className="text-2xl font-bold text-red-600">{commStats.unreadCount}</p>
                       </div>
-                      <Star className="h-8 w-8 text-purple-600" />
+                      <Bell className="h-8 w-8 text-red-600" />
                     </div>
                     <div className="mt-2">
-                      <Progress value={commStats.satisfactionScore * 20} className="h-2" />
-                      <p className="text-xs text-gray-500 mt-1">Très satisfaisant</p>
+                      <p className="text-xs text-gray-500 mt-1">Messages en attente</p>
                     </div>
                   </CardContent>
                 </Card>
@@ -1051,8 +1161,15 @@ const BanqueMessages = () => {
                 <TrendingUp className="h-4 w-4" />
                 <AlertTitle>Performance Communication</AlertTitle>
                 <AlertDescription>
-                  Excellente performance ce mois avec {commStats.resolvedToday} dossiers résolus aujourd'hui 
-                  et un taux de satisfaction de {commStats.satisfactionScore}/5.
+                  {commStats.totalConversations > 0 ? (
+                    <>
+                      {commStats.totalConversations} conversation{commStats.totalConversations > 1 ? 's' : ''} en cours,
+                      {' '}{commStats.messagesSent} message{commStats.messagesSent > 1 ? 's' : ''} envoyé{commStats.messagesSent > 1 ? 's' : ''}
+                      {commStats.averageResponseTime !== '—' ? `, temps de réponse moyen ${commStats.averageResponseTime}.` : '.'}
+                    </>
+                  ) : (
+                    'Aucune conversation pour le moment.'
+                  )}
                 </AlertDescription>
               </Alert>
             </TabsContent>

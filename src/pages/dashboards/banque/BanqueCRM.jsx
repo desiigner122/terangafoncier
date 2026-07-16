@@ -41,125 +41,96 @@ import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const BanqueCRM = ({ dashboardStats }) => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [selectedClient, setSelectedClient] = useState(null);
 
-  // Données CRM simulées pour la banque
-  const [clients, setClients] = useState([
-    {
-      id: 1,
-      name: 'M. Amadou Diallo',
-      type: 'particulier',
-      email: 'amadou.diallo@email.com',
-      phone: '+221 77 123 45 67',
-      score: 92,
-      status: 'active',
-      lastContact: '2024-01-15',
-      projects: ['Crédit Immobilier Villa', 'Assurance Habitation'],
-      creditAmount: 25000000, // CFA
-      priority: 'high',
-      avatar: null,
-      address: 'Quartier Almadies, Dakar',
-      notes: 'Client premium avec historique exemplaire',
-      creditStatus: 'approved',
-      monthlyIncome: 850000,
-      guarantees: ['Titre Foncier TF-2024-001', 'Salaire domicilié']
-    },
-    {
-      id: 2,
-      name: 'Société Immobilière Sénégal',
-      type: 'entreprise',
-      email: 'contact@immobilier-senegal.com',
-      phone: '+221 33 987 65 43',
-      score: 88,
-      status: 'active',
-      lastContact: '2024-01-20',
-      projects: ['Crédit Promoteur Immobilier', 'Ligne de Crédit Construction'],
-      creditAmount: 150000000, // CFA
-      priority: 'high',
-      avatar: null,
-      address: 'Zone d\'Activités Économiques, Diamniadio',
-      notes: 'Promoteur immobilier reconnu, 15 ans d\'expérience',
-      creditStatus: 'in_progress',
-      monthlyIncome: 5200000,
-      guarantees: ['Hypothèque multiple', 'Caution société mère']
-    },
-    {
-      id: 3,
-      name: 'Mme Fatou Mbaye',
-      type: 'particulier',
-      email: 'fatou.mbaye@gmail.com',
-      phone: '+221 76 654 32 10',
-      score: 75,
-      status: 'prospect',
-      lastContact: '2024-01-10',
-      projects: ['Crédit Habitat Social'],
-      creditAmount: 12000000, // CFA
-      priority: 'medium',
-      avatar: null,
-      address: 'Parcelles Assainies, Dakar',
-      notes: 'Première demande de crédit, profil intéressant',
-      creditStatus: 'pending',
-      monthlyIncome: 425000,
-      guarantees: ['Titre Foncier en cours', 'Épargne constituée']
-    },
-    {
-      id: 4,
-      name: 'Coopérative Habitat Solidaire',
-      type: 'cooperative',
-      email: 'info@habitat-solidaire.sn',
-      phone: '+221 77 456 78 90',
-      score: 82,
-      status: 'active',
-      lastContact: '2024-01-18',
-      projects: ['Crédit Logement Social Collectif'],
-      creditAmount: 75000000, // CFA
-      priority: 'high',
-      avatar: null,
-      address: 'Rufisque, Région de Dakar',
-      notes: 'Coopérative d\'habitat avec 200 membres',
-      creditStatus: 'approved',
-      monthlyIncome: 2800000,
-      guarantees: ['Caution mutuelle', 'Terrain collectif']
-    },
-    {
-      id: 5,
-      name: 'M. Ousmane Fall',
-      type: 'particulier',
-      email: 'ousmane.fall@outlook.com',
-      phone: '+221 78 123 45 67',
-      score: 68,
-      status: 'inactive',
-      lastContact: '2024-01-05',
-      projects: ['Crédit Acquisition Terrain'],
-      creditAmount: 8500000, // CFA
-      priority: 'low',
-      avatar: null,
-      address: 'Thiès, Région de Thiès',
-      notes: 'Dossier incomplet, relance nécessaire',
-      creditStatus: 'rejected',
-      monthlyIncome: 320000,
-      guarantees: ['Aucune garantie suffisante']
-    }
-  ]);
+  // Données CRM réelles (bank_clients filtré par bank_id)
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   const [crmStats, setCrmStats] = useState({
-    totalClients: clients.length,
-    activeCredits: 12,
-    monthlyVolume: 425000000, // CFA
-    conversionRate: 78,
-    portfolioPerformance: 94.2,
-    pendingApplications: 15
+    totalClients: 0,
+    activeCredits: 0,
+    monthlyVolume: 0, // CFA
+    conversionRate: null
   });
 
-  // Filtrage des clients
+  useEffect(() => {
+    if (!user?.id) return;
+    let cancelled = false;
+
+    const fetchData = async () => {
+      setLoading(true);
+      try {
+        // Clients réels de la banque
+        const { data: clientsData, error: clientsError } = await supabase
+          .from('bank_clients')
+          .select('*')
+          .eq('bank_id', user.id)
+          .order('created_at', { ascending: false });
+        if (clientsError) throw clientsError;
+
+        // Crédits réels pour dériver les statistiques
+        const { data: loansData, error: loansError } = await supabase
+          .from('loans')
+          .select('id, amount, status, created_at')
+          .eq('bank_id', user.id);
+        if (loansError) throw loansError;
+
+        if (cancelled) return;
+
+        const loans = loansData || [];
+        const activeStatuses = ['approved', 'disbursed'];
+        const activeCredits = loans.filter(l => activeStatuses.includes(l.status)).length;
+
+        // Volume du mois en cours (crédits créés ce mois-ci)
+        const now = new Date();
+        const monthlyVolume = loans
+          .filter(l => {
+            if (!l.created_at) return false;
+            const d = new Date(l.created_at);
+            return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+          })
+          .reduce((sum, l) => sum + (Number(l.amount) || 0), 0);
+
+        // Taux de conversion réel : crédits approuvés / total des demandes
+        const approved = loans.filter(l => activeStatuses.includes(l.status)).length;
+        const conversionRate = loans.length > 0 ? Math.round((approved / loans.length) * 100) : null;
+
+        setClients(clientsData || []);
+        setCrmStats({
+          totalClients: (clientsData || []).length,
+          activeCredits,
+          monthlyVolume,
+          conversionRate
+        });
+      } catch (err) {
+        console.error('Erreur chargement CRM banque:', err);
+        if (!cancelled) {
+          setClients([]);
+          setCrmStats({ totalClients: 0, activeCredits: 0, monthlyVolume: 0, conversionRate: null });
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+
+    fetchData();
+    return () => { cancelled = true; };
+  }, [user?.id]);
+
+  // Filtrage des clients (colonnes réelles : name, email, client_type)
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = filterType === 'all' || client.type === filterType;
+    const term = searchTerm.toLowerCase();
+    const matchesSearch = (client.name || '').toLowerCase().includes(term) ||
+                         (client.email || '').toLowerCase().includes(term);
+    const matchesFilter = filterType === 'all' || client.client_type === filterType;
     return matchesSearch && matchesFilter;
   });
 
@@ -181,28 +152,10 @@ const BanqueCRM = ({ dashboardStats }) => {
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-yellow-100 text-yellow-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getCreditStatusColor = (status) => {
-    switch (status) {
-      case 'approved': return 'bg-green-100 text-green-800';
-      case 'in_progress': return 'bg-blue-100 text-blue-800';
-      case 'pending': return 'bg-yellow-100 text-yellow-800';
-      case 'rejected': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const ClientCard = ({ client, onClick }) => {
-    const TypeIcon = getTypeIcon(client.type);
-    
+    const TypeIcon = getTypeIcon(client.client_type);
+    const lastContact = client.updated_at || client.created_at;
+
     return (
       <motion.div
         whileHover={{ scale: 1.02 }}
@@ -222,79 +175,69 @@ const BanqueCRM = ({ dashboardStats }) => {
                     {client.name}
                   </CardTitle>
                   <CardDescription className="flex items-center space-x-2 mt-1">
-                    <Badge className={`text-xs ${getTypeColor(client.type)}`}>
-                      {client.type}
-                    </Badge>
-                    <Badge className={`text-xs ${getPriorityColor(client.priority)}`}>
-                      {client.priority}
-                    </Badge>
+                    {client.client_type && (
+                      <Badge className={`text-xs ${getTypeColor(client.client_type)}`}>
+                        {client.client_type}
+                      </Badge>
+                    )}
                   </CardDescription>
                 </div>
               </div>
-              <div className="text-right">
-                <div className="text-sm font-semibold text-gray-900">
-                  Score: {client.score}%
+              {client.credit_score != null && (
+                <div className="text-right">
+                  <div className="text-sm font-semibold text-gray-900">
+                    Score: {client.credit_score}
+                  </div>
+                  <Progress value={client.credit_score} className="w-16 h-2 mt-1" />
                 </div>
-                <Progress value={client.score} className="w-16 h-2 mt-1" />
-              </div>
+              )}
             </div>
           </CardHeader>
 
           <CardContent className="pt-0">
             <div className="space-y-3">
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Mail className="h-4 w-4" />
-                <span className="truncate">{client.email}</span>
-              </div>
-              
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <Phone className="h-4 w-4" />
-                <span>{client.phone}</span>
-              </div>
+              {client.email && (
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Mail className="h-4 w-4" />
+                  <span className="truncate">{client.email}</span>
+                </div>
+              )}
 
-              <div className="flex items-center space-x-2 text-sm text-gray-600">
-                <MapPin className="h-4 w-4" />
-                <span className="truncate">{client.address}</span>
-              </div>
+              {client.phone && (
+                <div className="flex items-center space-x-2 text-sm text-gray-600">
+                  <Phone className="h-4 w-4" />
+                  <span>{client.phone}</span>
+                </div>
+              )}
 
               <div className="pt-2 border-t">
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-gray-600">Montant crédit:</span>
-                  <span className="font-semibold text-blue-600">
-                    {(client.creditAmount / 1000000).toFixed(1)}M CFA
-                  </span>
-                </div>
-                
-                <div className="flex items-center justify-between text-sm mb-2">
-                  <span className="text-gray-600">Revenus mensuels:</span>
-                  <span className="font-semibold text-green-600">
-                    {(client.monthlyIncome / 1000).toFixed(0)}K CFA
-                  </span>
-                </div>
-
                 <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Statut crédit:</span>
-                  <Badge className={`text-xs ${getCreditStatusColor(client.creditStatus)}`}>
-                    {client.creditStatus === 'approved' ? 'Approuvé' :
-                     client.creditStatus === 'in_progress' ? 'En cours' :
-                     client.creditStatus === 'pending' ? 'En attente' : 'Rejeté'}
-                  </Badge>
+                  <span className="text-gray-600">Total crédits:</span>
+                  <span className="font-semibold text-blue-600">
+                    {client.total_credits != null
+                      ? `${(Number(client.total_credits) / 1000000).toFixed(1)}M CFA`
+                      : '—'}
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center justify-between pt-2">
                 <span className="text-xs text-gray-500">
-                  Contact: {new Date(client.lastContact).toLocaleDateString('fr-FR')}
+                  {lastContact
+                    ? `Contact: ${new Date(lastContact).toLocaleDateString('fr-FR')}`
+                    : 'Contact: —'}
                 </span>
-                <Badge 
-                  className={`text-xs ${
-                    client.status === 'active' ? 'bg-green-100 text-green-800' : 
-                    client.status === 'prospect' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-gray-100 text-gray-800'
-                  }`}
-                >
-                  {client.status}
-                </Badge>
+                {client.status && (
+                  <Badge
+                    className={`text-xs ${
+                      client.status === 'active' ? 'bg-green-100 text-green-800' :
+                      client.status === 'prospect' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-gray-100 text-gray-800'
+                    }`}
+                  >
+                    {client.status}
+                  </Badge>
+                )}
               </div>
             </div>
           </CardContent>
@@ -371,7 +314,9 @@ const BanqueCRM = ({ dashboardStats }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-orange-600 text-sm font-medium">Taux Conversion</p>
-                  <p className="text-2xl font-bold text-orange-900">{crmStats.conversionRate}%</p>
+                  <p className="text-2xl font-bold text-orange-900">
+                    {crmStats.conversionRate != null ? `${crmStats.conversionRate}%` : '—'}
+                  </p>
                 </div>
                 <Target className="h-8 w-8 text-orange-600" />
               </div>
@@ -436,24 +381,33 @@ const BanqueCRM = ({ dashboardStats }) => {
           </div>
 
           {/* Liste des clients */}
-          <motion.div 
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            layout
-          >
-            {filteredClients.map((client) => (
-              <ClientCard
-                key={client.id}
-                client={client}
-                onClick={setSelectedClient}
-              />
-            ))}
-          </motion.div>
-
-          {filteredClients.length === 0 && (
+          {loading ? (
             <div className="text-center py-12">
-              <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500">Aucun client trouvé</p>
+              <Clock className="h-12 w-12 text-gray-300 mx-auto mb-4 animate-pulse" />
+              <p className="text-gray-500">Chargement des clients...</p>
             </div>
+          ) : (
+            <>
+              <motion.div
+                className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+                layout
+              >
+                {filteredClients.map((client) => (
+                  <ClientCard
+                    key={client.id}
+                    client={client}
+                    onClick={setSelectedClient}
+                  />
+                ))}
+              </motion.div>
+
+              {filteredClients.length === 0 && (
+                <div className="text-center py-12">
+                  <Users className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <p className="text-gray-500">Aucun client trouvé</p>
+                </div>
+              )}
+            </>
           )}
         </CardContent>
       </Card>

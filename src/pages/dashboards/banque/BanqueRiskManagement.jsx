@@ -1,44 +1,31 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Shield, 
-  AlertTriangle, 
-  CheckCircle, 
-  TrendingUp, 
-  TrendingDown,
+import {
+  Shield,
+  AlertTriangle,
+  CheckCircle,
+  TrendingUp,
   Target,
-  Eye,
-  Filter,
-  Download,
   RefreshCw,
-  Users,
   CreditCard,
-  DollarSign,
-  Building2,
-  Globe,
-  Clock,
-  Zap,
-  FileText,
-  Search,
   MoreHorizontal,
   Calculator,
-  BarChart3
+  BarChart3,
+  Loader2,
+  Inbox
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { 
-  BarChart, 
-  Bar, 
-  XAxis, 
-  YAxis, 
-  CartesianGrid, 
-  Tooltip, 
-  Legend, 
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
   ResponsiveContainer,
   LineChart,
   Line,
@@ -46,165 +33,66 @@ import {
   Cell,
   Pie
 } from 'recharts';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
-const BanqueRiskManagement = ({ dashboardStats = {} }) => {
-  const [riskData, setRiskData] = useState({});
-  const [searchTerm, setSearchTerm] = useState('');
-  const [riskFilter, setRiskFilter] = useState('all');
+// Interprétation retenue : risk_score (0-100) = score de solidité/qualité du dossier
+// (plus haut = meilleur / moins risqué). Le niveau de risque en est dérivé de façon cohérente.
+const scoreToLevel = (score) => {
+  if (score === null || score === undefined || Number.isNaN(Number(score))) return 'Inconnu';
+  const s = Number(score);
+  if (s >= 80) return 'Faible';
+  if (s >= 60) return 'Modéré';
+  if (s >= 40) return 'Élevé';
+  return 'Très Élevé';
+};
 
-  // Simulation des données de risque
+const BanqueRiskManagement = () => {
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [assessments, setAssessments] = useState([]);
+  const [loans, setLoans] = useState([]);
+
+  const fetchData = async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const [assessRes, loansRes] = await Promise.all([
+        supabase
+          .from('risk_assessments')
+          .select('*')
+          .eq('bank_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('loans')
+          .select('*')
+          .eq('bank_id', user.id)
+          .order('created_at', { ascending: false })
+      ]);
+
+      if (assessRes.error) throw assessRes.error;
+      if (loansRes.error) throw loansRes.error;
+
+      setAssessments(assessRes.data || []);
+      setLoans(loansRes.data || []);
+    } catch (err) {
+      console.error('Erreur chargement risques:', err);
+      setAssessments([]);
+      setLoans([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    const mockRiskData = {
-      globalRisk: {
-        level: 'Modéré',
-        score: 2.3,
-        trend: 'stable',
-        lastUpdate: new Date()
-      },
-      portfolioRisk: {
-        totalExposure: 1200000000,
-        riskWeightedAssets: 950000000,
-        capitalRatio: 12.8,
-        loanLossReserves: 24000000,
-        nplRatio: 2.1
-      },
-      creditCategories: [
-        {
-          category: 'Crédit Immobilier',
-          exposure: 450000000,
-          riskWeight: 50,
-          riskLevel: 'Faible',
-          score: 85,
-          nplRatio: 1.2,
-          growth: -2.1,
-          clients: 280
-        },
-        {
-          category: 'Crédit Commercial',
-          exposure: 320000000,
-          riskWeight: 100,
-          riskLevel: 'Modéré',
-          score: 72,
-          nplRatio: 2.8,
-          growth: 5.4,
-          clients: 95
-        },
-        {
-          category: 'Crédit Personnel',
-          exposure: 180000000,
-          riskWeight: 75,
-          riskLevel: 'Modéré',
-          score: 68,
-          nplRatio: 4.2,
-          growth: 8.7,
-          clients: 450
-        },
-        {
-          category: 'Découvert Autorisé',
-          exposure: 45000000,
-          riskWeight: 100,
-          riskLevel: 'Élevé',
-          score: 45,
-          nplRatio: 8.5,
-          growth: -1.2,
-          clients: 320
-        },
-        {
-          category: 'Crédit Auto',
-          exposure: 205000000,
-          riskWeight: 75,
-          riskLevel: 'Faible',
-          score: 78,
-          nplRatio: 1.8,
-          growth: 12.3,
-          clients: 190
-        }
-      ],
-      riskEvolution: [
-        { month: 'Jan', riskScore: 2.1, exposure: 1050000000, npl: 1.8 },
-        { month: 'Fév', riskScore: 2.2, exposure: 1080000000, npl: 1.9 },
-        { month: 'Mar', riskScore: 2.0, exposure: 1100000000, npl: 1.7 },
-        { month: 'Avr', riskScore: 2.3, exposure: 1140000000, npl: 2.1 },
-        { month: 'Mai', riskScore: 2.1, exposure: 1160000000, npl: 1.9 },
-        { month: 'Jun', riskScore: 2.4, exposure: 1180000000, npl: 2.2 },
-        { month: 'Jul', riskScore: 2.2, exposure: 1200000000, npl: 2.0 },
-        { month: 'Aoû', riskScore: 2.3, exposure: 1200000000, npl: 2.1 },
-        { month: 'Sep', riskScore: 2.3, exposure: 1200000000, npl: 2.1 }
-      ],
-      stressTests: [
-        {
-          scenario: 'Récession Économique',
-          impact: 'Élevé',
-          probabilité: 15,
-          perte: 180000000,
-          capitalImpact: -3.2,
-          status: 'Critique'
-        },
-        {
-          scenario: 'Hausse Taux d\'Intérêt',
-          impact: 'Modéré',
-          probabilité: 35,
-          perte: 95000000,
-          capitalImpact: -1.8,
-          status: 'Attention'
-        },
-        {
-          scenario: 'Crise Sectorielle',
-          impact: 'Modéré',
-          probabilité: 25,
-          perte: 125000000,
-          capitalImpact: -2.3,
-          status: 'Surveillé'
-        },
-        {
-          scenario: 'Défaillance Majeure',
-          impact: 'Très Élevé',
-          probabilité: 5,
-          perte: 320000000,
-          capitalImpact: -5.8,
-          status: 'Critique'
-        }
-      ],
-      alerts: [
-        {
-          id: 1,
-          type: 'limit_breach',
-          severity: 'high',
-          title: 'Dépassement limite secteur BTP',
-          description: 'L\'exposition au secteur BTP dépasse 15% du portefeuille',
-          timestamp: new Date(Date.now() - 2 * 60 * 60 * 1000),
-          action: 'Réduire exposition'
-        },
-        {
-          id: 2,
-          type: 'rating_downgrade',
-          severity: 'medium',
-          title: 'Dégradation notation client',
-          description: 'Industries Ba & Fils: AAA → AA-',
-          timestamp: new Date(Date.now() - 6 * 60 * 60 * 1000),
-          action: 'Réévaluer garanties'
-        },
-        {
-          id: 3,
-          type: 'market_risk',
-          severity: 'low',
-          title: 'Volatilité taux de change',
-          description: 'EUR/XOF: variation >2% sur 24h',
-          timestamp: new Date(Date.now() - 12 * 60 * 60 * 1000),
-          action: 'Surveiller positions'
-        }
-      ]
-    };
-    setRiskData(mockRiskData);
-  }, []);
+    fetchData();
+  }, [user?.id]);
 
   const formatCurrency = (value) => {
-    if (value >= 1000000000) {
-      return `${(value / 1000000000).toFixed(1)}Md XOF`;
-    } else if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M XOF`;
-    }
-    return `${value.toLocaleString()} XOF`;
+    const num = Number(value) || 0;
+    if (num >= 1000000000) return `${(num / 1000000000).toFixed(1)}Md XOF`;
+    if (num >= 1000000) return `${(num / 1000000).toFixed(1)}M XOF`;
+    return `${num.toLocaleString('fr-FR')} XOF`;
   };
 
   const getRiskLevelColor = (level) => {
@@ -212,12 +100,14 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
       'Faible': 'bg-green-100 text-green-800 border-green-200',
       'Modéré': 'bg-yellow-100 text-yellow-800 border-yellow-200',
       'Élevé': 'bg-red-100 text-red-800 border-red-200',
-      'Très Élevé': 'bg-purple-100 text-purple-800 border-purple-200'
+      'Très Élevé': 'bg-purple-100 text-purple-800 border-purple-200',
+      'Inconnu': 'bg-gray-100 text-gray-800 border-gray-200'
     };
-    return colors[level] || colors['Modéré'];
+    return colors[level] || colors['Inconnu'];
   };
 
   const getScoreColor = (score) => {
+    if (score === null || score === undefined) return 'text-gray-500';
     if (score >= 80) return 'text-green-600';
     if (score >= 60) return 'text-yellow-600';
     if (score >= 40) return 'text-orange-600';
@@ -233,7 +123,125 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
     return colors[severity] || colors.medium;
   };
 
-  const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6'];
+  const COLORS = ['#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#3B82F6'];
+
+  // Map loan_id -> loan (pour enrichir les évaluations avec référence / client / montant / type)
+  const loanMap = useMemo(() => {
+    const m = {};
+    loans.forEach((l) => { m[l.id] = l; });
+    return m;
+  }, [loans]);
+
+  // Score de risque global = moyenne des risk_score réels
+  const globalRisk = useMemo(() => {
+    const scored = assessments.filter((a) => a.risk_score !== null && a.risk_score !== undefined);
+    if (scored.length === 0) return { score: null, level: '—', count: 0 };
+    const avg = scored.reduce((sum, a) => sum + Number(a.risk_score), 0) / scored.length;
+    const rounded = Math.round(avg * 10) / 10;
+    return { score: rounded, level: scoreToLevel(rounded), count: scored.length };
+  }, [assessments]);
+
+  // Exposition totale = somme des montants de crédits (loans réels)
+  const totalExposure = useMemo(
+    () => loans.reduce((sum, l) => sum + (Number(l.amount) || 0), 0),
+    [loans]
+  );
+
+  // Nombre d'évaluations à risque élevé (score < 40)
+  const highRiskCount = useMemo(
+    () => assessments.filter((a) => a.risk_score !== null && Number(a.risk_score) < 40).length,
+    [assessments]
+  );
+
+  // Répartition par catégorie = regroupement des crédits par type,
+  // score moyen issu des risk_assessments rattachées (loan_id)
+  const creditCategories = useMemo(() => {
+    const groups = {};
+    loans.forEach((l) => {
+      const key = l.type || 'Non catégorisé';
+      if (!groups[key]) groups[key] = { exposure: 0, clients: new Set(), loanIds: [] };
+      groups[key].exposure += Number(l.amount) || 0;
+      if (l.client_id) groups[key].clients.add(l.client_id);
+      groups[key].loanIds.push(l.id);
+    });
+
+    return Object.entries(groups).map(([category, g]) => {
+      const catAssess = assessments.filter(
+        (a) => g.loanIds.includes(a.loan_id) && a.risk_score !== null && a.risk_score !== undefined
+      );
+      const score = catAssess.length
+        ? Math.round(catAssess.reduce((s, a) => s + Number(a.risk_score), 0) / catAssess.length)
+        : null;
+      return {
+        category,
+        exposure: g.exposure,
+        clients: g.clients.size,
+        evaluations: catAssess.length,
+        score,
+        riskLevel: score === null ? 'Inconnu' : scoreToLevel(score)
+      };
+    });
+  }, [loans, assessments]);
+
+  // Évolution mensuelle réelle : score moyen + nombre d'évaluations par mois (risk_assessments.created_at)
+  const riskEvolution = useMemo(() => {
+    const months = {};
+    assessments.forEach((a) => {
+      if (!a.created_at || a.risk_score === null || a.risk_score === undefined) return;
+      const d = new Date(a.created_at);
+      const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+      if (!months[key]) months[key] = { total: 0, count: 0, label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' }) };
+      months[key].total += Number(a.risk_score);
+      months[key].count += 1;
+    });
+    return Object.keys(months)
+      .sort()
+      .map((k) => ({
+        month: months[k].label,
+        riskScore: Math.round((months[k].total / months[k].count) * 10) / 10,
+        evaluations: months[k].count
+      }));
+  }, [assessments]);
+
+  // Alertes réelles = évaluations à risque (score < 60), enrichies via loans
+  const alerts = useMemo(() => {
+    return assessments
+      .filter((a) => a.risk_score !== null && Number(a.risk_score) < 60)
+      .slice(0, 20)
+      .map((a) => {
+        const loan = loanMap[a.loan_id] || {};
+        const score = Number(a.risk_score);
+        const severity = score < 40 ? 'high' : 'medium';
+        const clientName = loan.client_name || 'Client';
+        const ref = loan.reference ? ` (${loan.reference})` : '';
+        let factorText = '';
+        if (a.factors) {
+          try {
+            const f = typeof a.factors === 'string' ? JSON.parse(a.factors) : a.factors;
+            if (Array.isArray(f)) factorText = f.join(', ');
+            else if (f && typeof f === 'object') factorText = Object.values(f).filter((v) => typeof v === 'string').join(', ');
+          } catch { /* ignore */ }
+        }
+        return {
+          id: a.id,
+          severity,
+          title: `Dossier à surveiller — ${clientName}${ref}`,
+          description: factorText || `Score de risque ${score}/100 — niveau ${scoreToLevel(score)}`,
+          timestamp: a.created_at ? new Date(a.created_at) : null
+        };
+      });
+  }, [assessments, loanMap]);
+
+  const hasData = assessments.length > 0 || loans.length > 0;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="h-8 w-8 animate-spin text-purple-600" />
+        <span className="ml-3 text-gray-600">Chargement des données de risque...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -245,52 +253,44 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
             Gestion des Risques
           </h2>
           <p className="text-gray-600 mt-1">
-            Analyse et surveillance des risques de crédit et opérationnels
+            Analyse et surveillance des risques de crédit
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-          <Button variant="outline">
-            <Download className="h-4 w-4 mr-2" />
-            Rapport Risques
-          </Button>
-          <Button variant="outline">
+          <Button variant="outline" disabled title="Bientôt disponible">
             <Calculator className="h-4 w-4 mr-2" />
             Stress Test
           </Button>
-          <Button>
+          <Button onClick={fetchData}>
             <RefreshCw className="h-4 w-4 mr-2" />
             Actualiser
           </Button>
         </div>
       </div>
 
-      {/* Alertes de risque */}
-      {riskData.alerts && riskData.alerts.length > 0 && (
+      {/* Alertes de risque (réelles : évaluations à risque) */}
+      {alerts.length > 0 && (
         <Card className="border-orange-200 bg-orange-50">
           <CardHeader>
             <CardTitle className="flex items-center text-orange-800">
               <AlertTriangle className="h-5 w-5 mr-2" />
-              Alertes de Risque ({riskData.alerts.length})
+              Alertes de Risque ({alerts.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
-              {riskData.alerts.slice(0, 3).map((alert) => (
+              {alerts.slice(0, 3).map((alert) => (
                 <div key={alert.id} className="flex items-center justify-between p-3 bg-white rounded-lg border">
                   <div className="flex items-center space-x-3">
                     <Badge className={getSeverityColor(alert.severity)}>
-                      {alert.severity === 'high' ? 'Élevé' : 
-                       alert.severity === 'medium' ? 'Moyen' : 'Faible'}
+                      {alert.severity === 'high' ? 'Élevé' : 'Moyen'}
                     </Badge>
                     <div>
                       <h4 className="font-medium text-gray-900">{alert.title}</h4>
                       <p className="text-sm text-gray-600">{alert.description}</p>
                     </div>
                   </div>
-                  <Button variant="outline" size="sm">
-                    {alert.action}
-                  </Button>
                 </div>
               ))}
             </div>
@@ -298,20 +298,20 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
         </Card>
       )}
 
-      {/* Métriques principales */}
+      {/* Métriques principales (données réelles) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Score de Risque</p>
+                <p className="text-sm text-gray-600">Score de Risque Moyen</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {riskData.globalRisk?.score || 0}%
+                  {globalRisk.score === null ? '—' : `${globalRisk.score}/100`}
                 </p>
                 <div className="flex items-center mt-1">
                   <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
                   <span className="text-sm text-green-600 font-medium">
-                    {riskData.globalRisk?.level || 'Modéré'}
+                    {globalRisk.level}
                   </span>
                 </div>
               </div>
@@ -326,11 +326,13 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
               <div>
                 <p className="text-sm text-gray-600">Exposition Totale</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {formatCurrency(riskData.portfolioRisk?.totalExposure || 0)}
+                  {loans.length === 0 ? '—' : formatCurrency(totalExposure)}
                 </p>
                 <div className="flex items-center mt-1">
                   <TrendingUp className="h-4 w-4 text-blue-500 mr-1" />
-                  <span className="text-sm text-blue-600 font-medium">Contrôlée</span>
+                  <span className="text-sm text-blue-600 font-medium">
+                    {loans.length} crédit{loans.length > 1 ? 's' : ''}
+                  </span>
                 </div>
               </div>
               <Target className="h-8 w-8 text-blue-600" />
@@ -342,13 +344,13 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Ratio Capital</p>
+                <p className="text-sm text-gray-600">Dossiers Évalués</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {riskData.portfolioRisk?.capitalRatio || 0}%
+                  {globalRisk.count}
                 </p>
                 <div className="flex items-center mt-1">
-                  <CheckCircle className="h-4 w-4 text-green-500 mr-1" />
-                  <span className="text-sm text-green-600 font-medium">Conforme</span>
+                  <BarChart3 className="h-4 w-4 text-green-500 mr-1" />
+                  <span className="text-sm text-green-600 font-medium">Évaluations</span>
                 </div>
               </div>
               <BarChart3 className="h-8 w-8 text-green-600" />
@@ -360,13 +362,13 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">NPL Ratio</p>
+                <p className="text-sm text-gray-600">Risque Élevé</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {riskData.portfolioRisk?.nplRatio || 0}%
+                  {highRiskCount}
                 </p>
                 <div className="flex items-center mt-1">
                   <AlertTriangle className="h-4 w-4 text-yellow-500 mr-1" />
-                  <span className="text-sm text-yellow-600 font-medium">Acceptable</span>
+                  <span className="text-sm text-yellow-600 font-medium">Score &lt; 40</span>
                 </div>
               </div>
               <AlertTriangle className="h-8 w-8 text-yellow-600" />
@@ -375,7 +377,20 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
         </Card>
       </div>
 
+      {!hasData && (
+        <Card>
+          <CardContent className="py-16 text-center">
+            <Inbox className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold text-gray-900">Aucune donnée de risque</h3>
+            <p className="text-gray-600 mt-1">
+              Les évaluations de risque et crédits apparaîtront ici dès qu'ils seront enregistrés.
+            </p>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Onglets principaux */}
+      {hasData && (
       <Tabs defaultValue="portfolio" className="space-y-6">
         <TabsList className="grid w-full grid-cols-4">
           <TabsTrigger value="portfolio">Portefeuille</TabsTrigger>
@@ -385,22 +400,29 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
         </TabsList>
 
         <TabsContent value="portfolio" className="space-y-6">
+          {creditCategories.length === 0 ? (
+            <Card>
+              <CardContent className="py-12 text-center text-gray-600">
+                Aucun crédit à catégoriser pour le moment.
+              </CardContent>
+            </Card>
+          ) : (
+          <>
           {/* Répartition du risque par catégorie */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Répartition des Risques</CardTitle>
-                <CardDescription>Par catégorie de crédit</CardDescription>
+                <CardTitle>Répartition des Expositions</CardTitle>
+                <CardDescription>Par type de crédit</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
                   <RechartsPieChart>
                     <Pie
-                      data={riskData.creditCategories?.map(cat => ({
-                        name: cat.category.split(' ')[1],
-                        value: cat.exposure,
-                        risk: cat.riskLevel
-                      })) || []}
+                      data={creditCategories.map((cat) => ({
+                        name: cat.category,
+                        value: cat.exposure
+                      }))}
                       cx="50%"
                       cy="50%"
                       labelLine={false}
@@ -409,7 +431,7 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
                       fill="#8884d8"
                       dataKey="value"
                     >
-                      {(riskData.creditCategories || []).map((entry, index) => (
+                      {creditCategories.map((entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
                       ))}
                     </Pie>
@@ -422,14 +444,14 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
             <Card>
               <CardHeader>
                 <CardTitle>Distribution des Scores</CardTitle>
-                <CardDescription>Scores de risque par catégorie</CardDescription>
+                <CardDescription>Score de risque moyen par type</CardDescription>
               </CardHeader>
               <CardContent>
                 <ResponsiveContainer width="100%" height={300}>
-                  <BarChart data={riskData.creditCategories || []}>
+                  <BarChart data={creditCategories.filter((c) => c.score !== null)}>
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="category" angle={-45} textAnchor="end" height={80} />
-                    <YAxis />
+                    <YAxis domain={[0, 100]} />
                     <Tooltip />
                     <Bar dataKey="score" fill="#3B82F6" />
                   </BarChart>
@@ -441,12 +463,12 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
           {/* Détail par catégorie */}
           <Card>
             <CardHeader>
-              <CardTitle>Analyse Détaillée par Catégorie</CardTitle>
+              <CardTitle>Analyse Détaillée par Type</CardTitle>
               <CardDescription>Métriques de risque par type de crédit</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {(riskData.creditCategories || []).map((category, index) => (
+                {creditCategories.map((category, index) => (
                   <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -454,10 +476,10 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
                       </div>
                       <div>
                         <h4 className="font-semibold">{category.category}</h4>
-                        <p className="text-sm text-gray-600">{category.clients} clients</p>
+                        <p className="text-sm text-gray-600">{category.clients} client{category.clients > 1 ? 's' : ''}</p>
                       </div>
                     </div>
-                    
+
                     <div className="grid grid-cols-4 gap-4 text-sm">
                       <div className="text-center">
                         <p className="text-gray-600">Exposition</p>
@@ -466,12 +488,12 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
                       <div className="text-center">
                         <p className="text-gray-600">Score</p>
                         <p className={`font-semibold ${getScoreColor(category.score)}`}>
-                          {category.score}
+                          {category.score === null ? '—' : category.score}
                         </p>
                       </div>
                       <div className="text-center">
-                        <p className="text-gray-600">NPL</p>
-                        <p className="font-semibold">{category.nplRatio}%</p>
+                        <p className="text-gray-600">Évaluations</p>
+                        <p className="font-semibold">{category.evaluations}</p>
                       </div>
                       <div className="text-center">
                         <Badge className={getRiskLevelColor(category.riskLevel)}>
@@ -484,27 +506,35 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
               </div>
             </CardContent>
           </Card>
+          </>
+          )}
         </TabsContent>
 
         <TabsContent value="evolution" className="space-y-6">
           <Card>
             <CardHeader>
               <CardTitle>Évolution du Risque</CardTitle>
-              <CardDescription>Tendances mensuelles des indicateurs de risque</CardDescription>
+              <CardDescription>Score de risque moyen et volume d'évaluations par mois</CardDescription>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={400}>
-                <LineChart data={riskData.riskEvolution || []}>
-                  <CartesianGrid strokeDasharray="3 3" />
-                  <XAxis dataKey="month" />
-                  <YAxis yAxisId="left" />
-                  <YAxis yAxisId="right" orientation="right" />
-                  <Tooltip />
-                  <Legend />
-                  <Line yAxisId="left" type="monotone" dataKey="riskScore" stroke="#8B5CF6" strokeWidth={3} name="Score de Risque (%)" />
-                  <Line yAxisId="right" type="monotone" dataKey="npl" stroke="#EF4444" strokeWidth={2} name="NPL Ratio (%)" />
-                </LineChart>
-              </ResponsiveContainer>
+              {riskEvolution.length === 0 ? (
+                <div className="py-12 text-center text-gray-600">
+                  Pas encore assez d'historique d'évaluations pour tracer une tendance.
+                </div>
+              ) : (
+                <ResponsiveContainer width="100%" height={400}>
+                  <LineChart data={riskEvolution}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="month" />
+                    <YAxis yAxisId="left" domain={[0, 100]} />
+                    <YAxis yAxisId="right" orientation="right" allowDecimals={false} />
+                    <Tooltip />
+                    <Legend />
+                    <Line yAxisId="left" type="monotone" dataKey="riskScore" stroke="#8B5CF6" strokeWidth={3} name="Score de Risque Moyen" />
+                    <Line yAxisId="right" type="monotone" dataKey="evaluations" stroke="#3B82F6" strokeWidth={2} name="Nombre d'évaluations" />
+                  </LineChart>
+                </ResponsiveContainer>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -516,45 +546,13 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
               <CardDescription>Analyse d'impact des scénarios de stress</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {(riskData.stressTests || []).map((test, index) => (
-                  <div key={index} className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center space-x-4">
-                      <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                        test.status === 'Critique' ? 'bg-red-100' :
-                        test.status === 'Attention' ? 'bg-yellow-100' : 'bg-blue-100'
-                      }`}>
-                        <AlertTriangle className={`h-6 w-6 ${
-                          test.status === 'Critique' ? 'text-red-600' :
-                          test.status === 'Attention' ? 'text-yellow-600' : 'text-blue-600'
-                        }`} />
-                      </div>
-                      <div>
-                        <h4 className="font-semibold">{test.scenario}</h4>
-                        <p className="text-sm text-gray-600">Probabilité: {test.probabilité}%</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-3 gap-4 text-sm text-right">
-                      <div>
-                        <p className="text-gray-600">Perte Estimée</p>
-                        <p className="font-semibold text-red-600">{formatCurrency(test.perte)}</p>
-                      </div>
-                      <div>
-                        <p className="text-gray-600">Impact Capital</p>
-                        <p className="font-semibold">{test.capitalImpact}%</p>
-                      </div>
-                      <div>
-                        <Badge className={
-                          test.status === 'Critique' ? 'bg-red-100 text-red-800' :
-                          test.status === 'Attention' ? 'bg-yellow-100 text-yellow-800' : 'bg-blue-100 text-blue-800'
-                        }>
-                          {test.status}
-                        </Badge>
-                      </div>
-                    </div>
-                  </div>
-                ))}
+              <div className="py-16 text-center">
+                <Calculator className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900">Bientôt disponible</h3>
+                <p className="text-gray-600 mt-1">
+                  Le moteur de stress test (scénarios de récession, taux, défaillance) sera
+                  connecté prochainement. Aucune donnée simulée n'est affichée.
+                </p>
               </div>
             </CardContent>
           </Card>
@@ -564,57 +562,60 @@ const BanqueRiskManagement = ({ dashboardStats = {} }) => {
           <Card>
             <CardHeader>
               <CardTitle>Surveillance Continue</CardTitle>
-              <CardDescription>Alertes et signaux d'attention</CardDescription>
+              <CardDescription>Dossiers à risque issus des évaluations réelles</CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {(riskData.alerts || []).map((alert) => (
-                  <motion.div
-                    key={alert.id}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <div className="flex items-center justify-between p-4 border rounded-lg">
-                      <div className="flex items-center space-x-4">
-                        <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
-                          alert.severity === 'high' ? 'bg-red-100' :
-                          alert.severity === 'medium' ? 'bg-yellow-100' : 'bg-blue-100'
-                        }`}>
-                          <AlertTriangle className={`h-6 w-6 ${
-                            alert.severity === 'high' ? 'text-red-600' :
-                            alert.severity === 'medium' ? 'text-yellow-600' : 'text-blue-600'
-                          }`} />
+              {alerts.length === 0 ? (
+                <div className="py-12 text-center text-gray-600">
+                  Aucun dossier à risque à surveiller pour le moment.
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {alerts.map((alert) => (
+                    <motion.div
+                      key={alert.id}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <div className="flex items-center justify-between p-4 border rounded-lg">
+                        <div className="flex items-center space-x-4">
+                          <div className={`w-12 h-12 rounded-lg flex items-center justify-center ${
+                            alert.severity === 'high' ? 'bg-red-100' : 'bg-yellow-100'
+                          }`}>
+                            <AlertTriangle className={`h-6 w-6 ${
+                              alert.severity === 'high' ? 'text-red-600' : 'text-yellow-600'
+                            }`} />
+                          </div>
+                          <div>
+                            <h4 className="font-semibold">{alert.title}</h4>
+                            <p className="text-sm text-gray-600">{alert.description}</p>
+                            {alert.timestamp && (
+                              <p className="text-xs text-gray-500 mt-1">
+                                {alert.timestamp.toLocaleString('fr-FR')}
+                              </p>
+                            )}
+                          </div>
                         </div>
-                        <div>
-                          <h4 className="font-semibold">{alert.title}</h4>
-                          <p className="text-sm text-gray-600">{alert.description}</p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            {alert.timestamp.toLocaleString('fr-FR')}
-                          </p>
+
+                        <div className="flex items-center space-x-2">
+                          <Badge className={getSeverityColor(alert.severity)}>
+                            {alert.severity === 'high' ? 'Élevé' : 'Moyen'}
+                          </Badge>
+                          <Button variant="ghost" size="sm">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
                         </div>
                       </div>
-                      
-                      <div className="flex items-center space-x-2">
-                        <Badge className={getSeverityColor(alert.severity)}>
-                          {alert.severity === 'high' ? 'Élevé' : 
-                           alert.severity === 'medium' ? 'Moyen' : 'Faible'}
-                        </Badge>
-                        <Button variant="outline" size="sm">
-                          {alert.action}
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
       </Tabs>
+      )}
     </div>
   );
 };

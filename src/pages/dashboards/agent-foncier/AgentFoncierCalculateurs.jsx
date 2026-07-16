@@ -41,16 +41,19 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import StatsService from '@/services/StatsService';
 
 const AgentFoncierCalculateurs = () => {
   const [loading, setLoading] = useState(true);
   const [activeCalculator, setActiveCalculator] = useState('evaluateur');
   const [calculationHistory, setCalculationHistory] = useState([]);
+  // Prix de référence par région : chargés depuis les vraies propriétés (StatsService.getRegionMarket)
+  const [zones, setZones] = useState([]);
 
   // États pour l'évaluateur de terrain
   const [terrainData, setTerrainData] = useState({
     superficie: '',
-    zone: 'almadies',
+    zone: '',
     type: 'residentiel',
     viabilisation: true,
     proximiteRoute: 'directe',
@@ -76,7 +79,7 @@ const AgentFoncierCalculateurs = () => {
     superficie: '',
     chambres: 2,
     sallesDeBain: 1,
-    zone: 'almadies',
+    zone: '',
     standing: 'moyen',
     equipements: [],
     parking: false
@@ -84,8 +87,8 @@ const AgentFoncierCalculateurs = () => {
 
   // États pour analyseur zone
   const [zoneData, setZoneData] = useState({
-    zone1: 'almadies',
-    zone2: 'parcelles_assainies',
+    zone1: '',
+    zone2: '',
     criteres: ['prix_m2', 'accessibilite', 'services']
   });
 
@@ -97,7 +100,32 @@ const AgentFoncierCalculateurs = () => {
   });
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 800);
+    const loadMarket = async () => {
+      try {
+        // Prix/m² réels par région, agrégés depuis les propriétés actives (aucun chiffre fabriqué)
+        const market = await StatsService.getRegionMarket();
+        const realZones = (market || [])
+          .filter(m => m.avgPricePerM2 > 0)
+          .sort((a, b) => b.avgPricePerM2 - a.avgPricePerM2)
+          .map(m => ({
+            value: m.region,
+            label: m.region,
+            prixM2: m.avgPricePerM2,
+            count: m.count
+          }));
+        setZones(realZones);
+        if (realZones.length > 0) {
+          setTerrainData(prev => ({ ...prev, zone: realZones[0].value }));
+          setLoyerData(prev => ({ ...prev, zone: realZones[0].value }));
+        }
+      } catch (e) {
+        console.error('Erreur chargement marché régional:', e);
+        setZones([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+    loadMarket();
   }, []);
 
   const calculateurs = [
@@ -151,15 +179,6 @@ const AgentFoncierCalculateurs = () => {
     }
   ];
 
-  const zones = [
-    { value: 'almadies', label: 'Almadies', prixM2: 1200000 },
-    { value: 'dakar_plateau', label: 'Dakar Plateau', prixM2: 850000 },
-    { value: 'parcelles_assainies', label: 'Parcelles Assainies', prixM2: 420000 },
-    { value: 'rufisque', label: 'Rufisque', prixM2: 280000 },
-    { value: 'thiès', label: 'Thiès', prixM2: 180000 },
-    { value: 'mbour', label: 'Mbour', prixM2: 320000 }
-  ];
-
   const services = [
     { id: 'ecole', label: 'École à proximité', bonus: 0.05 },
     { id: 'hopital', label: 'Hôpital proche', bonus: 0.03 },
@@ -173,6 +192,7 @@ const AgentFoncierCalculateurs = () => {
     if (!terrainData.superficie) return;
 
     const baseZone = zones.find(z => z.value === terrainData.zone);
+    if (!baseZone) return; // pas de prix de référence réel disponible
     let prixBase = baseZone.prixM2;
     
     // Ajustements selon le type
@@ -255,8 +275,9 @@ const AgentFoncierCalculateurs = () => {
 
   const calculateLoyer = () => {
     if (!loyerData.superficie) return;
-    
+
     const baseZone = zones.find(z => z.value === loyerData.zone);
+    if (!baseZone) return; // pas de prix de référence réel disponible
     let loyerM2 = Math.round(baseZone.prixM2 * 0.008); // ~0.8% du prix d'achat
     
     // Ajustements selon le type
@@ -381,6 +402,16 @@ const AgentFoncierCalculateurs = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {zones.length === 0 && (
+                    <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+                      <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                      <span>
+                        Aucun prix de référence disponible pour le moment. Les prix au m² sont calculés à partir des
+                        biens réels publiés sur la plateforme. Ajoutez des propriétés (avec prix et surface) pour
+                        activer l'évaluation.
+                      </span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
@@ -490,8 +521,9 @@ const AgentFoncierCalculateurs = () => {
                   </div>
                   
                   <div className="flex gap-4">
-                    <Button 
+                    <Button
                       onClick={calculateTerrainValue}
+                      disabled={zones.length === 0}
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <Calculator className="h-4 w-4 mr-2" />
@@ -711,6 +743,16 @@ const AgentFoncierCalculateurs = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-6">
+                  {zones.length === 0 && (
+                    <div className="flex items-start gap-3 bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm text-amber-800">
+                      <Info className="h-5 w-5 flex-shrink-0 mt-0.5" />
+                      <span>
+                        Aucun prix de référence disponible pour le moment. L'estimation des loyers s'appuie sur les prix
+                        réels des biens publiés par région. Ajoutez des propriétés (avec prix et surface) pour activer
+                        l'estimateur.
+                      </span>
+                    </div>
+                  )}
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-4">
                       <div>
@@ -816,8 +858,9 @@ const AgentFoncierCalculateurs = () => {
                   </div>
                   
                   <div className="flex gap-4">
-                    <Button 
+                    <Button
                       onClick={calculateLoyer}
+                      disabled={zones.length === 0}
                       className="bg-green-600 hover:bg-green-700"
                     >
                       <Calculator className="h-4 w-4 mr-2" />
@@ -851,7 +894,7 @@ const AgentFoncierCalculateurs = () => {
                         </div>
                       </div>
                       <div className="mt-4 text-sm text-purple-700">
-                        <p><strong>Rendement annuel estimé:</strong> {Math.round((results.loyer.loyerTotal * 12) / (zones.find(z => z.value === loyerData.zone).prixM2 * parseFloat(loyerData.superficie)) * 100 * 100) / 100}%</p>
+                        <p><strong>Rendement annuel estimé:</strong> {Math.round((results.loyer.loyerTotal * 12) / ((zones.find(z => z.value === loyerData.zone)?.prixM2 || 0) * parseFloat(loyerData.superficie)) * 100 * 100) / 100}%</p>
                       </div>
                     </motion.div>
                   )}

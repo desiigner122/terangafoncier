@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Plus, 
-  Search, 
-  Filter, 
-  Eye, 
-  Edit, 
-  Phone, 
-  Mail, 
+import {
+  Users,
+  Plus,
+  Search,
+  Filter,
+  Eye,
+  Edit,
+  Phone,
+  Mail,
   MapPin,
   Calendar,
   DollarSign,
@@ -25,7 +25,8 @@ import {
   MoreHorizontal,
   UserPlus,
   Target,
-  Globe
+  Globe,
+  Flame
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -33,165 +34,153 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const AgentFoncierClients = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('tous');
+  const [clients, setClients] = useState([]);
+
+  // Helpers
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('') || '?';
+  };
+
+  const formatXOF = (amount) => {
+    if (amount === null || amount === undefined || isNaN(amount)) return '—';
+    if (amount >= 1e9) return (amount / 1e9).toFixed(1).replace(/\.0$/, '') + 'B XOF';
+    if (amount >= 1e6) return (amount / 1e6).toFixed(1).replace(/\.0$/, '') + 'M XOF';
+    if (amount >= 1e3) return (amount / 1e3).toFixed(0) + 'K XOF';
+    return amount + ' XOF';
+  };
+
+  const formatDate = (d) => {
+    if (!d) return '—';
+    try {
+      return new Date(d).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return '—';
+    }
+  };
+
+  const isRecent = (d) => {
+    if (!d) return false;
+    const diff = Date.now() - new Date(d).getTime();
+    return diff <= 30 * 24 * 60 * 60 * 1000;
+  };
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 800);
-  }, []);
+    const loadClients = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const agentId = user.id;
+        const [contactsRes, dealsRes] = await Promise.all([
+          supabase
+            .from('crm_contacts')
+            .select('id, name, email, phone, company, status, temperature, score, created_at')
+            .eq('owner_id', agentId)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('crm_deals')
+            .select('id, contact_id, amount, stage')
+            .eq('owner_id', agentId)
+        ]);
 
-  // Données complètes des clients
-  const clients = [
-    {
-      id: 1,
-      nom: 'Amadou Diallo',
-      type: 'Particulier',
-      email: 'amadou.diallo@email.com',
-      telephone: '+221 77 123 45 67',
-      adresse: 'Almadies, Dakar',
-      projetsActifs: 2,
-      projetsTotal: 5,
-      valeurPortefeuille: '2.8B XOF',
-      dateInscription: '2023-03-15',
-      dernierContact: '2024-09-20',
-      statut: 'actif',
-      satisfaction: 92,
-      avatar: 'AD',
-      priorite: 'haute',
-      prochainRdv: '2024-09-28 14h30',
-      notes: 'Client VIP - Investisseur immobilier actif'
-    },
-    {
-      id: 2,
-      nom: 'Société IMMOGO SARL',
-      type: 'Entreprise',
-      email: 'contact@immogo.sn',
-      telephone: '+221 33 456 78 90',
-      adresse: 'Zone industrielle, Rufisque',
-      projetsActifs: 5,
-      projetsTotal: 12,
-      valeurPortefeuille: '8.5B XOF',
-      dateInscription: '2022-07-20',
-      dernierContact: '2024-09-25',
-      statut: 'actif',
-      satisfaction: 88,
-      avatar: 'IM',
-      priorite: 'haute',
-      prochainRdv: '2024-09-27 10h00',
-      notes: 'Promoteur immobilier - Projets résidentiels'
-    },
-    {
-      id: 3,
-      nom: 'Fatou Seck',
-      type: 'Particulier',
-      email: 'fatou.seck@gmail.com',
-      telephone: '+221 78 654 32 10',
-      adresse: 'Mermoz, Dakar',
-      projetsActifs: 1,
-      projetsTotal: 1,
-      valeurPortefeuille: '450M XOF',
-      dateInscription: '2024-08-10',
-      dernierContact: '2024-09-18',
-      statut: 'nouveau',
-      satisfaction: 95,
-      avatar: 'FS',
-      priorite: 'moyenne',
-      prochainRdv: 'Non planifié',
-      notes: 'Première acquisition - Accompagnement nécessaire'
-    },
-    {
-      id: 4,
-      nom: 'Groupe SENEGALIA',
-      type: 'Entreprise',
-      email: 'info@senegalia.com',
-      telephone: '+221 33 987 65 43',
-      adresse: 'Dakar Plateau',
-      projetsActifs: 3,
-      projetsTotal: 8,
-      valeurPortefeuille: '5.2B XOF',
-      dateInscription: '2021-11-05',
-      dernierContact: '2024-09-22',
-      statut: 'actif',
-      satisfaction: 90,
-      avatar: 'GS',
-      priorite: 'haute',
-      prochainRdv: '2024-10-02 16h00',
-      notes: 'Développement agricole - Terres rurales'
-    },
-    {
-      id: 5,
-      nom: 'Omar Ba',
-      type: 'Particulier',
-      email: 'omar.ba@yahoo.fr',
-      telephone: '+221 77 888 99 00',
-      adresse: 'Parcelles Assainies',
-      projetsActifs: 0,
-      projetsTotal: 3,
-      valeurPortefeuille: '1.1B XOF',
-      dateInscription: '2023-01-20',
-      dernierContact: '2024-08-15',
-      statut: 'inactif',
-      satisfaction: 75,
-      avatar: 'OB',
-      priorite: 'faible',
-      prochainRdv: 'À planifier',
-      notes: 'Projets suspendus - Relance nécessaire'
-    },
-    {
-      id: 6,
-      nom: 'Diaspora Investment Corp',
-      type: 'Entreprise',
-      email: 'contact@diaspora-invest.com',
-      telephone: '+221 33 111 22 33',
-      adresse: 'Point E, Dakar',
-      projetsActifs: 4,
-      projetsTotal: 6,
-      valeurPortefeuille: '12.8B XOF',
-      dateInscription: '2023-09-12',
-      dernierContact: '2024-09-26',
-      statut: 'vip',
-      satisfaction: 98,
-      avatar: 'DI',
-      priorite: 'très haute',
-      prochainRdv: '2024-09-29 11h00',
-      notes: 'Client premium - Investissements diaspora'
-    }
-  ];
+        const contacts = contactsRes.data || [];
+        const deals = dealsRes.data || [];
 
-  // Statistiques clients
+        // Agrégation des deals par contact (portefeuille + projets réels)
+        const closedStages = ['won', 'lost', 'closed', 'gagne', 'gagné', 'perdu'];
+        const dealsByContact = {};
+        deals.forEach((d) => {
+          if (!d.contact_id) return;
+          if (!dealsByContact[d.contact_id]) {
+            dealsByContact[d.contact_id] = { total: 0, actifs: 0, montant: 0, hasAmount: false };
+          }
+          const agg = dealsByContact[d.contact_id];
+          agg.total += 1;
+          const stage = (d.stage || '').toLowerCase();
+          if (!closedStages.includes(stage)) agg.actifs += 1;
+          if (d.amount !== null && d.amount !== undefined && !isNaN(d.amount)) {
+            agg.montant += Number(d.amount);
+            agg.hasAmount = true;
+          }
+        });
+
+        const mapped = contacts.map((c) => {
+          const agg = dealsByContact[c.id] || { total: 0, actifs: 0, montant: 0, hasAmount: false };
+          const temperature = (c.temperature || '').toLowerCase();
+          return {
+            id: c.id,
+            nom: c.name || 'Client sans nom',
+            type: c.company ? 'Entreprise' : 'Particulier',
+            email: c.email || '—',
+            telephone: c.phone || '—',
+            adresse: c.company || '—',
+            projetsActifs: agg.actifs,
+            projetsTotal: agg.total,
+            valeurPortefeuille: agg.hasAmount ? formatXOF(agg.montant) : '—',
+            dateInscription: c.created_at,
+            statut: c.status || 'nouveau',
+            score: (c.score === null || c.score === undefined) ? null : Number(c.score),
+            temperature,
+            avatar: getInitials(c.name),
+            isNew: isRecent(c.created_at),
+            isVip: temperature === 'hot' || (c.score !== null && c.score !== undefined && Number(c.score) >= 90)
+          };
+        });
+
+        setClients(mapped);
+      } catch (e) {
+        console.error('Erreur chargement clients CRM:', e);
+        setClients([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadClients();
+  }, [user?.id]);
+
+  // Statistiques clients (issues des vraies colonnes crm_contacts)
+  const scoredClients = clients.filter(c => c.score !== null);
+  const avgScore = scoredClients.length
+    ? Math.round(scoredClients.reduce((acc, c) => acc + c.score, 0) / scoredClients.length)
+    : null;
+
   const clientStats = [
     {
       title: 'Total Clients',
       value: clients.length,
-      change: '+12.5%',
       icon: Users,
       color: 'text-blue-600',
       bgColor: 'bg-blue-50'
     },
     {
-      title: 'Clients Actifs',
-      value: clients.filter(c => c.statut === 'actif').length,
-      change: '+8.3%',
-      icon: CheckCircle2,
-      color: 'text-green-600',
-      bgColor: 'bg-green-50'
-    },
-    {
       title: 'Nouveaux (30j)',
-      value: clients.filter(c => c.statut === 'nouveau').length,
-      change: '+25.0%',
+      value: clients.filter(c => c.isNew).length,
       icon: UserPlus,
       color: 'text-purple-600',
       bgColor: 'bg-purple-50'
     },
     {
-      title: 'Satisfaction Moy.',
-      value: Math.round(clients.reduce((acc, c) => acc + c.satisfaction, 0) / clients.length) + '%',
-      change: '+2.1%',
+      title: 'Prospects chauds',
+      value: clients.filter(c => c.temperature === 'hot').length,
+      icon: Flame,
+      color: 'text-red-600',
+      bgColor: 'bg-red-50'
+    },
+    {
+      title: 'Score Moyen',
+      value: avgScore === null ? '—' : avgScore,
       icon: Star,
       color: 'text-orange-600',
       bgColor: 'bg-orange-50'
@@ -199,29 +188,39 @@ const AgentFoncierClients = () => {
   ];
 
   const getStatusColor = (statut) => {
-    switch (statut) {
-      case 'actif': return 'bg-green-100 text-green-800';
+    switch ((statut || '').toLowerCase()) {
+      case 'actif':
+      case 'active':
+      case 'client': return 'bg-green-100 text-green-800';
       case 'vip': return 'bg-purple-100 text-purple-800';
-      case 'nouveau': return 'bg-blue-100 text-blue-800';
-      case 'inactif': return 'bg-gray-100 text-gray-800';
+      case 'nouveau':
+      case 'new':
+      case 'lead': return 'bg-blue-100 text-blue-800';
+      case 'inactif':
+      case 'inactive': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getPriorityColor = (priorite) => {
-    switch (priorite) {
-      case 'très haute': return 'bg-red-500';
-      case 'haute': return 'bg-orange-500';
-      case 'moyenne': return 'bg-yellow-500';
-      case 'faible': return 'bg-gray-500';
-      default: return 'bg-gray-500';
+  const getTemperatureColor = (temperature) => {
+    switch ((temperature || '').toLowerCase()) {
+      case 'hot': return 'bg-red-500';
+      case 'warm': return 'bg-orange-500';
+      case 'cold': return 'bg-blue-400';
+      default: return 'bg-gray-400';
     }
   };
 
   const filteredClients = clients.filter(client => {
-    const matchesSearch = client.nom.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         client.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesFilter = selectedFilter === 'tous' || client.statut === selectedFilter;
+    const term = searchTerm.toLowerCase();
+    const matchesSearch =
+      client.nom.toLowerCase().includes(term) ||
+      client.email.toLowerCase().includes(term);
+    let matchesFilter = true;
+    if (selectedFilter === 'vip') matchesFilter = client.isVip;
+    else if (selectedFilter === 'nouveau') matchesFilter = client.isNew;
+    else if (selectedFilter === 'hot') matchesFilter = client.temperature === 'hot';
+    else if (selectedFilter === 'cold') matchesFilter = client.temperature === 'cold';
     return matchesSearch && matchesFilter;
   });
 
@@ -234,7 +233,7 @@ const AgentFoncierClients = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -273,10 +272,6 @@ const AgentFoncierClients = () => {
                   <div>
                     <p className="text-sm font-medium text-gray-600 mb-1">{stat.title}</p>
                     <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
-                    <div className="flex items-center mt-2">
-                      <TrendingUp className="h-4 w-4 text-green-500 mr-1" />
-                      <span className="text-sm text-green-600">{stat.change}</span>
-                    </div>
                   </div>
                   <div className={`p-3 rounded-full ${stat.bgColor}`}>
                     <stat.icon className={`h-6 w-6 ${stat.color}`} />
@@ -302,16 +297,16 @@ const AgentFoncierClients = () => {
           </div>
         </div>
         <div className="flex gap-2">
-          <select 
+          <select
             value={selectedFilter}
             onChange={(e) => setSelectedFilter(e.target.value)}
             className="border border-gray-300 rounded-md px-3 py-2 text-sm"
           >
-            <option value="tous">Tous les statuts</option>
-            <option value="actif">Actifs</option>
+            <option value="tous">Tous</option>
             <option value="vip">VIP</option>
-            <option value="nouveau">Nouveaux</option>
-            <option value="inactif">Inactifs</option>
+            <option value="nouveau">Nouveaux (30j)</option>
+            <option value="hot">Prospects chauds</option>
+            <option value="cold">Prospects froids</option>
           </select>
           <Button variant="outline" size="sm">
             <Filter className="h-4 w-4 mr-2" />
@@ -353,6 +348,13 @@ const AgentFoncierClients = () => {
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {filteredClients.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Users className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                  <p className="font-medium">Aucun client dans votre portefeuille</p>
+                  <p className="text-sm">Ajoutez vos premiers contacts pour les retrouver ici.</p>
+                </div>
+              ) : (
               <div className="space-y-4">
                 {filteredClients.map((client, index) => (
                   <motion.div
@@ -368,15 +370,13 @@ const AgentFoncierClients = () => {
                           <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center text-white font-semibold">
                             {client.avatar}
                           </div>
-                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getPriorityColor(client.priorite)} rounded-full border-2 border-white`}></div>
+                          <div className={`absolute -bottom-1 -right-1 w-4 h-4 ${getTemperatureColor(client.temperature)} rounded-full border-2 border-white`}></div>
                         </div>
                         <div className="flex-1">
                           <div className="flex items-center gap-3 mb-1">
                             <h3 className="font-semibold text-gray-900">{client.nom}</h3>
                             <Badge className={getStatusColor(client.statut)}>
-                              {client.statut === 'actif' ? 'Actif' :
-                               client.statut === 'vip' ? 'VIP' :
-                               client.statut === 'nouveau' ? 'Nouveau' : 'Inactif'}
+                              {client.statut}
                             </Badge>
                             <Badge variant="outline" className="text-xs">
                               {client.type}
@@ -392,7 +392,7 @@ const AgentFoncierClients = () => {
                               {client.telephone}
                             </div>
                             <div className="flex items-center">
-                              <MapPin className="h-3 w-3 mr-1" />
+                              <Building2 className="h-3 w-3 mr-1" />
                               {client.adresse}
                             </div>
                           </div>
@@ -406,15 +406,19 @@ const AgentFoncierClients = () => {
                               <span className="font-medium text-green-600">{client.valeurPortefeuille}</span>
                             </div>
                             <div>
-                              <span className="text-gray-500">Satisfaction: </span>
-                              <div className="flex items-center gap-1">
-                                <Progress value={client.satisfaction} className="w-12 h-2" />
-                                <span className="font-medium">{client.satisfaction}%</span>
-                              </div>
+                              <span className="text-gray-500">Score: </span>
+                              {client.score === null ? (
+                                <span className="font-medium">—</span>
+                              ) : (
+                                <div className="flex items-center gap-1">
+                                  <Progress value={client.score} className="w-12 h-2" />
+                                  <span className="font-medium">{client.score}</span>
+                                </div>
+                              )}
                             </div>
                             <div>
-                              <span className="text-gray-500">Prochain RDV: </span>
-                              <span className="font-medium">{client.prochainRdv}</span>
+                              <span className="text-gray-500">Inscrit le: </span>
+                              <span className="font-medium">{formatDate(client.dateInscription)}</span>
                             </div>
                           </div>
                         </div>
@@ -437,22 +441,27 @@ const AgentFoncierClients = () => {
                         </Button>
                       </div>
                     </div>
-                    {client.notes && (
-                      <div className="mt-3 p-2 bg-blue-50 rounded text-sm text-blue-800 border-l-4 border-blue-200">
-                        <strong>Note:</strong> {client.notes}
-                      </div>
-                    )}
                   </motion.div>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
         {/* Clients VIP */}
         <TabsContent value="vip" className="mt-6">
+          {clients.filter(c => c.isVip).length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center text-gray-500">
+                <Star className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                <p className="font-medium">Aucun client VIP</p>
+                <p className="text-sm">Les prospects chauds ou au score élevé (≥ 90) apparaîtront ici.</p>
+              </CardContent>
+            </Card>
+          ) : (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {clients.filter(c => c.statut === 'vip' || c.priorite === 'très haute').map((client) => (
+            {clients.filter(c => c.isVip).map((client) => (
               <Card key={client.id} className="border-2 border-purple-200">
                 <CardContent className="p-6">
                   <div className="flex items-center justify-between mb-4">
@@ -463,7 +472,7 @@ const AgentFoncierClients = () => {
                       <div>
                         <h3 className="font-bold text-lg text-gray-900">{client.nom}</h3>
                         <Badge className="bg-purple-100 text-purple-800">
-                          {client.statut.toUpperCase()}
+                          {client.type}
                         </Badge>
                       </div>
                     </div>
@@ -479,17 +488,22 @@ const AgentFoncierClients = () => {
                       <span className="font-medium">{client.projetsActifs}</span>
                     </div>
                     <div className="flex justify-between">
-                      <span className="text-gray-600">Satisfaction:</span>
-                      <div className="flex items-center gap-2">
-                        <Progress value={client.satisfaction} className="w-16 h-2" />
-                        <span className="font-medium">{client.satisfaction}%</span>
-                      </div>
+                      <span className="text-gray-600">Score:</span>
+                      {client.score === null ? (
+                        <span className="font-medium">—</span>
+                      ) : (
+                        <div className="flex items-center gap-2">
+                          <Progress value={client.score} className="w-16 h-2" />
+                          <span className="font-medium">{client.score}</span>
+                        </div>
+                      )}
                     </div>
                   </div>
                 </CardContent>
               </Card>
             ))}
           </div>
+          )}
         </TabsContent>
 
         {/* Activité Récente */}
@@ -498,10 +512,13 @@ const AgentFoncierClients = () => {
             <CardHeader>
               <CardTitle className="flex items-center">
                 <Clock className="h-5 w-5 mr-2" />
-                Activité Client Récente
+                Derniers Clients Ajoutés
               </CardTitle>
             </CardHeader>
             <CardContent>
+              {clients.length === 0 ? (
+                <div className="text-center py-8 text-gray-500">Aucune activité récente</div>
+              ) : (
               <div className="space-y-4">
                 {clients.slice(0, 4).map((client) => (
                   <div key={client.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
@@ -511,7 +528,7 @@ const AgentFoncierClients = () => {
                       </div>
                       <div>
                         <p className="font-medium text-gray-900">{client.nom}</p>
-                        <p className="text-sm text-gray-600">Dernier contact: {client.dernierContact}</p>
+                        <p className="text-sm text-gray-600">Inscrit le: {formatDate(client.dateInscription)}</p>
                       </div>
                     </div>
                     <Badge variant="outline">
@@ -520,6 +537,7 @@ const AgentFoncierClients = () => {
                   </div>
                 ))}
               </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -532,6 +550,9 @@ const AgentFoncierClients = () => {
                 <CardTitle>Répartition par Type</CardTitle>
               </CardHeader>
               <CardContent>
+                {clients.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500 text-sm">Aucune donnée</div>
+                ) : (
                 <div className="space-y-4">
                   {['Particulier', 'Entreprise'].map((type) => {
                     const count = clients.filter(c => c.type === type).length;
@@ -547,36 +568,43 @@ const AgentFoncierClients = () => {
                     );
                   })}
                 </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Performance Satisfaction</CardTitle>
+                <CardTitle>Performance Score</CardTitle>
               </CardHeader>
               <CardContent>
+                {avgScore === null ? (
+                  <div className="text-center py-6 text-gray-500 text-sm">
+                    Aucun score renseigné pour vos clients
+                  </div>
+                ) : (
                 <div className="space-y-4">
                   <div className="text-center">
                     <div className="text-4xl font-bold text-green-600 mb-2">
-                      {Math.round(clients.reduce((acc, c) => acc + c.satisfaction, 0) / clients.length)}%
+                      {avgScore}
                     </div>
-                    <p className="text-gray-600">Satisfaction Moyenne</p>
+                    <p className="text-gray-600">Score Moyen</p>
                   </div>
                   <div className="grid grid-cols-2 gap-4 text-sm">
                     <div className="text-center p-3 bg-green-50 rounded">
                       <div className="font-bold text-green-600">
-                        {clients.filter(c => c.satisfaction >= 90).length}
+                        {scoredClients.filter(c => c.score >= 90).length}
                       </div>
-                      <div className="text-gray-600">Excellente (90%+)</div>
+                      <div className="text-gray-600">Excellent (90+)</div>
                     </div>
                     <div className="text-center p-3 bg-blue-50 rounded">
                       <div className="font-bold text-blue-600">
-                        {clients.filter(c => c.satisfaction >= 80 && c.satisfaction < 90).length}
+                        {scoredClients.filter(c => c.score >= 80 && c.score < 90).length}
                       </div>
-                      <div className="text-gray-600">Bonne (80-89%)</div>
+                      <div className="text-gray-600">Bon (80-89)</div>
                     </div>
                   </div>
                 </div>
+                )}
               </CardContent>
             </Card>
           </div>

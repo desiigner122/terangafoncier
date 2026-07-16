@@ -1,186 +1,191 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Globe, 
-  Cloud, 
-  Smartphone, 
-  Wifi, 
-  Database,
-  Server,
-  Monitor,
+import {
+  Globe,
+  Cloud,
+  Smartphone,
+  Network,
   Zap,
-  Shield,
-  Lock,
-  Key,
-  Users,
   BarChart3,
   TrendingUp,
   Activity,
   Settings,
-  Download,
-  Upload,
-  Cpu,
-  HardDrive,
-  Network,
-  Bell,
+  FileText,
+  Map,
+  Brain,
+  Monitor,
   CheckCircle,
   AlertTriangle,
   Clock,
-  Plus
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+const timeAgo = (dateStr) => {
+  if (!dateStr) return '';
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "À l'instant";
+  if (mins < 60) return `Il y a ${mins} min`;
+  const hours = Math.floor(mins / 60);
+  if (hours < 24) return `Il y a ${hours}h`;
+  const days = Math.floor(hours / 24);
+  if (days === 1) return 'Il y a 1 jour';
+  return `Il y a ${days} jours`;
+};
 
 const AgentFoncierServicesDigitaux = () => {
-  const [activeService, setActiveService] = useState('overview');
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const [counters, setCounters] = useState({
+    documents: 0,
+    missions: 0,
+    missionsCompleted: 0,
+    properties: 0,
+    aiAnalyses: 0
+  });
+  const [recentActivities, setRecentActivities] = useState([]);
 
-  // Données des services digitaux
-  const servicesStats = {
-    cloudStorage: { used: 45.2, total: 100, unit: 'GB' },
-    apiCalls: { today: 2847, monthly: 45230 },
-    uptime: 99.9,
-    activeUsers: 156,
-    digitalTransactions: 1284,
-    automatedProcesses: 23
-  };
+  useEffect(() => {
+    if (!user?.id) return;
 
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [
+          docsRes,
+          missionsRes,
+          missionsDoneRes,
+          propsRes,
+          aiRes,
+          recentDocsRes,
+          recentMissionsRes
+        ] = await Promise.all([
+          supabase.from('documents').select('id', { count: 'exact', head: true }).eq('owner_id', user.id),
+          supabase.from('agent_missions').select('id', { count: 'exact', head: true }).eq('agent_id', user.id),
+          supabase.from('agent_missions').select('id', { count: 'exact', head: true }).eq('agent_id', user.id).eq('status', 'completed'),
+          supabase.from('properties').select('id', { count: 'exact', head: true }).eq('owner_id', user.id),
+          supabase.from('ai_analyses').select('id', { count: 'exact', head: true }).eq('user_id', user.id),
+          supabase.from('documents').select('id, name, created_at').eq('owner_id', user.id).order('created_at', { ascending: false }).limit(5),
+          supabase.from('agent_missions').select('id, title, status, created_at').eq('agent_id', user.id).order('created_at', { ascending: false }).limit(5)
+        ]);
+
+        setCounters({
+          documents: docsRes.count || 0,
+          missions: missionsRes.count || 0,
+          missionsCompleted: missionsDoneRes.count || 0,
+          properties: propsRes.count || 0,
+          aiAnalyses: aiRes.count || 0
+        });
+
+        const activities = [];
+        (recentDocsRes.data || []).forEach((d) => {
+          activities.push({
+            id: `doc-${d.id}`,
+            type: 'document',
+            message: `Document enregistré : ${d.name || 'Sans nom'}`,
+            created_at: d.created_at,
+            status: 'success'
+          });
+        });
+        (recentMissionsRes.data || []).forEach((m) => {
+          activities.push({
+            id: `mission-${m.id}`,
+            type: 'mission',
+            message: `Mission : ${m.title || 'Sans titre'}`,
+            created_at: m.created_at,
+            status: m.status === 'completed' ? 'success' : m.status === 'cancelled' ? 'warning' : 'pending'
+          });
+        });
+        activities.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        setRecentActivities(activities.slice(0, 6));
+      } catch (e) {
+        console.error('Erreur chargement services digitaux:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.id]);
+
+  // Statistiques globales : uniquement des compteurs réels (aucun chiffre fabriqué)
+  const globalStats = [
+    { title: 'Documents', value: counters.documents, icon: FileText, color: 'from-blue-500 to-cyan-600' },
+    { title: 'Missions', value: counters.missions, icon: Activity, color: 'from-purple-500 to-indigo-600' },
+    { title: 'Missions terminées', value: counters.missionsCompleted, icon: CheckCircle, color: 'from-green-500 to-emerald-600' },
+    { title: 'Terrains', value: counters.properties, icon: Map, color: 'from-orange-500 to-red-600' },
+    { title: 'Analyses IA', value: counters.aiAnalyses, icon: Brain, color: 'from-teal-500 to-cyan-600' }
+  ];
+
+  // Catalogue de services : offre statique (aucune métrique inventée).
+  // Chaque service affiche soit un compteur d'usage RÉEL, soit "Bientôt disponible".
   const digitalServices = [
     {
       id: 'cloud-storage',
-      name: 'Stockage Cloud',
-      description: 'Stockage sécurisé des documents fonciers',
+      name: 'Stockage Documentaire',
+      description: 'Conservation sécurisée de vos documents fonciers',
       icon: Cloud,
       color: 'from-blue-500 to-cyan-600',
-      status: 'active',
-      usage: 78,
-      metrics: {
-        totalFiles: 15420,
-        totalSize: '45.2 GB',
-        lastBackup: '2024-03-01 14:30',
-        syncStatus: 'Synchronisé'
-      }
+      available: true,
+      counterLabel: 'Documents stockés',
+      counterValue: counters.documents
+    },
+    {
+      id: 'ai-analysis',
+      name: 'Analyse IA',
+      description: 'Analyses assistées par intelligence artificielle',
+      icon: Brain,
+      color: 'from-teal-500 to-cyan-600',
+      available: true,
+      counterLabel: 'Analyses réalisées',
+      counterValue: counters.aiAnalyses
+    },
+    {
+      id: 'field-missions',
+      name: 'Gestion des Missions',
+      description: 'Suivi digital des missions terrain',
+      icon: Zap,
+      color: 'from-yellow-500 to-orange-600',
+      available: true,
+      counterLabel: 'Missions gérées',
+      counterValue: counters.missions
+    },
+    {
+      id: 'property-registry',
+      name: 'Registre des Terrains',
+      description: 'Cartographie et suivi de vos biens',
+      icon: Map,
+      color: 'from-orange-500 to-red-600',
+      available: true,
+      counterLabel: 'Terrains référencés',
+      counterValue: counters.properties
     },
     {
       id: 'mobile-app',
       name: 'Application Mobile',
-      description: 'App mobile pour agents et clients',
+      description: 'Accès mobile pour agents et clients',
       icon: Smartphone,
       color: 'from-green-500 to-emerald-600',
-      status: 'active',
-      usage: 92,
-      metrics: {
-        activeUsers: 234,
-        dailyLogins: 89,
-        appVersion: '2.1.4',
-        lastUpdate: '2024-02-28'
-      }
+      available: false
     },
     {
       id: 'api-services',
       name: 'Services API',
-      description: 'APIs pour intégrations tierces',
+      description: 'Intégrations avec services tiers (cadastre, notaires…)',
       icon: Network,
       color: 'from-purple-500 to-indigo-600',
-      status: 'active',
-      usage: 65,
-      metrics: {
-        endpoints: 24,
-        requests: '2.8K/jour',
-        latency: '120ms',
-        errorRate: '0.2%'
-      }
-    },
-    {
-      id: 'iot-monitoring',
-      name: 'IoT Monitoring',
-      description: 'Surveillance des capteurs terrain',
-      icon: Wifi,
-      color: 'from-orange-500 to-red-600',
-      status: 'maintenance',
-      usage: 45,
-      metrics: {
-        sensors: 67,
-        dataPoints: '15M/jour',
-        batteryLevel: '78%',
-        connectivity: '94%'
-      }
-    },
-    {
-      id: 'automation',
-      name: 'Automatisation',
-      description: 'Processus automatisés',
-      icon: Zap,
-      color: 'from-yellow-500 to-orange-600',
-      status: 'active',
-      usage: 88,
-      metrics: {
-        workflows: 23,
-        executions: '456/jour',
-        successRate: '97.8%',
-        timeSaved: '12h/jour'
-      }
-    },
-    {
-      id: 'analytics',
-      name: 'Analytics Avancé',
-      description: 'Intelligence des données',
-      icon: BarChart3,
-      color: 'from-teal-500 to-cyan-600',
-      status: 'active',
-      usage: 73,
-      metrics: {
-        datasets: 145,
-        reports: 67,
-        predictions: '89% précision',
-        insights: 234
-      }
+      available: false
     }
   ];
-
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'api',
-      message: 'Nouvelle intégration API avec le service cadastre',
-      timestamp: '2024-03-01 10:30',
-      status: 'success'
-    },
-    {
-      id: 2,
-      type: 'mobile',
-      message: 'Mise à jour de l\'application mobile v2.1.4',
-      timestamp: '2024-02-28 16:45',
-      status: 'success'
-    },
-    {
-      id: 3,
-      type: 'cloud',
-      message: 'Sauvegarde automatique terminée (45.2 GB)',
-      timestamp: '2024-03-01 14:30',
-      status: 'success'
-    },
-    {
-      id: 4,
-      type: 'iot',
-      message: 'Maintenance des capteurs IoT programmée',
-      timestamp: '2024-03-02 09:00',
-      status: 'warning'
-    }
-  ];
-
-  const getStatusColor = (status) => {
-    switch(status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'maintenance': return 'bg-yellow-100 text-yellow-800';
-      case 'offline': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
 
   const getStatusIcon = (status) => {
-    switch(status) {
+    switch (status) {
       case 'success': return <CheckCircle className="w-4 h-4 text-green-500" />;
       case 'warning': return <AlertTriangle className="w-4 h-4 text-yellow-500" />;
       case 'error': return <AlertTriangle className="w-4 h-4 text-red-500" />;
@@ -200,30 +205,19 @@ const AgentFoncierServicesDigitaux = () => {
           <h1 className="text-3xl font-bold bg-gradient-to-r from-amber-700 via-orange-700 to-red-700 bg-clip-text text-transparent">
             Services Digitaux
           </h1>
-          <p className="text-slate-600">Infrastructure et solutions numériques avancées</p>
+          <p className="text-slate-600">Vos outils numériques et leur utilisation réelle</p>
         </div>
         <div className="flex space-x-3">
           <Button variant="outline">
             <Settings className="w-4 h-4 mr-2" />
             Configuration
           </Button>
-          <Button className="bg-gradient-to-r from-blue-500 to-cyan-600">
-            <Plus className="w-4 h-4 mr-2" />
-            Nouveau Service
-          </Button>
         </div>
       </motion.div>
 
-      {/* Stats globales */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
-        {[
-          { title: 'Uptime', value: `${servicesStats.uptime}%`, icon: Activity, color: 'from-green-500 to-emerald-600' },
-          { title: 'Utilisateurs', value: servicesStats.activeUsers, icon: Users, color: 'from-blue-500 to-cyan-600' },
-          { title: 'API Calls', value: `${(servicesStats.apiCalls.today / 1000).toFixed(1)}K`, icon: Network, color: 'from-purple-500 to-indigo-600' },
-          { title: 'Stockage', value: `${servicesStats.cloudStorage.used}GB`, icon: HardDrive, color: 'from-orange-500 to-red-600' },
-          { title: 'Transactions', value: servicesStats.digitalTransactions, icon: TrendingUp, color: 'from-teal-500 to-cyan-600' },
-          { title: 'Processus Auto', value: servicesStats.automatedProcesses, icon: Zap, color: 'from-yellow-500 to-orange-600' }
-        ].map((stat, index) => (
+      {/* Stats globales (compteurs réels) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+        {globalStats.map((stat, index) => (
           <motion.div
             key={stat.title}
             initial={{ opacity: 0, y: 20 }}
@@ -235,7 +229,9 @@ const AgentFoncierServicesDigitaux = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
+                    <p className="text-2xl font-bold text-slate-900">
+                      {loading ? '—' : stat.value}
+                    </p>
                   </div>
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
                     <stat.icon className="w-5 h-5 text-white" />
@@ -247,7 +243,7 @@ const AgentFoncierServicesDigitaux = () => {
         ))}
       </div>
 
-      {/* Services digitaux */}
+      {/* Catalogue des services digitaux */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -257,10 +253,10 @@ const AgentFoncierServicesDigitaux = () => {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Globe className="w-5 h-5 text-amber-600" />
-              Infrastructure Digitale
+              Catalogue des Services
             </CardTitle>
             <CardDescription>
-              Gestion et monitoring de vos services numériques
+              Vos outils numériques et leur niveau d'utilisation
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -277,44 +273,26 @@ const AgentFoncierServicesDigitaux = () => {
                     <div className={`w-12 h-12 rounded-xl bg-gradient-to-r ${service.color} flex items-center justify-center`}>
                       <service.icon className="w-6 h-6 text-white" />
                     </div>
-                    <Badge className={getStatusColor(service.status)}>
-                      {service.status}
+                    <Badge className={service.available ? 'bg-green-100 text-green-800' : 'bg-slate-100 text-slate-600'}>
+                      {service.available ? 'Actif' : 'Bientôt disponible'}
                     </Badge>
                   </div>
 
                   <h3 className="font-semibold text-slate-900 mb-2">{service.name}</h3>
                   <p className="text-sm text-slate-600 mb-4">{service.description}</p>
 
-                  <div className="space-y-3">
-                    <div>
-                      <div className="flex justify-between text-sm mb-1">
-                        <span className="text-slate-600">Utilisation</span>
-                        <span className="font-medium">{service.usage}%</span>
-                      </div>
-                      <Progress value={service.usage} className="h-2" />
+                  {service.available ? (
+                    <div className="bg-slate-50 p-3 rounded-lg">
+                      <p className="text-xs text-slate-500">{service.counterLabel}</p>
+                      <p className="text-xl font-bold text-slate-900">
+                        {loading ? '—' : service.counterValue}
+                      </p>
                     </div>
-
-                    <div className="grid grid-cols-2 gap-3 text-xs">
-                      {Object.entries(service.metrics).map(([key, value]) => (
-                        <div key={key} className="bg-slate-50 p-2 rounded">
-                          <p className="text-slate-500 capitalize">{key.replace(/([A-Z])/g, ' $1')}</p>
-                          <p className="font-semibold text-slate-900">{value}</p>
-                        </div>
-                      ))}
+                  ) : (
+                    <div className="bg-slate-50 p-3 rounded-lg">
+                      <p className="text-sm text-slate-500">Fonctionnalité à venir</p>
                     </div>
-                  </div>
-
-                  <div className="flex space-x-2 mt-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Button variant="ghost" size="sm">
-                      <Monitor className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <Settings className="w-4 h-4" />
-                    </Button>
-                    <Button variant="ghost" size="sm">
-                      <BarChart3 className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  )}
                 </motion.div>
               ))}
             </div>
@@ -322,7 +300,7 @@ const AgentFoncierServicesDigitaux = () => {
         </Card>
       </motion.div>
 
-      {/* Activités récentes */}
+      {/* Activités récentes (documents + missions réels) */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -336,98 +314,67 @@ const AgentFoncierServicesDigitaux = () => {
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {recentActivities.map((activity, index) => (
-                <motion.div
-                  key={activity.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                  className="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
-                >
-                  <div className="flex-shrink-0 mt-1">
-                    {getStatusIcon(activity.status)}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm text-slate-900">{activity.message}</p>
-                    <p className="text-xs text-slate-500">{activity.timestamp}</p>
-                  </div>
-                  <Badge variant="outline" className="text-xs">
-                    {activity.type}
-                  </Badge>
-                </motion.div>
-              ))}
-            </div>
+            {loading ? (
+              <div className="flex items-center justify-center py-8 text-slate-400">
+                <Loader2 className="w-5 h-5 animate-spin mr-2" />
+                Chargement...
+              </div>
+            ) : recentActivities.length === 0 ? (
+              <div className="text-center py-8 text-slate-500">
+                <Monitor className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+                <p>Aucune activité récente</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {recentActivities.map((activity, index) => (
+                  <motion.div
+                    key={activity.id}
+                    initial={{ opacity: 0, x: -20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: index * 0.05 }}
+                    className="flex items-start space-x-3 p-3 rounded-lg hover:bg-slate-50 transition-colors"
+                  >
+                    <div className="flex-shrink-0 mt-1">
+                      {getStatusIcon(activity.status)}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="font-medium text-sm text-slate-900">{activity.message}</p>
+                      <p className="text-xs text-slate-500">{timeAgo(activity.created_at)}</p>
+                    </div>
+                    <Badge variant="outline" className="text-xs">
+                      {activity.type}
+                    </Badge>
+                  </motion.div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>
 
-      {/* Performance système */}
+      {/* Services d'infrastructure avancés (non instrumentés) */}
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ delay: 0.4 }}
-        className="grid grid-cols-1 lg:grid-cols-2 gap-6"
       >
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
-              <Cpu className="w-5 h-5 text-green-600" />
-              Performance Système
+              <BarChart3 className="w-5 h-5 text-purple-600" />
+              Monitoring Infrastructure
             </CardTitle>
+            <CardDescription>
+              Métriques système et supervision temps réel
+            </CardDescription>
           </CardHeader>
           <CardContent>
-            <div className="space-y-4">
-              {[
-                { name: 'CPU', usage: 45, color: 'bg-blue-500' },
-                { name: 'Mémoire', usage: 67, color: 'bg-green-500' },
-                { name: 'Disque', usage: 23, color: 'bg-yellow-500' },
-                { name: 'Réseau', usage: 78, color: 'bg-purple-500' }
-              ].map((metric) => (
-                <div key={metric.name} className="space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="font-medium">{metric.name}</span>
-                    <span>{metric.usage}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className={`${metric.color} h-2 rounded-full transition-all duration-300`}
-                      style={{ width: `${metric.usage}%` }}
-                    ></div>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Server className="w-5 h-5 text-purple-600" />
-              Statut des Services
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {[
-                { name: 'API Gateway', status: 'operational', uptime: '99.9%' },
-                { name: 'Base de données', status: 'operational', uptime: '99.8%' },
-                { name: 'Stockage Cloud', status: 'operational', uptime: '100%' },
-                { name: 'Services IoT', status: 'maintenance', uptime: '95.2%' },
-                { name: 'Analytics', status: 'operational', uptime: '99.7%' }
-              ].map((service) => (
-                <div key={service.name} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <div className={`w-3 h-3 rounded-full ${
-                      service.status === 'operational' ? 'bg-green-500' : 
-                      service.status === 'maintenance' ? 'bg-yellow-500' : 'bg-red-500'
-                    }`}></div>
-                    <span className="font-medium text-slate-900">{service.name}</span>
-                  </div>
-                  <span className="text-sm text-slate-600">{service.uptime}</span>
-                </div>
-              ))}
+            <div className="text-center py-8 text-slate-500">
+              <TrendingUp className="w-10 h-10 mx-auto mb-2 text-slate-300" />
+              <p className="font-medium">Bientôt disponible</p>
+              <p className="text-sm text-slate-400 mt-1">
+                Le monitoring d'infrastructure (uptime, charge serveur, latence) sera activé prochainement.
+              </p>
             </div>
           </CardContent>
         </Card>

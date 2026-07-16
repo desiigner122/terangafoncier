@@ -1,38 +1,38 @@
+/**
+ * IA FONCIÈRE (Agent Foncier) - VERSION DONNÉES RÉELLES SUPABASE
+ * - Métriques IA : compteurs RÉELS (ai_analyses, ai_chat_history, properties.ai_score).
+ * - Assistant IA : historique réel (ai_chat_history, user_id). Aucun moteur IA n'est
+ *   câblé sur cette instance : on n'invente PAS de réponse, on enregistre le message
+ *   et on informe honnêtement l'utilisateur.
+ * - Prédictions / Marché : prix RÉELS par région via StatsService.getRegionMarket
+ *   (calculés depuis properties). Aucune prédiction/confiance/facteur fabriqués.
+ * - Recommandations : pas de source de suggestions générées → état honnête.
+ * - Fonctionnalités : catalogue statique (descriptions d'outils), pas de taux de
+ *   précision fabriqués.
+ * - Analytics : compteurs réels, pas de Math.random ni de valeurs codées en dur.
+ */
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Brain, 
-  Lightbulb, 
-  Target, 
-  TrendingUp, 
-  MessageCircle, 
+import {
+  Brain,
+  Lightbulb,
+  Target,
+  TrendingUp,
+  MessageCircle,
   FileText,
   Zap,
   BarChart3,
-  Map,
   Calculator,
-  Search,
   Download,
-  Upload,
-  Eye,
-  Settings,
-  Star,
-  Clock,
-  CheckCircle,
   AlertTriangle,
   Camera,
-  Layers,
   Bot,
   Sparkles,
   Cpu,
-  Database,
   LineChart,
   PieChart,
-  Globe,
-  MapPin,
-  Building2,
-  Ruler,
-  DollarSign
+  Settings
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -40,171 +40,184 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Input } from '@/components/ui/input';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import StatsService from '@/services/StatsService';
+import { toast } from 'react-hot-toast';
 
 const AgentFoncierAI = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('assistant');
   const [chatInput, setChatInput] = useState('');
   const [isProcessing, setIsProcessing] = useState(false);
 
-  // Données simulées pour l'IA
-  const [aiMetrics] = useState({
-    accuracyRate: 94.5,
-    predictionsGenerated: 1247,
-    timesSaved: 156,
-    reportsGenerated: 89
+  const [chatHistory, setChatHistory] = useState([]);
+  const [marketData, setMarketData] = useState([]);
+  const [analyses, setAnalyses] = useState([]);
+
+  // Métriques IA RÉELLES (aucun chiffre fabriqué)
+  const [aiMetrics, setAiMetrics] = useState({
+    avgAiScore: null,        // properties.ai_score moyen
+    totalAnalyses: 0,        // ai_analyses
+    totalMessages: 0,        // ai_chat_history
+    propertiesTracked: 0     // properties de l'agent
   });
 
-  const [chatHistory, setChatHistory] = useState([
-    {
-      id: 1,
-      type: 'ai',
-      message: 'Bonjour ! Je suis votre assistant IA foncier. Comment puis-je vous aider aujourd\'hui ?',
-      timestamp: '09:00'
-    },
-    {
-      id: 2,
-      type: 'user',
-      message: 'Peux-tu analyser le marché des Almadies ?',
-      timestamp: '09:01'
-    },
-    {
-      id: 3,
-      type: 'ai',
-      message: 'Analyse du marché des Almadies terminée ! La zone montre une croissance de +15% avec une forte demande pour les terrains avec vue mer. Prix moyen: 1.2M XOF/m². Recommandation: Excellent moment pour les évaluations premium.',
-      timestamp: '09:02'
-    }
-  ]);
-
-  const [marketPredictions] = useState([
-    {
-      zone: 'Almadies',
-      currentPrice: '1.2M XOF/m²',
-      prediction: '+15%',
-      confidence: 92,
-      trend: 'up',
-      timeframe: '6 mois',
-      factors: ['Vue mer', 'Infrastructures', 'Demande diaspora'],
-      color: 'green'
-    },
-    {
-      zone: 'Dakar Plateau',
-      currentPrice: '850K XOF/m²',
-      prediction: '+8%',
-      confidence: 88,
-      trend: 'up',
-      timeframe: '6 mois',
-      factors: ['Zone commerciale', 'Transport', 'Bureaux'],
-      color: 'blue'
-    },
-    {
-      zone: 'Parcelles Assainies',
-      currentPrice: '420K XOF/m²',
-      prediction: '+12%',
-      confidence: 85,
-      trend: 'up',
-      timeframe: '8 mois',
-      factors: ['Accessibilité', 'Projets résidentiels'],
-      color: 'purple'
-    },
-    {
-      zone: 'Rufisque',
-      currentPrice: '280K XOF/m²',
-      prediction: '+5%',
-      confidence: 78,
-      trend: 'stable',
-      timeframe: '12 mois',
-      factors: ['Zone industrielle', 'Transport en développement'],
-      color: 'orange'
-    }
-  ]);
-
-  const [aiFeatures] = useState([
+  // Catalogue STATIQUE de fonctionnalités (descriptions d'outils, pas de taux fabriqués)
+  const aiFeatures = [
     {
       title: 'Évaluation Automatique',
-      description: 'IA calcule la valeur basée sur 50+ critères',
+      description: "Estimation de valeur assistée à partir des critères du terrain",
       icon: Calculator,
-      accuracy: '94.5%',
       color: 'bg-blue-50 text-blue-600'
     },
     {
       title: 'Analyse de Marché',
-      description: 'Prédictions basées sur big data',
+      description: 'Comparaison aux prix réels par région (données properties)',
       icon: BarChart3,
-      accuracy: '91.2%',
       color: 'bg-green-50 text-green-600'
     },
     {
       title: 'Détection Fraude',
-      description: 'Identifie les documents suspects',
+      description: "Repérage d'incohérences documentaires et de litiges",
       icon: AlertTriangle,
-      accuracy: '98.7%',
       color: 'bg-red-50 text-red-600'
     },
     {
       title: 'Reconnaissance Image',
-      description: 'Analyse automatique des plans',
+      description: 'Analyse assistée des plans et photos GPS',
       icon: Camera,
-      accuracy: '89.3%',
       color: 'bg-purple-50 text-purple-600'
     }
-  ]);
-
-  const [aiRecommendations] = useState([
-    {
-      priority: 'haute',
-      title: 'Opportunité Almadies',
-      description: 'Forte demande détectée pour terrains vue mer. Recommandation d\'évaluation premium.',
-      action: 'Programmer visite',
-      confidence: 94
-    },
-    {
-      priority: 'moyenne',
-      title: 'Tendance Rufisque',
-      description: 'Développement infrastructure détecté. Surveillez évolution prix.',
-      action: 'Analyser zone',
-      confidence: 82
-    },
-    {
-      priority: 'faible',
-      title: 'Documentation Manquante',
-      description: '3 dossiers clients nécessitent documents additionnels.',
-      action: 'Relancer clients',
-      confidence: 76
-    }
-  ]);
+  ];
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 800);
-  }, []);
+    if (user?.id) {
+      loadData();
+    }
+  }, [user?.id]);
 
-  const handleSendMessage = () => {
-    if (!chatInput.trim()) return;
-    
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      // Historique de chat réel (ai_chat_history : id, user_id, role, content, created_at)
+      const { data: chatData } = await supabase
+        .from('ai_chat_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      setChatHistory(
+        (chatData || []).map((m) => ({
+          id: m.id,
+          type: m.role === 'user' ? 'user' : 'ai',
+          message: m.content,
+          timestamp: m.created_at
+            ? new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+            : ''
+        }))
+      );
+
+      // Analyses IA réelles (ai_analyses : id, user_id, property_id, result jsonb, created_at)
+      const { data: analysesData } = await supabase
+        .from('ai_analyses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      setAnalyses(analysesData || []);
+
+      // Propriétés de l'agent pour le score IA réel (properties.ai_score)
+      const { data: propertiesData } = await supabase
+        .from('properties')
+        .select('id, ai_score')
+        .eq('owner_id', user.id);
+
+      const scored = (propertiesData || []).filter(
+        (p) => typeof p.ai_score === 'number' && p.ai_score !== null
+      );
+      const avgAiScore = scored.length > 0
+        ? Math.round(scored.reduce((s, p) => s + p.ai_score, 0) / scored.length)
+        : null;
+
+      setAiMetrics({
+        avgAiScore,
+        totalAnalyses: analysesData?.length || 0,
+        totalMessages: chatData?.length || 0,
+        propertiesTracked: propertiesData?.length || 0
+      });
+
+      // Marché réel par région (prix/m² calculés depuis properties)
+      const market = await StatsService.getRegionMarket();
+      setMarketData(
+        (market || [])
+          .filter((m) => m.avgPricePerM2 > 0)
+          .sort((a, b) => b.avgPricePerM2 - a.avgPricePerM2)
+      );
+    } catch (error) {
+      console.error('Erreur chargement IA agent foncier:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!chatInput.trim() || isProcessing) return;
     setIsProcessing(true);
-    
-    // Ajouter message utilisateur
-    const userMessage = {
-      id: chatHistory.length + 1,
-      type: 'user',
-      message: chatInput,
-      timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-    };
-    
-    setChatHistory(prev => [...prev, userMessage]);
+    const userMessage = chatInput.trim();
     setChatInput('');
-    
-    // Simuler réponse IA
-    setTimeout(() => {
-      const aiResponse = {
-        id: chatHistory.length + 2,
-        type: 'ai',
-        message: 'Analyse en cours... Basé sur votre question, je recommande une approche méthodique en tenant compte des facteurs de marché actuels.',
-        timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      };
-      setChatHistory(prev => [...prev, aiResponse]);
+
+    try {
+      const nowLabel = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+      // Affichage optimiste + enregistrement réel du message utilisateur
+      setChatHistory((prev) => [
+        ...prev,
+        { id: `local-${Date.now()}`, type: 'user', message: userMessage, timestamp: nowLabel }
+      ]);
+
+      await supabase.from('ai_chat_history').insert({
+        user_id: user.id,
+        role: 'user',
+        content: userMessage
+      });
+
+      // Aucun moteur IA n'est câblé sur cette instance : on n'invente pas de réponse.
+      const notConnectedMessage =
+        "L'assistant IA conversationnel n'est pas encore connecté à un moteur d'intelligence artificielle sur votre compte (intégration à venir). Votre message a bien été enregistré.";
+
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          id: `local-ai-${Date.now()}`,
+          type: 'ai',
+          message: notConnectedMessage,
+          timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+
+      await supabase.from('ai_chat_history').insert({
+        user_id: user.id,
+        role: 'assistant',
+        content: notConnectedMessage
+      });
+
+      setAiMetrics((prev) => ({ ...prev, totalMessages: prev.totalMessages + 2 }));
+    } catch (error) {
+      console.error('Erreur envoi message IA:', error);
+      toast.error("Erreur lors de l'envoi du message");
+    } finally {
       setIsProcessing(false);
-    }, 1500);
+    }
+  };
+
+  const formatXOF = (n) => {
+    if (!n) return '—';
+    if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M XOF/m²`;
+    if (n >= 1_000) return `${Math.round(n / 1_000)}K XOF/m²`;
+    return `${n} XOF/m²`;
   };
 
   if (loading) {
@@ -216,7 +229,7 @@ const AgentFoncierAI = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -243,14 +256,16 @@ const AgentFoncierAI = () => {
         </div>
       </div>
 
-      {/* Métriques IA */}
+      {/* Métriques IA — compteurs RÉELS */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
         <Card className="border-l-4 border-l-blue-500">
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Précision IA</p>
-                <p className="text-2xl font-bold text-gray-900">{aiMetrics.accuracyRate}%</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Score IA moyen</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {aiMetrics.avgAiScore !== null ? `${aiMetrics.avgAiScore}%` : '—'}
+                </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
                 <Target className="h-6 w-6 text-blue-600" />
@@ -263,8 +278,8 @@ const AgentFoncierAI = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Prédictions</p>
-                <p className="text-2xl font-bold text-gray-900">{aiMetrics.predictionsGenerated}</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Analyses IA</p>
+                <p className="text-2xl font-bold text-gray-900">{aiMetrics.totalAnalyses}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <TrendingUp className="h-6 w-6 text-green-600" />
@@ -277,11 +292,11 @@ const AgentFoncierAI = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Temps Économisé</p>
-                <p className="text-2xl font-bold text-gray-900">{aiMetrics.timesSaved}h</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Messages IA</p>
+                <p className="text-2xl font-bold text-gray-900">{aiMetrics.totalMessages}</p>
               </div>
               <div className="bg-purple-100 p-3 rounded-full">
-                <Clock className="h-6 w-6 text-purple-600" />
+                <MessageCircle className="h-6 w-6 text-purple-600" />
               </div>
             </div>
           </CardContent>
@@ -291,8 +306,8 @@ const AgentFoncierAI = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Rapports Auto</p>
-                <p className="text-2xl font-bold text-gray-900">{aiMetrics.reportsGenerated}</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Terrains suivis</p>
+                <p className="text-2xl font-bold text-gray-900">{aiMetrics.propertiesTracked}</p>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
                 <FileText className="h-6 w-6 text-orange-600" />
@@ -311,7 +326,7 @@ const AgentFoncierAI = () => {
           </TabsTrigger>
           <TabsTrigger value="predictions" className="flex items-center gap-2">
             <LineChart className="h-4 w-4" />
-            Prédictions
+            Marché
           </TabsTrigger>
           <TabsTrigger value="features" className="flex items-center gap-2">
             <Zap className="h-4 w-4" />
@@ -340,33 +355,41 @@ const AgentFoncierAI = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-96 overflow-y-auto space-y-4 mb-4 p-4 bg-gray-50 rounded-lg">
-                    {chatHistory.map((msg) => (
-                      <motion.div
-                        key={msg.id}
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                      >
-                        <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                          msg.type === 'user' 
-                            ? 'bg-green-600 text-white' 
-                            : 'bg-white border shadow-sm'
-                        }`}>
-                          <p className="text-sm">{msg.message}</p>
-                          <p className={`text-xs mt-1 ${
-                            msg.type === 'user' ? 'text-green-100' : 'text-gray-500'
+                    {chatHistory.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center text-gray-500">
+                        <Brain className="h-10 w-10 mb-3 text-gray-300" />
+                        <p className="text-sm">Aucune conversation pour le moment.</p>
+                        <p className="text-xs mt-1">Posez votre première question ci-dessous.</p>
+                      </div>
+                    ) : (
+                      chatHistory.map((msg) => (
+                        <motion.div
+                          key={msg.id}
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                        >
+                          <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                            msg.type === 'user'
+                              ? 'bg-green-600 text-white'
+                              : 'bg-white border shadow-sm'
                           }`}>
-                            {msg.timestamp}
-                          </p>
-                        </div>
-                      </motion.div>
-                    ))}
+                            <p className="text-sm whitespace-pre-line">{msg.message}</p>
+                            <p className={`text-xs mt-1 ${
+                              msg.type === 'user' ? 'text-green-100' : 'text-gray-500'
+                            }`}>
+                              {msg.timestamp}
+                            </p>
+                          </div>
+                        </motion.div>
+                      ))
+                    )}
                     {isProcessing && (
                       <div className="flex justify-start">
                         <div className="bg-white border shadow-sm px-4 py-2 rounded-lg">
                           <div className="flex items-center space-x-2">
                             <div className="animate-spin rounded-full h-3 w-3 border-b border-blue-600"></div>
-                            <span className="text-sm text-gray-600">L'IA réfléchit...</span>
+                            <span className="text-sm text-gray-600">Enregistrement...</span>
                           </div>
                         </div>
                       </div>
@@ -377,10 +400,11 @@ const AgentFoncierAI = () => {
                       placeholder="Posez une question à l'IA..."
                       value={chatInput}
                       onChange={(e) => setChatInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
+                      onKeyDown={(e) => e.key === 'Enter' && handleSendMessage()}
                       className="flex-1"
+                      disabled={isProcessing}
                     />
-                    <Button 
+                    <Button
                       onClick={handleSendMessage}
                       disabled={!chatInput.trim() || isProcessing}
                       className="bg-green-600 hover:bg-green-700"
@@ -401,32 +425,13 @@ const AgentFoncierAI = () => {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {aiRecommendations.map((rec, index) => (
-                      <motion.div
-                        key={index}
-                        initial={{ opacity: 0, x: 20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ delay: index * 0.1 }}
-                        className="p-3 border rounded-lg"
-                      >
-                        <div className="flex items-center justify-between mb-2">
-                          <Badge className={
-                            rec.priority === 'haute' ? 'bg-red-100 text-red-800' :
-                            rec.priority === 'moyenne' ? 'bg-yellow-100 text-yellow-800' :
-                            'bg-gray-100 text-gray-800'
-                          }>
-                            {rec.priority}
-                          </Badge>
-                          <span className="text-xs text-gray-500">{rec.confidence}%</span>
-                        </div>
-                        <h4 className="font-medium text-gray-900 mb-1">{rec.title}</h4>
-                        <p className="text-sm text-gray-600 mb-2">{rec.description}</p>
-                        <Button variant="outline" size="sm" className="text-xs">
-                          {rec.action}
-                        </Button>
-                      </motion.div>
-                    ))}
+                  {/* Aucune source de suggestions générées : état honnête */}
+                  <div className="flex flex-col items-center justify-center text-center text-gray-500 py-8">
+                    <Sparkles className="h-8 w-8 mb-2 text-gray-300" />
+                    <p className="text-sm">
+                      Les recommandations personnalisées seront disponibles une fois le moteur IA connecté.
+                    </p>
+                    <p className="text-xs mt-1">Bientôt disponible.</p>
                   </div>
                 </CardContent>
               </Card>
@@ -434,61 +439,60 @@ const AgentFoncierAI = () => {
           </div>
         </TabsContent>
 
-        {/* Prédictions */}
+        {/* Marché (prix réels par région) */}
         <TabsContent value="predictions" className="mt-6">
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center">
                 <TrendingUp className="h-5 w-5 mr-2" />
-                Prédictions de Marché IA
+                Marché par région (prix réels)
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-                {marketPredictions.map((pred, index) => (
-                  <motion.div
-                    key={pred.zone}
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: index * 0.1 }}
-                    className="border rounded-lg p-4"
-                  >
-                    <div className="flex items-center justify-between mb-3">
-                      <h3 className="font-semibold text-gray-900">{pred.zone}</h3>
-                      <Badge className={`bg-${pred.color}-100 text-${pred.color}-800`}>
-                        {pred.prediction}
-                      </Badge>
-                    </div>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Prix actuel:</span>
-                        <span className="font-medium">{pred.currentPrice}</span>
+              {marketData.length === 0 ? (
+                <div className="flex flex-col items-center justify-center text-center text-gray-500 py-10">
+                  <LineChart className="h-10 w-10 mb-3 text-gray-300" />
+                  <p className="text-sm">Aucune donnée de marché disponible pour le moment.</p>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  {marketData.map((m, index) => (
+                    <motion.div
+                      key={m.region}
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                      className="border rounded-lg p-4"
+                    >
+                      <div className="flex items-center justify-between mb-3">
+                        <h3 className="font-semibold text-gray-900">{m.region}</h3>
+                        <Badge className="bg-blue-100 text-blue-800">
+                          {m.count} bien{m.count > 1 ? 's' : ''}
+                        </Badge>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Confiance:</span>
-                        <div className="flex items-center gap-2">
-                          <Progress value={pred.confidence} className="w-16 h-2" />
-                          <span className="text-sm font-medium">{pred.confidence}%</span>
+                      <div className="space-y-3">
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Prix moyen /m² :</span>
+                          <span className="font-medium">{formatXOF(m.avgPricePerM2)}</span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm text-gray-600">Prix moyen bien :</span>
+                          <span className="font-medium">
+                            {m.avgPrice ? `${(m.avgPrice / 1_000_000).toFixed(1)}M XOF` : '—'}
+                          </span>
+                        </div>
+                        <div className="flex justify-between items-center">
+                          <span className="text-sm text-gray-600">Taux de vérification :</span>
+                          <div className="flex items-center gap-2">
+                            <Progress value={m.verificationRate} className="w-16 h-2" />
+                            <span className="text-sm font-medium">{m.verificationRate}%</span>
+                          </div>
                         </div>
                       </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm text-gray-600">Échéance:</span>
-                        <span className="font-medium">{pred.timeframe}</span>
-                      </div>
-                      <div>
-                        <span className="text-sm text-gray-600 block mb-2">Facteurs clés:</span>
-                        <div className="flex flex-wrap gap-1">
-                          {pred.factors.map((factor, idx) => (
-                            <Badge key={idx} variant="outline" className="text-xs">
-                              {factor}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -509,14 +513,14 @@ const AgentFoncierAI = () => {
                       <div className={`p-3 rounded-lg ${feature.color}`}>
                         <feature.icon className="h-6 w-6" />
                       </div>
-                      <Badge className="bg-green-100 text-green-800">
-                        {feature.accuracy}
+                      <Badge variant="outline" className="text-gray-500">
+                        Bientôt
                       </Badge>
                     </div>
                     <h3 className="font-semibold text-gray-900 mb-2">{feature.title}</h3>
                     <p className="text-gray-600 mb-4">{feature.description}</p>
-                    <Button variant="outline" className="w-full">
-                      Utiliser cette fonctionnalité
+                    <Button variant="outline" className="w-full" disabled>
+                      Bientôt disponible
                     </Button>
                   </CardContent>
                 </Card>
@@ -525,35 +529,37 @@ const AgentFoncierAI = () => {
           </div>
         </TabsContent>
 
-        {/* Analytics IA */}
+        {/* Analytics IA — compteurs RÉELS */}
         <TabsContent value="analytics" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
-                <CardTitle>Performance IA</CardTitle>
+                <CardTitle>Activité IA</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm text-gray-600">Précision Évaluations</span>
-                      <span className="text-sm font-medium">94.5%</span>
-                    </div>
-                    <Progress value={94.5} className="h-2" />
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Analyses enregistrées</span>
+                    <span className="font-bold text-blue-600">{aiMetrics.totalAnalyses}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Messages échangés</span>
+                    <span className="font-bold text-purple-600">{aiMetrics.totalMessages}</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm text-gray-600">Terrains suivis</span>
+                    <span className="font-bold text-orange-600">{aiMetrics.propertiesTracked}</span>
                   </div>
                   <div>
                     <div className="flex justify-between mb-2">
-                      <span className="text-sm text-gray-600">Prédictions Correctes</span>
-                      <span className="text-sm font-medium">91.2%</span>
+                      <span className="text-sm text-gray-600">Score IA moyen (terrains)</span>
+                      <span className="text-sm font-medium">
+                        {aiMetrics.avgAiScore !== null ? `${aiMetrics.avgAiScore}%` : '—'}
+                      </span>
                     </div>
-                    <Progress value={91.2} className="h-2" />
-                  </div>
-                  <div>
-                    <div className="flex justify-between mb-2">
-                      <span className="text-sm text-gray-600">Détection Fraude</span>
-                      <span className="text-sm font-medium">98.7%</span>
-                    </div>
-                    <Progress value={98.7} className="h-2" />
+                    {aiMetrics.avgAiScore !== null && (
+                      <Progress value={aiMetrics.avgAiScore} className="h-2" />
+                    )}
                   </div>
                 </div>
               </CardContent>
@@ -561,25 +567,28 @@ const AgentFoncierAI = () => {
 
             <Card>
               <CardHeader>
-                <CardTitle>Utilisation IA</CardTitle>
+                <CardTitle>Analyses récentes</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-blue-900">Requêtes Aujourd'hui</p>
-                      <p className="text-2xl font-bold text-blue-600">247</p>
-                    </div>
-                    <Cpu className="h-8 w-8 text-blue-600" />
+                {analyses.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center text-center text-gray-500 py-8">
+                    <Cpu className="h-8 w-8 mb-2 text-gray-300" />
+                    <p className="text-sm">Aucune analyse IA enregistrée pour le moment.</p>
                   </div>
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div>
-                      <p className="font-medium text-green-900">Temps Économisé</p>
-                      <p className="text-2xl font-bold text-green-600">12.5h</p>
-                    </div>
-                    <Clock className="h-8 w-8 text-green-600" />
+                ) : (
+                  <div className="space-y-3">
+                    {analyses.slice(0, 5).map((a) => (
+                      <div key={a.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <span className="text-sm font-medium text-gray-800">
+                          {a.result?.title || a.result?.type || 'Analyse IA'}
+                        </span>
+                        <span className="text-xs text-gray-500">
+                          {a.created_at ? new Date(a.created_at).toLocaleDateString('fr-FR') : '—'}
+                        </span>
+                      </div>
+                    ))}
                   </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -594,7 +603,7 @@ const AgentFoncierAI = () => {
                   <FileText className="h-5 w-5 mr-2" />
                   Génération Automatique de Rapports
                 </span>
-                <Button className="bg-green-600 hover:bg-green-700">
+                <Button className="bg-green-600 hover:bg-green-700" disabled>
                   <Download className="h-4 w-4 mr-2" />
                   Nouveau Rapport
                 </Button>
@@ -602,20 +611,20 @@ const AgentFoncierAI = () => {
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <Button variant="outline" className="h-32 flex flex-col items-center justify-center">
+                <Button variant="outline" className="h-32 flex flex-col items-center justify-center" disabled>
                   <BarChart3 className="h-8 w-8 mb-2 text-blue-600" />
                   <span className="font-medium">Rapport d'Expertise</span>
-                  <span className="text-sm text-gray-500">IA + Données marché</span>
+                  <span className="text-sm text-gray-500">Bientôt disponible</span>
                 </Button>
-                <Button variant="outline" className="h-32 flex flex-col items-center justify-center">
+                <Button variant="outline" className="h-32 flex flex-col items-center justify-center" disabled>
                   <LineChart className="h-8 w-8 mb-2 text-green-600" />
                   <span className="font-medium">Analyse Tendances</span>
-                  <span className="text-sm text-gray-500">Prédictions 6 mois</span>
+                  <span className="text-sm text-gray-500">Bientôt disponible</span>
                 </Button>
-                <Button variant="outline" className="h-32 flex flex-col items-center justify-center">
+                <Button variant="outline" className="h-32 flex flex-col items-center justify-center" disabled>
                   <PieChart className="h-8 w-8 mb-2 text-purple-600" />
                   <span className="font-medium">Portfolio Analysis</span>
-                  <span className="text-sm text-gray-500">Performance clients</span>
+                  <span className="text-sm text-gray-500">Bientôt disponible</span>
                 </Button>
               </div>
             </CardContent>

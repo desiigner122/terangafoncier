@@ -1,32 +1,23 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Ruler, 
-  Map, 
-  FileText, 
-  Camera, 
-  Download, 
-  Upload, 
-  Eye, 
+import {
+  Ruler,
+  Map,
+  FileText,
+  Camera,
+  Download,
+  Upload,
+  Eye,
   Plus,
   Search,
   Filter,
   Edit,
-  Trash2,
   MapPin,
   Compass,
   Square,
-  Triangle,
-  Circle,
-  Maximize,
   RefreshCw,
   Calendar,
   User,
-  AlertTriangle,
-  CheckCircle,
-  Clock,
-  Grid3X3,
-  Layers,
   ZoomIn,
   ZoomOut,
   RotateCcw,
@@ -43,10 +34,29 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Superficie (m²) -> hectares avec 1 décimale
+const toHectares = (m2) => {
+  const n = Number(m2) || 0;
+  return n / 10000;
+};
+
+// Libellé + couleur selon le verification_status réel de la propriété
+const getStatusBadge = (status) => {
+  switch (status) {
+    case 'verified': return { label: 'Vérifié', className: 'bg-green-100 text-green-800' };
+    case 'in_progress': return { label: 'En cours', className: 'bg-blue-100 text-blue-800' };
+    case 'pending': return { label: 'En attente', className: 'bg-orange-100 text-orange-800' };
+    case 'rejected': return { label: 'Rejeté', className: 'bg-red-100 text-red-800' };
+    default: return { label: status || 'Non défini', className: 'bg-gray-100 text-gray-800' };
+  }
+};
 
 const AgentFoncierCadastral = () => {
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('plans');
   const [searchTerm, setSearchTerm] = useState('');
@@ -54,95 +64,115 @@ const AgentFoncierCadastral = () => {
   const [showGrid, setShowGrid] = useState(true);
   const [zoom, setZoom] = useState(100);
 
-  // Données simulées
-  const [cadastralPlans] = useState([
-    {
-      id: 'CAD-001',
-      title: 'Secteur Nord - Dakar Plateau',
-      type: 'Plan de masse',
-      surface: '2.5 ha',
-      parcels: 24,
-      status: 'Validé',
-      date: '2024-09-20',
-      surveyor: 'M. Diop',
-      progress: 100,
-      coordinates: { lat: 14.6937, lng: -17.4441 }
-    },
-    {
-      id: 'CAD-002', 
-      title: 'Zone Industrielle - Rufisque',
-      type: 'Levé topographique',
-      surface: '5.2 ha',
-      parcels: 8,
-      status: 'En cours',
-      date: '2024-09-25',
-      surveyor: 'Mme Fall',
-      progress: 75,
-      coordinates: { lat: 14.7167, lng: -17.2667 }
-    },
-    {
-      id: 'CAD-003',
-      title: 'Résidentiel Almadies',
-      type: 'Bornage',
-      surface: '1.8 ha',
-      parcels: 45,
-      status: 'Révision',
-      date: '2024-09-15',
-      surveyor: 'M. Ndiaye',
-      progress: 90,
-      coordinates: { lat: 14.7644, lng: -17.5175 }
-    },
-    {
-      id: 'CAD-004',
-      title: 'Projet Diamniadio',
-      type: 'Plan cadastral',
-      surface: '12.0 ha',
-      parcels: 156,
-      status: 'Planifié',
-      date: '2024-10-01',
-      surveyor: 'Équipe Tech',
-      progress: 25,
-      coordinates: { lat: 14.7167, lng: -17.1833 }
-    }
-  ]);
-
-  const [recentMeasures] = useState([
-    { id: 1, parcel: 'PAR-A-001', type: 'Surface', value: '2450 m²', date: '2024-09-26', precision: '±0.5m' },
-    { id: 2, parcel: 'PAR-B-023', type: 'Périmètre', value: '198.5 m', date: '2024-09-25', precision: '±0.2m' },
-    { id: 3, parcel: 'PAR-C-112', type: 'Altitude', value: '45.2 m', date: '2024-09-24', precision: '±0.1m' },
-    { id: 4, parcel: 'PAR-D-034', type: 'Orientation', value: '125.5°', date: '2024-09-24', precision: '±0.05°' },
-    { id: 5, parcel: 'PAR-E-067', type: 'Distance', value: '87.3 m', date: '2024-09-23', precision: '±0.1m' }
-  ]);
-
-  const [surveyTools] = useState([
-    { name: 'Station totale', status: 'Disponible', lastCalib: '2024-09-01', precision: '±2mm + 2ppm' },
-    { name: 'GPS RTK', status: 'En service', lastCalib: '2024-08-15', precision: '±1cm' },
-    { name: 'Niveau optique', status: 'Maintenance', lastCalib: '2024-07-30', precision: '±1mm/km' },
-    { name: 'Distancemètre laser', status: 'Disponible', lastCalib: '2024-09-10', precision: '±1.5mm' }
-  ]);
+  // Données réelles
+  const [cadastralPlans, setCadastralPlans] = useState([]);
+  const [gpsPoints, setGpsPoints] = useState([]);
+  const [stats, setStats] = useState({
+    totalPlans: 0,
+    surfaceHa: 0,
+    gpsPointsCount: 0,
+    avgQuality: null
+  });
 
   useEffect(() => {
-    setTimeout(() => setLoading(false), 800);
-  }, []);
+    const loadCadastral = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      setLoading(true);
+      try {
+        // Plans cadastraux = properties de l'agent (owner_id)
+        const { data: props, error } = await supabase
+          .from('properties')
+          .select('id, title, name, type, surface, location, region, city, latitude, longitude, status, verification_status, created_at')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false });
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Validé': return 'bg-green-100 text-green-800';
-      case 'En cours': return 'bg-blue-100 text-blue-800';
-      case 'Révision': return 'bg-orange-100 text-orange-800';
-      case 'Planifié': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+        if (error) throw error;
+        const list = props || [];
 
-  const getToolStatusColor = (status) => {
-    switch (status) {
-      case 'Disponible': return 'bg-green-100 text-green-800';
-      case 'En service': return 'bg-blue-100 text-blue-800';
-      case 'Maintenance': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+        // Points GPS / relevés = property_photos géolocalisées de ces propriétés
+        const ids = list.map((p) => p.id);
+        const photosByProperty = {};
+        let gpsList = [];
+        if (ids.length > 0) {
+          const { data: photos } = await supabase
+            .from('property_photos')
+            .select('id, property_id, gps_latitude, gps_longitude, quality_score, created_at')
+            .in('property_id', ids)
+            .order('created_at', { ascending: false });
+
+          (photos || []).forEach((ph) => {
+            photosByProperty[ph.property_id] = (photosByProperty[ph.property_id] || 0) + 1;
+          });
+
+          const titleById = {};
+          list.forEach((p) => { titleById[p.id] = p.title || p.name || 'Parcelle'; });
+
+          gpsList = (photos || [])
+            .filter((ph) => ph.gps_latitude != null && ph.gps_longitude != null)
+            .map((ph) => ({
+              id: ph.id,
+              parcel: titleById[ph.property_id] || 'Parcelle',
+              lat: Number(ph.gps_latitude),
+              lng: Number(ph.gps_longitude),
+              quality: ph.quality_score != null ? Number(ph.quality_score) : null,
+              date: ph.created_at ? new Date(ph.created_at).toLocaleDateString('fr-FR') : '—'
+            }));
+        }
+
+        const plans = list.map((p) => ({
+          id: p.id,
+          title: p.title || p.name || 'Parcelle sans titre',
+          type: p.type || 'Terrain',
+          surface: p.surface,
+          location: p.location || [p.city, p.region].filter(Boolean).join(', ') || '—',
+          status: p.verification_status,
+          date: p.created_at ? new Date(p.created_at).toLocaleDateString('fr-FR') : '—',
+          hasGps: p.latitude != null && p.longitude != null,
+          lat: p.latitude,
+          lng: p.longitude,
+          photosCount: photosByProperty[p.id] || 0
+        }));
+
+        // Stats calculées sur les vraies données
+        const surfaceHa = list.reduce((sum, p) => sum + toHectares(p.surface), 0);
+        const qualities = gpsList.map((g) => g.quality).filter((q) => q != null);
+        const avgQuality = qualities.length
+          ? Math.round(qualities.reduce((a, b) => a + b, 0) / qualities.length)
+          : null;
+
+        setCadastralPlans(plans);
+        setGpsPoints(gpsList);
+        setStats({
+          totalPlans: plans.length,
+          surfaceHa,
+          gpsPointsCount: gpsList.length,
+          avgQuality
+        });
+      } catch (e) {
+        console.error('Erreur chargement cadastre agent:', e);
+        setCadastralPlans([]);
+        setGpsPoints([]);
+        setStats({ totalPlans: 0, surfaceHa: 0, gpsPointsCount: 0, avgQuality: null });
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCadastral();
+  }, [user?.id]);
+
+  const filteredPlans = cadastralPlans.filter((p) => {
+    const q = searchTerm.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      p.title.toLowerCase().includes(q) ||
+      String(p.type).toLowerCase().includes(q) ||
+      p.location.toLowerCase().includes(q)
+    );
+  });
 
   if (loading) {
     return (
@@ -153,7 +183,7 @@ const AgentFoncierCadastral = () => {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -183,8 +213,8 @@ const AgentFoncierCadastral = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Plans Actifs</p>
-                <p className="text-2xl font-bold text-gray-900">24</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Plans / Parcelles</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.totalPlans}</p>
               </div>
               <div className="bg-green-100 p-3 rounded-full">
                 <Map className="h-6 w-6 text-green-600" />
@@ -197,8 +227,10 @@ const AgentFoncierCadastral = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Surfaces Mesurées</p>
-                <p className="text-2xl font-bold text-gray-900">156.8 ha</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Surfaces Cumulées</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.surfaceHa > 0 ? `${stats.surfaceHa.toFixed(1)} ha` : '—'}
+                </p>
               </div>
               <div className="bg-blue-100 p-3 rounded-full">
                 <Square className="h-6 w-6 text-blue-600" />
@@ -211,8 +243,8 @@ const AgentFoncierCadastral = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Bornages</p>
-                <p className="text-2xl font-bold text-gray-900">89</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Points GPS</p>
+                <p className="text-2xl font-bold text-gray-900">{stats.gpsPointsCount}</p>
               </div>
               <div className="bg-orange-100 p-3 rounded-full">
                 <Target className="h-6 w-6 text-orange-600" />
@@ -225,8 +257,10 @@ const AgentFoncierCadastral = () => {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm font-medium text-gray-600 mb-1">Précision Moy.</p>
-                <p className="text-2xl font-bold text-gray-900">±0.8cm</p>
+                <p className="text-sm font-medium text-gray-600 mb-1">Qualité Moy. GPS</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {stats.avgQuality != null ? `${stats.avgQuality}%` : '—'}
+                </p>
               </div>
               <div className="bg-purple-100 p-3 rounded-full">
                 <Compass className="h-6 w-6 text-purple-600" />
@@ -245,7 +279,7 @@ const AgentFoncierCadastral = () => {
           </TabsTrigger>
           <TabsTrigger value="measures" className="flex items-center gap-2">
             <Ruler className="h-4 w-4" />
-            Mesures
+            Relevés GPS
           </TabsTrigger>
           <TabsTrigger value="viewer" className="flex items-center gap-2">
             <Eye className="h-4 w-4" />
@@ -288,88 +322,125 @@ const AgentFoncierCadastral = () => {
               </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                {cadastralPlans.map((plan) => (
-                  <motion.div
-                    key={plan.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    className="border rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
-                    onClick={() => setSelectedPlan(plan)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center gap-4">
-                        <div className="bg-green-100 p-3 rounded-lg">
-                          <Map className="h-6 w-6 text-green-600" />
-                        </div>
-                        <div>
-                          <h3 className="font-semibold text-gray-900">{plan.title}</h3>
-                          <p className="text-sm text-gray-600">{plan.type} • {plan.surface} • {plan.parcels} parcelles</p>
-                          <div className="flex items-center gap-4 mt-2">
-                            <Badge className={getStatusColor(plan.status)}>
-                              {plan.status}
-                            </Badge>
-                            <span className="text-xs text-gray-500">
-                              <Calendar className="h-3 w-3 inline mr-1" />
-                              {plan.date}
-                            </span>
-                            <span className="text-xs text-gray-500">
-                              <User className="h-3 w-3 inline mr-1" />
-                              {plan.surveyor}
-                            </span>
+              {filteredPlans.length === 0 ? (
+                <div className="text-center py-16">
+                  <Map className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600 font-medium">Aucun plan cadastral</p>
+                  <p className="text-sm text-gray-500">
+                    Vos parcelles apparaîtront ici dès qu'elles seront enregistrées.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {filteredPlans.map((plan) => {
+                    const badge = getStatusBadge(plan.status);
+                    return (
+                      <motion.div
+                        key={plan.id}
+                        initial={{ opacity: 0, x: -20 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        className="border rounded-lg p-4 hover:shadow-md transition-all duration-200 cursor-pointer"
+                        onClick={() => setSelectedPlan(plan)}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-4">
+                            <div className="bg-green-100 p-3 rounded-lg">
+                              <Map className="h-6 w-6 text-green-600" />
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-gray-900">{plan.title}</h3>
+                              <p className="text-sm text-gray-600">
+                                {plan.type}
+                                {plan.surface ? ` • ${Number(plan.surface).toLocaleString('fr-FR')} m²` : ''}
+                                {plan.photosCount ? ` • ${plan.photosCount} photo${plan.photosCount > 1 ? 's' : ''}` : ''}
+                              </p>
+                              <div className="flex items-center gap-4 mt-2 flex-wrap">
+                                <Badge className={badge.className}>
+                                  {badge.label}
+                                </Badge>
+                                <span className="text-xs text-gray-500">
+                                  <Calendar className="h-3 w-3 inline mr-1" />
+                                  {plan.date}
+                                </span>
+                                <span className="text-xs text-gray-500">
+                                  <MapPin className="h-3 w-3 inline mr-1" />
+                                  {plan.location}
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+                          <div className="flex items-center gap-3">
+                            <div className="text-right">
+                              {plan.hasGps ? (
+                                <span className="text-xs text-green-600 font-medium">
+                                  <Target className="h-3 w-3 inline mr-1" />
+                                  {Number(plan.lat).toFixed(4)}, {Number(plan.lng).toFixed(4)}
+                                </span>
+                              ) : (
+                                <span className="text-xs text-gray-400">Sans GPS</span>
+                              )}
+                            </div>
+                            <div className="flex gap-2">
+                              <Button variant="outline" size="sm">
+                                <Eye className="h-4 w-4" />
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <Download className="h-4 w-4" />
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <Edit className="h-4 w-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                      </div>
-                      <div className="flex items-center gap-3">
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-gray-900">{plan.progress}%</p>
-                          <Progress value={plan.progress} className="w-20 h-2 mt-1" />
-                        </div>
-                        <div className="flex gap-2">
-                          <Button variant="outline" size="sm">
-                            <Eye className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Download className="h-4 w-4" />
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Edit className="h-4 w-4" />
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
+                      </motion.div>
+                    );
+                  })}
+                </div>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
 
-        {/* Mesures Tab */}
+        {/* Relevés GPS Tab */}
         <TabsContent value="measures" className="mt-6">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
                   <Ruler className="h-5 w-5 mr-2" />
-                  Mesures Récentes
+                  Relevés GPS Récents
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {recentMeasures.map((measure) => (
-                    <div key={measure.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{measure.parcel}</p>
-                        <p className="text-sm text-gray-600">{measure.type}</p>
+                {gpsPoints.length === 0 ? (
+                  <div className="text-center py-12">
+                    <Target className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                    <p className="text-gray-600 font-medium">Aucun relevé GPS</p>
+                    <p className="text-sm text-gray-500">
+                      Les points géolocalisés de vos photos de parcelles s'afficheront ici.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {gpsPoints.slice(0, 12).map((point) => (
+                      <div key={point.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                        <div>
+                          <p className="font-medium text-gray-900">{point.parcel}</p>
+                          <p className="text-sm text-gray-600">Point GPS • {point.date}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="font-semibold text-green-600">
+                            {point.lat.toFixed(5)}, {point.lng.toFixed(5)}
+                          </p>
+                          <p className="text-xs text-gray-500">
+                            {point.quality != null ? `Qualité ${point.quality}%` : 'Qualité —'}
+                          </p>
+                        </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-green-600">{measure.value}</p>
-                        <p className="text-xs text-gray-500">{measure.precision}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -397,7 +468,7 @@ const AgentFoncierCadastral = () => {
                     <label className="block text-sm font-medium text-gray-700 mb-2">
                       Points de mesure
                     </label>
-                    <textarea 
+                    <textarea
                       className="w-full border border-gray-300 rounded-md px-3 py-2 h-24"
                       placeholder="Entrez les coordonnées (X, Y) séparées par des virgules..."
                     />
@@ -424,8 +495,8 @@ const AgentFoncierCadastral = () => {
                 <div className="flex items-center gap-3">
                   <div className="flex items-center gap-2">
                     <span className="text-sm text-gray-600">Grille</span>
-                    <Switch 
-                      checked={showGrid} 
+                    <Switch
+                      checked={showGrid}
                       onCheckedChange={setShowGrid}
                     />
                   </div>
@@ -449,7 +520,11 @@ const AgentFoncierCadastral = () => {
                 <div className="text-center">
                   <Globe className="h-12 w-12 text-gray-400 mx-auto mb-4" />
                   <p className="text-gray-600 mb-2">Visualiseur de Plans Cadastraux</p>
-                  <p className="text-sm text-gray-500">Sélectionnez un plan pour l'afficher</p>
+                  <p className="text-sm text-gray-500">
+                    {selectedPlan
+                      ? `Plan sélectionné : ${selectedPlan.title}`
+                      : 'Sélectionnez un plan pour l\'afficher'}
+                  </p>
                   <Button className="mt-4 bg-green-600 hover:bg-green-700">
                     <Upload className="h-4 w-4 mr-2" />
                     Charger un Plan
@@ -471,19 +546,12 @@ const AgentFoncierCadastral = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {surveyTools.map((tool, index) => (
-                    <div key={index} className="flex items-center justify-between p-3 border rounded-lg">
-                      <div>
-                        <p className="font-medium text-gray-900">{tool.name}</p>
-                        <p className="text-sm text-gray-600">Précision: {tool.precision}</p>
-                        <p className="text-xs text-gray-500">Dernier étalonnage: {tool.lastCalib}</p>
-                      </div>
-                      <Badge className={getToolStatusColor(tool.status)}>
-                        {tool.status}
-                      </Badge>
-                    </div>
-                  ))}
+                <div className="text-center py-12">
+                  <RefreshCw className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  <p className="text-gray-600 font-medium">Parc d'instruments</p>
+                  <p className="text-sm text-gray-500">
+                    Le suivi des instruments et étalonnages sera bientôt disponible.
+                  </p>
                 </div>
               </CardContent>
             </Card>

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Users, 
-  Search, 
-  Plus, 
-  Filter, 
-  Download, 
-  Mail, 
-  Phone, 
-  MapPin, 
+import {
+  Users,
+  Search,
+  Plus,
+  Filter,
+  Download,
+  Mail,
+  Phone,
+  MapPin,
   Calendar,
   Clock,
   DollarSign,
@@ -28,100 +28,177 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const AgentFoncierCRM = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedFilter, setSelectedFilter] = useState('all');
   const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [crmStats, setCrmStats] = useState({
+    totalClients: 0,
+    activeClients: 0,
+    nouveauxClients: 0,
+    clientsPotentiels: 0,
+    chiffreAffaires: 0,
+    tauxConversion: null
+  });
 
-  // Données CRM simulées
-  const crmStats = {
-    totalClients: 245,
-    activeClients: 89,
-    nouveauxClients: 12,
-    clientsPotentiels: 34,
-    chiffreAffaires: 125000000,
-    tauxConversion: 68
+  // Helpers
+  const getInitials = (name) => {
+    if (!name) return '?';
+    return name.trim().split(/\s+/).slice(0, 2).map(w => w[0]?.toUpperCase() || '').join('') || '?';
   };
 
-  const clientsData = [
-    {
-      id: 1,
-      name: 'Amadou Diallo',
-      email: 'amadou.diallo@email.com',
-      phone: '+221 77 123 45 67',
-      company: 'Diallo Immobilier',
-      location: 'Dakar, Plateau',
-      status: 'active',
-      value: 25000000,
-      lastContact: '2024-03-01',
-      nextFollowUp: '2024-03-05',
-      projects: 3,
-      avatar: '/api/placeholder/40/40',
-      tags: ['VIP', 'Promoteur'],
-      score: 95
-    },
-    {
-      id: 2,
-      name: 'Aïssatou Fall',
-      email: 'aissatou.fall@email.com',
-      phone: '+221 76 987 65 43',
-      company: 'Fall Construction',
-      location: 'Almadies, Dakar',
-      status: 'prospect',
-      value: 15000000,
-      lastContact: '2024-02-28',
-      nextFollowUp: '2024-03-03',
-      projects: 1,
-      avatar: '/api/placeholder/40/40',
-      tags: ['Nouveau'],
-      score: 78
-    },
-    {
-      id: 3,
-      name: 'Ousmane Ndiaye',
-      email: 'ousmane.ndiaye@email.com',
-      phone: '+221 78 456 78 90',
-      company: 'Ndiaye Développement',
-      location: 'Guédiawaye',
-      status: 'inactive',
-      value: 8000000,
-      lastContact: '2024-02-15',
-      nextFollowUp: '2024-03-10',
-      projects: 0,
-      avatar: '/api/placeholder/40/40',
-      tags: ['Suivi'],
-      score: 45
-    },
-    {
-      id: 4,
-      name: 'Fatou Sow',
-      email: 'fatou.sow@email.com',
-      phone: '+221 77 234 56 78',
-      company: 'Sow Investissement',
-      location: 'Pikine',
-      status: 'active',
-      value: 32000000,
-      lastContact: '2024-03-02',
-      nextFollowUp: '2024-03-04',
-      projects: 5,
-      avatar: '/api/placeholder/40/40',
-      tags: ['VIP', 'Premium'],
-      score: 88
+  const formatDate = (d) => {
+    if (!d) return '—';
+    try {
+      return new Date(d).toLocaleDateString('fr-FR', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch {
+      return '—';
     }
-  ];
+  };
+
+  const isRecent = (d) => {
+    if (!d) return false;
+    const diff = Date.now() - new Date(d).getTime();
+    return diff <= 30 * 24 * 60 * 60 * 1000;
+  };
+
+  // Normalise le statut réel crm_contacts vers les catégories du filtre
+  const normalizeStatus = (status, temperature) => {
+    const s = (status || '').toLowerCase();
+    const t = (temperature || '').toLowerCase();
+    if (['active', 'actif', 'client', 'won', 'customer'].includes(s)) return 'active';
+    if (['inactive', 'inactif', 'lost', 'perdu', 'cold'].includes(s) || t === 'cold') return 'inactive';
+    if (['prospect', 'lead', 'nouveau', 'new', 'qualified'].includes(s)) return 'prospect';
+    // Par défaut : prospect (non converti)
+    return 'prospect';
+  };
 
   useEffect(() => {
-    setClients(clientsData);
-  }, []);
+    const loadCRM = async () => {
+      if (!user?.id) {
+        setLoading(false);
+        return;
+      }
+      try {
+        const agentId = user.id;
+        const [contactsRes, dealsRes, activitiesRes] = await Promise.all([
+          supabase
+            .from('crm_contacts')
+            .select('id, name, email, phone, company, status, temperature, score, created_at')
+            .eq('owner_id', agentId)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('crm_deals')
+            .select('id, contact_id, amount, stage')
+            .eq('owner_id', agentId),
+          supabase
+            .from('crm_activities')
+            .select('id, contact_id, created_at')
+            .eq('owner_id', agentId)
+        ]);
+
+        const contacts = contactsRes.data || [];
+        const deals = dealsRes.data || [];
+        const activities = activitiesRes.data || [];
+
+        // Agrégation des deals par contact (portefeuille + projets réels)
+        const closedWon = ['won', 'gagne', 'gagné', 'closed_won', 'customer'];
+        const closedStages = [...closedWon, 'lost', 'closed', 'perdu', 'closed_lost'];
+        const dealsByContact = {};
+        let caTotal = 0;
+        let totalDeals = 0;
+        let wonDeals = 0;
+        deals.forEach((d) => {
+          const stage = (d.stage || '').toLowerCase();
+          totalDeals += 1;
+          if (closedWon.includes(stage)) wonDeals += 1;
+          const amt = (d.amount !== null && d.amount !== undefined && !isNaN(d.amount)) ? Number(d.amount) : 0;
+          caTotal += amt;
+          if (!d.contact_id) return;
+          if (!dealsByContact[d.contact_id]) {
+            dealsByContact[d.contact_id] = { total: 0, actifs: 0, montant: 0, hasAmount: false };
+          }
+          const agg = dealsByContact[d.contact_id];
+          agg.total += 1;
+          if (!closedStages.includes(stage)) agg.actifs += 1;
+          if (amt) { agg.montant += amt; agg.hasAmount = true; }
+        });
+
+        // Dernière activité réelle par contact (crm_activities.created_at max)
+        const lastActivityByContact = {};
+        activities.forEach((a) => {
+          if (!a.contact_id) return;
+          const prev = lastActivityByContact[a.contact_id];
+          if (!prev || new Date(a.created_at) > new Date(prev)) {
+            lastActivityByContact[a.contact_id] = a.created_at;
+          }
+        });
+
+        const mapped = contacts.map((c) => {
+          const agg = dealsByContact[c.id] || { total: 0, actifs: 0, montant: 0, hasAmount: false };
+          const temperature = (c.temperature || '').toLowerCase();
+          const tags = [];
+          if (temperature === 'hot') tags.push('Chaud');
+          if (temperature === 'warm') tags.push('Tiède');
+          if (c.company) tags.push('Entreprise');
+          if (c.score !== null && c.score !== undefined && Number(c.score) >= 90) tags.push('VIP');
+          if (isRecent(c.created_at)) tags.push('Nouveau');
+          return {
+            id: c.id,
+            name: c.name || 'Client sans nom',
+            email: c.email || '—',
+            phone: c.phone || '—',
+            company: c.company || '—',
+            location: c.company || '—',
+            status: normalizeStatus(c.status, c.temperature),
+            value: agg.hasAmount ? agg.montant : null,
+            lastContact: lastActivityByContact[c.id] || null,
+            nextFollowUp: null, // pas de colonne réelle de relance planifiée
+            projects: agg.total,
+            avatar: null,
+            tags,
+            score: (c.score === null || c.score === undefined) ? null : Number(c.score)
+          };
+        });
+
+        // Stats réelles
+        const nouveaux = contacts.filter(c => isRecent(c.created_at)).length;
+        const actifs = mapped.filter(c => c.status === 'active').length;
+        const prospects = mapped.filter(c => c.status === 'prospect').length;
+
+        setCrmStats({
+          totalClients: contacts.length,
+          activeClients: actifs,
+          nouveauxClients: nouveaux,
+          clientsPotentiels: prospects,
+          chiffreAffaires: caTotal,
+          tauxConversion: totalDeals > 0 ? Math.round((wonDeals / totalDeals) * 100) : null
+        });
+
+        setClients(mapped);
+      } catch (e) {
+        console.error('Erreur chargement CRM agent:', e);
+        setClients([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadCRM();
+  }, [user?.id]);
 
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          client.company.toLowerCase().includes(searchTerm.toLowerCase());
-    
+
     const matchesFilter = selectedFilter === 'all' || client.status === selectedFilter;
-    
+
     return matchesSearch && matchesFilter;
   });
 
@@ -173,12 +250,12 @@ const AgentFoncierCRM = () => {
       {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-4">
         {[
-          { title: 'Total Clients', value: crmStats.totalClients, icon: Users, color: 'from-blue-500 to-cyan-600', change: '+12' },
-          { title: 'Clients Actifs', value: crmStats.activeClients, icon: CheckCircle, color: 'from-green-500 to-emerald-600', change: '+5' },
-          { title: 'Nouveaux', value: crmStats.nouveauxClients, icon: Star, color: 'from-yellow-500 to-orange-600', change: '+3' },
-          { title: 'Prospects', value: crmStats.clientsPotentiels, icon: Eye, color: 'from-purple-500 to-indigo-600', change: '+8' },
-          { title: 'CA Total', value: `${(crmStats.chiffreAffaires / 1000000).toFixed(0)}M`, icon: DollarSign, color: 'from-rose-500 to-pink-600', change: '+15%' },
-          { title: 'Conversion', value: `${crmStats.tauxConversion}%`, icon: TrendingUp, color: 'from-teal-500 to-cyan-600', change: '+2%' }
+          { title: 'Total Clients', value: crmStats.totalClients, icon: Users, color: 'from-blue-500 to-cyan-600' },
+          { title: 'Clients Actifs', value: crmStats.activeClients, icon: CheckCircle, color: 'from-green-500 to-emerald-600' },
+          { title: 'Nouveaux (30j)', value: crmStats.nouveauxClients, icon: Star, color: 'from-yellow-500 to-orange-600' },
+          { title: 'Prospects', value: crmStats.clientsPotentiels, icon: Eye, color: 'from-purple-500 to-indigo-600' },
+          { title: 'CA Total', value: crmStats.chiffreAffaires > 0 ? `${(crmStats.chiffreAffaires / 1000000).toFixed(0)}M` : '—', icon: DollarSign, color: 'from-rose-500 to-pink-600' },
+          { title: 'Conversion', value: crmStats.tauxConversion !== null ? `${crmStats.tauxConversion}%` : '—', icon: TrendingUp, color: 'from-teal-500 to-cyan-600' }
         ].map((stat, index) => (
           <motion.div
             key={stat.title}
@@ -191,8 +268,7 @@ const AgentFoncierCRM = () => {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm text-slate-600">{stat.title}</p>
-                    <p className="text-2xl font-bold text-slate-900">{stat.value}</p>
-                    <p className="text-xs text-green-600">{stat.change}</p>
+                    <p className="text-2xl font-bold text-slate-900">{loading ? '—' : stat.value}</p>
                   </div>
                   <div className={`w-10 h-10 rounded-lg bg-gradient-to-r ${stat.color} flex items-center justify-center`}>
                     <stat.icon className="w-5 h-5 text-white" />
@@ -258,6 +334,17 @@ const AgentFoncierCRM = () => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {loading ? (
+              <div className="text-center py-12 text-slate-500">Chargement des clients...</div>
+            ) : filteredClients.length === 0 ? (
+              <div className="text-center py-12">
+                <Users className="w-12 h-12 mx-auto text-slate-300 mb-3" />
+                <p className="text-slate-600 font-medium">Aucun client pour le moment</p>
+                <p className="text-sm text-slate-400 mt-1">
+                  Vos contacts CRM apparaîtront ici dès qu'ils seront ajoutés.
+                </p>
+              </div>
+            ) : (
             <div className="space-y-4">
               {filteredClients.map((client, index) => (
                 <motion.div
@@ -269,51 +356,52 @@ const AgentFoncierCRM = () => {
                 >
                   <div className="flex items-center space-x-4 flex-1">
                     <Avatar className="h-12 w-12">
-                      <AvatarImage src={client.avatar} />
+                      <AvatarImage src={client.avatar || undefined} />
                       <AvatarFallback className="bg-gradient-to-r from-amber-500 to-orange-600 text-white">
-                        {client.name.split(' ').map(n => n[0]).join('')}
+                        {getInitials(client.name)}
                       </AvatarFallback>
                     </Avatar>
 
                     <div className="flex-1">
                       <div className="flex items-center space-x-2">
                         <h3 className="font-semibold text-slate-900">{client.name}</h3>
-                        <div className={`text-sm font-bold ${getScoreColor(client.score)}`}>
-                          {client.score}/100
-                        </div>
+                        {client.score !== null && (
+                          <div className={`text-sm font-bold ${getScoreColor(client.score)}`}>
+                            {client.score}/100
+                          </div>
+                        )}
                         {client.tags.map(tag => (
                           <Badge key={tag} variant="outline" className="text-xs">
                             {tag}
                           </Badge>
                         ))}
                       </div>
-                      
+
                       <div className="flex items-center space-x-4 text-sm text-slate-600 mt-1">
                         <span className="flex items-center">
                           <Building2 className="w-3 h-3 mr-1" />
                           {client.company}
                         </span>
                         <span className="flex items-center">
-                          <MapPin className="w-3 h-3 mr-1" />
-                          {client.location}
+                          <Mail className="w-3 h-3 mr-1" />
+                          {client.email}
                         </span>
                         <span className="flex items-center">
                           <DollarSign className="w-3 h-3 mr-1" />
-                          {(client.value / 1000000).toFixed(1)}M FCFA
+                          {client.value !== null ? `${(client.value / 1000000).toFixed(1)}M FCFA` : '—'}
                         </span>
                       </div>
 
                       <div className="flex items-center space-x-4 text-xs text-slate-500 mt-2">
-                        <span>Dernière activité: {client.lastContact}</span>
-                        <span>Suivi prévu: {client.nextFollowUp}</span>
-                        <span>{client.projects} projets</span>
+                        <span>Dernière activité: {formatDate(client.lastContact)}</span>
+                        <span>{client.projects} projet{client.projects > 1 ? 's' : ''}</span>
                       </div>
                     </div>
                   </div>
 
                   <div className="flex items-center space-x-2">
                     {getStatusBadge(client.status)}
-                    
+
                     <div className="flex space-x-1 opacity-0 group-hover:opacity-100 transition-opacity">
                       <Button variant="ghost" size="sm">
                         <Phone className="w-4 h-4" />
@@ -332,6 +420,7 @@ const AgentFoncierCRM = () => {
                 </motion.div>
               ))}
             </div>
+            )}
           </CardContent>
         </Card>
       </motion.div>

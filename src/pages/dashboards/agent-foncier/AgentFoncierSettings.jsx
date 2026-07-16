@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Settings,
   User,
   Shield,
@@ -15,7 +15,8 @@ import {
   Camera,
   MapPin,
   FileText,
-  Calculator
+  Calculator,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,72 +24,259 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Switch } from '@/components/ui/switch';
 import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Clés locales — ces préférences n'ont pas de table dédiée en base.
+// Elles sont donc persistées localement (honnête) et non fabriquées.
+const NOTIF_STORAGE_KEY = 'agent_foncier_settings_notifications';
+const GEO_STORAGE_KEY = 'agent_foncier_settings_geolocalisation';
+const AI_STORAGE_KEY = 'agent_foncier_settings_ia_blockchain';
+
+const DEFAULT_NOTIFICATIONS = {
+  emailNotifications: true,
+  smsNotifications: false,
+  evaluationAlerts: true,
+  documentAlerts: true,
+  clientAlerts: true
+};
+
+const DEFAULT_GEO = {
+  autoLocation: true,
+  precisionGPS: 'high',
+  saveTrajectories: false,
+  shareLocation: true
+};
+
+const DEFAULT_AI = {
+  aiAssistance: true,
+  predictiveAnalysis: true,
+  blockchainValidation: false,
+  smartContracts: false
+};
+
+const loadLocal = (key, fallback) => {
+  try {
+    const raw = localStorage.getItem(key);
+    return raw ? { ...fallback, ...JSON.parse(raw) } : fallback;
+  } catch {
+    return fallback;
+  }
+};
+
+// Plans commerciaux : contenu marketing statique (pas de la donnée utilisateur fabriquée).
+const plans = [
+  {
+    name: 'Essentiel',
+    price: '25,000',
+    features: ['50 évaluations/mois', 'Support email', 'Rapports de base'],
+  },
+  {
+    name: 'Professionnel',
+    price: '75,000',
+    features: ['200 évaluations/mois', 'IA intégrée', 'Support prioritaire', 'Analytics avancés'],
+  },
+  {
+    name: 'Expert',
+    price: '150,000',
+    features: ['Évaluations illimitées', 'Blockchain', 'API access', 'Support dédié'],
+  }
+];
 
 const AgentFoncierSettings = () => {
+  const { user, profile } = useAuth();
+
   const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [savingPassword, setSavingPassword] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 800);
-  }, []);
-
-  const [settings, setSettings] = useState({
-    // Profil
-    fullName: 'Moussa Diallo',
-    email: 'moussa.diallo@teranga.com',
-    phone: '+221 77 123 45 67',
+  // Profil : mappé sur la table profiles (colonnes réelles).
+  // specialisation / certification n'ont pas de colonne → préférence locale honnête.
+  const [profileInfo, setProfileInfo] = useState({
+    fullName: '',
+    email: '',
+    phone: '',
     specialisation: 'Évaluation Foncière',
-    certification: 'Agent Foncier Certifié',
-    
-    // Notifications
-    emailNotifications: true,
-    smsNotifications: false,
-    evaluationAlerts: true,
-    documentAlerts: true,
-    clientAlerts: true,
-    
-    // Géolocalisation
-    autoLocation: true,
-    precisionGPS: 'high',
-    saveTrajectories: false,
-    shareLocation: true,
-    
-    // IA et Blockchain
-    aiAssistance: true,
-    predictiveAnalysis: true,
-    blockchainValidation: false,
-    smartContracts: false,
-    
-    // Abonnement
-    currentPlan: 'Professionnel',
-    nextBilling: '2025-10-26',
-    usage: {
-      evaluations: 85,
-      documents: 68,
-      clients: 45
-    }
+    certification: ''
   });
 
-  const plans = [
-    {
-      name: 'Essentiel',
-      price: '25,000',
-      features: ['50 évaluations/mois', 'Support email', 'Rapports de base'],
-      current: false
-    },
-    {
-      name: 'Professionnel',
-      price: '75,000',
-      features: ['200 évaluations/mois', 'IA intégrée', 'Support prioritaire', 'Analytics avancés'],
-      current: true
-    },
-    {
-      name: 'Expert',
-      price: '150,000',
-      features: ['Évaluations illimitées', 'Blockchain', 'API access', 'Support dédié'],
-      current: false
+  // Préférences sans table → état local honnête.
+  const [notifications, setNotifications] = useState(() => loadLocal(NOTIF_STORAGE_KEY, DEFAULT_NOTIFICATIONS));
+  const [geo, setGeo] = useState(() => loadLocal(GEO_STORAGE_KEY, DEFAULT_GEO));
+  const [ai, setAi] = useState(() => loadLocal(AI_STORAGE_KEY, DEFAULT_AI));
+
+  // Mots de passe
+  const [passwords, setPasswords] = useState({ next: '', confirm: '' });
+
+  // Abonnement réel (user_subscriptions) + usage réel dérivé de la base
+  const [subscription, setSubscription] = useState(null);
+  const [usage, setUsage] = useState({ evaluations: 0, documents: 0, clients: 0 });
+
+  // --- Chargement des données réelles ---
+  const loadProfile = useCallback(() => {
+    if (!profile && !user) return;
+    const localPrefs = loadLocal('agent_foncier_profile_prefs', {
+      specialisation: 'Évaluation Foncière',
+      certification: ''
+    });
+    setProfileInfo(prev => ({
+      ...prev,
+      fullName: profile?.full_name
+        || [profile?.first_name, profile?.last_name].filter(Boolean).join(' ')
+        || '',
+      email: profile?.email || user?.email || '',
+      phone: profile?.phone || '',
+      specialisation: localPrefs.specialisation,
+      certification: localPrefs.certification
+    }));
+  }, [profile, user]);
+
+  const loadSubscription = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const { data } = await supabase
+        .from('user_subscriptions')
+        .select('*, subscription_plans(*)')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      setSubscription(data || null);
+    } catch {
+      setSubscription(null);
     }
-  ];
+  }, [user]);
+
+  // Usage réel : nombre d'évaluations (agent_missions type estimation),
+  // documents et clients réellement rattachés à cet agent.
+  const loadUsage = useCallback(async () => {
+    if (!user?.id) return;
+    try {
+      const [missionsRes, docsRes, clientsRes] = await Promise.all([
+        supabase
+          .from('agent_missions')
+          .select('id', { count: 'exact', head: true })
+          .eq('agent_id', user.id)
+          .eq('mission_type', 'estimation'),
+        supabase
+          .from('documents')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id),
+        supabase
+          .from('crm_contacts')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id)
+      ]);
+      setUsage({
+        evaluations: missionsRes.count || 0,
+        documents: docsRes.count || 0,
+        clients: clientsRes.count || 0
+      });
+    } catch {
+      setUsage({ evaluations: 0, documents: 0, clients: 0 });
+    }
+  }, [user]);
+
+  useEffect(() => {
+    loadProfile();
+    Promise.all([loadSubscription(), loadUsage()]).finally(() => setLoading(false));
+  }, [loadProfile, loadSubscription, loadUsage]);
+
+  // --- Sauvegardes ---
+  const handleSaveProfile = async () => {
+    if (!user?.id) {
+      window.safeGlobalToast?.({ title: 'Non authentifié', variant: 'destructive' });
+      return;
+    }
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profileInfo.fullName || null,
+          phone: profileInfo.phone || null
+        })
+        .eq('id', user.id);
+      if (error) throw error;
+
+      // specialisation / certification sans colonne → persistées localement
+      try {
+        localStorage.setItem('agent_foncier_profile_prefs', JSON.stringify({
+          specialisation: profileInfo.specialisation,
+          certification: profileInfo.certification
+        }));
+      } catch { /* noop */ }
+
+      window.safeGlobalToast?.({
+        title: 'Paramètres sauvegardés',
+        description: 'Vos informations de profil ont été mises à jour.',
+        variant: 'success'
+      });
+    } catch (e) {
+      window.safeGlobalToast?.({
+        title: 'Erreur de sauvegarde',
+        description: e.message || 'Impossible de mettre à jour le profil.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const saveNotifications = (next) => {
+    setNotifications(next);
+    try { localStorage.setItem(NOTIF_STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
+  };
+
+  const saveGeo = (next) => {
+    setGeo(next);
+    try { localStorage.setItem(GEO_STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
+  };
+
+  const saveAi = (next) => {
+    setAi(next);
+    try { localStorage.setItem(AI_STORAGE_KEY, JSON.stringify(next)); } catch { /* noop */ }
+  };
+
+  const handleUpdatePassword = async () => {
+    if (!passwords.next || passwords.next.length < 6) {
+      window.safeGlobalToast?.({
+        title: 'Mot de passe trop court',
+        description: 'Le mot de passe doit contenir au moins 6 caractères.',
+        variant: 'destructive'
+      });
+      return;
+    }
+    if (passwords.next !== passwords.confirm) {
+      window.safeGlobalToast?.({
+        title: 'Les mots de passe ne correspondent pas',
+        variant: 'destructive'
+      });
+      return;
+    }
+    setSavingPassword(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: passwords.next });
+      if (error) throw error;
+      setPasswords({ next: '', confirm: '' });
+      window.safeGlobalToast?.({
+        title: 'Mot de passe mis à jour',
+        variant: 'success'
+      });
+    } catch (e) {
+      window.safeGlobalToast?.({
+        title: 'Erreur',
+        description: e.message || 'Impossible de mettre à jour le mot de passe.',
+        variant: 'destructive'
+      });
+    } finally {
+      setSavingPassword(false);
+    }
+  };
+
+  const plan = subscription?.subscription_plans || null;
 
   if (loading) {
     return (
@@ -106,8 +294,8 @@ const AgentFoncierSettings = () => {
           <h1 className="text-2xl font-bold text-gray-900">Paramètres Agent Foncier</h1>
           <p className="text-gray-600">Configuration et préférences</p>
         </div>
-        <Button className="bg-green-600 hover:bg-green-700">
-          <Save className="h-4 w-4 mr-2" />
+        <Button className="bg-green-600 hover:bg-green-700" onClick={handleSaveProfile} disabled={saving}>
+          {saving ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : <Save className="h-4 w-4 mr-2" />}
           Sauvegarder
         </Button>
       </div>
@@ -138,8 +326,8 @@ const AgentFoncierSettings = () => {
                   </label>
                   <input
                     type="text"
-                    value={settings.fullName}
-                    onChange={(e) => setSettings({...settings, fullName: e.target.value})}
+                    value={profileInfo.fullName}
+                    onChange={(e) => setProfileInfo({...profileInfo, fullName: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -149,9 +337,10 @@ const AgentFoncierSettings = () => {
                   </label>
                   <input
                     type="email"
-                    value={settings.email}
-                    onChange={(e) => setSettings({...settings, email: e.target.value})}
-                    className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
+                    value={profileInfo.email}
+                    readOnly
+                    title="L'email est géré par votre compte d'authentification"
+                    className="w-full p-3 border border-gray-300 rounded-lg bg-gray-50 text-gray-600 cursor-not-allowed"
                   />
                 </div>
                 <div>
@@ -160,8 +349,8 @@ const AgentFoncierSettings = () => {
                   </label>
                   <input
                     type="tel"
-                    value={settings.phone}
-                    onChange={(e) => setSettings({...settings, phone: e.target.value})}
+                    value={profileInfo.phone}
+                    onChange={(e) => setProfileInfo({...profileInfo, phone: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
@@ -181,8 +370,8 @@ const AgentFoncierSettings = () => {
                     Spécialisation
                   </label>
                   <select
-                    value={settings.specialisation}
-                    onChange={(e) => setSettings({...settings, specialisation: e.target.value})}
+                    value={profileInfo.specialisation}
+                    onChange={(e) => setProfileInfo({...profileInfo, specialisation: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   >
                     <option>Évaluation Foncière</option>
@@ -197,16 +386,20 @@ const AgentFoncierSettings = () => {
                   </label>
                   <input
                     type="text"
-                    value={settings.certification}
-                    onChange={(e) => setSettings({...settings, certification: e.target.value})}
+                    value={profileInfo.certification}
+                    onChange={(e) => setProfileInfo({...profileInfo, certification: e.target.value})}
+                    placeholder="Ex : Agent Foncier Certifié"
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                   />
                 </div>
                 <div className="pt-4">
-                  <Button variant="outline" className="w-full">
+                  <Button variant="outline" className="w-full" disabled>
                     <Camera className="h-4 w-4 mr-2" />
                     Changer la Photo de Profil
                   </Button>
+                  <p className="text-xs text-gray-500 mt-2">
+                    Téléversement de la photo bientôt disponible (bucket Storage « avatars »).
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -228,19 +421,19 @@ const AgentFoncierSettings = () => {
                   <p className="text-sm text-gray-600">Recevoir les notifications importantes par email</p>
                 </div>
                 <Switch
-                  checked={settings.emailNotifications}
-                  onCheckedChange={(checked) => setSettings({...settings, emailNotifications: checked})}
+                  checked={notifications.emailNotifications}
+                  onCheckedChange={(checked) => saveNotifications({...notifications, emailNotifications: checked})}
                 />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="font-medium">Notifications SMS</h4>
                   <p className="text-sm text-gray-600">Recevoir les alertes urgentes par SMS</p>
                 </div>
                 <Switch
-                  checked={settings.smsNotifications}
-                  onCheckedChange={(checked) => setSettings({...settings, smsNotifications: checked})}
+                  checked={notifications.smsNotifications}
+                  onCheckedChange={(checked) => saveNotifications({...notifications, smsNotifications: checked})}
                 />
               </div>
 
@@ -250,8 +443,8 @@ const AgentFoncierSettings = () => {
                   <p className="text-sm text-gray-600">Notifications pour nouvelles demandes d'évaluation</p>
                 </div>
                 <Switch
-                  checked={settings.evaluationAlerts}
-                  onCheckedChange={(checked) => setSettings({...settings, evaluationAlerts: checked})}
+                  checked={notifications.evaluationAlerts}
+                  onCheckedChange={(checked) => saveNotifications({...notifications, evaluationAlerts: checked})}
                 />
               </div>
 
@@ -261,8 +454,8 @@ const AgentFoncierSettings = () => {
                   <p className="text-sm text-gray-600">Notifications pour documents en attente</p>
                 </div>
                 <Switch
-                  checked={settings.documentAlerts}
-                  onCheckedChange={(checked) => setSettings({...settings, documentAlerts: checked})}
+                  checked={notifications.documentAlerts}
+                  onCheckedChange={(checked) => saveNotifications({...notifications, documentAlerts: checked})}
                 />
               </div>
 
@@ -272,10 +465,14 @@ const AgentFoncierSettings = () => {
                   <p className="text-sm text-gray-600">Notifications pour nouveaux clients</p>
                 </div>
                 <Switch
-                  checked={settings.clientAlerts}
-                  onCheckedChange={(checked) => setSettings({...settings, clientAlerts: checked})}
+                  checked={notifications.clientAlerts}
+                  onCheckedChange={(checked) => saveNotifications({...notifications, clientAlerts: checked})}
                 />
               </div>
+
+              <p className="text-xs text-gray-400 pt-2 border-t">
+                Ces préférences sont enregistrées sur cet appareil.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -295,8 +492,8 @@ const AgentFoncierSettings = () => {
                   <p className="text-sm text-gray-600">Détecter automatiquement votre position</p>
                 </div>
                 <Switch
-                  checked={settings.autoLocation}
-                  onCheckedChange={(checked) => setSettings({...settings, autoLocation: checked})}
+                  checked={geo.autoLocation}
+                  onCheckedChange={(checked) => saveGeo({...geo, autoLocation: checked})}
                 />
               </div>
 
@@ -305,8 +502,8 @@ const AgentFoncierSettings = () => {
                   Précision GPS
                 </label>
                 <select
-                  value={settings.precisionGPS}
-                  onChange={(e) => setSettings({...settings, precisionGPS: e.target.value})}
+                  value={geo.precisionGPS}
+                  onChange={(e) => saveGeo({...geo, precisionGPS: e.target.value})}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                 >
                   <option value="low">Basse (100m)</option>
@@ -321,8 +518,8 @@ const AgentFoncierSettings = () => {
                   <p className="text-sm text-gray-600">Enregistrer vos déplacements pour analyse</p>
                 </div>
                 <Switch
-                  checked={settings.saveTrajectories}
-                  onCheckedChange={(checked) => setSettings({...settings, saveTrajectories: checked})}
+                  checked={geo.saveTrajectories}
+                  onCheckedChange={(checked) => saveGeo({...geo, saveTrajectories: checked})}
                 />
               </div>
 
@@ -332,10 +529,14 @@ const AgentFoncierSettings = () => {
                   <p className="text-sm text-gray-600">Permettre aux clients de voir votre position</p>
                 </div>
                 <Switch
-                  checked={settings.shareLocation}
-                  onCheckedChange={(checked) => setSettings({...settings, shareLocation: checked})}
+                  checked={geo.shareLocation}
+                  onCheckedChange={(checked) => saveGeo({...geo, shareLocation: checked})}
                 />
               </div>
+
+              <p className="text-xs text-gray-400 pt-2 border-t">
+                Ces préférences sont enregistrées sur cet appareil.
+              </p>
             </CardContent>
           </Card>
         </TabsContent>
@@ -356,25 +557,25 @@ const AgentFoncierSettings = () => {
                     <p className="text-sm text-gray-600">Aide à l'évaluation automatique</p>
                   </div>
                   <Switch
-                    checked={settings.aiAssistance}
-                    onCheckedChange={(checked) => setSettings({...settings, aiAssistance: checked})}
+                    checked={ai.aiAssistance}
+                    onCheckedChange={(checked) => saveAi({...ai, aiAssistance: checked})}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">Analyse Prédictive</h4>
                     <p className="text-sm text-gray-600">Prédictions de marché IA</p>
                   </div>
                   <Switch
-                    checked={settings.predictiveAnalysis}
-                    onCheckedChange={(checked) => setSettings({...settings, predictiveAnalysis: checked})}
+                    checked={ai.predictiveAnalysis}
+                    onCheckedChange={(checked) => saveAi({...ai, predictiveAnalysis: checked})}
                   />
                 </div>
-                
+
                 <div className="p-3 bg-blue-50 rounded-lg">
                   <p className="text-sm text-blue-800">
-                    <strong>Nouvelle :</strong> IA générative pour rédaction automatique de rapports
+                    <strong>Bientôt :</strong> IA générative pour rédaction automatique de rapports
                   </p>
                 </div>
               </CardContent>
@@ -394,22 +595,22 @@ const AgentFoncierSettings = () => {
                     <p className="text-sm text-gray-600">Sécuriser les documents par blockchain</p>
                   </div>
                   <Switch
-                    checked={settings.blockchainValidation}
-                    onCheckedChange={(checked) => setSettings({...settings, blockchainValidation: checked})}
+                    checked={ai.blockchainValidation}
+                    onCheckedChange={(checked) => saveAi({...ai, blockchainValidation: checked})}
                   />
                 </div>
-                
+
                 <div className="flex items-center justify-between">
                   <div>
                     <h4 className="font-medium">Smart Contracts</h4>
                     <p className="text-sm text-gray-600">Contrats intelligents automatiques</p>
                   </div>
                   <Switch
-                    checked={settings.smartContracts}
-                    onCheckedChange={(checked) => setSettings({...settings, smartContracts: checked})}
+                    checked={ai.smartContracts}
+                    onCheckedChange={(checked) => saveAi({...ai, smartContracts: checked})}
                   />
                 </div>
-                
+
                 <div className="p-3 bg-orange-50 rounded-lg">
                   <p className="text-sm text-orange-800">
                     <strong>Bêta :</strong> Fonctionnalités blockchain en test
@@ -418,6 +619,9 @@ const AgentFoncierSettings = () => {
               </CardContent>
             </Card>
           </div>
+          <p className="text-xs text-gray-400">
+            Ces préférences sont enregistrées sur cet appareil.
+          </p>
         </TabsContent>
 
         <TabsContent value="securite" className="space-y-6">
@@ -431,15 +635,18 @@ const AgentFoncierSettings = () => {
             <CardContent className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Mot de Passe Actuel
+                  Nouveau Mot de Passe
                 </label>
                 <div className="relative">
                   <input
                     type={showPassword ? "text" : "password"}
                     placeholder="••••••••"
+                    value={passwords.next}
+                    onChange={(e) => setPasswords({...passwords, next: e.target.value})}
                     className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 pr-10"
                   />
                   <button
+                    type="button"
                     onClick={() => setShowPassword(!showPassword)}
                     className="absolute right-3 top-3 text-gray-400"
                   >
@@ -447,18 +654,7 @@ const AgentFoncierSettings = () => {
                   </button>
                 </div>
               </div>
-              
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Nouveau Mot de Passe
-                </label>
-                <input
-                  type="password"
-                  placeholder="••••••••"
-                  className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
-                />
-              </div>
-              
+
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Confirmer le Mot de Passe
@@ -466,11 +662,18 @@ const AgentFoncierSettings = () => {
                 <input
                   type="password"
                   placeholder="••••••••"
+                  value={passwords.confirm}
+                  onChange={(e) => setPasswords({...passwords, confirm: e.target.value})}
                   className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500"
                 />
               </div>
-              
-              <Button className="bg-green-600 hover:bg-green-700">
+
+              <Button
+                className="bg-green-600 hover:bg-green-700"
+                onClick={handleUpdatePassword}
+                disabled={savingPassword}
+              >
+                {savingPassword && <Loader2 className="h-4 w-4 mr-2 animate-spin" />}
                 Mettre à Jour le Mot de Passe
               </Button>
             </CardContent>
@@ -489,39 +692,40 @@ const AgentFoncierSettings = () => {
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Plan:</span>
-                  <Badge className="bg-green-100 text-green-800">
-                    {settings.currentPlan}
-                  </Badge>
+                  {plan ? (
+                    <Badge className="bg-green-100 text-green-800">
+                      {plan.name || plan.role_type || 'Actif'}
+                    </Badge>
+                  ) : (
+                    <span className="text-sm text-gray-500">Aucun abonnement actif</span>
+                  )}
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="font-medium">Prochaine facturation:</span>
-                  <span className="text-sm text-gray-600">{settings.nextBilling}</span>
+                  <span className="text-sm text-gray-600">
+                    {subscription?.end_date || subscription?.expires_at
+                      ? new Date(subscription.end_date || subscription.expires_at).toLocaleDateString('fr-FR')
+                      : '—'}
+                  </span>
                 </div>
-                
+
                 <div className="space-y-3 pt-4">
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm text-gray-600">Évaluations</span>
-                      <span className="text-sm font-medium">{settings.usage.evaluations}%</span>
-                    </div>
-                    <Progress value={settings.usage.evaluations} className="h-2" />
+                  <p className="text-sm font-medium text-gray-700">Activité (données réelles)</p>
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">Évaluations réalisées</span>
+                    <span className="text-sm font-semibold">{usage.evaluations}</span>
                   </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm text-gray-600">Documents</span>
-                      <span className="text-sm font-medium">{settings.usage.documents}%</span>
-                    </div>
-                    <Progress value={settings.usage.documents} className="h-2" />
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">Documents</span>
+                    <span className="text-sm font-semibold">{usage.documents}</span>
                   </div>
-                  
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-sm text-gray-600">Clients</span>
-                      <span className="text-sm font-medium">{settings.usage.clients}%</span>
-                    </div>
-                    <Progress value={settings.usage.clients} className="h-2" />
+                  <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+                    <span className="text-sm text-gray-600">Clients</span>
+                    <span className="text-sm font-semibold">{usage.clients}</span>
                   </div>
+                  <p className="text-xs text-gray-400">
+                    Les quotas par plan seront affichés une fois l'abonnement configuré.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -532,28 +736,31 @@ const AgentFoncierSettings = () => {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {plans.map((plan) => (
-                    <div 
-                      key={plan.name}
-                      className={`p-4 border rounded-lg ${plan.current ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
-                    >
-                      <div className="flex justify-between items-start mb-2">
-                        <h4 className="font-medium">{plan.name}</h4>
-                        <div className="text-right">
-                          <span className="text-lg font-bold">{plan.price}</span>
-                          <span className="text-sm text-gray-600"> XOF/mois</span>
+                  {plans.map((p) => {
+                    const isCurrent = plan?.name && p.name.toLowerCase() === String(plan.name).toLowerCase();
+                    return (
+                      <div
+                        key={p.name}
+                        className={`p-4 border rounded-lg ${isCurrent ? 'border-green-500 bg-green-50' : 'border-gray-200'}`}
+                      >
+                        <div className="flex justify-between items-start mb-2">
+                          <h4 className="font-medium">{p.name}</h4>
+                          <div className="text-right">
+                            <span className="text-lg font-bold">{p.price}</span>
+                            <span className="text-sm text-gray-600"> XOF/mois</span>
+                          </div>
                         </div>
+                        <ul className="text-sm text-gray-600 space-y-1">
+                          {p.features.map((feature, index) => (
+                            <li key={index}>• {feature}</li>
+                          ))}
+                        </ul>
+                        {isCurrent && (
+                          <Badge className="mt-2 bg-green-100 text-green-800">Plan Actuel</Badge>
+                        )}
                       </div>
-                      <ul className="text-sm text-gray-600 space-y-1">
-                        {plan.features.map((feature, index) => (
-                          <li key={index}>• {feature}</li>
-                        ))}
-                      </ul>
-                      {plan.current && (
-                        <Badge className="mt-2 bg-green-100 text-green-800">Plan Actuel</Badge>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>

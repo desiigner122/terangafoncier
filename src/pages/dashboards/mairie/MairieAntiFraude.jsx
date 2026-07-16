@@ -1,121 +1,159 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Shield, 
-  Brain, 
-  FileText, 
-  AlertTriangle, 
-  CheckCircle, 
-  Scan, 
-  Upload, 
-  Eye, 
-  Search, 
-  Network, 
-  Zap, 
-  Target, 
-  Activity, 
-  Clock, 
-  Download, 
-  Share2,
+import {
+  Shield,
+  Brain,
+  FileText,
+  AlertTriangle,
+  CheckCircle,
+  Scan,
+  Upload,
+  Eye,
+  Network,
+  Clock,
+  Download,
   Database,
   Lock,
-  Unlock,
-  UserCheck,
   FileCheck,
   TrendingUp,
-  Filter,
-  RefreshCw,
   Archive,
-  Flag,
-  Award
+  Award,
+  Loader2
 } from 'lucide-react';
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Normalise le champ jsonb `parties` de la table disputes vers un tableau
+// { name, role, contact }. Gère tableau d'objets, tableau de chaînes ou chaîne JSON.
+const normalizeParties = (parties) => {
+  if (!parties) return [];
+  let arr = parties;
+  if (typeof arr === 'string') {
+    try { arr = JSON.parse(arr); } catch { return []; }
+  }
+  if (!Array.isArray(arr)) {
+    if (Array.isArray(arr?.parties)) arr = arr.parties;
+    else return [];
+  }
+  return arr.map((p) => {
+    if (typeof p === 'string') return { name: p, role: '', contact: '' };
+    if (!p || typeof p !== 'object') return { name: '—', role: '', contact: '' };
+    return {
+      name: p.name || p.nom || p.fullName || p.full_name || '—',
+      role: p.role || p.type || p.qualite || '',
+      contact: p.contact || p.phone || p.telephone || p.email || ''
+    };
+  });
+};
 
 const MairieAntiFraude = ({ dashboardStats }) => {
-  const [scanningDocument, setScanningDocument] = useState(false);
-  const [analysisResults, setAnalysisResults] = useState(null);
+  const { profile } = useAuth();
   const [selectedTab, setSelectedTab] = useState('scanner');
+  const [loading, setLoading] = useState(true);
+  const [errorData, setErrorData] = useState(null);
 
-  // Statistiques anti-fraude
+  // Statistiques anti-fraude issues des tables réelles (properties + disputes)
   const [fraudStats, setFraudStats] = useState({
-    documentsScanned: 1247,
-    fraudsDetected: 23,
-    validDocuments: 1183,
-    pendingVerification: 41,
-    accuracyRate: 96.8,
-    monthlyScans: 189
+    validDocuments: 0,      // properties verification_status = 'verified'
+    activeDisputes: 0,      // disputes status = 'open'
+    resolvedDisputes: 0,    // disputes status = 'resolved'/'closed'
+    pendingVerification: 0  // properties verification_status = 'pending'
   });
 
-  // Données des analyses récentes
-  const [recentAnalyses, setRecentAnalyses] = useState([
-    {
-      id: 1,
-      documentType: 'Titre Foncier',
-      citizenName: 'M. Ibrahim Sarr',
-      date: '2024-01-20',
-      status: 'validated',
-      confidence: 98.5,
-      issues: [],
-      riskLevel: 'low'
-    },
-    {
-      id: 2,
-      documentType: 'Permis de Construire',
-      citizenName: 'Mme Aïcha Diop',
-      date: '2024-01-20',
-      status: 'fraud_detected',
-      confidence: 87.2,
-      issues: ['Signature suspecte', 'Tampon non conforme'],
-      riskLevel: 'high'
-    },
-    {
-      id: 3,
-      documentType: 'Acte de Vente',
-      citizenName: 'Entreprise Alpha Construction',
-      date: '2024-01-19',
-      status: 'pending',
-      confidence: 72.3,
-      issues: ['Vérification croisée requise'],
-      riskLevel: 'medium'
-    },
-    {
-      id: 4,
-      documentType: 'Certificat d\'Urbanisme',
-      citizenName: 'M. Ousmane Fall',
-      date: '2024-01-19',
-      status: 'validated',
-      confidence: 94.7,
-      issues: [],
-      riskLevel: 'low'
-    }
-  ]);
+  // Analyses récentes = litiges réels (disputes)
+  const [recentAnalyses, setRecentAnalyses] = useState([]);
 
-  // Simulation du scan de document
-  const handleDocumentScan = async () => {
-    setScanningDocument(true);
-    
-    // Simulation d'analyse IA
-    setTimeout(() => {
-      const mockResult = {
-        documentType: 'Titre Foncier',
-        confidence: Math.random() * 30 + 70, // 70-100%
-        fraudRisk: Math.random() * 100,
-        issues: Math.random() > 0.7 ? ['Signature suspecte', 'Date incohérente'] : [],
-        blockchain_verified: Math.random() > 0.5,
-        authenticity_score: Math.random() * 20 + 80
-      };
-      
-      setAnalysisResults(mockResult);
-      setScanningDocument(false);
-    }, 3000);
-  };
+  // Statistiques blockchain réelles (comptages)
+  const [blockchainStats, setBlockchainStats] = useState({
+    transactions: 0,
+    certificates: 0
+  });
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setErrorData(null);
+    try {
+      // Filtrage par commune de la mairie si disponible dans le profil
+      const communeCity = profile?.city || null;
+
+      let propertiesQuery = supabase
+        .from('properties')
+        .select('id, verification_status, city');
+      if (communeCity) {
+        propertiesQuery = propertiesQuery.eq('city', communeCity);
+      }
+
+      const [propsRes, disputesRes, txRes, certRes] = await Promise.all([
+        propertiesQuery,
+        supabase
+          .from('disputes')
+          .select('id, title, property_id, status, parties, created_at')
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('blockchain_transactions')
+          .select('id', { count: 'exact', head: true }),
+        supabase
+          .from('blockchain_certificates')
+          .select('id', { count: 'exact', head: true })
+      ]);
+
+      if (propsRes.error) throw propsRes.error;
+      if (disputesRes.error) throw disputesRes.error;
+
+      const props = propsRes.data || [];
+      const disputes = disputesRes.data || [];
+
+      const validDocuments = props.filter((p) => p.verification_status === 'verified').length;
+      const pendingVerification = props.filter((p) => p.verification_status === 'pending').length;
+      const activeDisputes = disputes.filter((d) => d.status === 'open').length;
+      const resolvedDisputes = disputes.filter((d) => d.status === 'resolved' || d.status === 'closed').length;
+
+      setFraudStats({
+        validDocuments,
+        activeDisputes,
+        resolvedDisputes,
+        pendingVerification
+      });
+
+      // Mapping litiges -> lignes d'analyse. Les litiges ouverts constituent
+      // les cas de suspicion de fraude à traiter, les résolus sont validés.
+      const mapped = disputes.slice(0, 10).map((d) => {
+        const isResolved = d.status === 'resolved' || d.status === 'closed';
+        const parties = normalizeParties(d.parties);
+        const partyName = parties.length ? parties.map((p) => p.name).filter(Boolean).join(' vs ') : '—';
+        return {
+          id: d.id,
+          title: d.title || 'Litige sans titre',
+          partyName,
+          date: d.created_at,
+          status: isResolved ? 'validated' : (d.status === 'open' ? 'fraud_detected' : 'pending'),
+          riskLevel: isResolved ? 'low' : (d.status === 'open' ? 'high' : 'medium'),
+          propertyId: d.property_id || null
+        };
+      });
+      setRecentAnalyses(mapped);
+
+      setBlockchainStats({
+        transactions: txRes?.count ?? 0,
+        certificates: certRes?.count ?? 0
+      });
+    } catch (err) {
+      console.error('Erreur chargement anti-fraude:', err);
+      setErrorData(err.message || 'Erreur de chargement des données');
+    } finally {
+      setLoading(false);
+    }
+  }, [profile?.city]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -135,28 +173,39 @@ const MairieAntiFraude = ({ dashboardStats }) => {
     }
   };
 
-  const DocumentScanCard = ({ title, description, icon: Icon, onClick, disabled = false }) => (
-    <motion.div
-      whileHover={{ scale: disabled ? 1 : 1.02 }}
-      whileTap={{ scale: disabled ? 1 : 0.98 }}
-      className={`cursor-pointer ${disabled ? 'opacity-50' : ''}`}
-      onClick={disabled ? undefined : onClick}
-    >
-      <Card className={`h-full transition-all duration-300 ${
-        disabled ? '' : 'hover:shadow-lg border-l-4 border-l-teal-500'
-      }`}>
+  const getRiskLabel = (risk) => {
+    switch (risk) {
+      case 'low': return 'faible';
+      case 'medium': return 'moyen';
+      case 'high': return 'élevé';
+      default: return '—';
+    }
+  };
+
+  const DocumentScanCard = ({ title, description, icon: Icon }) => (
+    <div className="opacity-75">
+      <Card className="h-full">
         <CardContent className="p-6 text-center">
           <Icon className="h-12 w-12 text-teal-600 mx-auto mb-4" />
           <h3 className="font-semibold text-gray-900 mb-2">{title}</h3>
           <p className="text-sm text-gray-600">{description}</p>
+          <Badge variant="outline" className="mt-3 text-xs">Bientôt disponible</Badge>
         </CardContent>
       </Card>
-    </motion.div>
+    </div>
   );
 
   return (
     <div className="space-y-6">
-      {/* Header avec statistiques anti-fraude */}
+      {errorData && (
+        <Alert variant="destructive">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>Erreur de chargement</AlertTitle>
+          <AlertDescription>{errorData}</AlertDescription>
+        </Alert>
+      )}
+
+      {/* Header avec statistiques anti-fraude réelles */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
@@ -167,8 +216,10 @@ const MairieAntiFraude = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-green-600 text-sm font-medium">Documents Validés</p>
-                  <p className="text-2xl font-bold text-green-900">{fraudStats.validDocuments}</p>
+                  <p className="text-green-600 text-sm font-medium">Documents Vérifiés</p>
+                  <p className="text-2xl font-bold text-green-900">
+                    {loading ? '—' : fraudStats.validDocuments}
+                  </p>
                 </div>
                 <CheckCircle className="h-8 w-8 text-green-600" />
               </div>
@@ -185,8 +236,10 @@ const MairieAntiFraude = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-red-600 text-sm font-medium">Fraudes Détectées</p>
-                  <p className="text-2xl font-bold text-red-900">{fraudStats.fraudsDetected}</p>
+                  <p className="text-red-600 text-sm font-medium">Litiges Actifs</p>
+                  <p className="text-2xl font-bold text-red-900">
+                    {loading ? '—' : fraudStats.activeDisputes}
+                  </p>
                 </div>
                 <AlertTriangle className="h-8 w-8 text-red-600" />
               </div>
@@ -203,10 +256,12 @@ const MairieAntiFraude = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">Précision IA</p>
-                  <p className="text-2xl font-bold text-blue-900">{fraudStats.accuracyRate}%</p>
+                  <p className="text-blue-600 text-sm font-medium">Litiges Résolus</p>
+                  <p className="text-2xl font-bold text-blue-900">
+                    {loading ? '—' : fraudStats.resolvedDisputes}
+                  </p>
                 </div>
-                <Brain className="h-8 w-8 text-blue-600" />
+                <Shield className="h-8 w-8 text-blue-600" />
               </div>
             </CardContent>
           </Card>
@@ -222,7 +277,9 @@ const MairieAntiFraude = ({ dashboardStats }) => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-yellow-600 text-sm font-medium">En Vérification</p>
-                  <p className="text-2xl font-bold text-yellow-900">{fraudStats.pendingVerification}</p>
+                  <p className="text-2xl font-bold text-yellow-900">
+                    {loading ? '—' : fraudStats.pendingVerification}
+                  </p>
                 </div>
                 <Clock className="h-8 w-8 text-yellow-600" />
               </div>
@@ -236,10 +293,10 @@ const MairieAntiFraude = ({ dashboardStats }) => {
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
             <Shield className="h-5 w-5 text-teal-600" />
-            <span>Système Anti-Fraude Municipal avec IA</span>
+            <span>Système Anti-Fraude Municipal</span>
           </CardTitle>
           <CardDescription>
-            Détection automatique des fraudes documentaires avec intelligence artificielle et blockchain
+            Suivi de la vérification des documents fonciers et des litiges de la commune
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -251,165 +308,53 @@ const MairieAntiFraude = ({ dashboardStats }) => {
               <TabsTrigger value="reports">Rapports</TabsTrigger>
             </TabsList>
 
-            {/* Scanner de documents avec IA */}
+            {/* Scanner de documents avec IA (fonctionnalité à venir) */}
             <TabsContent value="scanner" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 <DocumentScanCard
                   title="Analyse Document"
                   description="Scanner et analyser un document avec IA"
                   icon={Scan}
-                  onClick={handleDocumentScan}
-                  disabled={scanningDocument}
                 />
-                
+
                 <DocumentScanCard
                   title="Vérification Signature"
                   description="Analyse biométrique des signatures"
                   icon={FileCheck}
-                  onClick={() => {}}
                 />
-                
+
                 <DocumentScanCard
                   title="Contrôle Tampon"
                   description="Vérification authenticité des tampons"
                   icon={Award}
-                  onClick={() => {}}
                 />
               </div>
 
-              {/* Zone de scan */}
+              {/* Zone de scan - fonctionnalité IA non encore branchée */}
               <div className="border-2 border-dashed border-teal-300 bg-teal-50 p-8 rounded-lg text-center">
-                {scanningDocument ? (
-                  <motion.div
-                    animate={{ rotate: 360 }}
-                    transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-                    className="inline-block"
-                  >
-                    <Brain className="h-12 w-12 text-teal-600 mb-4" />
-                  </motion.div>
-                ) : (
-                  <Upload className="h-12 w-12 text-teal-600 mx-auto mb-4" />
-                )}
-                
+                <Upload className="h-12 w-12 text-teal-600 mx-auto mb-4" />
                 <h3 className="text-lg font-semibold text-teal-900 mb-2">
-                  {scanningDocument ? 'Analyse IA en cours...' : 'Déposer un document'}
+                  Analyse IA de documents
                 </h3>
                 <p className="text-teal-700 mb-4">
-                  {scanningDocument ? 'Vérification avec blockchain et IA' : 'Glissez un document ou cliquez pour sélectionner'}
+                  Le scan automatique des documents par intelligence artificielle
+                  sera bientôt disponible. En attendant, consultez l'onglet
+                  « Analyses » pour le suivi des litiges en cours.
                 </p>
-                
-                {scanningDocument && (
-                  <div className="max-w-xs mx-auto">
-                    <Progress value={65} className="mb-2" />
-                    <p className="text-sm text-teal-600">Analyse en cours: 65%</p>
-                  </div>
-                )}
+                <Badge variant="outline">Bientôt disponible</Badge>
               </div>
-
-              {/* Résultats d'analyse */}
-              {analysisResults && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="grid grid-cols-1 md:grid-cols-2 gap-6"
-                >
-                  <Card className="border-l-4 border-l-blue-500">
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Brain className="h-5 w-5 text-blue-600" />
-                        <span>Analyse IA</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Confiance IA:</span>
-                        <span className="font-semibold">{analysisResults.confidence.toFixed(1)}%</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Score Authenticité:</span>
-                        <span className="font-semibold">{analysisResults.authenticity_score.toFixed(1)}%</span>
-                      </div>
-                      
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm text-gray-600">Risque Fraude:</span>
-                        <Badge className={`${
-                          analysisResults.fraudRisk < 30 ? 'bg-green-100 text-green-800' :
-                          analysisResults.fraudRisk < 70 ? 'bg-yellow-100 text-yellow-800' :
-                          'bg-red-100 text-red-800'
-                        }`}>
-                          {analysisResults.fraudRisk.toFixed(1)}%
-                        </Badge>
-                      </div>
-
-                      {analysisResults.issues.length > 0 && (
-                        <div className="pt-2 border-t">
-                          <p className="text-sm font-medium text-red-600 mb-2">Problèmes détectés:</p>
-                          {analysisResults.issues.map((issue, index) => (
-                            <div key={index} className="flex items-center space-x-2 text-sm text-red-600">
-                              <AlertTriangle className="h-4 w-4" />
-                              <span>{issue}</span>
-                            </div>
-                          ))}
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-
-                  <Card className="border-l-4 border-l-purple-500">
-                    <CardHeader>
-                      <CardTitle className="flex items-center space-x-2">
-                        <Network className="h-5 w-5 text-purple-600" />
-                        <span>Vérification Blockchain</span>
-                      </CardTitle>
-                    </CardHeader>
-                    <CardContent className="space-y-4">
-                      <div className="flex items-center space-x-2">
-                        {analysisResults.blockchain_verified ? (
-                          <>
-                            <CheckCircle className="h-5 w-5 text-green-600" />
-                            <span className="text-green-600 font-medium">Vérifié sur blockchain</span>
-                          </>
-                        ) : (
-                          <>
-                            <AlertTriangle className="h-5 w-5 text-red-600" />
-                            <span className="text-red-600 font-medium">Non trouvé sur blockchain</span>
-                          </>
-                        )}
-                      </div>
-                      
-                      <div className="text-sm text-gray-600">
-                        <p>Hash: 0x7f9a8b2c3d4e5f6a7b8c9d0e1f2a3b4c</p>
-                        <p>Block: #1,247,892</p>
-                        <p>Timestamp: {new Date().toLocaleString('fr-FR')}</p>
-                      </div>
-
-                      <Button className="w-full" size="sm">
-                        <Network className="h-4 w-4 mr-2" />
-                        Voir sur Blockchain
-                      </Button>
-                    </CardContent>
-                  </Card>
-                </motion.div>
-              )}
             </TabsContent>
 
-            {/* Vérification Blockchain */}
+            {/* Vérification Blockchain (comptages réels) */}
             <TabsContent value="blockchain" className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
                   <CardContent className="p-6 text-center">
                     <Network className="h-8 w-8 text-purple-600 mx-auto mb-3" />
-                    <h3 className="font-semibold text-purple-900 mb-2">Documents Blockchain</h3>
-                    <p className="text-2xl font-bold text-purple-900">1,205</p>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-green-50 to-green-100">
-                  <CardContent className="p-6 text-center">
-                    <Lock className="h-8 w-8 text-green-600 mx-auto mb-3" />
-                    <h3 className="font-semibold text-green-900 mb-2">Sécurisés</h3>
-                    <p className="text-2xl font-bold text-green-900">98.7%</p>
+                    <h3 className="font-semibold text-purple-900 mb-2">Certificats Blockchain</h3>
+                    <p className="text-2xl font-bold text-purple-900">
+                      {loading ? '—' : blockchainStats.certificates.toLocaleString('fr-FR')}
+                    </p>
                   </CardContent>
                 </Card>
 
@@ -417,7 +362,19 @@ const MairieAntiFraude = ({ dashboardStats }) => {
                   <CardContent className="p-6 text-center">
                     <Database className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-blue-900 mb-2">Transactions</h3>
-                    <p className="text-2xl font-bold text-blue-900">2,341</p>
+                    <p className="text-2xl font-bold text-blue-900">
+                      {loading ? '—' : blockchainStats.transactions.toLocaleString('fr-FR')}
+                    </p>
+                  </CardContent>
+                </Card>
+
+                <Card className="bg-gradient-to-br from-green-50 to-green-100">
+                  <CardContent className="p-6 text-center">
+                    <Lock className="h-8 w-8 text-green-600 mx-auto mb-3" />
+                    <h3 className="font-semibold text-green-900 mb-2">Documents Vérifiés</h3>
+                    <p className="text-2xl font-bold text-green-900">
+                      {loading ? '—' : fraudStats.validDocuments.toLocaleString('fr-FR')}
+                    </p>
                   </CardContent>
                 </Card>
               </div>
@@ -426,67 +383,69 @@ const MairieAntiFraude = ({ dashboardStats }) => {
                 <Network className="h-4 w-4" />
                 <AlertTitle>Blockchain Municipal Teranga</AlertTitle>
                 <AlertDescription>
-                  Tous les documents officiels sont automatiquement sécurisés sur notre blockchain privée 
-                  pour garantir leur authenticité et traçabilité.
+                  Les documents officiels certifiés sont enregistrés sur la blockchain
+                  pour garantir leur authenticité et leur traçabilité. Les compteurs
+                  ci-dessus reflètent les enregistrements réels.
                 </AlertDescription>
               </Alert>
             </TabsContent>
 
-            {/* Analyses récentes */}
+            {/* Analyses récentes = litiges réels */}
             <TabsContent value="analyses" className="space-y-6">
-              <div className="space-y-4">
-                {recentAnalyses.map((analysis) => (
-                  <motion.div
-                    key={analysis.id}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: analysis.id * 0.1 }}
-                  >
-                    <Card className="hover:shadow-md transition-shadow">
-                      <CardContent className="p-4">
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-center space-x-4">
-                            <div className="bg-teal-100 p-2 rounded-lg">
-                              <FileText className="h-5 w-5 text-teal-600" />
-                            </div>
-                            <div>
-                              <h4 className="font-semibold text-gray-900">{analysis.documentType}</h4>
-                              <p className="text-sm text-gray-600">{analysis.citizenName}</p>
-                              <p className="text-xs text-gray-500">{new Date(analysis.date).toLocaleDateString('fr-FR')}</p>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center space-x-4">
-                            <div className="text-right">
-                              <div className="text-sm font-medium">Confiance: {analysis.confidence}%</div>
-                              <div className={`text-sm ${getRiskColor(analysis.riskLevel)}`}>
-                                Risque: {analysis.riskLevel}
+              {loading ? (
+                <div className="flex items-center justify-center py-12 text-gray-500">
+                  <Loader2 className="h-6 w-6 animate-spin mr-2" />
+                  Chargement des analyses...
+                </div>
+              ) : recentAnalyses.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <FileText className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                  <p>Aucun litige à analyser pour le moment.</p>
+                </div>
+              ) : (
+                <div className="space-y-4">
+                  {recentAnalyses.map((analysis, index) => (
+                    <motion.div
+                      key={analysis.id}
+                      initial={{ opacity: 0, x: -20 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: index * 0.1 }}
+                    >
+                      <Card className="hover:shadow-md transition-shadow">
+                        <CardContent className="p-4">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center space-x-4">
+                              <div className="bg-teal-100 p-2 rounded-lg">
+                                <FileText className="h-5 w-5 text-teal-600" />
+                              </div>
+                              <div>
+                                <h4 className="font-semibold text-gray-900">{analysis.title}</h4>
+                                <p className="text-sm text-gray-600">{analysis.partyName}</p>
+                                <p className="text-xs text-gray-500">
+                                  {analysis.date ? new Date(analysis.date).toLocaleDateString('fr-FR') : '—'}
+                                </p>
                               </div>
                             </div>
-                            
-                            <Badge className={getStatusColor(analysis.status)}>
-                              {analysis.status === 'validated' ? 'Validé' :
-                               analysis.status === 'fraud_detected' ? 'Fraude' : 'En attente'}
-                            </Badge>
-                          </div>
-                        </div>
 
-                        {analysis.issues.length > 0 && (
-                          <div className="mt-3 pt-3 border-t">
-                            <div className="flex flex-wrap gap-2">
-                              {analysis.issues.map((issue, index) => (
-                                <Badge key={index} variant="outline" className="text-xs text-red-600 border-red-200">
-                                  {issue}
-                                </Badge>
-                              ))}
+                            <div className="flex items-center space-x-4">
+                              <div className="text-right">
+                                <div className={`text-sm ${getRiskColor(analysis.riskLevel)}`}>
+                                  Risque: {getRiskLabel(analysis.riskLevel)}
+                                </div>
+                              </div>
+
+                              <Badge className={getStatusColor(analysis.status)}>
+                                {analysis.status === 'validated' ? 'Résolu' :
+                                 analysis.status === 'fraud_detected' ? 'En cours' : 'En attente'}
+                              </Badge>
                             </div>
                           </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  </motion.div>
-                ))}
-              </div>
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  ))}
+                </div>
+              )}
             </TabsContent>
 
             {/* Rapports */}
@@ -497,9 +456,9 @@ const MairieAntiFraude = ({ dashboardStats }) => {
                     <TrendingUp className="h-8 w-8 text-teal-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-gray-900 mb-2">Rapport Mensuel</h3>
                     <p className="text-sm text-gray-600 mb-4">Statistiques anti-fraude du mois</p>
-                    <Button size="sm">
+                    <Button size="sm" disabled>
                       <Download className="h-4 w-4 mr-2" />
-                      Télécharger
+                      Bientôt disponible
                     </Button>
                   </CardContent>
                 </Card>
@@ -509,7 +468,7 @@ const MairieAntiFraude = ({ dashboardStats }) => {
                     <Archive className="h-8 w-8 text-blue-600 mx-auto mb-3" />
                     <h3 className="font-semibold text-gray-900 mb-2">Archive Analyses</h3>
                     <p className="text-sm text-gray-600 mb-4">Historique complet des vérifications</p>
-                    <Button size="sm" variant="outline">
+                    <Button size="sm" variant="outline" onClick={() => setSelectedTab('analyses')}>
                       <Eye className="h-4 w-4 mr-2" />
                       Consulter
                     </Button>

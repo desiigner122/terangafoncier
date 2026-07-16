@@ -36,117 +36,203 @@ import { Input } from '@/components/ui/input';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const MairieGPSVerification = ({ dashboardStats }) => {
+  const { profile } = useAuth();
   const [selectedProperty, setSelectedProperty] = useState(null);
   const [verificationInProgress, setVerificationInProgress] = useState(false);
   const [mapView, setMapView] = useState('satellite');
   const [filterStatus, setFilterStatus] = useState('all');
+  const [loading, setLoading] = useState(true);
+  const [resolvedThisMonth, setResolvedThisMonth] = useState(0);
 
-  // Statistiques GPS
+  // Statistiques GPS (calculées sur les données réelles)
   const [gpsStats, setGpsStats] = useState({
-    totalVerifications: 892,
-    successfulVerifications: 847,
-    conflictsDetected: 12,
-    pendingVerifications: 33,
-    accuracyRate: 98.2,
-    averageProcessingTime: 2.3 // minutes
+    totalVerifications: 0,
+    successfulVerifications: 0,
+    conflictsDetected: 0,
+    pendingVerifications: 0,
+    accuracyRate: null,
+    averageProcessingTime: null
   });
 
-  // Données des propriétés à vérifier
-  const [properties, setProperties] = useState([
-    {
-      id: 1,
-      reference: 'TF-001-2024',
-      owner: 'M. Moussa Diagne',
-      address: 'Zone Résidentielle Nord, Parcelle 47',
-      coordinates: {
-        latitude: 14.7167,
-        longitude: -17.4677,
-        precision: 2.1 // mètres
-      },
-      status: 'verified',
-      area: 450, // m²
-      lastVerified: '2024-01-20',
-      conflicts: [],
-      riskLevel: 'low',
-      satelliteImageDate: '2024-01-15'
-    },
-    {
-      id: 2,
-      reference: 'TF-002-2024',
-      owner: 'Société Immobilière Dakar',
-      address: 'Zone Commerciale, Lot 12-15',
-      coordinates: {
-        latitude: 14.7200,
-        longitude: -17.4700,
-        precision: 1.8
-      },
-      status: 'conflict_detected',
-      area: 1250,
-      lastVerified: '2024-01-19',
-      conflicts: ['Chevauchement avec TF-008-2023', 'Limite contestée par voisin'],
-      riskLevel: 'high',
-      satelliteImageDate: '2024-01-10'
-    },
-    {
-      id: 3,
-      reference: 'TF-003-2024',
-      owner: 'Coopérative Agricole Sénégal',
-      address: 'Zone Agricole Sud, Parcelle A-23',
-      coordinates: {
-        latitude: 14.7100,
-        longitude: -17.4750,
-        precision: 3.2
-      },
-      status: 'pending',
-      area: 2800,
-      lastVerified: null,
-      conflicts: [],
-      riskLevel: 'medium',
-      satelliteImageDate: '2024-01-18'
-    },
-    {
-      id: 4,
-      reference: 'TF-004-2024',
-      owner: 'Mme Fatou Mbaye',
-      address: 'Quartier Centre, Parcelle 89',
-      coordinates: {
-        latitude: 14.7180,
-        longitude: -17.4650,
-        precision: 1.5
-      },
-      status: 'verified',
-      area: 320,
-      lastVerified: '2024-01-20',
-      conflicts: [],
-      riskLevel: 'low',
-      satelliteImageDate: '2024-01-16'
-    }
-  ]);
+  // Propriétés à vérifier (chargées depuis Supabase)
+  const [properties, setProperties] = useState([]);
 
-  // Simulation de vérification GPS
+  useEffect(() => {
+    loadGPSData();
+  }, [profile]);
+
+  const loadGPSData = async () => {
+    setLoading(true);
+    try {
+      const communeCity = profile?.city || null;
+
+      // Propriétés (filtrées par ville de la mairie si disponible)
+      let propQuery = supabase
+        .from('properties')
+        .select('id, owner_id, title, name, type, surface, location, region, city, latitude, longitude, status, verification_status, created_at')
+        .order('created_at', { ascending: false })
+        .limit(200);
+      if (communeCity) propQuery = propQuery.eq('city', communeCity);
+      const { data: propsData } = await propQuery;
+      const propsList = propsData || [];
+
+      const propIds = propsList.map((p) => p.id);
+
+      // Photos GPS (coordonnées + score qualité)
+      let photosByProp = {};
+      if (propIds.length > 0) {
+        const { data: photos } = await supabase
+          .from('property_photos')
+          .select('property_id, url, is_primary, gps_latitude, gps_longitude, quality_score, created_at')
+          .in('property_id', propIds);
+        (photos || []).forEach((ph) => {
+          const cur = photosByProp[ph.property_id];
+          // Privilégier la photo primaire ou celle qui porte des coordonnées GPS
+          if (!cur || ph.is_primary || (ph.gps_latitude != null && cur.gps_latitude == null)) {
+            photosByProp[ph.property_id] = ph;
+          }
+        });
+      }
+
+      // Litiges ouverts (conflits réels) rattachés à ces propriétés
+      let disputesByProp = {};
+      if (propIds.length > 0) {
+        const { data: disputes } = await supabase
+          .from('disputes')
+          .select('id, title, property_id, status, created_at')
+          .in('property_id', propIds);
+        (disputes || []).forEach((d) => {
+          if (!disputesByProp[d.property_id]) disputesByProp[d.property_id] = [];
+          disputesByProp[d.property_id].push(d);
+        });
+        // Résolus ce mois
+        const startMonth = new Date();
+        startMonth.setDate(1);
+        startMonth.setHours(0, 0, 0, 0);
+        const resolved = (disputes || []).filter(
+          (d) => d.status === 'resolved' && d.created_at && new Date(d.created_at) >= startMonth
+        ).length;
+        setResolvedThisMonth(resolved);
+      }
+
+      // Noms des propriétaires
+      let ownersById = {};
+      const ownerIds = [...new Set(propsList.map((p) => p.owner_id).filter(Boolean))];
+      if (ownerIds.length > 0) {
+        const { data: owners } = await supabase
+          .from('profiles')
+          .select('id, full_name, first_name, last_name')
+          .in('id', ownerIds);
+        (owners || []).forEach((o) => {
+          ownersById[o.id] =
+            o.full_name ||
+            [o.first_name, o.last_name].filter(Boolean).join(' ') ||
+            null;
+        });
+      }
+
+      // Construire la liste des propriétés à vérifier
+      const mapped = propsList
+        .map((p) => {
+          const photo = photosByProp[p.id];
+          const lat = photo?.gps_latitude ?? p.latitude ?? null;
+          const lng = photo?.gps_longitude ?? p.longitude ?? null;
+          if (lat == null || lng == null) return null; // pas de coordonnées => hors périmètre GPS
+
+          const openDisputes = (disputesByProp[p.id] || []).filter((d) => d.status === 'open');
+          const hasConflict = openDisputes.length > 0;
+          const isVerified = p.verification_status === 'verified';
+          const status = hasConflict ? 'conflict_detected' : isVerified ? 'verified' : 'pending';
+
+          return {
+            id: p.id,
+            reference: p.title || p.name || `Parcelle ${String(p.id).slice(0, 8)}`,
+            owner: ownersById[p.owner_id] || 'Propriétaire inconnu',
+            address: p.location || [p.city, p.region].filter(Boolean).join(', ') || '—',
+            coordinates: {
+              latitude: Number(lat),
+              longitude: Number(lng),
+              qualityScore: photo?.quality_score ?? null
+            },
+            status,
+            area: p.surface ?? null,
+            lastVerified: isVerified ? (photo?.created_at || p.created_at) : null,
+            conflicts: openDisputes.map((d) => d.title || 'Litige en cours'),
+            riskLevel: hasConflict ? 'high' : isVerified ? 'low' : 'medium'
+          };
+        })
+        .filter(Boolean);
+
+      setProperties(mapped);
+
+      // Statistiques réelles
+      const verifiedCount = mapped.filter((m) => m.status === 'verified').length;
+      const conflictCount = mapped.filter((m) => m.status === 'conflict_detected').length;
+      const pendingCount = mapped.filter((m) => m.status === 'pending').length;
+      const qualityScores = mapped
+        .map((m) => m.coordinates.qualityScore)
+        .filter((q) => q != null && !Number.isNaN(Number(q)));
+      const avgQuality =
+        qualityScores.length > 0
+          ? Math.round(
+              (qualityScores.reduce((a, b) => a + Number(b), 0) / qualityScores.length) * 10
+            ) / 10
+          : null;
+
+      setGpsStats({
+        totalVerifications: mapped.length,
+        successfulVerifications: verifiedCount,
+        conflictsDetected: conflictCount,
+        pendingVerifications: pendingCount,
+        accuracyRate: avgQuality,
+        averageProcessingTime: null
+      });
+    } catch (err) {
+      console.error('Erreur chargement données GPS:', err);
+      setProperties([]);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Vérification GPS réelle : marque la propriété comme vérifiée dans Supabase
   const handleGPSVerification = async (property) => {
     setSelectedProperty(property);
     setVerificationInProgress(true);
-    
-    // Simulation du processus de vérification
-    setTimeout(() => {
-      const hasConflict = Math.random() > 0.8;
-      const updatedProperties = properties.map(p => 
-        p.id === property.id 
-          ? {
-              ...p,
-              status: hasConflict ? 'conflict_detected' : 'verified',
-              lastVerified: new Date().toISOString().split('T')[0],
-              conflicts: hasConflict ? ['Nouveau conflit détecté'] : [],
-              riskLevel: hasConflict ? 'high' : 'low'
-            }
-          : p
+    try {
+      await supabase
+        .from('properties')
+        .update({ verification_status: 'verified' })
+        .eq('id', property.id);
+
+      setProperties((prev) =>
+        prev.map((p) =>
+          p.id === property.id
+            ? {
+                ...p,
+                status: p.conflicts.length > 0 ? 'conflict_detected' : 'verified',
+                lastVerified: new Date().toISOString(),
+                riskLevel: p.conflicts.length > 0 ? 'high' : 'low'
+              }
+            : p
+        )
       );
-      setProperties(updatedProperties);
+      setGpsStats((s) => ({
+        ...s,
+        successfulVerifications:
+          property.status === 'verified' ? s.successfulVerifications : s.successfulVerifications + 1,
+        pendingVerifications:
+          property.status === 'pending' ? Math.max(0, s.pendingVerifications - 1) : s.pendingVerifications
+      }));
+    } catch (err) {
+      console.error('Erreur vérification GPS:', err);
+    } finally {
       setVerificationInProgress(false);
-    }, 4000);
+    }
   };
 
   const getStatusColor = (status) => {
@@ -201,10 +287,12 @@ const MairieGPSVerification = ({ dashboardStats }) => {
             </div>
             <div className="text-right">
               <div className="text-sm font-semibold text-gray-900">
-                {property.area} m²
+                {property.area != null ? `${property.area} m²` : '—'}
               </div>
               <div className="text-xs text-gray-600">
-                ±{property.coordinates.precision}m
+                {property.coordinates.qualityScore != null
+                  ? `Qualité: ${property.coordinates.qualityScore}`
+                  : 'Qualité: —'}
               </div>
             </div>
           </div>
@@ -314,8 +402,10 @@ const MairieGPSVerification = ({ dashboardStats }) => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-blue-600 text-sm font-medium">Précision Moyenne</p>
-                  <p className="text-2xl font-bold text-blue-900">{gpsStats.accuracyRate}%</p>
+                  <p className="text-blue-600 text-sm font-medium">Qualité GPS Moyenne</p>
+                  <p className="text-2xl font-bold text-blue-900">
+                    {gpsStats.accuracyRate != null ? gpsStats.accuracyRate : '—'}
+                  </p>
                 </div>
                 <Target className="h-8 w-8 text-blue-600" />
               </div>
@@ -419,6 +509,19 @@ const MairieGPSVerification = ({ dashboardStats }) => {
                   />
                 ))}
               </motion.div>
+
+              {!loading && filteredProperties.length === 0 && (
+                <div className="text-center py-12 text-gray-500">
+                  <Satellite className="h-10 w-10 mx-auto mb-3 text-gray-300" />
+                  <p className="font-medium">Aucune parcelle géolocalisée</p>
+                  <p className="text-sm">
+                    Aucune propriété avec coordonnées GPS pour ce périmètre.
+                  </p>
+                </div>
+              )}
+              {loading && (
+                <div className="text-center py-12 text-gray-400 text-sm">Chargement des données GPS…</div>
+              )}
 
               {/* Interface de vérification en cours */}
               {verificationInProgress && selectedProperty && (
@@ -537,7 +640,7 @@ const MairieGPSVerification = ({ dashboardStats }) => {
                     <CardTitle className="text-green-700">Résolus ce mois</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="text-3xl font-bold text-green-900 mb-2">8</div>
+                    <div className="text-3xl font-bold text-green-900 mb-2">{resolvedThisMonth}</div>
                     <p className="text-green-600">Conflits résolus</p>
                   </CardContent>
                 </Card>

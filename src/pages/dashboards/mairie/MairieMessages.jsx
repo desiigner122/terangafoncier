@@ -1,178 +1,259 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   MessageSquare,
   Send,
-  Phone,
-  Mail,
   Users,
   Bell,
-  Calendar,
-  FileText,
   Search,
-  Filter,
   Plus,
   Star,
-  Clock,
-  CheckCircle,
   User,
-  Building,
-  Flag,
   Archive,
   Paperclip,
   Eye,
-  Reply
+  Reply,
+  RefreshCw
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
 } from '@/components/ui/select';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { toast } from 'sonner';
 
-const MairieMessages = ({ dashboardStats }) => {
+const MairieMessages = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('inbox');
   const [selectedMessage, setSelectedMessage] = useState(null);
   const [searchQuery, setSearchQuery] = useState('');
   const [newMessage, setNewMessage] = useState('');
+  const [newSubject, setNewSubject] = useState('');
   const [recipient, setRecipient] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
-  // Messages reçus
-  const inboxMessages = [
-    {
-      id: 'msg-001',
-      sender: 'Conseil Départemental de Dakar',
-      senderEmail: 'contact@conseil-dakar.sn',
-      senderAvatar: null,
-      subject: 'Nouvelle directive sur l\'attribution foncière communale',
-      preview: 'Suite aux récentes réformes, nous vous informons des nouvelles procédures...',
-      content: 'Monsieur le Maire,\n\nSuite aux récentes réformes du code foncier, nous vous informons des nouvelles procédures d\'attribution foncière communale qui entreront en vigueur le 1er février 2024.\n\nLes principales modifications concernent :\n- Les seuils d\'attribution automatique\n- Les procédures de consultation publique\n- Les délais de traitement\n\nVeuillez trouver en pièce jointe le guide complet des nouvelles procédures.\n\nCordialement,\nLe Secrétaire Général',
-      timestamp: '2024-01-22T14:30:00',
-      isRead: false,
-      isImportant: true,
-      category: 'Officiel',
-      attachments: ['Guide_nouvelles_procedures.pdf'],
-      priority: 'Haute'
-    },
-    {
-      id: 'msg-002',
-      sender: 'Association des Résidents - Quartier Nord',
-      senderEmail: 'president@residents-nord.org',
-      senderAvatar: null,
-      subject: 'Demande d\'aménagement d\'un parc public',
-      preview: 'Les résidents du quartier Nord souhaitent soumettre une demande d\'aménagement...',
-      content: 'Monsieur le Maire,\n\nAu nom de l\'Association des Résidents du Quartier Nord, nous souhaitons vous soumettre une demande d\'aménagement d\'un parc public sur le terrain vague situé entre les rues 15 et 17.\n\nCe projet bénéficierait à plus de 800 familles et comprend :\n- Aires de jeux pour enfants\n- Espaces verts\n- Terrain de sport\n- Éclairage public\n\nNous avons déjà réuni 65% des signatures nécessaires et disposons d\'un budget participatif de 2,5M FCFA.\n\nNous restons à votre disposition pour présenter ce projet en détail.\n\nCordialement,\nMadame Fatou Diop, Présidente',
-      timestamp: '2024-01-21T09:15:00',
-      isRead: true,
-      isImportant: false,
-      category: 'Citoyens',
-      attachments: ['Petition_signatures.pdf', 'Plan_amenagement.jpg'],
-      priority: 'Moyenne'
-    },
-    {
-      id: 'msg-003',
-      sender: 'Moussa Ba - Entrepreneur',
-      senderEmail: 'moussa.ba@construction.sn',
-      senderAvatar: null,
-      subject: 'Demande de permis de construire - Complexe commercial',
-      preview: 'Je souhaite déposer une demande de permis de construire pour un complexe commercial...',
-      content: 'Monsieur le Maire,\n\nJ\'ai l\'honneur de vous adresser ma demande de permis de construire pour un complexe commercial moderne situé Zone Commerciale Centre, parcelle 245-B.\n\nLe projet comprend :\n- Surface totale : 2,400m²\n- 45 boutiques\n- 150 places de parking\n- Centre de services (banque, poste, pharmacie)\n\nTous les documents techniques sont joints à ce message. Le projet respecte toutes les normes d\'urbanisme en vigueur et créera environ 200 emplois directs.\n\nInvestissement total : 850M FCFA\nDurée des travaux prévue : 18 mois\n\nJe reste à votre disposition pour tout complément d\'information.\n\nCordialement,\nMoussa Ba',
-      timestamp: '2024-01-20T16:45:00',
-      isRead: true,
-      isImportant: false,
-      category: 'Business',
-      attachments: ['Plans_architecturaux.pdf', 'Etude_impact.pdf', 'Devis_estimatif.xlsx'],
-      priority: 'Normale'
-    },
-    {
-      id: 'msg-004',
-      sender: 'Préfet du Département',
-      senderEmail: 'cabinet@prefet-dakar.gouv.sn',
-      senderAvatar: null,
-      subject: 'Convocation réunion des maires - Schéma directeur',
-      preview: 'Vous êtes convié à la réunion mensuelle des maires du département...',
-      content: 'Monsieur le Maire,\n\nVous êtes convié à la réunion mensuelle des maires du département qui se tiendra le jeudi 25 janvier 2024 à 14h00 dans les locaux de la Préfecture.\n\nOrdre du jour :\n1. Présentation du nouveau schéma directeur d\'urbanisme\n2. Budget participatif régional 2024\n3. Coordination des projets intercommunaux\n4. Point sur les réformes foncières\n5. Questions diverses\n\nMerci de confirmer votre présence avant le 23 janvier.\n\nCordialement,\nLe Chef de Cabinet',
-      timestamp: '2024-01-19T11:20:00',
-      isRead: false,
-      isImportant: true,
-      category: 'Officiel',
-      attachments: ['Ordre_du_jour.pdf'],
-      priority: 'Haute'
+  // Données réelles (schéma : conversations / conversation_participants / messages)
+  const [inboxMessages, setInboxMessages] = useState([]);
+  const [sentMessages, setSentMessages] = useState([]);
+  const [contacts, setContacts] = useState([]);
+
+  useEffect(() => {
+    if (user?.id) {
+      loadMessages();
     }
-  ];
+  }, [user]);
 
-  // Messages envoyés
-  const sentMessages = [
-    {
-      id: 'sent-001',
-      recipient: 'Direction Régionale de l\'Urbanisme',
-      subject: 'Transmission dossier attribution Zone Résidentielle Nord',
-      content: 'Madame la Directrice,\n\nJ\'ai l\'honneur de vous transmettre le dossier complet d\'attribution foncière pour la Zone Résidentielle Nord, secteur B.\n\nLe dossier comprend 15 demandes pré-approuvées par la commission municipale...',
-      timestamp: '2024-01-22T10:30:00',
-      attachments: ['Dossier_complet.pdf']
-    },
-    {
-      id: 'sent-002',
-      recipient: 'Association des Commerçants',
-      subject: 'Réponse à votre demande d\'extension marché',
-      content: 'Monsieur le Président,\n\nSuite à votre demande d\'extension du marché central, je vous informe que le projet a été approuvé en principe par le conseil municipal...',
-      timestamp: '2024-01-21T15:45:00',
-      attachments: []
-    }
-  ];
+  const loadMessages = async () => {
+    try {
+      setLoading(true);
 
-  // Contacts fréquents
-  const frequentContacts = [
-    { name: 'Conseil Départemental', email: 'contact@conseil-dakar.sn', category: 'Officiel' },
-    { name: 'Préfet du Département', email: 'cabinet@prefet-dakar.gouv.sn', category: 'Officiel' },
-    { name: 'Direction Urbanisme', email: 'urbanisme@region-dakar.sn', category: 'Technique' },
-    { name: 'Association Citoyens Nord', email: 'president@residents-nord.org', category: 'Citoyens' },
-    { name: 'Chambre Commerce', email: 'info@chambre-commerce-dakar.sn', category: 'Business' }
-  ];
+      // 1) Conversations auxquelles la mairie participe
+      const { data: participations, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+      if (partError) throw partError;
 
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'Officiel': return 'bg-blue-100 text-blue-800';
-      case 'Citoyens': return 'bg-green-100 text-green-800';
-      case 'Business': return 'bg-purple-100 text-purple-800';
-      case 'Technique': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
+      const conversationIds = [...new Set((participations || []).map(p => p.conversation_id))];
+      if (conversationIds.length === 0) {
+        setInboxMessages([]);
+        setSentMessages([]);
+        setContacts([]);
+        setLoading(false);
+        return;
+      }
+
+      // 2) Conversations + participants + messages en parallèle
+      const [conversationsRes, messagesRes] = await Promise.all([
+        supabase
+          .from('conversations')
+          .select('*, participants:conversation_participants(user_id)')
+          .in('id', conversationIds),
+        supabase
+          .from('messages')
+          .select('id, conversation_id, sender_id, content, read, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: true })
+      ]);
+      if (conversationsRes.error) throw conversationsRes.error;
+      if (messagesRes.error) throw messagesRes.error;
+
+      const conversationsData = conversationsRes.data || [];
+      const allMessages = messagesRes.data || [];
+
+      const conversationsById = new Map(conversationsData.map(c => [c.id, c]));
+
+      // 3) Profils des interlocuteurs (tous les participants + expéditeurs hors mairie)
+      const participantIds = [...new Set(
+        conversationsData
+          .flatMap(c => (c.participants || []).map(p => p.user_id))
+          .concat(allMessages.map(m => m.sender_id))
+          .filter(id => id && id !== user.id)
+      )];
+
+      const { data: profilesData } = participantIds.length > 0
+        ? await supabase
+            .from('profiles')
+            .select('id, first_name, last_name, full_name, email, avatar_url')
+            .in('id', participantIds)
+        : { data: [] };
+
+      const profilesById = new Map((profilesData || []).map(p => [p.id, p]));
+
+      const nameOf = (id) => {
+        const p = profilesById.get(id);
+        if (!p) return 'Interlocuteur';
+        return p.full_name
+          || `${p.first_name || ''} ${p.last_name || ''}`.trim()
+          || p.email
+          || 'Interlocuteur';
+      };
+      const otherParticipant = (conv) => (conv?.participants || [])
+        .map(p => p.user_id)
+        .find(id => id && id !== user.id);
+
+      // 4) Boîte de réception : messages reçus (expéditeur ≠ mairie)
+      const inbox = allMessages
+        .filter(m => m.sender_id !== user.id)
+        .map(m => {
+          const conv = conversationsById.get(m.conversation_id);
+          const senderProfile = profilesById.get(m.sender_id);
+          return {
+            id: m.id,
+            conversationId: m.conversation_id,
+            sender: nameOf(m.sender_id),
+            senderEmail: senderProfile?.email || '',
+            senderAvatar: senderProfile?.avatar_url || '',
+            subject: conv?.subject || 'Conversation',
+            content: m.content || '',
+            preview: (m.content || '').slice(0, 120),
+            timestamp: m.created_at,
+            isRead: !!m.read,
+            attachments: []
+          };
+        })
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      // 5) Messages envoyés (expéditeur = mairie)
+      const sent = allMessages
+        .filter(m => m.sender_id === user.id)
+        .map(m => {
+          const conv = conversationsById.get(m.conversation_id);
+          const otherId = otherParticipant(conv);
+          return {
+            id: m.id,
+            conversationId: m.conversation_id,
+            recipient: otherId ? nameOf(otherId) : 'Destinataire',
+            subject: conv?.subject || 'Conversation',
+            content: m.content || '',
+            timestamp: m.created_at,
+            attachments: []
+          };
+        })
+        .sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
+      // 6) Contacts (interlocuteurs des conversations) pour le formulaire de rédaction
+      const contactList = conversationsData
+        .map(conv => {
+          const otherId = otherParticipant(conv);
+          if (!otherId) return null;
+          const p = profilesById.get(otherId);
+          return {
+            conversationId: conv.id,
+            name: nameOf(otherId),
+            email: p?.email || '',
+            avatar: p?.avatar_url || ''
+          };
+        })
+        .filter(Boolean);
+
+      setInboxMessages(inbox);
+      setSentMessages(sent);
+      setContacts(contactList);
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur chargement messages:', error);
+      toast.error('Erreur lors du chargement des messages');
+      setInboxMessages([]);
+      setSentMessages([]);
+      setContacts([]);
+      setLoading(false);
     }
   };
 
-  const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'Haute': return 'text-red-600';
-      case 'Moyenne': return 'text-orange-600';
-      case 'Normale': return 'text-green-600';
-      default: return 'text-gray-600';
+  const unreadCount = inboxMessages.filter(m => !m.isRead).length;
+
+  const openMessage = async (message) => {
+    setSelectedMessage(message);
+    if (!message.isRead) {
+      try {
+        await supabase.from('messages').update({ read: true }).eq('id', message.id);
+        setInboxMessages(prev => prev.map(m =>
+          m.id === message.id ? { ...m, isRead: true } : m
+        ));
+      } catch (error) {
+        console.error('Erreur marquage lu:', error);
+      }
     }
   };
 
   const filteredMessages = (messages) => {
-    return messages.filter(message => 
-      message.sender?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      message.subject.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      message.recipient?.toLowerCase().includes(searchQuery.toLowerCase())
+    const q = searchQuery.toLowerCase();
+    return messages.filter(message =>
+      message.sender?.toLowerCase().includes(q) ||
+      message.subject?.toLowerCase().includes(q) ||
+      message.recipient?.toLowerCase().includes(q)
     );
   };
 
-  const handleSendMessage = () => {
-    if (newMessage.trim() && recipient.trim()) {
-      // Logique d'envoi de message
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !recipient) {
+      toast.error('Choisissez un destinataire et saisissez un message');
+      return;
+    }
+    setSending(true);
+    try {
+      const { error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: recipient,
+          sender_id: user.id,
+          content: newMessage.trim(),
+          read: false
+        });
+      if (error) throw error;
+
+      // Mettre à jour l'activité (et le sujet si renseigné) de la conversation
+      const convUpdate = { updated_at: new Date().toISOString() };
+      if (newSubject.trim()) convUpdate.subject = newSubject.trim();
+      await supabase.from('conversations').update(convUpdate).eq('id', recipient);
+
+      toast.success('Message envoyé');
       setNewMessage('');
+      setNewSubject('');
       setRecipient('');
-      // Toast success
+      setActiveTab('sent');
+      await loadMessages();
+    } catch (error) {
+      console.error('Erreur envoi message:', error);
+      toast.error("Erreur lors de l'envoi du message");
+    } finally {
+      setSending(false);
     }
   };
+
+  const initials = (name) => (name || '?').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
 
   return (
     <div className="space-y-6">
@@ -184,59 +265,70 @@ const MairieMessages = ({ dashboardStats }) => {
             Messagerie institutionnelle et correspondances officielles
           </p>
         </div>
-        
-        <Button className="bg-teal-600 hover:bg-teal-700 mt-4 lg:mt-0">
+
+        <Button
+          className="bg-teal-600 hover:bg-teal-700 mt-4 lg:mt-0"
+          onClick={() => setActiveTab('compose')}
+        >
           <Plus className="h-4 w-4 mr-2" />
           Nouveau Message
         </Button>
       </div>
 
-      {/* Statistiques rapides */}
+      {/* Statistiques rapides (données réelles) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Messages Reçus</p>
-                <p className="text-2xl font-bold text-blue-600">24</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {loading ? '—' : inboxMessages.length}
+                </p>
               </div>
               <MessageSquare className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Non Lus</p>
-                <p className="text-2xl font-bold text-red-600">6</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {loading ? '—' : unreadCount}
+                </p>
               </div>
               <Bell className="h-8 w-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Envoyés</p>
-                <p className="text-2xl font-bold text-green-600">18</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {loading ? '—' : sentMessages.length}
+                </p>
               </div>
               <Send className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Importants</p>
-                <p className="text-2xl font-bold text-orange-600">4</p>
+                <p className="text-sm text-gray-600">Conversations</p>
+                <p className="text-2xl font-bold text-orange-600">
+                  {loading ? '—' : contacts.length}
+                </p>
               </div>
-              <Star className="h-8 w-8 text-orange-600" />
+              <Users className="h-8 w-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
@@ -248,27 +340,29 @@ const MairieMessages = ({ dashboardStats }) => {
           <Card>
             <CardContent className="p-4">
               <div className="space-y-2">
-                <Button 
-                  variant={activeTab === 'inbox' ? 'default' : 'ghost'} 
+                <Button
+                  variant={activeTab === 'inbox' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setActiveTab('inbox')}
                 >
                   <MessageSquare className="h-4 w-4 mr-2" />
                   Boîte de Réception
-                  <Badge className="ml-auto bg-red-500 text-white">6</Badge>
+                  {unreadCount > 0 && (
+                    <Badge className="ml-auto bg-red-500 text-white">{unreadCount}</Badge>
+                  )}
                 </Button>
-                
-                <Button 
-                  variant={activeTab === 'sent' ? 'default' : 'ghost'} 
+
+                <Button
+                  variant={activeTab === 'sent' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setActiveTab('sent')}
                 >
                   <Send className="h-4 w-4 mr-2" />
                   Messages Envoyés
                 </Button>
-                
-                <Button 
-                  variant={activeTab === 'compose' ? 'default' : 'ghost'} 
+
+                <Button
+                  variant={activeTab === 'compose' ? 'default' : 'ghost'}
                   className="w-full justify-start"
                   onClick={() => setActiveTab('compose')}
                 >
@@ -280,24 +374,29 @@ const MairieMessages = ({ dashboardStats }) => {
               <hr className="my-4" />
 
               <div>
-                <h4 className="text-sm font-medium text-gray-700 mb-3">Contacts Fréquents</h4>
-                <div className="space-y-2">
-                  {frequentContacts.slice(0, 4).map((contact, index) => (
-                    <div key={index} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
-                      <Avatar className="h-6 w-6">
-                        <AvatarFallback className="text-xs">
-                          {contact.name.split(' ').map(n => n[0]).join('')}
-                        </AvatarFallback>
-                      </Avatar>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-medium text-gray-900 truncate">{contact.name}</p>
-                        <Badge className={`text-xs ${getCategoryColor(contact.category)}`}>
-                          {contact.category}
-                        </Badge>
+                <h4 className="text-sm font-medium text-gray-700 mb-3">Contacts</h4>
+                {contacts.length === 0 ? (
+                  <p className="text-xs text-gray-400">Aucun contact pour le moment.</p>
+                ) : (
+                  <div className="space-y-2">
+                    {contacts.slice(0, 5).map((contact, index) => (
+                      <div key={index} className="flex items-center space-x-2 p-2 hover:bg-gray-50 rounded cursor-pointer">
+                        <Avatar className="h-6 w-6">
+                          <AvatarImage src={contact.avatar} />
+                          <AvatarFallback className="text-xs">
+                            {initials(contact.name)}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-medium text-gray-900 truncate">{contact.name}</p>
+                          {contact.email && (
+                            <p className="text-xs text-gray-500 truncate">{contact.email}</p>
+                          )}
+                        </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -323,67 +422,73 @@ const MairieMessages = ({ dashboardStats }) => {
                   </div>
                 </div>
               </CardHeader>
-              
+
               <CardContent className="p-0">
-                <div className="divide-y">
-                  {filteredMessages(inboxMessages).map((message) => (
-                    <div 
-                      key={message.id} 
-                      className={`p-4 hover:bg-gray-50 cursor-pointer ${
-                        !message.isRead ? 'bg-blue-50' : ''
-                      }`}
-                      onClick={() => setSelectedMessage(message)}
-                    >
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center space-x-3 mb-1">
-                            <Avatar className="h-8 w-8">
-                              <AvatarImage src={message.senderAvatar} />
-                              <AvatarFallback>
-                                {message.sender.split(' ').map(n => n[0]).join('')}
-                              </AvatarFallback>
-                            </Avatar>
-                            <div className="flex-1 min-w-0">
-                              <div className="flex items-center space-x-2">
+                {loading ? (
+                  <div className="flex items-center justify-center py-16 text-gray-500">
+                    <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                    Chargement...
+                  </div>
+                ) : filteredMessages(inboxMessages).length === 0 ? (
+                  <div className="text-center py-16 px-4">
+                    <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600 font-medium">Aucun message reçu</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Les messages des administrés et institutions apparaîtront ici.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredMessages(inboxMessages).map((message) => (
+                      <div
+                        key={message.id}
+                        className={`p-4 hover:bg-gray-50 cursor-pointer ${
+                          !message.isRead ? 'bg-blue-50' : ''
+                        }`}
+                        onClick={() => openMessage(message)}
+                      >
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-3 mb-1">
+                              <Avatar className="h-8 w-8">
+                                <AvatarImage src={message.senderAvatar} />
+                                <AvatarFallback>
+                                  {initials(message.sender)}
+                                </AvatarFallback>
+                              </Avatar>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center space-x-2">
+                                  <p className={`text-sm truncate ${
+                                    !message.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'
+                                  }`}>
+                                    {message.sender}
+                                  </p>
+                                </div>
                                 <p className={`text-sm truncate ${
-                                  !message.isRead ? 'font-semibold text-gray-900' : 'font-medium text-gray-700'
+                                  !message.isRead ? 'font-medium text-gray-900' : 'text-gray-600'
                                 }`}>
-                                  {message.sender}
+                                  {message.subject}
                                 </p>
-                                <Badge className={getCategoryColor(message.category)}>
-                                  {message.category}
-                                </Badge>
-                                {message.isImportant && (
-                                  <Star className="h-4 w-4 text-yellow-500" />
-                                )}
+                                <p className="text-xs text-gray-500 truncate mt-1">
+                                  {message.preview}
+                                </p>
                               </div>
-                              <p className={`text-sm truncate ${
-                                !message.isRead ? 'font-medium text-gray-900' : 'text-gray-600'
-                              }`}>
-                                {message.subject}
-                              </p>
-                              <p className="text-xs text-gray-500 truncate mt-1">
-                                {message.preview}
-                              </p>
                             </div>
                           </div>
-                        </div>
-                        
-                        <div className="ml-4 flex flex-col items-end space-y-1">
-                          <span className="text-xs text-gray-500">
-                            {new Date(message.timestamp).toLocaleDateString('fr-FR')}
-                          </span>
-                          <div className="flex items-center space-x-1">
+
+                          <div className="ml-4 flex flex-col items-end space-y-1">
+                            <span className="text-xs text-gray-500">
+                              {new Date(message.timestamp).toLocaleDateString('fr-FR')}
+                            </span>
                             {message.attachments.length > 0 && (
                               <Paperclip className="h-3 w-3 text-gray-400" />
                             )}
-                            <Flag className={`h-3 w-3 ${getPriorityColor(message.priority)}`} />
                           </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -393,33 +498,49 @@ const MairieMessages = ({ dashboardStats }) => {
               <CardHeader>
                 <CardTitle>Messages Envoyés</CardTitle>
               </CardHeader>
-              
+
               <CardContent className="p-0">
-                <div className="divide-y">
-                  {filteredMessages(sentMessages).map((message) => (
-                    <div key={message.id} className="p-4 hover:bg-gray-50 cursor-pointer">
-                      <div className="flex items-start justify-between">
-                        <div className="flex-1">
-                          <p className="text-sm font-medium text-gray-900">{message.recipient}</p>
-                          <p className="text-sm text-gray-600">{message.subject}</p>
-                          <p className="text-xs text-gray-500 mt-1 line-clamp-2">
-                            {message.content.substring(0, 100)}...
-                          </p>
-                        </div>
-                        <div className="ml-4 text-right">
-                          <span className="text-xs text-gray-500">
-                            {new Date(message.timestamp).toLocaleDateString('fr-FR')}
-                          </span>
-                          {message.attachments.length > 0 && (
-                            <div className="mt-1">
-                              <Paperclip className="h-3 w-3 text-gray-400" />
-                            </div>
-                          )}
+                {loading ? (
+                  <div className="flex items-center justify-center py-16 text-gray-500">
+                    <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+                    Chargement...
+                  </div>
+                ) : filteredMessages(sentMessages).length === 0 ? (
+                  <div className="text-center py-16 px-4">
+                    <Send className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                    <p className="text-gray-600 font-medium">Aucun message envoyé</p>
+                    <p className="text-sm text-gray-400 mt-1">
+                      Vos messages envoyés apparaîtront ici.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="divide-y">
+                    {filteredMessages(sentMessages).map((message) => (
+                      <div key={message.id} className="p-4 hover:bg-gray-50 cursor-pointer">
+                        <div className="flex items-start justify-between">
+                          <div className="flex-1">
+                            <p className="text-sm font-medium text-gray-900">{message.recipient}</p>
+                            <p className="text-sm text-gray-600">{message.subject}</p>
+                            <p className="text-xs text-gray-500 mt-1 line-clamp-2">
+                              {(message.content || '').substring(0, 100)}
+                              {(message.content || '').length > 100 ? '...' : ''}
+                            </p>
+                          </div>
+                          <div className="ml-4 text-right">
+                            <span className="text-xs text-gray-500">
+                              {new Date(message.timestamp).toLocaleDateString('fr-FR')}
+                            </span>
+                            {message.attachments.length > 0 && (
+                              <div className="mt-1">
+                                <Paperclip className="h-3 w-3 text-gray-400" />
+                              </div>
+                            )}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
-                </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           )}
@@ -429,32 +550,41 @@ const MairieMessages = ({ dashboardStats }) => {
               <CardHeader>
                 <CardTitle>Rédiger un Message</CardTitle>
               </CardHeader>
-              
+
               <CardContent className="space-y-4">
                 <div>
                   <label className="text-sm font-medium text-gray-700">Destinataire</label>
                   <Select value={recipient} onValueChange={setRecipient}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Sélectionner un destinataire" />
+                      <SelectValue placeholder={contacts.length ? 'Sélectionner un destinataire' : 'Aucun contact disponible'} />
                     </SelectTrigger>
                     <SelectContent>
-                      {frequentContacts.map((contact, index) => (
-                        <SelectItem key={index} value={contact.email}>
-                          {contact.name} - {contact.email}
+                      {contacts.map((contact, index) => (
+                        <SelectItem key={index} value={contact.conversationId}>
+                          {contact.name}{contact.email ? ` - ${contact.email}` : ''}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
+                  {contacts.length === 0 && (
+                    <p className="text-xs text-gray-400 mt-1">
+                      Aucune conversation existante. Les échanges se créent depuis les demandes communales.
+                    </p>
+                  )}
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-gray-700">Objet</label>
-                  <Input placeholder="Objet du message" />
+                  <Input
+                    placeholder="Objet du message"
+                    value={newSubject}
+                    onChange={(e) => setNewSubject(e.target.value)}
+                  />
                 </div>
 
                 <div>
                   <label className="text-sm font-medium text-gray-700">Message</label>
-                  <Textarea 
+                  <Textarea
                     placeholder="Rédigez votre message..."
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
@@ -462,20 +592,15 @@ const MairieMessages = ({ dashboardStats }) => {
                   />
                 </div>
 
-                <div className="flex items-center justify-between">
-                  <Button variant="outline">
-                    <Paperclip className="h-4 w-4 mr-2" />
-                    Joindre Fichier
-                  </Button>
-                  
+                <div className="flex items-center justify-end">
                   <div className="flex space-x-2">
-                    <Button variant="outline">Brouillon</Button>
-                    <Button 
+                    <Button
                       onClick={handleSendMessage}
+                      disabled={sending || !recipient || !newMessage.trim()}
                       className="bg-teal-600 hover:bg-teal-700"
                     >
                       <Send className="h-4 w-4 mr-2" />
-                      Envoyer
+                      {sending ? 'Envoi...' : 'Envoyer'}
                     </Button>
                   </div>
                 </div>
@@ -498,13 +623,15 @@ const MairieMessages = ({ dashboardStats }) => {
                 <h3 className="text-xl font-bold text-gray-900">{selectedMessage.subject}</h3>
                 <div className="flex items-center space-x-2 mt-1">
                   <span className="text-sm text-gray-600">De: {selectedMessage.sender}</span>
-                  <Badge className={getCategoryColor(selectedMessage.category)}>
-                    {selectedMessage.category}
-                  </Badge>
+                  {selectedMessage.timestamp && (
+                    <span className="text-sm text-gray-400">
+                      · {new Date(selectedMessage.timestamp).toLocaleString('fr-FR')}
+                    </span>
+                  )}
                 </div>
               </div>
-              <Button 
-                variant="ghost" 
+              <Button
+                variant="ghost"
                 onClick={() => setSelectedMessage(null)}
                 className="text-gray-600"
               >
@@ -536,13 +663,21 @@ const MairieMessages = ({ dashboardStats }) => {
             )}
 
             <div className="flex justify-end space-x-3 mt-6">
-              <Button variant="outline">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setRecipient(selectedMessage.conversationId);
+                  setNewSubject(selectedMessage.subject === 'Conversation' ? '' : selectedMessage.subject);
+                  setSelectedMessage(null);
+                  setActiveTab('compose');
+                }}
+              >
                 <Reply className="h-4 w-4 mr-2" />
                 Répondre
               </Button>
-              <Button variant="outline">
+              <Button variant="outline" onClick={() => setSelectedMessage(null)}>
                 <Archive className="h-4 w-4 mr-2" />
-                Archiver
+                Fermer
               </Button>
             </div>
           </motion.div>

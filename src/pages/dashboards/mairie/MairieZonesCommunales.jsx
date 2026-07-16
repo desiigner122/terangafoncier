@@ -1,192 +1,140 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   MapPin,
-  Plus,
-  Edit,
   Eye,
-  Trash2,
   Filter,
   Search,
   Download,
-  Upload,
   Users,
   Building,
   Ruler,
-  Calendar,
   CheckCircle,
   Clock,
   AlertTriangle,
-  Euro,
-  FileText,
-  Settings,
-  Map,
-  Globe,
-  Image,
-  Save
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 
 const MairieZonesCommunales = ({ dashboardStats }) => {
+  const { profile } = useAuth();
   const [activeTab, setActiveTab] = useState('zones');
-  const [selectedZone, setSelectedZone] = useState(null);
-  const [showCreateModal, setShowCreateModal] = useState(false);
-  const [showEditModal, setShowEditModal] = useState(false);
-  const [formData, setFormData] = useState({
-    title: '',
-    description: '',
-    totalArea: '',
-    availablePlots: '',
-    pricePerM2: '',
-    location: '',
-    features: [],
-    status: 'En_preparation',
-    deadlineApplication: '',
-    images: []
-  });
+  const [requests, setRequests] = useState([]);
+  const [zones, setZones] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [errorData, setErrorData] = useState(null);
+  const [search, setSearch] = useState('');
 
-  // Zones communales gérées par la mairie
-  const [zones, setZones] = useState([
-    {
-      id: 'zone-001',
-      title: 'Zone Résidentielle Nord',
-      commune: 'Commune de Teranga',
-      totalArea: '12 hectares',
-      availablePlots: 48,
-      soldPlots: 12,
-      pricePerM2: '75000',
-      status: 'Disponible',
-      dateCreated: '2024-01-15',
-      deadlineApplication: '2024-06-30',
-      applicants: 156,
-      description: 'Zone résidentielle moderne avec toutes commodités',
-      features: ['Électricité', 'Eau potable', 'Routes pavées', 'Éclairage public'],
-      coordinates: { lat: 14.7451, lng: -17.5069 }
-    },
-    {
-      id: 'zone-002', 
-      title: 'Zone Commerciale Centre',
-      commune: 'Commune de Teranga',
-      totalArea: '8 hectares',
-      availablePlots: 24,
-      soldPlots: 8,
-      pricePerM2: '120000',
-      status: 'Disponible',
-      dateCreated: '2024-02-01',
-      deadlineApplication: '2024-08-15',
-      applicants: 89,
-      description: 'Zone commerciale stratégique au centre-ville',
-      features: ['Électricité', 'Eau potable', 'Assainissement', 'Parking'],
-      coordinates: { lat: 14.7521, lng: -17.4851 }
-    },
-    {
-      id: 'zone-003',
-      title: 'Zone Agricole Sud',
-      commune: 'Commune de Teranga',
-      totalArea: '25 hectares', 
-      availablePlots: 15,
-      soldPlots: 3,
-      pricePerM2: '25000',
-      status: 'En_preparation',
-      dateCreated: '2024-03-10',
-      deadlineApplication: '2024-12-31',
-      applicants: 23,
-      description: 'Zone dédiée à l\'agriculture moderne et durable',
-      features: ['Irrigation', 'Routes agricoles', 'Électricité rurale'],
-      coordinates: { lat: 14.7251, lng: -17.4651 }
+  // Chargement réel : les zones communales sont dérivées des demandes de
+  // terrains communaux (communal_requests) regroupées par zone/commune.
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    setErrorData(null);
+    try {
+      let query = supabase
+        .from('communal_requests')
+        .select('id, applicant_id, applicant_name, commune, zone, type, surface, status, priority, ai_score, created_at, updated_at')
+        .order('created_at', { ascending: false });
+
+      // Les mairies gèrent les demandes de leur commune si connue
+      if (profile?.city) {
+        query = query.eq('commune', profile.city);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+
+      const rows = data || [];
+      setRequests(rows);
+
+      // Regroupement par zone
+      const map = new Map();
+      rows.forEach((r) => {
+        const key = r.zone || 'Zone non spécifiée';
+        if (!map.has(key)) {
+          map.set(key, {
+            id: key,
+            title: key,
+            commune: r.commune || (profile?.city ?? '—'),
+            requests: 0,
+            approved: 0,
+            pending: 0,
+            rejected: 0,
+            surface: 0,
+            lastDate: r.created_at
+          });
+        }
+        const g = map.get(key);
+        g.requests += 1;
+        g.surface += Number(r.surface) || 0;
+        if (r.status === 'approved') g.approved += 1;
+        else if (r.status === 'pending') g.pending += 1;
+        else if (r.status === 'rejected') g.rejected += 1;
+        if (r.created_at && (!g.lastDate || r.created_at > g.lastDate)) g.lastDate = r.created_at;
+      });
+      setZones(Array.from(map.values()).sort((a, b) => b.requests - a.requests));
+    } catch (err) {
+      console.error('Erreur chargement zones communales:', err);
+      setErrorData(err.message || 'Erreur de chargement');
+      setRequests([]);
+      setZones([]);
+    } finally {
+      setLoading(false);
     }
-  ]);
+  }, [profile?.city]);
+
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Disponible': return 'bg-green-100 text-green-800';
-      case 'En_preparation': return 'bg-yellow-100 text-yellow-800';
-      case 'Complet': return 'bg-red-100 text-red-800';
-      case 'Suspendu': return 'bg-gray-100 text-gray-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-blue-100 text-blue-800';
     }
   };
 
   const getStatusLabel = (status) => {
     switch (status) {
-      case 'Disponible': return 'Disponible';
-      case 'En_preparation': return 'En préparation';
-      case 'Complet': return 'Complet';
-      case 'Suspendu': return 'Suspendu';
-      default: return status;
+      case 'approved': return 'Approuvée';
+      case 'pending': return 'En attente';
+      case 'rejected': return 'Rejetée';
+      default: return status || '—';
     }
   };
 
-  const handleCreateZone = () => {
-    const newZone = {
-      id: `zone-${Date.now()}`,
-      ...formData,
-      commune: 'Commune de Teranga',
-      dateCreated: new Date().toISOString().split('T')[0],
-      applicants: 0,
-      soldPlots: 0,
-      coordinates: { lat: 14.7451, lng: -17.5069 }
-    };
-    
-    setZones([...zones, newZone]);
-    setShowCreateModal(false);
-    setFormData({
-      title: '',
-      description: '',
-      totalArea: '',
-      availablePlots: '',
-      pricePerM2: '',
-      location: '',
-      features: [],
-      status: 'En_preparation',
-      deadlineApplication: '',
-      images: []
-    });
-    
-    window.safeGlobalToast({
-      description: 'Zone communale créée avec succès',
-      variant: 'success'
-    });
-  };
-
-  const handleEditZone = (zone) => {
-    setSelectedZone(zone);
-    setFormData({
-      title: zone.title,
-      description: zone.description,
-      totalArea: zone.totalArea,
-      availablePlots: zone.availablePlots,
-      pricePerM2: zone.pricePerM2,
-      location: zone.location || '',
-      features: zone.features,
-      status: zone.status,
-      deadlineApplication: zone.deadlineApplication,
-      images: zone.images || []
-    });
-    setShowEditModal(true);
-  };
-
-  const handleDeleteZone = (zoneId) => {
-    setZones(zones.filter(zone => zone.id !== zoneId));
-    window.safeGlobalToast({
-      description: 'Zone communale supprimée',
-      variant: 'success'
-    });
+  const formatDate = (value) => {
+    if (!value) return '—';
+    try {
+      return new Date(value).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' });
+    } catch {
+      return '—';
+    }
   };
 
   const calculateProgress = (zone) => {
-    return zone.availablePlots > 0 ? (zone.soldPlots / zone.availablePlots) * 100 : 0;
+    return zone.requests > 0 ? (zone.approved / zone.requests) * 100 : 0;
   };
+
+  // Statistiques dérivées des données réelles
+  const totalRequests = requests.length;
+  const totalApproved = requests.filter((r) => r.status === 'approved').length;
+  const totalPending = requests.filter((r) => r.status === 'pending').length;
+
+  const filteredZones = zones.filter((z) =>
+    !search || (z.title || '').toLowerCase().includes(search.toLowerCase()) ||
+    (z.commune || '').toLowerCase().includes(search.toLowerCase())
+  );
 
   return (
     <div className="space-y-6">
@@ -195,167 +143,63 @@ const MairieZonesCommunales = ({ dashboardStats }) => {
         <div>
           <h2 className="text-3xl font-bold text-gray-900">Zones Communales</h2>
           <p className="text-gray-600 mt-1">
-            Gestion des zones communales proposées aux citoyens
+            Zones dérivées des demandes de terrains communaux
+            {profile?.city ? ` — ${profile.city}` : ''}
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
-          <Button variant="outline">
+          <Button variant="outline" disabled={zones.length === 0}>
             <Download className="h-4 w-4 mr-2" />
             Exporter
           </Button>
-          <Dialog open={showCreateModal} onOpenChange={setShowCreateModal}>
-            <DialogTrigger asChild>
-              <Button className="bg-teal-600 hover:bg-teal-700">
-                <Plus className="h-4 w-4 mr-2" />
-                Nouvelle Zone
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="max-w-2xl">
-              <DialogHeader>
-                <DialogTitle>Créer une nouvelle zone communale</DialogTitle>
-              </DialogHeader>
-              <div className="space-y-4 max-h-96 overflow-y-auto">
-                <div className="grid grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label>Titre de la zone</Label>
-                    <Input
-                      placeholder="Ex: Zone Résidentielle Nord"
-                      value={formData.title}
-                      onChange={(e) => setFormData({...formData, title: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Statut</Label>
-                    <Select value={formData.status} onValueChange={(value) => setFormData({...formData, status: value})}>
-                      <SelectTrigger>
-                        <SelectValue />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="En_preparation">En préparation</SelectItem>
-                        <SelectItem value="Disponible">Disponible</SelectItem>
-                        <SelectItem value="Suspendu">Suspendu</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Description</Label>
-                  <Textarea
-                    placeholder="Description détaillée de la zone..."
-                    value={formData.description}
-                    onChange={(e) => setFormData({...formData, description: e.target.value})}
-                    rows={3}
-                  />
-                </div>
-                
-                <div className="grid grid-cols-3 gap-4">
-                  <div className="space-y-2">
-                    <Label>Superficie totale</Label>
-                    <Input
-                      placeholder="Ex: 15 hectares"
-                      value={formData.totalArea}
-                      onChange={(e) => setFormData({...formData, totalArea: e.target.value})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Nombre de parcelles</Label>
-                    <Input
-                      type="number"
-                      placeholder="Ex: 48"
-                      value={formData.availablePlots}
-                      onChange={(e) => setFormData({...formData, availablePlots: parseInt(e.target.value)})}
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label>Prix par m² (FCFA)</Label>
-                    <Input
-                      type="number"
-                      placeholder="Ex: 75000"
-                      value={formData.pricePerM2}
-                      onChange={(e) => setFormData({...formData, pricePerM2: e.target.value})}
-                    />
-                  </div>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Adresse/Localisation</Label>
-                  <Input
-                    placeholder="Adresse complète de la zone"
-                    value={formData.location}
-                    onChange={(e) => setFormData({...formData, location: e.target.value})}
-                  />
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Date limite de candidature</Label>
-                  <Input
-                    type="date"
-                    value={formData.deadlineApplication}
-                    onChange={(e) => setFormData({...formData, deadlineApplication: e.target.value})}
-                  />
-                </div>
-                
-                <div className="flex justify-end space-x-2 pt-4">
-                  <Button variant="outline" onClick={() => setShowCreateModal(false)}>
-                    Annuler
-                  </Button>
-                  <Button onClick={handleCreateZone} className="bg-teal-600 hover:bg-teal-700">
-                    <Save className="h-4 w-4 mr-2" />
-                    Créer la zone
-                  </Button>
-                </div>
-              </div>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
 
-      {/* Statistiques */}
+      {/* Statistiques (données réelles) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Zones Actives</p>
-                <p className="text-2xl font-bold text-green-600">{zones.filter(z => z.status === 'Disponible').length}</p>
+                <p className="text-2xl font-bold text-green-600">{loading ? '—' : zones.length}</p>
               </div>
               <Building className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Total Parcelles</p>
-                <p className="text-2xl font-bold text-blue-600">{zones.reduce((acc, zone) => acc + zone.availablePlots, 0)}</p>
+                <p className="text-sm text-gray-600">Total Demandes</p>
+                <p className="text-2xl font-bold text-blue-600">{loading ? '—' : totalRequests}</p>
               </div>
               <Ruler className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Candidatures</p>
-                <p className="text-2xl font-bold text-purple-600">{zones.reduce((acc, zone) => acc + zone.applicants, 0)}</p>
+                <p className="text-sm text-gray-600">En attente</p>
+                <p className="text-2xl font-bold text-purple-600">{loading ? '—' : totalPending}</p>
               </div>
               <Users className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Parcelles Vendues</p>
-                <p className="text-2xl font-bold text-orange-600">{zones.reduce((acc, zone) => acc + zone.soldPlots, 0)}</p>
+                <p className="text-sm text-gray-600">Attributions</p>
+                <p className="text-2xl font-bold text-orange-600">{loading ? '—' : totalApproved}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-orange-600" />
             </div>
@@ -380,6 +224,8 @@ const MairieZonesCommunales = ({ dashboardStats }) => {
                 <Input
                   placeholder="Rechercher une zone..."
                   className="pl-10 w-80"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
                 />
               </div>
               <Button variant="outline">
@@ -389,86 +235,99 @@ const MairieZonesCommunales = ({ dashboardStats }) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-6">
-            {zones.map((zone) => (
-              <Card key={zone.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-3 mb-2">
-                        <h3 className="text-lg font-semibold text-gray-900">{zone.title}</h3>
-                        <Badge className={getStatusColor(zone.status)}>
-                          {getStatusLabel(zone.status)}
-                        </Badge>
-                      </div>
-                      
-                      <p className="text-gray-600 mb-4">{zone.description}</p>
-                      
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div className="flex items-center space-x-2">
-                          <Ruler className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm text-gray-600">{zone.totalArea}</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Building className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm text-gray-600">{zone.availablePlots} parcelles</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Users className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm text-gray-600">{zone.applicants} candidatures</span>
-                        </div>
-                        <div className="flex items-center space-x-2">
-                          <Euro className="h-4 w-4 text-gray-500" />
-                          <span className="text-sm text-gray-600">{parseInt(zone.pricePerM2).toLocaleString()} FCFA/m²</span>
-                        </div>
-                      </div>
-                      
-                      {/* Barre de progression */}
-                      <div className="mb-4">
-                        <div className="flex justify-between text-sm text-gray-600 mb-1">
-                          <span>Parcelles vendues</span>
-                          <span>{zone.soldPlots}/{zone.availablePlots}</span>
-                        </div>
-                        <div className="w-full bg-gray-200 rounded-full h-2">
-                          <div 
-                            className="bg-teal-600 h-2 rounded-full transition-all duration-300"
-                            style={{ width: `${calculateProgress(zone)}%` }}
-                          />
-                        </div>
-                      </div>
-                      
-                      <div className="flex flex-wrap gap-1 mb-4">
-                        {zone.features.map((feature, index) => (
-                          <Badge key={index} variant="secondary" className="text-xs">
-                            {feature}
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500">
+              <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+              Chargement des zones...
+            </div>
+          ) : errorData ? (
+            <Card>
+              <CardContent className="p-10 text-center text-gray-500">
+                <AlertTriangle className="h-8 w-8 mx-auto mb-3 text-red-400" />
+                Impossible de charger les zones communales.
+              </CardContent>
+            </Card>
+          ) : filteredZones.length === 0 ? (
+            <Card>
+              <CardContent className="p-10 text-center text-gray-500">
+                <MapPin className="h-8 w-8 mx-auto mb-3 text-gray-300" />
+                Aucune zone communale.
+                <p className="text-sm mt-1">
+                  Les zones apparaîtront dès que des demandes de terrains communaux seront enregistrées.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 gap-6">
+              {filteredZones.map((zone) => (
+                <Card key={zone.id} className="hover:shadow-md transition-shadow">
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-3 mb-2">
+                          <h3 className="text-lg font-semibold text-gray-900">{zone.title}</h3>
+                          <Badge variant="secondary" className="text-xs">
+                            <MapPin className="h-3 w-3 mr-1" />
+                            {zone.commune}
                           </Badge>
-                        ))}
+                        </div>
+
+                        <p className="text-gray-600 mb-4">
+                          Dernière demande : {formatDate(zone.lastDate)}
+                        </p>
+
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                          <div className="flex items-center space-x-2">
+                            <Ruler className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">
+                              {zone.surface > 0 ? `${zone.surface.toLocaleString()} m²` : '—'}
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Users className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">{zone.requests} demandes</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <Clock className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">{zone.pending} en attente</span>
+                          </div>
+                          <div className="flex items-center space-x-2">
+                            <CheckCircle className="h-4 w-4 text-gray-500" />
+                            <span className="text-sm text-gray-600">{zone.approved} attribuées</span>
+                          </div>
+                        </div>
+
+                        {/* Barre de progression : attributions / demandes */}
+                        <div className="mb-2">
+                          <div className="flex justify-between text-sm text-gray-600 mb-1">
+                            <span>Parcelles attribuées</span>
+                            <span>{zone.approved}/{zone.requests}</span>
+                          </div>
+                          <div className="w-full bg-gray-200 rounded-full h-2">
+                            <div
+                              className="bg-teal-600 h-2 rounded-full transition-all duration-300"
+                              style={{ width: `${calculateProgress(zone)}%` }}
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center space-x-2 ml-4">
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => { setActiveTab('candidatures'); setSearch(zone.title); }}
+                        >
+                          <Eye className="h-3 w-3 mr-1" />
+                          Voir
+                        </Button>
                       </div>
                     </div>
-                    
-                    <div className="flex items-center space-x-2 ml-4">
-                      <Button size="sm" variant="outline" onClick={() => handleEditZone(zone)}>
-                        <Edit className="h-3 w-3 mr-1" />
-                        Modifier
-                      </Button>
-                      <Button size="sm" variant="outline">
-                        <Eye className="h-3 w-3 mr-1" />
-                        Voir
-                      </Button>
-                      <Button 
-                        size="sm" 
-                        variant="outline" 
-                        className="text-red-600 hover:text-red-700"
-                        onClick={() => handleDeleteZone(zone.id)}
-                      >
-                        <Trash2 className="h-3 w-3" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Candidatures */}
@@ -476,37 +335,47 @@ const MairieZonesCommunales = ({ dashboardStats }) => {
           <Card>
             <CardHeader>
               <CardTitle>Candidatures Récentes</CardTitle>
-              <CardDescription>Gestion des demandes de parcelles communales</CardDescription>
+              <CardDescription>Demandes de parcelles communales</CardDescription>
             </CardHeader>
             <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Candidat</TableHead>
-                    <TableHead>Zone</TableHead>
-                    <TableHead>Date</TableHead>
-                    <TableHead>Statut</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  <TableRow>
-                    <TableCell>Amadou DIALLO</TableCell>
-                    <TableCell>Zone Résidentielle Nord</TableCell>
-                    <TableCell>15 Mars 2024</TableCell>
-                    <TableCell>
-                      <Badge className="bg-yellow-100 text-yellow-800">En attente</Badge>
-                    </TableCell>
-                    <TableCell>
-                      <div className="flex space-x-2">
-                        <Button size="sm" variant="outline">Voir</Button>
-                        <Button size="sm" className="bg-green-600 hover:bg-green-700">Approuver</Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                  {/* Plus de candidatures... */}
-                </TableBody>
-              </Table>
+              {loading ? (
+                <div className="flex items-center justify-center py-12 text-gray-500">
+                  <Loader2 className="h-5 w-5 mr-2 animate-spin" />
+                  Chargement...
+                </div>
+              ) : requests.length === 0 ? (
+                <div className="text-center py-12 text-gray-500">
+                  <Users className="h-8 w-8 mx-auto mb-3 text-gray-300" />
+                  Aucune candidature.
+                </div>
+              ) : (
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Candidat</TableHead>
+                      <TableHead>Zone</TableHead>
+                      <TableHead>Surface</TableHead>
+                      <TableHead>Date</TableHead>
+                      <TableHead>Statut</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {requests.slice(0, 50).map((r) => (
+                      <TableRow key={r.id}>
+                        <TableCell>{r.applicant_name || '—'}</TableCell>
+                        <TableCell>{r.zone || '—'}</TableCell>
+                        <TableCell>{r.surface ? `${Number(r.surface).toLocaleString()} m²` : '—'}</TableCell>
+                        <TableCell>{formatDate(r.created_at)}</TableCell>
+                        <TableCell>
+                          <Badge className={getStatusColor(r.status)}>
+                            {getStatusLabel(r.status)}
+                          </Badge>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -516,7 +385,7 @@ const MairieZonesCommunales = ({ dashboardStats }) => {
           <Card>
             <CardHeader>
               <CardTitle>Paramètres des Zones Communales</CardTitle>
-              <CardDescription>Configuration générale des zones communales</CardDescription>
+              <CardDescription>Configuration générale (bientôt disponible)</CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
@@ -524,23 +393,23 @@ const MairieZonesCommunales = ({ dashboardStats }) => {
                   <h4 className="text-sm font-medium">Publication automatique</h4>
                   <p className="text-sm text-gray-600">Publier automatiquement les nouvelles zones</p>
                 </div>
-                <Switch />
+                <Switch disabled />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-sm font-medium">Notifications candidatures</h4>
                   <p className="text-sm text-gray-600">Recevoir des notifications pour chaque nouvelle candidature</p>
                 </div>
-                <Switch defaultChecked />
+                <Switch disabled />
               </div>
-              
+
               <div className="flex items-center justify-between">
                 <div>
                   <h4 className="text-sm font-medium">Validation automatique</h4>
                   <p className="text-sm text-gray-600">Valider automatiquement les candidatures conformes</p>
                 </div>
-                <Switch />
+                <Switch disabled />
               </div>
             </CardContent>
           </Card>

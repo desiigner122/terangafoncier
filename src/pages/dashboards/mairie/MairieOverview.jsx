@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Building2, 
-  FileText, 
-  Users, 
+import {
+  Building2,
+  FileText,
+  Users,
   Map,
   Shield,
   TrendingUp,
@@ -28,10 +28,128 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
 import { LineChart, Line, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+// Palette de couleurs réutilisée pour les graphiques dynamiques
+const TYPE_COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#14B8A6', '#EC4899'];
 
 const MairieOverview = ({ dashboardStats }) => {
+  const { profile } = useAuth();
   const [timeFilter, setTimeFilter] = useState('7d');
   const [isLoading, setIsLoading] = useState(false);
+
+  // Données réelles chargées depuis Supabase
+  const [dataLoading, setDataLoading] = useState(true);
+  const [stats, setStats] = useState({
+    pendingRequests: 0,
+    approvedRequests: 0,
+    openDisputes: 0,
+    totalRequests: 0
+  });
+  const [weeklyRequests, setWeeklyRequests] = useState([]);
+  const [requestsByType, setRequestsByType] = useState([]);
+  const [zoneUtilization, setZoneUtilization] = useState([]);
+  const [recentRequests, setRecentRequests] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      setDataLoading(true);
+      try {
+        // Les mairies gèrent les demandes de LEUR commune (si connue), sinon toutes
+        const commune = profile?.city || profile?.commune || null;
+
+        let requestsQuery = supabase
+          .from('communal_requests')
+          .select('id, applicant_name, commune, zone, type, surface, status, priority, ai_score, created_at')
+          .order('created_at', { ascending: false });
+        if (commune) {
+          requestsQuery = requestsQuery.eq('commune', commune);
+        }
+
+        const [requestsRes, disputesRes] = await Promise.all([
+          requestsQuery,
+          supabase.from('disputes').select('id, status')
+        ]);
+
+        const requests = requestsRes.data || [];
+        const disputes = disputesRes.data || [];
+
+        // --- KPI principaux (agrégats réels) ---
+        const pending = requests.filter((r) => r.status === 'pending').length;
+        const approved = requests.filter((r) => r.status === 'approved').length;
+        const openDisputes = disputes.filter((d) => d.status === 'open').length;
+        setStats({
+          pendingRequests: pending,
+          approvedRequests: approved,
+          openDisputes,
+          totalRequests: requests.length
+        });
+
+        // --- Évolution des demandes sur 7 jours (créées vs approuvées) ---
+        const dayLabels = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+        const week = [];
+        for (let i = 6; i >= 0; i--) {
+          const d = new Date();
+          d.setHours(0, 0, 0, 0);
+          d.setDate(d.getDate() - i);
+          const next = new Date(d);
+          next.setDate(next.getDate() + 1);
+          const dayReqs = requests.filter((r) => {
+            const c = new Date(r.created_at);
+            return c >= d && c < next;
+          });
+          week.push({
+            day: dayLabels[d.getDay()],
+            requests: dayReqs.length,
+            approvals: dayReqs.filter((r) => r.status === 'approved').length
+          });
+        }
+        setWeeklyRequests(week);
+
+        // --- Répartition par type ---
+        const typeMap = {};
+        requests.forEach((r) => {
+          const key = r.type || 'Non spécifié';
+          typeMap[key] = (typeMap[key] || 0) + 1;
+        });
+        setRequestsByType(
+          Object.entries(typeMap).map(([name, value], idx) => ({
+            name,
+            value,
+            color: TYPE_COLORS[idx % TYPE_COLORS.length]
+          }))
+        );
+
+        // --- Répartition des demandes par zone (part relative réelle) ---
+        const zoneMap = {};
+        requests.forEach((r) => {
+          const key = r.zone || 'Non spécifiée';
+          zoneMap[key] = (zoneMap[key] || 0) + 1;
+        });
+        const total = requests.length || 1;
+        setZoneUtilization(
+          Object.entries(zoneMap)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 6)
+            .map(([zone, count]) => ({
+              zone,
+              count,
+              share: Math.round((count / total) * 100)
+            }))
+        );
+
+        // --- Demandes récentes ---
+        setRecentRequests(requests.slice(0, 4));
+      } catch (error) {
+        console.error('Erreur chargement données mairie:', error);
+      } finally {
+        setDataLoading(false);
+      }
+    };
+
+    fetchData();
+  }, [profile]);
 
   // Handlers pour les actions rapides
   const handleNewRequest = () => {
@@ -96,125 +214,67 @@ const MairieOverview = ({ dashboardStats }) => {
     }, 1000);
   };
 
-  // Données statistiques principales
+  // Données statistiques principales (agrégats réels communal_requests / disputes)
   const mainStats = [
     {
       title: 'Demandes en Cours',
-      value: dashboardStats.pendingRequests,
-      change: '+12%',
-      trend: 'up',
+      value: stats.pendingRequests,
       icon: FileText,
       color: 'bg-blue-500',
-      description: 'Demandes communales actives'
+      description: 'Demandes communales en attente'
     },
     {
-      title: 'Territoire Géré',
-      value: dashboardStats.territoryArea,
-      change: '+0.5%',
-      trend: 'up',
-      icon: Map,
+      title: 'Attributions',
+      value: stats.approvedRequests,
+      icon: CheckCircle,
       color: 'bg-green-500',
-      description: 'Surface municipale totale'
+      description: 'Parcelles attribuées (approuvées)'
     },
     {
-      title: 'Citoyens Actifs',
-      value: dashboardStats.activeCitizens.toLocaleString(),
-      change: '+3.2%',
-      trend: 'up',
-      icon: Users,
-      color: 'bg-purple-500',
-      description: 'Population engagée'
+      title: 'Litiges Ouverts',
+      value: stats.openDisputes,
+      icon: Shield,
+      color: 'bg-red-500',
+      description: 'Conflits fonciers en cours'
     },
     {
-      title: 'Parcelles Gérées',
-      value: dashboardStats.totalLandManaged,
-      change: '+8.1%',
-      trend: 'up',
+      title: 'Total Demandes',
+      value: stats.totalRequests,
       icon: Building2,
       color: 'bg-orange-500',
-      description: 'Terrains sous gestion'
+      description: 'Toutes demandes communales'
     }
   ];
 
-  // Données graphiques
-  const weeklyRequests = [
-    { day: 'Lun', requests: 12, approvals: 8 },
-    { day: 'Mar', requests: 19, approvals: 15 },
-    { day: 'Mer', requests: 15, approvals: 12 },
-    { day: 'Jeu', requests: 22, approvals: 18 },
-    { day: 'Ven', requests: 18, approvals: 16 },
-    { day: 'Sam', requests: 8, approvals: 6 },
-    { day: 'Dim', requests: 5, approvals: 4 }
-  ];
-
-  const requestsByType = [
-    { name: 'Attribution Communale', value: 45, color: '#3B82F6' },
-    { name: 'Permis Construire', value: 30, color: '#10B981' },
-    { name: 'Modification Cadastre', value: 15, color: '#F59E0B' },
-    { name: 'Résolution Conflits', value: 10, color: '#EF4444' }
-  ];
-
-  const zoneUtilization = [
-    { zone: 'Zone Résidentielle', utilized: 78, total: 100 },
-    { zone: 'Zone Commerciale', utilized: 65, total: 100 },
-    { zone: 'Zone Agricole', utilized: 45, total: 100 },
-    { zone: 'Zone Industrielle', utilized: 82, total: 100 }
-  ];
-
-  // Demandes récentes
-  const recentRequests = [
-    {
-      id: '#MR-2024-0987',
-      applicant: 'Amadou Diallo',
-      type: 'Attribution Communale',
-      area: '1200m²',
-      zone: 'Zone Résidentielle Nord',
-      status: 'En Évaluation',
-      priority: 'Moyenne',
-      date: '2024-01-20',
-      aiScore: 85
-    },
-    {
-      id: '#MR-2024-0988',
-      applicant: 'Fatou Seck',
-      type: 'Permis de Construire',
-      area: '800m²',
-      zone: 'Zone Commerciale Centre',
-      status: 'Approuvé',
-      priority: 'Haute',
-      date: '2024-01-19',
-      aiScore: 92
-    },
-    {
-      id: '#MR-2024-0989',
-      applicant: 'Ibrahim Ndiaye',
-      type: 'Modification Cadastre',
-      area: '650m²',
-      zone: 'Zone Mixte Sud',
-      status: 'En Attente',
-      priority: 'Normale',
-      date: '2024-01-18',
-      aiScore: 78
+  // Statuts réels: 'pending' | 'approved' | 'rejected' | ...
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'approved': return 'Approuvé';
+      case 'pending': return 'En Attente';
+      case 'rejected': return 'Rejeté';
+      case 'in_review':
+      case 'evaluation': return 'En Évaluation';
+      default: return status || 'Inconnu';
     }
-  ];
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Approuvé': return 'bg-green-100 text-green-800';
-      case 'En Évaluation': return 'bg-blue-100 text-blue-800';
-      case 'En Attente': return 'bg-yellow-100 text-yellow-800';
-      case 'Rejeté': return 'bg-red-100 text-red-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'in_review':
+      case 'evaluation': return 'bg-blue-100 text-blue-800';
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getPriorityColor = (priority) => {
-    switch (priority) {
-      case 'Haute': return 'bg-red-500';
-      case 'Moyenne': return 'bg-orange-500';
-      case 'Normale': return 'bg-green-500';
-      default: return 'bg-gray-500';
-    }
+    const p = (priority || '').toString().toLowerCase();
+    if (p === 'haute' || p === 'high') return 'bg-red-500';
+    if (p === 'moyenne' || p === 'medium') return 'bg-orange-500';
+    if (p === 'normale' || p === 'basse' || p === 'low') return 'bg-green-500';
+    return 'bg-gray-500';
   };
 
   return (
@@ -270,21 +330,10 @@ const MairieOverview = ({ dashboardStats }) => {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold text-gray-900">{stat.value}</div>
-                <div className="flex items-center space-x-2 mt-2">
-                  <div className={`flex items-center text-sm ${
-                    stat.trend === 'up' ? 'text-green-600' : 'text-red-600'
-                  }`}>
-                    {stat.trend === 'up' ? (
-                      <ArrowUp className="h-3 w-3 mr-1" />
-                    ) : (
-                      <ArrowDown className="h-3 w-3 mr-1" />
-                    )}
-                    {stat.change}
-                  </div>
-                  <span className="text-sm text-gray-600">vs période précédente</span>
+                <div className="text-2xl font-bold text-gray-900">
+                  {dataLoading ? '—' : stat.value}
                 </div>
-                <p className="text-xs text-gray-500 mt-1">{stat.description}</p>
+                <p className="text-xs text-gray-500 mt-2">{stat.description}</p>
               </CardContent>
               
               {/* Effet de gradient décoratif */}
@@ -308,6 +357,11 @@ const MairieOverview = ({ dashboardStats }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {!dataLoading && weeklyRequests.every((d) => d.requests === 0) ? (
+              <div className="h-[300px] flex items-center justify-center text-sm text-gray-500">
+                Aucune demande sur les 7 derniers jours
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height={300}>
               <AreaChart data={weeklyRequests}>
                 <CartesianGrid strokeDasharray="3 3" />
@@ -334,6 +388,7 @@ const MairieOverview = ({ dashboardStats }) => {
                 />
               </AreaChart>
             </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
 
@@ -349,6 +404,11 @@ const MairieOverview = ({ dashboardStats }) => {
             </CardDescription>
           </CardHeader>
           <CardContent>
+            {!dataLoading && requestsByType.length === 0 ? (
+              <div className="h-[300px] flex items-center justify-center text-sm text-gray-500">
+                Aucune demande à catégoriser
+              </div>
+            ) : (
             <ResponsiveContainer width="100%" height={300}>
               <PieChart>
                 <Pie
@@ -367,6 +427,7 @@ const MairieOverview = ({ dashboardStats }) => {
                 <Tooltip />
               </PieChart>
             </ResponsiveContainer>
+            )}
           </CardContent>
         </Card>
       </div>
@@ -381,19 +442,25 @@ const MairieOverview = ({ dashboardStats }) => {
               Utilisation des Zones
             </CardTitle>
             <CardDescription>
-              Taux d'occupation par zone
+              Répartition des demandes par zone
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {zoneUtilization.map((zone, index) => (
-              <div key={zone.zone} className="space-y-2">
-                <div className="flex justify-between items-center">
-                  <span className="text-sm font-medium text-gray-700">{zone.zone}</span>
-                  <span className="text-sm text-gray-600">{zone.utilized}%</span>
-                </div>
-                <Progress value={zone.utilized} className="h-2" />
+            {!dataLoading && zoneUtilization.length === 0 ? (
+              <div className="py-8 text-center text-sm text-gray-500">
+                Aucune zone renseignée
               </div>
-            ))}
+            ) : (
+              zoneUtilization.map((zone) => (
+                <div key={zone.zone} className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-700">{zone.zone}</span>
+                    <span className="text-sm text-gray-600">{zone.count} demande{zone.count > 1 ? 's' : ''} ({zone.share}%)</span>
+                  </div>
+                  <Progress value={zone.share} className="h-2" />
+                </div>
+              ))
+            )}
           </CardContent>
         </Card>
 
@@ -409,35 +476,48 @@ const MairieOverview = ({ dashboardStats }) => {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentRequests.map((request) => (
-              <div key={request.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
-                <div className="flex-1 min-w-0">
-                  <div className="flex items-center space-x-2 mb-1">
-                    <p className="text-sm font-medium text-gray-900 truncate">
-                      {request.applicant}
+            {!dataLoading && recentRequests.length === 0 ? (
+              <div className="py-8 text-center text-sm text-gray-500">
+                Aucune demande récente
+              </div>
+            ) : (
+              recentRequests.map((request) => (
+                <div key={request.id} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center space-x-2 mb-1">
+                      <p className="text-sm font-medium text-gray-900 truncate">
+                        {request.applicant_name || 'Demandeur inconnu'}
+                      </p>
+                      <div className={`w-2 h-2 rounded-full ${getPriorityColor(request.priority)}`} />
+                    </div>
+                    <p className="text-xs text-gray-600 mb-1">
+                      {request.type || 'Type non spécifié'}
+                      {request.surface ? ` • ${request.surface}m²` : ''}
                     </p>
-                    <div className={`w-2 h-2 rounded-full ${getPriorityColor(request.priority)}`} />
-                  </div>
-                  <p className="text-xs text-gray-600 mb-1">{request.type} • {request.area}</p>
-                  <p className="text-xs text-gray-500">{request.zone}</p>
-                  <div className="flex items-center space-x-2 mt-2">
-                    <Badge className={`text-xs ${getStatusColor(request.status)}`}>
-                      {request.status}
-                    </Badge>
-                    <div className="flex items-center space-x-1">
-                      <Star className="h-3 w-3 text-yellow-500" />
-                      <span className="text-xs text-gray-600">IA: {request.aiScore}%</span>
+                    <p className="text-xs text-gray-500">{request.zone || '—'}</p>
+                    <div className="flex items-center space-x-2 mt-2">
+                      <Badge className={`text-xs ${getStatusColor(request.status)}`}>
+                        {getStatusLabel(request.status)}
+                      </Badge>
+                      {request.ai_score != null && (
+                        <div className="flex items-center space-x-1">
+                          <Star className="h-3 w-3 text-yellow-500" />
+                          <span className="text-xs text-gray-600">IA: {request.ai_score}%</span>
+                        </div>
+                      )}
                     </div>
                   </div>
+                  <div className="text-xs text-gray-500">
+                    {request.created_at
+                      ? new Date(request.created_at).toLocaleDateString('fr-FR', {
+                          day: '2-digit',
+                          month: '2-digit'
+                        })
+                      : ''}
+                  </div>
                 </div>
-                <div className="text-xs text-gray-500">
-                  {new Date(request.date).toLocaleDateString('fr-FR', { 
-                    day: '2-digit', 
-                    month: '2-digit'
-                  })}
-                </div>
-              </div>
-            ))}
+              ))
+            )}
           </CardContent>
         </Card>
       </div>

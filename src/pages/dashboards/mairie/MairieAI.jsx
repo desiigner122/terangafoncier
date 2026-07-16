@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Brain,
   MessageSquare,
   Lightbulb,
@@ -35,168 +35,177 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Progress } from '@/components/ui/progress';
 import { Switch } from '@/components/ui/switch';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+
+// Message honnête : l'assistant conversationnel n'est relié à aucun moteur de génération.
+const NO_AI_MESSAGE = "L'assistant conversationnel IA n'est pas encore connecté à un moteur de génération. "
+  + "Votre question a bien été enregistrée. Les données IA disponibles (scores IA des demandes communales et "
+  + "analyses enregistrées) sont consultables dans les onglets « Suggestions IA » et « Analyses Prédictives ».";
 
 const MairieAI = ({ dashboardStats }) => {
+  const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState('assistant');
   const [aiQuery, setAiQuery] = useState('');
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [chatHistory, setChatHistory] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Suggestions IA prédéfinies
-  const aiSuggestions = [
-    {
-      id: 'sugg-1',
-      category: 'Optimisation',
-      title: 'Réduction délais traitement',
-      description: 'Optimiser le processus d\'attribution communale pour réduire les délais de 25%',
-      impact: 'Haute',
-      confidence: 92,
-      timeline: '2-3 mois',
-      resources: ['Formation équipe', 'Digitalisation processus'],
-      status: 'Recommandé'
-    },
-    {
-      id: 'sugg-2',
-      category: 'Prédiction',
-      title: 'Zones à forte demande',
-      description: 'La Zone Résidentielle Nord connaîtra une hausse de 35% des demandes au Q2',
-      impact: 'Moyenne',
-      confidence: 87,
-      timeline: '3-6 mois',
-      resources: ['Étude faisabilité', 'Plan d\'extension'],
-      status: 'En analyse'
-    },
-    {
-      id: 'sugg-3',
-      category: 'Alerte',
-      title: 'Saturation Zone Commerciale',
-      description: 'La Zone Commerciale Centre atteindra sa capacité maximale d\'ici 8 mois',
-      impact: 'Haute',
-      confidence: 94,
-      timeline: '6-8 mois',
-      resources: ['Plan urbanisme', 'Extension zone'],
-      status: 'Critique'
-    },
-    {
-      id: 'sugg-4',
-      category: 'Efficacité',
-      title: 'Automatisation validation',
-      description: 'Automatiser 60% des validations de conformité avec l\'IA',
-      impact: 'Moyenne',
-      confidence: 89,
-      timeline: '4-6 mois',
-      resources: ['Système IA', 'Base données'],
-      status: 'Planifié'
-    }
-  ];
+  // Données réelles
+  const [aiAnalyses, setAiAnalyses] = useState([]);   // ai_analyses (result jsonb)
+  const [requests, setRequests] = useState([]);       // communal_requests (ai_score réel)
 
-  // Analyses IA récentes
-  const aiAnalyses = [
-    {
-      id: 'analysis-1',
-      type: 'Analyse Prédictive',
-      title: 'Prévision demandes Février 2024',
-      result: '78 demandes attendues (+8% vs Janvier)',
-      accuracy: '91%',
-      date: '2024-01-22',
-      details: 'Basé sur historique 24 mois + événements locaux + saisonnalité'
-    },
-    {
-      id: 'analysis-2',
-      type: 'Détection Anomalies',
-      title: 'Pics inhabituels Zone Agricole',
-      result: 'Augmentation 150% demandes agricoles détectée',
-      accuracy: '96%',
-      date: '2024-01-21',
-      details: 'Corrélation avec nouveau programme gouvernemental agricole'
-    },
-    {
-      id: 'analysis-3',
-      type: 'Optimisation Ressources',
-      title: 'Allocation personnel février',
-      result: 'Redistribution recommandée : +2 agents zone commerciale',
-      accuracy: '88%',
-      date: '2024-01-20',
-      details: 'Analyse charge travail + prévisions demandes + capacité équipe'
-    }
-  ];
+  const communeFilter = profile?.city || null;
 
-  // Conversation avec l'assistant IA
-  const conversationExample = [
-    {
-      type: 'user',
-      message: 'Quelles sont les tendances actuelles des demandes foncières ?',
-      timestamp: '14:30'
-    },
-    {
-      type: 'ai',
-      message: 'Basé sur l\'analyse des 12 derniers mois, voici les principales tendances :\n\n• **Augmentation de 23%** des demandes dans la Zone Résidentielle Nord\n• **Stabilisation** des demandes commerciales (+2%)\n• **Émergence** de demandes mixtes (résidentiel-commercial) : +45%\n• **Délais de traitement** réduits de 18% grâce aux optimisations\n\nRecommandation : Préparer l\'extension de la Zone Nord pour répondre à la demande croissante.',
-      timestamp: '14:31',
-      confidence: 94
-    },
-    {
-      type: 'user',
-      message: 'Comment optimiser les délais de traitement des permis de construire ?',
-      timestamp: '14:35'
-    },
-    {
-      type: 'ai',
-      message: 'Voici mes recommandations pour optimiser les délais :\n\n**1. Automatisation (Impact: -40% délais)**\n• Validation automatique documents standards\n• Pré-évaluation conformité urbanisme\n\n**2. Réorganisation processus (Impact: -25% délais)**\n• Traitement parallèle des étapes\n• Priorisation intelligente\n\n**3. Formation équipe (Impact: -15% délais)**\n• Spécialisation par type de demande\n• Outils d\'aide à la décision\n\n**Délai cible**: Passer de 22j à 14j moyenne',
-      timestamp: '14:36',
-      confidence: 91
+  const loadData = useCallback(async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      // 1) Analyses IA enregistrées de l'utilisateur
+      const { data: analysesData } = await supabase
+        .from('ai_analyses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      const analyses = (analysesData || []).map((a) => {
+        const r = a.result || {};
+        return {
+          id: a.id,
+          type: r.type || 'Analyse IA',
+          title: r.title || r.name || 'Analyse IA',
+          result: r.result || r.summary || r.description || '',
+          details: r.details || '',
+          accuracy: typeof r.confidence === 'number' ? `${r.confidence}%`
+            : (typeof r.accuracy === 'number' ? `${r.accuracy}%` : null),
+          date: a.created_at,
+          raw: r
+        };
+      });
+      setAiAnalyses(analyses);
+
+      // 2) Demandes communales (scores IA réels), filtrées par commune du profil si dispo
+      let reqQuery = supabase
+        .from('communal_requests')
+        .select('id, applicant_name, commune, zone, type, surface, status, priority, ai_score, created_at')
+        .order('ai_score', { ascending: false, nullsFirst: false });
+      if (communeFilter) {
+        reqQuery = reqQuery.eq('commune', communeFilter);
+      }
+      const { data: reqData } = await reqQuery;
+      setRequests(reqData || []);
+
+      // 3) Historique de conversation IA réel (ai_chat_history)
+      const { data: chatData } = await supabase
+        .from('ai_chat_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      const mappedChat = (chatData || []).map((m) => ({
+        type: m.role === 'assistant' ? 'ai' : 'user',
+        message: m.content,
+        timestamp: m.created_at
+          ? new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+          : ''
+      }));
+      setChatHistory(mappedChat);
+    } catch (err) {
+      console.error('Erreur chargement MairieAI:', err);
+      setAiAnalyses([]);
+      setRequests([]);
+      setChatHistory([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, [user?.id, communeFilter]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  // --- Métriques dérivées de données RÉELLES (jamais fabriquées) ---
+  const scoredRequests = requests.filter(
+    (r) => r.ai_score !== null && r.ai_score !== undefined
+  );
+  const avgAiScore = scoredRequests.length
+    ? Math.round(scoredRequests.reduce((s, r) => s + (Number(r.ai_score) || 0), 0) / scoredRequests.length)
+    : null;
+  const totalAnalyses = aiAnalyses.length;
+  const pendingCount = requests.filter((r) => r.status === 'pending').length;
 
   const getCategoryColor = (category) => {
     switch (category) {
-      case 'Optimisation': return 'bg-blue-100 text-blue-800';
-      case 'Prédiction': return 'bg-purple-100 text-purple-800';
-      case 'Alerte': return 'bg-red-100 text-red-800';
-      case 'Efficacité': return 'bg-green-100 text-green-800';
+      case 'residentiel':
+      case 'Résidentiel': return 'bg-blue-100 text-blue-800';
+      case 'commercial':
+      case 'Commercial': return 'bg-purple-100 text-purple-800';
+      case 'agricole':
+      case 'Agricole': return 'bg-green-100 text-green-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'Recommandé': return 'bg-green-100 text-green-800';
-      case 'En analyse': return 'bg-blue-100 text-blue-800';
-      case 'Critique': return 'bg-red-100 text-red-800';
-      case 'Planifié': return 'bg-orange-100 text-orange-800';
+      case 'approved': return 'bg-green-100 text-green-800';
+      case 'pending': return 'bg-blue-100 text-blue-800';
+      case 'rejected': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getImpactColor = (impact) => {
-    switch (impact) {
+  const getStatusLabel = (status) => {
+    switch (status) {
+      case 'approved': return 'Approuvée';
+      case 'pending': return 'En attente';
+      case 'rejected': return 'Rejetée';
+      default: return status || '—';
+    }
+  };
+
+  const getImpactColor = (priority) => {
+    switch (priority) {
+      case 'high':
       case 'Haute': return 'text-red-600';
+      case 'medium':
       case 'Moyenne': return 'text-orange-600';
+      case 'low':
       case 'Faible': return 'text-green-600';
       default: return 'text-gray-600';
     }
   };
 
-  const handleSendMessage = () => {
-    if (aiQuery.trim()) {
-      const newMessage = {
-        type: 'user',
-        message: aiQuery,
-        timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
-      };
-      setChatHistory([...chatHistory, newMessage]);
-      setAiQuery('');
+  // Enregistre la question dans ai_chat_history (pas de fausse réponse IA générée)
+  const handleSendMessage = async () => {
+    const text = aiQuery.trim();
+    if (!text) return;
 
-      // Simulation réponse IA après délai
-      setTimeout(() => {
-        const aiResponse = {
-          type: 'ai',
-          message: 'Je traite votre demande et analyse les données municipales pertinentes. Voici ma réponse basée sur l\'analyse des données...',
-          timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' }),
-          confidence: Math.floor(85 + Math.random() * 15)
-        };
-        setChatHistory(prev => [...prev, aiResponse]);
-      }, 2000);
+    const userMessage = {
+      type: 'user',
+      message: text,
+      timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    };
+    const noticeMessage = {
+      type: 'ai',
+      message: NO_AI_MESSAGE,
+      timestamp: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+    };
+    setChatHistory((prev) => [...prev, userMessage, noticeMessage]);
+    setAiQuery('');
+
+    // Persiste la question si l'utilisateur est authentifié (aucune réponse fabriquée)
+    if (user?.id) {
+      try {
+        await supabase.from('ai_chat_history').insert({
+          user_id: user.id,
+          role: 'user',
+          content: text
+        });
+      } catch (err) {
+        console.error('Erreur enregistrement question IA:', err);
+      }
     }
   };
 
@@ -208,9 +217,10 @@ const MairieAI = ({ dashboardStats }) => {
           <h2 className="text-3xl font-bold text-gray-900">Assistant IA Municipal</h2>
           <p className="text-gray-600 mt-1">
             Intelligence artificielle pour l'aide à la décision municipale
+            {communeFilter ? ` — ${communeFilter}` : ''}
           </p>
         </div>
-        
+
         <div className="flex items-center space-x-3 mt-4 lg:mt-0">
           <Badge className="bg-green-100 text-green-800">
             <div className="w-2 h-2 bg-green-500 rounded-full mr-2 animate-pulse" />
@@ -223,52 +233,54 @@ const MairieAI = ({ dashboardStats }) => {
         </div>
       </div>
 
-      {/* Indicateurs IA */}
+      {/* Indicateurs IA (données réelles) */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Suggestions Actives</p>
-                <p className="text-2xl font-bold text-blue-600">12</p>
+                <p className="text-sm text-gray-600">Analyses IA</p>
+                <p className="text-2xl font-bold text-blue-600">{totalAnalyses}</p>
               </div>
               <Lightbulb className="h-8 w-8 text-blue-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Précision Moyenne</p>
-                <p className="text-2xl font-bold text-green-600">92.3%</p>
+                <p className="text-sm text-gray-600">Score IA moyen</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {avgAiScore !== null ? `${avgAiScore}%` : '—'}
+                </p>
               </div>
               <Target className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Temps Économisé</p>
-                <p className="text-2xl font-bold text-purple-600">124h</p>
+                <p className="text-sm text-gray-600">Demandes évaluées</p>
+                <p className="text-2xl font-bold text-purple-600">{scoredRequests.length}</p>
               </div>
-              <Clock className="h-8 w-8 text-purple-600" />
+              <BarChart3 className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Optimisations</p>
-                <p className="text-2xl font-bold text-orange-600">8</p>
+                <p className="text-sm text-gray-600">Demandes en attente</p>
+                <p className="text-2xl font-bold text-orange-600">{pendingCount}</p>
               </div>
-              <Zap className="h-8 w-8 text-orange-600" />
+              <Clock className="h-8 w-8 text-orange-600" />
             </div>
           </CardContent>
         </Card>
@@ -298,45 +310,51 @@ const MairieAI = ({ dashboardStats }) => {
                     Posez vos questions sur la gestion municipale et foncière
                   </CardDescription>
                 </CardHeader>
-                
+
                 <CardContent>
                   {/* Zone de conversation */}
                   <div className="bg-gray-50 rounded-lg p-4 h-96 overflow-y-auto mb-4">
-                    {conversationExample.concat(chatHistory).map((message, index) => (
-                      <div key={index} className={`mb-4 ${
-                        message.type === 'user' ? 'text-right' : 'text-left'
-                      }`}>
-                        <div className={`inline-block p-3 rounded-lg max-w-[80%] ${
-                          message.type === 'user' 
-                            ? 'bg-teal-600 text-white rounded-br-none'
-                            : 'bg-white border rounded-bl-none'
+                    {chatHistory.length === 0 ? (
+                      <div className="h-full flex flex-col items-center justify-center text-center text-gray-500">
+                        <Brain className="h-10 w-10 text-gray-300 mb-3" />
+                        <p className="text-sm">Aucune conversation pour le moment.</p>
+                        <p className="text-xs mt-1 max-w-sm">
+                          Posez une question ci-dessous. Le moteur de réponse génératif n'est pas
+                          encore connecté ; vos questions sont enregistrées.
+                        </p>
+                      </div>
+                    ) : (
+                      chatHistory.map((message, index) => (
+                        <div key={index} className={`mb-4 ${
+                          message.type === 'user' ? 'text-right' : 'text-left'
                         }`}>
-                          {message.type === 'ai' && (
-                            <div className="flex items-center space-x-2 mb-2">
-                              <Avatar className="h-6 w-6">
-                                <AvatarFallback className="bg-purple-100 text-purple-600">
-                                  <Brain className="h-3 w-3" />
-                                </AvatarFallback>
-                              </Avatar>
-                              <span className="text-xs text-gray-600">Assistant IA</span>
-                              {message.confidence && (
-                                <Badge variant="secondary" className="text-xs">
-                                  {message.confidence}% confiance
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-                          <div className="whitespace-pre-line text-sm">
-                            {message.message}
-                          </div>
-                          <div className={`text-xs mt-1 ${
-                            message.type === 'user' ? 'text-teal-200' : 'text-gray-500'
+                          <div className={`inline-block p-3 rounded-lg max-w-[80%] ${
+                            message.type === 'user'
+                              ? 'bg-teal-600 text-white rounded-br-none'
+                              : 'bg-white border rounded-bl-none'
                           }`}>
-                            {message.timestamp}
+                            {message.type === 'ai' && (
+                              <div className="flex items-center space-x-2 mb-2">
+                                <Avatar className="h-6 w-6">
+                                  <AvatarFallback className="bg-purple-100 text-purple-600">
+                                    <Brain className="h-3 w-3" />
+                                  </AvatarFallback>
+                                </Avatar>
+                                <span className="text-xs text-gray-600">Assistant IA</span>
+                              </div>
+                            )}
+                            <div className="whitespace-pre-line text-sm">
+                              {message.message}
+                            </div>
+                            <div className={`text-xs mt-1 ${
+                              message.type === 'user' ? 'text-teal-200' : 'text-gray-500'
+                            }`}>
+                              {message.timestamp}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    ))}
+                      ))
+                    )}
                   </div>
 
                   {/* Interface de saisie */}
@@ -349,7 +367,7 @@ const MairieAI = ({ dashboardStats }) => {
                         onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                       />
                     </div>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -358,7 +376,7 @@ const MairieAI = ({ dashboardStats }) => {
                     >
                       {isListening ? <MicOff className="h-4 w-4" /> : <Mic className="h-4 w-4" />}
                     </Button>
-                    
+
                     <Button
                       variant="outline"
                       size="sm"
@@ -367,7 +385,7 @@ const MairieAI = ({ dashboardStats }) => {
                     >
                       {isSpeaking ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
                     </Button>
-                    
+
                     <Button onClick={handleSendMessage} className="bg-teal-600 hover:bg-teal-700">
                       <Send className="h-4 w-4" />
                     </Button>
@@ -385,10 +403,10 @@ const MairieAI = ({ dashboardStats }) => {
                 <CardContent className="space-y-2">
                   {[
                     'Analyse des délais actuels',
-                    'Prévisions demandes février',
+                    'Prévisions demandes',
                     'Optimisation ressources',
                     'Zones à surveiller',
-                    'Rapport mensuel automatique',
+                    'Rapport mensuel',
                     'Indicateurs performance'
                   ].map((question, index) => (
                     <Button
@@ -408,117 +426,155 @@ const MairieAI = ({ dashboardStats }) => {
           </div>
         </TabsContent>
 
-        {/* Suggestions IA */}
+        {/* Suggestions IA → demandes communales à fort score IA (données réelles) */}
         <TabsContent value="suggestions" className="space-y-6">
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {aiSuggestions.map((suggestion) => (
-              <Card key={suggestion.id} className="hover:shadow-md transition-shadow">
-                <CardHeader>
-                  <div className="flex items-start justify-between">
-                    <div>
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Badge className={getCategoryColor(suggestion.category)}>
-                          {suggestion.category}
-                        </Badge>
-                        <Badge className={getStatusColor(suggestion.status)}>
-                          {suggestion.status}
-                        </Badge>
+          {loading ? (
+            <Card>
+              <CardContent className="p-12 text-center text-gray-500">
+                Chargement des demandes évaluées par l'IA…
+              </CardContent>
+            </Card>
+          ) : scoredRequests.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <Lightbulb className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  Aucune demande évaluée par l'IA
+                </h3>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  Les demandes communales scorées par l'IA apparaîtront ici, classées par priorité.
+                  Le moteur de suggestions proactives sera bientôt disponible.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              {scoredRequests.slice(0, 12).map((req) => (
+                <Card key={req.id} className="hover:shadow-md transition-shadow">
+                  <CardHeader>
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Badge className={getCategoryColor(req.type)}>
+                            {req.type || 'Demande'}
+                          </Badge>
+                          <Badge className={getStatusColor(req.status)}>
+                            {getStatusLabel(req.status)}
+                          </Badge>
+                        </div>
+                        <CardTitle className="text-lg">
+                          {req.applicant_name || 'Demandeur'}
+                        </CardTitle>
                       </div>
-                      <CardTitle className="text-lg">{suggestion.title}</CardTitle>
-                    </div>
-                    <div className="text-right">
-                      <div className="text-2xl font-bold text-gray-900">
-                        {suggestion.confidence}%
+                      <div className="text-right">
+                        <div className="text-2xl font-bold text-gray-900">
+                          {req.ai_score !== null && req.ai_score !== undefined ? `${req.ai_score}%` : '—'}
+                        </div>
+                        <div className="text-xs text-gray-600">score IA</div>
                       </div>
-                      <div className="text-xs text-gray-600">confiance</div>
                     </div>
-                  </div>
-                  <CardDescription>{suggestion.description}</CardDescription>
-                </CardHeader>
-                
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <span className="text-gray-600">Impact</span>
-                      <p className={`font-medium ${getImpactColor(suggestion.impact)}`}>
-                        {suggestion.impact}
-                      </p>
-                    </div>
-                    <div>
-                      <span className="text-gray-600">Délai</span>
-                      <p className="font-medium text-gray-900">{suggestion.timeline}</p>
-                    </div>
-                  </div>
+                    <CardDescription>
+                      Demande {req.type || ''} — {req.surface ? `${req.surface} m²` : 'surface n.c.'}
+                      {req.zone ? `, zone ${req.zone}` : ''}
+                      {req.commune ? `, ${req.commune}` : ''}
+                    </CardDescription>
+                  </CardHeader>
 
-                  <div>
-                    <span className="text-sm text-gray-600 mb-2 block">Ressources nécessaires:</span>
-                    <div className="flex flex-wrap gap-1">
-                      {suggestion.resources.map((resource, index) => (
-                        <Badge key={index} variant="secondary" className="text-xs">
-                          {resource}
-                        </Badge>
-                      ))}
-                    </div>
-                  </div>
-
-                  <Progress value={suggestion.confidence} className="h-2" />
-
-                  <div className="flex space-x-2">
-                    <Button size="sm" className="bg-green-600 hover:bg-green-700">
-                      <ThumbsUp className="h-3 w-3 mr-1" />
-                      Approuver
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <Eye className="h-3 w-3 mr-1" />
-                      Détails
-                    </Button>
-                    <Button size="sm" variant="outline">
-                      <ThumbsDown className="h-3 w-3 mr-1" />
-                      Rejeter
-                    </Button>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-        </TabsContent>
-
-        {/* Analyses Prédictives */}
-        <TabsContent value="analyses" className="space-y-6">
-          <div className="space-y-4">
-            {aiAnalyses.map((analysis) => (
-              <Card key={analysis.id}>
-                <CardContent className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center space-x-2 mb-2">
-                        <Badge variant="secondary">{analysis.type}</Badge>
-                        <span className="text-sm text-gray-600">
-                          {new Date(analysis.date).toLocaleDateString('fr-FR')}
-                        </span>
+                  <CardContent className="space-y-4">
+                    <div className="grid grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <span className="text-gray-600">Priorité</span>
+                        <p className={`font-medium ${getImpactColor(req.priority)}`}>
+                          {req.priority || '—'}
+                        </p>
                       </div>
-                      <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                        {analysis.title}
-                      </h3>
-                      <p className="text-gray-700 mb-2">{analysis.result}</p>
-                      <p className="text-sm text-gray-600">{analysis.details}</p>
-                    </div>
-                    
-                    <div className="text-right ml-4">
-                      <div className="text-lg font-bold text-green-600">
-                        {analysis.accuracy}
+                      <div>
+                        <span className="text-gray-600">Déposée le</span>
+                        <p className="font-medium text-gray-900">
+                          {req.created_at ? new Date(req.created_at).toLocaleDateString('fr-FR') : '—'}
+                        </p>
                       </div>
-                      <div className="text-xs text-gray-600">précision</div>
-                      <Button variant="outline" size="sm" className="mt-2">
-                        <Download className="h-3 w-3 mr-1" />
-                        Export
+                    </div>
+
+                    {req.ai_score !== null && req.ai_score !== undefined && (
+                      <Progress value={req.ai_score} className="h-2" />
+                    )}
+
+                    <div className="flex space-x-2">
+                      <Button size="sm" variant="outline">
+                        <Eye className="h-3 w-3 mr-1" />
+                        Détails
                       </Button>
                     </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
+        </TabsContent>
+
+        {/* Analyses Prédictives → ai_analyses réel */}
+        <TabsContent value="analyses" className="space-y-6">
+          {loading ? (
+            <Card>
+              <CardContent className="p-12 text-center text-gray-500">
+                Chargement des analyses IA…
+              </CardContent>
+            </Card>
+          ) : aiAnalyses.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <BarChart3 className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                  Aucune analyse IA enregistrée
+                </h3>
+                <p className="text-gray-600 max-w-md mx-auto">
+                  Les analyses prédictives générées apparaîtront ici dès qu'elles seront disponibles.
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="space-y-4">
+              {aiAnalyses.map((analysis) => (
+                <Card key={analysis.id}>
+                  <CardContent className="p-6">
+                    <div className="flex items-start justify-between">
+                      <div className="flex-1">
+                        <div className="flex items-center space-x-2 mb-2">
+                          <Badge variant="secondary">{analysis.type}</Badge>
+                          {analysis.date && (
+                            <span className="text-sm text-gray-600">
+                              {new Date(analysis.date).toLocaleDateString('fr-FR')}
+                            </span>
+                          )}
+                        </div>
+                        <h3 className="text-lg font-semibold text-gray-900 mb-2">
+                          {analysis.title}
+                        </h3>
+                        {analysis.result && (
+                          <p className="text-gray-700 mb-2">{analysis.result}</p>
+                        )}
+                        {analysis.details && (
+                          <p className="text-sm text-gray-600">{analysis.details}</p>
+                        )}
+                      </div>
+
+                      <div className="text-right ml-4">
+                        <div className="text-lg font-bold text-green-600">
+                          {analysis.accuracy || '—'}
+                        </div>
+                        <div className="text-xs text-gray-600">confiance</div>
+                        <Button variant="outline" size="sm" className="mt-2">
+                          <Download className="h-3 w-3 mr-1" />
+                          Export
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
+            </div>
+          )}
         </TabsContent>
 
         {/* Formation IA */}
@@ -530,49 +586,51 @@ const MairieAI = ({ dashboardStats }) => {
                 Entraînement et Amélioration IA
               </CardTitle>
               <CardDescription>
-                Configuration et amélioration continue de l'assistant IA
+                Suivi des données réelles alimentant l'assistant IA
               </CardDescription>
             </CardHeader>
-            
+
             <CardContent className="space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="text-center p-4 bg-blue-50 rounded-lg">
-                  <div className="text-2xl font-bold text-blue-600">2,847</div>
-                  <div className="text-sm text-gray-600">Décisions analysées</div>
+                  <div className="text-2xl font-bold text-blue-600">{requests.length}</div>
+                  <div className="text-sm text-gray-600">Demandes analysées</div>
                 </div>
                 <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <div className="text-2xl font-bold text-green-600">96.2%</div>
-                  <div className="text-sm text-gray-600">Précision actuelle</div>
+                  <div className="text-2xl font-bold text-green-600">
+                    {avgAiScore !== null ? `${avgAiScore}%` : '—'}
+                  </div>
+                  <div className="text-sm text-gray-600">Score IA moyen</div>
                 </div>
                 <div className="text-center p-4 bg-purple-50 rounded-lg">
-                  <div className="text-2xl font-bold text-purple-600">45</div>
-                  <div className="text-sm text-gray-600">Modèles entraînés</div>
+                  <div className="text-2xl font-bold text-purple-600">{totalAnalyses}</div>
+                  <div className="text-sm text-gray-600">Analyses enregistrées</div>
                 </div>
               </div>
 
-              <div className="space-y-4">
+              <div className="p-4 bg-gray-50 rounded-lg text-sm text-gray-600">
+                La configuration avancée de l'entraînement et l'apprentissage automatique
+                seront bientôt disponibles.
+              </div>
+
+              <div className="space-y-4 opacity-60 pointer-events-none">
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Apprentissage automatique</span>
-                  <Switch defaultChecked />
+                  <Switch disabled />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Suggestions proactives</span>
-                  <Switch defaultChecked />
+                  <Switch disabled />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Analyse prédictive avancée</span>
-                  <Switch defaultChecked />
+                  <Switch disabled />
                 </div>
                 <div className="flex items-center justify-between">
                   <span className="text-sm font-medium">Notifications automatiques</span>
-                  <Switch />
+                  <Switch disabled />
                 </div>
               </div>
-
-              <Button className="w-full bg-teal-600 hover:bg-teal-700">
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Relancer Entraînement IA
-              </Button>
             </CardContent>
           </Card>
         </TabsContent>

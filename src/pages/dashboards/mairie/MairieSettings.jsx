@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { 
   Settings,
   User,
@@ -60,9 +62,11 @@ import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 
 const MairieSettings = ({ dashboardStats }) => {
+  const { user, profile } = useAuth();
   const [activeTab, setActiveTab] = useState('general');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  // Préférences locales (aucune table dédiée en base) : conservées côté navigateur uniquement
   const [notifications, setNotifications] = useState({
     newRequests: true,
     statusUpdates: true,
@@ -73,97 +77,86 @@ const MairieSettings = ({ dashboardStats }) => {
     pushNotifications: true
   });
 
-  // Handlers supplémentaires pour les paramètres
-  const handleBackupData = () => {
-    setIsLoading(true);
-    setTimeout(() => {
+  // Changement de mot de passe via Supabase Auth
+  const [passwordForm, setPasswordForm] = useState({ next: '', confirm: '' });
+  const handleChangePassword = async () => {
+    if (!passwordForm.next || passwordForm.next.length < 6) {
       window.safeGlobalToast({
-        title: "Sauvegarde créée",
-        description: "Données municipales sauvegardées avec succès",
+        title: "Mot de passe trop court",
+        description: "Le mot de passe doit contenir au moins 6 caractères.",
+        variant: "destructive"
+      });
+      return;
+    }
+    if (passwordForm.next !== passwordForm.confirm) {
+      window.safeGlobalToast({
+        title: "Confirmation invalide",
+        description: "Les deux mots de passe ne correspondent pas.",
+        variant: "destructive"
+      });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: passwordForm.next });
+      if (error) throw error;
+      setPasswordForm({ next: '', confirm: '' });
+      window.safeGlobalToast({
+        title: "Mot de passe modifié",
+        description: "Votre mot de passe a été mis à jour.",
         variant: "success"
       });
-      setIsLoading(false);
-    }, 3000);
-  };
-
-  const handleRestoreData = () => {
-    setIsLoading(true);
-    setTimeout(() => {
+    } catch (err) {
       window.safeGlobalToast({
-        title: "Données restaurées",
-        description: "Restauration terminée avec succès",
-        variant: "success"
+        title: "Échec de la modification",
+        description: err?.message || "Une erreur est survenue.",
+        variant: "destructive"
       });
+    } finally {
       setIsLoading(false);
-    }, 3000);
+    }
   };
 
   const handleAddUser = () => {
     window.safeGlobalToast({
-      title: "Nouveau utilisateur",
-      description: "Formulaire d'ajout d'utilisateur ouvert",
+      title: "Bientôt disponible",
+      description: "La gestion multi-utilisateurs et des rôles n'est pas encore active.",
       variant: "default"
     });
   };
 
-  const handleToggleNotification = (key) => {
-    setNotifications(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-    window.safeGlobalToast({
-      title: "Notification mise à jour",
-      description: "Préférences de notification modifiées",
-      variant: "default"
-    });
-  };
-
-  // Paramètres généraux
+  // Paramètres généraux : alimentés par le profil réel (table profiles)
+  // municipalityName/mayorName/address dérivent du profil de la mairie connectée.
+  // timezone/language/currency = préférences locales (aucune colonne dédiée en base).
   const [generalSettings, setGeneralSettings] = useState({
-    municipalityName: 'Commune de Teranga',
-    mayorName: 'Abdoulaye SARR',
-    address: 'Avenue Léopold Sédar Senghor, Dakar',
-    phone: '+221 33 123 45 67',
-    email: 'mairie@teranga.sn',
-    website: 'www.commune-teranga.sn',
+    municipalityName: '',
+    mayorName: '',
+    address: '',
+    phone: '',
+    email: '',
+    website: '',
     timezone: 'Africa/Dakar',
     language: 'fr',
     currency: 'XOF'
   });
 
-  // Utilisateurs et rôles
-  const [users, setUsers] = useState([
-    {
-      id: 'user-001',
-      name: 'Aminata DIOP',
-      email: 'aminata.diop@teranga.sn',
-      role: 'Chef Service Urbanisme',
-      permissions: ['view_all', 'edit_urban_planning', 'approve_permits'],
-      status: 'Actif',
-      lastLogin: '2024-01-22 09:30',
-      avatar: null
-    },
-    {
-      id: 'user-002',
-      name: 'Moussa FALL',
-      email: 'moussa.fall@teranga.sn',
-      role: 'Agent Foncier',
-      permissions: ['view_requests', 'edit_land_records', 'create_nft'],
-      status: 'Actif',
-      lastLogin: '2024-01-22 14:15',
-      avatar: null
-    },
-    {
-      id: 'user-003',
-      name: 'Fatou NDIAYE',
-      email: 'fatou.ndiaye@teranga.sn',
-      role: 'Secrétaire Général',
-      permissions: ['view_all', 'user_management', 'system_config'],
-      status: 'Inactif',
-      lastLogin: '2024-01-20 16:45',
-      avatar: null
-    }
-  ]);
+  // Charge les informations de la commune depuis le profil (profiles)
+  useEffect(() => {
+    if (!profile) return;
+    const cityRegion = [profile.city, profile.region].filter(Boolean).join(', ');
+    setGeneralSettings(prev => ({
+      ...prev,
+      municipalityName: profile.city ? `Commune de ${profile.city}` : (profile.full_name || ''),
+      mayorName: profile.full_name || [profile.first_name, profile.last_name].filter(Boolean).join(' '),
+      address: cityRegion,
+      phone: profile.phone || '',
+      email: profile.email || user?.email || ''
+    }));
+  }, [profile, user]);
+
+  // Gestion multi-utilisateurs / rôles : aucune table dédiée dans le schéma actuel.
+  // On évite d'inventer des comptes fictifs -> état honnête (voir onglet Utilisateurs).
+  const users = [];
 
   // Paramètres système
   const [systemSettings, setSystemSettings] = useState({
@@ -209,28 +202,61 @@ const MairieSettings = ({ dashboardStats }) => {
     }));
   };
 
-  const handleSaveSettings = () => {
+  // Sauvegarde réelle des informations de la commune dans profiles.
+  // Les préférences locales (notifications, système, langue...) ne sont pas persistées
+  // faute de table dédiée : elles restent au niveau du navigateur.
+  const handleSaveSettings = async () => {
+    if (!user?.id) {
+      window.safeGlobalToast({
+        title: "Session requise",
+        description: "Impossible d'identifier votre compte.",
+        variant: "destructive"
+      });
+      return;
+    }
     setIsLoading(true);
-    setTimeout(() => {
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: generalSettings.mayorName || null,
+          phone: generalSettings.phone || null,
+          email: generalSettings.email || null
+        })
+        .eq('id', user.id);
+      if (error) throw error;
       window.safeGlobalToast({
         title: "Paramètres sauvegardés",
-        description: "Tous les paramètres ont été mis à jour avec succès",
+        description: "Informations de la commune mises à jour.",
         variant: "success"
       });
+    } catch (err) {
+      window.safeGlobalToast({
+        title: "Échec de la sauvegarde",
+        description: err?.message || "Une erreur est survenue.",
+        variant: "destructive"
+      });
+    } finally {
       setIsLoading(false);
-    }, 2000);
+    }
   };
 
   const handleResetSettings = () => {
-    setIsLoading(true);
-    setTimeout(() => {
-      window.safeGlobalToast({
-        title: "Paramètres réinitialisés",
-        description: "Les paramètres par défaut ont été restaurés",
-        variant: "default"
-      });
-      setIsLoading(false);
-    }, 1500);
+    if (!profile) return;
+    const cityRegion = [profile.city, profile.region].filter(Boolean).join(', ');
+    setGeneralSettings(prev => ({
+      ...prev,
+      municipalityName: profile.city ? `Commune de ${profile.city}` : (profile.full_name || ''),
+      mayorName: profile.full_name || [profile.first_name, profile.last_name].filter(Boolean).join(' '),
+      address: cityRegion,
+      phone: profile.phone || '',
+      email: profile.email || user?.email || ''
+    }));
+    window.safeGlobalToast({
+      title: "Formulaire réinitialisé",
+      description: "Les valeurs enregistrées ont été rechargées.",
+      variant: "default"
+    });
   };
 
   const getRoleColor = (role) => {
@@ -283,7 +309,7 @@ const MairieSettings = ({ dashboardStats }) => {
       <Alert>
         <Info className="h-4 w-4" />
         <AlertDescription>
-          <strong>Sauvegarde automatique activée</strong> - Vos modifications sont automatiquement sauvegardées toutes les 5 minutes.
+          Les informations de la commune sont enregistrées dans votre profil. Cliquez sur <strong>Sauvegarder</strong> pour appliquer vos modifications.
         </AlertDescription>
       </Alert>
 
@@ -461,6 +487,19 @@ const MairieSettings = ({ dashboardStats }) => {
               Nouvel Utilisateur
             </Button>
           </div>
+
+          {users.length === 0 && (
+            <Card>
+              <CardContent className="p-10 text-center">
+                <Users className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-900 font-medium">Gestion multi-utilisateurs bientôt disponible</p>
+                <p className="text-sm text-gray-600 mt-1">
+                  Aucune table de comptes et de rôles municipaux n'est encore configurée.
+                  Cette fonctionnalité sera activée prochainement.
+                </p>
+              </CardContent>
+            </Card>
+          )}
 
           <div className="space-y-4">
             {users.map((user) => (
@@ -839,11 +878,13 @@ const MairieSettings = ({ dashboardStats }) => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="space-y-2">
-                  <Label>Mot de passe actuel</Label>
+                  <Label>Nouveau mot de passe</Label>
                   <div className="relative">
                     <Input
                       type={showPassword ? "text" : "password"}
-                      placeholder="Entrez votre mot de passe actuel"
+                      placeholder="Nouveau mot de passe (min. 6 caractères)"
+                      value={passwordForm.next}
+                      onChange={(e) => setPasswordForm(prev => ({ ...prev, next: e.target.value }))}
                     />
                     <Button
                       variant="ghost"
@@ -855,18 +896,18 @@ const MairieSettings = ({ dashboardStats }) => {
                     </Button>
                   </div>
                 </div>
-                
-                <div className="space-y-2">
-                  <Label>Nouveau mot de passe</Label>
-                  <Input type="password" placeholder="Nouveau mot de passe" />
-                </div>
-                
+
                 <div className="space-y-2">
                   <Label>Confirmer le mot de passe</Label>
-                  <Input type="password" placeholder="Confirmer le nouveau mot de passe" />
+                  <Input
+                    type="password"
+                    placeholder="Confirmer le nouveau mot de passe"
+                    value={passwordForm.confirm}
+                    onChange={(e) => setPasswordForm(prev => ({ ...prev, confirm: e.target.value }))}
+                  />
                 </div>
-                
-                <Button className="w-full">
+
+                <Button className="w-full" onClick={handleChangePassword} disabled={isLoading}>
                   <Key className="h-4 w-4 mr-2" />
                   Changer le mot de passe
                 </Button>
@@ -882,27 +923,12 @@ const MairieSettings = ({ dashboardStats }) => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
-                <div className="text-center p-4 bg-green-50 rounded-lg">
-                  <Shield className="h-8 w-8 text-green-600 mx-auto mb-2" />
-                  <p className="text-sm text-green-800 font-medium">2FA Activé</p>
-                  <p className="text-xs text-green-600">Votre compte est sécurisé</p>
-                </div>
-                
-                <div className="space-y-2">
-                  <Button variant="outline" className="w-full">
-                    <QrCode className="h-4 w-4 mr-2" />
-                    Voir le QR Code
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full">
-                    <RefreshCw className="h-4 w-4 mr-2" />
-                    Régénérer les codes de récupération
-                  </Button>
-                  
-                  <Button variant="outline" className="w-full text-red-600 hover:text-red-700">
-                    <X className="h-4 w-4 mr-2" />
-                    Désactiver 2FA
-                  </Button>
+                <div className="text-center p-4 bg-gray-50 rounded-lg">
+                  <Shield className="h-8 w-8 text-gray-400 mx-auto mb-2" />
+                  <p className="text-sm text-gray-800 font-medium">Bientôt disponible</p>
+                  <p className="text-xs text-gray-600">
+                    L'authentification à deux facteurs sera proposée prochainement.
+                  </p>
                 </div>
               </CardContent>
             </Card>
@@ -923,24 +949,16 @@ const MairieSettings = ({ dashboardStats }) => {
                     <Laptop className="h-5 w-5 text-gray-600" />
                     <div>
                       <p className="font-medium">Session actuelle</p>
-                      <p className="text-sm text-gray-600">Windows 11 - Chrome 120.0</p>
+                      <p className="text-sm text-gray-600">
+                        {user?.email || 'Compte connecté'}
+                      </p>
                     </div>
                   </div>
                   <Badge className="bg-green-100 text-green-800">Actuelle</Badge>
                 </div>
-                
-                <div className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
-                  <div className="flex items-center space-x-3">
-                    <Smartphone className="h-5 w-5 text-gray-600" />
-                    <div>
-                      <p className="font-medium">Mobile</p>
-                      <p className="text-sm text-gray-600">Android - Safari</p>
-                    </div>
-                  </div>
-                  <Button size="sm" variant="outline" className="text-red-600">
-                    Terminer
-                  </Button>
-                </div>
+                <p className="text-xs text-gray-500">
+                  La gestion des autres sessions actives (appareils connectés) sera bientôt disponible.
+                </p>
               </div>
             </CardContent>
           </Card>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,11 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import StatsService from '@/services/StatsService';
+import {
   Calculator, 
   TrendingUp, 
   DollarSign, 
@@ -30,8 +34,62 @@ import {
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
 const InvestisseurCalculateurs = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('roi');
-  const [calculations, setCalculations] = useState([]);
+
+  // Données réelles (prix marché par région + portefeuille de l'investisseur)
+  const [regionMarket, setRegionMarket] = useState([]);
+  const [selectedRegion, setSelectedRegion] = useState('');
+  const [portfolio, setPortfolio] = useState({ avgRoi: null, activeCount: 0 });
+
+  useEffect(() => {
+    let active = true;
+
+    // Prix réels par région (lecture publique via properties)
+    StatsService.getRegionMarket().then((regions) => {
+      if (active) setRegionMarket(Array.isArray(regions) ? regions : []);
+    });
+
+    // Portefeuille réel de l'investisseur connecté
+    const loadPortfolio = async () => {
+      if (!user?.id) return;
+      const { data, error } = await supabase
+        .from('investments')
+        .select('roi, status')
+        .eq('investor_id', user.id);
+      if (error || !active) return;
+      const rows = data || [];
+      const activeRows = rows.filter((r) => r.status === 'active');
+      const rois = rows.map((r) => Number(r.roi)).filter((v) => !Number.isNaN(v));
+      setPortfolio({
+        avgRoi: rois.length ? rois.reduce((a, b) => a + b, 0) / rois.length : null,
+        activeCount: activeRows.length
+      });
+    };
+    loadPortfolio();
+
+    return () => { active = false; };
+  }, [user?.id]);
+
+  // Prix moyen /m² agrégé (toutes régions confondues) — donnée réelle
+  const avgPricePerM2 = regionMarket.length
+    ? Math.round(
+        regionMarket.reduce((a, r) => a + (r.avgPricePerM2 || 0), 0) / regionMarket.length
+      )
+    : null;
+
+  // Applique le prix moyen réel de la région choisie comme valeur de référence
+  const applyRegionReference = (region) => {
+    setSelectedRegion(region);
+    const ref = regionMarket.find((r) => r.region === region);
+    if (ref && ref.avgPrice) {
+      setRoiInputs((prev) => ({
+        ...prev,
+        purchasePrice: ref.avgPrice,
+        exitValue: Math.round(ref.avgPrice * 1.3)
+      }));
+    }
+  };
 
   // État pour le calculateur ROI
   const [roiInputs, setRoiInputs] = useState({
@@ -143,34 +201,6 @@ const InvestisseurCalculateurs = () => {
   const rentabilityResults = calculateRentability();
   const financingResults = calculateFinancing();
 
-  // Historique des calculs récents
-  const recentCalculations = [
-    {
-      id: 1,
-      type: 'ROI',
-      title: 'Villa VDN',
-      result: '18.5%',
-      date: '2024-12-15',
-      investment: 150000000
-    },
-    {
-      id: 2,
-      type: 'Rentabilité',
-      title: 'Appartement Liberté 6',
-      result: '12.3%',
-      date: '2024-12-14',
-      investment: 85000000
-    },
-    {
-      id: 3,
-      type: 'Financement',
-      title: 'Complexe Commercial',
-      result: '680K XOF/mois',
-      date: '2024-12-13',
-      investment: 120000000
-    }
-  ];
-
   return (
     <div className="w-full h-full bg-white p-6">
       <div className="space-y-6">
@@ -188,28 +218,16 @@ const InvestisseurCalculateurs = () => {
           </div>
         </div>
 
-        {/* Statistiques rapides */}
+        {/* Statistiques rapides — données réelles (portefeuille + marché) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Calculs Effectués</p>
-                  <p className="text-2xl font-bold text-gray-900">247</p>
-                </div>
-                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Calculator className="w-6 h-6 text-blue-600" />
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm font-medium text-gray-600">ROI Moyen</p>
-                  <p className="text-2xl font-bold text-gray-900">19.2%</p>
+                  <p className="text-sm font-medium text-gray-600">ROI Moyen Portefeuille</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {portfolio.avgRoi !== null ? `${portfolio.avgRoi.toFixed(1)}%` : '—'}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-green-600" />
@@ -222,11 +240,11 @@ const InvestisseurCalculateurs = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Projets Analysés</p>
-                  <p className="text-2xl font-bold text-gray-900">43</p>
+                  <p className="text-sm font-medium text-gray-600">Investissements Actifs</p>
+                  <p className="text-2xl font-bold text-gray-900">{portfolio.activeCount}</p>
                 </div>
-                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Target className="w-6 h-6 text-purple-600" />
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                  <Target className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
@@ -236,11 +254,29 @@ const InvestisseurCalculateurs = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Sauvegardés</p>
-                  <p className="text-2xl font-bold text-gray-900">18</p>
+                  <p className="text-sm font-medium text-gray-600">Régions Référencées</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {regionMarket.length > 0 ? regionMarket.length : '—'}
+                  </p>
+                </div>
+                <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                  <MapPin className="w-6 h-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-gray-600">Prix Moyen /m²</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {avgPricePerM2 ? formatCurrency(avgPricePerM2) : '—'}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <Save className="w-6 h-6 text-orange-600" />
+                  <DollarSign className="w-6 h-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
@@ -279,8 +315,32 @@ const InvestisseurCalculateurs = () => {
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                       <div className="space-y-4">
                         <h3 className="font-semibold text-lg">Paramètres d'Investissement</h3>
-                        
+
                         <div className="space-y-4">
+                          <div>
+                            <Label htmlFor="referenceRegion">Région de référence (prix réels du marché)</Label>
+                            <Select value={selectedRegion} onValueChange={applyRegionReference}>
+                              <SelectTrigger id="referenceRegion">
+                                <SelectValue placeholder={regionMarket.length ? 'Choisir une région pour pré-remplir' : 'Aucune donnée marché disponible'} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {regionMarket.map((r) => (
+                                  <SelectItem key={r.region} value={r.region}>
+                                    {r.region} — {formatCurrency(r.avgPrice)} (moy.)
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
+                            {selectedRegion && (() => {
+                              const ref = regionMarket.find((r) => r.region === selectedRegion);
+                              return ref ? (
+                                <p className="text-xs text-gray-500 mt-1">
+                                  Prix moyen réel: {formatCurrency(ref.avgPricePerM2)}/m² · {ref.count} bien{ref.count > 1 ? 's' : ''} actif{ref.count > 1 ? 's' : ''}
+                                </p>
+                              ) : null;
+                            })()}
+                          </div>
+
                           <div>
                             <Label htmlFor="purchasePrice">Prix d'achat</Label>
                             <Input
@@ -612,28 +672,12 @@ const InvestisseurCalculateurs = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {recentCalculations.map((calc) => (
-                    <div key={calc.id} className="border rounded-lg p-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <Badge variant="secondary" className="text-xs">
-                          {calc.type}
-                        </Badge>
-                        <span className="text-xs text-gray-500">
-                          {new Date(calc.date).toLocaleDateString('fr-FR')}
-                        </span>
-                      </div>
-                      <h4 className="font-medium text-sm mb-1">{calc.title}</h4>
-                      <div className="flex items-center justify-between">
-                        <span className="text-xs text-gray-600">
-                          {formatCurrency(calc.investment)}
-                        </span>
-                        <span className="font-semibold text-green-600 text-sm">
-                          {calc.result}
-                        </span>
-                      </div>
-                    </div>
-                  ))}
+                <div className="text-center py-8">
+                  <History className="w-8 h-8 text-gray-300 mx-auto mb-2" />
+                  <p className="text-sm text-gray-500">Aucun calcul sauvegardé</p>
+                  <p className="text-xs text-gray-400 mt-1">
+                    La sauvegarde de l'historique des calculs sera bientôt disponible.
+                  </p>
                 </div>
               </CardContent>
             </Card>

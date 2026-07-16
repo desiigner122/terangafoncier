@@ -1,157 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
-import { 
-  Search, 
-  Filter, 
-  MapPin, 
-  Building, 
-  DollarSign, 
+import {
+  Search,
+  Filter,
+  MapPin,
+  Building,
   TrendingUp,
-  Calendar,
-  Users,
-  Target,
   Eye,
   Heart,
-  Star,
   ArrowUpRight,
-  Bookmark,
-  Share,
-  AlertTriangle,
   CheckCircle,
-  Clock,
   Home,
   Building2,
-  Warehouse
+  Loader2
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 // Layout géré par CompleteSidebarInvestisseurDashboard
 
 const InvestisseurOpportunites = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('all');
-  const [selectedBudget, setSelectedBudget] = useState('all');
+  const [budgetFilter, setBudgetFilter] = useState('all');
+  const [roiFilter, setRoiFilter] = useState('all');
   const [sortBy, setSortBy] = useState('roi');
 
-  // Opportunités d'investissement
-  const opportunities = [
-    {
-      id: 1,
-      title: 'Villa Moderne VDN - Opportunité Exclusive',
-      type: 'Résidentiel',
-      location: 'VDN, Dakar',
-      price: 280000000,
-      minInvestment: 140000000,
-      expectedRoi: 18.5,
-      duration: '24 mois',
-      riskLevel: 'Modéré',
-      status: 'Nouveau',
-      description: 'Villa moderne 4 chambres avec piscine, finitions haut de gamme',
-      area: '350m²',
-      landSize: '500m²',
-      completionRate: 75,
-      investors: 8,
-      maxInvestors: 12,
-      promoter: 'Fall Promotion SARL',
-      images: 4,
-      rating: 4.8,
-      features: ['Piscine', 'Garage 2 places', 'Jardin', 'Sécurité 24h'],
-      deadline: '2025-01-15',
-      fundingGoal: 280000000,
-      currentFunding: 210000000
-    },
-    {
-      id: 2,
-      title: 'Complexe Commercial Liberté 6',
-      type: 'Commercial',
-      location: 'Liberté 6, Dakar',
-      price: 450000000,
-      minInvestment: 50000000,
-      expectedRoi: 22.3,
-      duration: '36 mois',
-      riskLevel: 'Faible',
-      status: 'Tendance',
-      description: 'Centre commercial avec 15 boutiques et parking',
-      area: '1200m²',
-      landSize: '800m²',
-      completionRate: 30,
-      investors: 24,
-      maxInvestors: 30,
-      promoter: 'Teranga Invest',
-      images: 8,
-      rating: 4.9,
-      features: ['Parking', '15 boutiques', 'Ascenseur', 'Climatisation'],
-      deadline: '2025-02-28',
-      fundingGoal: 450000000,
-      currentFunding: 320000000
-    },
-    {
-      id: 3,
-      title: 'Entrepôt Logistique Rufisque',
-      type: 'Industriel',
-      location: 'Rufisque',
-      price: 320000000,
-      minInvestment: 80000000,
-      expectedRoi: 19.8,
-      duration: '30 mois',
-      riskLevel: 'Élevé',
-      status: 'En cours',
-      description: 'Entrepôt moderne avec quais de chargement',
-      area: '2000m²',
-      landSize: '3000m²',
-      completionRate: 15,
-      investors: 6,
-      maxInvestors: 10,
-      promoter: 'Logistics Pro',
-      images: 6,
-      rating: 4.6,
-      features: ['Quais chargement', 'Bureau', 'Sécurité', 'Accès camions'],
-      deadline: '2025-01-30',
-      fundingGoal: 320000000,
-      currentFunding: 128000000
-    },
-    {
-      id: 4,
-      title: 'Résidence Standing Almadies',
-      type: 'Résidentiel',
-      location: 'Almadies, Dakar',
-      price: 680000000,
-      minInvestment: 170000000,
-      expectedRoi: 16.2,
-      duration: '42 mois',
-      riskLevel: 'Faible',
-      status: 'Premium',
-      description: 'Résidence de 8 villas avec vue mer',
-      area: '2800m²',
-      landSize: '4000m²',
-      completionRate: 60,
-      investors: 18,
-      maxInvestors: 20,
-      promoter: 'Almadies Development',
-      images: 12,
-      rating: 4.9,
-      features: ['Vue mer', '8 villas', 'Piscine commune', 'Gardiennage'],
-      deadline: '2025-03-15',
-      fundingGoal: 680000000,
-      currentFunding: 544000000
-    }
-  ];
+  const [opportunities, setOpportunities] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Statistiques des opportunités
-  const opportunityStats = {
-    totalOpportunities: 47,
-    newThisWeek: 8,
-    averageRoi: 19.2,
-    totalValue: 2100000000,
-    bookmarked: 12,
-    applied: 6
-  };
+  // Chargement des opportunités réelles (investment_opportunities — lecture publique)
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('investment_opportunities')
+          .select(`id, property_id, title, location, region, type, expected_roi,
+                   min_investment, total_amount, risk_level, status, description, created_at,
+                   properties ( surface, city, region, ai_score, estimated_value )`)
+          .order('created_at', { ascending: false });
+        if (error) throw error;
+        if (!cancelled) setOpportunities(data || []);
+      } catch (e) {
+        console.error('Erreur chargement opportunités:', e);
+        if (!cancelled) setOpportunities([]);
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
+    };
+    load();
+    return () => { cancelled = true; };
+  }, []);
+
+  // Statistiques dérivées des données réelles
+  const now = Date.now();
+  const weekAgo = now - 7 * 24 * 60 * 60 * 1000;
+  const newThisWeek = opportunities.filter(o => o.created_at && new Date(o.created_at).getTime() >= weekAgo).length;
+  const openCount = opportunities.filter(o => o.status === 'open').length;
+  const roiValues = opportunities.map(o => Number(o.expected_roi)).filter(v => !isNaN(v) && v > 0);
+  const averageRoi = roiValues.length ? (roiValues.reduce((a, b) => a + b, 0) / roiValues.length) : null;
 
   const formatCurrency = (amount) => {
+    if (amount == null || isNaN(amount)) return '—';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
@@ -160,73 +74,102 @@ const InvestisseurOpportunites = () => {
     }).format(amount);
   };
 
+  const typeLabel = (type) => {
+    if (!type) return 'Autre';
+    return type.charAt(0).toUpperCase() + type.slice(1);
+  };
+
   const getTypeColor = (type) => {
-    switch (type) {
-      case 'Résidentiel': return 'bg-blue-100 text-blue-800';
-      case 'Commercial': return 'bg-green-100 text-green-800';
-      case 'Industriel': return 'bg-orange-100 text-orange-800';
-      case 'Foncier': return 'bg-purple-100 text-purple-800';
+    switch ((type || '').toLowerCase()) {
+      case 'immobilier': return 'bg-blue-100 text-blue-800';
+      case 'projet': return 'bg-green-100 text-green-800';
+      case 'terrain': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
+    }
+  };
+
+  const riskLabel = (risk) => {
+    switch ((risk || '').toLowerCase()) {
+      case 'faible': return 'Faible';
+      case 'moyen': return 'Modéré';
+      case 'eleve': return 'Élevé';
+      default: return null;
     }
   };
 
   const getRiskColor = (risk) => {
-    switch (risk) {
-      case 'Faible': return 'bg-green-100 text-green-800';
-      case 'Modéré': return 'bg-yellow-100 text-yellow-800';
-      case 'Élevé': return 'bg-red-100 text-red-800';
+    switch ((risk || '').toLowerCase()) {
+      case 'faible': return 'bg-green-100 text-green-800';
+      case 'moyen': return 'bg-yellow-100 text-yellow-800';
+      case 'eleve': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
+  const statusLabel = (status) => {
+    switch ((status || '').toLowerCase()) {
+      case 'open': return 'Ouverte';
+      case 'funded': return 'Financée';
+      case 'closed': return 'Clôturée';
+      default: return status || '—';
+    }
+  };
+
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'Nouveau': return 'bg-blue-100 text-blue-800';
-      case 'Tendance': return 'bg-green-100 text-green-800';
-      case 'Premium': return 'bg-purple-100 text-purple-800';
-      case 'En cours': return 'bg-orange-100 text-orange-800';
+    switch ((status || '').toLowerCase()) {
+      case 'open': return 'bg-green-100 text-green-800';
+      case 'funded': return 'bg-blue-100 text-blue-800';
+      case 'closed': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getTypeIcon = (type) => {
-    switch (type) {
-      case 'Résidentiel': return <Home className="w-4 h-4" />;
-      case 'Commercial': return <Building2 className="w-4 h-4" />;
-      case 'Industriel': return <Warehouse className="w-4 h-4" />;
-      case 'Foncier': return <MapPin className="w-4 h-4" />;
+    switch ((type || '').toLowerCase()) {
+      case 'immobilier': return <Home className="w-4 h-4" />;
+      case 'projet': return <Building2 className="w-4 h-4" />;
+      case 'terrain': return <MapPin className="w-4 h-4" />;
       default: return <Building className="w-4 h-4" />;
     }
   };
 
+  // Types réellement présents dans les données (filtres dynamiques)
+  const availableTypes = Array.from(
+    new Set(opportunities.map(o => (o.type || '').toLowerCase()).filter(Boolean))
+  );
+
   const filteredOpportunities = opportunities.filter(opp => {
-    const matchesSearch = opp.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         opp.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         opp.promoter.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === 'all' || opp.type.toLowerCase() === selectedType.toLowerCase();
-    return matchesSearch && matchesType;
+    const haystack = `${opp.title || ''} ${opp.location || ''} ${opp.region || ''}`.toLowerCase();
+    const matchesSearch = haystack.includes(searchTerm.toLowerCase());
+    const matchesType = selectedType === 'all' || (opp.type || '').toLowerCase() === selectedType;
+
+    const min = Number(opp.min_investment);
+    let matchesBudget = true;
+    if (budgetFilter === 'lt100') matchesBudget = !isNaN(min) && min < 100000000;
+    else if (budgetFilter === '100-300') matchesBudget = !isNaN(min) && min >= 100000000 && min <= 300000000;
+    else if (budgetFilter === 'gt300') matchesBudget = !isNaN(min) && min > 300000000;
+
+    const roi = Number(opp.expected_roi);
+    let matchesRoi = true;
+    if (roiFilter === 'gt15') matchesRoi = !isNaN(roi) && roi > 15;
+    else if (roiFilter === 'gt20') matchesRoi = !isNaN(roi) && roi > 20;
+    else if (roiFilter === 'gt25') matchesRoi = !isNaN(roi) && roi > 25;
+
+    return matchesSearch && matchesType && matchesBudget && matchesRoi;
   });
 
   const sortedOpportunities = [...filteredOpportunities].sort((a, b) => {
     switch (sortBy) {
       case 'roi':
-        return b.expectedRoi - a.expectedRoi;
+        return (Number(b.expected_roi) || 0) - (Number(a.expected_roi) || 0);
       case 'price':
-        return a.price - b.price;
-      case 'deadline':
-        return new Date(a.deadline) - new Date(b.deadline);
+        return (Number(a.total_amount) || 0) - (Number(b.total_amount) || 0);
+      case 'recent':
+        return new Date(b.created_at || 0) - new Date(a.created_at || 0);
       default:
         return 0;
     }
   });
-
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('fr-FR', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
 
   return (
     <div className="w-full h-full bg-white p-6">
@@ -237,12 +180,14 @@ const InvestisseurOpportunites = () => {
             <h1 className="text-2xl font-bold text-gray-900">Opportunités d'Investissement</h1>
             <p className="text-gray-600">Découvrez les meilleures opportunités du marché</p>
           </div>
-          <div className="flex items-center space-x-2">
-            <Badge className="bg-green-100 text-green-800">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              {opportunityStats.newThisWeek} nouvelles cette semaine
-            </Badge>
-          </div>
+          {newThisWeek > 0 && (
+            <div className="flex items-center space-x-2">
+              <Badge className="bg-green-100 text-green-800">
+                <TrendingUp className="w-3 h-3 mr-1" />
+                {newThisWeek} nouvelle{newThisWeek > 1 ? 's' : ''} cette semaine
+              </Badge>
+            </div>
+          )}
         </div>
 
         {/* Statistiques */}
@@ -252,10 +197,10 @@ const InvestisseurOpportunites = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Opportunités</p>
-                  <p className="text-2xl font-bold text-gray-900">{opportunityStats.totalOpportunities}</p>
+                  <p className="text-2xl font-bold text-gray-900">{opportunities.length}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
-                  <Target className="w-6 h-6 text-blue-600" />
+                  <Building className="w-6 h-6 text-blue-600" />
                 </div>
               </div>
             </CardContent>
@@ -266,7 +211,9 @@ const InvestisseurOpportunites = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">ROI Moyen</p>
-                  <p className="text-2xl font-bold text-gray-900">{opportunityStats.averageRoi}%</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {averageRoi != null ? `${averageRoi.toFixed(1)}%` : '—'}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <TrendingUp className="w-6 h-6 text-green-600" />
@@ -279,11 +226,11 @@ const InvestisseurOpportunites = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Favoris</p>
-                  <p className="text-2xl font-bold text-gray-900">{opportunityStats.bookmarked}</p>
+                  <p className="text-sm font-medium text-gray-600">Ouvertes</p>
+                  <p className="text-2xl font-bold text-gray-900">{openCount}</p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-purple-600" />
+                  <CheckCircle className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
             </CardContent>
@@ -293,11 +240,11 @@ const InvestisseurOpportunites = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Candidatures</p>
-                  <p className="text-2xl font-bold text-gray-900">{opportunityStats.applied}</p>
+                  <p className="text-sm font-medium text-gray-600">Nouvelles (7j)</p>
+                  <p className="text-2xl font-bold text-gray-900">{newThisWeek}</p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <CheckCircle className="w-6 h-6 text-orange-600" />
+                  <TrendingUp className="w-6 h-6 text-orange-600" />
                 </div>
               </div>
             </CardContent>
@@ -321,184 +268,156 @@ const InvestisseurOpportunites = () => {
                         className="pl-10 w-64"
                       />
                     </div>
-                    <select 
-                      value={sortBy} 
+                    <select
+                      value={sortBy}
                       onChange={(e) => setSortBy(e.target.value)}
                       className="px-3 py-2 border rounded-md text-sm"
                     >
                       <option value="roi">Trier par ROI</option>
-                      <option value="price">Trier par Prix</option>
-                      <option value="deadline">Trier par Échéance</option>
+                      <option value="price">Trier par Montant</option>
+                      <option value="recent">Plus récentes</option>
                     </select>
                   </div>
                 </div>
               </CardHeader>
               <CardContent>
-                {/* Filtres */}
-                <div className="flex flex-wrap gap-2 mb-6">
-                  <Button
-                    variant={selectedType === 'all' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedType('all')}
-                  >
-                    Tous
-                  </Button>
-                  <Button
-                    variant={selectedType === 'résidentiel' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedType('résidentiel')}
-                  >
-                    Résidentiel
-                  </Button>
-                  <Button
-                    variant={selectedType === 'commercial' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedType('commercial')}
-                  >
-                    Commercial
-                  </Button>
-                  <Button
-                    variant={selectedType === 'industriel' ? 'default' : 'outline'}
-                    size="sm"
-                    onClick={() => setSelectedType('industriel')}
-                  >
-                    Industriel
-                  </Button>
-                </div>
+                {/* Filtres par type (dynamiques selon les données réelles) */}
+                {availableTypes.length > 0 && (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    <Button
+                      variant={selectedType === 'all' ? 'default' : 'outline'}
+                      size="sm"
+                      onClick={() => setSelectedType('all')}
+                    >
+                      Tous
+                    </Button>
+                    {availableTypes.map((t) => (
+                      <Button
+                        key={t}
+                        variant={selectedType === t ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => setSelectedType(t)}
+                      >
+                        {typeLabel(t)}
+                      </Button>
+                    ))}
+                  </div>
+                )}
 
                 {/* Opportunités */}
-                <div className="space-y-6">
-                  {sortedOpportunities.map((opportunity) => (
-                    <motion.div
-                      key={opportunity.id}
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="border rounded-lg p-6 hover:shadow-md transition-all"
-                    >
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="flex items-start space-x-4">
-                          <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
-                            {getTypeIcon(opportunity.type)}
-                          </div>
-                          <div>
-                            <h3 className="font-semibold text-lg text-gray-900 mb-1">
-                              {opportunity.title}
-                            </h3>
-                            <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
-                              <div className="flex items-center">
-                                <MapPin className="w-4 h-4 mr-1" />
-                                {opportunity.location}
+                {loading ? (
+                  <div className="flex items-center justify-center py-16 text-gray-500">
+                    <Loader2 className="w-6 h-6 animate-spin mr-2" />
+                    Chargement des opportunités...
+                  </div>
+                ) : sortedOpportunities.length === 0 ? (
+                  <div className="text-center text-gray-500 py-16">
+                    <Building className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                    <p className="text-sm font-medium">Aucune opportunité disponible</p>
+                    <p className="text-xs mt-1">Aucune opportunité ne correspond à vos critères pour le moment.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-6">
+                    {sortedOpportunities.map((opportunity) => {
+                      const risk = riskLabel(opportunity.risk_level);
+                      const surface = opportunity.properties?.surface;
+                      return (
+                        <motion.div
+                          key={opportunity.id}
+                          initial={{ opacity: 0, y: 20 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          className="border rounded-lg p-6 hover:shadow-md transition-all"
+                        >
+                          <div className="flex items-start justify-between mb-4">
+                            <div className="flex items-start space-x-4">
+                              <div className="w-16 h-16 bg-blue-100 rounded-lg flex items-center justify-center">
+                                {getTypeIcon(opportunity.type)}
                               </div>
-                              <div className="flex items-center">
-                                <Building className="w-4 h-4 mr-1" />
-                                {opportunity.promoter}
-                              </div>
-                              <div className="flex items-center">
-                                <Star className="w-4 h-4 mr-1 text-yellow-500" />
-                                {opportunity.rating}
+                              <div>
+                                <h3 className="font-semibold text-lg text-gray-900 mb-1">
+                                  {opportunity.title}
+                                </h3>
+                                <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
+                                  {(opportunity.location || opportunity.region) && (
+                                    <div className="flex items-center">
+                                      <MapPin className="w-4 h-4 mr-1" />
+                                      {opportunity.location || opportunity.region}
+                                    </div>
+                                  )}
+                                </div>
+                                {opportunity.description && (
+                                  <p className="text-sm text-gray-600 mb-3">{opportunity.description}</p>
+                                )}
+
+                                {/* Badges */}
+                                <div className="flex items-center space-x-2">
+                                  {opportunity.type && (
+                                    <Badge className={getTypeColor(opportunity.type)}>
+                                      {typeLabel(opportunity.type)}
+                                    </Badge>
+                                  )}
+                                  {risk && (
+                                    <Badge className={getRiskColor(opportunity.risk_level)}>
+                                      Risque {risk}
+                                    </Badge>
+                                  )}
+                                  <Badge className={getStatusColor(opportunity.status)}>
+                                    {statusLabel(opportunity.status)}
+                                  </Badge>
+                                </div>
                               </div>
                             </div>
-                            <p className="text-sm text-gray-600 mb-3">{opportunity.description}</p>
-                            
-                            {/* Badges */}
-                            <div className="flex items-center space-x-2">
-                              <Badge className={getTypeColor(opportunity.type)}>
-                                {opportunity.type}
-                              </Badge>
-                              <Badge className={getRiskColor(opportunity.riskLevel)}>
-                                Risque {opportunity.riskLevel}
-                              </Badge>
-                              <Badge className={getStatusColor(opportunity.status)}>
-                                {opportunity.status}
-                              </Badge>
+
+                            <div className="text-right">
+                              <div className="text-2xl font-bold text-green-600 mb-1">
+                                {opportunity.expected_roi != null ? `${opportunity.expected_roi}%` : '—'}
+                              </div>
+                              <div className="text-sm text-gray-500">ROI attendu</div>
                             </div>
                           </div>
-                        </div>
-                        
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-green-600 mb-1">
-                            {opportunity.expectedRoi}%
+
+                          {/* Métriques réelles */}
+                          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+                            <div>
+                              <p className="text-xs text-gray-500">Montant total</p>
+                              <p className="font-semibold">{formatCurrency(opportunity.total_amount)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Investissement min.</p>
+                              <p className="font-semibold text-blue-600">{formatCurrency(opportunity.min_investment)}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Région</p>
+                              <p className="font-semibold">{opportunity.region || opportunity.properties?.region || '—'}</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-gray-500">Superficie</p>
+                              <p className="font-semibold">{surface ? `${surface} m²` : '—'}</p>
+                            </div>
                           </div>
-                          <div className="text-sm text-gray-500">ROI attendu</div>
-                          <div className="text-sm text-gray-500 mt-2">
-                            Échéance: {formatDate(opportunity.deadline)}
+
+                          {/* Actions */}
+                          <div className="flex items-center justify-end">
+                            <div className="flex space-x-2">
+                              <Button variant="outline" size="sm">
+                                <Heart className="w-4 h-4 mr-2" />
+                                Sauvegarder
+                              </Button>
+                              <Button variant="outline" size="sm">
+                                <Eye className="w-4 h-4 mr-2" />
+                                Détails
+                              </Button>
+                              <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                                <ArrowUpRight className="w-4 h-4 mr-2" />
+                                Investir
+                              </Button>
+                            </div>
                           </div>
-                        </div>
-                      </div>
-
-                      {/* Métriques */}
-                      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-                        <div>
-                          <p className="text-xs text-gray-500">Prix total</p>
-                          <p className="font-semibold">{formatCurrency(opportunity.price)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Investissement min.</p>
-                          <p className="font-semibold text-blue-600">{formatCurrency(opportunity.minInvestment)}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Durée</p>
-                          <p className="font-semibold">{opportunity.duration}</p>
-                        </div>
-                        <div>
-                          <p className="text-xs text-gray-500">Investisseurs</p>
-                          <p className="font-semibold">{opportunity.investors}/{opportunity.maxInvestors}</p>
-                        </div>
-                      </div>
-
-                      {/* Progression du financement */}
-                      <div className="mb-4">
-                        <div className="flex items-center justify-between text-sm mb-2">
-                          <span className="text-gray-600">Financement</span>
-                          <span className="font-medium">
-                            {Math.round((opportunity.currentFunding / opportunity.fundingGoal) * 100)}%
-                          </span>
-                        </div>
-                        <Progress 
-                          value={(opportunity.currentFunding / opportunity.fundingGoal) * 100} 
-                          className="h-2 mb-2" 
-                        />
-                        <div className="flex justify-between text-xs text-gray-500">
-                          <span>{formatCurrency(opportunity.currentFunding)} levés</span>
-                          <span>Objectif: {formatCurrency(opportunity.fundingGoal)}</span>
-                        </div>
-                      </div>
-
-                      {/* Caractéristiques */}
-                      <div className="mb-4">
-                        <p className="text-sm text-gray-600 mb-2">Caractéristiques:</p>
-                        <div className="flex flex-wrap gap-2">
-                          {opportunity.features.map((feature, index) => (
-                            <Badge key={index} variant="secondary" className="text-xs">
-                              {feature}
-                            </Badge>
-                          ))}
-                        </div>
-                      </div>
-
-                      {/* Actions */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3 text-sm text-gray-600">
-                          <span>{opportunity.area} • {opportunity.landSize} terrain</span>
-                        </div>
-                        <div className="flex space-x-2">
-                          <Button variant="outline" size="sm">
-                            <Heart className="w-4 h-4 mr-2" />
-                            Sauvegarder
-                          </Button>
-                          <Button variant="outline" size="sm">
-                            <Eye className="w-4 h-4 mr-2" />
-                            Détails
-                          </Button>
-                          <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
-                            <ArrowUpRight className="w-4 h-4 mr-2" />
-                            Investir
-                          </Button>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -513,39 +432,41 @@ const InvestisseurOpportunites = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div>
-                    <label className="text-sm font-medium mb-2 block">Budget</label>
-                    <select className="w-full px-3 py-2 border rounded-md text-sm">
-                      <option>Tous budgets</option>
-                      <option>Moins de 100M XOF</option>
-                      <option>100M - 300M XOF</option>
-                      <option>Plus de 300M XOF</option>
+                    <label className="text-sm font-medium mb-2 block">Budget (investissement min.)</label>
+                    <select
+                      value={budgetFilter}
+                      onChange={(e) => setBudgetFilter(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                    >
+                      <option value="all">Tous budgets</option>
+                      <option value="lt100">Moins de 100M XOF</option>
+                      <option value="100-300">100M - 300M XOF</option>
+                      <option value="gt300">Plus de 300M XOF</option>
                     </select>
                   </div>
-                  
+
                   <div>
                     <label className="text-sm font-medium mb-2 block">ROI minimum</label>
-                    <select className="w-full px-3 py-2 border rounded-md text-sm">
-                      <option>Tous ROI</option>
-                      <option>Plus de 15%</option>
-                      <option>Plus de 20%</option>
-                      <option>Plus de 25%</option>
-                    </select>
-                  </div>
-                  
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Durée</label>
-                    <select className="w-full px-3 py-2 border rounded-md text-sm">
-                      <option>Toutes durées</option>
-                      <option>Moins de 24 mois</option>
-                      <option>24 - 36 mois</option>
-                      <option>Plus de 36 mois</option>
+                    <select
+                      value={roiFilter}
+                      onChange={(e) => setRoiFilter(e.target.value)}
+                      className="w-full px-3 py-2 border rounded-md text-sm"
+                    >
+                      <option value="all">Tous ROI</option>
+                      <option value="gt15">Plus de 15%</option>
+                      <option value="gt20">Plus de 20%</option>
+                      <option value="gt25">Plus de 25%</option>
                     </select>
                   </div>
                 </div>
-                
-                <Button className="w-full mt-4">
+
+                <Button
+                  variant="outline"
+                  className="w-full mt-4"
+                  onClick={() => { setBudgetFilter('all'); setRoiFilter('all'); setSelectedType('all'); setSearchTerm(''); }}
+                >
                   <Filter className="w-4 h-4 mr-2" />
-                  Appliquer filtres
+                  Réinitialiser
                 </Button>
               </CardContent>
             </Card>
@@ -559,7 +480,7 @@ const InvestisseurOpportunites = () => {
                 <div className="text-center text-gray-500 py-4">
                   <Heart className="w-8 h-8 mx-auto mb-2 text-gray-400" />
                   <p className="text-sm">Aucun favori pour l'instant</p>
-                  <p className="text-xs mt-1">Sauvegardez vos opportunités préférées</p>
+                  <p className="text-xs mt-1">Bientôt disponible</p>
                 </div>
               </CardContent>
             </Card>

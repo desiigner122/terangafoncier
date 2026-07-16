@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Settings, 
-  User, 
-  Bell, 
-  Shield, 
+import {
+  Settings,
+  User,
+  Bell,
+  Shield,
   CreditCard,
   Database,
   Smartphone,
@@ -24,68 +24,223 @@ import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
-import { Progress } from '@/components/ui/progress';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Préférences locales (aucune table dédiée en base) — persistées honnêtement dans le
+// localStorage par utilisateur. Ne sont PAS synchronisées côté serveur.
+const DEFAULT_LOCAL_PREFS = {
+  notifications: {
+    emailAlerts: true,
+    smsAlerts: false,
+    pushNotifications: true,
+    weeklyReports: false,
+    monthlyAnalytics: false,
+    opportunityAlerts: true,
+    priceChangeAlerts: false,
+    newsUpdates: false
+  },
+  security: {
+    loginAlerts: true,
+    sessionTimeout: 30
+  },
+  preferences: {
+    language: 'fr',
+    currency: 'XOF',
+    timezone: 'Africa/Dakar',
+    dashboardTheme: 'light',
+    autoSave: true
+  },
+  investment: {
+    riskTolerance: 'moderate',
+    preferredSectors: ['residential', 'commercial'],
+    minInvestmentAmount: 0,
+    maxInvestmentAmount: 0,
+    autoInvestment: false
+  }
+};
 
 const InvestisseurSettings = () => {
+  const { user, profile } = useAuth();
   const [loading, setLoading] = useState(true);
   const [showPassword, setShowPassword] = useState(false);
   const [saveStatus, setSaveStatus] = useState(null);
+  const [passwordSaving, setPasswordSaving] = useState(false);
+  const [passwordError, setPasswordError] = useState(null);
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [activeInvestments, setActiveInvestments] = useState(null);
+
+  const prefsKey = user?.id ? `investor_prefs_${user.id}` : null;
 
   const [settings, setSettings] = useState({
     profile: {
-      fullName: 'Jean-Baptiste Senghor',
-      email: 'jb.senghor@investpro.sn',
-      phone: '+221 77 123 45 67',
-      address: 'Almadies, Dakar',
-      investorType: 'Premium',
-      registrationDate: '2023-03-15'
+      fullName: '',
+      email: '',
+      phone: '',
+      address: '',
+      registrationDate: null
     },
-    notifications: {
-      emailAlerts: true,
-      smsAlerts: true,
-      pushNotifications: true,
-      weeklyReports: true,
-      monthlyAnalytics: true,
-      opportunityAlerts: true,
-      priceChangeAlerts: false,
-      newsUpdates: true
-    },
-    security: {
-      twoFactorAuth: true,
-      loginAlerts: true,
-      sessionTimeout: 30,
-      passwordLastChanged: '2024-01-15',
-      trustedDevices: 3
-    },
-    preferences: {
-      language: 'fr',
-      currency: 'XOF',
-      timezone: 'Africa/Dakar',
-      dashboardTheme: 'light',
-      autoSave: true,
-      analyticsLevel: 'advanced'
-    },
-    investment: {
-      riskTolerance: 'moderate',
-      preferredSectors: ['residential', 'commercial'],
-      minInvestmentAmount: 50000000,
-      maxInvestmentAmount: 500000000,
-      autoInvestment: false,
-      investmentAlerts: true
-    }
+    ...DEFAULT_LOCAL_PREFS
   });
 
-  useEffect(() => {
-    setTimeout(() => setLoading(false), 1000);
-  }, []);
+  // Charge le profil réel (table profiles) + préférences locales
+  const loadData = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      return;
+    }
+    setLoading(true);
 
+    // Préférences locales honnêtes
+    let localPrefs = DEFAULT_LOCAL_PREFS;
+    try {
+      if (prefsKey) {
+        const stored = localStorage.getItem(prefsKey);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          localPrefs = {
+            notifications: { ...DEFAULT_LOCAL_PREFS.notifications, ...(parsed.notifications || {}) },
+            security: { ...DEFAULT_LOCAL_PREFS.security, ...(parsed.security || {}) },
+            preferences: { ...DEFAULT_LOCAL_PREFS.preferences, ...(parsed.preferences || {}) },
+            investment: { ...DEFAULT_LOCAL_PREFS.investment, ...(parsed.investment || {}) }
+          };
+        }
+      }
+    } catch (e) {
+      localPrefs = DEFAULT_LOCAL_PREFS;
+    }
+
+    // Profil réel depuis Supabase (fallback sur le profil du contexte)
+    let profileRow = profile || null;
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('id, email, full_name, first_name, last_name, phone, city, region, created_at')
+        .eq('id', user.id)
+        .maybeSingle();
+      if (!error && data) profileRow = data;
+    } catch (e) {
+      // garde le profil du contexte
+    }
+
+    const fullName =
+      profileRow?.full_name ||
+      [profileRow?.first_name, profileRow?.last_name].filter(Boolean).join(' ') ||
+      '';
+    const address = [profileRow?.city, profileRow?.region].filter(Boolean).join(', ');
+
+    setSettings({
+      profile: {
+        fullName,
+        email: profileRow?.email || user.email || '',
+        phone: profileRow?.phone || '',
+        address,
+        registrationDate: profileRow?.created_at || null
+      },
+      ...localPrefs
+    });
+
+    // Nombre réel d'investissements actifs (table investments, filtré investor_id)
+    try {
+      const { count } = await supabase
+        .from('investments')
+        .select('id', { count: 'exact', head: true })
+        .eq('investor_id', user.id)
+        .eq('status', 'active');
+      setActiveInvestments(count ?? 0);
+    } catch (e) {
+      setActiveInvestments(null);
+    }
+
+    setLoading(false);
+  }, [user?.id, user?.email, profile, prefsKey]);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
+  const persistLocalPrefs = (next) => {
+    if (!prefsKey) return;
+    try {
+      localStorage.setItem(
+        prefsKey,
+        JSON.stringify({
+          notifications: next.notifications,
+          security: next.security,
+          preferences: next.preferences,
+          investment: next.investment
+        })
+      );
+    } catch (e) {
+      // stockage indisponible — les préférences restent en mémoire
+    }
+  };
+
+  // Sauvegarde du profil → table profiles (données réelles).
+  // Les autres sections sont des préférences locales sans table → localStorage honnête.
   const handleSave = async (section) => {
     setSaveStatus('saving');
-    // Simulation d'une sauvegarde
-    setTimeout(() => {
+
+    if (section === 'profile') {
+      if (!user?.id) {
+        setSaveStatus(null);
+        return;
+      }
+      // Découpe l'adresse saisie "ville, region"
+      const parts = (settings.profile.address || '').split(',').map(s => s.trim());
+      const city = parts[0] || null;
+      const region = parts[1] || null;
+      try {
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            full_name: settings.profile.fullName || null,
+            phone: settings.profile.phone || null,
+            city,
+            region,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', user.id);
+        if (error) throw error;
+        setSaveStatus('success');
+      } catch (e) {
+        setSaveStatus(null);
+        return;
+      }
+      setTimeout(() => setSaveStatus(null), 2000);
+      return;
+    }
+
+    // Préférences locales
+    persistLocalPrefs(settings);
+    setSaveStatus('success');
+    setTimeout(() => setSaveStatus(null), 2000);
+  };
+
+  const handleChangePassword = async () => {
+    setPasswordError(null);
+    if (!newPassword || newPassword.length < 6) {
+      setPasswordError('Le mot de passe doit contenir au moins 6 caractères.');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setPasswordError('Les mots de passe ne correspondent pas.');
+      return;
+    }
+    setPasswordSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      if (error) throw error;
+      setNewPassword('');
+      setConfirmPassword('');
       setSaveStatus('success');
       setTimeout(() => setSaveStatus(null), 2000);
-    }, 1500);
+    } catch (e) {
+      setPasswordError(e?.message || 'Impossible de changer le mot de passe.');
+    } finally {
+      setPasswordSaving(false);
+    }
   };
 
   const handleInputChange = (section, field, value) => {
@@ -179,8 +334,9 @@ const InvestisseurSettings = () => {
                     <input
                       type="email"
                       value={settings.profile.email}
-                      onChange={(e) => handleInputChange('profile', 'email', e.target.value)}
-                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      readOnly
+                      title="L'email est géré via votre compte et ne peut être modifié ici."
+                      className="w-full p-3 border border-gray-200 bg-gray-50 text-gray-600 rounded-lg cursor-not-allowed"
                     />
                   </div>
                   <div className="space-y-2">
@@ -193,11 +349,12 @@ const InvestisseurSettings = () => {
                     />
                   </div>
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Adresse</label>
+                    <label className="text-sm font-medium text-gray-700">Ville / Région</label>
                     <input
                       type="text"
                       value={settings.profile.address}
                       onChange={(e) => handleInputChange('profile', 'address', e.target.value)}
+                      placeholder="Ex : Dakar, Dakar"
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -207,23 +364,17 @@ const InvestisseurSettings = () => {
 
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <label className="text-sm font-medium text-gray-700">Type d'Investisseur</label>
-                    <div className="flex items-center space-x-2">
-                      <Badge className="bg-gold-100 text-gold-800 px-3 py-1">
-                        {settings.profile.investorType}
-                      </Badge>
-                    </div>
-                  </div>
-                  <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Membre depuis</label>
                     <p className="text-gray-600">
-                      {new Date(settings.profile.registrationDate).toLocaleDateString('fr-FR')}
+                      {settings.profile.registrationDate
+                        ? new Date(settings.profile.registrationDate).toLocaleDateString('fr-FR')
+                        : '—'}
                     </p>
                   </div>
                 </div>
 
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     onClick={() => handleSave('profile')}
                     className="bg-blue-600 hover:bg-blue-700"
                   >
@@ -245,6 +396,9 @@ const InvestisseurSettings = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                <p className="text-xs text-gray-500">
+                  Préférences enregistrées localement sur cet appareil (non synchronisées entre appareils).
+                </p>
                 {Object.entries(settings.notifications).map(([key, value]) => {
                   const labels = {
                     emailAlerts: 'Alertes par Email',
@@ -274,7 +428,7 @@ const InvestisseurSettings = () => {
                 })}
 
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     onClick={() => handleSave('notifications')}
                     className="bg-green-600 hover:bg-green-700"
                   >
@@ -296,26 +450,7 @@ const InvestisseurSettings = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Authentification à deux facteurs */}
-                <div className="flex items-center justify-between p-4 border rounded-lg">
-                  <div>
-                    <h3 className="font-semibold text-gray-900">Authentification à Deux Facteurs</h3>
-                    <p className="text-sm text-gray-600">Sécurité renforcée pour votre compte</p>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    {settings.security.twoFactorAuth ? (
-                      <Badge className="bg-green-100 text-green-800">Activé</Badge>
-                    ) : (
-                      <Badge className="bg-red-100 text-red-800">Désactivé</Badge>
-                    )}
-                    <Switch
-                      checked={settings.security.twoFactorAuth}
-                      onCheckedChange={(checked) => handleInputChange('security', 'twoFactorAuth', checked)}
-                    />
-                  </div>
-                </div>
-
-                {/* Alertes de connexion */}
+                {/* Alertes de connexion (préférence locale) */}
                 <div className="flex items-center justify-between p-4 border rounded-lg">
                   <div>
                     <h3 className="font-semibold text-gray-900">Alertes de Connexion</h3>
@@ -327,7 +462,7 @@ const InvestisseurSettings = () => {
                   />
                 </div>
 
-                {/* Session timeout */}
+                {/* Session timeout (préférence locale) */}
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Délai d'expiration de session (minutes)</label>
                   <select
@@ -342,17 +477,19 @@ const InvestisseurSettings = () => {
                   </select>
                 </div>
 
-                {/* Changement de mot de passe */}
+                {/* Changement de mot de passe (Supabase Auth réel) */}
                 <div className="p-4 border rounded-lg">
                   <h3 className="font-semibold text-gray-900 mb-2">Changer le Mot de Passe</h3>
                   <p className="text-sm text-gray-600 mb-4">
-                    Dernier changement: {new Date(settings.security.passwordLastChanged).toLocaleDateString('fr-FR')}
+                    Votre mot de passe est mis à jour via votre compte sécurisé.
                   </p>
                   <div className="space-y-3">
                     <div className="relative">
                       <input
                         type={showPassword ? 'text' : 'password'}
                         placeholder="Nouveau mot de passe"
+                        value={newPassword}
+                        onChange={(e) => setNewPassword(e.target.value)}
                         className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent pr-10"
                       />
                       <button
@@ -366,17 +503,29 @@ const InvestisseurSettings = () => {
                     <input
                       type="password"
                       placeholder="Confirmer le nouveau mot de passe"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
-                    <Button className="bg-red-600 hover:bg-red-700">
+                    {passwordError && (
+                      <p className="text-sm text-red-600 flex items-center">
+                        <AlertTriangle className="h-4 w-4 mr-1" />
+                        {passwordError}
+                      </p>
+                    )}
+                    <Button
+                      className="bg-red-600 hover:bg-red-700"
+                      onClick={handleChangePassword}
+                      disabled={passwordSaving}
+                    >
                       <Lock className="h-4 w-4 mr-2" />
-                      Changer le Mot de Passe
+                      {passwordSaving ? 'Mise à jour...' : 'Changer le Mot de Passe'}
                     </Button>
                   </div>
                 </div>
 
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     onClick={() => handleSave('security')}
                     className="bg-red-600 hover:bg-red-700"
                   >
@@ -398,6 +547,9 @@ const InvestisseurSettings = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <p className="text-xs text-gray-500">
+                  Préférences enregistrées localement sur cet appareil.
+                </p>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div className="space-y-2">
                     <label className="text-sm font-medium text-gray-700">Langue</label>
@@ -464,7 +616,7 @@ const InvestisseurSettings = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     onClick={() => handleSave('preferences')}
                     className="bg-purple-600 hover:bg-purple-700"
                   >
@@ -486,6 +638,9 @@ const InvestisseurSettings = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
+                <p className="text-xs text-gray-500">
+                  Critères enregistrés localement pour filtrer vos opportunités.
+                </p>
                 <div className="space-y-2">
                   <label className="text-sm font-medium text-gray-700">Tolérance au Risque</label>
                   <select
@@ -517,8 +672,8 @@ const InvestisseurSettings = () => {
                           }}
                           className="rounded border-gray-300"
                         />
-                        <span className="capitalize">{sector === 'residential' ? 'Résidentiel' : 
-                          sector === 'commercial' ? 'Commercial' : 
+                        <span className="capitalize">{sector === 'residential' ? 'Résidentiel' :
+                          sector === 'commercial' ? 'Commercial' :
                           sector === 'industrial' ? 'Industriel' : 'Agricole'}</span>
                       </label>
                     ))}
@@ -531,7 +686,7 @@ const InvestisseurSettings = () => {
                     <input
                       type="number"
                       value={settings.investment.minInvestmentAmount}
-                      onChange={(e) => handleInputChange('investment', 'minInvestmentAmount', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('investment', 'minInvestmentAmount', parseInt(e.target.value) || 0)}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -541,7 +696,7 @@ const InvestisseurSettings = () => {
                     <input
                       type="number"
                       value={settings.investment.maxInvestmentAmount}
-                      onChange={(e) => handleInputChange('investment', 'maxInvestmentAmount', parseInt(e.target.value))}
+                      onChange={(e) => handleInputChange('investment', 'maxInvestmentAmount', parseInt(e.target.value) || 0)}
                       className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
@@ -559,7 +714,7 @@ const InvestisseurSettings = () => {
                 </div>
 
                 <div className="flex justify-end">
-                  <Button 
+                  <Button
                     onClick={() => handleSave('investment')}
                     className="bg-orange-600 hover:bg-orange-700"
                   >
@@ -581,194 +736,28 @@ const InvestisseurSettings = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
-                {/* Plan actuel */}
-                <div className="p-6 bg-gradient-to-r from-blue-50 to-cyan-50 rounded-lg border">
-                  <div className="flex items-center justify-between mb-4">
-                    <div>
-                      <h3 className="text-xl font-bold text-gray-900">Plan Investisseur Premium</h3>
-                      <p className="text-gray-600">Abonnement mensuel actuel</p>
-                    </div>
-                    <Badge className="bg-green-100 text-green-800 px-4 py-2">
-                      ✓ Actif
-                    </Badge>
+                {/* Résumé réel du compte */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="p-6 bg-gray-50 rounded-lg border text-center">
+                    <p className="text-3xl font-bold text-gray-900">
+                      {activeInvestments === null ? '—' : activeInvestments}
+                    </p>
+                    <p className="text-sm text-gray-600 mt-1">Investissements actifs</p>
                   </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-blue-600">100,000 XOF</p>
-                      <p className="text-sm text-gray-600">par mois</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-gray-900">12</p>
-                      <p className="text-sm text-gray-600">investissements actifs</p>
-                    </div>
-                    <div className="text-center">
-                      <p className="text-2xl font-bold text-green-600">Illimité</p>
-                      <p className="text-sm text-gray-600">opportunités</p>
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <Check className="h-4 w-4 text-green-600 mr-2" />
-                        <span>Analyse IA avancée</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Check className="h-4 w-4 text-green-600 mr-2" />
-                        <span>Blockchain & smart contracts</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Check className="h-4 w-4 text-green-600 mr-2" />
-                        <span>Support expert dédié</span>
-                      </div>
-                    </div>
-                    <div className="space-y-2">
-                      <div className="flex items-center">
-                        <Check className="h-4 w-4 text-green-600 mr-2" />
-                        <span>Rapports personnalisés</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Check className="h-4 w-4 text-green-600 mr-2" />
-                        <span>API d'intégration</span>
-                      </div>
-                      <div className="flex items-center">
-                        <Check className="h-4 w-4 text-green-600 mr-2" />
-                        <span>Accès prioritaire</span>
-                      </div>
-                    </div>
+                  <div className="p-6 bg-gray-50 rounded-lg border text-center">
+                    <p className="text-3xl font-bold text-green-600">Illimité</p>
+                    <p className="text-sm text-gray-600 mt-1">Accès aux opportunités</p>
                   </div>
                 </div>
 
-                {/* Informations facturation */}
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Informations de Facturation</h4>
-                    <div className="space-y-3">
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Prochain paiement</span>
-                        <span className="font-semibold">20 Février 2024</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Méthode de paiement</span>
-                        <span className="font-semibold">**** 1234 (Visa)</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-600">Statut</span>
-                        <Badge className="bg-green-100 text-green-800">À jour</Badge>
-                      </div>
-                    </div>
-                    <Button variant="outline" className="w-full">
-                      Modifier le mode de paiement
-                    </Button>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h4 className="font-semibold text-gray-900">Utilisation du Mois</h4>
-                    <div className="space-y-3">
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">Analyses IA utilisées</span>
-                          <span className="text-sm font-semibold">47/100</span>
-                        </div>
-                        <Progress value={47} className="h-2" />
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">Rapports générés</span>
-                          <span className="text-sm font-semibold">12/50</span>
-                        </div>
-                        <Progress value={24} className="h-2" />
-                      </div>
-                      <div>
-                        <div className="flex justify-between mb-1">
-                          <span className="text-sm text-gray-600">Appels API</span>
-                          <span className="text-sm font-semibold">2,847/10,000</span>
-                        </div>
-                        <Progress value={28} className="h-2" />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Actions */}
-                <div className="flex flex-col sm:flex-row gap-3 pt-4 border-t">
-                  <Button className="bg-blue-600 hover:bg-blue-700">
-                    Passer au plan Entreprise
-                  </Button>
-                  <Button variant="outline">
-                    Télécharger la facture
-                  </Button>
-                  <Button variant="outline">
-                    Historique des paiements
-                  </Button>
-                  <Button variant="outline" className="text-red-600 border-red-200 hover:bg-red-50">
-                    Annuler l'abonnement
-                  </Button>
-                </div>
-
-                {/* Plans disponibles */}
-                <div className="pt-6 border-t">
-                  <h4 className="font-semibold text-gray-900 mb-4">Autres Plans Disponibles</h4>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="p-4 border rounded-lg">
-                      <div className="text-center mb-4">
-                        <h5 className="font-bold text-lg">Plan Entreprise</h5>
-                        <p className="text-2xl font-bold text-purple-600">250,000 XOF</p>
-                        <p className="text-sm text-gray-600">par mois</p>
-                      </div>
-                      <ul className="space-y-2 text-sm mb-4">
-                        <li className="flex items-center">
-                          <Check className="h-4 w-4 text-green-600 mr-2" />
-                          Tout du plan Premium
-                        </li>
-                        <li className="flex items-center">
-                          <Check className="h-4 w-4 text-green-600 mr-2" />
-                          Multi-utilisateurs (5)
-                        </li>
-                        <li className="flex items-center">
-                          <Check className="h-4 w-4 text-green-600 mr-2" />
-                          API avancée
-                        </li>
-                        <li className="flex items-center">
-                          <Check className="h-4 w-4 text-green-600 mr-2" />
-                          Support 24/7
-                        </li>
-                      </ul>
-                      <Button variant="outline" className="w-full">
-                        Passer à Entreprise
-                      </Button>
-                    </div>
-
-                    <div className="p-4 border rounded-lg">
-                      <div className="text-center mb-4">
-                        <h5 className="font-bold text-lg">Plan Institutional</h5>
-                        <p className="text-2xl font-bold text-gold-600">Sur mesure</p>
-                        <p className="text-sm text-gray-600">contact requis</p>
-                      </div>
-                      <ul className="space-y-2 text-sm mb-4">
-                        <li className="flex items-center">
-                          <Check className="h-4 w-4 text-green-600 mr-2" />
-                          Solution sur mesure
-                        </li>
-                        <li className="flex items-center">
-                          <Check className="h-4 w-4 text-green-600 mr-2" />
-                          Intégrations personnalisées
-                        </li>
-                        <li className="flex items-center">
-                          <Check className="h-4 w-4 text-green-600 mr-2" />
-                          Formation incluse
-                        </li>
-                        <li className="flex items-center">
-                          <Check className="h-4 w-4 text-green-600 mr-2" />
-                          Manager dédié
-                        </li>
-                      </ul>
-                      <Button variant="outline" className="w-full">
-                        Nous contacter
-                      </Button>
-                    </div>
-                  </div>
+                {/* Facturation / plans : pas de système d'abonnement en base */}
+                <div className="p-8 border border-dashed rounded-lg text-center">
+                  <CreditCard className="h-10 w-10 text-gray-300 mx-auto mb-3" />
+                  <h3 className="font-semibold text-gray-900">Facturation et plans</h3>
+                  <p className="text-sm text-gray-600 mt-2 max-w-md mx-auto">
+                    La gestion des abonnements, des paiements et de la facturation sera bientôt disponible.
+                    Aucune donnée de facturation n'est associée à votre compte pour le moment.
+                  </p>
                 </div>
               </CardContent>
             </Card>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Hammer, 
-  Clock, 
-  Users, 
-  Truck, 
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import {
+  Hammer,
+  Clock,
+  Users,
+  Truck,
   AlertTriangle,
   CheckCircle,
   Calendar,
@@ -24,119 +26,123 @@ import {
   Edit,
   Plus,
   Filter,
-  Download
+  Download,
+  Loader2,
+  TrendingUp,
+  Wallet
 } from 'lucide-react';
 
 const PromoteurChantiers = () => {
+  const { user } = useAuth();
   const [selectedSite, setSelectedSite] = useState(null);
   const [activeTab, setActiveTab] = useState('active');
+  const [loading, setLoading] = useState(true);
 
-  // Chantiers actifs
-  const activeSites = [
-    {
-      id: 1,
-      name: 'Résidence Teranga',
-      location: 'Almadies, Dakar',
-      type: 'Résidentiel',
-      status: 'En cours',
-      progress: 75,
-      startDate: '2024-01-15',
-      plannedEnd: '2025-06-30',
-      currentPhase: 'Finitions intérieures',
-      budget: 2800000000,
-      spent: 2100000000,
-      workers: 45,
-      contractor: 'BTP Sénégal SARL',
-      supervisor: 'Ing. Mamadou Fall',
-      supervisorPhone: '+221 77 123 45 67',
-      lastInspection: '2024-12-10',
-      nextMilestone: 'Livraison étage 2 - 20 Déc',
-      issues: 2,
-      safetyScore: 92,
-      images: 24,
-      units: 24,
-      unitsCompleted: 18
-    },
-    {
-      id: 2,
-      name: 'Complexe Commercial VDN',
-      location: 'VDN, Dakar',
-      type: 'Commercial',
-      status: 'En cours',
-      progress: 45,
-      startDate: '2024-03-10',
-      plannedEnd: '2025-12-15',
-      currentPhase: 'Gros œuvre niveau 2',
-      budget: 5200000000,
-      spent: 2340000000,
-      workers: 78,
-      contractor: 'Teranga Construction',
-      supervisor: 'Ing. Aïssatou Diop',
-      supervisorPhone: '+221 77 234 56 78',
-      lastInspection: '2024-12-08',
-      nextMilestone: 'Coulage dalle niveau 3 - 28 Déc',
-      issues: 1,
-      safetyScore: 88,
-      images: 42,
-      units: 12,
-      unitsCompleted: 5
-    },
-    {
-      id: 3,
-      name: 'Entrepôt Logistics',
-      location: 'Rufisque',
-      type: 'Industriel',
-      status: 'Retard',
-      progress: 35,
-      startDate: '2024-05-20',
-      plannedEnd: '2025-08-30',
-      currentPhase: 'Charpente métallique',
-      budget: 1800000000,
-      spent: 630000000,
-      workers: 32,
-      contractor: 'Metal Pro Sénégal',
-      supervisor: 'Ing. Ousmane Sarr',
-      supervisorPhone: '+221 77 345 67 89',
-      lastInspection: '2024-12-05',
-      nextMilestone: 'Montage charpente - 15 Jan',
-      issues: 4,
-      safetyScore: 85,
-      images: 18,
-      units: 1,
-      unitsCompleted: 0
-    }
-  ];
+  // Chantiers (developer_projects) et ventes (project_sales) réels
+  const [activeSites, setActiveSites] = useState([]);
+  const [completedSites, setCompletedSites] = useState([]);
+  const [constructionRequests, setConstructionRequests] = useState(0);
 
-  // Chantiers terminés
-  const completedSites = [
-    {
-      id: 4,
-      name: 'Villa Duplex Mermoz',
-      location: 'Mermoz, Dakar',
-      type: 'Résidentiel',
-      status: 'Terminé',
-      progress: 100,
-      startDate: '2023-06-15',
-      completedDate: '2024-11-30',
-      budget: 180000000,
-      finalCost: 172000000,
-      contractor: 'Fall Construction',
-      quality: 'Excellent',
-      clientSatisfaction: 4.8
-    }
-  ];
+  // Statistiques agrégées (données réelles Supabase)
+  const [siteStats, setSiteStats] = useState({
+    totalActive: 0,
+    totalCompleted: 0,
+    totalBudget: 0,
+    totalSpent: 0,
+    averageProgress: 0,
+    onTime: 0,
+    delayed: 0
+  });
 
-  // Statistiques générales
-  const siteStats = {
-    totalActive: 8,
-    totalWorkers: 234,
-    totalBudget: 12400000000,
-    averageProgress: 62,
-    onTime: 6,
-    delayed: 2,
-    safetyIncidents: 3,
-    averageSafetyScore: 88
+  // Statut « terminé »
+  const isDone = (s) =>
+    ['completed', 'terminé', 'termine', 'delivered', 'livré', 'livre', 'done'].includes(
+      String(s || '').toLowerCase()
+    );
+
+  // Un chantier est en retard si la fin prévue est dépassée et l'avancement < 100
+  const isDelayed = (site) => {
+    if (!site.estimated_completion) return false;
+    if ((site.progress || 0) >= 100) return false;
+    return new Date(site.estimated_completion) < new Date();
   };
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Projets / chantiers du promoteur
+        const { data: projects } = await supabase
+          .from('developer_projects')
+          .select('*')
+          .eq('developer_id', user.id)
+          .order('created_at', { ascending: false });
+
+        // Ventes du promoteur (pour compter les lots vendus par projet)
+        const { data: sales } = await supabase
+          .from('project_sales')
+          .select('project_id, status')
+          .eq('promoteur_id', user.id);
+
+        // Demandes de construction associées au promoteur
+        const { count: reqCount } = await supabase
+          .from('construction_requests')
+          .select('id', { count: 'exact', head: true })
+          .eq('user_id', user.id);
+
+        const projectList = projects || [];
+        const salesList = sales || [];
+
+        // Lots vendus par projet (statuts sold / delivered)
+        const soldByProject = {};
+        const totalByProject = {};
+        salesList.forEach((s) => {
+          totalByProject[s.project_id] = (totalByProject[s.project_id] || 0) + 1;
+          if (['sold', 'delivered'].includes(String(s.status || '').toLowerCase())) {
+            soldByProject[s.project_id] = (soldByProject[s.project_id] || 0) + 1;
+          }
+        });
+
+        const active = projectList.filter((p) => !isDone(p.status));
+        const completed = projectList.filter((p) => isDone(p.status));
+
+        const withSales = (p) => ({
+          ...p,
+          soldUnits: soldByProject[p.id] || 0,
+          totalUnits: totalByProject[p.id] || 0
+        });
+
+        setActiveSites(active.map(withSales));
+        setCompletedSites(completed.map(withSales));
+        setConstructionRequests(reqCount || 0);
+
+        const totalBudget = projectList.reduce((s, p) => s + (Number(p.budget) || 0), 0);
+        const totalSpent = projectList.reduce((s, p) => s + (Number(p.spent) || 0), 0);
+        const avgProgress = active.length
+          ? Math.round(active.reduce((s, p) => s + (Number(p.progress) || 0), 0) / active.length)
+          : 0;
+        const delayedCount = active.filter(isDelayed).length;
+
+        setSiteStats({
+          totalActive: active.length,
+          totalCompleted: completed.length,
+          totalBudget,
+          totalSpent,
+          averageProgress: avgProgress,
+          onTime: active.length - delayedCount,
+          delayed: delayedCount
+        });
+      } catch (err) {
+        console.error('Erreur chargement chantiers:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.id]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -144,21 +150,34 @@ const PromoteurChantiers = () => {
       currency: 'XOF',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
+  // Libellé lisible du statut brut
+  const getStatusLabel = (status, site) => {
+    if (site && isDelayed(site)) return 'Retard';
+    const s = String(status || '').toLowerCase();
+    if (['completed', 'terminé', 'termine', 'delivered', 'livré', 'livre', 'done'].includes(s)) return 'Terminé';
+    if (['in_progress', 'en_cours', 'en cours', 'ongoing', 'active'].includes(s)) return 'En cours';
+    if (['planning', 'planned', 'planification', 'draft'].includes(s)) return 'Planification';
+    if (['suspended', 'on_hold', 'suspendu', 'paused'].includes(s)) return 'Suspendu';
+    if (['delayed', 'retard', 'late'].includes(s)) return 'Retard';
+    return status || '—';
+  };
+
+  const getStatusColor = (label) => {
+    switch (label) {
       case 'En cours': return 'bg-blue-100 text-blue-800';
       case 'Retard': return 'bg-red-100 text-red-800';
       case 'Terminé': return 'bg-green-100 text-green-800';
       case 'Suspendu': return 'bg-yellow-100 text-yellow-800';
+      case 'Planification': return 'bg-purple-100 text-purple-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getStatusIcon = (status) => {
-    switch (status) {
+  const getStatusIcon = (label) => {
+    switch (label) {
       case 'En cours': return <Clock className="w-4 h-4" />;
       case 'Retard': return <AlertTriangle className="w-4 h-4" />;
       case 'Terminé': return <CheckCircle className="w-4 h-4" />;
@@ -167,16 +186,8 @@ const PromoteurChantiers = () => {
     }
   };
 
-  const getTypeColor = (type) => {
-    switch (type) {
-      case 'Résidentiel': return 'bg-blue-100 text-blue-800';
-      case 'Commercial': return 'bg-green-100 text-green-800';
-      case 'Industriel': return 'bg-orange-100 text-orange-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
   const formatDate = (dateString) => {
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'short',
@@ -185,12 +196,21 @@ const PromoteurChantiers = () => {
   };
 
   const calculateDelay = (plannedEnd) => {
+    if (!plannedEnd) return 0;
     const today = new Date();
     const planned = new Date(plannedEnd);
     const diffTime = planned - today;
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
     return diffDays;
   };
+
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-white flex items-center justify-center p-12">
+        <Loader2 className="w-8 h-8 text-orange-600 animate-spin" />
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full bg-white">
@@ -199,13 +219,19 @@ const PromoteurChantiers = () => {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-gray-900">Gestion des Chantiers</h1>
-            <p className="text-gray-600">Suivi en temps réel de vos chantiers de construction</p>
+            <p className="text-gray-600">Suivi de vos chantiers de construction</p>
           </div>
           <div className="flex items-center space-x-2">
             <Badge className="bg-blue-100 text-blue-800">
               <Hammer className="w-3 h-3 mr-1" />
               {siteStats.totalActive} chantiers actifs
             </Badge>
+            {constructionRequests > 0 && (
+              <Badge className="bg-purple-100 text-purple-800">
+                <FileText className="w-3 h-3 mr-1" />
+                {constructionRequests} demandes
+              </Badge>
+            )}
           </div>
         </div>
 
@@ -226,6 +252,9 @@ const PromoteurChantiers = () => {
                 <div className="flex items-center text-sm">
                   <CheckCircle className="w-4 h-4 text-green-500 mr-1" />
                   <span className="text-green-600">{siteStats.onTime} dans les temps</span>
+                  {siteStats.delayed > 0 && (
+                    <span className="text-red-600 ml-2">• {siteStats.delayed} en retard</span>
+                  )}
                 </div>
               </div>
             </CardContent>
@@ -235,15 +264,16 @@ const PromoteurChantiers = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Ouvriers</p>
-                  <p className="text-2xl font-bold text-gray-900">{siteStats.totalWorkers}</p>
+                  <p className="text-sm font-medium text-gray-600">Avancement Moyen</p>
+                  <p className="text-2xl font-bold text-gray-900">{siteStats.averageProgress}%</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Users className="w-6 h-6 text-green-600" />
+                  <TrendingUp className="w-6 h-6 text-green-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-sm text-gray-600">Tous chantiers confondus</span>
+                <Progress value={siteStats.averageProgress} className="h-2" />
+                <span className="text-xs text-gray-500 mt-1">Chantiers en cours</span>
               </div>
             </CardContent>
           </Card>
@@ -268,16 +298,21 @@ const PromoteurChantiers = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Sécurité</p>
-                  <p className="text-2xl font-bold text-gray-900">{siteStats.averageSafetyScore}%</p>
+                  <p className="text-sm font-medium text-gray-600">Total Dépensé</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {formatCurrency(siteStats.totalSpent)}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6 text-orange-600" />
+                  <Wallet className="w-6 h-6 text-orange-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <Progress value={siteStats.averageSafetyScore} className="h-2" />
-                <span className="text-xs text-gray-500 mt-1">Score moyen sécurité</span>
+                <Progress
+                  value={siteStats.totalBudget ? Math.min(100, Math.round((siteStats.totalSpent / siteStats.totalBudget) * 100)) : 0}
+                  className="h-2"
+                />
+                <span className="text-xs text-gray-500 mt-1">Consommation du budget</span>
               </div>
             </CardContent>
           </Card>
@@ -314,8 +349,17 @@ const PromoteurChantiers = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {activeSites.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Hammer className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium">Aucun chantier actif</p>
+                    <p className="text-sm">Vos projets de construction en cours apparaîtront ici.</p>
+                  </div>
+                ) : (
                 <div className="space-y-6">
-                  {activeSites.map((site) => (
+                  {activeSites.map((site) => {
+                    const statusLabel = getStatusLabel(site.status, site);
+                    return (
                     <motion.div
                       key={site.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -329,55 +373,45 @@ const PromoteurChantiers = () => {
                           </div>
                           <div>
                             <h3 className="font-semibold text-lg text-gray-900 mb-1">
-                              {site.name}
+                              {site.title}
                             </h3>
                             <div className="flex items-center space-x-4 text-sm text-gray-600 mb-2">
                               <div className="flex items-center">
                                 <MapPin className="w-4 h-4 mr-1" />
-                                {site.location}
+                                {site.location || '—'}
                               </div>
-                              <div className="flex items-center">
-                                <Building className="w-4 h-4 mr-1" />
-                                {site.contractor}
-                              </div>
-                              <div className="flex items-center">
-                                <Users className="w-4 h-4 mr-1" />
-                                {site.workers} ouvriers
-                              </div>
+                              {site.client && (
+                                <div className="flex items-center">
+                                  <Building className="w-4 h-4 mr-1" />
+                                  {site.client}
+                                </div>
+                              )}
                             </div>
                             <p className="text-sm text-gray-600 mb-3">
-                              Phase actuelle: <strong>{site.currentPhase}</strong>
+                              Phase actuelle: <strong>{site.current_phase || '—'}</strong>
                             </p>
-                            
+
                             {/* Badges */}
                             <div className="flex items-center space-x-2">
-                              <Badge className={getTypeColor(site.type)}>
-                                {site.type}
+                              <Badge className={getStatusColor(statusLabel)}>
+                                {getStatusIcon(statusLabel)}
+                                <span className="ml-1">{statusLabel}</span>
                               </Badge>
-                              <Badge className={getStatusColor(site.status)}>
-                                {getStatusIcon(site.status)}
-                                <span className="ml-1">{site.status}</span>
-                              </Badge>
-                              {site.issues > 0 && (
-                                <Badge className="bg-red-100 text-red-800">
-                                  {site.issues} problèmes
-                                </Badge>
-                              )}
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="text-right">
                           <div className="text-2xl font-bold text-blue-600 mb-1">
-                            {site.progress}%
+                            {site.progress || 0}%
                           </div>
                           <div className="text-sm text-gray-500">Avancement</div>
                           <div className="text-sm text-gray-500 mt-2">
-                            Fin prévue: {formatDate(site.plannedEnd)}
+                            Fin prévue: {formatDate(site.estimated_completion)}
                           </div>
-                          {calculateDelay(site.plannedEnd) < 0 && (
+                          {calculateDelay(site.estimated_completion) < 0 && (site.progress || 0) < 100 && (
                             <div className="text-sm text-red-600 font-medium">
-                              Retard: {Math.abs(calculateDelay(site.plannedEnd))} jours
+                              Retard: {Math.abs(calculateDelay(site.estimated_completion))} jours
                             </div>
                           )}
                         </div>
@@ -387,12 +421,9 @@ const PromoteurChantiers = () => {
                       <div className="mb-4">
                         <div className="flex items-center justify-between text-sm mb-2">
                           <span className="text-gray-600">Progression du chantier</span>
-                          <span className="font-medium">{site.progress}%</span>
+                          <span className="font-medium">{site.progress || 0}%</span>
                         </div>
-                        <Progress value={site.progress} className="h-3 mb-2" />
-                        <p className="text-xs text-blue-600">
-                          Prochaine étape: {site.nextMilestone}
-                        </p>
+                        <Progress value={site.progress || 0} className="h-3 mb-2" />
                       </div>
 
                       {/* Métriques */}
@@ -408,42 +439,19 @@ const PromoteurChantiers = () => {
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Unités</p>
+                          <p className="text-xs text-gray-500">Lots vendus</p>
                           <p className="font-semibold">
-                            {site.unitsCompleted}/{site.units}
+                            {site.totalUnits > 0 ? `${site.soldUnits}/${site.totalUnits}` : '—'}
                           </p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Sécurité</p>
-                          <p className="font-semibold text-green-600">{site.safetyScore}%</p>
-                        </div>
-                      </div>
-
-                      {/* Équipe */}
-                      <div className="mb-4 p-3 bg-gray-50 rounded-lg">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">
-                              Superviseur: {site.supervisor}
-                            </p>
-                            <p className="text-sm text-gray-600">
-                              Dernière inspection: {formatDate(site.lastInspection)}
-                            </p>
-                          </div>
-                          <Button variant="outline" size="sm">
-                            <Phone className="w-4 h-4 mr-2" />
-                            Appeler
-                          </Button>
+                          <p className="text-xs text-gray-500">Démarré le</p>
+                          <p className="font-semibold">{formatDate(site.start_date)}</p>
                         </div>
                       </div>
 
                       {/* Actions */}
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3 text-sm text-gray-600">
-                          <span>{site.images} photos</span>
-                          <span>•</span>
-                          <span>Démarré le {formatDate(site.startDate)}</span>
-                        </div>
+                      <div className="flex items-center justify-end pt-2 border-t">
                         <div className="flex space-x-2">
                           <Button variant="outline" size="sm">
                             <Camera className="w-4 h-4 mr-2" />
@@ -460,8 +468,10 @@ const PromoteurChantiers = () => {
                         </div>
                       </div>
                     </motion.div>
-                  ))}
+                    );
+                  })}
                 </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -473,38 +483,44 @@ const PromoteurChantiers = () => {
                 <CardTitle>Chantiers Terminés</CardTitle>
               </CardHeader>
               <CardContent>
+                {completedSites.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <CheckCircle className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium">Aucun chantier terminé</p>
+                    <p className="text-sm">Vos chantiers livrés apparaîtront ici.</p>
+                  </div>
+                ) : (
                 <div className="space-y-4">
-                  {completedSites.map((site) => (
+                  {completedSites.map((site) => {
+                    const saving = (Number(site.budget) || 0) - (Number(site.spent) || 0);
+                    return (
                     <div key={site.id} className="border rounded-lg p-4">
                       <div className="flex items-center justify-between">
                         <div>
-                          <h3 className="font-semibold text-gray-900">{site.name}</h3>
-                          <p className="text-sm text-gray-600">{site.location}</p>
+                          <h3 className="font-semibold text-gray-900">{site.title}</h3>
+                          <p className="text-sm text-gray-600">{site.location || '—'}</p>
                           <div className="flex items-center space-x-4 mt-2">
-                            <Badge className={getTypeColor(site.type)}>
-                              {site.type}
-                            </Badge>
                             <Badge className="bg-green-100 text-green-800">
                               Terminé
                             </Badge>
                           </div>
                         </div>
                         <div className="text-right">
-                          <p className="text-lg font-bold text-green-600">
-                            {formatCurrency(site.budget - site.finalCost)} économisé
-                          </p>
+                          {site.budget != null && site.spent != null && (
+                            <p className={`text-lg font-bold ${saving >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                              {formatCurrency(Math.abs(saving))} {saving >= 0 ? 'économisé' : 'dépassement'}
+                            </p>
+                          )}
                           <p className="text-sm text-gray-500">
-                            Terminé le {formatDate(site.completedDate)}
+                            Fin: {formatDate(site.estimated_completion || site.updated_at)}
                           </p>
-                          <div className="flex items-center mt-1">
-                            <span className="text-sm text-gray-600 mr-2">Satisfaction:</span>
-                            <span className="font-semibold text-blue-600">{site.clientSatisfaction}/5</span>
-                          </div>
                         </div>
                       </div>
                     </div>
-                  ))}
+                    );
+                  })}
                 </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -526,8 +542,8 @@ const PromoteurChantiers = () => {
                 <span className="text-sm">Galerie Photos</span>
               </Button>
               <Button variant="outline" className="h-16 flex flex-col">
-                <AlertTriangle className="w-5 h-5 mb-1" />
-                <span className="text-sm">Incidents Sécurité</span>
+                <FileText className="w-5 h-5 mb-1" />
+                <span className="text-sm">Demandes de Construction</span>
               </Button>
               <Button variant="outline" className="h-16 flex flex-col">
                 <FileText className="w-5 h-5 mb-1" />

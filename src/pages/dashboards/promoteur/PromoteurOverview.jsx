@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { 
-  Building2, 
-  TrendingUp, 
-  DollarSign, 
-  Users, 
-  BarChart3, 
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import {
+  Building2,
+  TrendingUp,
+  DollarSign,
+  Users,
+  BarChart3,
   Calendar,
   MapPin,
   Target,
@@ -25,125 +27,141 @@ import {
   Hammer,
   Home,
   Truck,
-  PieChart
+  PieChart,
+  Loader2
 } from 'lucide-react';
 
 const PromoteurOverview = () => {
+  const { user } = useAuth();
   const [timeframe, setTimeframe] = useState('30d');
+  const [loading, setLoading] = useState(true);
 
-  // Statistiques générales
-  const businessStats = {
-    totalRevenue: 4200000,
-    monthlyGrowth: 12.8,
-    activeProjects: 8,
-    totalClients: 156,
-    completedProjects: 24,
-    averageMargin: 22.5,
-    yearlyGrowth: 28.3
-  };
+  // KPI agrégés (données réelles Supabase)
+  const [businessStats, setBusinessStats] = useState({
+    totalBudget: 0,
+    totalSpent: 0,
+    salesRevenue: 0,
+    activeProjects: 0,
+    completedProjects: 0,
+    totalClients: 0,
+    totalSales: 0,
+    monthSales: 0
+  });
 
-  // Projets actifs
-  const activeProjects = [
-    {
-      id: 1,
-      name: 'Résidence Teranga',
-      location: 'Almadies, Dakar',
-      type: 'Résidentiel',
-      status: 'En construction',
-      progress: 75,
-      budget: 2800000,
-      revenue: 3200000,
-      margin: 400000,
-      startDate: '2024-01-15',
-      expectedCompletion: '2025-06-30',
-      unitsTotal: 24,
-      unitsSold: 18,
-      clientsCount: 18,
-      nextMilestone: 'Finitions intérieures'
-    },
-    {
-      id: 2,
-      name: 'Complexe Commercial VDN',
-      location: 'VDN, Dakar',
-      type: 'Commercial',
-      status: 'En cours',
-      progress: 45,
-      budget: 5200000,
-      revenue: 6500000,
-      margin: 1300000,
-      startDate: '2024-03-10',
-      expectedCompletion: '2025-12-15',
-      unitsTotal: 12,
-      unitsSold: 8,
-      clientsCount: 8,
-      nextMilestone: 'Gros œuvre niveau 2'
-    },
-    {
-      id: 3,
-      name: 'Lotissement Moderne',
-      location: 'Diamaguène, Sicap',
-      type: 'Foncier',
-      status: 'Commercialisation',
-      progress: 90,
-      budget: 1800000,
-      revenue: 2400000,
-      margin: 600000,
-      startDate: '2023-08-20',
-      expectedCompletion: '2024-12-30',
-      unitsTotal: 30,
-      unitsSold: 25,
-      clientsCount: 25,
-      nextMilestone: 'Finalisation actes'
-    }
-  ];
+  // Projets actifs (developer_projects)
+  const [activeProjects, setActiveProjects] = useState([]);
 
-  // Activités récentes
-  const recentActivities = [
-    {
-      id: 1,
-      type: 'sale',
-      title: 'Nouvelle vente',
-      description: 'Villa T4 - Résidence Teranga',
-      time: '2 heures',
-      amount: 185000000,
-      positive: true
-    },
-    {
-      id: 2,
-      type: 'milestone',
-      title: 'Étape terminée',
-      description: 'Gros œuvre - Complexe VDN',
-      time: '1 jour',
-      positive: true
-    },
-    {
-      id: 3,
-      type: 'payment',
-      title: 'Paiement reçu',
-      description: 'Acompte - Lotissement Moderne',
-      time: '2 jours',
-      amount: 45000000,
-      positive: true
-    },
-    {
-      id: 4,
-      type: 'issue',
-      title: 'Retard signalé',
-      description: 'Livraison matériaux - Projet Teranga',
-      time: '3 jours',
-      positive: false
-    }
-  ];
+  // Ventes récentes (project_sales)
+  const [recentSales, setRecentSales] = useState([]);
 
-  // Ventes par mois (6 derniers mois)
-  const salesData = [
-    { month: 'Jul', sales: 8, revenue: 1200000 },
-    { month: 'Août', sales: 12, revenue: 1800000 },
-    { month: 'Sep', sales: 15, revenue: 2200000 },
-    { month: 'Oct', sales: 10, revenue: 1650000 },
-    { month: 'Nov', sales: 18, revenue: 2850000 },
-    { month: 'Déc', sales: 22, revenue: 3400000 }
-  ];
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        // Projets du promoteur
+        const { data: projects } = await supabase
+          .from('developer_projects')
+          .select('*')
+          .eq('developer_id', user.id)
+          .order('created_at', { ascending: false });
+
+        // Ventes du promoteur
+        const { data: sales } = await supabase
+          .from('project_sales')
+          .select('*')
+          .eq('promoteur_id', user.id)
+          .order('sale_date', { ascending: false });
+
+        // Clients / prospects
+        const { count: clientsCount } = await supabase
+          .from('crm_contacts')
+          .select('id', { count: 'exact', head: true })
+          .eq('owner_id', user.id);
+
+        const projectList = projects || [];
+        const salesList = sales || [];
+
+        // Statut actif = non terminé / non annulé
+        const isDone = (s) => ['completed', 'terminé', 'delivered', 'livré'].includes(String(s || '').toLowerCase());
+        const activeCount = projectList.filter((p) => !isDone(p.status)).length;
+        const completedCount = projectList.filter((p) => isDone(p.status)).length;
+
+        const totalBudget = projectList.reduce((sum, p) => sum + (Number(p.budget) || 0), 0);
+        const totalSpent = projectList.reduce((sum, p) => sum + (Number(p.spent) || 0), 0);
+
+        // CA réel = somme des ventes vendues / livrées
+        const revenueSales = salesList.filter((s) => ['sold', 'delivered'].includes(String(s.status || '').toLowerCase()));
+        const salesRevenue = revenueSales.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+
+        // Ventes du mois en cours
+        const now = new Date();
+        const monthSales = salesList.filter((s) => {
+          const d = s.sale_date ? new Date(s.sale_date) : (s.created_at ? new Date(s.created_at) : null);
+          return d && d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+        }).length;
+
+        setBusinessStats({
+          totalBudget,
+          totalSpent,
+          salesRevenue,
+          activeProjects: activeCount,
+          completedProjects: completedCount,
+          totalClients: clientsCount || 0,
+          totalSales: salesList.length,
+          monthSales
+        });
+
+        // Agrégats ventes par projet (unités vendues / total)
+        const salesByProject = {};
+        salesList.forEach((s) => {
+          const key = s.project_id;
+          if (!salesByProject[key]) salesByProject[key] = { total: 0, sold: 0, revenue: 0 };
+          salesByProject[key].total += 1;
+          if (['sold', 'delivered'].includes(String(s.status || '').toLowerCase())) {
+            salesByProject[key].sold += 1;
+            salesByProject[key].revenue += Number(s.price) || 0;
+          }
+        });
+
+        setActiveProjects(
+          projectList
+            .filter((p) => !isDone(p.status))
+            .slice(0, 5)
+            .map((p) => {
+              const ps = salesByProject[p.id] || { total: 0, sold: 0, revenue: 0 };
+              const budget = Number(p.budget) || 0;
+              const spent = Number(p.spent) || 0;
+              return {
+                id: p.id,
+                name: p.title || 'Projet sans titre',
+                location: p.location || '—',
+                status: p.status || '—',
+                progress: Number(p.progress) || 0,
+                budget,
+                spent,
+                revenue: ps.revenue,
+                remaining: budget - spent,
+                startDate: p.start_date,
+                expectedCompletion: p.estimated_completion,
+                unitsTotal: ps.total,
+                unitsSold: ps.sold,
+                nextMilestone: p.current_phase || null
+              };
+            })
+        );
+
+        setRecentSales(salesList.slice(0, 5));
+      } catch (e) {
+        console.error('Erreur chargement PromoteurOverview:', e);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.id]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -155,32 +173,32 @@ const PromoteurOverview = () => {
   };
 
   const getStatusColor = (status) => {
-    switch (status) {
-      case 'En construction': return 'bg-blue-100 text-blue-800';
-      case 'En cours': return 'bg-orange-100 text-orange-800';
-      case 'Commercialisation': return 'bg-green-100 text-green-800';
-      case 'Terminé': return 'bg-gray-100 text-gray-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
+    const s = String(status || '').toLowerCase();
+    if (s.includes('construction') || s.includes('progress') || s.includes('cours')) return 'bg-blue-100 text-blue-800';
+    if (s.includes('commercial') || s.includes('vente')) return 'bg-green-100 text-green-800';
+    if (s.includes('plan') || s.includes('attente') || s.includes('pending')) return 'bg-orange-100 text-orange-800';
+    if (s.includes('termin') || s.includes('complet') || s.includes('livr')) return 'bg-gray-100 text-gray-800';
+    return 'bg-gray-100 text-gray-800';
   };
 
   const getStatusIcon = (status) => {
-    switch (status) {
-      case 'En construction': return <Hammer className="w-4 h-4" />;
-      case 'En cours': return <Clock className="w-4 h-4" />;
-      case 'Commercialisation': return <Target className="w-4 h-4" />;
-      case 'Terminé': return <CheckCircle className="w-4 h-4" />;
-      default: return <Building2 className="w-4 h-4" />;
-    }
+    const s = String(status || '').toLowerCase();
+    if (s.includes('construction')) return <Hammer className="w-4 h-4" />;
+    if (s.includes('cours') || s.includes('progress') || s.includes('attente')) return <Clock className="w-4 h-4" />;
+    if (s.includes('commercial') || s.includes('vente')) return <Target className="w-4 h-4" />;
+    if (s.includes('termin') || s.includes('complet')) return <CheckCircle className="w-4 h-4" />;
+    return <Building2 className="w-4 h-4" />;
   };
 
-  const getTypeIcon = (type) => {
-    switch (type) {
-      case 'Résidentiel': return <Home className="w-4 h-4" />;
-      case 'Commercial': return <Building2 className="w-4 h-4" />;
-      case 'Foncier': return <MapPin className="w-4 h-4" />;
-      default: return <Building2 className="w-4 h-4" />;
-    }
+  const timeAgo = (dateStr) => {
+    if (!dateStr) return '';
+    const diff = Date.now() - new Date(dateStr).getTime();
+    const days = Math.floor(diff / 86400000);
+    if (days > 0) return `${days} j`;
+    const hours = Math.floor(diff / 3600000);
+    if (hours > 0) return `${hours} h`;
+    const mins = Math.floor(diff / 60000);
+    return `${mins} min`;
   };
 
   return (
@@ -191,16 +209,15 @@ const PromoteurOverview = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
-                  <p className="text-sm font-medium text-gray-600">Chiffre d'Affaires</p>
+                  <p className="text-sm font-medium text-gray-600">Chiffre d'Affaires (ventes)</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(businessStats.totalRevenue)}
+                    {loading ? '—' : formatCurrency(businessStats.salesRevenue)}
                   </p>
                   <div className="mt-4 flex items-center">
                     <TrendingUp className="w-4 h-4 text-green-500 mr-1" />
-                    <span className="text-sm text-green-600 font-medium">
-                      +{businessStats.monthlyGrowth}%
+                    <span className="text-sm text-gray-600">
+                      {businessStats.totalSales} vente{businessStats.totalSales > 1 ? 's' : ''} au total
                     </span>
-                    <span className="text-sm text-gray-500 ml-1">ce mois</span>
                   </div>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
@@ -215,7 +232,7 @@ const PromoteurOverview = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Projets Actifs</p>
-                  <p className="text-2xl font-bold text-gray-900">{businessStats.activeProjects}</p>
+                  <p className="text-2xl font-bold text-gray-900">{loading ? '—' : businessStats.activeProjects}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Building2 className="w-6 h-6 text-blue-600" />
@@ -223,7 +240,7 @@ const PromoteurOverview = () => {
               </div>
               <div className="mt-4">
                 <span className="text-sm text-gray-600">
-                  {businessStats.completedProjects} projets terminés
+                  {businessStats.completedProjects} projet{businessStats.completedProjects > 1 ? 's' : ''} terminé{businessStats.completedProjects > 1 ? 's' : ''}
                 </span>
               </div>
             </CardContent>
@@ -234,14 +251,14 @@ const PromoteurOverview = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Clients</p>
-                  <p className="text-2xl font-bold text-gray-900">{businessStats.totalClients}</p>
+                  <p className="text-2xl font-bold text-gray-900">{loading ? '—' : businessStats.totalClients}</p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <Users className="w-6 h-6 text-purple-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-sm text-gray-600">Base clients active</span>
+                <span className="text-sm text-gray-600">Base clients / prospects</span>
               </div>
             </CardContent>
           </Card>
@@ -250,19 +267,19 @@ const PromoteurOverview = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Marge Moyenne</p>
-                  <p className="text-2xl font-bold text-gray-900">{businessStats.averageMargin}%</p>
+                  <p className="text-sm font-medium text-gray-600">Budget engagé</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {loading ? '—' : formatCurrency(businessStats.totalBudget)}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <Target className="w-6 h-6 text-orange-600" />
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                <ArrowUpRight className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600 font-medium">
-                  +{businessStats.yearlyGrowth}%
+                <span className="text-sm text-gray-600">
+                  Dépensé : {loading ? '—' : formatCurrency(businessStats.totalSpent)}
                 </span>
-                <span className="text-sm text-gray-500 ml-1">annuel</span>
               </div>
             </CardContent>
           </Card>
@@ -293,6 +310,18 @@ const PromoteurOverview = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12 text-gray-500">
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Chargement des projets...
+                  </div>
+                ) : activeProjects.length === 0 ? (
+                  <div className="text-center py-12 text-gray-500">
+                    <Building2 className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                    <p className="font-medium">Aucun projet en cours</p>
+                    <p className="text-sm">Créez votre premier projet pour le suivre ici.</p>
+                  </div>
+                ) : (
                 <div className="space-y-6">
                   {activeProjects.map((project) => (
                     <motion.div
@@ -318,10 +347,6 @@ const PromoteurOverview = () => {
                           <Badge className={getStatusColor(project.status)}>
                             {project.status}
                           </Badge>
-                          <div className="flex items-center text-sm text-gray-500 mt-1">
-                            {getTypeIcon(project.type)}
-                            <span className="ml-1">{project.type}</span>
-                          </div>
                         </div>
                       </div>
 
@@ -331,15 +356,15 @@ const PromoteurOverview = () => {
                           <p className="font-semibold">{formatCurrency(project.budget)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">CA prévisionnel</p>
-                          <p className="font-semibold text-green-600">{formatCurrency(project.revenue)}</p>
+                          <p className="text-xs text-gray-500">Dépensé</p>
+                          <p className="font-semibold text-orange-600">{formatCurrency(project.spent)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Marge</p>
-                          <p className="font-semibold text-blue-600">{formatCurrency(project.margin)}</p>
+                          <p className="text-xs text-gray-500">Restant</p>
+                          <p className="font-semibold text-blue-600">{formatCurrency(project.remaining)}</p>
                         </div>
                         <div>
-                          <p className="text-xs text-gray-500">Ventes</p>
+                          <p className="text-xs text-gray-500">Ventes (unités)</p>
                           <p className="font-semibold">{project.unitsSold}/{project.unitsTotal}</p>
                         </div>
                       </div>
@@ -350,14 +375,18 @@ const PromoteurOverview = () => {
                           <span className="font-medium">{project.progress}%</span>
                         </div>
                         <Progress value={project.progress} className="h-2 mb-2" />
-                        <p className="text-xs text-blue-600">Prochaine étape: {project.nextMilestone}</p>
+                        {project.nextMilestone && (
+                          <p className="text-xs text-blue-600">Phase actuelle: {project.nextMilestone}</p>
+                        )}
                       </div>
 
                       <div className="flex items-center justify-between">
                         <div className="text-sm text-gray-600">
                           <span>Fin prévue: </span>
                           <span className="font-medium">
-                            {new Date(project.expectedCompletion).toLocaleDateString('fr-FR')}
+                            {project.expectedCompletion
+                              ? new Date(project.expectedCompletion).toLocaleDateString('fr-FR')
+                              : '—'}
                           </span>
                         </div>
                         <div className="flex space-x-2">
@@ -373,6 +402,7 @@ const PromoteurOverview = () => {
                     </motion.div>
                   ))}
                 </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -383,26 +413,46 @@ const PromoteurOverview = () => {
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center justify-between">
-                  Ventes du Mois
-                  <Badge variant="secondary" className="bg-green-100 text-green-800">+22 ventes</Badge>
+                  Ventes récentes
+                  {businessStats.monthSales > 0 && (
+                    <Badge variant="secondary" className="bg-green-100 text-green-800">
+                      {businessStats.monthSales} ce mois
+                    </Badge>
+                  )}
                 </CardTitle>
               </CardHeader>
               <CardContent>
+                {loading ? (
+                  <div className="flex items-center justify-center py-6 text-gray-500">
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Chargement...
+                  </div>
+                ) : recentSales.length === 0 ? (
+                  <div className="text-center py-6 text-gray-500">
+                    <p className="text-sm">Aucune vente enregistrée</p>
+                  </div>
+                ) : (
                 <div className="space-y-4">
-                  {salesData.slice(-3).map((data, index) => (
-                    <div key={index} className="flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-gray-900">{data.month}</p>
-                        <p className="text-sm text-gray-600">{data.sales} ventes</p>
+                  {recentSales.map((sale) => (
+                    <div key={sale.id} className="flex items-center justify-between">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 truncate">
+                          {sale.buyer_name || sale.unit_reference || 'Vente'}
+                        </p>
+                        <p className="text-sm text-gray-600 truncate">
+                          {sale.unit_type || sale.unit_reference || '—'}
+                          {sale.sale_date ? ` • ${new Date(sale.sale_date).toLocaleDateString('fr-FR')}` : ''}
+                        </p>
                       </div>
                       <div className="text-right">
                         <p className="font-semibold text-green-600">
-                          {formatCurrency(data.revenue)}
+                          {formatCurrency(Number(sale.price) || 0)}
                         </p>
+                        <p className="text-xs text-gray-500">{sale.status || ''}</p>
                       </div>
                     </div>
                   ))}
                 </div>
+                )}
                 <div className="mt-4 pt-4 border-t">
                   <Button size="sm" className="w-full">
                     <BarChart3 className="w-4 h-4 mr-2" />
@@ -412,43 +462,7 @@ const PromoteurOverview = () => {
               </CardContent>
             </Card>
 
-            {/* Activités récentes */}
-            <Card>
-              <CardHeader>
-                <CardTitle>Activités Récentes</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-3">
-                  {recentActivities.map((activity) => (
-                    <div key={activity.id} className="flex items-center space-x-3">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        activity.positive ? 'bg-green-100' : 'bg-red-100'
-                      }`}>
-                        {activity.positive ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <AlertTriangle className="w-4 h-4 text-red-600" />
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-gray-900">{activity.title}</p>
-                        <p className="text-xs text-gray-500 truncate">{activity.description}</p>
-                      </div>
-                      <div className="text-right">
-                        {activity.amount && (
-                          <p className="text-sm font-medium text-green-600">
-                            {formatCurrency(activity.amount)}
-                          </p>
-                        )}
-                        <p className="text-xs text-gray-500">{activity.time}</p>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
-
-            {/* Métriques rapides */}
+            {/* Métriques rapides (données réelles) */}
             <Card>
               <CardHeader>
                 <CardTitle>Métriques Clés</CardTitle>
@@ -456,20 +470,28 @@ const PromoteurOverview = () => {
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Taux de vente moyen</span>
-                    <span className="font-semibold text-green-600">78%</span>
+                    <span className="text-sm text-gray-600">Ventes finalisées</span>
+                    <span className="font-semibold text-green-600">
+                      {loading ? '—' : `${businessStats.totalSales}`}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Délai moyen projet</span>
-                    <span className="font-semibold">18 mois</span>
+                    <span className="text-sm text-gray-600">Projets actifs</span>
+                    <span className="font-semibold">{loading ? '—' : businessStats.activeProjects}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Satisfaction client</span>
-                    <span className="font-semibold text-blue-600">4.7/5</span>
+                    <span className="text-sm text-gray-600">Budget engagé</span>
+                    <span className="font-semibold text-blue-600">
+                      {loading ? '—' : formatCurrency(businessStats.totalBudget)}
+                    </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">ROI moyen</span>
-                    <span className="font-semibold text-purple-600">22.5%</span>
+                    <span className="text-sm text-gray-600">Taux d'utilisation budget</span>
+                    <span className="font-semibold text-purple-600">
+                      {loading || !businessStats.totalBudget
+                        ? '—'
+                        : `${Math.round((businessStats.totalSpent / businessStats.totalBudget) * 100)}%`}
+                    </span>
                   </div>
                 </div>
               </CardContent>

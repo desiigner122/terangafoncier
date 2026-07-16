@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,305 +6,186 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  Users, 
-  User, 
-  Star, 
-  Phone, 
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import {
+  Users,
+  User,
+  Phone,
   Mail,
-  Calendar,
-  MapPin,
   Building,
   MessageSquare,
   Eye,
-  Edit,
   UserPlus,
   Filter,
   Download,
   Search,
-  Clock,
+  Flame,
   CheckCircle,
-  AlertTriangle,
-  Heart,
   Gift,
   FileText,
-  Settings,
-  Bell,
-  Shield,
   Award,
-  TrendingUp
+  TrendingUp,
+  Loader2
 } from 'lucide-react';
 
 const PromoteurClients = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-  const [selectedClient, setSelectedClient] = useState(null);
+  const [loading, setLoading] = useState(true);
 
-  // Statistiques clients
-  const clientStats = {
-    totalClients: 127,
-    activeClients: 94,
-    newThisMonth: 23,
-    satisfactionRate: 4.6,
-    retentionRate: 87,
-    referralRate: 34,
-    averageValue: 68500000,
-    lifetimeValue: 8703500000
+  // Contacts CRM réels (crm_contacts, owner_id = promoteur)
+  const [clients, setClients] = useState([]);
+
+  // Statistiques agrégées (données réelles crm_contacts)
+  const [clientStats, setClientStats] = useState({
+    totalClients: 0,
+    newThisMonth: 0,
+    hotProspects: 0,
+    activeClients: 0,
+    averageScore: 0
+  });
+
+  // Normalisation de la « temperature » CRM (chaud / tiède / froid)
+  const tempKey = (t) => {
+    const s = String(t || '').toLowerCase();
+    if (['hot', 'chaud'].includes(s)) return 'hot';
+    if (['warm', 'tiède', 'tiede'].includes(s)) return 'warm';
+    if (['cold', 'froid'].includes(s)) return 'cold';
+    return '';
   };
 
-  // Base de données clients
-  const clients = [
-    {
-      id: 1,
-      name: 'Moussa Ba',
-      email: 'moussa.ba@email.com',
-      phone: '+221 77 987 65 43',
-      status: 'Client actif',
-      category: 'VIP',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2024-01-15',
-      lastContact: '2024-12-10',
-      nextFollowUp: '2024-12-20',
-      projects: [
-        {
-          name: 'Résidence Teranga',
-          unit: 'Appartement 3 pièces',
-          value: 85000000,
-          status: 'Propriétaire',
-          completionDate: '2024-11-30'
-        }
-      ],
-      totalSpent: 85000000,
-      satisfaction: 4.8,
-      referrals: 3,
-      agent: 'Fatou Diagne',
-      source: 'Site web',
-      preferences: ['Haut de gamme', 'Vue mer', 'Parking'],
-      notes: 'Client très exigeant sur les finitions. Intéressé par d\'autres projets.',
-      interactions: 24,
-      contracts: 1,
-      payments: 'À jour',
-      loyaltyPoints: 850,
-      vipLevel: 'Gold'
-    },
-    {
-      id: 2,
-      name: 'Aminata Diop', 
-      email: 'aminata.diop@email.com',
-      phone: '+221 78 123 45 67',
-      status: 'Prospect avancé',
-      category: 'Premium',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2024-03-10',
-      lastContact: '2024-12-08',
-      nextFollowUp: '2024-12-15',
-      projects: [
-        {
-          name: 'Villa Duplex Mermoz',
-          unit: 'Villa 4 chambres',
-          value: 65000000,
-          status: 'En négociation',
-          expectedDate: '2025-01-15'
-        }
-      ],
-      totalSpent: 0,
-      satisfaction: 0,
-      referrals: 0,
-      agent: 'Mamadou Seck',
-      source: 'Référence',
-      preferences: ['Jardin', 'Garage', 'Sécurité'],
-      notes: 'Demande modifications sur la cuisine. Budget confirmé.',
-      interactions: 12,
-      contracts: 0,
-      payments: 'N/A',
-      loyaltyPoints: 120,
-      interest: 85
-    },
-    {
-      id: 3,
-      name: 'Ibrahima Sarr',
-      email: 'ibrahima@email.com',
-      phone: '+221 77 555 44 33',
-      status: 'Prospect',
-      category: 'Standard',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2024-06-20',
-      lastContact: '2024-12-05',
-      nextFollowUp: '2024-12-12',
-      projects: [
-        {
-          name: 'Appartements VDN',
-          unit: 'Appartement 2 pièces',
-          value: 45000000,
-          status: 'Réflexion',
-          expectedDate: '2025-03-01'
-        }
-      ],
-      totalSpent: 0,
-      satisfaction: 0,
-      referrals: 0,
-      agent: 'Aïssatou Fall',
-      source: 'Publicité Facebook',
-      preferences: ['Budget limité', 'Transport', 'Écoles'],
-      notes: 'Cherche facilités de paiement. Première acquisition.',
-      interactions: 8,
-      contracts: 0,
-      payments: 'N/A',
-      loyaltyPoints: 45,
-      interest: 60
-    },
-    {
-      id: 4,
-      name: 'Fatou Ndiaye',
-      email: 'fatou.ndiaye@email.com',
-      phone: '+221 76 888 99 00',
-      status: 'Client fidèle',
-      category: 'VIP',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2023-08-10',
-      lastContact: '2024-12-01',
-      nextFollowUp: '2024-12-30',
-      projects: [
-        {
-          name: 'Villa Almadies',
-          unit: 'Villa 5 chambres',
-          value: 120000000,
-          status: 'Propriétaire',
-          completionDate: '2024-06-15'
-        },
-        {
-          name: 'Appartement Centre-ville',
-          unit: 'Appartement 2 pièces',
-          value: 55000000,
-          status: 'Propriétaire',
-          completionDate: '2024-09-30'
-        }
-      ],
-      totalSpent: 175000000,
-      satisfaction: 4.9,
-      referrals: 5,
-      agent: 'Fatou Diagne',
-      source: 'Référence',
-      preferences: ['Investissement', 'Qualité', 'Emplacement'],
-      notes: 'Investisseuse expérimentée. Excellente relation client.',
-      interactions: 45,
-      contracts: 2,
-      payments: 'À jour',
-      loyaltyPoints: 1750,
-      vipLevel: 'Platinum'
-    },
-    {
-      id: 5,
-      name: 'Omar Thiam',
-      email: 'omar.thiam@email.com',
-      phone: '+221 77 222 33 44',
-      status: 'Ancien client',
-      category: 'Standard',
-      avatar: '/api/placeholder/40/40',
-      joinDate: '2023-02-15',
-      lastContact: '2024-10-20',
-      nextFollowUp: '2025-01-15',
-      projects: [
-        {
-          name: 'Studio Médina',
-          unit: 'Studio',
-          value: 25000000,
-          status: 'Propriétaire',
-          completionDate: '2023-12-30'
-        }
-      ],
-      totalSpent: 25000000,
-      satisfaction: 4.2,
-      referrals: 1,
-      agent: 'Aïssatou Fall',
-      source: 'Walk-in',
-      preferences: ['Première acquisition', 'Transport'],
-      notes: 'Premier achat immobilier. Potentiel pour upgrade.',
-      interactions: 18,
-      contracts: 1,
-      payments: 'Terminé',
-      loyaltyPoints: 250,
-      vipLevel: 'Bronze'
-    }
-  ];
+  // Classification d'un contact en segment (best-effort sur status/temperature réels)
+  const classify = (c) => {
+    const s = String(c.status || '').toLowerCase();
+    if (['inactive', 'inactif', 'lost', 'perdu', 'closed', 'clos', 'archived', 'archivé'].includes(s)) return 'inactive';
+    if (['client', 'active', 'actif', 'won', 'gagné', 'gagne', 'customer', 'signé', 'signe'].includes(s)) return 'active';
+    return 'prospect';
+  };
 
-  // Segmentation des clients
+  // Un contact est « VIP » s'il est chaud ou fortement scoré (données réelles)
+  const isVip = (c) => tempKey(c.temperature) === 'hot' || (Number(c.score) || 0) >= 80;
+
+  useEffect(() => {
+    if (!user?.id) return;
+
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const { data: contacts } = await supabase
+          .from('crm_contacts')
+          .select('*')
+          .eq('owner_id', user.id)
+          .order('created_at', { ascending: false });
+
+        const list = contacts || [];
+        setClients(list);
+
+        const now = new Date();
+        const newThisMonth = list.filter((c) => {
+          if (!c.created_at) return false;
+          const d = new Date(c.created_at);
+          return d.getFullYear() === now.getFullYear() && d.getMonth() === now.getMonth();
+        }).length;
+
+        const hotProspects = list.filter((c) => tempKey(c.temperature) === 'hot').length;
+        const activeClients = list.filter((c) => classify(c) === 'active').length;
+        const scored = list.filter((c) => c.score !== null && c.score !== undefined && c.score !== '');
+        const averageScore = scored.length
+          ? Math.round(scored.reduce((s, c) => s + (Number(c.score) || 0), 0) / scored.length)
+          : 0;
+
+        setClientStats({
+          totalClients: list.length,
+          newThisMonth,
+          hotProspects,
+          activeClients,
+          averageScore
+        });
+      } catch (err) {
+        console.error('Erreur chargement clients CRM:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.id]);
+
+  // Segmentation des clients (sur données réelles)
   const clientSegments = {
     all: clients,
-    active: clients.filter(c => c.status === 'Client actif' || c.status === 'Client fidèle'),
-    prospects: clients.filter(c => c.status.includes('Prospect')),
-    vip: clients.filter(c => c.category === 'VIP'),
-    inactive: clients.filter(c => c.status === 'Ancien client')
+    active: clients.filter((c) => classify(c) === 'active'),
+    prospects: clients.filter((c) => classify(c) === 'prospect'),
+    vip: clients.filter(isVip),
+    inactive: clients.filter((c) => classify(c) === 'inactive')
   };
 
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('fr-FR', {
-      style: 'currency',
-      currency: 'XOF',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0
-    }).format(amount);
+  const getStatusLabel = (status) => {
+    const s = String(status || '').toLowerCase();
+    if (['client', 'customer', 'signé', 'signe'].includes(s)) return 'Client';
+    if (['active', 'actif'].includes(s)) return 'Actif';
+    if (['won', 'gagné', 'gagne'].includes(s)) return 'Gagné';
+    if (['prospect'].includes(s)) return 'Prospect';
+    if (['lead', 'nouveau', 'new'].includes(s)) return 'Nouveau';
+    if (['inactive', 'inactif'].includes(s)) return 'Inactif';
+    if (['lost', 'perdu'].includes(s)) return 'Perdu';
+    return status || '—';
   };
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Client actif': return 'bg-green-100 text-green-800';
-      case 'Client fidèle': return 'bg-blue-100 text-blue-800';
-      case 'Prospect avancé': return 'bg-orange-100 text-orange-800';
-      case 'Prospect': return 'bg-yellow-100 text-yellow-800';
-      case 'Ancien client': return 'bg-gray-100 text-gray-800';
+  const getStatusColor = (segment) => {
+    switch (segment) {
+      case 'active': return 'bg-green-100 text-green-800';
+      case 'prospect': return 'bg-yellow-100 text-yellow-800';
+      case 'inactive': return 'bg-gray-100 text-gray-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getCategoryColor = (category) => {
-    switch (category) {
-      case 'VIP': return 'bg-purple-100 text-purple-800';
-      case 'Premium': return 'bg-blue-100 text-blue-800';
-      case 'Standard': return 'bg-gray-100 text-gray-800';
+  const getTempLabel = (t) => {
+    switch (tempKey(t)) {
+      case 'hot': return 'Chaud';
+      case 'warm': return 'Tiède';
+      case 'cold': return 'Froid';
+      default: return null;
+    }
+  };
+
+  const getTempColor = (t) => {
+    switch (tempKey(t)) {
+      case 'hot': return 'bg-red-100 text-red-800';
+      case 'warm': return 'bg-orange-100 text-orange-800';
+      case 'cold': return 'bg-blue-100 text-blue-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
-  const getVipLevelColor = (level) => {
-    switch (level) {
-      case 'Platinum': return 'bg-gray-800 text-white';
-      case 'Gold': return 'bg-yellow-500 text-white';
-      case 'Silver': return 'bg-gray-400 text-white';
-      case 'Bronze': return 'bg-orange-400 text-white';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
-
-  const getRatingStars = (rating) => {
-    return Array(5).fill(0).map((_, i) => (
-      <Star 
-        key={i} 
-        className={`w-4 h-4 ${i < Math.floor(rating) ? 'text-yellow-400 fill-current' : 'text-gray-300'}`} 
-      />
-    ));
-  };
-
-  const getInteractionLevel = (interactions) => {
-    if (interactions >= 30) return { level: 'Très actif', color: 'text-green-600' };
-    if (interactions >= 15) return { level: 'Actif', color: 'text-blue-600' };
-    if (interactions >= 5) return { level: 'Modéré', color: 'text-orange-600' };
-    return { level: 'Faible', color: 'text-red-600' };
-  };
-
-  const filteredClients = clientSegments[activeTab].filter(client =>
-    client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.email.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    client.projects.some(p => p.name.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredClients = clientSegments[activeTab].filter((client) =>
+    (client.name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.email || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (client.company || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const formatDate = (dateString) => {
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       year: 'numeric',
       month: 'short',
       day: 'numeric'
     });
   };
+
+  const getInitials = (name) =>
+    (name || '?').split(' ').map((n) => n[0]).join('').slice(0, 2).toUpperCase();
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-24">
+        <Loader2 className="w-8 h-8 animate-spin text-blue-600" />
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -317,7 +198,7 @@ const PromoteurClients = () => {
           <div className="flex items-center space-x-2">
             <Badge className="bg-blue-100 text-blue-800">
               <Users className="w-3 h-3 mr-1" />
-              {clientStats.totalClients} clients
+              {clientStats.totalClients} contact{clientStats.totalClients > 1 ? 's' : ''}
             </Badge>
             <Button>
               <UserPlus className="w-4 h-4 mr-2" />
@@ -326,13 +207,13 @@ const PromoteurClients = () => {
           </div>
         </div>
 
-        {/* Métriques principales */}
+        {/* Métriques principales (données réelles crm_contacts) */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
           <Card>
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Total Clients</p>
+                  <p className="text-sm font-medium text-gray-600">Total Contacts</p>
                   <p className="text-2xl font-bold text-gray-900">{clientStats.totalClients}</p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -341,7 +222,7 @@ const PromoteurClients = () => {
               </div>
               <div className="mt-4">
                 <span className="text-sm text-green-600 font-medium">
-                  +{clientStats.newThisMonth} ce mois
+                  {clientStats.newThisMonth > 0 ? `+${clientStats.newThisMonth} ce mois` : 'Aucun nouveau ce mois'}
                 </span>
               </div>
             </CardContent>
@@ -351,17 +232,15 @@ const PromoteurClients = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Satisfaction</p>
-                  <p className="text-2xl font-bold text-gray-900">{clientStats.satisfactionRate}/5</p>
+                  <p className="text-sm font-medium text-gray-600">Prospects chauds</p>
+                  <p className="text-2xl font-bold text-gray-900">{clientStats.hotProspects}</p>
                 </div>
-                <div className="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
-                  <Star className="w-6 h-6 text-yellow-600" />
+                <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center">
+                  <Flame className="w-6 h-6 text-red-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <div className="flex items-center">
-                  {getRatingStars(clientStats.satisfactionRate)}
-                </div>
+                <span className="text-sm text-gray-500">À prioriser</span>
               </div>
             </CardContent>
           </Card>
@@ -370,16 +249,19 @@ const PromoteurClients = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Rétention</p>
-                  <p className="text-2xl font-bold text-gray-900">{clientStats.retentionRate}%</p>
+                  <p className="text-sm font-medium text-gray-600">Contacts actifs</p>
+                  <p className="text-2xl font-bold text-gray-900">{clientStats.activeClients}</p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
-                  <Heart className="w-6 h-6 text-green-600" />
+                  <CheckCircle className="w-6 h-6 text-green-600" />
                 </div>
               </div>
               <div className="mt-4">
-                <Progress value={clientStats.retentionRate} className="h-2" />
-                <span className="text-xs text-gray-500 mt-1">Clients fidèles</span>
+                <Progress
+                  value={clientStats.totalClients ? Math.round((clientStats.activeClients / clientStats.totalClients) * 100) : 0}
+                  className="h-2"
+                />
+                <span className="text-xs text-gray-500 mt-1">Clients / customers</span>
               </div>
             </CardContent>
           </Card>
@@ -388,9 +270,9 @@ const PromoteurClients = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Valeur Moyenne</p>
+                  <p className="text-sm font-medium text-gray-600">Score moyen</p>
                   <p className="text-2xl font-bold text-gray-900">
-                    {formatCurrency(clientStats.averageValue)}
+                    {clientStats.averageScore > 0 ? `${clientStats.averageScore}/100` : '—'}
                   </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
@@ -398,9 +280,7 @@ const PromoteurClients = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-sm text-purple-600 font-medium">
-                  {clientStats.referralRate}% de parrainage
-                </span>
+                <span className="text-sm text-gray-500">Scoring CRM</span>
               </div>
             </CardContent>
           </Card>
@@ -425,7 +305,7 @@ const PromoteurClients = () => {
                 Anciens ({clientSegments.inactive.length})
               </TabsTrigger>
             </TabsList>
-            
+
             <div className="flex items-center space-x-2">
               <div className="relative">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
@@ -460,12 +340,22 @@ const PromoteurClients = () => {
                     {tabKey === 'inactive' && 'Anciens Clients'}
                   </CardTitle>
                   <CardDescription>
-                    {filteredClients.length} client{filteredClients.length > 1 ? 's' : ''} trouvé{filteredClients.length > 1 ? 's' : ''}
+                    {filteredClients.length} contact{filteredClients.length > 1 ? 's' : ''} trouvé{filteredClients.length > 1 ? 's' : ''}
                   </CardDescription>
                 </CardHeader>
                 <CardContent>
+                  {filteredClients.length === 0 ? (
+                    <div className="text-center py-12 text-gray-500">
+                      <Users className="w-10 h-10 mx-auto mb-3 text-gray-300" />
+                      <p>Aucun contact dans cette catégorie.</p>
+                    </div>
+                  ) : (
                   <div className="space-y-4">
-                    {filteredClients.map((client) => (
+                    {filteredClients.map((client) => {
+                      const segment = classify(client);
+                      const tempLabel = getTempLabel(client.temperature);
+                      const score = Number(client.score) || 0;
+                      return (
                       <motion.div
                         key={client.id}
                         initial={{ opacity: 0, y: 20 }}
@@ -475,148 +365,91 @@ const PromoteurClients = () => {
                         <div className="flex items-start justify-between">
                           <div className="flex items-start space-x-4">
                             <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-lg">
-                              {client.name.split(' ').map(n => n[0]).join('')}
+                              {getInitials(client.name)}
                             </div>
                             <div className="flex-1">
                               <div className="flex items-center space-x-3 mb-2">
-                                <h3 className="font-semibold text-lg text-gray-900">{client.name}</h3>
-                                {client.vipLevel && (
-                                  <Badge className={getVipLevelColor(client.vipLevel)}>
+                                <h3 className="font-semibold text-lg text-gray-900">{client.name || 'Sans nom'}</h3>
+                                {isVip(client) && (
+                                  <Badge className="bg-purple-100 text-purple-800">
                                     <Award className="w-3 h-3 mr-1" />
-                                    {client.vipLevel}
+                                    VIP
                                   </Badge>
                                 )}
                               </div>
-                              
-                              <div className="flex items-center space-x-4 text-sm text-gray-600 mb-3">
-                                <div className="flex items-center">
-                                  <Mail className="w-4 h-4 mr-1" />
-                                  {client.email}
-                                </div>
-                                <div className="flex items-center">
-                                  <Phone className="w-4 h-4 mr-1" />
-                                  {client.phone}
-                                </div>
-                                <div className="flex items-center">
-                                  <User className="w-4 h-4 mr-1" />
-                                  {client.agent}
-                                </div>
-                              </div>
-                              
-                              <div className="flex items-center space-x-2 mb-3">
-                                <Badge className={getStatusColor(client.status)}>
-                                  {client.status}
-                                </Badge>
-                                <Badge className={getCategoryColor(client.category)}>
-                                  {client.category}
-                                </Badge>
-                                <Badge className="bg-gray-100 text-gray-800">
-                                  {client.source}
-                                </Badge>
-                              </div>
 
-                              {/* Projets */}
-                              <div className="mb-3">
-                                <p className="text-sm font-medium text-gray-700 mb-1">Projets:</p>
-                                {client.projects.map((project, index) => (
-                                  <div key={index} className="text-sm text-gray-600 ml-2">
-                                    • <strong>{project.name}</strong> - {project.unit} 
-                                    ({formatCurrency(project.value)}) - {project.status}
-                                  </div>
-                                ))}
-                              </div>
-
-                              {/* Métriques client */}
-                              <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4 text-sm">
-                                <div>
-                                  <p className="text-gray-500">Total dépensé</p>
-                                  <p className="font-semibold text-green-600">
-                                    {formatCurrency(client.totalSpent)}
-                                  </p>
-                                </div>
-                                <div>
-                                  <p className="text-gray-500">Interactions</p>
+                              <div className="flex items-center flex-wrap gap-x-4 gap-y-1 text-sm text-gray-600 mb-3">
+                                {client.email && (
                                   <div className="flex items-center">
-                                    <p className="font-semibold mr-2">{client.interactions}</p>
-                                    <span className={`text-xs ${getInteractionLevel(client.interactions).color}`}>
-                                      {getInteractionLevel(client.interactions).level}
-                                    </span>
+                                    <Mail className="w-4 h-4 mr-1" />
+                                    {client.email}
                                   </div>
-                                </div>
-                                <div>
-                                  <p className="text-gray-500">Parrainages</p>
-                                  <p className="font-semibold text-blue-600">{client.referrals}</p>
-                                </div>
-                                <div>
-                                  <p className="text-gray-500">Points fidélité</p>
-                                  <p className="font-semibold text-purple-600">{client.loyaltyPoints}</p>
-                                </div>
+                                )}
+                                {client.phone && (
+                                  <div className="flex items-center">
+                                    <Phone className="w-4 h-4 mr-1" />
+                                    {client.phone}
+                                  </div>
+                                )}
+                                {client.company && (
+                                  <div className="flex items-center">
+                                    <Building className="w-4 h-4 mr-1" />
+                                    {client.company}
+                                  </div>
+                                )}
                               </div>
 
-                              {/* Satisfaction et intérêt */}
-                              {client.satisfaction > 0 && (
-                                <div className="flex items-center mb-2">
-                                  <span className="text-sm text-gray-600 mr-2">Satisfaction:</span>
-                                  <div className="flex items-center">
-                                    {getRatingStars(client.satisfaction)}
-                                    <span className="ml-2 text-sm font-medium">{client.satisfaction}</span>
-                                  </div>
-                                </div>
-                              )}
+                              <div className="flex items-center flex-wrap gap-2 mb-3">
+                                <Badge className={getStatusColor(segment)}>
+                                  {getStatusLabel(client.status)}
+                                </Badge>
+                                {tempLabel && (
+                                  <Badge className={getTempColor(client.temperature)}>
+                                    <Flame className="w-3 h-3 mr-1" />
+                                    {tempLabel}
+                                  </Badge>
+                                )}
+                              </div>
 
-                              {client.interest && (
-                                <div className="mb-2">
+                              {/* Score CRM réel */}
+                              {(client.score !== null && client.score !== undefined && client.score !== '') && (
+                                <div className="mb-2 max-w-sm">
                                   <div className="flex items-center justify-between text-sm mb-1">
-                                    <span className="text-gray-600">Niveau d'intérêt:</span>
-                                    <span className="font-medium">{client.interest}%</span>
+                                    <span className="text-gray-600">Score CRM:</span>
+                                    <span className="font-medium">{score}/100</span>
                                   </div>
-                                  <Progress value={client.interest} className="h-2" />
+                                  <Progress value={score} className="h-2" />
                                 </div>
-                              )}
-
-                              {/* Notes */}
-                              {client.notes && (
-                                <p className="text-sm text-gray-600 italic bg-gray-50 p-2 rounded">
-                                  "{client.notes}"
-                                </p>
                               )}
                             </div>
                           </div>
-                          
+
                           <div className="text-right">
                             <div className="mb-4">
-                              <p className="text-sm text-gray-500">Client depuis</p>
-                              <p className="font-medium">{formatDate(client.joinDate)}</p>
-                            </div>
-                            <div className="mb-4">
-                              <p className="text-sm text-gray-500">Dernier contact</p>
-                              <p className="font-medium">{formatDate(client.lastContact)}</p>
-                            </div>
-                            <div className="mb-4">
-                              <p className="text-sm text-gray-500">Prochain suivi</p>
-                              <p className="font-medium text-orange-600">{formatDate(client.nextFollowUp)}</p>
+                              <p className="text-sm text-gray-500">Contact depuis</p>
+                              <p className="font-medium">{formatDate(client.created_at)}</p>
                             </div>
                           </div>
                         </div>
-                        
+
                         {/* Actions */}
-                        <div className="flex items-center justify-between mt-6 pt-4 border-t">
-                          <div className="flex items-center space-x-4 text-sm text-gray-600">
-                            <div className="flex items-center">
-                              <Calendar className="w-4 h-4 mr-1" />
-                              {client.contracts} contrat{client.contracts > 1 ? 's' : ''}
-                            </div>
-                            <div className="flex items-center">
-                              <CheckCircle className="w-4 h-4 mr-1" />
-                              {client.payments}
-                            </div>
-                          </div>
+                        <div className="flex items-center justify-end mt-6 pt-4 border-t">
                           <div className="flex space-x-2">
-                            <Button variant="outline" size="sm">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={!client.phone}
+                              onClick={() => client.phone && (window.location.href = `tel:${client.phone}`)}
+                            >
                               <Phone className="w-4 h-4 mr-1" />
                               Appeler
                             </Button>
-                            <Button variant="outline" size="sm">
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              disabled={!client.email}
+                              onClick={() => client.email && (window.location.href = `mailto:${client.email}`)}
+                            >
                               <Mail className="w-4 h-4 mr-1" />
                               Email
                             </Button>
@@ -631,8 +464,10 @@ const PromoteurClients = () => {
                           </div>
                         </div>
                       </motion.div>
-                    ))}
+                      );
+                    })}
                   </div>
+                  )}
                 </CardContent>
               </Card>
             </TabsContent>

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -6,11 +6,13 @@ import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { 
-  TrendingUp, 
-  DollarSign, 
-  PieChart, 
-  BarChart3, 
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import {
+  TrendingUp,
+  DollarSign,
+  PieChart,
+  BarChart3,
   Calendar,
   Download,
   Filter,
@@ -28,203 +30,267 @@ import {
   FileText,
   CreditCard,
   Wallet,
-  TrendingDown
+  TrendingDown,
+  Loader2
 } from 'lucide-react';
 
 const PromoteurFinances = () => {
+  const { user } = useAuth();
   const [selectedPeriod, setSelectedPeriod] = useState('month');
   const [activeTab, setActiveTab] = useState('overview');
+  const [loading, setLoading] = useState(true);
 
-  // Données financières principales
-  const financialData = {
-    totalRevenue: 2800000000,
-    totalCosts: 1950000000,
-    netProfit: 850000000,
-    profitMargin: 30.36,
-    monthlyGrowth: 12.5,
-    cashFlow: 450000000,
-    pendingPayments: 320000000,
-    expenses: 185000000,
-    taxes: 127500000,
-    investments: 520000000
-  };
+  // Données financières principales (agrégats réels Supabase)
+  const [financialData, setFinancialData] = useState({
+    totalRevenue: 0,
+    totalCosts: 0,
+    netProfit: 0,
+    profitMargin: null,
+    monthlyGrowth: null,
+    cashFlow: 0,
+    pendingPayments: 0
+  });
 
-  // Revenus par projet
-  const projectRevenues = [
-    {
-      id: 1,
-      name: 'Résidence Teranga',
-      totalBudget: 2800000000,
-      revenue: 1530000000,
-      costs: 2100000000,
-      profit: -570000000,
-      profitMargin: -37.25,
-      unitsTotal: 24,
-      unitsSold: 18,
-      averagePrice: 85000000,
-      status: 'En cours',
-      completion: 75,
-      expectedCompletion: '2025-06-30',
-      riskLevel: 'Moyen'
-    },
-    {
-      id: 2,
-      name: 'Villa Duplex Mermoz',
-      totalBudget: 180000000,
-      revenue: 390000000,
-      costs: 172000000,
-      profit: 218000000,
-      profitMargin: 55.9,
-      unitsTotal: 8,
-      unitsSold: 6,
-      averagePrice: 65000000,
-      status: 'Terminé',
-      completion: 100,
-      completedDate: '2024-11-30',
-      riskLevel: 'Faible'
-    },
-    {
-      id: 3,
-      name: 'Appartements VDN',
-      totalBudget: 5200000000,
-      revenue: 540000000,
-      costs: 2340000000,
-      profit: -1800000000,
-      profitMargin: -333.33,
-      unitsTotal: 36,
-      unitsSold: 12,
-      averagePrice: 45000000,
-      status: 'En cours',
-      completion: 45,
-      expectedCompletion: '2025-12-15',
-      riskLevel: 'Élevé'
-    },
-    {
-      id: 4,
-      name: 'Entrepôt Logistics',
-      totalBudget: 1800000000,
-      revenue: 0,
-      costs: 630000000,
-      profit: -630000000,
-      profitMargin: 0,
-      unitsTotal: 1,
-      unitsSold: 0,
-      averagePrice: 1800000000,
-      status: 'En cours',
-      completion: 35,
-      expectedCompletion: '2025-08-30',
-      riskLevel: 'Élevé'
-    }
-  ];
+  // Rentabilité par projet (developer_projects + project_sales)
+  const [projectRevenues, setProjectRevenues] = useState([]);
+  // Flux de trésorerie mensuel (financial_transactions + project_sales)
+  const [cashFlowData, setCashFlowData] = useState([]);
+  // Créances = ventes réservées non soldées (project_sales)
+  const [receivables, setReceivables] = useState([]);
+  // Résumé des créances
+  const [receivablesSummary, setReceivablesSummary] = useState({
+    upcoming: 0,
+    overdue: 0,
+    collectedThisMonth: 0
+  });
 
-  // Flux de trésorerie mensuel
-  const cashFlowData = [
-    { month: 'Jan', income: 180000000, expenses: 145000000, net: 35000000 },
-    { month: 'Fév', income: 220000000, expenses: 165000000, net: 55000000 },
-    { month: 'Mar', income: 195000000, expenses: 178000000, net: 17000000 },
-    { month: 'Avr', income: 285000000, expenses: 198000000, net: 87000000 },
-    { month: 'Mai', income: 320000000, expenses: 215000000, net: 105000000 },
-    { month: 'Jun', income: 275000000, expenses: 189000000, net: 86000000 },
-    { month: 'Jul', income: 360000000, expenses: 245000000, net: 115000000 },
-    { month: 'Aoû', income: 298000000, expenses: 203000000, net: 95000000 },
-    { month: 'Sep', income: 415000000, expenses: 278000000, net: 137000000 },
-    { month: 'Oct', income: 385000000, expenses: 256000000, net: 129000000 },
-    { month: 'Nov', income: 425000000, expenses: 289000000, net: 136000000 },
-    { month: 'Déc', income: 380000000, expenses: 265000000, net: 115000000 }
-  ];
+  const isSold = (s) => ['sold', 'delivered'].includes(String(s || '').toLowerCase());
 
-  // Catégories de dépenses
-  const expenseCategories = [
-    {
-      category: 'Construction',
-      amount: 1650000000,
-      percentage: 68.4,
-      change: -5.2,
-      subcategories: [
-        { name: 'Matériaux', amount: 890000000 },
-        { name: 'Main d\'œuvre', amount: 520000000 },
-        { name: 'Équipement', amount: 240000000 }
-      ]
-    },
-    {
-      category: 'Marketing & Ventes',
-      amount: 185000000,
-      percentage: 7.7,
-      change: 12.3,
-      subcategories: [
-        { name: 'Publicité digitale', amount: 85000000 },
-        { name: 'Événements', amount: 45000000 },
-        { name: 'Commissions', amount: 55000000 }
-      ]
-    },
-    {
-      category: 'Administration',
-      amount: 125000000,
-      percentage: 5.2,
-      change: 3.1,
-      subcategories: [
-        { name: 'Salaires', amount: 85000000 },
-        { name: 'Bureaux', amount: 25000000 },
-        { name: 'Autres', amount: 15000000 }
-      ]
-    },
-    {
-      category: 'Légal & Réglementaire',
-      amount: 95000000,
-      percentage: 3.9,
-      change: 8.7,
-      subcategories: [
-        { name: 'Permis', amount: 35000000 },
-        { name: 'Avocats', amount: 30000000 },
-        { name: 'Assurances', amount: 30000000 }
-      ]
-    },
-    {
-      category: 'Autres',
-      amount: 355000000,
-      percentage: 14.8,
-      change: -2.1,
-      subcategories: [
-        { name: 'Maintenance', amount: 155000000 },
-        { name: 'Transport', amount: 85000000 },
-        { name: 'Divers', amount: 115000000 }
-      ]
-    }
-  ];
+  useEffect(() => {
+    if (!user?.id) return;
 
-  // Créances et dettes
-  const receivables = [
-    {
-      id: 1,
-      client: 'Moussa Ba',
-      project: 'Résidence Teranga',
-      amount: 45000000,
-      dueDate: '2024-12-20',
-      status: 'En retard',
-      daysPastDue: 5,
-      type: 'Acompte'
-    },
-    {
-      id: 2,
-      client: 'Aminata Diop',
-      project: 'Villa Duplex Mermoz',
-      amount: 32500000,
-      dueDate: '2024-12-25',
-      status: 'À venir',
-      daysPastDue: 0,
-      type: 'Solde final'
-    },
-    {
-      id: 3,
-      client: 'Société IMMO Plus',
-      project: 'Appartements VDN',
-      amount: 135000000,
-      dueDate: '2025-01-15',
-      status: 'À venir',
-      daysPastDue: 0,
-      type: 'Paiement échelonné'
-    }
-  ];
+    const loadData = async () => {
+      setLoading(true);
+      try {
+        const [
+          { data: projects },
+          { data: sales },
+          { data: transactions }
+        ] = await Promise.all([
+          supabase
+            .from('developer_projects')
+            .select('*')
+            .eq('developer_id', user.id)
+            .order('created_at', { ascending: false }),
+          supabase
+            .from('project_sales')
+            .select('*')
+            .eq('promoteur_id', user.id),
+          supabase
+            .from('financial_transactions')
+            .select('*')
+            .eq('user_id', user.id)
+            .order('created_at', { ascending: false })
+        ]);
+
+        const projectList = projects || [];
+        const salesList = sales || [];
+        const txList = transactions || [];
+
+        const projById = {};
+        projectList.forEach((p) => { projById[p.id] = p; });
+
+        // ----- Agrégats globaux -----
+        const soldSales = salesList.filter((s) => isSold(s.status));
+        // Chiffre d'affaires = somme des ventes soldées
+        const totalRevenue = soldSales.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+        // Coûts = somme des dépenses réelles des projets (spent)
+        const totalCosts = projectList.reduce((sum, p) => sum + (Number(p.spent) || 0), 0);
+        const netProfit = totalRevenue - totalCosts;
+        const profitMargin = totalRevenue > 0
+          ? Math.round((netProfit / totalRevenue) * 1000) / 10
+          : null;
+
+        // Créances = ventes réservées non encore encaissées
+        const reservedSales = salesList.filter(
+          (s) => String(s.status || '').toLowerCase() === 'reserved'
+        );
+        const pendingPayments = reservedSales.reduce(
+          (sum, s) => sum + (Number(s.price) || 0),
+          0
+        );
+
+        // Croissance mensuelle réelle (CA mois courant vs précédent)
+        const now = new Date();
+        const curKey = `${now.getFullYear()}-${now.getMonth()}`;
+        const prev = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const prevKey = `${prev.getFullYear()}-${prev.getMonth()}`;
+        let curCA = 0;
+        let prevCA = 0;
+        soldSales.forEach((s) => {
+          if (!s.sale_date) return;
+          const d = new Date(s.sale_date);
+          const key = `${d.getFullYear()}-${d.getMonth()}`;
+          if (key === curKey) curCA += Number(s.price) || 0;
+          else if (key === prevKey) prevCA += Number(s.price) || 0;
+        });
+        const monthlyGrowth =
+          prevCA > 0 ? Math.round(((curCA - prevCA) / prevCA) * 1000) / 10 : null;
+
+        // ----- Flux de trésorerie mensuel (12 derniers mois) -----
+        // Entrées : ventes soldées (sale_date) + transactions crédit.
+        // Sorties : transactions de type débit/dépense.
+        const monthsBack = [];
+        const monthLabels = ['Jan', 'Fév', 'Mar', 'Avr', 'Mai', 'Jun', 'Jul', 'Aoû', 'Sep', 'Oct', 'Nov', 'Déc'];
+        for (let i = 11; i >= 0; i--) {
+          const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+          monthsBack.push({
+            key: `${d.getFullYear()}-${d.getMonth()}`,
+            month: monthLabels[d.getMonth()],
+            income: 0,
+            expenses: 0,
+            net: 0
+          });
+        }
+        const cfMap = {};
+        monthsBack.forEach((m) => { cfMap[m.key] = m; });
+
+        soldSales.forEach((s) => {
+          const ref = s.sale_date || s.created_at;
+          if (!ref) return;
+          const d = new Date(ref);
+          const key = `${d.getFullYear()}-${d.getMonth()}`;
+          if (cfMap[key]) cfMap[key].income += Number(s.price) || 0;
+        });
+
+        const isExpense = (t) => {
+          const kind = String(t.type || t.transaction_type || '').toLowerCase();
+          return ['debit', 'expense', 'depense', 'dépense', 'sortie', 'payment', 'paiement'].some((k) => kind.includes(k));
+        };
+        const isIncome = (t) => {
+          const kind = String(t.type || t.transaction_type || '').toLowerCase();
+          return ['credit', 'income', 'revenu', 'entree', 'entrée', 'encaissement', 'sale', 'vente'].some((k) => kind.includes(k));
+        };
+
+        txList.forEach((t) => {
+          const ref = t.created_at;
+          if (!ref) return;
+          const d = new Date(ref);
+          const key = `${d.getFullYear()}-${d.getMonth()}`;
+          if (!cfMap[key]) return;
+          const amt = Number(t.amount) || 0;
+          if (isExpense(t)) cfMap[key].expenses += Math.abs(amt);
+          else if (isIncome(t)) cfMap[key].income += Math.abs(amt);
+        });
+
+        monthsBack.forEach((m) => { m.net = m.income - m.expenses; });
+
+        // Flux de trésorerie net cumulé sur la période affichée
+        const cashFlow = monthsBack.reduce((sum, m) => sum + m.net, 0);
+
+        setFinancialData({
+          totalRevenue,
+          totalCosts,
+          netProfit,
+          profitMargin,
+          monthlyGrowth,
+          cashFlow,
+          pendingPayments
+        });
+        setCashFlowData(monthsBack.map(({ key, ...rest }) => rest));
+
+        // ----- Rentabilité par projet -----
+        const statusLabel = (st) => {
+          const s = String(st || '').toLowerCase();
+          if (s.includes('complet') || s.includes('termin') || s.includes('done') || s.includes('deliver')) return 'Terminé';
+          return 'En cours';
+        };
+        const perf = projectList.map((p) => {
+          const forP = salesList.filter((s) => s.project_id === p.id);
+          const closed = forP.filter((s) => isSold(s.status));
+          const revenue = closed.reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+          const costs = Number(p.spent) || 0;
+          const budget = Number(p.budget) || 0;
+          const profit = revenue - costs;
+          const pm = revenue > 0 ? Math.round((profit / revenue) * 1000) / 10 : null;
+          const unitsTotal = forP.length;
+          const unitsSold = closed.length;
+          const averagePrice = unitsSold ? Math.round(revenue / unitsSold) : 0;
+          const completion = Number(p.progress) || 0;
+          // Niveau de risque dérivé du dépassement budgétaire réel
+          let riskLevel = 'Faible';
+          if (budget > 0) {
+            const ratio = costs / budget;
+            if (ratio > 0.9) riskLevel = 'Élevé';
+            else if (ratio > 0.6) riskLevel = 'Moyen';
+          } else {
+            riskLevel = null;
+          }
+          return {
+            id: p.id,
+            name: p.title || 'Projet',
+            totalBudget: budget,
+            revenue,
+            costs,
+            profit,
+            profitMargin: pm,
+            unitsTotal,
+            unitsSold,
+            averagePrice,
+            status: statusLabel(p.status),
+            completion,
+            expectedCompletion: p.estimated_completion || null,
+            completedDate: p.updated_at || null,
+            riskLevel
+          };
+        });
+        setProjectRevenues(perf);
+
+        // ----- Créances (ventes réservées) -----
+        const today = new Date();
+        const recv = reservedSales.map((s) => {
+          const due = s.sale_date ? new Date(s.sale_date) : null;
+          const daysPastDue = due ? Math.floor((today - due) / (1000 * 60 * 60 * 24)) : 0;
+          const overdue = daysPastDue > 0;
+          return {
+            id: s.id,
+            client: s.buyer_name || 'Acquéreur',
+            project: projById[s.project_id]?.title || '—',
+            amount: Number(s.price) || 0,
+            dueDate: s.sale_date || null,
+            status: overdue ? 'En retard' : 'À venir',
+            daysPastDue: overdue ? daysPastDue : 0,
+            type: s.unit_reference ? `Lot ${s.unit_reference}` : (s.unit_type || 'Réservation')
+          };
+        });
+        setReceivables(recv);
+
+        // Résumé des créances
+        const upcoming = recv
+          .filter((r) => r.status === 'À venir')
+          .reduce((sum, r) => sum + r.amount, 0);
+        const overdueTotal = recv
+          .filter((r) => r.status === 'En retard')
+          .reduce((sum, r) => sum + r.amount, 0);
+        // Encaissé ce mois = ventes soldées durant le mois courant
+        const collectedThisMonth = soldSales
+          .filter((s) => {
+            const ref = s.sale_date || s.created_at;
+            if (!ref) return false;
+            const d = new Date(ref);
+            return `${d.getFullYear()}-${d.getMonth()}` === curKey;
+          })
+          .reduce((sum, s) => sum + (Number(s.price) || 0), 0);
+        setReceivablesSummary({ upcoming, overdue: overdueTotal, collectedThisMonth });
+      } catch (err) {
+        console.error('Erreur chargement finances promoteur:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadData();
+  }, [user?.id]);
 
   const formatCurrency = (amount) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -232,10 +298,11 @@ const PromoteurFinances = () => {
       currency: 'XOF',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0
-    }).format(amount);
+    }).format(amount || 0);
   };
 
   const formatPercentage = (value) => {
+    if (value === null || value === undefined || Number.isNaN(value)) return '—';
     return `${value > 0 ? '+' : ''}${value.toFixed(1)}%`;
   };
 
@@ -268,6 +335,21 @@ const PromoteurFinances = () => {
     return null;
   };
 
+  const maxIncome = cashFlowData.length
+    ? Math.max(...cashFlowData.map((m) => m.income), 1)
+    : 1;
+
+  if (loading) {
+    return (
+      <div className="w-full h-full bg-white flex items-center justify-center py-24">
+        <div className="flex flex-col items-center text-gray-500">
+          <Loader2 className="w-8 h-8 animate-spin mb-3" />
+          <p>Chargement des données financières...</p>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full bg-white">
       <div className="p-6 space-y-6">
@@ -278,10 +360,12 @@ const PromoteurFinances = () => {
             <p className="text-gray-600">Suivi des finances et rentabilité des projets</p>
           </div>
           <div className="flex items-center space-x-2">
-            <Badge className="bg-green-100 text-green-800">
-              <TrendingUp className="w-3 h-3 mr-1" />
-              +{financialData.monthlyGrowth}% ce mois
-            </Badge>
+            {financialData.monthlyGrowth !== null && (
+              <Badge className={financialData.monthlyGrowth >= 0 ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                <TrendingUp className="w-3 h-3 mr-1" />
+                {formatPercentage(financialData.monthlyGrowth)} ce mois
+              </Badge>
+            )}
             <Button variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Rapport
@@ -305,10 +389,16 @@ const PromoteurFinances = () => {
                 </div>
               </div>
               <div className="mt-4 flex items-center">
-                <ArrowUp className="w-4 h-4 text-green-500 mr-1" />
-                <span className="text-sm text-green-600 font-medium">
-                  +{financialData.monthlyGrowth}% vs mois dernier
-                </span>
+                {financialData.monthlyGrowth !== null ? (
+                  <>
+                    {getChangeIcon(financialData.monthlyGrowth)}
+                    <span className={`text-sm font-medium ml-1 ${financialData.monthlyGrowth >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                      {formatPercentage(financialData.monthlyGrowth)} vs mois dernier
+                    </span>
+                  </>
+                ) : (
+                  <span className="text-sm text-gray-400">Ventes soldées cumulées</span>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -318,7 +408,7 @@ const PromoteurFinances = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Bénéfice Net</p>
-                  <p className="text-2xl font-bold text-green-600">
+                  <p className={`text-2xl font-bold ${getProfitColor(financialData.netProfit)}`}>
                     {formatCurrency(financialData.netProfit)}
                   </p>
                 </div>
@@ -327,9 +417,9 @@ const PromoteurFinances = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <Progress value={financialData.profitMargin} className="h-2" />
+                <Progress value={Math.max(0, Math.min(100, financialData.profitMargin || 0))} className="h-2" />
                 <span className="text-xs text-gray-500 mt-1">
-                  Marge: {financialData.profitMargin}%
+                  Marge: {financialData.profitMargin !== null ? `${financialData.profitMargin}%` : '—'}
                 </span>
               </div>
             </CardContent>
@@ -340,7 +430,7 @@ const PromoteurFinances = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Flux de Trésorerie</p>
-                  <p className="text-2xl font-bold text-blue-600">
+                  <p className={`text-2xl font-bold ${getProfitColor(financialData.cashFlow)}`}>
                     {formatCurrency(financialData.cashFlow)}
                   </p>
                 </div>
@@ -349,8 +439,8 @@ const PromoteurFinances = () => {
                 </div>
               </div>
               <div className="mt-4">
-                <span className="text-sm text-purple-600 font-medium">
-                  Flux positif
+                <span className={`text-sm font-medium ${financialData.cashFlow >= 0 ? 'text-purple-600' : 'text-red-600'}`}>
+                  {financialData.cashFlow >= 0 ? 'Flux positif' : 'Flux négatif'} (12 mois)
                 </span>
               </div>
             </CardContent>
@@ -409,7 +499,7 @@ const PromoteurFinances = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                    <p className="text-gray-500">Graphique des revenus (à intégrer)</p>
+                    <p className="text-gray-500">Graphique des revenus (bientôt disponible)</p>
                   </div>
                 </CardContent>
               </Card>
@@ -421,32 +511,38 @@ const PromoteurFinances = () => {
                   <CardDescription>Entrées vs sorties mensuelles</CardDescription>
                 </CardHeader>
                 <CardContent>
-                  <div className="space-y-4">
-                    {cashFlowData.slice(-6).map((month) => (
-                      <div key={month.month} className="flex items-center justify-between">
-                        <div className="flex items-center space-x-3">
-                          <div className="w-12 text-sm font-medium">{month.month}</div>
-                          <div className="flex-1">
-                            <div className="flex justify-between text-sm mb-1">
-                              <span className="text-green-600">
-                                +{formatCurrency(month.income)}
-                              </span>
-                              <span className="text-red-600">
-                                -{formatCurrency(month.expenses)}
-                              </span>
+                  {cashFlowData.some((m) => m.income > 0 || m.expenses > 0) ? (
+                    <div className="space-y-4">
+                      {cashFlowData.slice(-6).map((month, idx) => (
+                        <div key={idx} className="flex items-center justify-between">
+                          <div className="flex items-center space-x-3">
+                            <div className="w-12 text-sm font-medium">{month.month}</div>
+                            <div className="flex-1">
+                              <div className="flex justify-between text-sm mb-1">
+                                <span className="text-green-600">
+                                  +{formatCurrency(month.income)}
+                                </span>
+                                <span className="text-red-600">
+                                  -{formatCurrency(month.expenses)}
+                                </span>
+                              </div>
+                              <Progress
+                                value={(month.income / maxIncome) * 100}
+                                className="h-2"
+                              />
                             </div>
-                            <Progress 
-                              value={(month.income / Math.max(...cashFlowData.map(m => m.income))) * 100} 
-                              className="h-2" 
-                            />
+                          </div>
+                          <div className={`font-semibold ${month.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                            {formatCurrency(month.net)}
                           </div>
                         </div>
-                        <div className={`font-semibold ${month.net >= 0 ? 'text-green-600' : 'text-red-600'}`}>
-                          {formatCurrency(month.net)}
-                        </div>
-                      </div>
-                    ))}
-                  </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="h-40 flex items-center justify-center text-gray-400 text-sm">
+                      Aucun mouvement de trésorerie enregistré
+                    </div>
+                  )}
                 </CardContent>
               </Card>
             </div>
@@ -457,41 +553,73 @@ const PromoteurFinances = () => {
                 <CardTitle>Alertes Financières</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center p-3 bg-red-50 border border-red-200 rounded-lg">
-                    <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />
-                    <div className="flex-1">
-                      <p className="font-medium text-red-800">Créance en retard</p>
-                      <p className="text-sm text-red-600">
-                        {formatCurrency(45000000)} de Moussa Ba en retard de 5 jours
-                      </p>
+                {(() => {
+                  const alerts = [];
+                  // Créances en retard réelles
+                  const overdue = receivables.filter((r) => r.status === 'En retard');
+                  overdue.forEach((r) => {
+                    alerts.push({
+                      type: 'danger',
+                      title: 'Créance en retard',
+                      text: `${formatCurrency(r.amount)} de ${r.client} en retard de ${r.daysPastDue} jour(s)`
+                    });
+                  });
+                  // Dépassement budgétaire réel
+                  projectRevenues.forEach((p) => {
+                    if (p.totalBudget > 0 && p.costs > p.totalBudget) {
+                      const pct = Math.round(((p.costs - p.totalBudget) / p.totalBudget) * 100);
+                      alerts.push({
+                        type: 'warning',
+                        title: 'Budget dépassé',
+                        text: `Projet ${p.name}: +${pct}% du budget initial`
+                      });
+                    }
+                  });
+                  // Objectif de marge atteint
+                  if (financialData.profitMargin !== null && financialData.profitMargin >= 30) {
+                    alerts.push({
+                      type: 'info',
+                      title: 'Objectif atteint',
+                      text: `Marge bénéficiaire de ${financialData.profitMargin}% atteinte`
+                    });
+                  }
+
+                  if (alerts.length === 0) {
+                    return (
+                      <div className="text-center text-gray-400 text-sm py-6">
+                        Aucune alerte financière
+                      </div>
+                    );
+                  }
+
+                  const styles = {
+                    danger: { box: 'bg-red-50 border-red-200', icon: <AlertTriangle className="w-5 h-5 text-red-600 mr-3" />, title: 'text-red-800', text: 'text-red-600' },
+                    warning: { box: 'bg-yellow-50 border-yellow-200', icon: <Clock className="w-5 h-5 text-yellow-600 mr-3" />, title: 'text-yellow-800', text: 'text-yellow-600' },
+                    info: { box: 'bg-blue-50 border-blue-200', icon: <CheckCircle className="w-5 h-5 text-blue-600 mr-3" />, title: 'text-blue-800', text: 'text-blue-600' }
+                  };
+
+                  return (
+                    <div className="space-y-3">
+                      {alerts.slice(0, 6).map((a, i) => {
+                        const st = styles[a.type];
+                        return (
+                          <div key={i} className={`flex items-center p-3 border rounded-lg ${st.box}`}>
+                            {st.icon}
+                            <div className="flex-1">
+                              <p className={`font-medium ${st.title}`}>{a.title}</p>
+                              <p className={`text-sm ${st.text}`}>{a.text}</p>
+                            </div>
+                            {a.type !== 'info' && (
+                              <Button size="sm" variant="outline">
+                                {a.type === 'danger' ? 'Relancer' : 'Analyser'}
+                              </Button>
+                            )}
+                          </div>
+                        );
+                      })}
                     </div>
-                    <Button size="sm" variant="outline">
-                      Relancer
-                    </Button>
-                  </div>
-                  <div className="flex items-center p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
-                    <Clock className="w-5 h-5 text-yellow-600 mr-3" />
-                    <div className="flex-1">
-                      <p className="font-medium text-yellow-800">Budget dépassé</p>
-                      <p className="text-sm text-yellow-600">
-                        Projet Appartements VDN: +15% du budget initial
-                      </p>
-                    </div>
-                    <Button size="sm" variant="outline">
-                      Analyser
-                    </Button>
-                  </div>
-                  <div className="flex items-center p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <CheckCircle className="w-5 h-5 text-blue-600 mr-3" />
-                    <div className="flex-1">
-                      <p className="font-medium text-blue-800">Objectif atteint</p>
-                      <p className="text-sm text-blue-600">
-                        Marge bénéficiaire de 30% atteinte ce mois
-                      </p>
-                    </div>
-                  </div>
-                </div>
+                  );
+                })()}
               </CardContent>
             </Card>
           </TabsContent>
@@ -509,6 +637,12 @@ const PromoteurFinances = () => {
                 </div>
               </CardHeader>
               <CardContent>
+                {projectRevenues.length === 0 ? (
+                  <div className="text-center text-gray-400 py-12">
+                    <Building className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                    <p>Aucun projet enregistré</p>
+                  </div>
+                ) : (
                 <div className="space-y-6">
                   {projectRevenues.map((project) => (
                     <motion.div
@@ -526,9 +660,11 @@ const PromoteurFinances = () => {
                             <Badge className={getStatusColor(project.status)}>
                               {project.status}
                             </Badge>
-                            <Badge className={getRiskColor(project.riskLevel)}>
-                              Risque {project.riskLevel}
-                            </Badge>
+                            {project.riskLevel && (
+                              <Badge className={getRiskColor(project.riskLevel)}>
+                                Risque {project.riskLevel}
+                              </Badge>
+                            )}
                             <Badge className="bg-gray-100 text-gray-800">
                               {project.completion}% terminé
                             </Badge>
@@ -595,18 +731,18 @@ const PromoteurFinances = () => {
                             </p>
                           </div>
                           <div>
-                            <p className="text-gray-500 mb-1">Temps restant</p>
+                            <p className="text-gray-500 mb-1">Échéance</p>
                             <p className="font-semibold">
-                              {project.status === 'Terminé' 
-                                ? `Terminé le ${new Date(project.completedDate).toLocaleDateString('fr-FR')}`
-                                : `Fin prévue: ${new Date(project.expectedCompletion).toLocaleDateString('fr-FR')}`
+                              {project.status === 'Terminé'
+                                ? (project.completedDate ? `Terminé le ${new Date(project.completedDate).toLocaleDateString('fr-FR')}` : 'Terminé')
+                                : (project.expectedCompletion ? `Fin prévue: ${new Date(project.expectedCompletion).toLocaleDateString('fr-FR')}` : '—')
                               }
                             </p>
                           </div>
                           <div>
                             <p className="text-gray-500 mb-1">Taux de vente</p>
                             <p className="font-semibold">
-                              {Math.round((project.unitsSold / project.unitsTotal) * 100)}%
+                              {project.unitsTotal > 0 ? `${Math.round((project.unitsSold / project.unitsTotal) * 100)}%` : '—'}
                             </p>
                           </div>
                         </div>
@@ -614,6 +750,7 @@ const PromoteurFinances = () => {
                     </motion.div>
                   ))}
                 </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -625,11 +762,11 @@ const PromoteurFinances = () => {
               <Card>
                 <CardHeader>
                   <CardTitle>Répartition des Dépenses</CardTitle>
-                  <CardDescription>Par catégorie</CardDescription>
+                  <CardDescription>Par projet</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                    <p className="text-gray-500">Graphique en secteurs (à intégrer)</p>
+                    <p className="text-gray-500">Graphique en secteurs (bientôt disponible)</p>
                   </div>
                 </CardContent>
               </Card>
@@ -642,60 +779,77 @@ const PromoteurFinances = () => {
                 </CardHeader>
                 <CardContent>
                   <div className="h-64 flex items-center justify-center bg-gray-50 rounded-lg">
-                    <p className="text-gray-500">Graphique linéaire (à intégrer)</p>
+                    <p className="text-gray-500">Graphique linéaire (bientôt disponible)</p>
                   </div>
                 </CardContent>
               </Card>
             </div>
 
-            {/* Détail des catégories */}
+            {/* Détail des dépenses par projet (developer_projects.spent) */}
             <Card>
               <CardHeader>
-                <CardTitle>Détail des Catégories de Dépenses</CardTitle>
+                <CardTitle>Dépenses par Projet</CardTitle>
+                <CardDescription>Dépenses engagées vs budget alloué</CardDescription>
               </CardHeader>
               <CardContent>
+                {projectRevenues.filter((p) => p.costs > 0 || p.totalBudget > 0).length === 0 ? (
+                  <div className="text-center text-gray-400 py-10">
+                    Aucune dépense enregistrée
+                  </div>
+                ) : (
                 <div className="space-y-4">
-                  {expenseCategories.map((category, index) => (
-                    <motion.div
-                      key={index}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: index * 0.1 }}
-                      className="border rounded-lg p-4"
-                    >
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center space-x-3">
-                          <h3 className="font-semibold text-gray-900">{category.category}</h3>
-                          <div className="flex items-center">
-                            {getChangeIcon(category.change)}
-                            <span className={`text-sm font-medium ml-1 ${
-                              category.change >= 0 ? 'text-green-600' : 'text-red-600'
-                            }`}>
-                              {formatPercentage(category.change)}
-                            </span>
-                          </div>
-                        </div>
-                        <div className="text-right">
-                          <p className="font-bold text-lg text-gray-900">
-                            {formatCurrency(category.amount)}
-                          </p>
-                          <p className="text-sm text-gray-500">{category.percentage}% du total</p>
-                        </div>
-                      </div>
-                      
-                      <Progress value={category.percentage} className="h-2 mb-3" />
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
-                        {category.subcategories.map((sub, subIndex) => (
-                          <div key={subIndex} className="flex justify-between">
-                            <span className="text-gray-600">{sub.name}:</span>
-                            <span className="font-medium">{formatCurrency(sub.amount)}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </motion.div>
-                  ))}
+                  {(() => {
+                    const totalSpent = projectRevenues.reduce((s, p) => s + p.costs, 0) || 1;
+                    return projectRevenues
+                      .filter((p) => p.costs > 0 || p.totalBudget > 0)
+                      .map((project, index) => {
+                        const pct = Math.round((project.costs / totalSpent) * 1000) / 10;
+                        const budgetUse = project.totalBudget > 0
+                          ? Math.round((project.costs / project.totalBudget) * 100)
+                          : null;
+                        return (
+                          <motion.div
+                            key={project.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ delay: index * 0.1 }}
+                            className="border rounded-lg p-4"
+                          >
+                            <div className="flex items-center justify-between mb-3">
+                              <div className="flex items-center space-x-3">
+                                <h3 className="font-semibold text-gray-900">{project.name}</h3>
+                                {budgetUse !== null && (
+                                  <span className={`text-sm font-medium ${budgetUse > 100 ? 'text-red-600' : 'text-gray-500'}`}>
+                                    {budgetUse}% du budget
+                                  </span>
+                                )}
+                              </div>
+                              <div className="text-right">
+                                <p className="font-bold text-lg text-gray-900">
+                                  {formatCurrency(project.costs)}
+                                </p>
+                                <p className="text-sm text-gray-500">{pct}% des dépenses</p>
+                              </div>
+                            </div>
+                            <Progress value={Math.min(100, pct)} className="h-2 mb-3" />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-sm">
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Budget alloué:</span>
+                                <span className="font-medium">{formatCurrency(project.totalBudget)}</span>
+                              </div>
+                              <div className="flex justify-between">
+                                <span className="text-gray-600">Reste disponible:</span>
+                                <span className="font-medium">
+                                  {formatCurrency(Math.max(0, project.totalBudget - project.costs))}
+                                </span>
+                              </div>
+                            </div>
+                          </motion.div>
+                        );
+                      });
+                  })()}
                 </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -722,6 +876,12 @@ const PromoteurFinances = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
+                {receivables.length === 0 ? (
+                  <div className="text-center text-gray-400 py-12">
+                    <CreditCard className="w-10 h-10 mx-auto mb-3 opacity-40" />
+                    <p>Aucune créance en cours</p>
+                  </div>
+                ) : (
                 <div className="space-y-4">
                   {receivables.map((receivable) => (
                     <motion.div
@@ -733,7 +893,7 @@ const PromoteurFinances = () => {
                       <div className="flex items-start justify-between">
                         <div className="flex items-start space-x-4">
                           <div className="w-12 h-12 bg-gradient-to-br from-green-500 to-blue-600 rounded-full flex items-center justify-center text-white font-semibold">
-                            {receivable.client.split(' ').map(n => n[0]).join('')}
+                            {receivable.client.split(' ').map(n => n[0]).join('').slice(0, 2)}
                           </div>
                           <div>
                             <h3 className="font-semibold text-gray-900 mb-1">
@@ -754,17 +914,17 @@ const PromoteurFinances = () => {
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="text-right">
                           <p className="text-xl font-bold text-green-600 mb-1">
                             {formatCurrency(receivable.amount)}
                           </p>
                           <p className="text-sm text-gray-600">
-                            Échéance: {new Date(receivable.dueDate).toLocaleDateString('fr-FR')}
+                            Échéance: {receivable.dueDate ? new Date(receivable.dueDate).toLocaleDateString('fr-FR') : '—'}
                           </p>
                         </div>
                       </div>
-                      
+
                       <div className="flex items-center justify-between mt-4 pt-3 border-t">
                         <div className="text-sm text-gray-600">
                           {receivable.status === 'En retard' && (
@@ -772,7 +932,7 @@ const PromoteurFinances = () => {
                               Action requise: Relance client
                             </span>
                           )}
-                          {receivable.status === 'À venir' && (
+                          {receivable.status === 'À venir' && receivable.dueDate && (
                             <span className="text-blue-600">
                               Paiement prévu dans {Math.ceil((new Date(receivable.dueDate) - new Date()) / (1000 * 60 * 60 * 24))} jours
                             </span>
@@ -793,6 +953,7 @@ const PromoteurFinances = () => {
                     </motion.div>
                   ))}
                 </div>
+                )}
               </CardContent>
             </Card>
 
@@ -805,19 +966,19 @@ const PromoteurFinances = () => {
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div className="text-center p-4 bg-green-50 rounded-lg">
                     <p className="text-2xl font-bold text-green-600">
-                      {formatCurrency(167500000)}
+                      {formatCurrency(receivablesSummary.upcoming)}
                     </p>
                     <p className="text-sm text-green-700">À venir</p>
                   </div>
                   <div className="text-center p-4 bg-red-50 rounded-lg">
                     <p className="text-2xl font-bold text-red-600">
-                      {formatCurrency(45000000)}
+                      {formatCurrency(receivablesSummary.overdue)}
                     </p>
                     <p className="text-sm text-red-700">En retard</p>
                   </div>
                   <div className="text-center p-4 bg-blue-50 rounded-lg">
                     <p className="text-2xl font-bold text-blue-600">
-                      {formatCurrency(107500000)}
+                      {formatCurrency(receivablesSummary.collectedThisMonth)}
                     </p>
                     <p className="text-sm text-blue-700">Encaissé ce mois</p>
                   </div>

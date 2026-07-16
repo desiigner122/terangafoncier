@@ -64,21 +64,15 @@ import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import { createClient } from '@supabase/supabase-js';
+import supabase from '@/lib/supabaseClient';
 import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 
-const supabase = createClient(
-  import.meta.env.VITE_SUPABASE_URL,
-  import.meta.env.VITE_SUPABASE_ANON_KEY
-);
-
 const CompleteSidebarNotaireDashboard = () => {
-  const { user, signOut } = useAuth();
+  const { user, profile, signOut } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [profile, setProfile] = useState(null);
 
   // Extraire l'onglet actif depuis l'URL
   const getActiveTabFromPath = () => {
@@ -110,22 +104,73 @@ const CompleteSidebarNotaireDashboard = () => {
     clientSatisfaction: 0,
     totalClients: 0,
     unreadCommunications: 0,
+    unreadNotifications: 0,
     pendingTickets: 0
   });
 
   const [isLoadingStats, setIsLoadingStats] = useState(true);
 
-  // Chargement des stats réelles
+  // Chargement des stats réelles + compteurs de badges (colonnes réelles, filtrés par notaire_id/user_id)
   useEffect(() => {
     const loadDashboardStats = async () => {
-      if (!user) return;
-      
+      if (!user?.id) {
+        setIsLoadingStats(false);
+        return;
+      }
+
       setIsLoadingStats(true);
       try {
-        const result = await NotaireSupabaseService.getDashboardStats(user.id);
-        if (result.success) {
-          setDashboardStats(result.data);
+        // Stats enrichies via le service (revenus, conformité, satisfaction...) pour le contexte Outlet
+        let serviceStats = {};
+        try {
+          const result = await NotaireSupabaseService.getDashboardStats(user.id);
+          if (result.success && result.data) serviceStats = result.data;
+        } catch (serviceError) {
+          console.error('Erreur service stats notaire:', serviceError);
         }
+
+        // Compteurs réels des badges : comptage direct sur les vraies tables/colonnes
+        const [actesRes, clientsRes, notifsRes, ticketsRes] = await Promise.all([
+          // Dossiers actifs = actes en cours (statuts réels)
+          supabase.from('notarial_acts').select('id', { count: 'exact', head: true })
+            .eq('notaire_id', user.id).in('status', ['draft', 'in_progress']),
+          // Clients CRM du notaire
+          supabase.from('clients_notaire').select('id', { count: 'exact', head: true })
+            .eq('notaire_id', user.id),
+          // Notifications non lues
+          supabase.from('notifications').select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id).eq('read', false),
+          // Tickets de support en attente
+          supabase.from('support_tickets').select('id', { count: 'exact', head: true })
+            .eq('user_id', user.id).in('status', ['open', 'in_progress'])
+        ]);
+
+        // Messages non lus dans les conversations où le notaire est participant
+        let unreadMessages = 0;
+        const { data: parts } = await supabase
+          .from('conversation_participants')
+          .select('conversation_id')
+          .eq('user_id', user.id);
+        const convIds = (parts || []).map((p) => p.conversation_id);
+        if (convIds.length > 0) {
+          const { count: msgCount } = await supabase
+            .from('messages')
+            .select('id', { count: 'exact', head: true })
+            .in('conversation_id', convIds)
+            .eq('read', false)
+            .neq('sender_id', user.id);
+          unreadMessages = msgCount || 0;
+        }
+
+        setDashboardStats((prev) => ({
+          ...prev,
+          ...serviceStats,
+          activeCases: actesRes.count || 0,
+          totalClients: clientsRes.count || 0,
+          unreadCommunications: unreadMessages,
+          unreadNotifications: notifsRes.count || 0,
+          pendingTickets: ticketsRes.count || 0
+        }));
       } catch (error) {
         console.error('Erreur chargement stats sidebar:', error);
       } finally {
@@ -134,40 +179,6 @@ const CompleteSidebarNotaireDashboard = () => {
     };
 
     loadDashboardStats();
-  }, [user]);
-
-  // Chargement du profil utilisateur
-  useEffect(() => {
-    // Temporairement désactivé pour éviter la récursion infinie des politiques RLS
-    // const fetchProfile = async () => {
-    //   if (!user) return;
-    //   
-    //   try {
-    //     const { data, error } = await supabase
-    //       .from('profiles')
-    //       .select('*')
-    //       .eq('id', user.id)
-    //       .single();
-    //     
-    //     if (error) throw error;
-    //     setProfile(data);
-    //   } catch (error) {
-    //     console.error('Erreur lors du chargement du profil:', error);
-    //   }
-    // };
-
-    // fetchProfile();
-    
-    // Utilisation d'un profil par défaut
-    if (user) {
-      setProfile({
-        id: user.id,
-        email: user.email,
-        role: 'notaire',
-        first_name: 'Maître',
-        last_name: 'Notaire'
-      });
-    }
   }, [user]);
 
   const handleLogout = async () => {
@@ -294,6 +305,7 @@ const CompleteSidebarNotaireDashboard = () => {
       label: 'Notifications',
       icon: Bell,
       description: 'Centre de notifications',
+      badge: dashboardStats.unreadNotifications > 0 ? dashboardStats.unreadNotifications.toString() : null,
       route: '/notaire/notifications'
     },
     {
@@ -576,18 +588,18 @@ const CompleteSidebarNotaireDashboard = () => {
                 )}
               </Button>
 
-              {/* Notifications Button - Tickets en attente */}
-              <Button 
-                variant="ghost" 
-                size="sm" 
+              {/* Notifications Button - Notifications non lues */}
+              <Button
+                variant="ghost"
+                size="sm"
                 className="text-gray-600 hover:text-amber-600 hover:bg-amber-50 relative"
-                onClick={() => navigate('/notaire/settings')}
-                title="Paramètres & Support"
+                onClick={() => navigate('/notaire/notifications')}
+                title="Notifications"
               >
                 <Bell className="h-5 w-5" />
-                {!isLoadingStats && dashboardStats.pendingTickets > 0 && (
+                {!isLoadingStats && dashboardStats.unreadNotifications > 0 && (
                   <span className="absolute -top-1 -right-1 bg-orange-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center">
-                    {dashboardStats.pendingTickets}
+                    {dashboardStats.unreadNotifications}
                   </span>
                 )}
               </Button>

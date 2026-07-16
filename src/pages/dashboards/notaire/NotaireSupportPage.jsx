@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Ticket, 
-  Plus, 
-  Search, 
-  Filter, 
-  MessageSquare, 
-  Clock, 
-  CheckCircle2, 
+import {
+  Ticket,
+  Plus,
+  Search,
+  Filter,
+  MessageSquare,
+  Clock,
+  CheckCircle2,
   XCircle,
   AlertCircle,
   Send,
@@ -16,7 +16,6 @@ import {
   Calendar
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import supabase from '@/lib/supabaseClient';
 
 const NotaireSupportPage = () => {
@@ -29,8 +28,10 @@ const NotaireSupportPage = () => {
   const [showNewTicketModal, setShowNewTicketModal] = useState(false);
   const [newMessage, setNewMessage] = useState('');
   const [messages, setMessages] = useState([]);
+  const [newTicket, setNewTicket] = useState({ title: '', description: '', priority: 'normal' });
+  const [isCreating, setIsCreating] = useState(false);
 
-  // ✅ DONNÉES RÉELLES - Chargement depuis Supabase
+  // ✅ DONNÉES RÉELLES - support_tickets filtré par user.id
   useEffect(() => {
     if (user) {
       loadTickets();
@@ -38,15 +39,30 @@ const NotaireSupportPage = () => {
   }, [user]);
 
   const loadTickets = async () => {
+    if (!user) return;
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.getSupportTickets(user.id);
-      if (result.success) {
-        setTickets(result.data || []);
-      } else {
-        console.error('Erreur lors du chargement:', result.error);
-        setTickets([]);
+      const { data: ticketsData, error } = await supabase
+        .from('support_tickets')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+      if (error) throw error;
+
+      // Compteur de messages réel (support_ticket_messages)
+      let countsByTicket = {};
+      const ids = (ticketsData || []).map(t => t.id);
+      if (ids.length > 0) {
+        const { data: msgs } = await supabase
+          .from('support_ticket_messages')
+          .select('ticket_id')
+          .in('ticket_id', ids);
+        (msgs || []).forEach(m => {
+          countsByTicket[m.ticket_id] = (countsByTicket[m.ticket_id] || 0) + 1;
+        });
       }
+
+      setTickets((ticketsData || []).map(t => ({ ...t, messages_count: countsByTicket[t.id] || 0 })));
     } catch (error) {
       console.error('Erreur chargement tickets:', error);
       setTickets([]);
@@ -59,7 +75,7 @@ const NotaireSupportPage = () => {
     try {
       if (!ticket) return;
       const { data, error } = await supabase
-        .from('ticket_responses')
+        .from('support_ticket_messages')
         .select('*')
         .eq('ticket_id', ticket.id)
         .order('created_at', { ascending: true });
@@ -80,14 +96,20 @@ const NotaireSupportPage = () => {
 
   const priorityConfig = {
     low: { label: 'Basse', color: 'gray' },
+    normal: { label: 'Normale', color: 'blue' },
     medium: { label: 'Moyenne', color: 'yellow' },
-    high: { label: 'Haute', color: 'red' }
+    high: { label: 'Haute', color: 'red' },
+    urgent: { label: 'Urgente', color: 'red' }
   };
+
+  // Fallbacks sobres pour éviter tout crash sur une valeur inattendue
+  const getStatus = (s) => statusConfig[s] || { label: s || '—', color: 'gray', icon: AlertCircle };
+  const getPriority = (p) => priorityConfig[p] || { label: p || '—', color: 'gray' };
 
   const filteredTickets = tickets.filter(ticket => {
     const matchesStatus = filterStatus === 'all' || ticket.status === filterStatus;
-    const matchesSearch = (ticket.subject || ticket.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
-                         (ticket.ticket_number || '').toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesSearch = (ticket.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         (ticket.id || '').toLowerCase().includes(searchQuery.toLowerCase());
     return matchesStatus && matchesSearch;
   });
 
@@ -100,16 +122,51 @@ const NotaireSupportPage = () => {
   }, [selectedTicket]);
 
   const handleSendMessage = async () => {
-    if (!newMessage.trim() || !selectedTicket) return;
+    if (!newMessage.trim() || !selectedTicket || !user) return;
     try {
-      const result = await NotaireSupabaseService.respondToTicket(selectedTicket.id, user.id, newMessage, false);
-      if (result.success) {
-        setNewMessage('');
-        await loadMessages(selectedTicket);
-        await loadTickets();
-      }
+      const { error } = await supabase
+        .from('support_ticket_messages')
+        .insert({ ticket_id: selectedTicket.id, sender_id: user.id, content: newMessage });
+      if (error) throw error;
+
+      await supabase
+        .from('support_tickets')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', selectedTicket.id);
+
+      setNewMessage('');
+      await loadMessages(selectedTicket);
+      await loadTickets();
     } catch (e) {
       console.error('Erreur envoi message:', e);
+    }
+  };
+
+  const handleCreateTicket = async () => {
+    if (!user || !newTicket.title.trim()) return;
+    setIsCreating(true);
+    try {
+      const { data, error } = await supabase
+        .from('support_tickets')
+        .insert({
+          user_id: user.id,
+          title: newTicket.title,
+          description: newTicket.description,
+          priority: newTicket.priority,
+          status: 'open'
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      setShowNewTicketModal(false);
+      setNewTicket({ title: '', description: '', priority: 'normal' });
+      await loadTickets();
+      if (data) setSelectedTicket({ ...data, messages_count: 0 });
+    } catch (e) {
+      console.error('Erreur création ticket:', e);
+    } finally {
+      setIsCreating(false);
     }
   };
 
@@ -210,8 +267,19 @@ const NotaireSupportPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Liste des tickets */}
         <div className="lg:col-span-1 space-y-4">
-            {filteredTickets.map((ticket, index) => {
-            const StatusIcon = statusConfig[ticket.status].icon;
+            {isLoading ? (
+              <div className="bg-white rounded-xl p-8 shadow-md border border-slate-200 text-center text-slate-500">
+                Chargement des tickets...
+              </div>
+            ) : filteredTickets.length === 0 ? (
+              <div className="bg-white rounded-xl p-8 shadow-md border border-slate-200 text-center">
+                <Ticket size={40} className="text-slate-300 mx-auto mb-3" />
+                <p className="text-slate-500">Aucun ticket pour le moment</p>
+              </div>
+            ) : filteredTickets.map((ticket, index) => {
+            const status = getStatus(ticket.status);
+            const priority = getPriority(ticket.priority);
+            const StatusIcon = status.icon;
             return (
               <motion.div
                 key={ticket.id}
@@ -227,25 +295,25 @@ const NotaireSupportPage = () => {
               >
                 <div className="flex items-start justify-between mb-2">
                   <div className="flex-1">
-                    <h3 className="font-semibold text-slate-800 mb-1">{ticket.subject || ticket.title}</h3>
-                    <p className="text-sm text-slate-600">{ticket.ticket_number || ticket.id}</p>
+                    <h3 className="font-semibold text-slate-800 mb-1">{ticket.title || 'Sans titre'}</h3>
+                    <p className="text-sm text-slate-600">#{String(ticket.id).slice(0, 8)}</p>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-xs font-medium bg-${priorityConfig[ticket.priority].color}-100 text-${priorityConfig[ticket.priority].color}-700`}>
-                    {priorityConfig[ticket.priority].label}
+                  <span className={`px-2 py-1 rounded-full text-xs font-medium bg-${priority.color}-100 text-${priority.color}-700`}>
+                    {priority.label}
                   </span>
                 </div>
                 <div className="flex items-center gap-2 text-sm text-slate-600 mb-2">
-                  <User size={14} />
-                  <span>{ticket.user_id}</span>
+                  <Calendar size={14} />
+                  <span>{ticket.created_at ? new Date(ticket.created_at).toLocaleDateString('fr-FR') : '—'}</span>
                 </div>
                 <div className="flex items-center justify-between">
-                  <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-${statusConfig[ticket.status].color}-100 text-${statusConfig[ticket.status].color}-700`}>
+                  <span className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium bg-${status.color}-100 text-${status.color}-700`}>
                     <StatusIcon size={14} />
-                    {statusConfig[ticket.status].label}
+                    {status.label}
                   </span>
                   <span className="flex items-center gap-1 text-xs text-slate-500">
                     <MessageSquare size={14} />
-                    {ticket.messages_count?.[0]?.count ?? ticket.messages_count ?? 0}
+                    {ticket.messages_count ?? 0}
                   </span>
                 </div>
               </motion.div>
@@ -265,72 +333,65 @@ const NotaireSupportPage = () => {
               <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
                 <div className="flex items-start justify-between mb-4">
                   <div>
-                    <h2 className="text-2xl font-bold mb-2">{selectedTicket.subject || selectedTicket.title}</h2>
-                    <p className="text-blue-100">{selectedTicket.ticket_number || selectedTicket.id}</p>
+                    <h2 className="text-2xl font-bold mb-2">{selectedTicket.title || 'Sans titre'}</h2>
+                    <p className="text-blue-100">#{String(selectedTicket.id).slice(0, 8)}</p>
                   </div>
                   <span className={`px-3 py-1 rounded-full text-sm font-medium bg-white bg-opacity-20`}>
-                    {statusConfig[selectedTicket.status].label}
+                    {getStatus(selectedTicket.status).label}
                   </span>
                 </div>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                  <div>
-                    <p className="text-blue-100">Utilisateur</p>
-                    <p className="font-semibold">{selectedTicket.user_id}</p>
-                  </div>
-                  <div>
-                    <p className="text-blue-100">Catégorie</p>
-                    <p className="font-semibold">{selectedTicket.category}</p>
-                  </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
                   <div>
                     <p className="text-blue-100">Priorité</p>
-                    <p className="font-semibold">{priorityConfig[selectedTicket.priority].label}</p>
+                    <p className="font-semibold">{getPriority(selectedTicket.priority).label}</p>
                   </div>
                   <div>
-                    <p className="text-blue-100">Assigné à</p>
-                    <p className="font-semibold">{selectedTicket.assigned_to || 'Non assigné'}</p>
+                    <p className="text-blue-100">Créé le</p>
+                    <p className="font-semibold">{selectedTicket.created_at ? new Date(selectedTicket.created_at).toLocaleDateString('fr-FR') : '—'}</p>
+                  </div>
+                  <div>
+                    <p className="text-blue-100">Dernière activité</p>
+                    <p className="font-semibold">{selectedTicket.updated_at ? new Date(selectedTicket.updated_at).toLocaleDateString('fr-FR') : '—'}</p>
                   </div>
                 </div>
+                {selectedTicket.description && (
+                  <p className="mt-4 text-blue-50 text-sm bg-white bg-opacity-10 rounded-lg p-3">
+                    {selectedTicket.description}
+                  </p>
+                )}
               </div>
 
               {/* Timeline des messages */}
               <div className="p-6 max-h-96 overflow-y-auto">
                 <div className="space-y-4">
-                  {messages.map((message) => (
-                    <div
-                      key={message.id}
-                      className={`flex ${message.is_staff ? 'justify-end' : 'justify-start'}`}
-                    >
-                      <div className={`max-w-[80%] ${message.is_staff ? 'bg-blue-100' : 'bg-slate-100'} rounded-lg p-4`}>
-                        <div className="flex items-center gap-2 mb-2">
-                          <User size={16} className="text-slate-600" />
-                          <span className="font-semibold text-sm text-slate-800">{message.is_staff ? 'Support' : 'Vous'}</span>
-                          <span className="text-xs text-slate-500">
-                            {new Date(message.created_at).toLocaleString('fr-FR')}
-                          </span>
-                        </div>
-                        <p className="text-slate-700">{message.message}</p>
-                        {Array.isArray(message.attachments) && message.attachments.length > 0 && (
-                          <div className="mt-2 flex items-center gap-2">
-                            <Paperclip size={14} className="text-slate-500" />
-                            {message.attachments.map((file, idx) => (
-                              <span key={idx} className="text-xs text-blue-600 hover:underline cursor-pointer">
-                                {file}
-                              </span>
-                            ))}
+                  {messages.length === 0 ? (
+                    <p className="text-center text-slate-400 text-sm py-4">Aucun message pour le moment</p>
+                  ) : messages.map((message) => {
+                    const isMe = message.sender_id === user?.id;
+                    return (
+                      <div
+                        key={message.id}
+                        className={`flex ${isMe ? 'justify-end' : 'justify-start'}`}
+                      >
+                        <div className={`max-w-[80%] ${isMe ? 'bg-blue-100' : 'bg-slate-100'} rounded-lg p-4`}>
+                          <div className="flex items-center gap-2 mb-2">
+                            <User size={16} className="text-slate-600" />
+                            <span className="font-semibold text-sm text-slate-800">{isMe ? 'Vous' : 'Support'}</span>
+                            <span className="text-xs text-slate-500">
+                              {message.created_at ? new Date(message.created_at).toLocaleString('fr-FR') : ''}
+                            </span>
                           </div>
-                        )}
+                          <p className="text-slate-700">{message.content}</p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
 
               {/* Zone de réponse */}
               <div className="border-t border-slate-200 p-4 bg-slate-50">
                 <div className="flex gap-2">
-                  <button className="p-2 hover:bg-slate-200 rounded-lg transition-colors">
-                    <Paperclip size={20} className="text-slate-600" />
-                  </button>
                   <input
                     type="text"
                     placeholder="Tapez votre réponse..."
@@ -376,28 +437,35 @@ const NotaireSupportPage = () => {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Titre</label>
-                <input type="text" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-1">Catégorie</label>
-                <select className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Technique</option>
-                  <option>Facturation</option>
-                  <option>Formation</option>
-                  <option>Autre</option>
-                </select>
+                <input
+                  type="text"
+                  value={newTicket.title}
+                  onChange={(e) => setNewTicket({ ...newTicket, title: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Priorité</label>
-                <select className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
-                  <option>Basse</option>
-                  <option>Moyenne</option>
-                  <option>Haute</option>
+                <select
+                  value={newTicket.priority}
+                  onChange={(e) => setNewTicket({ ...newTicket, priority: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="low">Basse</option>
+                  <option value="normal">Normale</option>
+                  <option value="medium">Moyenne</option>
+                  <option value="high">Haute</option>
+                  <option value="urgent">Urgente</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Description</label>
-                <textarea rows="4" className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"></textarea>
+                <textarea
+                  rows="4"
+                  value={newTicket.description}
+                  onChange={(e) => setNewTicket({ ...newTicket, description: e.target.value })}
+                  className="w-full px-4 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
+                ></textarea>
               </div>
               <div className="flex justify-end gap-3">
                 <button
@@ -406,8 +474,12 @@ const NotaireSupportPage = () => {
                 >
                   Annuler
                 </button>
-                <button className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
-                  Créer le Ticket
+                <button
+                  onClick={handleCreateTicket}
+                  disabled={isCreating || !newTicket.title.trim()}
+                  className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isCreating ? 'Création...' : 'Créer le Ticket'}
                 </button>
               </div>
             </div>

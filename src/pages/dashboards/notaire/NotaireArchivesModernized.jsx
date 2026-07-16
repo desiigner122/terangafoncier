@@ -15,11 +15,12 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Progress } from '@/components/ui/progress';
 import { useAuth } from '@/contexts/UnifiedAuthContext.jsx';
-import { NotaireSupabaseService } from '@/services/NotaireSupabaseService';
+import { supabase } from '@/lib/supabaseClient';
 
 /**
  * NotaireArchivesModernized.jsx
- * Archives notariales numériques avec recherche full-text et données Supabase réelles
+ * Archives notariales numériques et données Supabase réelles.
+ * Source réelle : notarial_acts (status 'signed'/'completed') jointe à properties.
  * Remplace NotaireArchives.jsx (mock data)
  */
 
@@ -52,27 +53,74 @@ export default function NotaireArchivesModernized() {
     }
   }, [user]);
 
+  // Nombre de jours entre deux dates (durée réelle du dossier)
+  const daysBetween = (start, end) => {
+    if (!start || !end) return null;
+    const diff = new Date(end) - new Date(start);
+    if (Number.isNaN(diff) || diff < 0) return null;
+    return Math.round(diff / (1000 * 60 * 60 * 24));
+  };
+
+  // Mappe une ligne notarial_acts (+ properties jointe) vers la forme attendue par le JSX
+  const mapActToArchive = (act) => {
+    const property = act.properties || null;
+    const archiveDate = act.signed_at || act.updated_at || act.created_at;
+    return {
+      id: act.id,
+      act_type: act.act_type,
+      act_number: act.reference || act.id?.slice(0, 8),
+      title: act.reference || getTypeLabel(act.act_type),
+      client_name: act.client_name,
+      property_address:
+        property?.location ||
+        property?.title ||
+        [property?.city, property?.region].filter(Boolean).join(', ') ||
+        null,
+      archive_date: archiveDate,
+      completion_date: act.signed_at || null,
+      // Valeur réelle de la transaction / honoraires réels
+      property_value: act.amount ?? null,
+      notary_fees: act.notary_fees ?? null,
+      // Durée calculée à partir des timestamps réels (pas de fabrication)
+      duration_days: daysBetween(act.created_at, act.signed_at),
+      // Pas de table de liaison acte<->documents fiable : champ non renseigné (bloc masqué)
+      document_count: 0,
+      notes: null
+    };
+  };
+
   const loadArchives = async () => {
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.getArchives(user.id, {
-        search: searchTerm,
-        year: yearFilter !== 'all' ? yearFilter : null,
-        type: typeFilter !== 'all' ? typeFilter : null
-      });
+      let query = supabase
+        .from('notarial_acts')
+        .select('id, notaire_id, act_type, reference, client_name, status, notary_fees, amount, signed_at, created_at, updated_at, properties(title, location, city, region)')
+        .eq('notaire_id', user.id)
+        .in('status', ['signed', 'completed']);
 
-      if (result.success) {
-        setArchives(result.data);
-        setFilteredArchives(result.data);
-      } else {
-        window.safeGlobalToast?.({
-          title: "Erreur de chargement",
-          description: result.error || "Impossible de charger les archives",
-          variant: "destructive"
-        });
+      const term = searchTerm.trim();
+      if (term) {
+        query = query.or(`reference.ilike.%${term}%,client_name.ilike.%${term}%`);
       }
+
+      if (typeFilter !== 'all') {
+        query = query.eq('act_type', typeFilter);
+      }
+
+      const { data, error } = await query.order('signed_at', { ascending: false, nullsFirst: false });
+
+      if (error) throw error;
+
+      const mapped = (data || []).map(mapActToArchive);
+      setArchives(mapped);
+      setFilteredArchives(mapped);
     } catch (error) {
       console.error('Erreur chargement archives:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur de chargement",
+        description: error.message || "Impossible de charger les archives",
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }

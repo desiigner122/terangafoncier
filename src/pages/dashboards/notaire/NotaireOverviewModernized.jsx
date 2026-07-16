@@ -21,7 +21,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import supabase from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -38,22 +38,38 @@ import {
 	TableRow
 } from '@/components/ui/table';
 
+// Statuts RÉELS de notarial_acts : draft | in_progress | signed | completed | cancelled
 const statusStyles = {
 	draft: { label: 'Brouillon', className: 'bg-slate-100 text-slate-700' },
-	draft_review: { label: 'En révision', className: 'bg-amber-100 text-amber-800' },
-	documentation: { label: 'Documentation', className: 'bg-blue-100 text-blue-800' },
-	signature_pending: { label: 'Signature en attente', className: 'bg-purple-100 text-purple-800' },
-	registration: { label: 'Enregistrement', className: 'bg-orange-100 text-orange-800' },
+	in_progress: { label: 'En cours', className: 'bg-blue-100 text-blue-800' },
+	signed: { label: 'Signé', className: 'bg-purple-100 text-purple-800' },
 	completed: { label: 'Terminé', className: 'bg-emerald-100 text-emerald-800' },
-	rejected: { label: 'Refusé', className: 'bg-red-100 text-red-800' }
+	cancelled: { label: 'Annulé', className: 'bg-red-100 text-red-800' }
 };
 
-const priorityStyles = {
-	high: 'bg-red-100 text-red-800',
-	urgent: 'bg-red-100 text-red-800',
-	medium: 'bg-amber-100 text-amber-800',
-	low: 'bg-emerald-100 text-emerald-800'
+// Progression dérivée du statut réel (pas de colonne progress dans le schéma)
+const statusProgress = {
+	draft: 15,
+	in_progress: 50,
+	signed: 80,
+	completed: 100,
+	cancelled: 0
 };
+
+const actTypeLabels = {
+	vente_immobiliere: 'Ventes Immobilières',
+	succession: 'Successions',
+	donation: 'Donations',
+	acte_propriete: 'Actes de Propriété',
+	hypotheque: 'Hypothèques',
+	constitution_societe: 'Constitutions Société',
+	servitude: 'Servitudes',
+	partage: 'Partages'
+};
+
+const distributionColors = ['#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16', '#F97316'];
+
+const ACTIVE_STATUSES = ['draft', 'in_progress', 'signed'];
 
 const NotaireOverviewModernized = () => {
 	const { dashboardStats: contextStats } = useOutletContext() || {};
@@ -77,7 +93,7 @@ const NotaireOverviewModernized = () => {
 	const [stats, setStats] = useState(defaultStats);
 	const [revenueData, setRevenueData] = useState([]);
 	const [recentActs, setRecentActs] = useState([]);
-	const [cases, setCases] = useState([]);
+	const [acts, setActs] = useState([]);
 	const [distribution, setDistribution] = useState([]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [isRefreshing, setIsRefreshing] = useState(false);
@@ -98,33 +114,85 @@ const NotaireOverviewModernized = () => {
 		initial ? setIsLoading(true) : setIsRefreshing(true);
 
 		try {
-			const [statsResult, revenueResult, recentActsResult, distributionResult, casesResult] = await Promise.all([
-				NotaireSupabaseService.getDashboardStats(user.id),
-				NotaireSupabaseService.getRevenueData(user.id, 6),
-				NotaireSupabaseService.getRecentActs(user.id, 8),
-				NotaireSupabaseService.getActTypesDistribution(user.id),
-				NotaireSupabaseService.getCases(user.id)
+			// Source principale : tous les actes notariés du notaire (colonnes RÉELLES)
+			const [actsRes, docsRes, complianceRes, clientsRes] = await Promise.all([
+				supabase
+					.from('notarial_acts')
+					.select('id, act_type, reference, client_id, client_name, status, notary_fees, amount, client_satisfaction, signed_at, created_at')
+					.eq('notaire_id', user.id)
+					.order('created_at', { ascending: false }),
+				supabase
+					.from('document_authentication')
+					.select('id', { count: 'exact', head: true })
+					.eq('notaire_id', user.id)
+					.eq('verification_status', 'verified'),
+				supabase
+					.from('compliance_checks')
+					.select('compliance_score')
+					.eq('notaire_id', user.id),
+				supabase
+					.from('clients_notaire')
+					.select('id', { count: 'exact', head: true })
+					.eq('notaire_id', user.id)
 			]);
 
-			if (statsResult?.success) {
-				setStats((prev) => ({ ...prev, ...statsResult.data }));
-			}
+			const allActs = actsRes.data || [];
+			setActs(allActs);
 
-			if (revenueResult?.success) {
-				setRevenueData(revenueResult.data || []);
-			}
+			// KPI dérivés des actes réels
+			const activeCases = allActs.filter((act) => ACTIVE_STATUSES.includes(act.status)).length;
+			const completedActs = allActs.filter((act) => act.status === 'completed');
+			const currentMonth = new Date().toISOString().substring(0, 7);
+			const monthlyRevenue = completedActs
+				.filter((act) => (act.created_at || '').startsWith(currentMonth))
+				.reduce((sum, act) => sum + (Number(act.notary_fees) || 0), 0);
 
-			if (recentActsResult?.success) {
-				setRecentActs(recentActsResult.data || []);
-			}
+			// Satisfaction client réelle (échelle 0-100)
+			const satisfactionScores = allActs
+				.map((act) => act.client_satisfaction)
+				.filter((v) => v !== null && v !== undefined);
+			const avgSatisfaction = satisfactionScores.length
+				? satisfactionScores.reduce((sum, v) => sum + Number(v), 0) / satisfactionScores.length
+				: 0;
 
-			if (distributionResult?.success) {
-				setDistribution(distributionResult.data || []);
-			}
+			// Durée moyenne réelle : signed_at - created_at des actes complétés/signés
+			const durations = completedActs
+				.filter((act) => act.signed_at && act.created_at)
+				.map((act) => (new Date(act.signed_at) - new Date(act.created_at)) / (1000 * 60 * 60 * 24))
+				.filter((d) => d >= 0);
+			const avgCompletionDays = durations.length
+				? durations.reduce((sum, d) => sum + d, 0) / durations.length
+				: 0;
 
-			if (casesResult?.success) {
-				setCases(casesResult.data || []);
-			}
+			// Conformité réelle (moyenne des compliance_score)
+			const complianceScores = (complianceRes.data || [])
+				.map((c) => c.compliance_score)
+				.filter((v) => v !== null && v !== undefined);
+			const avgCompliance = complianceScores.length
+				? complianceScores.reduce((sum, v) => sum + Number(v), 0) / complianceScores.length
+				: 0;
+
+			setStats((prev) => ({
+				...prev,
+				totalCases: allActs.length,
+				activeCases,
+				completedCases: completedActs.length,
+				monthlyRevenue,
+				documentsAuthenticated: docsRes.count || 0,
+				complianceScore: Math.round(avgCompliance),
+				clientSatisfaction: avgSatisfaction,
+				avgCompletionDays: Math.round(avgCompletionDays),
+				uniqueClients: clientsRes.count || new Set(allActs.map((a) => a.client_id).filter(Boolean)).size
+			}));
+
+			// Revenus des 6 derniers mois (actes complétés)
+			setRevenueData(buildRevenueData(completedActs, 6));
+
+			// Actes récents (8 derniers, déjà triés desc)
+			setRecentActs(allActs.slice(0, 8));
+
+			// Répartition par type d'acte
+			setDistribution(buildDistribution(allActs));
 		} catch (error) {
 			console.error("Erreur chargement vue d'ensemble notaire:", error);
 			window.safeGlobalToast?.({
@@ -135,6 +203,44 @@ const NotaireOverviewModernized = () => {
 		} finally {
 			initial ? setIsLoading(false) : setIsRefreshing(false);
 		}
+	};
+
+	const buildRevenueData = (completedActs, monthsBack) => {
+		const buckets = {};
+		const now = new Date();
+		for (let i = monthsBack - 1; i >= 0; i -= 1) {
+			const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
+			const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+			buckets[key] = {
+				month: d.toLocaleDateString('fr-FR', { month: 'short' }),
+				revenue: 0,
+				cases: 0
+			};
+		}
+		completedActs.forEach((act) => {
+			const key = (act.created_at || '').substring(0, 7);
+			if (buckets[key]) {
+				buckets[key].revenue += Number(act.notary_fees) || 0;
+				buckets[key].cases += 1;
+			}
+		});
+		return Object.values(buckets);
+	};
+
+	const buildDistribution = (allActs) => {
+		if (!allActs.length) return [];
+		const counts = {};
+		allActs.forEach((act) => {
+			const type = act.act_type || 'autre';
+			counts[type] = (counts[type] || 0) + 1;
+		});
+		const total = allActs.length;
+		return Object.entries(counts).map(([type, count], index) => ({
+			name: actTypeLabels[type] || type,
+			count,
+			value: Math.round((count / total) * 100),
+			color: distributionColors[index % distributionColors.length]
+		}));
 	};
 
 	const formatCurrency = (amount) => {
@@ -164,49 +270,47 @@ const NotaireOverviewModernized = () => {
 		return statusStyles[normalized] || { label: status || 'Inconnu', className: 'bg-slate-100 text-slate-700' };
 	};
 
+	// client_satisfaction est sur une échelle 0-100 dans le schéma réel
 	const formatSatisfaction = (value) => {
 		if (!value && value !== 0) return '—';
-		return `${value.toFixed(1)} / 5`;
+		return `${Math.round(value)} %`;
 	};
 
+	const getProgress = (status) => statusProgress[status?.toLowerCase()] ?? 0;
+
+	const getActLabel = (act) =>
+		act.reference || act.client_name || actTypeLabels[act.act_type] || act.act_type || 'Acte sans référence';
+
 	const upcomingCases = useMemo(() => {
-		if (!cases?.length) return [];
-		return [...cases]
-			.filter((item) => item.status !== 'completed' && item.status !== 'closed')
-			.sort((a, b) => {
-				const dateA = a.due_date || a.next_action_date || a.opened_date;
-				const dateB = b.due_date || b.next_action_date || b.opened_date;
-				return new Date(dateA || 0) - new Date(dateB || 0);
-			})
+		if (!acts?.length) return [];
+		return acts
+			.filter((item) => ACTIVE_STATUSES.includes(item.status))
+			.sort((a, b) => new Date(a.created_at || 0) - new Date(b.created_at || 0))
 			.slice(0, 6);
-	}, [cases]);
+	}, [acts]);
 
 	const pipelineStats = useMemo(() => {
-		if (!cases?.length) {
-			return { total: 0, inProgress: 0, awaitingSignature: 0, documentation: 0, blocked: 0, completed: 0 };
-		}
+		const base = { total: 0, inProgress: 0, awaitingSignature: 0, documentation: 0, blocked: 0, completed: 0 };
+		if (!acts?.length) return base;
 
-		return cases.reduce(
-			(acc, current) => {
-				acc.total += 1;
-				const status = current.status?.toLowerCase();
+		return acts.reduce((acc, current) => {
+			acc.total += 1;
+			const status = current.status?.toLowerCase();
 
-				if (status === 'completed' || status === 'closed') {
-					acc.completed += 1;
-				} else if (status?.includes('signature')) {
-					acc.awaitingSignature += 1;
-				} else if (status === 'documentation' || status === 'draft_review') {
-					acc.documentation += 1;
-				} else if (status === 'blocked' || status === 'on_hold') {
-					acc.blocked += 1;
-				} else {
-					acc.inProgress += 1;
-				}
-				return acc;
-			},
-			{ total: 0, inProgress: 0, awaitingSignature: 0, documentation: 0, blocked: 0, completed: 0 }
-		);
-	}, [cases]);
+			if (status === 'completed') {
+				acc.completed += 1;
+			} else if (status === 'signed') {
+				acc.awaitingSignature += 1;
+			} else if (status === 'draft') {
+				acc.documentation += 1;
+			} else if (status === 'cancelled') {
+				acc.blocked += 1;
+			} else {
+				acc.inProgress += 1;
+			}
+			return acc;
+		}, base);
+	}, [acts]);
 
 	const revenueMax = Math.max(...revenueData.map((item) => item.revenue), 0) || 1;
 
@@ -296,7 +400,7 @@ const NotaireOverviewModernized = () => {
 						<div className="text-3xl font-bold">{formatSatisfaction(stats.clientSatisfaction || 0)}</div>
 						<p className="text-xs text-muted-foreground">{stats.uniqueClients || 0} clients servis</p>
 						<Progress
-							value={Math.min(100, ((stats.clientSatisfaction || 0) / 5) * 100)}
+							value={Math.min(100, stats.clientSatisfaction || 0)}
 							className="mt-3"
 						/>
 					</CardContent>
@@ -318,7 +422,7 @@ const NotaireOverviewModernized = () => {
 						</div>
 					</CardHeader>
 					<CardContent>
-						{revenueData.length ? (
+						{revenueData.some((item) => item.revenue > 0 || item.cases > 0) ? (
 							<div className="h-56 flex items-end gap-3">
 								{revenueData.map((item) => {
 									const height = Math.max(12, (item.revenue / revenueMax) * 100);
@@ -402,20 +506,18 @@ const NotaireOverviewModernized = () => {
 								<TableBody>
 									{recentActs.map((act) => {
 										const statusBadge = getStatusBadge(act.status);
+										const progress = getProgress(act.status);
 										return (
 											<TableRow key={act.id}>
 												<TableCell className="font-medium">
 													<div className="flex flex-col">
-														<span>{act.title || 'Acte sans titre'}</span>
+														<span>{getActLabel(act)}</span>
 														<span className="text-xs text-gray-500">{formatDate(act.created_at)}</span>
 													</div>
 												</TableCell>
 												<TableCell>
-													{act.client ? (
-														<div className="flex flex-col">
-															<span>{`${act.client.first_name || ''} ${act.client.last_name || ''}`.trim() || 'Client interne'}</span>
-															<span className="text-xs text-gray-500">{act.client.email || 'Email indisponible'}</span>
-														</div>
+													{act.client_name ? (
+														<span>{act.client_name}</span>
 													) : (
 														<span className="text-xs text-gray-500">Client non assigné</span>
 													)}
@@ -425,8 +527,8 @@ const NotaireOverviewModernized = () => {
 												</TableCell>
 												<TableCell className="w-48">
 													<div className="flex items-center gap-3">
-														<Progress value={Math.min(100, act.progress || 0)} className="h-1.5" />
-														<span className="text-xs text-gray-500">{Math.round(act.progress || 0)}%</span>
+														<Progress value={progress} className="h-1.5" />
+														<span className="text-xs text-gray-500">{progress}%</span>
 													</div>
 												</TableCell>
 											</TableRow>
@@ -481,7 +583,7 @@ const NotaireOverviewModernized = () => {
 									</div>
 									<div className="p-4 rounded-lg border bg-gradient-to-br from-red-50 to-white">
 										<div className="flex items-center gap-2 text-sm font-semibold text-red-700">
-											<AlertTriangle className="h-4 w-4" /> Bloqués / urgences
+											<AlertTriangle className="h-4 w-4" /> Annulés / urgences
 										</div>
 										<div className="mt-2 text-2xl font-bold text-gray-900">{pipelineStats.blocked}</div>
 										<p className="text-xs text-gray-500">Escalades requises</p>
@@ -493,53 +595,55 @@ const NotaireOverviewModernized = () => {
 								<ScrollArea className="h-72 pr-4">
 									{upcomingCases.length ? (
 										<div className="space-y-3">
-											{upcomingCases.map((item) => (
-												<div key={item.id} className="p-4 border rounded-lg hover:shadow-sm transition-all">
-													<div className="flex items-start justify-between gap-3">
-														<div>
-															<div className="text-sm font-semibold text-gray-900 flex items-center gap-2">
-																<Target className="h-4 w-4 text-amber-600" /> {item.title || 'Dossier sans titre'}
+											{upcomingCases.map((item) => {
+												const statusBadge = getStatusBadge(item.status);
+												const progress = getProgress(item.status);
+												return (
+													<div key={item.id} className="p-4 border rounded-lg hover:shadow-sm transition-all">
+														<div className="flex items-start justify-between gap-3">
+															<div>
+																<div className="text-sm font-semibold text-gray-900 flex items-center gap-2">
+																	<Target className="h-4 w-4 text-amber-600" /> {getActLabel(item)}
+																</div>
+																<div className="mt-1 text-xs text-gray-500 flex flex-wrap gap-2">
+																	<span className="flex items-center gap-1">
+																		<Calendar className="h-3 w-3" /> Créé le {formatDate(item.created_at)}
+																	</span>
+																	{item.client_name && (
+																		<span className="flex items-center gap-1">
+																			<Users className="h-3 w-3" /> {item.client_name}
+																		</span>
+																	)}
+																</div>
 															</div>
-															<div className="mt-1 text-xs text-gray-500 flex flex-wrap gap-2">
-																{item.due_date && (
-																	<span className="flex items-center gap-1">
-																		<Calendar className="h-3 w-3" /> {formatDate(item.due_date)}
-																	</span>
-																)}
-																{item.next_action && (
-																	<span className="flex items-center gap-1">
-																		<Clock className="h-3 w-3" /> {item.next_action}
-																	</span>
-																)}
+															<div className="flex flex-col items-end gap-2">
+																<Badge className={`${statusBadge.className} text-xs capitalize`}>
+																	{statusBadge.label}
+																</Badge>
+																<Button
+																	size="sm"
+																	variant="outline"
+																	onClick={() =>
+																		window.safeGlobalToast?.({
+																			title: 'Ouverture dossier',
+																			description: `Le dossier ${item.reference || item.client_name || ''} sera ouvert dans la prochaine itération.`
+																		})
+																	}
+																>
+																	Consulter
+																</Button>
 															</div>
 														</div>
-														<div className="flex flex-col items-end gap-2">
-															<Badge className={`${priorityStyles[item.priority] || 'bg-slate-100 text-slate-700'} text-xs capitalize`}>
-																{item.priority || 'standard'}
-															</Badge>
-															<Button
-																size="sm"
-																variant="outline"
-																onClick={() =>
-																	window.safeGlobalToast?.({
-																		title: 'Ouverture dossier',
-																		description: `Le dossier ${item.case_number || item.title || ''} sera ouvert dans la prochaine itération.`
-																	})
-																}
-															>
-																Consulter
-															</Button>
+														<div className="mt-3">
+															<div className="flex items-center justify-between text-xs text-gray-500">
+																<span>Progression</span>
+																<span>{progress}%</span>
+															</div>
+															<Progress value={progress} className="h-1.5 mt-1" />
 														</div>
 													</div>
-													<div className="mt-3">
-														<div className="flex items-center justify-between text-xs text-gray-500">
-															<span>Progression</span>
-															<span>{Math.round(item.progress || 0)}%</span>
-														</div>
-														<Progress value={Math.min(100, item.progress || 0)} className="h-1.5 mt-1" />
-													</div>
-												</div>
-											))}
+												);
+											})}
 										</div>
 									) : (
 										<div className="h-48 flex flex-col items-center justify-center text-sm text-gray-500">
@@ -565,7 +669,9 @@ const NotaireOverviewModernized = () => {
 							<div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
 								<Clock className="h-4 w-4 text-amber-600" /> Durée moyenne
 							</div>
-							<div className="mt-2 text-2xl font-bold text-gray-900">{stats.avgCompletionDays || 0} jours</div>
+							<div className="mt-2 text-2xl font-bold text-gray-900">
+								{stats.avgCompletionDays ? `${stats.avgCompletionDays} jours` : '—'}
+							</div>
 							<p className="text-xs text-gray-500">Comparé à l'objectif de 30 jours</p>
 						</div>
 
@@ -582,7 +688,7 @@ const NotaireOverviewModernized = () => {
 								<FileText className="h-4 w-4 text-blue-600" /> Documents validés
 							</div>
 							<div className="mt-2 text-2xl font-bold text-gray-900">{stats.documentsAuthenticated || 0}</div>
-							<p className="text-xs text-gray-500">Authentifications blockchain réussies</p>
+							<p className="text-xs text-gray-500">Authentifications vérifiées</p>
 						</div>
 
 						<div className="rounded-lg border p-4 bg-white shadow-sm">

@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { useOutletContext } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import {
   Settings,
@@ -28,8 +27,6 @@ import {
   Wifi,
   Moon,
   Sun,
-  Smartphone,
-  Laptop,
   Printer,
   FileText,
   Archive,
@@ -44,7 +41,6 @@ import {
   Zap,
   ShieldCheck,
   Fingerprint,
-  LogOut,
   User,
   Plus,
   PenTool,
@@ -53,7 +49,7 @@ import {
   Users as UsersIcon
 } from 'lucide-react';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -70,26 +66,30 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 import NotaireTickets from '@/components/notaire/NotaireTickets';
 import NotaireSubscription from '@/components/notaire/NotaireSubscription';
 
+// Clé de persistance locale des préférences (aucune table dédiée côté Supabase).
+const PREFS_STORAGE_KEY = (userId) => `notaire_settings_prefs_${userId}`;
+const LAST_SAVED_KEY = (userId) => `notaire_settings_last_saved_${userId}`;
+
 const NotaireSettingsModernized = () => {
-  const { dashboardStats } = useOutletContext() || {};
-  const { user } = useAuth();
+  const { user, profile } = useAuth();
 
   const [settings, setSettings] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('overview');
   const [unsavedChanges, setUnsavedChanges] = useState(false);
+  const [lastSaved, setLastSaved] = useState(null);
 
   const defaultSettings = useMemo(() => ({
     profile: {
-      firstName: user?.first_name || 'Maître',
-      lastName: user?.last_name || 'Notaire',
-      email: user?.email || 'maitre.notaire@terangafoncier.sn',
-      phone: '+221 77 123 45 67',
-      office: 'Étude Notariale Dakar Centre',
-      chambre: 'N°12345',
-      specializations: ['Immobilier', 'Successions', 'Sociétés'],
-      bio: "Référent national en actes immobiliers et successions complexes."
+      firstName: profile?.first_name || '',
+      lastName: profile?.last_name || '',
+      email: profile?.email || user?.email || '',
+      phone: profile?.phone || '',
+      office: '',
+      chambre: '',
+      specializations: [],
+      bio: ''
     },
     preferences: {
       theme: 'light',
@@ -128,25 +128,57 @@ const NotaireSettingsModernized = () => {
       marketingEmails: false,
       weeklyReport: true
     }
-  }), [user]);
+  }), [user, profile]);
 
   useEffect(() => {
     const loadSettings = async () => {
       if (!user) return;
       setIsLoading(true);
       try {
-        const result = await NotaireSupabaseService.getNotaireSettings(user.id);
-        if (result.success && result.data) {
-          setSettings(prev => ({ ...defaultSettings, ...result.data }));
-        } else {
-          setSettings(defaultSettings);
+        // 1) Profil : source réelle = table `profiles` (colonnes réelles uniquement).
+        const { data: profileRow, error: profileError } = await supabase
+          .from('profiles')
+          .select('first_name, last_name, email, phone')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Erreur lecture profil:', profileError);
         }
+
+        // 2) Préférences / sécurité / intégrations / notifications : aucune table
+        //    dédiée dans le schéma → persistance locale honnête (localStorage).
+        let localPrefs = {};
+        try {
+          const raw = localStorage.getItem(PREFS_STORAGE_KEY(user.id));
+          if (raw) localPrefs = JSON.parse(raw) || {};
+        } catch (e) {
+          console.warn('Préférences locales illisibles, réinitialisation:', e);
+        }
+
+        const savedRaw = localStorage.getItem(LAST_SAVED_KEY(user.id));
+        setLastSaved(savedRaw || null);
+
+        setSettings({
+          ...defaultSettings,
+          profile: {
+            ...defaultSettings.profile,
+            firstName: profileRow?.first_name ?? defaultSettings.profile.firstName,
+            lastName: profileRow?.last_name ?? defaultSettings.profile.lastName,
+            email: profileRow?.email ?? defaultSettings.profile.email,
+            phone: profileRow?.phone ?? defaultSettings.profile.phone
+          },
+          preferences: { ...defaultSettings.preferences, ...(localPrefs.preferences || {}) },
+          security: { ...defaultSettings.security, ...(localPrefs.security || {}) },
+          integrations: { ...defaultSettings.integrations, ...(localPrefs.integrations || {}) },
+          notifications: { ...defaultSettings.notifications, ...(localPrefs.notifications || {}) }
+        });
       } catch (error) {
         console.error('Erreur chargement paramètres:', error);
         setSettings(defaultSettings);
         window.safeGlobalToast?.({
-          title: 'Mode hors ligne',
-          description: "Impossible de charger vos paramètres. Utilisation des valeurs locales.",
+          title: 'Chargement partiel',
+          description: "Impossible de charger votre profil. Valeurs par défaut affichées.",
           variant: 'destructive'
         });
       } finally {
@@ -171,23 +203,53 @@ const NotaireSettingsModernized = () => {
     handleSettingChange(category, key, !settings?.[category]?.[key]);
   };
 
+  const persistLocalPrefs = (next) => {
+    try {
+      localStorage.setItem(PREFS_STORAGE_KEY(user.id), JSON.stringify({
+        preferences: next.preferences,
+        security: next.security,
+        integrations: next.integrations,
+        notifications: next.notifications
+      }));
+      const stamp = new Date().toISOString();
+      localStorage.setItem(LAST_SAVED_KEY(user.id), stamp);
+      setLastSaved(stamp);
+    } catch (e) {
+      console.warn('Persistance locale des préférences impossible:', e);
+    }
+  };
+
   const handleSave = async () => {
     if (!user || !settings || isSaving) return;
     setIsSaving(true);
     try {
-      const result = await NotaireSupabaseService.updateNotaireSettings(user.id, settings);
-      if (!result.success) throw new Error(result.error || 'Erreur sauvegarde');
+      // Profil → table réelle `profiles` (colonnes existantes uniquement).
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          first_name: settings.profile?.firstName || null,
+          last_name: settings.profile?.lastName || null,
+          phone: settings.profile?.phone || null
+        })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // Préférences/sécurité/intégrations/notifications : persistance locale honnête
+      // (pas de table dédiée dans le schéma Supabase).
+      persistLocalPrefs(settings);
+
       setUnsavedChanges(false);
       window.safeGlobalToast?.({
         title: 'Paramètres sauvegardés',
-        description: 'Vos préférences ont bien été mises à jour.',
+        description: 'Profil mis à jour. Préférences enregistrées sur cet appareil.',
         variant: 'success'
       });
     } catch (error) {
       console.error('Erreur sauvegarde paramètres:', error);
       window.safeGlobalToast?.({
         title: 'Sauvegarde échouée',
-        description: "Nous n'avons pas pu mettre à jour vos paramètres.",
+        description: "Nous n'avons pas pu mettre à jour votre profil.",
         variant: 'destructive'
       });
     } finally {
@@ -195,30 +257,25 @@ const NotaireSettingsModernized = () => {
     }
   };
 
-  const handleReset = async () => {
+  const handleReset = () => {
     if (!user || !settings) return;
-    if (!confirm('Réinitialiser tous les paramètres aux valeurs recommandées ?')) return;
-    setIsSaving(true);
-    try {
-      setSettings(defaultSettings);
-      const result = await NotaireSupabaseService.updateNotaireSettings(user.id, defaultSettings);
-      if (!result.success) throw new Error(result.error || 'Erreur réinitialisation');
-      setUnsavedChanges(false);
-      window.safeGlobalToast?.({
-        title: 'Réinitialisation effectuée',
-        description: 'Vos paramètres ont été rétablis avec succès.',
-        variant: 'success'
-      });
-    } catch (error) {
-      console.error('Erreur reset paramètres:', error);
-      window.safeGlobalToast?.({
-        title: 'Réinitialisation impossible',
-        description: "Une erreur est survenue pendant la réinitialisation.",
-        variant: 'destructive'
-      });
-    } finally {
-      setIsSaving(false);
-    }
+    if (!confirm('Réinitialiser les préférences aux valeurs recommandées ? (Votre profil est conservé.)')) return;
+    // On ne réinitialise QUE les préférences locales, jamais le profil réel.
+    const next = {
+      ...settings,
+      preferences: defaultSettings.preferences,
+      security: defaultSettings.security,
+      integrations: defaultSettings.integrations,
+      notifications: defaultSettings.notifications
+    };
+    setSettings(next);
+    persistLocalPrefs(next);
+    setUnsavedChanges(false);
+    window.safeGlobalToast?.({
+      title: 'Réinitialisation effectuée',
+      description: 'Vos préférences ont été rétablies sur cet appareil.',
+      variant: 'success'
+    });
   };
 
   const securityScore = useMemo(() => {
@@ -336,8 +393,8 @@ const NotaireSettingsModernized = () => {
           <CardContent className="p-5 flex justify-between items-center">
             <div>
               <p className="text-sm text-gray-500">Dernière sauvegarde</p>
-              <p className="text-2xl font-semibold text-gray-900">{formatDate(dashboardStats?.lastSettingsBackup)}</p>
-              <p className="text-xs text-gray-500">Synchronisé avec Supabase</p>
+              <p className="text-2xl font-semibold text-gray-900">{lastSaved ? formatDate(lastSaved) : '—'}</p>
+              <p className="text-xs text-gray-500">Profil sur Supabase, préférences locales</p>
             </div>
             <div className="h-12 w-12 bg-purple-100 rounded-full flex items-center justify-center">
               <Database className="h-6 w-6 text-purple-600" />
@@ -374,42 +431,26 @@ const NotaireSettingsModernized = () => {
                 </CardTitle>
                 <CardDescription>Suivi des opérations récentes sur vos paramètres</CardDescription>
               </CardHeader>
-              <CardContent className="space-y-4">
-                {[
-                  {
-                    label: 'Modification des paramètres de sécurité',
-                    date: 'Il y a 2 heures',
-                    icon: Shield,
-                    color: 'text-emerald-600'
-                  },
-                  {
-                    label: 'Activation des notifications d\'audience',
-                    date: 'Hier',
-                    icon: Bell,
-                    color: 'text-blue-600'
-                  },
-                  {
-                    label: 'Synchronisation Supabase réussie',
-                    date: '25 septembre',
-                    icon: Database,
-                    color: 'text-purple-600'
-                  }
-                ].map((event, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 rounded-lg border border-gray-100 hover:border-amber-200 transition">
+              <CardContent>
+                {lastSaved ? (
+                  <div className="flex items-center justify-between p-3 rounded-lg border border-gray-100">
                     <div className="flex items-center gap-3">
-                      <div className={`h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center ${event.color}`}>
-                        <event.icon className="h-5 w-5" />
+                      <div className="h-10 w-10 rounded-full bg-amber-50 flex items-center justify-center text-emerald-600">
+                        <Save className="h-5 w-5" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{event.label}</p>
-                        <p className="text-xs text-gray-500">{event.date}</p>
+                        <p className="font-medium text-gray-900">Dernière sauvegarde des paramètres</p>
+                        <p className="text-xs text-gray-500">{formatDate(lastSaved)}</p>
                       </div>
                     </div>
-                    <Button variant="ghost" size="sm">
-                      Voir détails
-                    </Button>
                   </div>
-                ))}
+                ) : (
+                  <div className="text-center py-8 text-gray-500">
+                    <Activity className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                    <p className="text-sm">Aucune activité enregistrée pour le moment.</p>
+                    <p className="text-xs text-gray-400 mt-1">Le journal d'audit détaillé sera bientôt disponible.</p>
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -482,10 +523,10 @@ const NotaireSettingsModernized = () => {
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="text-sm text-gray-600">
-                  <p>Dernière exportation : 25 septembre 2024</p>
-                  <p>Suivant planifié : 02 octobre 2024</p>
+                  <p>Dernière sauvegarde : {lastSaved ? formatDate(lastSaved) : '—'}</p>
+                  <p className="text-xs text-gray-400">Export planifié et journal téléchargeable bientôt disponibles.</p>
                 </div>
-                <Button variant="outline" className="w-full">
+                <Button variant="outline" className="w-full" disabled>
                   <Download className="h-4 w-4 mr-2" />
                   Télécharger le journal
                 </Button>
@@ -834,46 +875,11 @@ const NotaireSettingsModernized = () => {
               <CardDescription>Déconnectez à distance les appareils non reconnus</CardDescription>
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-52 pr-3">
-                {[{
-                  id: 1,
-                  device: 'MacBook Pro',
-                  type: 'desktop',
-                  location: 'Dakar, Sénégal',
-                  lastSeen: 'Il y a 12 min'
-                }, {
-                  id: 2,
-                  device: 'iPhone 15 Pro',
-                  type: 'mobile',
-                  location: 'Thiès, Sénégal',
-                  lastSeen: 'Il y a 1h'
-                }, {
-                  id: 3,
-                  device: 'PC Étude notariale',
-                  type: 'desktop',
-                  location: 'Saint-Louis, Sénégal',
-                  lastSeen: 'Il y a 3h'
-                }].map((session) => {
-                  const Icon = session.type === 'mobile' ? Smartphone : Laptop;
-                  return (
-                    <div key={session.id} className="flex items-center justify-between p-3 border rounded-lg mb-3 last:mb-0">
-                      <div className="flex items-center gap-3">
-                        <div className="h-10 w-10 rounded-full bg-purple-50 flex items-center justify-center">
-                          <Icon className="h-5 w-5 text-purple-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-gray-900">{session.device}</p>
-                          <p className="text-xs text-gray-500">{session.location} • {session.lastSeen}</p>
-                        </div>
-                      </div>
-                      <Button size="sm" variant="outline">
-                        <LogOut className="h-4 w-4 mr-2" />
-                        Déconnecter
-                      </Button>
-                    </div>
-                  );
-                })}
-              </ScrollArea>
+              <div className="text-center py-10 text-gray-500">
+                <Monitor className="h-8 w-8 mx-auto mb-2 text-gray-300" />
+                <p className="text-sm">Aucun appareil connecté à afficher.</p>
+                <p className="text-xs text-gray-400 mt-1">Le suivi multi-appareils des sessions sera bientôt disponible.</p>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>
@@ -953,13 +959,13 @@ const NotaireSettingsModernized = () => {
             <CardContent className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm text-gray-600">
               <div className="p-4 border rounded-lg">
                 <p className="font-medium text-gray-900">Export Supabase</p>
-                <p className="text-xs text-gray-500">Chaque nuit à 02h00</p>
-                <p className="mt-2 text-xs text-emerald-600">Statut : opérationnel</p>
+                <p className="text-xs text-gray-500">Sauvegarde automatique programmée</p>
+                <p className="mt-2 text-xs text-gray-400">Bientôt disponible</p>
               </div>
               <div className="p-4 border rounded-lg">
                 <p className="font-medium text-gray-900">Synchronisation CRM</p>
-                <p className="text-xs text-gray-500">Toutes les 2 heures</p>
-                <p className="mt-2 text-xs text-blue-600">Dernière sync : 09:15</p>
+                <p className="text-xs text-gray-500">Mise à jour périodique des fiches clients</p>
+                <p className="mt-2 text-xs text-gray-400">Bientôt disponible</p>
               </div>
             </CardContent>
           </Card>

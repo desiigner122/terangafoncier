@@ -1,31 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Briefcase, Plus, Search, Filter, Eye, Edit2, Trash2, 
-  FileText, Calendar, Clock, User, Users, MapPin, 
-  TrendingUp, AlertCircle, CheckCircle, XCircle, 
-  ArrowRight, Download, Upload, Phone, Mail, Home,
-  DollarSign, Percent, Shield, Link2, BookOpen
+import {
+  Briefcase, Plus, Search, Eye, Edit2, Trash2,
+  FileText, Calendar, User,
+  AlertCircle, CheckCircle, XCircle,
+  ArrowRight, DollarSign, TrendingUp, Shield, Star
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
-import { Select } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Textarea } from '@/components/ui/textarea';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useAuth } from '@/contexts/UnifiedAuthContext.jsx';
-import { NotaireSupabaseService } from '@/services/NotaireSupabaseService';
+import supabase from '@/lib/supabaseClient';
 
 /**
  * NotaireCasesModernized.jsx
- * Gestion complète des dossiers notariaux avec données Supabase réelles
- * Remplace toutes les données mockées par des interactions database
+ * Gestion des dossiers / actes notariaux — reconnecté à la table réelle `notarial_acts`.
+ * Colonnes réelles : id, notaire_id, client_id, property_id, act_type, reference, client_name,
+ *   status ('draft'|'in_progress'|'signed'|'completed'|'cancelled'), notary_fees, amount,
+ *   client_satisfaction, signed_at, created_at, updated_at.
+ * Les champs sans source réelle (progression détaillée, échéance, documents, parties multiples,
+ * priorité) ont été retirés ou remplacés par un affichage honnête dérivé du statut.
  */
+
+const ACT_TYPE_LABELS = {
+  vente_immobiliere: 'Vente immobilière',
+  vente_terrain: 'Vente terrain',
+  succession: 'Succession',
+  donation: 'Donation',
+  hypotheque: 'Hypothèque',
+  bail: 'Bail',
+  partage: 'Partage',
+  constitution_societe: 'Constitution société',
+  autre: 'Autre'
+};
+
+// Progression dérivée du statut réel (encodage visuel du workflow, pas une métrique fabriquée)
+const STATUS_PROGRESS = {
+  draft: 10,
+  in_progress: 50,
+  signed: 80,
+  completed: 100,
+  cancelled: 0
+};
 
 export default function NotaireCasesModernized() {
   const { user } = useAuth();
@@ -39,7 +61,7 @@ export default function NotaireCasesModernized() {
   // États de filtres
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
-  const [priorityFilter, setPriorityFilter] = useState('all');
+  const [typeFilter, setTypeFilter] = useState('all');
   const [sortBy, setSortBy] = useState('date_desc');
 
   // États de dialogs
@@ -51,21 +73,17 @@ export default function NotaireCasesModernized() {
   const [currentPage, setCurrentPage] = useState(1);
   const casesPerPage = 10;
 
-  // États du formulaire de création
+  // États du formulaire de création (colonnes réelles uniquement)
   const [newCase, setNewCase] = useState({
-    title: '',
-    case_type: 'vente_terrain',
-    buyer_name: '',
-    seller_name: '',
-    property_address: '',
-    property_value: '',
-    priority: 'medium',
-    due_date: '',
-    description: ''
+    act_type: 'vente_immobiliere',
+    reference: '',
+    client_name: '',
+    amount: '',
+    notary_fees: ''
   });
 
   /**
-   * 🔄 CHARGEMENT DES DONNÉES SUPABASE
+   * 🔄 CHARGEMENT DES DONNÉES SUPABASE (notarial_acts, filtré par notaire_id)
    */
   useEffect(() => {
     if (user?.id) {
@@ -76,22 +94,21 @@ export default function NotaireCasesModernized() {
   const loadCases = async () => {
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.getCases(user.id);
-      if (result.success) {
-        setCases(result.data);
-        setFilteredCases(result.data);
-      } else {
-        window.safeGlobalToast?.({
-          title: "Erreur de chargement",
-          description: result.error || "Impossible de charger les dossiers",
-          variant: "destructive"
-        });
-      }
+      const { data, error } = await supabase
+        .from('notarial_acts')
+        .select('id, notaire_id, client_id, property_id, act_type, reference, client_name, status, notary_fees, amount, client_satisfaction, signed_at, created_at, updated_at')
+        .eq('notaire_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+
+      setCases(data || []);
+      setFilteredCases(data || []);
     } catch (error) {
       console.error('Erreur chargement dossiers:', error);
       window.safeGlobalToast?.({
-        title: "Erreur système",
-        description: "Une erreur est survenue lors du chargement",
+        title: "Erreur de chargement",
+        description: error.message || "Impossible de charger les dossiers",
         variant: "destructive"
       });
     } finally {
@@ -109,11 +126,9 @@ export default function NotaireCasesModernized() {
     if (searchTerm) {
       const search = searchTerm.toLowerCase();
       filtered = filtered.filter(c =>
-        c.title?.toLowerCase().includes(search) ||
-        c.case_number?.toLowerCase().includes(search) ||
-        c.buyer_name?.toLowerCase().includes(search) ||
-        c.seller_name?.toLowerCase().includes(search) ||
-        c.property_address?.toLowerCase().includes(search)
+        c.reference?.toLowerCase().includes(search) ||
+        c.client_name?.toLowerCase().includes(search) ||
+        (ACT_TYPE_LABELS[c.act_type] || c.act_type || '').toLowerCase().includes(search)
       );
     }
 
@@ -122,23 +137,22 @@ export default function NotaireCasesModernized() {
       filtered = filtered.filter(c => c.status === statusFilter);
     }
 
-    // Filtre par priorité
-    if (priorityFilter !== 'all') {
-      filtered = filtered.filter(c => c.priority === priorityFilter);
+    // Filtre par type d'acte
+    if (typeFilter !== 'all') {
+      filtered = filtered.filter(c => c.act_type === typeFilter);
     }
 
     // Tri
     filtered.sort((a, b) => {
       switch (sortBy) {
         case 'date_desc':
-          return new Date(b.opened_date) - new Date(a.opened_date);
+          return new Date(b.created_at) - new Date(a.created_at);
         case 'date_asc':
-          return new Date(a.opened_date) - new Date(b.opened_date);
-        case 'priority':
-          const priorityOrder = { high: 0, medium: 1, low: 2 };
-          return priorityOrder[a.priority] - priorityOrder[b.priority];
-        case 'progress':
-          return (b.progress || 0) - (a.progress || 0);
+          return new Date(a.created_at) - new Date(b.created_at);
+        case 'amount_desc':
+          return (parseFloat(b.amount) || 0) - (parseFloat(a.amount) || 0);
+        case 'fees_desc':
+          return (parseFloat(b.notary_fees) || 0) - (parseFloat(a.notary_fees) || 0);
         default:
           return 0;
       }
@@ -146,7 +160,7 @@ export default function NotaireCasesModernized() {
 
     setFilteredCases(filtered);
     setCurrentPage(1);
-  }, [searchTerm, statusFilter, priorityFilter, sortBy, cases]);
+  }, [searchTerm, statusFilter, typeFilter, sortBy, cases]);
 
   /**
    * 📄 PAGINATION
@@ -156,13 +170,13 @@ export default function NotaireCasesModernized() {
   const paginatedCases = filteredCases.slice(startIndex, startIndex + casesPerPage);
 
   /**
-   * ➕ CRÉATION D'UN NOUVEAU DOSSIER
+   * ➕ CRÉATION D'UN NOUVEL ACTE (notarial_acts)
    */
   const handleCreateCase = async () => {
-    if (!newCase.title || !newCase.buyer_name || !newCase.seller_name) {
+    if (!newCase.client_name || !newCase.act_type) {
       window.safeGlobalToast?.({
         title: "Champs requis",
-        description: "Veuillez remplir tous les champs obligatoires",
+        description: "Le client et le type d'acte sont obligatoires",
         variant: "destructive"
       });
       return;
@@ -170,35 +184,51 @@ export default function NotaireCasesModernized() {
 
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.createCase(user.id, newCase);
-      if (result.success) {
-        window.safeGlobalToast?.({
-          title: "Dossier créé",
-          description: `Dossier ${result.data.case_number} créé avec succès`,
-          variant: "success"
-        });
-        setShowCreateDialog(false);
-        setNewCase({
-          title: '',
-          case_type: 'vente_terrain',
-          buyer_name: '',
-          seller_name: '',
-          property_address: '',
-          property_value: '',
-          priority: 'medium',
-          due_date: '',
-          description: ''
-        });
-        loadCases(); // Recharger la liste
-      } else {
-        window.safeGlobalToast?.({
-          title: "Erreur de création",
-          description: result.error,
-          variant: "destructive"
-        });
+      // Générer une référence si non fournie
+      let reference = newCase.reference?.trim();
+      if (!reference) {
+        const year = new Date().getFullYear();
+        const sequence = cases.length + 1;
+        reference = `ACT-${year}-${String(sequence).padStart(3, '0')}`;
       }
+
+      const { data, error } = await supabase
+        .from('notarial_acts')
+        .insert({
+          notaire_id: user.id,
+          act_type: newCase.act_type,
+          reference,
+          client_name: newCase.client_name,
+          amount: parseFloat(newCase.amount) || 0,
+          notary_fees: parseFloat(newCase.notary_fees) || 0,
+          status: 'draft'
+        })
+        .select()
+        .single();
+
+      if (error) throw error;
+
+      window.safeGlobalToast?.({
+        title: "Dossier créé",
+        description: `Acte ${data.reference} créé avec succès`,
+        variant: "success"
+      });
+      setShowCreateDialog(false);
+      setNewCase({
+        act_type: 'vente_immobiliere',
+        reference: '',
+        client_name: '',
+        amount: '',
+        notary_fees: ''
+      });
+      loadCases();
     } catch (error) {
       console.error('Erreur création dossier:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur de création",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -212,25 +242,28 @@ export default function NotaireCasesModernized() {
 
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.deleteCase(selectedCase.id);
-      if (result.success) {
-        window.safeGlobalToast?.({
-          title: "Dossier supprimé",
-          description: "Le dossier a été archivé avec succès",
-          variant: "success"
-        });
-        setShowDeleteDialog(false);
-        setSelectedCase(null);
-        loadCases();
-      } else {
-        window.safeGlobalToast?.({
-          title: "Erreur de suppression",
-          description: result.error,
-          variant: "destructive"
-        });
-      }
+      const { error } = await supabase
+        .from('notarial_acts')
+        .delete()
+        .eq('id', selectedCase.id);
+
+      if (error) throw error;
+
+      window.safeGlobalToast?.({
+        title: "Dossier supprimé",
+        description: "L'acte a été supprimé avec succès",
+        variant: "success"
+      });
+      setShowDeleteDialog(false);
+      setSelectedCase(null);
+      loadCases();
     } catch (error) {
       console.error('Erreur suppression dossier:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur de suppression",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -242,17 +275,35 @@ export default function NotaireCasesModernized() {
   const handleUpdateStatus = async (caseId, newStatus) => {
     setIsLoading(true);
     try {
-      const result = await NotaireSupabaseService.updateCaseStatus(caseId, newStatus);
-      if (result.success) {
-        window.safeGlobalToast?.({
-          title: "Statut mis à jour",
-          description: "Le statut du dossier a été modifié",
-          variant: "success"
-        });
-        loadCases();
+      const updates = {
+        status: newStatus,
+        updated_at: new Date().toISOString()
+      };
+      // Renseigner la date de signature si l'acte est signé
+      if (newStatus === 'signed') {
+        updates.signed_at = new Date().toISOString();
       }
+
+      const { error } = await supabase
+        .from('notarial_acts')
+        .update(updates)
+        .eq('id', caseId);
+
+      if (error) throw error;
+
+      window.safeGlobalToast?.({
+        title: "Statut mis à jour",
+        description: "Le statut du dossier a été modifié",
+        variant: "success"
+      });
+      loadCases();
     } catch (error) {
       console.error('Erreur mise à jour statut:', error);
+      window.safeGlobalToast?.({
+        title: "Erreur",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
       setIsLoading(false);
     }
@@ -263,25 +314,16 @@ export default function NotaireCasesModernized() {
    */
   const getStatusConfig = (status) => {
     const configs = {
-      new: { label: 'Nouveau', color: 'bg-blue-500', icon: Plus },
+      draft: { label: 'Brouillon', color: 'bg-gray-500', icon: Edit2 },
       in_progress: { label: 'En cours', color: 'bg-yellow-500', icon: ArrowRight },
-      documents_pending: { label: 'Docs en attente', color: 'bg-orange-500', icon: FileText },
-      review: { label: 'Révision', color: 'bg-purple-500', icon: Eye },
-      signature_pending: { label: 'Signature', color: 'bg-indigo-500', icon: Edit2 },
+      signed: { label: 'Signé', color: 'bg-indigo-500', icon: Shield },
       completed: { label: 'Terminé', color: 'bg-green-500', icon: CheckCircle },
-      archived: { label: 'Archivé', color: 'bg-gray-500', icon: BookOpen }
+      cancelled: { label: 'Annulé', color: 'bg-red-500', icon: XCircle }
     };
-    return configs[status] || configs.new;
+    return configs[status] || configs.draft;
   };
 
-  const getPriorityConfig = (priority) => {
-    const configs = {
-      high: { label: 'Haute', color: 'bg-red-500 text-white' },
-      medium: { label: 'Moyenne', color: 'bg-yellow-500 text-white' },
-      low: { label: 'Basse', color: 'bg-green-500 text-white' }
-    };
-    return configs[priority] || configs.medium;
-  };
+  const getActTypeLabel = (type) => ACT_TYPE_LABELS[type] || type || 'Acte';
 
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('fr-FR', {
@@ -292,7 +334,7 @@ export default function NotaireCasesModernized() {
   };
 
   const formatDate = (dateString) => {
-    if (!dateString) return '-';
+    if (!dateString) return '—';
     return new Date(dateString).toLocaleDateString('fr-FR', {
       day: '2-digit',
       month: 'short',
@@ -300,25 +342,16 @@ export default function NotaireCasesModernized() {
     });
   };
 
-  const calculateDaysUntilDue = (dueDate) => {
-    if (!dueDate) return null;
-    const today = new Date();
-    const due = new Date(dueDate);
-    const diffTime = due - today;
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
   /**
-   * 📊 STATISTIQUES RAPIDES
+   * 📊 STATISTIQUES RAPIDES (dérivées des données réelles)
    */
   const stats = {
     total: cases.length,
     active: cases.filter(c => c.status === 'in_progress').length,
-    pending: cases.filter(c => c.status === 'documents_pending' || c.status === 'signature_pending').length,
+    draft: cases.filter(c => c.status === 'draft').length,
+    signed: cases.filter(c => c.status === 'signed').length,
     completed: cases.filter(c => c.status === 'completed').length,
-    highPriority: cases.filter(c => c.priority === 'high').length,
-    totalValue: cases.reduce((sum, c) => sum + (parseFloat(c.property_value) || 0), 0)
+    totalValue: cases.reduce((sum, c) => sum + (parseFloat(c.amount) || 0), 0)
   };
 
   return (
@@ -336,7 +369,7 @@ export default function NotaireCasesModernized() {
               Gestion des Dossiers
             </h1>
             <p className="text-gray-600 dark:text-gray-400 mt-1">
-              Suivi complet de vos dossiers notariaux • Données en temps réel
+              Suivi complet de vos actes notariaux
             </p>
           </div>
           <Button
@@ -370,13 +403,23 @@ export default function NotaireCasesModernized() {
             </div>
           </Card>
 
-          <Card className="p-4 bg-gradient-to-br from-orange-50 to-orange-100 dark:from-orange-900/20 dark:to-orange-800/20 border-orange-200 dark:border-orange-800">
+          <Card className="p-4 bg-gradient-to-br from-gray-50 to-gray-100 dark:from-gray-900/20 dark:to-gray-800/20 border-gray-200 dark:border-gray-800">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">En attente</p>
-                <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{stats.pending}</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 font-medium">Brouillons</p>
+                <p className="text-2xl font-bold text-gray-700 dark:text-gray-300">{stats.draft}</p>
               </div>
-              <Clock className="h-8 w-8 text-orange-500" />
+              <FileText className="h-8 w-8 text-gray-500" />
+            </div>
+          </Card>
+
+          <Card className="p-4 bg-gradient-to-br from-indigo-50 to-indigo-100 dark:from-indigo-900/20 dark:to-indigo-800/20 border-indigo-200 dark:border-indigo-800">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Signés</p>
+                <p className="text-2xl font-bold text-indigo-700 dark:text-indigo-300">{stats.signed}</p>
+              </div>
+              <Shield className="h-8 w-8 text-indigo-500" />
             </div>
           </Card>
 
@@ -387,16 +430,6 @@ export default function NotaireCasesModernized() {
                 <p className="text-2xl font-bold text-green-700 dark:text-green-300">{stats.completed}</p>
               </div>
               <CheckCircle className="h-8 w-8 text-green-500" />
-            </div>
-          </Card>
-
-          <Card className="p-4 bg-gradient-to-br from-red-50 to-red-100 dark:from-red-900/20 dark:to-red-800/20 border-red-200 dark:border-red-800">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-red-600 dark:text-red-400 font-medium">Priorité haute</p>
-                <p className="text-2xl font-bold text-red-700 dark:text-red-300">{stats.highPriority}</p>
-              </div>
-              <AlertCircle className="h-8 w-8 text-red-500" />
             </div>
           </Card>
 
@@ -433,23 +466,22 @@ export default function NotaireCasesModernized() {
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
             <option value="all">Tous les statuts</option>
-            <option value="new">Nouveau</option>
+            <option value="draft">Brouillon</option>
             <option value="in_progress">En cours</option>
-            <option value="documents_pending">Docs en attente</option>
-            <option value="review">Révision</option>
-            <option value="signature_pending">Signature</option>
+            <option value="signed">Signé</option>
             <option value="completed">Terminé</option>
+            <option value="cancelled">Annulé</option>
           </select>
 
           <select
-            value={priorityFilter}
-            onChange={(e) => setPriorityFilter(e.target.value)}
+            value={typeFilter}
+            onChange={(e) => setTypeFilter(e.target.value)}
             className="px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white"
           >
-            <option value="all">Toutes priorités</option>
-            <option value="high">Haute</option>
-            <option value="medium">Moyenne</option>
-            <option value="low">Basse</option>
+            <option value="all">Tous les types</option>
+            {Object.entries(ACT_TYPE_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>{label}</option>
+            ))}
           </select>
 
           <select
@@ -459,8 +491,8 @@ export default function NotaireCasesModernized() {
           >
             <option value="date_desc">Plus récent</option>
             <option value="date_asc">Plus ancien</option>
-            <option value="priority">Par priorité</option>
-            <option value="progress">Par progression</option>
+            <option value="amount_desc">Montant décroissant</option>
+            <option value="fees_desc">Honoraires décroissants</option>
           </select>
         </div>
       </Card>
@@ -477,11 +509,11 @@ export default function NotaireCasesModernized() {
             Aucun dossier trouvé
           </h3>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            {searchTerm || statusFilter !== 'all' || priorityFilter !== 'all'
+            {searchTerm || statusFilter !== 'all' || typeFilter !== 'all'
               ? 'Essayez de modifier vos filtres de recherche'
               : 'Commencez par créer votre premier dossier'}
           </p>
-          {!searchTerm && statusFilter === 'all' && priorityFilter === 'all' && (
+          {!searchTerm && statusFilter === 'all' && typeFilter === 'all' && (
             <Button onClick={() => setShowCreateDialog(true)}>
               <Plus className="h-5 w-5 mr-2" />
               Créer un dossier
@@ -493,8 +525,7 @@ export default function NotaireCasesModernized() {
           <AnimatePresence mode="popLayout">
             {paginatedCases.map((caseItem, index) => {
               const statusConfig = getStatusConfig(caseItem.status);
-              const priorityConfig = getPriorityConfig(caseItem.priority);
-              const daysUntilDue = calculateDaysUntilDue(caseItem.due_date);
+              const progress = STATUS_PROGRESS[caseItem.status] ?? 0;
               const StatusIcon = statusConfig.icon;
 
               return (
@@ -505,7 +536,7 @@ export default function NotaireCasesModernized() {
                   exit={{ opacity: 0, x: -100 }}
                   transition={{ delay: index * 0.05 }}
                 >
-                  <Card className="p-6 hover:shadow-lg transition-all duration-200 border-l-4" style={{ borderLeftColor: statusConfig.color.replace('bg-', '#').replace('-500', '') }}>
+                  <Card className="p-6 hover:shadow-lg transition-all duration-200 border-l-4 border-l-indigo-500">
                     <div className="flex items-start justify-between gap-4">
                       {/* Informations principales */}
                       <div className="flex-1 space-y-3">
@@ -514,102 +545,85 @@ export default function NotaireCasesModernized() {
                             <StatusIcon className={`h-5 w-5 ${statusConfig.color.replace('bg-', 'text-')}`} />
                           </div>
                           <div className="flex-1">
-                            <div className="flex items-center gap-3 mb-2">
+                            <div className="flex items-center flex-wrap gap-3 mb-2">
                               <h3 className="text-lg font-bold text-gray-900 dark:text-white">
-                                {caseItem.title}
+                                {getActTypeLabel(caseItem.act_type)}
                               </h3>
-                              <Badge className={priorityConfig.color}>
-                                {priorityConfig.label}
+                              <Badge className={`${statusConfig.color} text-white`}>
+                                {statusConfig.label}
                               </Badge>
-                              <Badge variant="outline" className="font-mono text-xs">
-                                {caseItem.case_number}
-                              </Badge>
+                              {caseItem.reference && (
+                                <Badge variant="outline" className="font-mono text-xs">
+                                  {caseItem.reference}
+                                </Badge>
+                              )}
                             </div>
-                            
+
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
                               <div className="flex items-center gap-2">
                                 <User className="h-4 w-4 text-blue-500" />
                                 <div>
-                                  <p className="text-gray-500 dark:text-gray-400 text-xs">Acheteur</p>
-                                  <p className="font-medium text-gray-700 dark:text-gray-300">{caseItem.buyer_name}</p>
+                                  <p className="text-gray-500 dark:text-gray-400 text-xs">Client</p>
+                                  <p className="font-medium text-gray-700 dark:text-gray-300">{caseItem.client_name || '—'}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
-                                <Users className="h-4 w-4 text-green-500" />
+                                <FileText className="h-4 w-4 text-green-500" />
                                 <div>
-                                  <p className="text-gray-500 dark:text-gray-400 text-xs">Vendeur</p>
-                                  <p className="font-medium text-gray-700 dark:text-gray-300">{caseItem.seller_name}</p>
-                                </div>
-                              </div>
-                              <div className="flex items-center gap-2">
-                                <MapPin className="h-4 w-4 text-purple-500" />
-                                <div>
-                                  <p className="text-gray-500 dark:text-gray-400 text-xs">Propriété</p>
-                                  <p className="font-medium text-gray-700 dark:text-gray-300 truncate">
-                                    {caseItem.property_address || 'Non définie'}
-                                  </p>
+                                  <p className="text-gray-500 dark:text-gray-400 text-xs">Type d'acte</p>
+                                  <p className="font-medium text-gray-700 dark:text-gray-300">{getActTypeLabel(caseItem.act_type)}</p>
                                 </div>
                               </div>
                               <div className="flex items-center gap-2">
                                 <DollarSign className="h-4 w-4 text-yellow-500" />
                                 <div>
-                                  <p className="text-gray-500 dark:text-gray-400 text-xs">Valeur</p>
+                                  <p className="text-gray-500 dark:text-gray-400 text-xs">Montant</p>
                                   <p className="font-medium text-gray-700 dark:text-gray-300">
-                                    {formatCurrency(caseItem.property_value)}
+                                    {caseItem.amount ? formatCurrency(caseItem.amount) : '—'}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <TrendingUp className="h-4 w-4 text-purple-500" />
+                                <div>
+                                  <p className="text-gray-500 dark:text-gray-400 text-xs">Honoraires</p>
+                                  <p className="font-medium text-gray-700 dark:text-gray-300">
+                                    {caseItem.notary_fees ? formatCurrency(caseItem.notary_fees) : '—'}
                                   </p>
                                 </div>
                               </div>
                             </div>
 
-                            {/* Progression */}
+                            {/* Progression (dérivée du statut) */}
                             <div className="mt-3">
                               <div className="flex items-center justify-between mb-1">
-                                <span className="text-xs text-gray-500 dark:text-gray-400">Progression</span>
+                                <span className="text-xs text-gray-500 dark:text-gray-400">Avancement</span>
                                 <span className="text-xs font-semibold text-gray-700 dark:text-gray-300">
-                                  {caseItem.progress || 0}%
+                                  {progress}%
                                 </span>
                               </div>
-                              <Progress value={caseItem.progress || 0} className="h-2" />
+                              <Progress value={progress} className="h-2" />
                             </div>
 
                             {/* Informations supplémentaires */}
                             <div className="flex flex-wrap items-center gap-4 text-xs text-gray-500 dark:text-gray-400 mt-3">
                               <div className="flex items-center gap-1">
                                 <Calendar className="h-3 w-3" />
-                                Ouvert: {formatDate(caseItem.opened_date)}
+                                Créé: {formatDate(caseItem.created_at)}
                               </div>
-                              {caseItem.due_date && (
-                                <div className={`flex items-center gap-1 ${daysUntilDue < 0 ? 'text-red-600' : daysUntilDue < 7 ? 'text-orange-600' : ''}`}>
-                                  <Clock className="h-3 w-3" />
-                                  Échéance: {formatDate(caseItem.due_date)}
-                                  {daysUntilDue !== null && (
-                                    <span className="font-semibold">
-                                      ({daysUntilDue < 0 ? `${Math.abs(daysUntilDue)}j retard` : `${daysUntilDue}j restants`})
-                                    </span>
-                                  )}
+                              {caseItem.signed_at && (
+                                <div className="flex items-center gap-1 text-indigo-600">
+                                  <Shield className="h-3 w-3" />
+                                  Signé: {formatDate(caseItem.signed_at)}
                                 </div>
                               )}
-                              <div className="flex items-center gap-1">
-                                <FileText className="h-3 w-3" />
-                                Docs: {caseItem.completed_documents || 0}/{caseItem.documents_count || 0}
-                              </div>
-                              {caseItem.notary_fees && (
+                              {caseItem.client_satisfaction != null && (
                                 <div className="flex items-center gap-1 text-green-600">
-                                  <TrendingUp className="h-3 w-3" />
-                                  Honoraires: {formatCurrency(caseItem.notary_fees)}
+                                  <Star className="h-3 w-3" />
+                                  Satisfaction: {caseItem.client_satisfaction}%
                                 </div>
                               )}
                             </div>
-
-                            {/* Prochaine action */}
-                            {caseItem.next_action && (
-                              <div className="mt-3 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                                <p className="text-sm text-blue-700 dark:text-blue-300 font-medium flex items-center gap-2">
-                                  <AlertCircle className="h-4 w-4" />
-                                  {caseItem.next_action}
-                                </p>
-                              </div>
-                            )}
                           </div>
                         </div>
                       </div>
@@ -632,12 +646,11 @@ export default function NotaireCasesModernized() {
                           onChange={(e) => handleUpdateStatus(caseItem.id, e.target.value)}
                           className="px-2 py-1 text-xs border rounded"
                         >
-                          <option value="new">Nouveau</option>
+                          <option value="draft">Brouillon</option>
                           <option value="in_progress">En cours</option>
-                          <option value="documents_pending">Docs en attente</option>
-                          <option value="review">Révision</option>
-                          <option value="signature_pending">Signature</option>
+                          <option value="signed">Signé</option>
                           <option value="completed">Terminé</option>
+                          <option value="cancelled">Annulé</option>
                         </select>
                         <Button
                           size="sm"
@@ -680,7 +693,7 @@ export default function NotaireCasesModernized() {
                   } else {
                     pageNum = currentPage - 2 + i;
                   }
-                  
+
                   return (
                     <Button
                       key={pageNum}
@@ -712,118 +725,69 @@ export default function NotaireCasesModernized() {
           <DialogHeader>
             <DialogTitle>Créer un nouveau dossier</DialogTitle>
             <DialogDescription>
-              Remplissez les informations pour créer un dossier notarial
+              Remplissez les informations pour créer un acte notarial
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-4">
-            <div>
-              <Label htmlFor="title">Titre du dossier *</Label>
-              <Input
-                id="title"
-                placeholder="Ex: Vente Terrain Résidentiel - Ouakam"
-                value={newCase.title}
-                onChange={(e) => setNewCase({ ...newCase, title: e.target.value })}
-              />
-            </div>
-
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="case_type">Type de dossier</Label>
+                <Label htmlFor="act_type">Type d'acte *</Label>
                 <select
-                  id="case_type"
-                  value={newCase.case_type}
-                  onChange={(e) => setNewCase({ ...newCase, case_type: e.target.value })}
+                  id="act_type"
+                  value={newCase.act_type}
+                  onChange={(e) => setNewCase({ ...newCase, act_type: e.target.value })}
                   className="w-full px-3 py-2 border rounded-lg"
                 >
-                  <option value="vente_terrain">Vente terrain</option>
-                  <option value="vente_immobilier">Vente immobilier</option>
-                  <option value="succession">Succession</option>
-                  <option value="donation">Donation</option>
-                  <option value="hypotheque">Hypothèque</option>
-                  <option value="autre">Autre</option>
+                  {Object.entries(ACT_TYPE_LABELS).map(([value, label]) => (
+                    <option key={value} value={value}>{label}</option>
+                  ))}
                 </select>
               </div>
 
               <div>
-                <Label htmlFor="priority">Priorité</Label>
-                <select
-                  id="priority"
-                  value={newCase.priority}
-                  onChange={(e) => setNewCase({ ...newCase, priority: e.target.value })}
-                  className="w-full px-3 py-2 border rounded-lg"
-                >
-                  <option value="low">Basse</option>
-                  <option value="medium">Moyenne</option>
-                  <option value="high">Haute</option>
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label htmlFor="buyer_name">Nom de l'acheteur *</Label>
+                <Label htmlFor="reference">Référence</Label>
                 <Input
-                  id="buyer_name"
-                  placeholder="Nom complet"
-                  value={newCase.buyer_name}
-                  onChange={(e) => setNewCase({ ...newCase, buyer_name: e.target.value })}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="seller_name">Nom du vendeur *</Label>
-                <Input
-                  id="seller_name"
-                  placeholder="Nom complet"
-                  value={newCase.seller_name}
-                  onChange={(e) => setNewCase({ ...newCase, seller_name: e.target.value })}
+                  id="reference"
+                  placeholder="Auto-générée si vide"
+                  value={newCase.reference}
+                  onChange={(e) => setNewCase({ ...newCase, reference: e.target.value })}
                 />
               </div>
             </div>
 
             <div>
-              <Label htmlFor="property_address">Adresse de la propriété</Label>
+              <Label htmlFor="client_name">Nom du client *</Label>
               <Input
-                id="property_address"
-                placeholder="Adresse complète"
-                value={newCase.property_address}
-                onChange={(e) => setNewCase({ ...newCase, property_address: e.target.value })}
+                id="client_name"
+                placeholder="Nom complet"
+                value={newCase.client_name}
+                onChange={(e) => setNewCase({ ...newCase, client_name: e.target.value })}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div>
-                <Label htmlFor="property_value">Valeur (FCFA)</Label>
+                <Label htmlFor="amount">Montant de la transaction (FCFA)</Label>
                 <Input
-                  id="property_value"
+                  id="amount"
                   type="number"
                   placeholder="0"
-                  value={newCase.property_value}
-                  onChange={(e) => setNewCase({ ...newCase, property_value: e.target.value })}
+                  value={newCase.amount}
+                  onChange={(e) => setNewCase({ ...newCase, amount: e.target.value })}
                 />
               </div>
 
               <div>
-                <Label htmlFor="due_date">Date d'échéance</Label>
+                <Label htmlFor="notary_fees">Honoraires notariaux (FCFA)</Label>
                 <Input
-                  id="due_date"
-                  type="date"
-                  value={newCase.due_date}
-                  onChange={(e) => setNewCase({ ...newCase, due_date: e.target.value })}
+                  id="notary_fees"
+                  type="number"
+                  placeholder="0"
+                  value={newCase.notary_fees}
+                  onChange={(e) => setNewCase({ ...newCase, notary_fees: e.target.value })}
                 />
               </div>
-            </div>
-
-            <div>
-              <Label htmlFor="description">Description</Label>
-              <Textarea
-                id="description"
-                placeholder="Description du dossier..."
-                rows={3}
-                value={newCase.description}
-                onChange={(e) => setNewCase({ ...newCase, description: e.target.value })}
-              />
             </div>
           </div>
 
@@ -844,10 +808,10 @@ export default function NotaireCasesModernized() {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <Briefcase className="h-5 w-5" />
-              {selectedCase?.title}
+              {selectedCase && getActTypeLabel(selectedCase.act_type)}
             </DialogTitle>
             <DialogDescription>
-              Dossier {selectedCase?.case_number}
+              {selectedCase?.reference ? `Référence ${selectedCase.reference}` : 'Acte notarial'}
             </DialogDescription>
           </DialogHeader>
 
@@ -856,116 +820,84 @@ export default function NotaireCasesModernized() {
               <Tabs defaultValue="general" className="w-full">
                 <TabsList className="grid w-full grid-cols-3">
                   <TabsTrigger value="general">Général</TabsTrigger>
-                  <TabsTrigger value="parties">Parties</TabsTrigger>
-                  <TabsTrigger value="property">Propriété</TabsTrigger>
+                  <TabsTrigger value="client">Client</TabsTrigger>
+                  <TabsTrigger value="transaction">Transaction</TabsTrigger>
                 </TabsList>
 
                 <TabsContent value="general" className="space-y-4 mt-4">
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Statut</p>
-                      <Badge className={getStatusConfig(selectedCase.status).color}>
+                      <Badge className={`${getStatusConfig(selectedCase.status).color} text-white`}>
                         {getStatusConfig(selectedCase.status).label}
                       </Badge>
                     </div>
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Priorité</p>
-                      <Badge className={getPriorityConfig(selectedCase.priority).color}>
-                        {getPriorityConfig(selectedCase.priority).label}
-                      </Badge>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Type d'acte</p>
+                      <p className="font-semibold">{getActTypeLabel(selectedCase.act_type)}</p>
                     </div>
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Date d'ouverture</p>
-                      <p className="font-semibold">{formatDate(selectedCase.opened_date)}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Date de création</p>
+                      <p className="font-semibold">{formatDate(selectedCase.created_at)}</p>
                     </div>
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Échéance</p>
-                      <p className="font-semibold">{formatDate(selectedCase.due_date)}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Date de signature</p>
+                      <p className="font-semibold">{formatDate(selectedCase.signed_at)}</p>
                     </div>
-                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg col-span-2">
-                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Progression</p>
-                      <Progress value={selectedCase.progress || 0} className="h-2 mb-1" />
-                      <p className="text-sm font-semibold">{selectedCase.progress || 0}%</p>
-                    </div>
-                  </div>
-
-                  {selectedCase.next_action && (
-                    <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
-                      <p className="text-sm font-medium text-blue-700 dark:text-blue-300">
-                        Prochaine action: {selectedCase.next_action}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Satisfaction client</p>
+                      <p className="font-semibold">
+                        {selectedCase.client_satisfaction != null ? `${selectedCase.client_satisfaction}%` : '—'}
                       </p>
                     </div>
-                  )}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1">Avancement</p>
+                      <Progress value={STATUS_PROGRESS[selectedCase.status] ?? 0} className="h-2 mb-1" />
+                      <p className="text-sm font-semibold">{STATUS_PROGRESS[selectedCase.status] ?? 0}%</p>
+                    </div>
+                  </div>
                 </TabsContent>
 
-                <TabsContent value="parties" className="space-y-4 mt-4">
+                <TabsContent value="client" className="space-y-4 mt-4">
                   <Card className="p-4">
                     <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
                       <User className="h-5 w-5 text-blue-500" />
-                      Acheteur
+                      Client
                     </h4>
-                    <p className="text-gray-700 dark:text-gray-300 font-medium">{selectedCase.buyer_name}</p>
-                  </Card>
-
-                  <Card className="p-4">
-                    <h4 className="font-semibold text-lg mb-3 flex items-center gap-2">
-                      <Users className="h-5 w-5 text-green-500" />
-                      Vendeur
-                    </h4>
-                    <p className="text-gray-700 dark:text-gray-300 font-medium">{selectedCase.seller_name}</p>
+                    <p className="text-gray-700 dark:text-gray-300 font-medium">
+                      {selectedCase.client_name || 'Non renseigné'}
+                    </p>
                   </Card>
                 </TabsContent>
 
-                <TabsContent value="property" className="space-y-4 mt-4">
+                <TabsContent value="transaction" className="space-y-4 mt-4">
                   <div className="grid grid-cols-1 gap-4">
-                    {selectedCase.property_address && (
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">
-                          <MapPin className="h-4 w-4" />
-                          Adresse
-                        </p>
-                        <p className="font-semibold">{selectedCase.property_address}</p>
-                      </div>
-                    )}
-                    
-                    {selectedCase.property_value && (
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">
-                          <DollarSign className="h-4 w-4" />
-                          Valeur de la propriété
-                        </p>
-                        <p className="font-semibold text-lg text-green-600">
-                          {formatCurrency(selectedCase.property_value)}
-                        </p>
-                      </div>
-                    )}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">
+                        <DollarSign className="h-4 w-4" />
+                        Montant de la transaction
+                      </p>
+                      <p className="font-semibold text-lg text-green-600">
+                        {selectedCase.amount ? formatCurrency(selectedCase.amount) : '—'}
+                      </p>
+                    </div>
 
-                    {selectedCase.notary_fees && (
-                      <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">
-                          <TrendingUp className="h-4 w-4" />
-                          Honoraires notariaux
-                        </p>
-                        <p className="font-semibold text-lg text-purple-600">
-                          {formatCurrency(selectedCase.notary_fees)}
-                        </p>
-                      </div>
-                    )}
+                    <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">
+                        <TrendingUp className="h-4 w-4" />
+                        Honoraires notariaux
+                      </p>
+                      <p className="font-semibold text-lg text-purple-600">
+                        {selectedCase.notary_fees ? formatCurrency(selectedCase.notary_fees) : '—'}
+                      </p>
+                    </div>
 
                     <div className="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
                       <p className="text-sm text-gray-500 dark:text-gray-400 mb-1 flex items-center gap-2">
                         <FileText className="h-4 w-4" />
-                        Documents
+                        Référence
                       </p>
-                      <p className="font-semibold">
-                        {selectedCase.completed_documents || 0} / {selectedCase.documents_count || 0} complétés
-                      </p>
-                      {selectedCase.documents_count > 0 && (
-                        <Progress 
-                          value={(selectedCase.completed_documents / selectedCase.documents_count) * 100} 
-                          className="h-2 mt-2"
-                        />
-                      )}
+                      <p className="font-semibold font-mono">{selectedCase.reference || '—'}</p>
                     </div>
                   </div>
                 </TabsContent>
@@ -984,8 +916,8 @@ export default function NotaireCasesModernized() {
               Confirmer la suppression
             </DialogTitle>
             <DialogDescription>
-              Êtes-vous sûr de vouloir archiver le dossier "{selectedCase?.case_number}" ?
-              Cette action peut être annulée depuis les archives.
+              Êtes-vous sûr de vouloir supprimer le dossier "{selectedCase?.reference || getActTypeLabel(selectedCase?.act_type)}" ?
+              Cette action est définitive.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
@@ -993,7 +925,7 @@ export default function NotaireCasesModernized() {
               Annuler
             </Button>
             <Button variant="destructive" onClick={handleDeleteCase} disabled={isLoading}>
-              {isLoading ? 'Suppression...' : 'Archiver'}
+              {isLoading ? 'Suppression...' : 'Supprimer'}
             </Button>
           </DialogFooter>
         </DialogContent>

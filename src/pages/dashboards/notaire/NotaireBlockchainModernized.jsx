@@ -11,24 +11,20 @@ import {
   Hash,
   Zap,
   Activity,
-  DollarSign,
   RefreshCw,
-  Download,
-  Upload,
   Eye,
   Search,
-  Filter,
   TrendingUp,
   Server,
   Lock,
-  Unlock,
   Package,
   HardDrive,
-  Globe
+  Globe,
+  Boxes
 } from 'lucide-react';
 
+import supabase from '@/lib/supabaseClient';
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -50,11 +46,12 @@ import {
   DialogContent,
   DialogDescription,
   DialogHeader,
-  DialogTitle,
-  DialogTrigger
+  DialogTitle
 } from '@/components/ui/dialog';
 import { Separator } from '@/components/ui/separator';
 
+// Réseaux blockchain supportés — contenu ÉDITORIAL (capacités de la plateforme),
+// pas une métrique. Aucune colonne "network" n'existe dans le schéma réel.
 const blockchainNetworks = [
   { value: 'polygon', label: 'Polygon (MATIC)', color: 'bg-purple-100 text-purple-700', icon: '⬡' },
   { value: 'ethereum', label: 'Ethereum (ETH)', color: 'bg-blue-100 text-blue-700', icon: '◆' },
@@ -62,33 +59,42 @@ const blockchainNetworks = [
   { value: 'avalanche', label: 'Avalanche (AVAX)', color: 'bg-red-100 text-red-700', icon: '▲' }
 ];
 
+// Statuts réels de document_authentication.verification_status
 const verificationStatusStyles = {
   pending: { label: 'En attente', className: 'bg-amber-100 text-amber-800', icon: Clock },
   verified: { label: 'Vérifié', className: 'bg-emerald-100 text-emerald-800', icon: CheckCircle2 },
-  failed: { label: 'Échec', className: 'bg-red-100 text-red-800', icon: AlertCircle },
-  expired: { label: 'Expiré', className: 'bg-slate-100 text-slate-700', icon: Clock }
+  rejected: { label: 'Rejeté', className: 'bg-red-100 text-red-800', icon: AlertCircle }
+};
+
+// Statuts réels (indicatifs) de blockchain_transactions.status
+const txStatusStyles = {
+  pending: { label: 'En attente', className: 'bg-amber-100 text-amber-800' },
+  confirmed: { label: 'Confirmée', className: 'bg-emerald-100 text-emerald-800' },
+  completed: { label: 'Complétée', className: 'bg-emerald-100 text-emerald-800' },
+  success: { label: 'Réussie', className: 'bg-emerald-100 text-emerald-800' },
+  failed: { label: 'Échouée', className: 'bg-red-100 text-red-800' }
 };
 
 const NotaireBlockchainModernized = () => {
-  const { dashboardStats } = useOutletContext() || {};
+  useOutletContext();
   const { user } = useAuth();
 
   const [authentications, setAuthentications] = useState([]);
+  const [transactions, setTransactions] = useState([]);
   const [authStats, setAuthStats] = useState({
     totalDocuments: 0,
     authenticatedDocs: 0,
     pendingAuth: 0,
-    blockchainCost: 0,
-    successRate: 0
+    rejectedDocs: 0,
+    successRate: 0,
+    totalTransactions: 0
   });
   const [selectedAuth, setSelectedAuth] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [networkFilter, setNetworkFilter] = useState('all');
   const [statusFilter, setStatusFilter] = useState('all');
   const [isLoading, setIsLoading] = useState(true);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('documents');
-  const [showAuthDialog, setShowAuthDialog] = useState(false);
 
   useEffect(() => {
     if (user) {
@@ -101,23 +107,46 @@ const NotaireBlockchainModernized = () => {
     initial ? setIsLoading(true) : setIsRefreshing(true);
 
     try {
-      const [authResult, statsResult] = await Promise.all([
-        NotaireSupabaseService.getDocumentAuthentications(user.id),
-        NotaireSupabaseService.getAuthenticationStats(user.id)
+      const [authRes, txRes] = await Promise.all([
+        supabase
+          .from('document_authentication')
+          .select('id, document_name, document_type, verification_status, authenticity_hash, property_id, verified_at, created_at')
+          .eq('notaire_id', user.id)
+          .order('created_at', { ascending: false }),
+        supabase
+          .from('blockchain_transactions')
+          .select('id, property_id, amount, status, transaction_hash, block_number, created_at')
+          .eq('user_id', user.id)
+          .order('created_at', { ascending: false })
       ]);
 
-      if (authResult?.success) {
-        setAuthentications(authResult.data || []);
-      }
+      if (authRes.error) throw authRes.error;
+      if (txRes.error) throw txRes.error;
 
-      if (statsResult?.success) {
-        setAuthStats(prev => ({ ...prev, ...statsResult.data }));
-      }
+      const auths = authRes.data || [];
+      const txs = txRes.data || [];
+
+      setAuthentications(auths);
+      setTransactions(txs);
+
+      const total = auths.length;
+      const verified = auths.filter((a) => a.verification_status === 'verified').length;
+      const pending = auths.filter((a) => a.verification_status === 'pending').length;
+      const rejected = auths.filter((a) => a.verification_status === 'rejected').length;
+
+      setAuthStats({
+        totalDocuments: total,
+        authenticatedDocs: verified,
+        pendingAuth: pending,
+        rejectedDocs: rejected,
+        successRate: total > 0 ? Math.round((verified / total) * 100) : 0,
+        totalTransactions: txs.length
+      });
     } catch (error) {
       console.error('Erreur chargement données blockchain:', error);
       window.safeGlobalToast?.({
         title: 'Erreur de chargement',
-        description: 'Impossible de récupérer les authentifications blockchain.',
+        description: 'Impossible de récupérer les données blockchain.',
         variant: 'destructive'
       });
     } finally {
@@ -129,19 +158,25 @@ const NotaireBlockchainModernized = () => {
     return authentications.filter((auth) => {
       const matchesSearch =
         !searchTerm ||
-        auth.transaction_hash?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        auth.document_hash?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        auth.notarial_documents?.document_name?.toLowerCase().includes(searchTerm.toLowerCase());
+        auth.authenticity_hash?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        auth.document_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        auth.document_type?.toLowerCase().includes(searchTerm.toLowerCase());
 
-      const matchesNetwork = networkFilter === 'all' || auth.blockchain_network === networkFilter;
       const matchesStatus = statusFilter === 'all' || auth.verification_status === statusFilter;
 
-      return matchesSearch && matchesNetwork && matchesStatus;
+      return matchesSearch && matchesStatus;
     });
-  }, [authentications, searchTerm, networkFilter, statusFilter]);
+  }, [authentications, searchTerm, statusFilter]);
+
+  const filteredTransactions = useMemo(() => {
+    if (!searchTerm) return transactions;
+    return transactions.filter((tx) =>
+      tx.transaction_hash?.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [transactions, searchTerm]);
 
   const formatCurrency = (amount) => {
-    if (!amount || Number.isNaN(Number(amount))) return '0 FCFA';
+    if (!amount || Number.isNaN(Number(amount))) return '—';
     return new Intl.NumberFormat('fr-FR', {
       style: 'currency',
       currency: 'XOF',
@@ -150,7 +185,7 @@ const NotaireBlockchainModernized = () => {
   };
 
   const formatDate = (date) => {
-    if (!date) return 'N/A';
+    if (!date) return '—';
     return new Date(date).toLocaleString('fr-FR', {
       day: '2-digit',
       month: 'short',
@@ -161,54 +196,41 @@ const NotaireBlockchainModernized = () => {
   };
 
   const truncateHash = (hash) => {
-    if (!hash) return 'N/A';
+    if (!hash) return '—';
+    if (hash.length <= 16) return hash;
     return `${hash.substring(0, 8)}...${hash.substring(hash.length - 6)}`;
-  };
-
-  const getNetworkInfo = (network) => {
-    return blockchainNetworks.find((n) => n.value === network) || blockchainNetworks[0];
   };
 
   const getStatusInfo = (status) => {
     return verificationStatusStyles[status] || verificationStatusStyles.pending;
   };
 
-  const handleAuthenticateDocument = async (documentId) => {
-    try {
-      const result = await NotaireSupabaseService.authenticateDocument(user.id, documentId);
-      if (result.success) {
-        window.safeGlobalToast?.({
-          title: 'Authentification lancée',
-          description: 'Le document est en cours d\'authentification sur la blockchain.',
-          variant: 'success'
-        });
-        await loadBlockchainData(false);
-      } else {
-        throw new Error(result.error);
-      }
-    } catch (error) {
-      window.safeGlobalToast?.({
-        title: 'Erreur',
-        description: 'Impossible d\'authentifier le document.',
-        variant: 'destructive'
-      });
-    }
+  const getTxStatusInfo = (status) => {
+    return txStatusStyles[status] || { label: status || 'Inconnu', className: 'bg-slate-100 text-slate-700' };
   };
 
+  // Tendance mensuelle réelle des authentifications (created_at)
   const monthlyAuthTrend = useMemo(() => {
     const last6Months = [];
     const now = new Date();
 
     for (let i = 5; i >= 0; i--) {
       const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
       const monthLabel = date.toLocaleDateString('fr-FR', { month: 'short', year: 'numeric' });
 
       const monthAuths = authentications.filter((auth) => {
-        const authDate = new Date(auth.authenticated_at);
+        const authDate = new Date(auth.verified_at || auth.created_at);
         return (
           authDate.getFullYear() === date.getFullYear() &&
           authDate.getMonth() === date.getMonth()
+        );
+      });
+
+      const monthTxs = transactions.filter((tx) => {
+        const txDate = new Date(tx.created_at);
+        return (
+          txDate.getFullYear() === date.getFullYear() &&
+          txDate.getMonth() === date.getMonth()
         );
       });
 
@@ -216,14 +238,27 @@ const NotaireBlockchainModernized = () => {
         month: monthLabel,
         count: monthAuths.length,
         verified: monthAuths.filter((a) => a.verification_status === 'verified').length,
-        cost: monthAuths.reduce((sum, a) => sum + (a.total_cost || 0), 0)
+        txVolume: monthTxs.reduce((sum, t) => sum + (Number(t.amount) || 0), 0)
       });
     }
 
     return last6Months;
-  }, [authentications]);
+  }, [authentications, transactions]);
 
   const maxMonthlyCount = Math.max(...monthlyAuthTrend.map((m) => m.count), 1);
+
+  const statusDistribution = useMemo(() => {
+    const total = authentications.length;
+    return Object.entries(verificationStatusStyles).map(([key, info]) => {
+      const count = authentications.filter((a) => a.verification_status === key).length;
+      return {
+        key,
+        label: info.label,
+        count,
+        percentage: total ? Math.round((count / total) * 100) : 0
+      };
+    });
+  }, [authentications]);
 
   if (isLoading) {
     return (
@@ -248,10 +283,6 @@ const NotaireBlockchainModernized = () => {
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <Badge className="bg-emerald-100 text-emerald-700 flex items-center gap-1">
-            <CheckCircle2 className="h-4 w-4" />
-            Réseau actif
-          </Badge>
           <Button variant="outline" onClick={() => loadBlockchainData(false)} disabled={isRefreshing}>
             <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
             Actualiser
@@ -283,46 +314,44 @@ const NotaireBlockchainModernized = () => {
           <CardContent>
             <div className="text-3xl font-bold">{authStats.pendingAuth}</div>
             <p className="text-xs text-muted-foreground">
-              Authentifications blockchain en cours
+              Authentifications en cours de vérification
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Coûts blockchain</CardTitle>
-            <DollarSign className="h-5 w-5 text-blue-600" />
+            <CardTitle className="text-sm font-medium">Documents rejetés</CardTitle>
+            <AlertCircle className="h-5 w-5 text-red-600" />
           </CardHeader>
           <CardContent>
-            <div className="text-3xl font-bold">{formatCurrency(authStats.blockchainCost)}</div>
+            <div className="text-3xl font-bold">{authStats.rejectedDocs}</div>
             <p className="text-xs text-muted-foreground">
-              Frais totaux d'authentification
+              Authentifications non validées
             </p>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between pb-2">
-            <CardTitle className="text-sm font-medium">Réseau préféré</CardTitle>
-            <Link2 className="h-5 w-5 text-purple-600" />
+            <CardTitle className="text-sm font-medium">Transactions blockchain</CardTitle>
+            <Boxes className="h-5 w-5 text-purple-600" />
           </CardHeader>
           <CardContent>
-            <div className="flex items-center gap-2">
-              <span className="text-2xl">⬡</span>
-              <div>
-                <div className="text-xl font-bold">Polygon</div>
-                <p className="text-xs text-muted-foreground">Réseau principal</p>
-              </div>
-            </div>
+            <div className="text-3xl font-bold">{authStats.totalTransactions}</div>
+            <p className="text-xs text-muted-foreground">
+              Enregistrées on-chain
+            </p>
           </CardContent>
         </Card>
       </div>
 
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid grid-cols-1 sm:grid-cols-3 w-full">
+        <TabsList className="grid grid-cols-1 sm:grid-cols-4 w-full">
           <TabsTrigger value="documents">Documents authentifiés</TabsTrigger>
-          <TabsTrigger value="analytics">Analytics blockchain</TabsTrigger>
-          <TabsTrigger value="network">Réseaux & coûts</TabsTrigger>
+          <TabsTrigger value="transactions">Transactions on-chain</TabsTrigger>
+          <TabsTrigger value="analytics">Analytics</TabsTrigger>
+          <TabsTrigger value="network">Réseaux & infos</TabsTrigger>
         </TabsList>
 
         <TabsContent value="documents" className="space-y-4 mt-4">
@@ -332,39 +361,22 @@ const NotaireBlockchainModernized = () => {
                 <div>
                   <CardTitle>Historique d'authentification</CardTitle>
                   <CardDescription>
-                    Suivi en temps réel des documents authentifiés sur la blockchain
+                    Documents notariaux authentifiés et leur empreinte cryptographique
                   </CardDescription>
                 </div>
-                <Button onClick={() => setShowAuthDialog(true)}>
-                  <Upload className="h-4 w-4 mr-2" />
-                  Nouveau document
-                </Button>
               </div>
             </CardHeader>
             <CardContent>
               <div className="flex flex-wrap gap-3 mb-4">
                 <div className="flex-1 min-w-[200px]">
                   <Input
-                    placeholder="Rechercher par hash, nom..."
+                    placeholder="Rechercher par nom, type, empreinte..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="w-full"
                     icon={<Search className="h-4 w-4" />}
                   />
                 </div>
-                <Select value={networkFilter} onValueChange={setNetworkFilter}>
-                  <SelectTrigger className="w-[180px]">
-                    <SelectValue placeholder="Réseau" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Tous les réseaux</SelectItem>
-                    {blockchainNetworks.map((net) => (
-                      <SelectItem key={net.value} value={net.value}>
-                        {net.icon} {net.label}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
                 <Select value={statusFilter} onValueChange={setStatusFilter}>
                   <SelectTrigger className="w-[180px]">
                     <SelectValue placeholder="Statut" />
@@ -386,18 +398,15 @@ const NotaireBlockchainModernized = () => {
                     <TableHeader>
                       <TableRow>
                         <TableHead>Document</TableHead>
-                        <TableHead>Hash transaction</TableHead>
-                        <TableHead>Réseau</TableHead>
+                        <TableHead>Empreinte (hash)</TableHead>
                         <TableHead>Statut</TableHead>
                         <TableHead>Date</TableHead>
-                        <TableHead>Coût</TableHead>
                         <TableHead>Actions</TableHead>
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {filteredAuthentications.map((auth) => {
                         const statusInfo = getStatusInfo(auth.verification_status);
-                        const networkInfo = getNetworkInfo(auth.blockchain_network);
                         const StatusIcon = statusInfo.icon;
 
                         return (
@@ -407,10 +416,10 @@ const NotaireBlockchainModernized = () => {
                                 <FileCheck className="h-4 w-4 text-gray-500" />
                                 <div className="flex flex-col">
                                   <span className="font-medium">
-                                    {auth.notarial_documents?.document_name || 'Document'}
+                                    {auth.document_name || 'Document'}
                                   </span>
                                   <span className="text-xs text-gray-500">
-                                    {auth.notarial_documents?.document_type || 'Type inconnu'}
+                                    {auth.document_type || 'Type inconnu'}
                                   </span>
                                 </div>
                               </div>
@@ -419,14 +428,9 @@ const NotaireBlockchainModernized = () => {
                               <div className="flex items-center gap-2">
                                 <Hash className="h-3 w-3 text-gray-400" />
                                 <code className="text-xs font-mono text-gray-700">
-                                  {truncateHash(auth.transaction_hash)}
+                                  {truncateHash(auth.authenticity_hash)}
                                 </code>
                               </div>
-                            </TableCell>
-                            <TableCell>
-                              <Badge className={networkInfo.color}>
-                                {networkInfo.icon} {networkInfo.label}
-                              </Badge>
                             </TableCell>
                             <TableCell>
                               <Badge className={`${statusInfo.className} flex items-center gap-1 w-fit`}>
@@ -435,10 +439,7 @@ const NotaireBlockchainModernized = () => {
                               </Badge>
                             </TableCell>
                             <TableCell className="text-sm text-gray-600">
-                              {formatDate(auth.authenticated_at)}
-                            </TableCell>
-                            <TableCell className="font-medium">
-                              {formatCurrency(auth.total_cost)}
+                              {formatDate(auth.verified_at || auth.created_at)}
                             </TableCell>
                             <TableCell>
                               <Button
@@ -458,9 +459,87 @@ const NotaireBlockchainModernized = () => {
                 ) : (
                   <div className="h-48 flex flex-col items-center justify-center text-sm text-gray-500">
                     <Shield className="h-8 w-8 mb-2 text-gray-400" />
-                    {searchTerm || networkFilter !== 'all' || statusFilter !== 'all'
+                    {searchTerm || statusFilter !== 'all'
                       ? 'Aucun résultat ne correspond aux filtres appliqués'
-                      : 'Aucune authentification blockchain disponible'}
+                      : 'Aucune authentification de document disponible'}
+                  </div>
+                )}
+              </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="transactions" className="space-y-4 mt-4">
+          <Card>
+            <CardHeader>
+              <CardTitle>Transactions blockchain</CardTitle>
+              <CardDescription>
+                Transactions enregistrées on-chain associées à votre compte
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex flex-wrap gap-3 mb-4">
+                <div className="flex-1 min-w-[200px]">
+                  <Input
+                    placeholder="Rechercher par hash de transaction..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full"
+                    icon={<Search className="h-4 w-4" />}
+                  />
+                </div>
+              </div>
+
+              <ScrollArea className="h-[500px]">
+                {filteredTransactions.length ? (
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Hash transaction</TableHead>
+                        <TableHead>Bloc</TableHead>
+                        <TableHead>Montant</TableHead>
+                        <TableHead>Statut</TableHead>
+                        <TableHead>Date</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {filteredTransactions.map((tx) => {
+                        const txStatus = getTxStatusInfo(tx.status);
+                        return (
+                          <TableRow key={tx.id} className="hover:bg-gray-50">
+                            <TableCell>
+                              <div className="flex items-center gap-2">
+                                <Hash className="h-3 w-3 text-gray-400" />
+                                <code className="text-xs font-mono text-gray-700">
+                                  {truncateHash(tx.transaction_hash)}
+                                </code>
+                              </div>
+                            </TableCell>
+                            <TableCell className="text-sm text-gray-600">
+                              {tx.block_number ? `#${Number(tx.block_number).toLocaleString('fr-FR')}` : '—'}
+                            </TableCell>
+                            <TableCell className="font-medium">
+                              {formatCurrency(tx.amount)}
+                            </TableCell>
+                            <TableCell>
+                              <Badge className={`${txStatus.className} w-fit`}>
+                                {txStatus.label}
+                              </Badge>
+                            </TableCell>
+                            <TableCell className="text-sm text-gray-600">
+                              {formatDate(tx.created_at)}
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })}
+                    </TableBody>
+                  </Table>
+                ) : (
+                  <div className="h-48 flex flex-col items-center justify-center text-sm text-gray-500">
+                    <Link2 className="h-8 w-8 mb-2 text-gray-400" />
+                    {searchTerm
+                      ? 'Aucune transaction ne correspond à la recherche'
+                      : 'Aucune transaction blockchain enregistrée'}
                   </div>
                 )}
               </ScrollArea>
@@ -476,52 +555,52 @@ const NotaireBlockchainModernized = () => {
                 <CardDescription>Evolution des authentifications sur 6 mois</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="h-64 flex items-end gap-3">
-                  {monthlyAuthTrend.map((item) => (
-                    <div key={item.month} className="flex-1 flex flex-col items-center justify-end">
-                      <div
-                        className="w-full rounded-t-md bg-gradient-to-t from-purple-500 to-purple-300 transition-all"
-                        style={{ height: `${Math.max(10, (item.count / maxMonthlyCount) * 100)}%` }}
-                      />
-                      <div className="mt-3 text-xs font-medium text-gray-700">{item.month}</div>
-                      <Badge className="mt-1 bg-slate-100 text-slate-700" variant="secondary">
-                        {item.count} docs
-                      </Badge>
-                      <div className="text-[11px] text-gray-500">{item.verified} vérifiés</div>
-                    </div>
-                  ))}
-                </div>
+                {authentications.length ? (
+                  <div className="h-64 flex items-end gap-3">
+                    {monthlyAuthTrend.map((item) => (
+                      <div key={item.month} className="flex-1 flex flex-col items-center justify-end">
+                        <div
+                          className="w-full rounded-t-md bg-gradient-to-t from-purple-500 to-purple-300 transition-all"
+                          style={{ height: `${Math.max(10, (item.count / maxMonthlyCount) * 100)}%` }}
+                        />
+                        <div className="mt-3 text-xs font-medium text-gray-700">{item.month}</div>
+                        <Badge className="mt-1 bg-slate-100 text-slate-700" variant="secondary">
+                          {item.count} docs
+                        </Badge>
+                        <div className="text-[11px] text-gray-500">{item.verified} vérifiés</div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-64 flex items-center justify-center text-sm text-gray-500">
+                    Aucune donnée d'authentification à afficher
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Répartition par réseau</CardTitle>
-                <CardDescription>Distribution des authentifications par blockchain</CardDescription>
+                <CardTitle>Répartition par statut</CardTitle>
+                <CardDescription>Distribution des authentifications de documents</CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                {blockchainNetworks.map((network) => {
-                  const count = authentications.filter(
-                    (a) => a.blockchain_network === network.value
-                  ).length;
-                  const percentage = authentications.length
-                    ? Math.round((count / authentications.length) * 100)
-                    : 0;
-
-                  return (
-                    <div key={network.value} className="space-y-2">
+                {authentications.length ? (
+                  statusDistribution.map((item) => (
+                    <div key={item.key} className="space-y-2">
                       <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="text-lg">{network.icon}</span>
-                          <span className="text-sm font-medium">{network.label}</span>
-                        </div>
-                        <Badge variant="outline">{count} docs</Badge>
+                        <span className="text-sm font-medium">{item.label}</span>
+                        <Badge variant="outline">{item.count} docs</Badge>
                       </div>
-                      <Progress value={percentage} className="h-2" />
-                      <div className="text-xs text-gray-500">{percentage}% du total</div>
+                      <Progress value={item.percentage} className="h-2" />
+                      <div className="text-xs text-gray-500">{item.percentage}% du total</div>
                     </div>
-                  );
-                })}
+                  ))
+                ) : (
+                  <div className="h-40 flex items-center justify-center text-sm text-gray-500">
+                    Aucune authentification enregistrée
+                  </div>
+                )}
               </CardContent>
             </Card>
           </div>
@@ -555,16 +634,12 @@ const NotaireBlockchainModernized = () => {
 
                 <div className="p-4 rounded-lg border bg-gradient-to-br from-blue-50 to-white">
                   <div className="flex items-center gap-2 text-sm font-semibold text-blue-700">
-                    <Activity className="h-4 w-4" /> Coût moyen
+                    <Activity className="h-4 w-4" /> Transactions on-chain
                   </div>
-                  <div className="mt-2 text-2xl font-bold text-gray-900">
-                    {formatCurrency(
-                      authStats.totalDocuments
-                        ? authStats.blockchainCost / authStats.totalDocuments
-                        : 0
-                    )}
+                  <div className="mt-2 text-3xl font-bold text-gray-900">
+                    {authStats.totalTransactions}
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">Par authentification</p>
+                  <p className="text-xs text-gray-500 mt-1">Total enregistrées</p>
                 </div>
 
                 <div className="p-4 rounded-lg border bg-gradient-to-br from-purple-50 to-white">
@@ -572,7 +647,9 @@ const NotaireBlockchainModernized = () => {
                     <TrendingUp className="h-4 w-4" /> Croissance
                   </div>
                   <div className="mt-2 text-3xl font-bold text-gray-900">
-                    +{monthlyAuthTrend.length > 1 ? Math.round(((monthlyAuthTrend[monthlyAuthTrend.length - 1].count - monthlyAuthTrend[0].count) / Math.max(1, monthlyAuthTrend[0].count)) * 100) : 0}%
+                    {monthlyAuthTrend.length > 1
+                      ? `${monthlyAuthTrend[monthlyAuthTrend.length - 1].count - monthlyAuthTrend[0].count >= 0 ? '+' : ''}${Math.round(((monthlyAuthTrend[monthlyAuthTrend.length - 1].count - monthlyAuthTrend[0].count) / Math.max(1, monthlyAuthTrend[0].count)) * 100)}%`
+                      : '—'}
                   </div>
                   <p className="text-xs text-gray-500 mt-1">Sur 6 mois</p>
                 </div>
@@ -584,9 +661,9 @@ const NotaireBlockchainModernized = () => {
         <TabsContent value="network" className="space-y-4 mt-4">
           <Card>
             <CardHeader>
-              <CardTitle>Configuration des réseaux blockchain</CardTitle>
+              <CardTitle>Réseaux blockchain supportés</CardTitle>
               <CardDescription>
-                Réseaux disponibles et frais d'authentification associés
+                Réseaux compatibles avec la plateforme d'authentification (information)
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
@@ -605,17 +682,9 @@ const NotaireBlockchainModernized = () => {
                         </div>
                       </div>
                     </div>
-                    <div className="flex flex-col items-end gap-2">
-                      <Badge className={network.color}>
-                        {network.value === 'polygon' ? 'Actif' : 'Disponible'}
-                      </Badge>
-                      <div className="text-sm font-semibold text-gray-900">
-                        {network.value === 'polygon' && '5 000 FCFA'}
-                        {network.value === 'ethereum' && '15 000 FCFA'}
-                        {network.value === 'binance' && '7 500 FCFA'}
-                        {network.value === 'avalanche' && '6 000 FCFA'}
-                      </div>
-                    </div>
+                    <Badge className={network.color}>
+                      {network.value === 'polygon' ? 'Recommandé' : 'Compatible'}
+                    </Badge>
                   </div>
                   <Separator className="my-3" />
                   <div className="grid grid-cols-3 gap-4 text-xs text-gray-600">
@@ -655,19 +724,26 @@ const NotaireBlockchainModernized = () => {
           <div className="grid gap-4 grid-cols-1 lg:grid-cols-3">
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Coûts par mois</CardTitle>
+                <CardTitle className="text-base">Volume transactions / mois</CardTitle>
+                <CardDescription>Montants on-chain enregistrés</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {monthlyAuthTrend.map((item) => (
-                    <div key={item.month} className="flex items-center justify-between">
-                      <span className="text-sm text-gray-600">{item.month}</span>
-                      <span className="font-semibold text-gray-900">
-                        {formatCurrency(item.cost)}
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                {transactions.length ? (
+                  <div className="space-y-3">
+                    {monthlyAuthTrend.map((item) => (
+                      <div key={item.month} className="flex items-center justify-between">
+                        <span className="text-sm text-gray-600">{item.month}</span>
+                        <span className="font-semibold text-gray-900">
+                          {item.txVolume ? formatCurrency(item.txVolume) : '—'}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="h-32 flex items-center justify-center text-sm text-gray-500">
+                    Aucune transaction enregistrée
+                  </div>
+                )}
               </CardContent>
             </Card>
 
@@ -735,7 +811,7 @@ const NotaireBlockchainModernized = () => {
         <Dialog open={!!selectedAuth} onOpenChange={() => setSelectedAuth(null)}>
           <DialogContent className="max-w-2xl">
             <DialogHeader>
-              <DialogTitle>Détails de l'authentification blockchain</DialogTitle>
+              <DialogTitle>Détails de l'authentification</DialogTitle>
               <DialogDescription>
                 Informations complètes sur l'authentification du document
               </DialogDescription>
@@ -745,21 +821,14 @@ const NotaireBlockchainModernized = () => {
                 <div>
                   <div className="text-sm font-medium text-gray-500">Document</div>
                   <div className="mt-1 font-semibold text-gray-900">
-                    {selectedAuth.notarial_documents?.document_name || 'N/A'}
+                    {selectedAuth.document_name || '—'}
                   </div>
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-500">Type</div>
                   <div className="mt-1 font-semibold text-gray-900">
-                    {selectedAuth.notarial_documents?.document_type || 'N/A'}
+                    {selectedAuth.document_type || '—'}
                   </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Réseau blockchain</div>
-                  <Badge className={getNetworkInfo(selectedAuth.blockchain_network).color}>
-                    {getNetworkInfo(selectedAuth.blockchain_network).icon}{' '}
-                    {getNetworkInfo(selectedAuth.blockchain_network).label}
-                  </Badge>
                 </div>
                 <div>
                   <div className="text-sm font-medium text-gray-500">Statut</div>
@@ -767,62 +836,37 @@ const NotaireBlockchainModernized = () => {
                     {getStatusInfo(selectedAuth.verification_status).label}
                   </Badge>
                 </div>
+                <div>
+                  <div className="text-sm font-medium text-gray-500">Bien lié</div>
+                  <div className="mt-1 text-sm text-gray-900">
+                    {selectedAuth.property_id || '—'}
+                  </div>
+                </div>
               </div>
 
               <Separator />
 
               <div>
-                <div className="text-sm font-medium text-gray-500 mb-2">Hash de transaction</div>
+                <div className="text-sm font-medium text-gray-500 mb-2">Empreinte du document (hash)</div>
                 <code className="block p-3 bg-gray-100 rounded text-xs font-mono break-all">
-                  {selectedAuth.transaction_hash}
+                  {selectedAuth.authenticity_hash || '—'}
                 </code>
               </div>
 
-              <div>
-                <div className="text-sm font-medium text-gray-500 mb-2">Hash du document</div>
-                <code className="block p-3 bg-gray-100 rounded text-xs font-mono break-all">
-                  {selectedAuth.document_hash}
-                </code>
-              </div>
-
-              <div className="grid gap-4 sm:grid-cols-3">
+              <div className="grid gap-4 sm:grid-cols-2">
                 <div>
-                  <div className="text-sm font-medium text-gray-500">Date authentification</div>
+                  <div className="text-sm font-medium text-gray-500">Date de vérification</div>
                   <div className="mt-1 text-sm text-gray-900">
-                    {formatDate(selectedAuth.authenticated_at)}
+                    {formatDate(selectedAuth.verified_at)}
                   </div>
                 </div>
                 <div>
-                  <div className="text-sm font-medium text-gray-500">Frais d'authentification</div>
-                  <div className="mt-1 text-sm font-semibold text-gray-900">
-                    {formatCurrency(selectedAuth.authentication_fee)}
-                  </div>
-                </div>
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Frais réseau</div>
-                  <div className="mt-1 text-sm font-semibold text-gray-900">
-                    {formatCurrency(selectedAuth.network_fee)}
+                  <div className="text-sm font-medium text-gray-500">Date de création</div>
+                  <div className="mt-1 text-sm text-gray-900">
+                    {formatDate(selectedAuth.created_at)}
                   </div>
                 </div>
               </div>
-
-              {selectedAuth.block_number && (
-                <div>
-                  <div className="text-sm font-medium text-gray-500">Bloc #</div>
-                  <div className="mt-1 font-semibold text-gray-900">
-                    {selectedAuth.block_number.toLocaleString('fr-FR')}
-                  </div>
-                </div>
-              )}
-
-              {selectedAuth.ipfs_hash && (
-                <div>
-                  <div className="text-sm font-medium text-gray-500 mb-2">IPFS Hash</div>
-                  <code className="block p-3 bg-gray-100 rounded text-xs font-mono break-all">
-                    {selectedAuth.ipfs_hash}
-                  </code>
-                </div>
-              )}
             </div>
           </DialogContent>
         </Dialog>

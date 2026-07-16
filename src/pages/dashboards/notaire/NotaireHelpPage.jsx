@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
 import { 
   HelpCircle, 
   Search, 
@@ -18,6 +19,29 @@ const NotaireHelpPage = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedArticle, setSelectedArticle] = useState(null);
   const [expandedFAQ, setExpandedFAQ] = useState(null);
+  const [faqItems, setFaqItems] = useState([]);
+  const [faqLoading, setFaqLoading] = useState(true);
+
+  // FAQ réelle depuis la table Supabase `faq_items` (id, question, answer, category)
+  useEffect(() => {
+    let active = true;
+    const loadFaq = async () => {
+      const { data, error } = await supabase
+        .from('faq_items')
+        .select('id, question, answer, category')
+        .order('created_at', { ascending: true });
+      if (!active) return;
+      if (error) {
+        console.error('Erreur chargement FAQ:', error);
+        setFaqItems([]);
+      } else {
+        setFaqItems(data || []);
+      }
+      setFaqLoading(false);
+    };
+    loadFaq();
+    return () => { active = false; };
+  }, []);
 
   const categories = [
     { id: 'all', name: 'Tout', icon: Book },
@@ -33,42 +57,21 @@ const NotaireHelpPage = () => {
       title: 'Guide de démarrage rapide',
       category: 'getting-started',
       content: 'Ce guide vous aidera à configurer votre compte et à commencer à utiliser la plateforme.',
-      readTime: '5 min',
-      views: 1234
+      readTime: '5 min'
     },
     {
       id: 2,
       title: 'Comment créer un acte notarié',
       category: 'features',
       content: 'Tutoriel complet pour créer et gérer vos actes notariés sur la plateforme.',
-      readTime: '10 min',
-      views: 2456
+      readTime: '10 min'
     },
     {
       id: 3,
       title: 'Comprendre la facturation',
       category: 'billing',
       content: 'Tout ce que vous devez savoir sur la facturation et les abonnements.',
-      readTime: '7 min',
-      views: 567
-    }
-  ];
-
-  const faqItems = [
-    {
-      id: 1,
-      question: 'Comment réinitialiser mon mot de passe ?',
-      answer: 'Cliquez sur "Mot de passe oublié" sur la page de connexion, puis suivez les instructions envoyées par email.'
-    },
-    {
-      id: 2,
-      question: 'Puis-je ajouter plusieurs utilisateurs ?',
-      answer: 'Oui, selon votre plan d\'abonnement. Le plan Pro permet jusqu\'à 10 utilisateurs.'
-    },
-    {
-      id: 3,
-      question: 'Comment exporter mes données ?',
-      answer: 'Rendez-vous dans Paramètres > Export de données pour télécharger toutes vos données.'
+      readTime: '7 min'
     }
   ];
 
@@ -201,9 +204,8 @@ const NotaireHelpPage = () => {
                 >
                   <h3 className="font-semibold text-slate-800 mb-2">{article.title}</h3>
                   <p className="text-sm text-slate-600 mb-3">{article.content}</p>
-                  <div className="flex items-center justify-between text-xs text-slate-500">
+                  <div className="flex items-center text-xs text-slate-500">
                     <span>{article.readTime} de lecture</span>
-                    <span>{article.views} vues</span>
                   </div>
                 </motion.div>
               ))}
@@ -222,29 +224,35 @@ const NotaireHelpPage = () => {
               Questions Fréquentes
             </h2>
             <div className="space-y-3">
-              {faqItems.map((faq) => (
-                <div
-                  key={faq.id}
-                  className="border border-slate-200 rounded-lg overflow-hidden"
-                >
-                  <button
-                    onClick={() => setExpandedFAQ(expandedFAQ === faq.id ? null : faq.id)}
-                    className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+              {faqLoading ? (
+                <p className="text-slate-500 text-center py-6">Chargement des questions…</p>
+              ) : faqItems.length === 0 ? (
+                <p className="text-slate-500 text-center py-6">Aucune question disponible pour le moment.</p>
+              ) : (
+                faqItems.map((faq) => (
+                  <div
+                    key={faq.id}
+                    className="border border-slate-200 rounded-lg overflow-hidden"
                   >
-                    <span className="font-medium text-slate-800 text-left">{faq.question}</span>
-                    {expandedFAQ === faq.id ? (
-                      <ChevronDown size={20} className="text-slate-600" />
-                    ) : (
-                      <ChevronRight size={20} className="text-slate-600" />
+                    <button
+                      onClick={() => setExpandedFAQ(expandedFAQ === faq.id ? null : faq.id)}
+                      className="w-full flex items-center justify-between p-4 bg-slate-50 hover:bg-slate-100 transition-colors"
+                    >
+                      <span className="font-medium text-slate-800 text-left">{faq.question}</span>
+                      {expandedFAQ === faq.id ? (
+                        <ChevronDown size={20} className="text-slate-600" />
+                      ) : (
+                        <ChevronRight size={20} className="text-slate-600" />
+                      )}
+                    </button>
+                    {expandedFAQ === faq.id && (
+                      <div className="p-4 bg-white">
+                        <p className="text-slate-600">{faq.answer}</p>
+                      </div>
                     )}
-                  </button>
-                  {expandedFAQ === faq.id && (
-                    <div className="p-4 bg-white">
-                      <p className="text-slate-600">{faq.answer}</p>
-                    </div>
-                  )}
-                </div>
-              ))}
+                  </div>
+                ))
+              )}
             </div>
           </motion.div>
 
@@ -295,8 +303,6 @@ const NotaireHelpPage = () => {
             <h2 className="text-2xl font-bold text-slate-800 mb-4">{selectedArticle.title}</h2>
             <div className="flex items-center gap-4 text-sm text-slate-600 mb-6">
               <span>{selectedArticle.readTime} de lecture</span>
-              <span>•</span>
-              <span>{selectedArticle.views} vues</span>
             </div>
             <div className="prose max-w-none">
               <p className="text-slate-700 leading-relaxed">{selectedArticle.content}</p>

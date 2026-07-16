@@ -1057,23 +1057,15 @@ export class NotaireSupabaseService {
    */
   static async createClient(notaireId, clientData) {
     try {
+      // clients_notaire (schéma réel) : id, notaire_id, client_id, name, status, created_at.
+      // Les coordonnées (email/téléphone/adresse) vivent dans profiles via client_id.
       const { data, error } = await supabase
         .from('clients_notaire')
         .insert({
           notaire_id: notaireId,
-          client_name: clientData.client_name,
-          client_type: clientData.client_type || 'individual',
-          email: clientData.email,
-          phone: clientData.phone,
-          address: clientData.address,
-          city: clientData.city,
-          notes: clientData.notes,
-          total_transactions: 0,
-          total_revenue: 0,
-          satisfaction_score: null,
-          client_status: 'active',
-          created_at: new Date().toISOString(),
-          last_contact: new Date().toISOString()
+          client_id: clientData.client_id || null,
+          name: clientData.client_name || clientData.name,
+          status: clientData.client_status || 'active'
         })
         .select()
         .single();
@@ -1230,9 +1222,9 @@ export class NotaireSupabaseService {
       const { data, error } = await supabase
         .from('subscription_plans')
         .select('*')
-        .eq('is_active', true)
-        .order('order_index', { ascending: true });
-      
+        .eq('status', 'active')
+        .order('price', { ascending: true, nullsFirst: false });
+
       if (error) throw error;
       return { success: true, data: data || [] };
     } catch (error) {

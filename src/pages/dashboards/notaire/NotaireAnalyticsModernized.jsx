@@ -18,7 +18,7 @@ import {
 } from 'lucide-react';
 
 import { useAuth } from '@/contexts/UnifiedAuthContext';
-import NotaireSupabaseService from '@/services/NotaireSupabaseService';
+import supabase from '@/lib/supabaseClient';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,15 +41,39 @@ const periodOptions = [
 	{ value: 'yearly', label: 'Annuel' }
 ];
 
+// Statuts "actifs" (dossiers en cours) vs "finalisés" selon le schéma réel notarial_acts.
+const ACTIVE_STATUSES = ['draft', 'in_progress', 'signed'];
+
+const ACT_TYPE_LABELS = {
+	vente_immobiliere: 'Ventes immobilières',
+	succession: 'Successions',
+	donation: 'Donations',
+	acte_propriete: 'Actes de propriété',
+	hypotheque: 'Hypothèques',
+	constitution_societe: 'Constitutions société',
+	servitude: 'Servitudes',
+	partage: 'Partages'
+};
+
+const ACT_TYPE_COLORS = ['#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EF4444', '#06B6D4', '#84CC16', '#F97316'];
+
+const getISOWeek = (date) => {
+	const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+	const dayNum = d.getUTCDay() || 7;
+	d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+	const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+	const week = Math.ceil(((d - yearStart) / 86400000 + 1) / 7);
+	return { year: d.getUTCFullYear(), week };
+};
+
 const NotaireAnalyticsModernized = () => {
 	const { dashboardStats: contextStats } = useOutletContext() || {};
 	const { user } = useAuth();
 
 	const [period, setPeriod] = useState('monthly');
-	const [analytics, setAnalytics] = useState([]);
-	const [revenueData, setRevenueData] = useState([]);
+	const [acts, setActs] = useState([]);
 	const [complianceChecks, setComplianceChecks] = useState([]);
-	const [distribution, setDistribution] = useState([]);
+	const [techCounts, setTechCounts] = useState({ documentsAuthenticated: 0, blockchainTransactions: 0, aiQueries: 0 });
 	const [isLoading, setIsLoading] = useState(true);
 	const [isRefreshing, setIsRefreshing] = useState(false);
 	const [activeTab, setActiveTab] = useState('performance');
@@ -58,37 +82,48 @@ const NotaireAnalyticsModernized = () => {
 		if (user) {
 			loadAnalyticsData(true);
 		}
-	}, [user, period]);
-
-	const latestMetrics = useMemo(() => analytics?.[0] || null, [analytics]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [user]);
 
 	const loadAnalyticsData = async (initial = false) => {
 		if (!user) return;
 		initial ? setIsLoading(true) : setIsRefreshing(true);
 
 		try {
-			const [analyticsResult, revenueResult, complianceResult, distributionResult] = await Promise.all([
-				NotaireSupabaseService.getAnalytics(user.id, period),
-				NotaireSupabaseService.getRevenueData(user.id, 6),
-				NotaireSupabaseService.getComplianceChecks(user.id),
-				NotaireSupabaseService.getActTypesDistribution(user.id)
+			const [actsResult, complianceResult, docsResult, blockchainResult, aiResult] = await Promise.all([
+				supabase
+					.from('notarial_acts')
+					.select('id, act_type, status, notary_fees, amount, client_id, client_satisfaction, signed_at, created_at')
+					.eq('notaire_id', user.id)
+					.order('created_at', { ascending: false }),
+				supabase
+					.from('compliance_checks')
+					.select('id, check_type, compliance_score, status, act_id, created_at')
+					.eq('notaire_id', user.id)
+					.order('created_at', { ascending: false }),
+				supabase
+					.from('document_authentication')
+					.select('id', { count: 'exact', head: true })
+					.eq('notaire_id', user.id)
+					.eq('verification_status', 'verified'),
+				supabase
+					.from('blockchain_transactions')
+					.select('id', { count: 'exact', head: true })
+					.eq('user_id', user.id),
+				supabase
+					.from('ai_chat_history')
+					.select('id', { count: 'exact', head: true })
+					.eq('user_id', user.id)
 			]);
 
-			if (analyticsResult?.success) {
-				setAnalytics(analyticsResult.data || []);
-			}
+			if (!actsResult.error) setActs(actsResult.data || []);
+			if (!complianceResult.error) setComplianceChecks(complianceResult.data || []);
 
-			if (revenueResult?.success) {
-				setRevenueData(revenueResult.data || []);
-			}
-
-			if (complianceResult?.success) {
-				setComplianceChecks(complianceResult.data || []);
-			}
-
-			if (distributionResult?.success) {
-				setDistribution(distributionResult.data || []);
-			}
+			setTechCounts({
+				documentsAuthenticated: docsResult.error ? 0 : docsResult.count || 0,
+				blockchainTransactions: blockchainResult.error ? 0 : blockchainResult.count || 0,
+				aiQueries: aiResult.error ? 0 : aiResult.count || 0
+			});
 		} catch (error) {
 			console.error('Erreur chargement analytics notaire:', error);
 			window.safeGlobalToast?.({
@@ -110,42 +145,176 @@ const NotaireAnalyticsModernized = () => {
 				maximumFractionDigits: 0
 			}).format(amount);
 		} catch (error) {
-			return `${amount.toLocaleString('fr-FR')} FCFA`;
+			return `${Number(amount).toLocaleString('fr-FR')} FCFA`;
 		}
 	};
 
-		const formatPercent = (value, fractionDigits = 1) => {
-			if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
-			const numeric = Number(value);
-			const normalized = Math.abs(numeric) <= 1 ? numeric * 100 : numeric;
-			return `${normalized.toFixed(fractionDigits)}%`;
+	const formatPercent = (value, fractionDigits = 1) => {
+		if (value === null || value === undefined || Number.isNaN(Number(value))) return '—';
+		const numeric = Number(value);
+		const normalized = Math.abs(numeric) <= 1 ? numeric * 100 : numeric;
+		return `${normalized.toFixed(fractionDigits)}%`;
 	};
 
-	const computeRevenueGrowth = useMemo(() => {
-		if (!revenueData.length || revenueData.length < 2) return 0;
-		const ordered = [...revenueData];
-		const latest = ordered[ordered.length - 1]?.revenue || 0;
-		const previous = ordered[ordered.length - 2]?.revenue || 0;
-		if (!previous) return 0;
+	// Regroupement réel des actes par période (mois / semaine ISO / année) à partir de created_at.
+	const aggregates = useMemo(() => {
+		const bucketOf = (dateStr) => {
+			const d = new Date(dateStr);
+			if (period === 'yearly') {
+				return { key: `${d.getFullYear()}`, label: `${d.getFullYear()}` };
+			}
+			if (period === 'weekly') {
+				const { year, week } = getISOWeek(d);
+				return { key: `${year}-W${String(week).padStart(2, '0')}`, label: `S${week}` };
+			}
+			return {
+				key: `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`,
+				label: d.toLocaleDateString('fr-FR', { month: 'short', year: '2-digit' })
+			};
+		};
+
+		const map = new Map();
+		acts.forEach((act) => {
+			if (!act.created_at) return;
+			const { key, label } = bucketOf(act.created_at);
+			if (!map.has(key)) {
+				map.set(key, {
+					key,
+					label,
+					totalActs: 0,
+					completedActs: 0,
+					revenue: 0,
+					clients: new Set(),
+					satisfactionSum: 0,
+					satisfactionCount: 0
+				});
+			}
+			const bucket = map.get(key);
+			bucket.totalActs += 1;
+			if (act.status === 'completed') {
+				bucket.completedActs += 1;
+				bucket.revenue += Number(act.notary_fees) || 0;
+			}
+			if (act.client_id) bucket.clients.add(act.client_id);
+			if (act.client_satisfaction !== null && act.client_satisfaction !== undefined) {
+				bucket.satisfactionSum += Number(act.client_satisfaction);
+				bucket.satisfactionCount += 1;
+			}
+		});
+
+		return Array.from(map.values())
+			.map((b) => ({
+				key: b.key,
+				label: b.label,
+				totalActs: b.totalActs,
+				completedActs: b.completedActs,
+				revenue: b.revenue,
+				activeClients: b.clients.size,
+				satisfaction: b.satisfactionCount ? b.satisfactionSum / b.satisfactionCount : null
+			}))
+			.sort((a, b) => a.key.localeCompare(b.key));
+	}, [acts, period]);
+
+	const revenueSeries = useMemo(() => {
+		const windowSize = period === 'yearly' ? 5 : period === 'weekly' ? 8 : 6;
+		return aggregates.slice(-windowSize);
+	}, [aggregates, period]);
+
+	const revenueGrowth = useMemo(() => {
+		if (aggregates.length < 2) return null;
+		const latest = aggregates[aggregates.length - 1].revenue;
+		const previous = aggregates[aggregates.length - 2].revenue;
+		if (!previous) return null;
 		return ((latest - previous) / previous) * 100;
-	}, [revenueData]);
+	}, [aggregates]);
+
+	// Agrégats globaux réels sur notarial_acts.
+	const totals = useMemo(() => {
+		const totalActs = acts.length;
+		const completedActs = acts.filter((a) => a.status === 'completed').length;
+		const activeActs = acts.filter((a) => ACTIVE_STATUSES.includes(a.status)).length;
+
+		const now = new Date();
+		const currentKey = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+		const monthlyRevenue = acts
+			.filter((a) => a.status === 'completed' && a.created_at?.startsWith(currentKey))
+			.reduce((sum, a) => sum + (Number(a.notary_fees) || 0), 0);
+		const newActsThisMonth = acts.filter((a) => a.created_at?.startsWith(currentKey)).length;
+
+		const satScores = acts
+			.filter((a) => a.client_satisfaction !== null && a.client_satisfaction !== undefined)
+			.map((a) => Number(a.client_satisfaction));
+		const satisfaction = satScores.length ? satScores.reduce((s, v) => s + v, 0) / satScores.length : null;
+
+		const completedFees = acts.filter((a) => a.status === 'completed').map((a) => Number(a.notary_fees) || 0);
+		const avgActValue = completedFees.length ? completedFees.reduce((s, v) => s + v, 0) / completedFees.length : 0;
+
+		const uniqueClients = new Set(acts.map((a) => a.client_id).filter(Boolean)).size;
+		const conversionRate = totalActs ? completedActs / totalActs : 0;
+
+		// Durée de traitement réelle : signed_at - created_at pour les actes signés/finalisés.
+		const durations = acts
+			.filter((a) => (a.status === 'completed' || a.status === 'signed') && a.signed_at && a.created_at)
+			.map((a) => (new Date(a.signed_at) - new Date(a.created_at)) / 86400000)
+			.filter((d) => d >= 0);
+		const avgCompletionDays = durations.length
+			? Math.round(durations.reduce((s, v) => s + v, 0) / durations.length)
+			: null;
+		const onTimeRate = durations.length
+			? (durations.filter((d) => d <= 30).length / durations.length) * 100
+			: null;
+
+		return {
+			totalActs,
+			completedActs,
+			activeActs,
+			monthlyRevenue,
+			newActsThisMonth,
+			satisfaction,
+			avgActValue,
+			uniqueClients,
+			conversionRate,
+			avgCompletionDays,
+			onTimeRate
+		};
+	}, [acts]);
+
+	const distribution = useMemo(() => {
+		const counts = {};
+		acts.forEach((a) => {
+			const type = a.act_type || 'autre';
+			counts[type] = (counts[type] || 0) + 1;
+		});
+		const total = acts.length || 1;
+		return Object.entries(counts)
+			.sort((a, b) => b[1] - a[1])
+			.map(([type, count], index) => ({
+				name: ACT_TYPE_LABELS[type] || type,
+				count,
+				value: Math.round((count / total) * 100),
+				color: ACT_TYPE_COLORS[index % ACT_TYPE_COLORS.length]
+			}));
+	}, [acts]);
 
 	const complianceAverage = useMemo(() => {
 		if (complianceChecks.length) {
-			const sum = complianceChecks.reduce((acc, item) => acc + (item.compliance_score || 0), 0);
+			const sum = complianceChecks.reduce((acc, item) => acc + (Number(item.compliance_score) || 0), 0);
 			return Math.round(sum / complianceChecks.length);
 		}
-		return latestMetrics?.compliance_score || contextStats?.complianceScore || 0;
-	}, [complianceChecks, latestMetrics, contextStats]);
+		return contextStats?.complianceScore ?? null;
+	}, [complianceChecks, contextStats]);
 
-	const satisfactionAverage = useMemo(() => {
-		if (latestMetrics?.client_satisfaction) return latestMetrics.client_satisfaction;
-		return contextStats?.clientSatisfaction || 0;
-	}, [latestMetrics, contextStats]);
+	const monthlyRevenueDisplay = totals.monthlyRevenue || contextStats?.monthlyRevenue || 0;
+	const satisfactionValue = totals.satisfaction ?? contextStats?.clientSatisfaction ?? null;
+	const avgCompletionDisplay = totals.avgCompletionDays ?? contextStats?.avgCompletionDays ?? null;
+	const onTimeProgress = totals.onTimeRate === null ? 0 : Math.min(100, Math.max(0, totals.onTimeRate));
+	const maxRevenue = Math.max(...revenueSeries.map((el) => el.revenue), 1) || 1;
 
-		const onTimeRate = latestMetrics?.on_time_completion_rate ?? 0;
-		const onTimeProgress = Math.min(100, Math.max(0, Math.abs(onTimeRate) <= 1 ? onTimeRate * 100 : onTimeRate));
-		const conversionRate = (latestMetrics?.completed_acts || 0) / Math.max(1, latestMetrics?.total_acts || 1);
+	const complianceStatusBadge = (status) => {
+		if (status === 'passed') return 'bg-emerald-100 text-emerald-700';
+		if (status === 'failed') return 'bg-red-100 text-red-700';
+		return 'bg-amber-100 text-amber-700';
+	};
 
 	if (isLoading) {
 		return (
@@ -194,11 +363,11 @@ const NotaireAnalyticsModernized = () => {
 						<TrendingUp className="h-5 w-5 text-emerald-600" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-3xl font-bold">{formatCurrency(latestMetrics?.monthly_revenue || contextStats?.monthlyRevenue || 0)}</div>
+						<div className="text-3xl font-bold">{formatCurrency(monthlyRevenueDisplay)}</div>
 						<div className="flex items-center gap-2 text-xs text-muted-foreground mt-2">
 							Variation
-							<span className={`font-semibold ${computeRevenueGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-								{computeRevenueGrowth >= 0 ? '+' : ''}{computeRevenueGrowth.toFixed(1)}%
+							<span className={`font-semibold ${revenueGrowth === null ? 'text-gray-500' : revenueGrowth >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
+								{revenueGrowth === null ? '—' : `${revenueGrowth >= 0 ? '+' : ''}${revenueGrowth.toFixed(1)}%`}
 							</span>
 							sur la période
 						</div>
@@ -211,10 +380,10 @@ const NotaireAnalyticsModernized = () => {
 						<ShieldCheck className="h-5 w-5 text-blue-600" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-3xl font-bold">{complianceAverage}%</div>
-						<Progress value={complianceAverage} className="mt-3" />
+						<div className="text-3xl font-bold">{complianceAverage === null ? '—' : `${complianceAverage}%`}</div>
+						<Progress value={complianceAverage || 0} className="mt-3" />
 						<p className="text-xs text-muted-foreground mt-2">
-							{complianceChecks.length} contrôles effectués ce trimestre
+							{complianceChecks.length} contrôle{complianceChecks.length > 1 ? 's' : ''} de conformité effectué{complianceChecks.length > 1 ? 's' : ''}
 						</p>
 					</CardContent>
 				</Card>
@@ -225,9 +394,9 @@ const NotaireAnalyticsModernized = () => {
 						<Users className="h-5 w-5 text-violet-600" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-3xl font-bold">{satisfactionAverage ? `${satisfactionAverage.toFixed(1)} / 5` : '—'}</div>
-						<Progress value={Math.min(100, (satisfactionAverage || 0) / 5 * 100)} className="mt-3" />
-						<p className="text-xs text-muted-foreground mt-2">Indice de fidélisation {formatPercent(latestMetrics?.client_retention_rate || 0)}</p>
+						<div className="text-3xl font-bold">{satisfactionValue === null ? '—' : `${Number(satisfactionValue).toFixed(0)}%`}</div>
+						<Progress value={Math.min(100, Number(satisfactionValue) || 0)} className="mt-3" />
+						<p className="text-xs text-muted-foreground mt-2">Indice moyen de satisfaction déclarée</p>
 					</CardContent>
 				</Card>
 
@@ -237,11 +406,11 @@ const NotaireAnalyticsModernized = () => {
 						<Cpu className="h-5 w-5 text-amber-600" />
 					</CardHeader>
 					<CardContent>
-						<div className="text-3xl font-bold">{latestMetrics?.documents_authenticated || contextStats?.documentsAuthenticated || 0}</div>
-						<p className="text-xs text-muted-foreground">Documents blockchain authentifiés</p>
+						<div className="text-3xl font-bold">{techCounts.documentsAuthenticated || contextStats?.documentsAuthenticated || 0}</div>
+						<p className="text-xs text-muted-foreground">Documents authentifiés</p>
 						<div className="mt-3 grid grid-cols-2 gap-2 text-xs text-gray-500">
-							<div>Transactions blockchain<br /><span className="font-semibold text-gray-900">{latestMetrics?.blockchain_transactions || 0}</span></div>
-							<div>Requêtes IA assistant<br /><span className="font-semibold text-gray-900">{latestMetrics?.ai_assistant_queries || 0}</span></div>
+							<div>Transactions blockchain<br /><span className="font-semibold text-gray-900">{techCounts.blockchainTransactions}</span></div>
+							<div>Requêtes IA assistant<br /><span className="font-semibold text-gray-900">{techCounts.aiQueries}</span></div>
 						</div>
 					</CardContent>
 				</Card>
@@ -259,19 +428,19 @@ const NotaireAnalyticsModernized = () => {
 						<Card className="lg:col-span-2">
 							<CardHeader>
 								<CardTitle>Tendance des honoraires</CardTitle>
-								<CardDescription>Comparatif des honoraires perçus sur 6 mois</CardDescription>
+								<CardDescription>Honoraires perçus sur les actes finalisés</CardDescription>
 							</CardHeader>
 							<CardContent>
-								{revenueData.length ? (
+								{revenueSeries.length ? (
 									<div className="h-56 flex items-end gap-3">
-										{revenueData.map((item) => (
-											<div key={item.month} className="flex-1">
+										{revenueSeries.map((item) => (
+											<div key={item.key} className="flex-1">
 												<div className="flex flex-col items-center justify-end h-full">
 													<div
 														className="w-full rounded-t-md bg-gradient-to-t from-emerald-500 to-emerald-300"
-														style={{ height: `${Math.max(10, (item.revenue / (Math.max(...revenueData.map((el) => el.revenue), 1) || 1)) * 100)}%` }}
+														style={{ height: `${Math.max(10, (item.revenue / maxRevenue) * 100)}%` }}
 													/>
-													<div className="mt-3 text-xs font-medium text-gray-700">{item.month}</div>
+													<div className="mt-3 text-xs font-medium text-gray-700">{item.label}</div>
 													<div className="text-[11px] text-gray-500">{formatCurrency(item.revenue)}</div>
 												</div>
 											</div>
@@ -297,7 +466,7 @@ const NotaireAnalyticsModernized = () => {
 										<Gauge className="h-4 w-4 text-amber-600" /> Durée moyenne
 									</div>
 									<div className="mt-2 text-2xl font-bold text-gray-900">
-										{latestMetrics?.avg_completion_days || contextStats?.avgCompletionDays || 0} jours
+										{avgCompletionDisplay === null ? '—' : `${avgCompletionDisplay} jours`}
 									</div>
 									<p className="text-xs text-gray-500">Objectif: 30 jours</p>
 								</div>
@@ -305,10 +474,10 @@ const NotaireAnalyticsModernized = () => {
 									<div className="flex items-center gap-2 text-sm font-semibold text-gray-700">
 										<CheckCircle2 className="h-4 w-4 text-emerald-600" /> Respect des délais
 									</div>
-																			<div className="mt-2 text-2xl font-bold text-gray-900">
-																				{formatPercent(onTimeRate)}
-																			</div>
-																			<Progress value={onTimeProgress} className="mt-3" />
+									<div className="mt-2 text-2xl font-bold text-gray-900">
+										{formatPercent(totals.onTimeRate)}
+									</div>
+									<Progress value={onTimeProgress} className="mt-3" />
 								</div>
 							</CardContent>
 						</Card>
@@ -317,15 +486,15 @@ const NotaireAnalyticsModernized = () => {
 					<Card>
 						<CardHeader>
 							<CardTitle>Historique analytique</CardTitle>
-							<CardDescription>Dernières valeurs enregistrées dans Supabase</CardDescription>
+							<CardDescription>Agrégats réels par période à partir de vos actes</CardDescription>
 						</CardHeader>
 						<CardContent>
-							{analytics.length ? (
+							{aggregates.length ? (
 								<ScrollArea className="h-72">
 									<Table>
 										<TableHeader>
 											<TableRow>
-												<TableHead>Date</TableHead>
+												<TableHead>Période</TableHead>
 												<TableHead>Actes</TableHead>
 												<TableHead>Revenus</TableHead>
 												<TableHead>Clients actifs</TableHead>
@@ -333,18 +502,18 @@ const NotaireAnalyticsModernized = () => {
 											</TableRow>
 										</TableHeader>
 										<TableBody>
-											{analytics.map((entry) => (
-												<TableRow key={`${entry.metric_date}-${entry.metric_type}`}>
-													<TableCell>{new Date(entry.metric_date).toLocaleDateString('fr-FR')}</TableCell>
+											{[...aggregates].reverse().map((entry) => (
+												<TableRow key={entry.key}>
+													<TableCell>{entry.label}</TableCell>
 													<TableCell>
 														<div className="flex flex-col">
-															<span className="font-medium text-gray-900">{entry.total_acts || 0} actes</span>
-															<span className="text-xs text-gray-500">{entry.completed_acts || 0} finalisés</span>
+															<span className="font-medium text-gray-900">{entry.totalActs} actes</span>
+															<span className="text-xs text-gray-500">{entry.completedActs} finalisés</span>
 														</div>
 													</TableCell>
-													<TableCell>{formatCurrency(entry.monthly_revenue || 0)}</TableCell>
-													<TableCell>{entry.active_clients || 0}</TableCell>
-													<TableCell>{entry.client_satisfaction ? `${entry.client_satisfaction.toFixed(1)} / 5` : '—'}</TableCell>
+													<TableCell>{formatCurrency(entry.revenue)}</TableCell>
+													<TableCell>{entry.activeClients}</TableCell>
+													<TableCell>{entry.satisfaction === null ? '—' : `${Number(entry.satisfaction).toFixed(0)}%`}</TableCell>
 												</TableRow>
 											))}
 										</TableBody>
@@ -374,14 +543,11 @@ const NotaireAnalyticsModernized = () => {
 												<div key={check.id} className="p-4 border rounded-lg hover:shadow-sm transition-all">
 													<div className="flex items-start justify-between">
 														<div>
-															<div className="font-semibold text-gray-900">{check.check_type}</div>
-															<div className="text-xs text-gray-500">{new Date(check.checked_at).toLocaleString('fr-FR')}</div>
-															{check.act?.title && (
-																<div className="text-xs text-gray-600 mt-1">Acte: {check.act.title}</div>
-															)}
+															<div className="font-semibold text-gray-900">{check.check_type || 'Contrôle de conformité'}</div>
+															<div className="text-xs text-gray-500">{check.created_at ? new Date(check.created_at).toLocaleString('fr-FR') : '—'}</div>
 														</div>
-														<Badge className={check.check_status === 'completed' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'}>
-															{check.check_status}
+														<Badge className={complianceStatusBadge(check.status)}>
+															{check.status || 'pending'}
 														</Badge>
 													</div>
 													<div className="mt-3">
@@ -391,13 +557,17 @@ const NotaireAnalyticsModernized = () => {
 														</div>
 														<Progress value={check.compliance_score || 0} className="h-1.5 mt-1" />
 													</div>
-													{check.critical_issues ? (
+													{check.status === 'failed' ? (
 														<div className="mt-3 text-xs text-red-600 flex items-center gap-2">
-															<AlertTriangle className="h-3 w-3" /> {check.critical_issues} points critiques à traiter
+															<AlertTriangle className="h-3 w-3" /> Points de non-conformité à traiter
 														</div>
-													) : (
+													) : check.status === 'passed' ? (
 														<div className="mt-3 text-xs text-emerald-600 flex items-center gap-2">
 															<CheckCircle2 className="h-3 w-3" /> Conforme
+														</div>
+													) : (
+														<div className="mt-3 text-xs text-amber-600 flex items-center gap-2">
+															<AlertTriangle className="h-3 w-3" /> Contrôle en attente
 														</div>
 													)}
 												</div>
@@ -456,35 +626,35 @@ const NotaireAnalyticsModernized = () => {
 								<CardDescription>Suivi des volumes traités et de l'engagement client</CardDescription>
 							</CardHeader>
 							<CardContent>
-								{latestMetrics ? (
+								{totals.totalActs ? (
 									<div className="grid gap-4 sm:grid-cols-2">
 										<div className="p-4 border rounded-lg bg-gradient-to-br from-amber-50 to-white">
 											<div className="flex items-center gap-2 text-sm font-semibold text-amber-700">
 												<Activity className="h-4 w-4" /> Actes traités
 											</div>
-											<div className="mt-2 text-3xl font-bold text-gray-900">{latestMetrics.total_acts || 0}</div>
-											<p className="text-xs text-gray-500">{latestMetrics.new_acts || 0} nouveaux actes créés</p>
+											<div className="mt-2 text-3xl font-bold text-gray-900">{totals.totalActs}</div>
+											<p className="text-xs text-gray-500">{totals.newActsThisMonth} nouveaux actes ce mois</p>
 										</div>
 										<div className="p-4 border rounded-lg bg-gradient-to-br from-emerald-50 to-white">
 											<div className="flex items-center gap-2 text-sm font-semibold text-emerald-700">
 												<Users className="h-4 w-4" /> Clients actifs
 											</div>
-											<div className="mt-2 text-3xl font-bold text-gray-900">{latestMetrics.active_clients || 0}</div>
-											<p className="text-xs text-gray-500">{latestMetrics.new_clients || 0} nouveaux clients</p>
+											<div className="mt-2 text-3xl font-bold text-gray-900">{totals.uniqueClients}</div>
+											<p className="text-xs text-gray-500">clients distincts sur vos actes</p>
 										</div>
 										<div className="p-4 border rounded-lg bg-gradient-to-br from-blue-50 to-white">
 											<div className="flex items-center gap-2 text-sm font-semibold text-blue-700">
 												<PieChart className="h-4 w-4" /> Répartition actes
 											</div>
 											<div className="mt-2 text-3xl font-bold text-gray-900">{distribution.reduce((acc, item) => acc + (item.count || 0), 0)}</div>
-											<p className="text-xs text-gray-500">{distribution.length} typologies actives</p>
+											<p className="text-xs text-gray-500">{distribution.length} typologie{distribution.length > 1 ? 's' : ''} active{distribution.length > 1 ? 's' : ''}</p>
 										</div>
 										<div className="p-4 border rounded-lg bg-gradient-to-br from-purple-50 to-white">
 											<div className="flex items-center gap-2 text-sm font-semibold text-purple-700">
 												<LineChart className="h-4 w-4" /> Honoraires moyens
 											</div>
 											<div className="mt-2 text-3xl font-bold text-gray-900">
-												{formatCurrency(latestMetrics.avg_act_value || 0)}
+												{formatCurrency(totals.avgActValue || 0)}
 											</div>
 											<p className="text-xs text-gray-500">par acte finalisé</p>
 										</div>
@@ -508,21 +678,21 @@ const NotaireAnalyticsModernized = () => {
 									<div className="flex items-center gap-2">
 										<TrendingUp className="h-4 w-4 text-emerald-600" /> Taux de conversion
 									</div>
-														<span className="font-semibold text-gray-900">
-																				{formatPercent(conversionRate)}
-														</span>
+									<span className="font-semibold text-gray-900">
+										{formatPercent(totals.conversionRate)}
+									</span>
 								</div>
 								<div className="flex items-center justify-between border rounded-lg p-3">
 									<div className="flex items-center gap-2">
 										<Gauge className="h-4 w-4 text-amber-600" /> Dossiers actifs
 									</div>
-									<span className="font-semibold text-gray-900">{latestMetrics?.active_cases || contextStats?.activeCases || 0}</span>
+									<span className="font-semibold text-gray-900">{totals.activeActs || contextStats?.activeCases || 0}</span>
 								</div>
 								<div className="flex items-center justify-between border rounded-lg p-3">
 									<div className="flex items-center gap-2">
 										<Cpu className="h-4 w-4 text-blue-600" /> Automatisation IA
 									</div>
-									<span className="font-semibold text-gray-900">{latestMetrics?.ai_assistant_queries || 0} requêtes</span>
+									<span className="font-semibold text-gray-900">{techCounts.aiQueries} requêtes</span>
 								</div>
 							</CardContent>
 						</Card>

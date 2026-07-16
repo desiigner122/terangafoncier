@@ -1,184 +1,246 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  MessageSquare, 
-  Send, 
-  Search, 
+import {
+  MessageSquare,
+  Send,
+  Search,
   Phone,
   Video,
   MoreVertical,
   Paperclip,
   Smile,
-  Filter,
   Users,
-  Clock,
   CheckCheck,
   Circle,
-  User,
   MapPin,
-  Calendar
+  RefreshCw
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { toast } from 'sonner';
 
 const GeometreMessages = () => {
-  const [selectedConversation, setSelectedConversation] = useState(1);
+  const { user } = useAuth();
+  const [loading, setLoading] = useState(true);
+  const messagesEndRef = useRef(null);
+
+  const [conversations, setConversations] = useState([]);
+  const [selectedConversation, setSelectedConversation] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
 
-  // Conversations simulées
-  const conversations = [
-    {
-      id: 1,
-      client: {
-        name: 'SARL Sénégal Construction',
-        avatar: '/api/placeholder/40/40',
-        type: 'Entreprise',
-        location: 'Dakar'
-      },
-      lastMessage: 'Pouvons-nous programmer la visite du terrain pour demain ?',
-      timestamp: '2025-09-27T14:30:00',
-      unreadCount: 2,
-      status: 'active',
-      project: 'Levé topographique - Parcelle 1247'
-    },
-    {
-      id: 2,
-      client: {
-        name: 'Ministère de l\'Urbanisme',
-        avatar: '/api/placeholder/40/40',
-        type: 'Institution',
-        location: 'Dakar'
-      },
-      lastMessage: 'Le rapport de conformité est-il prêt ?',
-      timestamp: '2025-09-27T11:15:00',
-      unreadCount: 0,
-      status: 'away',
-      project: 'Étude cadastrale - Zone industrielle'
-    },
-    {
-      id: 3,
-      client: {
-        name: 'Promoteur Almadies SA',
-        avatar: '/api/placeholder/40/40',
-        type: 'Promoteur',
-        location: 'Almadies'
-      },
-      lastMessage: 'Merci pour le plan mis à jour !',
-      timestamp: '2025-09-26T16:45:00',
-      unreadCount: 0,
-      status: 'online',
-      project: 'Bornage - Résidence Les Almadies'
-    },
-    {
-      id: 4,
-      client: {
-        name: 'Direction du Cadastre',
-        avatar: '/api/placeholder/40/40',
-        type: 'Administration',
-        location: 'Dakar'
-      },
-      lastMessage: 'Les données GPS sont bien reçues',
-      timestamp: '2025-09-26T09:20:00',
-      unreadCount: 1,
-      status: 'offline',
-      project: 'Cartographie numérique'
-    },
-    {
-      id: 5,
-      client: {
-        name: 'Mairie de Keur Massar',
-        avatar: '/api/placeholder/40/40',
-        type: 'Collectivité',
-        location: 'Keur Massar'
-      },
-      lastMessage: 'Le contrat est signé, nous pouvons commencer',
-      timestamp: '2025-09-25T14:10:00',
-      unreadCount: 0,
-      status: 'online',
-      project: 'Lotissement communal'
+  // Charger les conversations réelles du géomètre
+  useEffect(() => {
+    if (user?.id) {
+      loadConversations();
     }
-  ];
+  }, [user]);
 
-  // Messages simulés pour la conversation sélectionnée
-  const messages = [
-    {
-      id: 1,
-      sender: 'client',
-      content: 'Bonjour, nous avons besoin d\'un levé topographique pour notre nouvelle parcelle.',
-      timestamp: '2025-09-27T09:00:00',
-      status: 'read'
-    },
-    {
-      id: 2,
-      sender: 'geometre',
-      content: 'Bonjour ! Bien sûr, je peux vous aider. Pouvez-vous me donner plus de détails sur la parcelle ? Localisation, superficie approximative ?',
-      timestamp: '2025-09-27T09:15:00',
-      status: 'read'
-    },
-    {
-      id: 3,
-      sender: 'client',
-      content: 'C\'est une parcelle de 2 hectares située à Keur Massar, près de la nouvelle route. Nous prévoyons une construction résidentielle.',
-      timestamp: '2025-09-27T09:30:00',
-      status: 'read'
-    },
-    {
-      id: 4,
-      sender: 'geometre',
-      content: 'Parfait ! Pour ce type de projet, je recommande un levé complet avec GPS différentiel et nivellement. Le délai serait de 3-4 jours ouvrables.',
-      timestamp: '2025-09-27T10:00:00',
-      status: 'read'
-    },
-    {
-      id: 5,
-      sender: 'client',
-      content: 'Excellent. Quel serait le coût pour cette prestation ?',
-      timestamp: '2025-09-27T10:15:00',
-      status: 'read'
-    },
-    {
-      id: 6,
-      sender: 'geometre',
-      content: 'Pour 2 hectares avec toutes les prestations incluses : 850 000 FCFA. Cela comprend le levé, le plan CAD, et le rapport technique.',
-      timestamp: '2025-09-27T10:30:00',
-      status: 'read'
-    },
-    {
-      id: 7,
-      sender: 'client',
-      content: 'C\'est dans notre budget. Pouvons-nous programmer la visite du terrain pour demain ?',
-      timestamp: '2025-09-27T14:30:00',
-      status: 'delivered'
-    },
-    {
-      id: 8,
-      sender: 'geometre',
-      content: 'Parfaitement ! Je suis disponible demain à partir de 8h. Préférez-vous le matin ou l\'après-midi ?',
-      timestamp: '2025-09-27T14:35:00',
-      status: 'sent'
+  // Charger les messages quand une conversation est sélectionnée
+  useEffect(() => {
+    if (selectedConversation) {
+      loadMessages(selectedConversation.id);
     }
-  ];
+  }, [selectedConversation]);
+
+  // Auto-scroll vers le dernier message
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [messages]);
+
+  const loadConversations = async () => {
+    try {
+      setLoading(true);
+
+      // 1) Conversations auxquelles le géomètre participe (schéma réel :
+      // conversation_participants → conversations)
+      const { data: participations, error: partError } = await supabase
+        .from('conversation_participants')
+        .select('conversation_id')
+        .eq('user_id', user.id);
+      if (partError) throw partError;
+
+      const conversationIds = [...new Set((participations || []).map(p => p.conversation_id))];
+      if (conversationIds.length === 0) {
+        setConversations([]);
+        setLoading(false);
+        return;
+      }
+
+      const { data: conversationsData, error: convError } = await supabase
+        .from('conversations')
+        .select('*, participants:conversation_participants(user_id)')
+        .in('id', conversationIds)
+        .order('updated_at', { ascending: false });
+      if (convError) throw convError;
+
+      // 2) Autres participants (le client/interlocuteur) et propriétés liées
+      const otherParticipantIds = [...new Set(
+        (conversationsData || []).flatMap(c =>
+          (c.participants || [])
+            .map(p => p.user_id)
+            .filter(id => id && id !== user.id)
+        )
+      )];
+      const propertyIds = [...new Set((conversationsData || []).map(c => c.property_id).filter(Boolean))];
+
+      const [profilesRes, propertiesRes, messagesRes] = await Promise.all([
+        otherParticipantIds.length > 0
+          ? supabase.from('profiles').select('id, first_name, last_name, full_name, email, avatar_url, city').in('id', otherParticipantIds)
+          : Promise.resolve({ data: [] }),
+        propertyIds.length > 0
+          ? supabase.from('properties').select('id, title, name, location, city').in('id', propertyIds)
+          : Promise.resolve({ data: [] }),
+        supabase
+          .from('messages')
+          .select('id, conversation_id, sender_id, content, read, created_at')
+          .in('conversation_id', conversationIds)
+          .order('created_at', { ascending: true })
+      ]);
+
+      const profilesById = new Map((profilesRes.data || []).map(p => [p.id, p]));
+      const propertiesById = new Map((propertiesRes.data || []).map(p => [p.id, p]));
+      const allMessages = messagesRes.data || [];
+
+      const messagesByConversation = new Map();
+      allMessages.forEach(msg => {
+        if (!messagesByConversation.has(msg.conversation_id)) {
+          messagesByConversation.set(msg.conversation_id, []);
+        }
+        messagesByConversation.get(msg.conversation_id).push(msg);
+      });
+
+      const formatted = (conversationsData || []).map(conv => {
+        const otherId = (conv.participants || []).map(p => p.user_id).find(id => id && id !== user.id);
+        const participant = otherId ? profilesById.get(otherId) : null;
+        const property = conv.property_id ? propertiesById.get(conv.property_id) : null;
+        const convMessages = messagesByConversation.get(conv.id) || [];
+        const lastMessage = convMessages[convMessages.length - 1];
+        const unreadCount = convMessages.filter(m => !m.read && m.sender_id !== user.id).length;
+
+        const clientName = participant
+          ? (participant.full_name
+              || `${participant.first_name || ''} ${participant.last_name || ''}`.trim()
+              || participant.email
+              || 'Interlocuteur')
+          : 'Interlocuteur';
+
+        return {
+          id: conv.id,
+          client: {
+            name: clientName,
+            avatar: participant?.avatar_url || '',
+            location: participant?.city || property?.city || property?.location || ''
+          },
+          lastMessage: lastMessage?.content || '',
+          timestamp: lastMessage?.created_at || conv.updated_at || conv.created_at,
+          unreadCount,
+          project: conv.subject || property?.title || property?.name || 'Conversation'
+        };
+      });
+
+      setConversations(formatted);
+      setLoading(false);
+    } catch (error) {
+      console.error('Erreur chargement conversations:', error);
+      toast.error('Erreur lors du chargement des conversations');
+      setConversations([]);
+      setLoading(false);
+    }
+  };
+
+  const loadMessages = async (conversationId) => {
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .select('id, conversation_id, sender_id, content, read, created_at')
+        .eq('conversation_id', conversationId)
+        .order('created_at', { ascending: true });
+      if (error) throw error;
+
+      // Le type d'expéditeur est déduit par comparaison d'id (fiable)
+      const formatted = (data || []).map(msg => ({
+        id: msg.id,
+        sender: msg.sender_id === user.id ? 'geometre' : 'client',
+        content: msg.content,
+        timestamp: msg.created_at,
+        // 'messages' n'a qu'un booléen 'read' (pas de timestamp de lecture) :
+        // read → double coche bleue, sinon envoyé
+        status: msg.read ? 'read' : 'sent'
+      }));
+
+      setMessages(formatted);
+
+      // Marquer comme lus les messages reçus
+      await supabase
+        .from('messages')
+        .update({ read: true })
+        .eq('conversation_id', conversationId)
+        .eq('read', false)
+        .neq('sender_id', user.id);
+
+      setConversations(prev => prev.map(c =>
+        c.id === conversationId ? { ...c, unreadCount: 0 } : c
+      ));
+    } catch (error) {
+      console.error('Erreur chargement messages:', error);
+      toast.error('Erreur lors du chargement des messages');
+    }
+  };
+
+  const handleSendMessage = async () => {
+    if (!newMessage.trim() || !selectedConversation) return;
+
+    const content = newMessage.trim();
+    try {
+      const { data, error } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: selectedConversation.id,
+          sender_id: user.id,
+          content,
+          read: false
+        })
+        .select()
+        .single();
+      if (error) throw error;
+
+      setMessages(prev => [...prev, {
+        id: data.id,
+        sender: 'geometre',
+        content,
+        timestamp: data.created_at,
+        status: 'sent'
+      }]);
+      setNewMessage('');
+
+      // Mettre à jour l'activité de la conversation (schéma réel : updated_at)
+      await supabase
+        .from('conversations')
+        .update({ updated_at: new Date().toISOString() })
+        .eq('id', selectedConversation.id);
+
+      setConversations(prev => prev.map(c =>
+        c.id === selectedConversation.id
+          ? { ...c, lastMessage: content, timestamp: data.created_at }
+          : c
+      ));
+    } catch (error) {
+      console.error('Erreur envoi message:', error);
+      toast.error("Erreur lors de l'envoi du message");
+    }
+  };
 
   const filteredConversations = conversations.filter(conv =>
     conv.client.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    conv.project.toLowerCase().includes(searchTerm.toLowerCase())
+    (conv.project || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
-
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'online': return 'bg-green-400';
-      case 'active': return 'bg-green-400';
-      case 'away': return 'bg-yellow-400';
-      case 'offline': return 'bg-gray-400';
-      default: return 'bg-gray-400';
-    }
-  };
 
   const getMessageStatusIcon = (status) => {
     switch (status) {
@@ -189,19 +251,12 @@ const GeometreMessages = () => {
     }
   };
 
-  const handleSendMessage = () => {
-    if (newMessage.trim()) {
-      // Logique d'envoi du message
-      setNewMessage('');
-    }
-  };
-
   const ConversationItem = ({ conversation }) => (
     <motion.div
       whileHover={{ x: 5 }}
-      onClick={() => setSelectedConversation(conversation.id)}
+      onClick={() => setSelectedConversation(conversation)}
       className={`p-4 border-b border-gray-100 cursor-pointer hover:bg-gray-50 transition-colors ${
-        selectedConversation === conversation.id ? 'bg-blue-50 border-r-4 border-r-blue-500' : ''
+        selectedConversation?.id === conversation.id ? 'bg-blue-50 border-r-4 border-r-blue-500' : ''
       }`}
     >
       <div className="flex items-center space-x-3">
@@ -209,33 +264,38 @@ const GeometreMessages = () => {
           <Avatar className="h-12 w-12">
             <AvatarImage src={conversation.client.avatar} />
             <AvatarFallback>
-              {conversation.client.name.split(' ').map(n => n[0]).join('')}
+              {conversation.client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
             </AvatarFallback>
           </Avatar>
-          <div className={`absolute bottom-0 right-0 h-3 w-3 rounded-full border-2 border-white ${getStatusColor(conversation.status)}`} />
         </div>
-        
+
         <div className="flex-1 min-w-0">
           <div className="flex items-center justify-between">
             <h3 className="font-semibold text-gray-900 truncate">
               {conversation.client.name}
             </h3>
-            <span className="text-xs text-gray-500">
-              {new Date(conversation.timestamp).toLocaleTimeString('fr-FR', { 
-                hour: '2-digit', 
-                minute: '2-digit' 
-              })}
-            </span>
+            {conversation.timestamp && (
+              <span className="text-xs text-gray-500">
+                {new Date(conversation.timestamp).toLocaleTimeString('fr-FR', {
+                  hour: '2-digit',
+                  minute: '2-digit'
+                })}
+              </span>
+            )}
           </div>
-          
+
           <p className="text-sm text-gray-600 truncate mt-1">
-            {conversation.lastMessage}
+            {conversation.lastMessage || 'Aucun message'}
           </p>
-          
+
           <div className="flex items-center justify-between mt-2">
             <div className="flex items-center space-x-1 text-xs text-gray-500">
-              <MapPin className="h-3 w-3" />
-              <span>{conversation.client.location}</span>
+              {conversation.client.location && (
+                <>
+                  <MapPin className="h-3 w-3" />
+                  <span>{conversation.client.location}</span>
+                </>
+              )}
             </div>
             {conversation.unreadCount > 0 && (
               <Badge className="bg-red-500 text-white text-xs h-5 w-5 rounded-full flex items-center justify-center">
@@ -255,8 +315,8 @@ const GeometreMessages = () => {
       className={`flex ${message.sender === 'geometre' ? 'justify-end' : 'justify-start'} mb-4`}
     >
       <div className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-        message.sender === 'geometre' 
-          ? 'bg-blue-600 text-white' 
+        message.sender === 'geometre'
+          ? 'bg-blue-600 text-white'
           : 'bg-gray-100 text-gray-900'
       }`}>
         <p className="text-sm">{message.content}</p>
@@ -264,9 +324,9 @@ const GeometreMessages = () => {
           message.sender === 'geometre' ? 'text-blue-100' : 'text-gray-500'
         }`}>
           <span>
-            {new Date(message.timestamp).toLocaleTimeString('fr-FR', { 
-              hour: '2-digit', 
-              minute: '2-digit' 
+            {new Date(message.timestamp).toLocaleTimeString('fr-FR', {
+              hour: '2-digit',
+              minute: '2-digit'
             })}
           </span>
           {message.sender === 'geometre' && getMessageStatusIcon(message.status)}
@@ -275,7 +335,7 @@ const GeometreMessages = () => {
     </motion.div>
   );
 
-  const selectedConv = conversations.find(c => c.id === selectedConversation);
+  const selectedConv = selectedConversation;
 
   return (
     <div className="h-screen flex bg-gray-50">
@@ -289,7 +349,7 @@ const GeometreMessages = () => {
               Nouveau
             </Button>
           </div>
-          
+
           <div className="relative">
             <Search className="h-4 w-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
             <Input
@@ -302,15 +362,30 @@ const GeometreMessages = () => {
         </div>
 
         <div className="flex-1 overflow-y-auto">
-          {filteredConversations.map(conversation => (
-            <ConversationItem key={conversation.id} conversation={conversation} />
-          ))}
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500">
+              <RefreshCw className="h-5 w-5 animate-spin mr-2" />
+              Chargement...
+            </div>
+          ) : filteredConversations.length === 0 ? (
+            <div className="text-center py-16 px-4">
+              <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+              <p className="text-gray-600 font-medium">Aucune conversation</p>
+              <p className="text-sm text-gray-400 mt-1">
+                Vos échanges avec vos clients apparaîtront ici.
+              </p>
+            </div>
+          ) : (
+            filteredConversations.map(conversation => (
+              <ConversationItem key={conversation.id} conversation={conversation} />
+            ))
+          )}
         </div>
       </div>
 
       {/* Zone de conversation */}
       <div className="flex-1 flex flex-col">
-        {selectedConv && (
+        {selectedConv ? (
           <>
             {/* En-tête de conversation */}
             <div className="bg-white border-b border-gray-200 p-4">
@@ -319,7 +394,7 @@ const GeometreMessages = () => {
                   <Avatar className="h-10 w-10">
                     <AvatarImage src={selectedConv.client.avatar} />
                     <AvatarFallback>
-                      {selectedConv.client.name.split(' ').map(n => n[0]).join('')}
+                      {selectedConv.client.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                     </AvatarFallback>
                   </Avatar>
                   <div>
@@ -327,7 +402,7 @@ const GeometreMessages = () => {
                     <p className="text-sm text-gray-600">{selectedConv.project}</p>
                   </div>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Button size="sm" variant="outline">
                     <Phone className="h-4 w-4" />
@@ -344,9 +419,17 @@ const GeometreMessages = () => {
 
             {/* Messages */}
             <div className="flex-1 overflow-y-auto p-4 space-y-4">
-              {messages.map(message => (
-                <Message key={message.id} message={message} />
-              ))}
+              {messages.length === 0 ? (
+                <div className="text-center py-16">
+                  <MessageSquare className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                  <p className="text-gray-600">Aucun message dans cette conversation</p>
+                </div>
+              ) : (
+                messages.map(message => (
+                  <Message key={message.id} message={message} />
+                ))
+              )}
+              <div ref={messagesEndRef} />
             </div>
 
             {/* Zone de saisie */}
@@ -372,7 +455,7 @@ const GeometreMessages = () => {
                 <Button size="sm" variant="outline">
                   <Smile className="h-4 w-4" />
                 </Button>
-                <Button 
+                <Button
                   onClick={handleSendMessage}
                   disabled={!newMessage.trim()}
                   className="bg-blue-600 hover:bg-blue-700"
@@ -382,6 +465,14 @@ const GeometreMessages = () => {
               </div>
             </div>
           </>
+        ) : (
+          <div className="flex-1 flex items-center justify-center text-gray-500">
+            <div className="text-center">
+              <MessageSquare className="h-16 w-16 mx-auto mb-4 text-gray-300" />
+              <p className="text-lg">Sélectionnez une conversation</p>
+              <p className="text-sm">pour afficher les messages</p>
+            </div>
+          </div>
         )}
       </div>
     </div>

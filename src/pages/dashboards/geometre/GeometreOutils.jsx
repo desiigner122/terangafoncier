@@ -1,5 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -29,35 +31,30 @@ import {
 } from 'lucide-react';
 
 const GeometreOutils = () => {
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('gps');
   const [selectedTool, setSelectedTool] = useState(null);
 
+  // Catalogue statique des outils (specs nominales — pas de données live fabriquées)
   // Outils GPS/GNSS
   const gpsTools = [
     {
       id: 'rtk-positioning',
       name: 'Positionnement RTK',
       description: 'Positionnement centimétrique en temps réel',
-      status: 'active',
-      accuracy: '2cm',
-      lastUpdate: '15:30',
-      satellites: 18,
-      quality: 'Excellent'
+      accuracy: '2cm'
     },
     {
       id: 'coordinate-converter',
       name: 'Convertisseur Coordonnées',
       description: 'Conversion entre systèmes de coordonnées',
-      status: 'ready',
       fromSystem: 'WGS84',
-      toSystem: 'UTM Zone 28N',
-      lastConversion: 'Dakar - Almadies'
+      toSystem: 'UTM Zone 28N'
     },
     {
       id: 'datum-transform',
       name: 'Transformation Datum',
       description: 'Transformation entre différents datums',
-      status: 'ready',
       accuracy: '1m',
       supportedDatums: ['WGS84', 'Clarke 1880', 'Airy 1830']
     }
@@ -69,8 +66,6 @@ const GeometreOutils = () => {
       id: 'distance-calculator',
       name: 'Calcul de Distance',
       description: 'Calcul de distances et azimuts',
-      status: 'active',
-      lastMeasurement: '1,247.65m',
       precision: '±5mm',
       type: 'Horizontale'
     },
@@ -78,8 +73,6 @@ const GeometreOutils = () => {
       id: 'area-calculator',
       name: 'Calcul de Surface',
       description: 'Calcul de superficies polygonales',
-      status: 'ready',
-      lastArea: '2,150.43m²',
       precision: '±0.1m²',
       method: 'Coordonnées'
     },
@@ -87,10 +80,8 @@ const GeometreOutils = () => {
       id: 'elevation-tool',
       name: 'Outils d\'Altitude',
       description: 'Gestion des altitudes et dénivelés',
-      status: 'ready',
       altitudeSystem: 'NGF',
-      precision: '±2cm',
-      lastElevation: '45.67m'
+      precision: '±2cm'
     }
   ];
 
@@ -99,60 +90,67 @@ const GeometreOutils = () => {
     {
       id: 'layer-manager',
       name: 'Gestionnaire de Couches',
-      description: 'Gestion des couches cartographiques',
-      status: 'active',
-      activeLayers: 8,
-      totalLayers: 15,
-      lastUpdate: '14:45'
+      description: 'Gestion des couches cartographiques'
     },
     {
       id: 'spatial-analysis',
       name: 'Analyse Spatiale',
       description: 'Outils d\'analyse géospatiale',
-      status: 'ready',
-      analysisType: 'Buffer',
-      lastAnalysis: 'Zone influence 500m',
-      processingTime: '2.3s'
+      analysisType: 'Buffer'
     },
     {
       id: 'map-export',
       name: 'Export Cartographique',
       description: 'Export de cartes et plans',
-      status: 'ready',
       formats: ['PDF', 'DWG', 'PNG'],
-      lastExport: 'Plan cadastral - Lot 15',
       resolution: '300 DPI'
     }
   ];
 
-  // Statistiques d'utilisation
-  const toolStats = {
-    totalMeasurements: 1247,
-    averageAccuracy: '3.2cm',
-    activeTools: 12,
-    weeklyUsage: 89,
-    savedProjects: 45
-  };
+  const totalTools = gpsTools.length + measurementTools.length + sigTools.length;
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'active': return 'bg-green-100 text-green-800';
-      case 'ready': return 'bg-blue-100 text-blue-800';
-      case 'maintenance': return 'bg-yellow-100 text-yellow-800';
-      case 'offline': return 'bg-red-100 text-red-800';
-      default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  // Statistiques réelles (reconnectées à Supabase). Pas de valeurs fabriquées.
+  const [toolStats, setToolStats] = useState({
+    totalMeasurements: null, // field_measurements du géomètre
+    savedProjects: null,     // survey_missions du géomètre
+    activeTools: totalTools, // décompte réel du catalogue
+    averageAccuracy: null,   // pas de source réelle
+    weeklyUsage: null        // pas de source réelle
+  });
+  const [loadingStats, setLoadingStats] = useState(true);
 
-  const getStatusIcon = (status) => {
-    switch (status) {
-      case 'active': return <Zap className="w-4 h-4" />;
-      case 'ready': return <CheckCircle className="w-4 h-4" />;
-      case 'maintenance': return <Clock className="w-4 h-4" />;
-      case 'offline': return <AlertTriangle className="w-4 h-4" />;
-      default: return <Settings className="w-4 h-4" />;
-    }
-  };
+  useEffect(() => {
+    const loadStats = async () => {
+      if (!user?.id) {
+        setLoadingStats(false);
+        return;
+      }
+      try {
+        const [measRes, missionsRes] = await Promise.all([
+          supabase
+            .from('field_measurements')
+            .select('id', { count: 'exact', head: true })
+            .eq('geometre_id', user.id),
+          supabase
+            .from('survey_missions')
+            .select('id', { count: 'exact', head: true })
+            .eq('geometre_id', user.id)
+        ]);
+
+        setToolStats((prev) => ({
+          ...prev,
+          totalMeasurements: measRes.count ?? 0,
+          savedProjects: missionsRes.count ?? 0
+        }));
+      } catch (err) {
+        console.error('Erreur chargement statistiques outils:', err);
+      } finally {
+        setLoadingStats(false);
+      }
+    };
+
+    loadStats();
+  }, [user?.id]);
 
   return (
     <div className="p-6 space-y-6">
@@ -166,7 +164,7 @@ const GeometreOutils = () => {
           <div className="flex items-center space-x-2">
             <Badge className="bg-green-100 text-green-800">
               <Zap className="w-3 h-3 mr-1" />
-              {toolStats.activeTools} outils actifs
+              {toolStats.activeTools} outils disponibles
             </Badge>
           </div>
         </div>
@@ -178,7 +176,9 @@ const GeometreOutils = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Mesures Totales</p>
-                  <p className="text-2xl font-bold text-gray-900">{toolStats.totalMeasurements}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {loadingStats ? '…' : (toolStats.totalMeasurements ?? 0)}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
                   <Ruler className="w-6 h-6 text-blue-600" />
@@ -192,7 +192,9 @@ const GeometreOutils = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Précision Moyenne</p>
-                  <p className="text-2xl font-bold text-gray-900">{toolStats.averageAccuracy}</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {toolStats.averageAccuracy ?? '—'}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
                   <Target className="w-6 h-6 text-green-600" />
@@ -206,7 +208,9 @@ const GeometreOutils = () => {
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm font-medium text-gray-600">Usage Hebdomadaire</p>
-                  <p className="text-2xl font-bold text-gray-900">{toolStats.weeklyUsage}h</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {toolStats.weeklyUsage != null ? `${toolStats.weeklyUsage}h` : '—'}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
                   <BarChart3 className="w-6 h-6 text-purple-600" />
@@ -219,8 +223,10 @@ const GeometreOutils = () => {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm font-medium text-gray-600">Projets Sauvés</p>
-                  <p className="text-2xl font-bold text-gray-900">{toolStats.savedProjects}</p>
+                  <p className="text-sm font-medium text-gray-600">Projets (missions)</p>
+                  <p className="text-2xl font-bold text-gray-900">
+                    {loadingStats ? '…' : (toolStats.savedProjects ?? 0)}
+                  </p>
                 </div>
                 <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center">
                   <Layers className="w-6 h-6 text-orange-600" />
@@ -268,9 +274,9 @@ const GeometreOutils = () => {
                         <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
                           <Navigation className="w-5 h-5 text-blue-600" />
                         </div>
-                        <Badge className={getStatusColor(tool.status)}>
-                          {getStatusIcon(tool.status)}
-                          <span className="ml-1 capitalize">{tool.status}</span>
+                        <Badge className="bg-blue-100 text-blue-800">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="ml-1">Disponible</span>
                         </Badge>
                       </div>
                       
@@ -284,16 +290,16 @@ const GeometreOutils = () => {
                             <span className="font-medium">{tool.accuracy}</span>
                           </div>
                         )}
-                        {tool.satellites && (
+                        {tool.fromSystem && tool.toSystem && (
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Satellites:</span>
-                            <span className="font-medium">{tool.satellites}</span>
+                            <span className="text-gray-500">Systèmes:</span>
+                            <span className="font-medium">{tool.fromSystem} → {tool.toSystem}</span>
                           </div>
                         )}
-                        {tool.quality && (
+                        {tool.supportedDatums && (
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Qualité:</span>
-                            <span className="font-medium text-green-600">{tool.quality}</span>
+                            <span className="text-gray-500">Datums:</span>
+                            <span className="font-medium">{tool.supportedDatums.join(', ')}</span>
                           </div>
                         )}
                       </div>
@@ -329,9 +335,9 @@ const GeometreOutils = () => {
                         <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
                           <Ruler className="w-5 h-5 text-green-600" />
                         </div>
-                        <Badge className={getStatusColor(tool.status)}>
-                          {getStatusIcon(tool.status)}
-                          <span className="ml-1 capitalize">{tool.status}</span>
+                        <Badge className="bg-blue-100 text-blue-800">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="ml-1">Disponible</span>
                         </Badge>
                       </div>
                       
@@ -339,16 +345,22 @@ const GeometreOutils = () => {
                       <p className="text-sm text-gray-600 mb-4">{tool.description}</p>
                       
                       <div className="space-y-2 text-xs">
-                        {tool.lastMeasurement && (
+                        {tool.type && (
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Dernière mesure:</span>
-                            <span className="font-medium">{tool.lastMeasurement}</span>
+                            <span className="text-gray-500">Type:</span>
+                            <span className="font-medium">{tool.type}</span>
                           </div>
                         )}
-                        {tool.lastArea && (
+                        {tool.method && (
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Dernière surface:</span>
-                            <span className="font-medium">{tool.lastArea}</span>
+                            <span className="text-gray-500">Méthode:</span>
+                            <span className="font-medium">{tool.method}</span>
+                          </div>
+                        )}
+                        {tool.altitudeSystem && (
+                          <div className="flex justify-between">
+                            <span className="text-gray-500">Système:</span>
+                            <span className="font-medium">{tool.altitudeSystem}</span>
                           </div>
                         )}
                         <div className="flex justify-between">
@@ -388,9 +400,9 @@ const GeometreOutils = () => {
                         <div className="w-10 h-10 bg-purple-100 rounded-lg flex items-center justify-center">
                           <Map className="w-5 h-5 text-purple-600" />
                         </div>
-                        <Badge className={getStatusColor(tool.status)}>
-                          {getStatusIcon(tool.status)}
-                          <span className="ml-1 capitalize">{tool.status}</span>
+                        <Badge className="bg-blue-100 text-blue-800">
+                          <CheckCircle className="w-4 h-4" />
+                          <span className="ml-1">Disponible</span>
                         </Badge>
                       </div>
                       
@@ -398,16 +410,16 @@ const GeometreOutils = () => {
                       <p className="text-sm text-gray-600 mb-4">{tool.description}</p>
                       
                       <div className="space-y-2 text-xs">
-                        {tool.activeLayers && (
+                        {tool.analysisType && (
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Couches actives:</span>
-                            <span className="font-medium">{tool.activeLayers}/{tool.totalLayers}</span>
+                            <span className="text-gray-500">Type d'analyse:</span>
+                            <span className="font-medium">{tool.analysisType}</span>
                           </div>
                         )}
-                        {tool.lastAnalysis && (
+                        {tool.resolution && (
                           <div className="flex justify-between">
-                            <span className="text-gray-500">Dernière analyse:</span>
-                            <span className="font-medium">{tool.lastAnalysis}</span>
+                            <span className="text-gray-500">Résolution:</span>
+                            <span className="font-medium">{tool.resolution}</span>
                           </div>
                         )}
                         {tool.formats && (

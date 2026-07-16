@@ -1,10 +1,10 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Bell, 
-  AlertTriangle, 
-  CheckCircle, 
-  Info, 
+import {
+  Bell,
+  AlertTriangle,
+  CheckCircle,
+  Info,
   Calendar,
   MapPin,
   Users,
@@ -15,7 +15,8 @@ import {
   Archive,
   Filter,
   Search,
-  Settings
+  Settings,
+  Loader2
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
@@ -23,192 +24,175 @@ import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
 
 const GeometreNotifications = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterType, setFilterType] = useState('all');
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
 
-  // Notifications simulées
-  const notifications = [
-    {
-      id: 1,
-      type: 'mission',
-      title: 'Nouvelle mission assignée',
-      message: 'Levé topographique requis pour la parcelle 1247 à Keur Massar',
-      timestamp: '2025-09-27T14:30:00',
-      isRead: false,
-      priority: 'high',
-      client: 'SARL Sénégal Construction',
-      action: 'Voir la mission'
-    },
-    {
-      id: 2,
-      type: 'deadline',
-      title: 'Échéance approchant',
-      message: 'Le rapport pour Promoteur Almadies SA doit être livré dans 2 jours',
-      timestamp: '2025-09-27T11:15:00',
-      isRead: false,
-      priority: 'high',
-      client: 'Promoteur Almadies SA',
-      action: 'Voir le projet'
-    },
-    {
-      id: 3,
-      type: 'message',
-      title: 'Nouveau message client',
-      message: 'Le Ministère de l\'Urbanisme a envoyé un message concernant l\'étude cadastrale',
-      timestamp: '2025-09-27T09:45:00',
-      isRead: true,
-      priority: 'medium',
-      client: 'Ministère de l\'Urbanisme',
-      action: 'Répondre'
-    },
-    {
-      id: 4,
-      type: 'instrument',
-      title: 'Calibrage requis',
-      message: 'La station totale Leica TS16 nécessite un calibrage',
-      timestamp: '2025-09-26T16:20:00',
-      isRead: false,
-      priority: 'medium',
-      client: null,
-      action: 'Programmer'
-    },
-    {
-      id: 5,
-      type: 'payment',
-      title: 'Paiement reçu',
-      message: 'Paiement de 450 000 FCFA reçu de Direction du Cadastre',
-      timestamp: '2025-09-26T14:10:00',
-      isRead: true,
-      priority: 'low',
-      client: 'Direction du Cadastre',
-      action: 'Voir les détails'
-    },
-    {
-      id: 6,
-      type: 'system',
-      title: 'Mise à jour disponible',
-      message: 'Une nouvelle version du logiciel de topographie est disponible',
-      timestamp: '2025-09-25T10:30:00',
-      isRead: true,
-      priority: 'low',
-      client: null,
-      action: 'Mettre à jour'
-    },
-    {
-      id: 7,
-      type: 'weather',
-      title: 'Alerte météo',
-      message: 'Conditions météorologiques défavorables prévues demain - reportez les levés extérieurs',
-      timestamp: '2025-09-25T07:00:00',
-      isRead: false,
-      priority: 'high',
-      client: null,
-      action: 'Voir la météo'
+  const [notifications, setNotifications] = useState([]);
+  const [loading, setLoading] = useState(true);
+
+  // Chargement des notifications réelles (table notifications, filtré par user_id)
+  const loadNotifications = useCallback(async () => {
+    if (!user?.id) return;
+    setLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from('notifications')
+        .select('id, user_id, title, message, type, read, created_at')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      if (error) throw error;
+      setNotifications(data || []);
+    } catch (err) {
+      console.error('Erreur chargement notifications:', err);
+      setNotifications([]);
+    } finally {
+      setLoading(false);
     }
-  ];
+  }, [user?.id]);
+
+  useEffect(() => {
+    loadNotifications();
+  }, [loadNotifications]);
+
+  const markAsRead = async (id) => {
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('id', id);
+      if (error) throw error;
+      setNotifications(prev => prev.map(n => (n.id === id ? { ...n, read: true } : n)));
+    } catch (err) {
+      console.error('Erreur marquage notification:', err);
+    }
+  };
+
+  const markAllRead = async () => {
+    if (!user?.id) return;
+    try {
+      const { error } = await supabase
+        .from('notifications')
+        .update({ read: true })
+        .eq('user_id', user.id)
+        .eq('read', false);
+      if (error) throw error;
+      setNotifications(prev => prev.map(n => ({ ...n, read: true })));
+    } catch (err) {
+      console.error('Erreur marquage global:', err);
+    }
+  };
 
   const getNotificationIcon = (type) => {
     switch (type) {
       case 'mission': return MapPin;
       case 'deadline': return Clock;
       case 'message': return Users;
+      case 'document': return FileText;
       case 'instrument': return Settings;
       case 'payment': return CheckCircle;
       case 'system': return Info;
       case 'weather': return AlertTriangle;
+      case 'alert': return AlertTriangle;
       default: return Bell;
     }
   };
 
-  const getNotificationColor = (type, priority) => {
-    if (priority === 'high') return 'text-red-600 bg-red-50';
-    if (priority === 'medium') return 'text-orange-600 bg-orange-50';
-    return 'text-blue-600 bg-blue-50';
-  };
-
-  const getPriorityBadgeColor = (priority) => {
-    switch (priority) {
-      case 'high': return 'bg-red-100 text-red-800';
-      case 'medium': return 'bg-orange-100 text-orange-800';
-      case 'low': return 'bg-green-100 text-green-800';
-      default: return 'bg-gray-100 text-gray-800';
+  const getNotificationColor = (type) => {
+    switch (type) {
+      case 'alert':
+      case 'weather':
+      case 'deadline': return 'text-red-600 bg-red-50';
+      case 'mission':
+      case 'message': return 'text-orange-600 bg-orange-50';
+      case 'payment': return 'text-green-600 bg-green-50';
+      default: return 'text-blue-600 bg-blue-50';
     }
   };
 
+  // Types réellement présents dans les données pour construire le filtre
+  const availableTypes = Array.from(
+    new Set(notifications.map(n => n.type).filter(Boolean))
+  );
+
   const filteredNotifications = notifications.filter(notif => {
-    const matchesSearch = notif.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         notif.message.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         (notif.client && notif.client.toLowerCase().includes(searchTerm.toLowerCase()));
+    const title = notif.title || '';
+    const message = notif.message || '';
+    const matchesSearch = title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         message.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = filterType === 'all' || notif.type === filterType;
-    const matchesReadStatus = !showUnreadOnly || !notif.isRead;
-    
+    const matchesReadStatus = !showUnreadOnly || !notif.read;
+
     return matchesSearch && matchesType && matchesReadStatus;
   });
 
-  const unreadCount = notifications.filter(n => !n.isRead).length;
-  const priorityCount = notifications.filter(n => n.priority === 'high' && !n.isRead).length;
+  const unreadCount = notifications.filter(n => !n.read).length;
+  const readCount = notifications.filter(n => n.read).length;
+  const todayCount = notifications.filter(n =>
+    n.created_at && new Date(n.created_at).toDateString() === new Date().toDateString()
+  ).length;
 
   const NotificationCard = ({ notification }) => {
     const Icon = getNotificationIcon(notification.type);
-    
+
     return (
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
         className={`border rounded-lg p-4 hover:shadow-md transition-all duration-300 ${
-          notification.isRead ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
+          notification.read ? 'bg-white border-gray-200' : 'bg-blue-50 border-blue-200'
         }`}
       >
         <div className="flex items-start space-x-3">
-          <div className={`p-2 rounded-full ${getNotificationColor(notification.type, notification.priority)}`}>
+          <div className={`p-2 rounded-full ${getNotificationColor(notification.type)}`}>
             <Icon className="h-5 w-5" />
           </div>
-          
+
           <div className="flex-1 min-w-0">
             <div className="flex items-start justify-between">
               <div className="flex-1">
-                <h3 className={`font-semibold ${notification.isRead ? 'text-gray-900' : 'text-gray-900'}`}>
-                  {notification.title}
+                <h3 className="font-semibold text-gray-900">
+                  {notification.title || 'Notification'}
                 </h3>
-                <p className="text-sm text-gray-600 mt-1">
-                  {notification.message}
-                </p>
-                {notification.client && (
-                  <p className="text-xs text-gray-500 mt-2">
-                    Client: {notification.client}
+                {notification.message && (
+                  <p className="text-sm text-gray-600 mt-1">
+                    {notification.message}
                   </p>
                 )}
               </div>
-              
+
               <div className="flex items-center space-x-2 ml-4">
-                <Badge className={getPriorityBadgeColor(notification.priority)}>
-                  {notification.priority === 'high' ? 'Urgent' : 
-                   notification.priority === 'medium' ? 'Moyen' : 'Faible'}
-                </Badge>
-                {!notification.isRead && (
+                {notification.type && (
+                  <Badge className="bg-gray-100 text-gray-800">
+                    {notification.type}
+                  </Badge>
+                )}
+                {!notification.read && (
                   <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
                 )}
               </div>
             </div>
-            
+
             <div className="flex items-center justify-between mt-3">
               <span className="text-xs text-gray-500">
-                {new Date(notification.timestamp).toLocaleString('fr-FR')}
+                {notification.created_at
+                  ? new Date(notification.created_at).toLocaleString('fr-FR')
+                  : '—'}
               </span>
-              
+
               <div className="flex space-x-2">
-                <Button size="sm" variant="outline">
-                  {notification.action}
-                </Button>
-                <Button size="sm" variant="ghost">
-                  <Eye className="h-4 w-4" />
-                </Button>
-                <Button size="sm" variant="ghost">
-                  <Archive className="h-4 w-4" />
-                </Button>
+                {!notification.read && (
+                  <Button size="sm" variant="outline" onClick={() => markAsRead(notification.id)}>
+                    <Eye className="h-4 w-4 mr-1" />
+                    Marquer lu
+                  </Button>
+                )}
               </div>
             </div>
           </div>
@@ -225,13 +209,9 @@ const GeometreNotifications = () => {
           <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
           <p className="text-gray-600">Restez informé de toutes vos activités professionnelles</p>
         </div>
-        
+
         <div className="flex items-center gap-2">
-          <Button variant="outline" size="sm">
-            <Archive className="h-4 w-4 mr-2" />
-            Archiver tout
-          </Button>
-          <Button size="sm">
+          <Button size="sm" onClick={markAllRead} disabled={unreadCount === 0}>
             <CheckCircle className="h-4 w-4 mr-2" />
             Marquer tout lu
           </Button>
@@ -251,7 +231,7 @@ const GeometreNotifications = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
@@ -263,31 +243,27 @@ const GeometreNotifications = () => {
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-gray-600">Priorité haute</p>
-                <p className="text-2xl font-bold text-red-600">{priorityCount}</p>
+                <p className="text-sm text-gray-600">Lues</p>
+                <p className="text-2xl font-bold text-green-600">{readCount}</p>
               </div>
-              <AlertTriangle className="h-8 w-8 text-red-600" />
+              <CheckCircle className="h-8 w-8 text-green-600" />
             </div>
           </CardContent>
         </Card>
-        
+
         <Card>
           <CardContent className="p-4">
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-sm text-gray-600">Aujourd'hui</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {notifications.filter(n => 
-                    new Date(n.timestamp).toDateString() === new Date().toDateString()
-                  ).length}
-                </p>
+                <p className="text-2xl font-bold text-purple-600">{todayCount}</p>
               </div>
-              <Calendar className="h-8 w-8 text-green-600" />
+              <Calendar className="h-8 w-8 text-purple-600" />
             </div>
           </CardContent>
         </Card>
@@ -308,24 +284,20 @@ const GeometreNotifications = () => {
                 />
               </div>
             </div>
-            
+
             <Select value={filterType} onValueChange={setFilterType}>
               <SelectTrigger className="w-full lg:w-48">
                 <SelectValue placeholder="Type" />
               </SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Tous les types</SelectItem>
-                <SelectItem value="mission">Missions</SelectItem>
-                <SelectItem value="deadline">Échéances</SelectItem>
-                <SelectItem value="message">Messages</SelectItem>
-                <SelectItem value="instrument">Instruments</SelectItem>
-                <SelectItem value="payment">Paiements</SelectItem>
-                <SelectItem value="system">Système</SelectItem>
-                <SelectItem value="weather">Météo</SelectItem>
+                {availableTypes.map(type => (
+                  <SelectItem key={type} value={type}>{type}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
-            
-            <Button 
+
+            <Button
               variant={showUnreadOnly ? "default" : "outline"}
               onClick={() => setShowUnreadOnly(!showUnreadOnly)}
             >
@@ -338,15 +310,26 @@ const GeometreNotifications = () => {
 
       {/* Liste des notifications */}
       <div className="space-y-4">
-        {filteredNotifications.length > 0 ? (
+        {loading ? (
+          <div className="text-center py-12">
+            <Loader2 className="h-8 w-8 text-gray-400 mx-auto mb-4 animate-spin" />
+            <p className="text-gray-600">Chargement des notifications...</p>
+          </div>
+        ) : filteredNotifications.length > 0 ? (
           filteredNotifications.map(notification => (
             <NotificationCard key={notification.id} notification={notification} />
           ))
         ) : (
           <div className="text-center py-12">
             <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-gray-900 mb-2">Aucune notification trouvée</h3>
-            <p className="text-gray-600">Modifiez vos critères de recherche ou filtres</p>
+            <h3 className="text-lg font-medium text-gray-900 mb-2">
+              {notifications.length === 0 ? 'Aucune notification' : 'Aucune notification trouvée'}
+            </h3>
+            <p className="text-gray-600">
+              {notifications.length === 0
+                ? 'Vous serez notifié ici de vos missions, messages et échéances.'
+                : 'Modifiez vos critères de recherche ou filtres'}
+            </p>
           </div>
         )}
       </div>

@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
+import { toast } from 'sonner';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -8,63 +8,210 @@ import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
-import { 
-  Settings, 
-  User, 
-  Bell, 
-  Shield, 
-  Eye, 
-  Smartphone, 
-  Mail, 
-  Lock, 
-  Globe, 
-  Moon, 
+import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import {
+  User,
+  Bell,
+  Shield,
+  Eye,
+  Lock,
+  Globe,
+  Moon,
   Sun,
-  Camera,
-  Edit,
   Save,
   X,
   Check,
-  AlertTriangle,
-  Key,
-  Trash2,
   Crown,
   Gem,
   StarIcon,
   CreditCardIcon,
-  CalendarIcon,
-  UsersIcon,
-  ZapIcon
+  Loader2,
+  Inbox
 } from 'lucide-react';
 
 const GeometreSettings = () => {
-  const [activeTab, setActiveTab] = useState('profile');
+  const { user, profile } = useAuth();
+  const geometreId = user?.id;
 
-  // États pour les différentes sections
+  const [activeTab, setActiveTab] = useState('profile');
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [sendingReset, setSendingReset] = useState(false);
+
+  // Profil réel (table profiles). PAS de champs sans colonne (bio/licence/spécialités
+  // n'existent pas dans le schéma → non affichés pour ne pas fabriquer de donnée).
   const [profileData, setProfileData] = useState({
-    fullName: 'Mamadou Aly Ndiaye',
-    email: 'mamadou.aly@geometre-expert.sn',
-    phone: '+221 77 234 56 78',
-    address: 'Mermoz, Dakar',
-    bio: 'Géomètre expert avec 15 ans d\'expérience en levés topographiques et cadastraux.',
-    license: 'GE-SN-2010-0157',
-    specialities: ['Topographie', 'Cadastre', 'SIG', 'GPS/GNSS']
+    full_name: '',
+    email: '',
+    phone: '',
+    city: '',
+    region: '',
+    avatar_url: ''
   });
 
+  // Préférences locales (aucune table dédiée → non persistées côté serveur, honnête).
   const [notificationSettings, setNotificationSettings] = useState({
     emailMissions: true,
-    emailReports: false,
-    pushMissions: true,
-    pushDeadlines: true,
-    smsImportant: false
+    pushDeadlines: true
   });
 
   const [privacySettings, setPrivacySettings] = useState({
-    profilePublic: true,
-    showPhone: false,
-    showEmail: true,
-    allowMessages: true
+    profilePublic: true
   });
+
+  useEffect(() => {
+    if (!geometreId) {
+      setLoading(false);
+      return;
+    }
+    let active = true;
+
+    const load = async () => {
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('id, email, full_name, first_name, last_name, phone, city, region, avatar_url')
+          .eq('id', geometreId)
+          .maybeSingle();
+
+        if (error) throw error;
+        if (!active) return;
+
+        const fullName =
+          data?.full_name ||
+          [data?.first_name, data?.last_name].filter(Boolean).join(' ') ||
+          profile?.full_name ||
+          '';
+
+        setProfileData({
+          full_name: fullName,
+          email: data?.email || user?.email || '',
+          phone: data?.phone || '',
+          city: data?.city || '',
+          region: data?.region || '',
+          avatar_url: data?.avatar_url || ''
+        });
+      } catch (err) {
+        console.error('Erreur chargement profil géomètre:', err);
+        if (active) {
+          toast.error('Impossible de charger votre profil.');
+        }
+      } finally {
+        if (active) setLoading(false);
+      }
+    };
+
+    load();
+    return () => {
+      active = false;
+    };
+  }, [geometreId, user?.email, profile?.full_name]);
+
+  const handleSaveProfile = async () => {
+    if (!geometreId) return;
+    setSaving(true);
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          full_name: profileData.full_name?.trim() || null,
+          phone: profileData.phone?.trim() || null,
+          city: profileData.city?.trim() || null,
+          region: profileData.region?.trim() || null,
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', geometreId);
+
+      if (error) throw error;
+      toast.success('Profil mis à jour.');
+    } catch (err) {
+      console.error('Erreur sauvegarde profil géomètre:', err);
+      toast.error('La sauvegarde a échoué.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordReset = async () => {
+    const email = profileData.email || user?.email;
+    if (!email) {
+      toast.error('Aucune adresse email associée au compte.');
+      return;
+    }
+    setSendingReset(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${window.location.origin}/reset-password`
+      });
+      if (error) throw error;
+      toast.success(`Un email de réinitialisation a été envoyé à ${email}.`);
+    } catch (err) {
+      console.error('Erreur réinitialisation mot de passe:', err);
+      toast.error("Impossible d'envoyer l'email de réinitialisation.");
+    } finally {
+      setSendingReset(false);
+    }
+  };
+
+  const initials =
+    (profileData.full_name || profileData.email || 'G')
+      .split(' ')
+      .map((p) => p[0])
+      .filter(Boolean)
+      .slice(0, 2)
+      .join('')
+      .toUpperCase();
+
+  // Catalogue statique d'offres (contenu marketing, aucune donnée utilisateur réelle).
+  const subscriptionPlans = [
+    {
+      name: 'Starter',
+      subtitle: 'Pour débuter',
+      price: '750K XOF',
+      icon: Gem,
+      iconColor: 'text-green-500',
+      highlight: false,
+      features: [
+        { label: "Jusqu'à 20 missions", included: true },
+        { label: 'Outils de base GPS', included: true },
+        { label: 'Rapports standards', included: true },
+        { label: 'Support email', included: true },
+        { label: 'SIG avancé', included: false }
+      ]
+    },
+    {
+      name: 'Professional',
+      subtitle: 'Le plus populaire',
+      price: '1.5M XOF',
+      icon: Crown,
+      iconColor: 'text-green-500',
+      highlight: true,
+      features: [
+        { label: 'Missions illimitées', included: true },
+        { label: 'SIG complet', included: true },
+        { label: 'Blockchain intégrée', included: true },
+        { label: 'Assistant IA', included: true },
+        { label: 'Support prioritaire', included: true }
+      ]
+    },
+    {
+      name: 'Enterprise',
+      subtitle: 'Pour grandes équipes',
+      price: '3M XOF',
+      icon: StarIcon,
+      iconColor: 'text-purple-500',
+      highlight: false,
+      features: [
+        { label: 'Tout du Professional', included: true },
+        { label: 'Multi-utilisateurs (10)', included: true },
+        { label: 'API personnalisée', included: true },
+        { label: 'Formation équipe', included: true },
+        { label: 'Support dédié 24/7', included: true }
+      ]
+    }
+  ];
 
   return (
     <div className="p-6 space-y-6">
@@ -118,93 +265,97 @@ const GeometreSettings = () => {
                 </CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="fullName">Nom complet</Label>
-                      <Input 
-                        id="fullName"
-                        value={profileData.fullName}
-                        onChange={(e) => setProfileData({...profileData, fullName: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="email">Email professionnel</Label>
-                      <Input 
-                        id="email"
-                        type="email"
-                        value={profileData.email}
-                        onChange={(e) => setProfileData({...profileData, email: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="phone">Téléphone</Label>
-                      <Input 
-                        id="phone"
-                        value={profileData.phone}
-                        onChange={(e) => setProfileData({...profileData, phone: e.target.value})}
-                      />
-                    </div>
-
-                    <div>
-                      <Label htmlFor="license">Numéro de licence</Label>
-                      <Input 
-                        id="license"
-                        value={profileData.license}
-                        onChange={(e) => setProfileData({...profileData, license: e.target.value})}
-                      />
-                    </div>
+                {loading ? (
+                  <div className="flex items-center justify-center py-12 text-gray-500">
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Chargement du profil...
                   </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <Label htmlFor="address">Adresse</Label>
-                      <Input 
-                        id="address"
-                        value={profileData.address}
-                        onChange={(e) => setProfileData({...profileData, address: e.target.value})}
-                      />
-                    </div>
-                    
-                    <div>
-                      <Label htmlFor="bio">Biographie professionnelle</Label>
-                      <textarea 
-                        id="bio"
-                        rows={4}
-                        className="w-full px-3 py-2 border rounded-md"
-                        value={profileData.bio}
-                        onChange={(e) => setProfileData({...profileData, bio: e.target.value})}
-                      />
-                    </div>
-
-                    <div>
-                      <Label>Spécialités</Label>
-                      <div className="flex flex-wrap gap-2 mt-2">
-                        {profileData.specialities.map((spec, index) => (
-                          <Badge key={index} variant="secondary">
-                            {spec}
-                          </Badge>
-                        ))}
+                ) : (
+                  <>
+                    <div className="flex items-center gap-4 mb-6">
+                      <Avatar className="h-16 w-16">
+                        <AvatarImage src={profileData.avatar_url} alt={profileData.full_name} />
+                        <AvatarFallback>{initials}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <p className="font-medium">{profileData.full_name || '—'}</p>
+                        <p className="text-sm text-gray-500">{profileData.email || '—'}</p>
                       </div>
                     </div>
-                  </div>
-                </div>
-                
-                <div className="mt-6 pt-6 border-t">
-                  <Button>
-                    <Save className="w-4 h-4 mr-2" />
-                    Sauvegarder les modifications
-                  </Button>
-                </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="fullName">Nom complet</Label>
+                          <Input
+                            id="fullName"
+                            value={profileData.full_name}
+                            onChange={(e) => setProfileData({ ...profileData, full_name: e.target.value })}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="email">Email professionnel</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            value={profileData.email}
+                            disabled
+                            title="L'email est géré par votre compte et ne peut pas être modifié ici."
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="phone">Téléphone</Label>
+                          <Input
+                            id="phone"
+                            value={profileData.phone}
+                            onChange={(e) => setProfileData({ ...profileData, phone: e.target.value })}
+                          />
+                        </div>
+                      </div>
+
+                      <div className="space-y-4">
+                        <div>
+                          <Label htmlFor="city">Ville</Label>
+                          <Input
+                            id="city"
+                            value={profileData.city}
+                            onChange={(e) => setProfileData({ ...profileData, city: e.target.value })}
+                          />
+                        </div>
+
+                        <div>
+                          <Label htmlFor="region">Région</Label>
+                          <Input
+                            id="region"
+                            value={profileData.region}
+                            onChange={(e) => setProfileData({ ...profileData, region: e.target.value })}
+                          />
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="mt-6 pt-6 border-t">
+                      <Button onClick={handleSaveProfile} disabled={saving}>
+                        {saving ? (
+                          <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                        ) : (
+                          <Save className="w-4 h-4 mr-2" />
+                        )}
+                        Sauvegarder les modifications
+                      </Button>
+                    </div>
+                  </>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
 
           {/* Abonnement */}
           <TabsContent value="abonnement" className="space-y-6">
-            {/* Statut d'abonnement actuel */}
+            {/* Statut d'abonnement actuel — aucune table d'abonnement/facturation dans
+                le schéma → état honnête (pas de plan fabriqué). */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -213,25 +364,17 @@ const GeometreSettings = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">Plan Professional</h3>
-                      <p className="text-gray-600">Outils avancés pour géomètres experts</p>
-                      <p className="text-sm text-gray-500 mt-1">
-                        Renouvelé le 15 décembre 2024
-                      </p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-2xl font-bold text-green-600">1.5M XOF</p>
-                      <p className="text-sm text-gray-500">/mois</p>
-                    </div>
-                  </div>
+                <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
+                  <Inbox className="h-10 w-10 mb-3 text-gray-300" />
+                  <p className="font-medium text-gray-600">Aucun abonnement actif</p>
+                  <p className="text-sm mt-1">
+                    La gestion des abonnements sera bientôt disponible.
+                  </p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Plans d'abonnement */}
+            {/* Plans d'abonnement — catalogue d'offres statique (contenu marketing). */}
             <Card>
               <CardHeader>
                 <CardTitle>Plans d'abonnement disponibles</CardTitle>
@@ -241,129 +384,57 @@ const GeometreSettings = () => {
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  {/* Plan Starter */}
-                  <div className="border rounded-lg p-6 relative">
-                    <div className="text-center mb-4">
-                      <Gem className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                      <h3 className="text-xl font-semibold">Starter</h3>
-                      <p className="text-gray-600">Pour débuter</p>
-                    </div>
-                    <div className="text-center mb-6">
-                      <div className="text-3xl font-bold">750K XOF</div>
-                      <div className="text-gray-500">/mois</div>
-                    </div>
-                    <ul className="space-y-3 mb-6">
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Jusqu'à 20 missions</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Outils de base GPS</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Rapports standards</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Support email</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <X className="h-4 w-4 text-red-500" />
-                        <span className="text-sm text-gray-400">SIG avancé</span>
-                      </li>
-                    </ul>
-                    <Button variant="outline" className="w-full">
-                      Changer de plan
-                    </Button>
-                  </div>
-
-                  {/* Plan Professional */}
-                  <div className="border-2 border-green-500 rounded-lg p-6 relative">
-                    <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
-                      <span className="bg-green-500 text-white px-3 py-1 rounded-full text-sm">
-                        Actuel
-                      </span>
-                    </div>
-                    <div className="text-center mb-4">
-                      <Crown className="h-8 w-8 mx-auto mb-2 text-green-500" />
-                      <h3 className="text-xl font-semibold">Professional</h3>
-                      <p className="text-gray-600">Le plus populaire</p>
-                    </div>
-                    <div className="text-center mb-6">
-                      <div className="text-3xl font-bold">1.5M XOF</div>
-                      <div className="text-gray-500">/mois</div>
-                    </div>
-                    <ul className="space-y-3 mb-6">
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Missions illimitées</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">SIG complet</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Blockchain intégrée</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Assistant IA</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Support prioritaire</span>
-                      </li>
-                    </ul>
-                    <Button className="w-full bg-green-500 hover:bg-green-600">
-                      Plan actuel
-                    </Button>
-                  </div>
-
-                  {/* Plan Enterprise */}
-                  <div className="border rounded-lg p-6 relative">
-                    <div className="text-center mb-4">
-                      <StarIcon className="h-8 w-8 mx-auto mb-2 text-purple-500" />
-                      <h3 className="text-xl font-semibold">Enterprise</h3>
-                      <p className="text-gray-600">Pour grandes équipes</p>
-                    </div>
-                    <div className="text-center mb-6">
-                      <div className="text-3xl font-bold">3M XOF</div>
-                      <div className="text-gray-500">/mois</div>
-                    </div>
-                    <ul className="space-y-3 mb-6">
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Tout du Professional</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Multi-utilisateurs (10)</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">API personnalisée</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Formation équipe</span>
-                      </li>
-                      <li className="flex items-center gap-2">
-                        <Check className="h-4 w-4 text-green-500" />
-                        <span className="text-sm">Support dédié 24/7</span>
-                      </li>
-                    </ul>
-                    <Button variant="outline" className="w-full">
-                      Passer à Enterprise
-                    </Button>
-                  </div>
+                  {subscriptionPlans.map((plan) => {
+                    const PlanIcon = plan.icon;
+                    return (
+                      <div
+                        key={plan.name}
+                        className={`border rounded-lg p-6 relative ${
+                          plan.highlight ? 'border-2 border-green-500' : ''
+                        }`}
+                      >
+                        <div className="text-center mb-4">
+                          <PlanIcon className={`h-8 w-8 mx-auto mb-2 ${plan.iconColor}`} />
+                          <h3 className="text-xl font-semibold">{plan.name}</h3>
+                          <p className="text-gray-600">{plan.subtitle}</p>
+                        </div>
+                        <div className="text-center mb-6">
+                          <div className="text-3xl font-bold">{plan.price}</div>
+                          <div className="text-gray-500">/mois</div>
+                        </div>
+                        <ul className="space-y-3 mb-6">
+                          {plan.features.map((feature, index) => (
+                            <li key={index} className="flex items-center gap-2">
+                              {feature.included ? (
+                                <Check className="h-4 w-4 text-green-500" />
+                              ) : (
+                                <X className="h-4 w-4 text-red-500" />
+                              )}
+                              <span
+                                className={`text-sm ${feature.included ? '' : 'text-gray-400'}`}
+                              >
+                                {feature.label}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <Button
+                          variant={plan.highlight ? 'default' : 'outline'}
+                          className={`w-full ${
+                            plan.highlight ? 'bg-green-500 hover:bg-green-600' : ''
+                          }`}
+                          disabled
+                        >
+                          Bientôt disponible
+                        </Button>
+                      </div>
+                    );
+                  })}
                 </div>
               </CardContent>
             </Card>
 
-            {/* Historique de facturation */}
+            {/* Historique de facturation — aucune table de facturation → état honnête. */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
@@ -372,45 +443,24 @@ const GeometreSettings = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Décembre 2024</p>
-                        <p className="text-sm text-gray-500">Plan Professional</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">1.5M XOF</p>
-                      <p className="text-sm text-green-600">Payé</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between p-4 border rounded-lg">
-                    <div className="flex items-center gap-3">
-                      <CalendarIcon className="h-4 w-4 text-gray-500" />
-                      <div>
-                        <p className="font-medium">Novembre 2024</p>
-                        <p className="text-sm text-gray-500">Plan Professional</p>
-                      </div>
-                    </div>
-                    <div className="text-right">
-                      <p className="font-medium">1.5M XOF</p>
-                      <p className="text-sm text-green-600">Payé</p>
-                    </div>
-                  </div>
+                <div className="flex flex-col items-center justify-center py-8 text-center text-gray-500">
+                  <CreditCardIcon className="h-10 w-10 mb-3 text-gray-300" />
+                  <p className="font-medium text-gray-600">Aucune facture disponible</p>
+                  <p className="text-sm mt-1">
+                    Vos factures apparaîtront ici une fois la facturation activée.
+                  </p>
                 </div>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Notifications */}
+          {/* Notifications — préférences locales (aucune table dédiée). */}
           <TabsContent value="notifications" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Préférences de notification</CardTitle>
                 <CardDescription>
-                  Choisissez comment vous souhaitez être notifié
+                  Préférences locales à cet appareil (non synchronisées pour le moment)
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-6">
@@ -420,10 +470,10 @@ const GeometreSettings = () => {
                       <p className="font-medium">Nouvelles missions</p>
                       <p className="text-sm text-gray-600">Notifications email pour les nouvelles missions</p>
                     </div>
-                    <Switch 
+                    <Switch
                       checked={notificationSettings.emailMissions}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings({...notificationSettings, emailMissions: checked})
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({ ...notificationSettings, emailMissions: checked })
                       }
                     />
                   </div>
@@ -433,10 +483,10 @@ const GeometreSettings = () => {
                       <p className="font-medium">Rapprochement d'échéances</p>
                       <p className="text-sm text-gray-600">Notifications push pour les deadlines</p>
                     </div>
-                    <Switch 
+                    <Switch
                       checked={notificationSettings.pushDeadlines}
-                      onCheckedChange={(checked) => 
-                        setNotificationSettings({...notificationSettings, pushDeadlines: checked})
+                      onCheckedChange={(checked) =>
+                        setNotificationSettings({ ...notificationSettings, pushDeadlines: checked })
                       }
                     />
                   </div>
@@ -445,11 +495,14 @@ const GeometreSettings = () => {
             </Card>
           </TabsContent>
 
-          {/* Confidentialité */}
+          {/* Confidentialité — préférence locale. */}
           <TabsContent value="privacy" className="space-y-6">
             <Card>
               <CardHeader>
                 <CardTitle>Paramètres de confidentialité</CardTitle>
+                <CardDescription>
+                  Préférences locales à cet appareil (non synchronisées pour le moment)
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="flex items-center justify-between">
@@ -457,10 +510,10 @@ const GeometreSettings = () => {
                     <p className="font-medium">Profil public</p>
                     <p className="text-sm text-gray-600">Votre profil est visible par les autres utilisateurs</p>
                   </div>
-                  <Switch 
+                  <Switch
                     checked={privacySettings.profilePublic}
-                    onCheckedChange={(checked) => 
-                      setPrivacySettings({...privacySettings, profilePublic: checked})
+                    onCheckedChange={(checked) =>
+                      setPrivacySettings({ ...privacySettings, profilePublic: checked })
                     }
                   />
                 </div>
@@ -473,17 +526,24 @@ const GeometreSettings = () => {
             <Card>
               <CardHeader>
                 <CardTitle>Sécurité du compte</CardTitle>
+                <CardDescription>
+                  Recevez un email pour réinitialiser votre mot de passe en toute sécurité
+                </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
-                <Button variant="outline">
-                  <Lock className="w-4 h-4 mr-2" />
+                <Button variant="outline" onClick={handlePasswordReset} disabled={sendingReset}>
+                  {sendingReset ? (
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  ) : (
+                    <Lock className="w-4 h-4 mr-2" />
+                  )}
                   Changer le mot de passe
                 </Button>
               </CardContent>
             </Card>
           </TabsContent>
 
-          {/* Apparence */}
+          {/* Apparence — préférence UI locale (aucune persistance serveur). */}
           <TabsContent value="appearance" className="space-y-6">
             <Card>
               <CardHeader>

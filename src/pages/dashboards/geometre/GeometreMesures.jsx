@@ -1,9 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
-  Ruler, 
-  Plus, 
-  Search, 
+import {
+  Ruler,
+  Plus,
+  Search,
   Download,
   Upload,
   Calculator,
@@ -15,22 +15,17 @@ import {
   Calendar,
   Clock,
   CheckCircle,
-  AlertTriangle,
   Eye,
-  Edit,
   FileText,
   Camera,
   Navigation,
   Layers,
-  Route,
   Building,
-  TreePine,
   Satellite,
   Settings,
-  Save,
   Share,
-  Trash2,
-  Copy
+  Copy,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -38,177 +33,74 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Normalise une ligne field_measurements (data jsonb) en objet d'affichage.
+// Aucune valeur inventée : tout provient du jsonb `data` ou reste "—".
+const mapMeasurement = (row) => {
+  const d = (row && typeof row.data === 'object' && row.data) ? row.data : {};
+
+  let coordinates = null;
+  if (typeof d?.coordinates?.lat === 'number' && typeof d?.coordinates?.lng === 'number') {
+    coordinates = { lat: d.coordinates.lat, lng: d.coordinates.lng };
+  } else if (typeof d.latitude === 'number' && typeof d.longitude === 'number') {
+    coordinates = { lat: d.latitude, lng: d.longitude };
+  }
+
+  return {
+    id: row.id,
+    property_id: row.property_id || null,
+    created_at: row.created_at || null,
+    title: d.title || d.name || 'Relevé de terrain',
+    type: d.type || d.mission_type || 'autre',
+    status: d.status || 'complete',
+    date: row.created_at ? new Date(row.created_at).toLocaleDateString('fr-FR') : '—',
+    location: d.location || '—',
+    superficie: d.superficie || d.surface || '—',
+    precision: d.precision || '—',
+    points: typeof d.points === 'number' ? d.points : null,
+    client: d.client || d.client_name || '—',
+    coordinates,
+    equipment: d.equipment || '—',
+    operator: d.operator || '—',
+    temperature: d.temperature || '—',
+    humidity: d.humidity || '—',
+    results: (d.results && typeof d.results === 'object') ? d.results : {}
+  };
+};
 
 const GeometreMesures = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('tous');
   const [statusFilter, setStatusFilter] = useState('tous');
+  const [mesures, setMesures] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Données des mesures
-  const mesures = [
-    {
-      id: 1,
-      title: 'Levé GPS - Parcelle A127',
-      type: 'gps',
-      status: 'complete',
-      date: '2024-09-25',
-      location: 'Almadies, Dakar',
-      superficie: '2.5 ha',
-      precision: '±2 cm',
-      points: 45,
-      client: 'Société IMMOGO',
-      coordinates: {
-        lat: 14.7167,
-        lng: -17.4677
-      },
-      equipment: 'GPS RTK Trimble R12',
-      operator: 'Géomètre Principal',
-      temperature: '28°C',
-      humidity: '65%',
-      icon: Satellite,
-      results: {
-        perimeter: '675.8 m',
-        area: '25,247 m²',
-        northing: '1,554,123.45',
-        easting: '234,567.89'
+  useEffect(() => {
+    const loadMesures = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('field_measurements')
+          .select('*')
+          .eq('geometre_id', user.id)
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setMesures((data || []).map(mapMeasurement));
+      } catch (err) {
+        console.error('Erreur chargement mesures:', err);
+        setMesures([]);
+      } finally {
+        setLoading(false);
       }
-    },
-    {
-      id: 2,
-      title: 'Mesure Station Totale - Bornage Rufisque',
-      type: 'station_totale',
-      status: 'en_cours',
-      date: '2024-10-01',
-      location: 'Rufisque',
-      superficie: '800 m²',
-      precision: '±1 mm',
-      points: 28,
-      client: 'M. Amadou Diallo',
-      coordinates: {
-        lat: 14.7197,
-        lng: -17.2658
-      },
-      equipment: 'Station Totale Leica TS16',
-      operator: 'Assistant Géomètre',
-      temperature: '26°C',
-      humidity: '70%',
-      icon: Compass,
-      results: {
-        perimeter: '112.5 m',
-        area: '847 m²',
-        northing: '1,554,890.12',
-        easting: '235,123.45'
-      }
-    },
-    {
-      id: 3,
-      title: 'Nivellement - Zone Industrielle Thiès',
-      type: 'nivellement',
-      status: 'planifie',
-      date: '2024-10-05',
-      location: 'Thiès',
-      superficie: '15 ha',
-      precision: '±5 mm',
-      points: 120,
-      client: 'Ministère Industrie',
-      coordinates: {
-        lat: 14.7889,
-        lng: -16.9250
-      },
-      equipment: 'Niveau Électronique Leica DNA03',
-      operator: 'Géomètre Principal',
-      temperature: '25°C',
-      humidity: '60%',
-      icon: Ruler,
-      results: {
-        denivele_max: '12.5 m',
-        denivele_min: '2.1 m',
-        pente_moyenne: '3.2%',
-        volume_remblai: '15,250 m³'
-      }
-    },
-    {
-      id: 4,
-      title: 'Mesure Drone - Cartographie Bargny',
-      type: 'drone',
-      status: 'en_cours',
-      date: '2024-09-30',
-      location: 'Bargny',
-      superficie: '25 ha',
-      precision: '±3 cm',
-      points: 8500,
-      client: 'Ministère Industrie',
-      coordinates: {  
-        lat: 14.6928,
-        lng: -17.0547
-      },
-      equipment: 'Drone DJI Phantom 4 RTK',
-      operator: 'Pilote Drone Certifié',
-      temperature: '29°C',
-      humidity: '75%',
-      icon: Camera,
-      results: {
-        photos_prises: '450',
-        resolution: '2.5 cm/px',
-        couverture: '100%',
-        modele_3d: 'Généré'
-      }
-    },
-    {
-      id: 5,
-      title: 'Polygonation - Lotissement Kaolack',
-      type: 'polygonation',
-      status: 'complete',
-      date: '2024-09-20',
-      location: 'Kaolack',
-      superficie: '5.2 ha',
-      precision: '±1 cm',
-      points: 65,
-      client: 'Coopérative Agricole',
-      coordinates: {
-        lat: 14.1516,
-        lng: -16.0729
-      },
-      equipment: 'GPS RTK + Station Totale',
-      operator: 'Équipe Complète',
-      temperature: '31°C',
-      humidity: '68%',
-      icon: Grid3X3,
-      results: {
-        parcelles: '24',
-        voirie: '1,200 m²',
-        espaces_verts: '800 m²',
-        coefficient_utilis: '0.75'
-      }
-    },
-    {
-      id: 6,
-      title: 'Relevé Architectural - Villa Sacré-Cœur',
-      type: 'architectural',
-      status: 'complete',
-      date: '2024-09-28',
-      location: 'Sacré-Cœur, Dakar',
-      superficie: '1,200 m²',
-      precision: '±2 mm',
-      points: 156,
-      client: 'Arch. Mbaye & Associates',
-      coordinates: {
-        lat: 14.6937,
-        lng: -17.4441
-      },
-      equipment: 'Scanner 3D + Station Totale',
-      operator: 'Spécialiste Architecture',
-      temperature: '27°C',
-      humidity: '72%',
-      icon: Building,
-      results: {
-        facades: '4',
-        nuage_points: '2.5M points',
-        plans_generes: '8',
-        precision_3d: '±1 mm'
-      }
-    }
-  ];
+    };
+
+    loadMesures();
+  }, [user?.id]);
 
   const getTypeIcon = (type) => {
     switch (type) {
@@ -224,20 +116,28 @@ const GeometreMesures = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'complete': return 'bg-green-100 text-green-800';
-      case 'en_cours': return 'bg-blue-100 text-blue-800';
-      case 'planifie': return 'bg-yellow-100 text-yellow-800';
-      case 'erreur': return 'bg-red-100 text-red-800';
+      case 'complete':
+      case 'completed': return 'bg-green-100 text-green-800';
+      case 'en_cours':
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
+      case 'planifie':
+      case 'pending': return 'bg-yellow-100 text-yellow-800';
+      case 'erreur':
+      case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'complete': return 'Terminé';
-      case 'en_cours': return 'En cours';
-      case 'planifie': return 'Planifié';
-      case 'erreur': return 'Erreur';
+      case 'complete':
+      case 'completed': return 'Terminé';
+      case 'en_cours':
+      case 'in_progress': return 'En cours';
+      case 'planifie':
+      case 'pending': return 'Planifié';
+      case 'erreur':
+      case 'cancelled': return 'Erreur';
       default: return status;
     }
   };
@@ -254,17 +154,24 @@ const GeometreMesures = () => {
     }
   };
 
+  const isComplete = (s) => s === 'complete' || s === 'completed';
+  const isInProgress = (s) => s === 'en_cours' || s === 'in_progress';
+
   const filteredMesures = mesures.filter(mesure => {
     const matchesSearch = mesure.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          mesure.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          mesure.location.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesType = typeFilter === 'tous' || mesure.type === typeFilter;
-    const matchesStatus = statusFilter === 'tous' || mesure.status === statusFilter;
-    
+    const matchesStatus = statusFilter === 'tous' ||
+                          mesure.status === statusFilter ||
+                          (statusFilter === 'complete' && isComplete(mesure.status)) ||
+                          (statusFilter === 'en_cours' && isInProgress(mesure.status));
+
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  // Statistiques
+  // Statistiques dérivées des données réelles (jamais fabriquées)
+  const totalPoints = mesures.reduce((sum, m) => sum + (m.points || 0), 0);
   const stats = [
     {
       title: 'Total Mesures',
@@ -275,29 +182,32 @@ const GeometreMesures = () => {
     },
     {
       title: 'En Cours',
-      value: mesures.filter(m => m.status === 'en_cours').length,
+      value: mesures.filter(m => isInProgress(m.status)).length,
       icon: Clock,
       color: 'text-yellow-600',
       bgColor: 'bg-yellow-100'
     },
     {
       title: 'Terminées',
-      value: mesures.filter(m => m.status === 'complete').length,
+      value: mesures.filter(m => isComplete(m.status)).length,
       icon: CheckCircle,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
     {
-      title: 'Surface Totale',
-      value: '51.7 ha',
+      title: 'Points Relevés',
+      value: totalPoints > 0 ? totalPoints.toLocaleString('fr-FR') : '—',
       icon: Map,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
     }
   ];
 
+  // Types réellement présents dans les données (pour l'analytique)
+  const presentTypes = Array.from(new Set(mesures.map(m => m.type)));
+
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
@@ -405,10 +315,28 @@ const GeometreMesures = () => {
         </TabsList>
 
         <TabsContent value="liste" className="mt-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+            </div>
+          ) : filteredMesures.length === 0 ? (
+            <Card>
+              <CardContent className="py-16 text-center">
+                <Ruler className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-1">Aucune mesure</h3>
+                <p className="text-gray-500">
+                  {mesures.length === 0
+                    ? "Aucun relevé de terrain enregistré pour le moment."
+                    : "Aucune mesure ne correspond à vos critères de recherche."}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
           <div className="space-y-4">
             {filteredMesures.map((mesure, index) => {
               const TypeIcon = getTypeIcon(mesure.type);
-              
+              const resultEntries = Object.entries(mesure.results).slice(0, 3);
+
               return (
                 <motion.div
                   key={mesure.id}
@@ -427,7 +355,7 @@ const GeometreMesures = () => {
                             <h3 className="text-lg font-semibold text-gray-900 mb-2">
                               {mesure.title}
                             </h3>
-                            
+
                             <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <MapPin className="h-3 w-3" />
@@ -443,7 +371,7 @@ const GeometreMesures = () => {
                               </div>
                               <div className="flex items-center gap-2 text-sm text-gray-600">
                                 <Target className="h-3 w-3" />
-                                {mesure.points} points
+                                {mesure.points !== null ? `${mesure.points} points` : '— points'}
                               </div>
                             </div>
 
@@ -467,15 +395,19 @@ const GeometreMesures = () => {
                               <div className="space-y-2">
                                 <h4 className="text-sm font-medium text-gray-900">Résultats</h4>
                                 <div className="text-xs text-gray-600 space-y-1">
-                                  {Object.entries(mesure.results).slice(0, 3).map(([key, value]) => (
-                                    <div key={key}>{key}: {value}</div>
-                                  ))}
+                                  {resultEntries.length > 0 ? (
+                                    resultEntries.map(([key, value]) => (
+                                      <div key={key}>{key}: {String(value)}</div>
+                                    ))
+                                  ) : (
+                                    <div className="text-gray-400">Aucun résultat</div>
+                                  )}
                                 </div>
                               </div>
                             </div>
                           </div>
                         </div>
-                        
+
                         <div className="flex flex-col items-end gap-2">
                           <div className="flex gap-2">
                             <Badge className={getStatusColor(mesure.status)}>
@@ -491,9 +423,11 @@ const GeometreMesures = () => {
                       {/* Actions */}
                       <div className="flex items-center justify-between pt-4 border-t">
                         <div className="text-sm text-gray-500">
-                          Coordonnées: {mesure.coordinates.lat.toFixed(4)}°N, {mesure.coordinates.lng.toFixed(4)}°W
+                          {mesure.coordinates
+                            ? `Coordonnées: ${mesure.coordinates.lat.toFixed(4)}°N, ${mesure.coordinates.lng.toFixed(4)}°W`
+                            : 'Coordonnées: —'}
                         </div>
-                        
+
                         <div className="flex gap-2">
                           <Button variant="ghost" size="sm">
                             <Eye className="h-4 w-4 mr-2" />
@@ -519,6 +453,7 @@ const GeometreMesures = () => {
               );
             })}
           </div>
+          )}
         </TabsContent>
 
         <TabsContent value="carte" className="mt-6">
@@ -555,52 +490,58 @@ const GeometreMesures = () => {
                 <CardTitle>Répartition par Type</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {['gps', 'station_totale', 'nivellement', 'drone', 'polygonation', 'architectural'].map((type) => {
-                    const count = mesures.filter(m => m.type === type).length;
-                    const percentage = (count / mesures.length * 100).toFixed(1);
-                    return (
-                      <div key={type} className="flex items-center justify-between">
-                        <span className="text-sm">{getTypeText(type)}</span>
-                        <div className="flex items-center gap-2">
-                          <div className="w-24 bg-gray-200 rounded-full h-2">
-                            <div 
-                              className="bg-blue-600 h-2 rounded-full" 
-                              style={{ width: `${percentage}%` }}
-                            ></div>
+                {mesures.length === 0 ? (
+                  <p className="text-sm text-gray-500 py-4">Aucune donnée disponible.</p>
+                ) : (
+                  <div className="space-y-4">
+                    {presentTypes.map((type) => {
+                      const count = mesures.filter(m => m.type === type).length;
+                      const percentage = (count / mesures.length * 100).toFixed(1);
+                      return (
+                        <div key={type} className="flex items-center justify-between">
+                          <span className="text-sm">{getTypeText(type)}</span>
+                          <div className="flex items-center gap-2">
+                            <div className="w-24 bg-gray-200 rounded-full h-2">
+                              <div
+                                className="bg-blue-600 h-2 rounded-full"
+                                style={{ width: `${percentage}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-sm font-medium w-12">{percentage}%</span>
                           </div>
-                          <span className="text-sm font-medium w-12">{percentage}%</span>
                         </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                      );
+                    })}
+                  </div>
+                )}
               </CardContent>
             </Card>
 
             <Card>
               <CardHeader>
-                <CardTitle>Précision Moyenne par Type</CardTitle>
+                <CardTitle>Précision par Type</CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Station Totale</span>
-                    <Badge variant="outline" className="bg-green-50 text-green-700">±1 mm</Badge>
+                {mesures.length === 0 ? (
+                  <p className="text-sm text-gray-500 py-4">Aucune donnée disponible.</p>
+                ) : (
+                  <div className="space-y-3">
+                    {presentTypes.map((type) => {
+                      // Précision réelle enregistrée pour ce type (première non vide)
+                      const withPrecision = mesures.find(
+                        m => m.type === type && m.precision && m.precision !== '—'
+                      );
+                      return (
+                        <div key={type} className="flex items-center justify-between">
+                          <span className="text-sm">{getTypeText(type)}</span>
+                          <Badge variant="outline" className="bg-gray-50 text-gray-700">
+                            {withPrecision ? withPrecision.precision : '—'}
+                          </Badge>
+                        </div>
+                      );
+                    })}
                   </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">GPS RTK</span>
-                    <Badge variant="outline" className="bg-blue-50 text-blue-700">±2 cm</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Drone</span>
-                    <Badge variant="outline" className="bg-purple-50 text-purple-700">±3 cm</Badge>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm">Nivellement</span>
-                    <Badge variant="outline" className="bg-orange-50 text-orange-700">±5 mm</Badge>
-                  </div>
-                </div>
+                )}
               </CardContent>
             </Card>
           </div>

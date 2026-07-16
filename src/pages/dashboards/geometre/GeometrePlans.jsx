@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
   FileText, 
@@ -37,7 +37,8 @@ import {
   Save,
   Undo,
   Redo,
-  Maximize
+  Maximize,
+  Loader2
 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -45,141 +46,71 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+
+// Normalise une ligne `documents` (type='plan') en objet d'affichage.
+// Seules les colonnes réelles existent (name, type, url, status, created_at) :
+// tout champ métier absent du schéma reste "—" (jamais inventé).
+const mapPlan = (row) => {
+  const createdLabel = row.created_at
+    ? new Date(row.created_at).toLocaleString('fr-FR', {
+        day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit'
+      })
+    : '—';
+
+  return {
+    id: row.id,
+    property_id: row.property_id || null,
+    url: row.url || null,
+    created_at: row.created_at || null,
+    title: row.name || 'Plan sans titre',
+    type: row.type || 'plan',
+    status: row.status || 'complete',
+    lastModified: createdLabel,
+    // Champs non présents dans le schéma `documents` -> état honnête.
+    client: '—',
+    location: '—',
+    echelle: '—',
+    format: '—',
+    version: '—',
+    fileSize: '—',
+    tags: []
+  };
+};
 
 const GeometrePlans = () => {
+  const { user } = useAuth();
   const [searchTerm, setSearchTerm] = useState('');
   const [typeFilter, setTypeFilter] = useState('tous');
   const [statusFilter, setStatusFilter] = useState('tous');
+  const [plans, setPlans] = useState([]);
+  const [loading, setLoading] = useState(true);
 
-  // Données des plans
-  const plans = [
-    {
-      id: 1,
-      title: 'Plan de Bornage - Parcelle A127',
-      type: 'bornage',
-      status: 'complete',
-      date: '2024-09-25',
-      lastModified: '2024-09-25 14:30',
-      client: 'M. Amadou Diallo',
-      location: 'Rufisque',
-      echelle: '1:500',
-      format: 'A3',
-      superficie: '800 m²',
-      version: '2.1',
-      fileSize: '2.4 MB',
-      description: 'Plan de bornage définitif avec implantation des bornes géodésiques',
-      icon: Grid3X3,
-      tags: ['Bornage', 'Géodésie', 'Parcelle'],
-      layers: ['Fond de plan', 'Limites', 'Bornes', 'Cotes', 'Textes'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    },
-    {
-      id: 2,
-      title: 'Plan Topographique - Almadies Bay',
-      type: 'topographie',
-      status: 'en_cours',
-      date: '2024-09-30',
-      lastModified: '2024-10-01 09:15',
-      client: 'Société IMMOGO',
-      location: 'Almadies, Dakar',
-      echelle: '1:200',
-      format: 'A1',
-      superficie: '2.5 ha',
-      version: '1.3',
-      fileSize: '8.7 MB',
-      description: 'Plan topographique détaillé pour projet résidentiel avec courbes de niveau',
-      icon: Layers,
-      tags: ['Topographie', 'Courbes niveau', 'Résidentiel'],
-      layers: ['Topographie', 'Courbes niveau', 'Végétation', 'Bâti existant', 'Réseaux'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    },
-    {
-      id: 3,
-      title: 'Plan de Lotissement - Thiès Centre',
-      type: 'lotissement',
-      status: 'revision',
-      date: '2024-09-20',
-      lastModified: '2024-09-28 16:45',
-      client: 'Promoteur Sénégal SARL',
-      location: 'Thiès',
-      echelle: '1:1000',
-      format: 'A0',
-      superficie: '15 ha',
-      version: '3.2',
-      fileSize: '12.1 MB',
-      description: 'Plan de lotissement 120 lots avec voirie, réseaux et espaces verts',
-      icon: Route,
-      tags: ['Lotissement', 'Urbanisme', 'Voirie'],
-      layers: ['Parcelles', 'Voirie', 'Réseaux', 'Espaces verts', 'Équipements'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    },
-    {
-      id: 4,
-      title: 'Plan Cadastral - Zone Industrielle',
-      type: 'cadastral',
-      status: 'planifie',
-      date: '2024-10-05',
-      lastModified: '2024-09-15 11:20',
-      client: 'Ministère de l\'Industrie',
-      location: 'Bargny',
-      echelle: '1:2000',
-      format: 'A1',
-      superficie: '25 ha',
-      version: '1.0',
-      fileSize: '5.3 MB',
-      description: 'Plan cadastral pour aménagement zone industrielle avec découpage parcellaire',
-      icon: Building,
-      tags: ['Cadastral', 'Industriel', 'Parcellaire'],
-      layers: ['Cadastre', 'Parcelles', 'Voirie', 'Industrie', 'Infrastructure'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    },
-    {
-      id: 5,
-      title: 'Plan Architectural - Villa Sacré-Cœur',
-      type: 'architectural',
-      status: 'complete',
-      date: '2024-09-28',
-      lastModified: '2024-09-28 17:00',
-      client: 'Arch. Mbaye & Associates',
-      location: 'Sacré-Cœur, Dakar',
-      echelle: '1:100',
-      format: 'A2',
-      superficie: '1,200 m²',
-      version: '2.0',
-      fileSize: '4.8 MB',
-      description: 'Plan architectural détaillé avec relevé de façades et coupes',
-      icon: Building,
-      tags: ['Architecture', 'Relevé', 'Façades'],
-      layers: ['Plan masse', 'Façades', 'Coupes', 'Détails', 'Cotes'],
-      coordinates: 'Local',
-      projection: 'Lambert Conforme'
-    },
-    {
-      id: 6,
-      title: 'Plan Agricole - Parcelles Kaolack',
-      type: 'agricole',
-      status: 'complete',
-      date: '2024-09-18',
-      lastModified: '2024-09-20 10:30',
-      client: 'Coopérative Agricole Thiès',
-      location: 'Kaolack',
-      echelle: '1:2500',
-      format: 'A3',
-      superficie: '5.2 ha',
-      version: '1.1',
-      fileSize: '3.2 MB',
-      description: 'Plan de délimitation parcelles agricoles avec système d\'irrigation',
-      icon: TreePine,
-      tags: ['Agriculture', 'Irrigation', 'Parcellaire'],
-      layers: ['Parcelles', 'Irrigation', 'Cultures', 'Chemins', 'Points eau'],
-      coordinates: 'UTM Zone 28N',
-      projection: 'WGS84'
-    }
-  ];
+  useEffect(() => {
+    const loadPlans = async () => {
+      if (!user?.id) return;
+      setLoading(true);
+      try {
+        const { data, error } = await supabase
+          .from('documents')
+          .select('*')
+          .eq('owner_id', user.id)
+          .eq('type', 'plan')
+          .order('created_at', { ascending: false });
+
+        if (error) throw error;
+        setPlans((data || []).map(mapPlan));
+      } catch (err) {
+        console.error('Erreur chargement plans:', err);
+        setPlans([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    loadPlans();
+  }, [user?.id]);
 
   const getTypeIcon = (type) => {
     switch (type) {
@@ -195,22 +126,36 @@ const GeometrePlans = () => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'complete': return 'bg-green-100 text-green-800';
-      case 'en_cours': return 'bg-blue-100 text-blue-800';
+      case 'complete':
+      case 'completed':
+      case 'validated': return 'bg-green-100 text-green-800';
+      case 'en_cours':
+      case 'in_progress': return 'bg-blue-100 text-blue-800';
       case 'revision': return 'bg-yellow-100 text-yellow-800';
-      case 'planifie': return 'bg-purple-100 text-purple-800';
-      case 'erreur': return 'bg-red-100 text-red-800';
+      case 'planifie':
+      case 'pending':
+      case 'draft': return 'bg-purple-100 text-purple-800';
+      case 'erreur':
+      case 'rejected':
+      case 'cancelled': return 'bg-red-100 text-red-800';
       default: return 'bg-gray-100 text-gray-800';
     }
   };
 
   const getStatusText = (status) => {
     switch (status) {
-      case 'complete': return 'Terminé';
-      case 'en_cours': return 'En cours';
-      case 'revision': return 'En révision';  
-      case 'planifie': return 'Planifié';
-      case 'erreur': return 'Erreur';
+      case 'complete':
+      case 'completed':
+      case 'validated': return 'Terminé';
+      case 'en_cours':
+      case 'in_progress': return 'En cours';
+      case 'revision': return 'En révision';
+      case 'planifie':
+      case 'pending': return 'Planifié';
+      case 'draft': return 'Brouillon';
+      case 'erreur':
+      case 'rejected':
+      case 'cancelled': return 'Erreur';
       default: return status;
     }
   };
@@ -237,7 +182,18 @@ const GeometrePlans = () => {
     return matchesSearch && matchesType && matchesStatus;
   });
 
-  // Statistiques
+  const isComplete = (s) => s === 'complete' || s === 'completed' || s === 'validated';
+  const isInProgress = (s) => s === 'en_cours' || s === 'in_progress';
+
+  // Nombre de plans créés le mois en cours (donnée réelle via created_at).
+  const now = new Date();
+  const thisMonthCount = plans.filter((p) => {
+    if (!p.created_at) return false;
+    const d = new Date(p.created_at);
+    return d.getMonth() === now.getMonth() && d.getFullYear() === now.getFullYear();
+  }).length;
+
+  // Statistiques — toutes dérivées des vraies lignes `documents`.
   const stats = [
     {
       title: 'Total Plans',
@@ -248,22 +204,22 @@ const GeometrePlans = () => {
     },
     {
       title: 'En Cours',
-      value: plans.filter(p => p.status === 'en_cours').length,
+      value: plans.filter(p => isInProgress(p.status)).length,
       icon: Clock,
-      color: 'text-yellow-600',  
+      color: 'text-yellow-600',
       bgColor: 'bg-yellow-100'
     },
     {
       title: 'Terminés',
-      value: plans.filter(p => p.status === 'complete').length,
+      value: plans.filter(p => isComplete(p.status)).length,
       icon: CheckCircle,
       color: 'text-green-600',
       bgColor: 'bg-green-100'
     },
     {
-      title: 'Taille Totale',
-      value: '36.5 MB',
-      icon: Settings,
+      title: 'Ce Mois',
+      value: thisMonthCount,
+      icon: Calendar,
       color: 'text-purple-600',
       bgColor: 'bg-purple-100'
     }
@@ -378,6 +334,24 @@ const GeometrePlans = () => {
         </TabsList>
 
         <TabsContent value="grille" className="mt-6">
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500">
+              <Loader2 className="h-6 w-6 animate-spin mr-2" />
+              Chargement des plans...
+            </div>
+          ) : filteredPlans.length === 0 ? (
+            <Card>
+              <CardContent className="p-12 text-center">
+                <FileText className="h-12 w-12 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-1">Aucun plan</h3>
+                <p className="text-gray-600">
+                  {plans.length === 0
+                    ? "Vous n'avez pas encore de plan enregistré."
+                    : 'Aucun plan ne correspond à votre recherche.'}
+                </p>
+              </CardContent>
+            </Card>
+          ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {filteredPlans.map((plan, index) => {
               const TypeIcon = getTypeIcon(plan.type);
@@ -429,14 +403,22 @@ const GeometrePlans = () => {
 
                       {/* Actions */}
                       <div className="flex gap-2 mt-4">
-                        <Button variant="outline" size="sm" className="flex-1">
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          className="flex-1"
+                          disabled={!plan.url}
+                          onClick={() => plan.url && window.open(plan.url, '_blank', 'noopener')}
+                        >
                           <Eye className="h-3 w-3 mr-1" />
                           Voir
                         </Button>
-                        <Button variant="ghost" size="sm">
-                          <Edit className="h-3 w-3" />
-                        </Button>
-                        <Button variant="ghost" size="sm">
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          disabled={!plan.url}
+                          onClick={() => plan.url && window.open(plan.url, '_blank', 'noopener')}
+                        >
                           <Download className="h-3 w-3" />
                         </Button>
                         <Button variant="ghost" size="sm">
@@ -449,6 +431,7 @@ const GeometrePlans = () => {
               );
             })}
           </div>
+          )}
         </TabsContent>
 
         <TabsContent value="liste" className="mt-6">
@@ -468,7 +451,22 @@ const GeometrePlans = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {filteredPlans.map((plan) => {
+                    {loading ? (
+                      <tr>
+                        <td colSpan={7} className="p-8 text-center text-gray-500">
+                          <Loader2 className="h-5 w-5 animate-spin inline mr-2" />
+                          Chargement des plans...
+                        </td>
+                      </tr>
+                    ) : filteredPlans.length === 0 ? (
+                      <tr>
+                        <td colSpan={7} className="p-8 text-center text-gray-500">
+                          {plans.length === 0
+                            ? "Aucun plan enregistré."
+                            : 'Aucun plan ne correspond à votre recherche.'}
+                        </td>
+                      </tr>
+                    ) : filteredPlans.map((plan) => {
                       const TypeIcon = getTypeIcon(plan.type);
                       return (
                         <tr key={plan.id} className="border-b hover:bg-gray-50">

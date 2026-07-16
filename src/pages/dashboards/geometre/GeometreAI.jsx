@@ -1,31 +1,26 @@
+/**
+ * GEOMETRE AI - VERSION DONNÉES RÉELLES SUPABASE
+ * - Chat IA : historique réel (ai_chat_history, user_id). Aucun moteur IA n'est câblé
+ *   sur cette instance : on n'invente PAS de réponse, on enregistre le message et on
+ *   informe honnêtement l'utilisateur.
+ * - Analyses : ai_analyses (user_id, property_id, result jsonb), état vide honnête.
+ * - Performance IA : compteurs réels (analyses, messages, score IA properties.ai_score).
+ * - Outils / Suggestions : catalogue statique de fonctionnalités (pas de compteur
+ *   d'usage fabriqué, pas de suggestion inventée sur des parcelles fictives).
+ */
+
 import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { 
+import {
   Brain,
-  Zap,
   Target,
-  Eye,
   Calculator,
   Map,
   FileText,
-  Camera,
-  TrendingUp,
-  Activity,
-  Layers,
-  Compass,
-  MessageSquare,
-  Bot,
   Sparkles,
-  BarChart3,
   AlertCircle,
   CheckCircle,
   Clock,
-  Upload,
-  Download,
-  Settings,
-  Play,
-  Pause,
-  RotateCcw,
   Send,
   Mic,
   Paperclip
@@ -33,106 +28,177 @@ import {
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useAuth } from '@/contexts/UnifiedAuthContext';
+import { supabase } from '@/lib/supabaseClient';
+import { toast } from 'react-hot-toast';
 
 const GeometreAI = () => {
+  const { user } = useAuth();
   const [message, setMessage] = useState('');
   const [activeTab, setActiveTab] = useState('chat');
+  const [loading, setLoading] = useState(true);
+  const [sending, setSending] = useState(false);
 
-  // Suggestions de l'IA
-  const aiSuggestions = [
-    {
-      title: "Calcul de surface optimisé",
-      description: "Optimiser le calcul de surface pour la parcelle A127",
-      icon: Calculator,
-      action: "Analyser maintenant",
-      status: "Nouveau"
-    },
-    {
-      title: "Précision GPS améliorée",
-      description: "Correction atmosphérique pour les relevés de ce matin",
-      icon: Target,
-      action: "Appliquer corrections",
-      status: "Recommandé"
-    },
-    {
-      title: "Rapport automatique",
-      description: "Générer le rapport de bornage pour M. Diallo",
-      icon: FileText,
-      action: "Générer rapport",
-      status: "Prêt"
-    }
-  ];
+  const [chatHistory, setChatHistory] = useState([]);
+  const [analyses, setAnalyses] = useState([]);
+  const [stats, setStats] = useState({
+    totalAnalyses: 0,
+    totalMessages: 0,
+    avgAiScore: null,
+    propertiesAnalyzed: 0
+  });
 
-  // Historique des conversations
-  const chatHistory = [
-    {
-      id: 1,
-      type: 'user',
-      message: "Comment calculer la surface d'un terrain irrégulier avec 7 points GPS ?",
-      time: "10:30"
-    },
-    {
-      id: 2,
-      type: 'ai',
-      message: "Pour calculer la surface d'un polygone irrégulier avec 7 points GPS, je recommande la méthode de Gauss (formule du lacet). Voici les étapes:\n\n1. Ordonnez vos points dans le sens horaire ou anti-horaire\n2. Appliquez la formule: S = ½|Σ(xi(yi+1 - yi-1))|\n3. Convertissez les coordonnées GPS en mètres si nécessaire\n\nVoulez-vous que je calcule automatiquement avec vos coordonnées ?",
-      time: "10:31"
-    },
-    {
-      id: 3,
-      type: 'user',
-      message: "Oui, voici mes coordonnées : (14.7167, -17.4677), (14.7170, -17.4680), ...",
-      time: "10:32"
-    },
-    {
-      id: 4,
-      type: 'ai',
-      message: "Calcul en cours... ✨\n\nRésultat : Surface = 2,847 m² (0,28 ha)\n\nPrécision estimée : ±0.5%\nMéthode utilisée : Formule de Gauss avec correction géodésique\n\nVoulez-vous que je génère un rapport détaillé ?",
-      time: "10:33"
-    }
-  ];
-
-  // Outils IA disponibles
+  // Catalogue STATIQUE de fonctionnalités (descriptions d'outils, pas de donnée
+  // temps réel : aucun compteur d'usage fabriqué).
   const aiTools = [
     {
       name: "Calcul de surface intelligent",
-      description: "Calcul automatique avec correction d'erreurs",
+      description: "Calcul automatique de surface (formule de Gauss / lacet) avec contrôle d'erreurs",
       icon: Calculator,
-      color: "bg-blue-50 text-blue-600",
-      usage: "156 fois ce mois"
+      color: "bg-blue-50 text-blue-600"
     },
     {
       name: "Optimisation de parcours",
-      description: "Route optimale pour les relevés terrain",
+      description: "Route optimale pour enchaîner les relevés terrain",
       icon: Map,
-      color: "bg-green-50 text-green-600",
-      usage: "89 fois ce mois"
+      color: "bg-green-50 text-green-600"
     },
     {
       name: "Analyse de précision",
-      description: "Évaluation de la qualité des mesures",
+      description: "Évaluation de la qualité et de la cohérence des mesures GPS",
       icon: Target,
-      color: "bg-purple-50 text-purple-600",
-      usage: "203 fois ce mois"
+      color: "bg-purple-50 text-purple-600"
     },
     {
       name: "Génération de rapports",
-      description: "Rapports automatiques personnalisés",
+      description: "Rapports de bornage / levé automatiques et personnalisés",
       icon: FileText,
-      color: "bg-orange-50 text-orange-600",
-      usage: "127 fois ce mois"
+      color: "bg-orange-50 text-orange-600"
     }
   ];
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case 'Nouveau': return 'bg-blue-100 text-blue-800';
-      case 'Recommandé': return 'bg-green-100 text-green-800';
-      case 'Prêt': return 'bg-purple-100 text-purple-800';
-      default: return 'bg-gray-100 text-gray-800';
+  useEffect(() => {
+    if (user?.id) {
+      loadData();
     }
+  }, [user?.id]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+
+      // Historique de chat réel (ai_chat_history : id, user_id, role, content, created_at)
+      const { data: chatData } = await supabase
+        .from('ai_chat_history')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: true });
+
+      setChatHistory(
+        (chatData || []).map((m) => ({
+          id: m.id,
+          type: m.role === 'user' ? 'user' : 'ai',
+          message: m.content,
+          time: m.created_at
+            ? new Date(m.created_at).toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+            : ''
+        }))
+      );
+
+      // Analyses IA réelles (ai_analyses : id, user_id, property_id, result jsonb, created_at)
+      const { data: analysesData } = await supabase
+        .from('ai_analyses')
+        .select('*')
+        .eq('user_id', user.id)
+        .order('created_at', { ascending: false });
+
+      setAnalyses(analysesData || []);
+
+      // Propriétés du géomètre pour le score IA réel (properties.ai_score)
+      const { data: propertiesData } = await supabase
+        .from('properties')
+        .select('id, ai_score')
+        .eq('owner_id', user.id);
+
+      const scored = (propertiesData || []).filter(
+        (p) => typeof p.ai_score === 'number' && p.ai_score !== null
+      );
+      const avgAiScore = scored.length > 0
+        ? Math.round(scored.reduce((s, p) => s + p.ai_score, 0) / scored.length)
+        : null;
+
+      const propertiesAnalyzed = new Set(
+        (analysesData || []).map((a) => a.property_id).filter(Boolean)
+      ).size;
+
+      setStats({
+        totalAnalyses: analysesData?.length || 0,
+        totalMessages: chatData?.length || 0,
+        avgAiScore,
+        propertiesAnalyzed
+      });
+    } catch (error) {
+      console.error('Erreur chargement IA géomètre:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleSend = async () => {
+    if (!message.trim() || sending) return;
+    setSending(true);
+    const userMessage = message.trim();
+    setMessage('');
+
+    try {
+      const nowLabel = new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' });
+
+      // Affichage optimiste + enregistrement réel du message utilisateur
+      setChatHistory((prev) => [
+        ...prev,
+        { id: `local-${Date.now()}`, type: 'user', message: userMessage, time: nowLabel }
+      ]);
+
+      await supabase.from('ai_chat_history').insert({
+        user_id: user.id,
+        role: 'user',
+        content: userMessage
+      });
+
+      // Aucun moteur IA n'est câblé sur cette instance : on n'invente pas de réponse.
+      const notConnectedMessage =
+        "L'assistant IA conversationnel n'est pas encore connecté à un moteur d'intelligence artificielle sur votre compte (intégration à venir). Votre message a bien été enregistré.";
+
+      setChatHistory((prev) => [
+        ...prev,
+        {
+          id: `local-ai-${Date.now()}`,
+          type: 'ai',
+          message: notConnectedMessage,
+          time: new Date().toLocaleTimeString('fr-FR', { hour: '2-digit', minute: '2-digit' })
+        }
+      ]);
+
+      await supabase.from('ai_chat_history').insert({
+        user_id: user.id,
+        role: 'assistant',
+        content: notConnectedMessage
+      });
+
+      setStats((prev) => ({ ...prev, totalMessages: prev.totalMessages + 2 }));
+    } catch (error) {
+      console.error('Erreur envoi message IA:', error);
+      toast.error("Erreur lors de l'envoi du message");
+    } finally {
+      setSending(false);
+    }
+  };
+
+  const getAnalysisTitle = (analysis) => {
+    const r = analysis.result || {};
+    return r.title || r.type || 'Analyse IA';
   };
 
   return (
@@ -146,7 +212,7 @@ const GeometreAI = () => {
           </div>
           <Badge className="bg-gradient-to-r from-blue-500 to-purple-500 text-white">
             <Sparkles className="w-4 h-4 mr-1" />
-            IA Activée
+            IA
           </Badge>
         </div>
 
@@ -168,33 +234,43 @@ const GeometreAI = () => {
                       Conversation avec l'IA
                     </CardTitle>
                     <CardDescription>
-                      Posez vos questions techniques et obtenez des réponses expertes
+                      Posez vos questions techniques. Vos messages sont enregistrés.
                     </CardDescription>
                   </CardHeader>
                   <CardContent className="flex-1 flex flex-col">
                     {/* Messages */}
                     <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-                      {chatHistory.map((msg) => (
-                        <div
-                          key={msg.id}
-                          className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
-                        >
-                          <div
-                            className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
-                              msg.type === 'user'
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-100 text-gray-900'
-                            }`}
-                          >
-                            <p className="text-sm whitespace-pre-line">{msg.message}</p>
-                            <p className={`text-xs mt-1 ${
-                              msg.type === 'user' ? 'text-blue-200' : 'text-gray-500'
-                            }`}>
-                              {msg.time}
-                            </p>
-                          </div>
+                      {loading ? (
+                        <p className="text-sm text-gray-500 text-center py-8">Chargement…</p>
+                      ) : chatHistory.length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-center text-gray-500 py-8">
+                          <Brain className="w-10 h-10 mb-3 text-gray-300" />
+                          <p className="text-sm">Aucune conversation pour le moment.</p>
+                          <p className="text-xs mt-1">Posez votre première question ci-dessous.</p>
                         </div>
-                      ))}
+                      ) : (
+                        chatHistory.map((msg) => (
+                          <div
+                            key={msg.id}
+                            className={`flex ${msg.type === 'user' ? 'justify-end' : 'justify-start'}`}
+                          >
+                            <div
+                              className={`max-w-xs lg:max-w-md px-4 py-2 rounded-lg ${
+                                msg.type === 'user'
+                                  ? 'bg-blue-600 text-white'
+                                  : 'bg-gray-100 text-gray-900'
+                              }`}
+                            >
+                              <p className="text-sm whitespace-pre-line">{msg.message}</p>
+                              <p className={`text-xs mt-1 ${
+                                msg.type === 'user' ? 'text-blue-200' : 'text-gray-500'
+                              }`}>
+                                {msg.time}
+                              </p>
+                            </div>
+                          </div>
+                        ))
+                      )}
                     </div>
 
                     {/* Input */}
@@ -203,15 +279,17 @@ const GeometreAI = () => {
                         placeholder="Posez votre question technique..."
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
+                        onKeyDown={(e) => { if (e.key === 'Enter') handleSend(); }}
                         className="flex-1"
+                        disabled={sending}
                       />
-                      <Button size="sm">
+                      <Button size="sm" variant="outline" disabled>
                         <Paperclip className="w-4 h-4" />
                       </Button>
-                      <Button size="sm">
+                      <Button size="sm" variant="outline" disabled>
                         <Mic className="w-4 h-4" />
                       </Button>
-                      <Button>
+                      <Button onClick={handleSend} disabled={sending || !message.trim()}>
                         <Send className="w-4 h-4" />
                       </Button>
                     </div>
@@ -230,7 +308,7 @@ const GeometreAI = () => {
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: index * 0.1 }}
                       >
-                        <Card className="hover:shadow-md transition-shadow cursor-pointer">
+                        <Card className="hover:shadow-md transition-shadow">
                           <CardContent className="p-6">
                             <div className="flex items-center justify-between">
                               <div className="flex items-center space-x-4">
@@ -240,12 +318,9 @@ const GeometreAI = () => {
                                 <div>
                                   <h3 className="font-semibold text-gray-900">{tool.name}</h3>
                                   <p className="text-gray-600 text-sm">{tool.description}</p>
-                                  <p className="text-xs text-gray-500 mt-1">{tool.usage}</p>
                                 </div>
                               </div>
-                              <Button variant="outline">
-                                Utiliser
-                              </Button>
+                              <Badge variant="outline" className="text-gray-500">Bientôt</Badge>
                             </div>
                           </CardContent>
                         </Card>
@@ -258,43 +333,59 @@ const GeometreAI = () => {
               <TabsContent value="analysis">
                 <Card>
                   <CardHeader>
-                    <CardTitle>Analyses en cours</CardTitle>
+                    <CardTitle>Analyses IA</CardTitle>
                     <CardDescription>
-                      Analyses automatiques de vos données géodésiques
+                      Analyses enregistrées sur vos données géodésiques
                     </CardDescription>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-4">
-                      <div className="flex items-center space-x-3">
-                        <Clock className="w-5 h-5 text-orange-500" />
-                        <div>
-                          <p className="font-medium">Analyse de précision GPS</p>
-                          <p className="text-sm text-gray-600">Parcelle A127 - En cours...</p>
-                        </div>
+                    {loading ? (
+                      <p className="text-sm text-gray-500 py-6 text-center">Chargement…</p>
+                    ) : analyses.length === 0 ? (
+                      <div className="flex flex-col items-center justify-center text-center text-gray-500 py-10">
+                        <Sparkles className="w-10 h-10 mb-3 text-gray-300" />
+                        <p className="text-sm">Aucune analyse IA enregistrée pour le moment.</p>
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <CheckCircle className="w-5 h-5 text-green-500" />
-                        <div>
-                          <p className="font-medium">Optimisation du parcours</p>
-                          <p className="text-sm text-gray-600">Route optimale générée pour demain</p>
-                        </div>
+                    ) : (
+                      <div className="space-y-4">
+                        {analyses.map((analysis) => {
+                          const status = analysis.result?.status || 'completed';
+                          const Icon = status === 'in_progress'
+                            ? Clock
+                            : status === 'error'
+                              ? AlertCircle
+                              : CheckCircle;
+                          const iconColor = status === 'in_progress'
+                            ? 'text-orange-500'
+                            : status === 'error'
+                              ? 'text-red-500'
+                              : 'text-green-500';
+                          return (
+                            <div key={analysis.id} className="flex items-center space-x-3">
+                              <Icon className={`w-5 h-5 ${iconColor}`} />
+                              <div>
+                                <p className="font-medium">{getAnalysisTitle(analysis)}</p>
+                                <p className="text-sm text-gray-600">
+                                  {analysis.result?.summary
+                                    || (analysis.created_at
+                                      ? new Date(analysis.created_at).toLocaleDateString('fr-FR')
+                                      : '—')}
+                                </p>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
-                      <div className="flex items-center space-x-3">
-                        <AlertCircle className="w-5 h-5 text-red-500" />
-                        <div>
-                          <p className="font-medium">Détection d'anomalie</p>
-                          <p className="text-sm text-gray-600">Point GPS aberrant détecté - Position 7</p>
-                        </div>
-                      </div>
-                    </div>
+                    )}
                   </CardContent>
                 </Card>
               </TabsContent>
             </Tabs>
           </div>
 
-          {/* Suggestions IA */}
+          {/* Colonne latérale */}
           <div>
+            {/* Suggestions IA — pas de source de suggestions générées : état honnête */}
             <Card>
               <CardHeader>
                 <CardTitle className="flex items-center">
@@ -303,59 +394,38 @@ const GeometreAI = () => {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="space-y-4">
-                  {aiSuggestions.map((suggestion, index) => {
-                    const Icon = suggestion.icon;
-                    return (
-                      <div key={index} className="p-4 border border-gray-200 rounded-lg">
-                        <div className="flex items-start space-x-3">
-                          <div className="p-2 bg-purple-50 rounded-lg">
-                            <Icon className="w-4 h-4 text-purple-600" />
-                          </div>
-                          <div className="flex-1">
-                            <div className="flex items-center justify-between mb-1">
-                              <h4 className="font-medium text-sm">{suggestion.title}</h4>
-                              <Badge className={getStatusColor(suggestion.status)}>
-                                {suggestion.status}
-                              </Badge>
-                            </div>
-                            <p className="text-xs text-gray-600 mb-3">
-                              {suggestion.description}
-                            </p>
-                            <Button size="sm" variant="outline" className="w-full">
-                              {suggestion.action}
-                            </Button>
-                          </div>
-                        </div>
-                      </div>
-                    );
-                  })}
+                <div className="flex flex-col items-center justify-center text-center text-gray-500 py-6">
+                  <Sparkles className="w-8 h-8 mb-2 text-gray-300" />
+                  <p className="text-sm">Les suggestions personnalisées seront disponibles une fois le moteur IA connecté.</p>
+                  <p className="text-xs mt-1">Bientôt disponible.</p>
                 </div>
               </CardContent>
             </Card>
 
-            {/* Performance IA */}
+            {/* Performance IA — compteurs RÉELS */}
             <Card className="mt-6">
               <CardHeader>
-                <CardTitle className="text-lg">Performance IA</CardTitle>
+                <CardTitle className="text-lg">Activité IA</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Précision moyenne</span>
-                    <span className="font-bold text-green-600">97.8%</span>
+                    <span className="text-sm text-gray-600">Analyses enregistrées</span>
+                    <span className="font-bold text-blue-600">{stats.totalAnalyses}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Temps de réponse</span>
-                    <span className="font-bold text-blue-600">1.2s</span>
+                    <span className="text-sm text-gray-600">Messages échangés</span>
+                    <span className="font-bold text-purple-600">{stats.totalMessages}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Requêtes ce mois</span>
-                    <span className="font-bold text-purple-600">1,247</span>
+                    <span className="text-sm text-gray-600">Propriétés analysées</span>
+                    <span className="font-bold text-orange-600">{stats.propertiesAnalyzed}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Économie de temps</span>
-                    <span className="font-bold text-orange-600">23.5h</span>
+                    <span className="text-sm text-gray-600">Score IA moyen</span>
+                    <span className="font-bold text-green-600">
+                      {stats.avgAiScore !== null ? `${stats.avgAiScore}%` : '—'}
+                    </span>
                   </div>
                 </div>
               </CardContent>
